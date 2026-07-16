@@ -151,3 +151,63 @@ DESIGN NOTES — later stories depend on these:
   `.still(.sleep1)` for a fully static sleeper. The view animates whatever it is given.
 
 Remains: US-006 onward (US-001..US-005 pass; 5/35).
+
+## 2026-07-17 — US-006: Add SwiftData persistence model — PASSES
+
+Started with Sources/GameState.swift, Sources/GameStore.swift and Tests/GameStateTests.swift
+already on disk UNCOMMITTED — a previous iteration wrote them but died before building or
+committing. Treated them as unverified: read them, then built and tested from scratch rather
+than trusting the code looked right. It was in fact complete and correct.
+
+Did:
+- Sources/GameState.swift: @Model GameState with all 12 required fields, plus EnergyType
+  (strength/vitality/spirit/stamina), Stage, HealthStatus, and EnergyTotals (a struct of 4 Ints,
+  subscriptable by EnergyType so callers address a total without a switch; serves both
+  stageEnergy and lifetimeEnergy).
+- Sources/GameStore.swift: owns the SwiftData stack and THE single saved game.
+  loadOrCreate(digitamaId:now:) is the only way in, so first launch and return launch are one
+  code path. resetGame(digitamaId:now:), save(). Store URL injectable (tests use a temp file).
+- Tests/GameStateTests.swift: 11 tests. I added ONE (testDefaultStoreLocationOpensAndPersists);
+  the other 10 came from the dead iteration.
+- No project.yml change needed — Sources/ and Tests/ are directory globs, so the new files were
+  picked up by xcodegen automatically.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 37 tests (11 new), 0 failures.
+- Round-trip writes DISTINCT values to all 12 fields (no two fields share a value, so a crossed
+  mapping cannot round-trip by coincidence), drops the container, reads through a NEW one on the
+  same file — what is asserted came off disk, not out of the first context's cache.
+- All 8 Stage raw values asserted to be real directories under "16x16 Digimon Sprites".
+
+RELAUNCH VERIFIED LITERALLY — the AC most at risk of being faked with a same-process proxy:
+- The unit tests all pass a TEMP url, so none of them touch the store the shipping app opens.
+  Added testDefaultStoreLocationOpensAndPersists to cover GameStore() at SwiftData's DEFAULT
+  location. If that path did not work on watchOS, every other test here would still pass and the
+  app would break on first launch.
+- Then went further than the test: after the test PROCESS EXITED, read its default.store with
+  sqlite3 from a different process. ZGAMESTATE = agu_digitama | Digitama | 0 | healthy | 700000
+  (700000 == t0). The data outlived the process that wrote it — that IS surviving a relaunch.
+
+Notes for next iterations:
+- **The CoreData errors on opening the default store are a FALSE ALARM.** You will see "Failed to
+  stat path .../Library/Application Support/default.store, errno 2" and "Sandbox access to
+  file-write-create denied". SwiftData probes that directory before creating it, logs loudly, then
+  succeeds. The store and its -wal are genuinely on disk and the test passes. Do not go
+  bug-hunting on those lines, and do not "fix" them by pre-creating the directory.
+- Enum raw values ARE the persisted spelling — the sqlite dump shows ZSTAGE 'Digitama' and
+  ZHEALTHSTATUS 'healthy' as strings. Renaming a Stage/HealthStatus case rewrites saved games;
+  change a displayName instead.
+- Stage.rawValue IS the sprite subfolder name, so US-016 can do
+  DigimonSpriteView(stage: state.stage.rawValue, name:) with no mapping table.
+- Stage.armorHybrid.ladderIndex is nil BY DESIGN (it is a side branch, not a rung). The US-009
+  stage-skip validator must treat nil as "unknown", not as the rung after Ultimate.
+- **resetGame is a TOTAL wipe**, lifetimeEnergy and the battle record included. US-029 rebirth
+  after death must NOT route through it — lifetimeEnergy and the Dex have to outlive a Digimon.
+- The Dex does not exist yet. US-018/US-019 add to it; it will need its own @Model and must be
+  added to GameStore.schema, or it silently will not be saved.
+- testDefaultStoreLocationOpensAndPersists leaves a real saved game (agu_digitama) in the app's
+  simulator container. Harmless today since nothing reads the default store yet, but US-016 will
+  launch the app and find it — reset or delete the app if a clean first-launch is needed.
+
+Remains: US-007 onward (US-001..US-006 pass; 6/35).
