@@ -16,8 +16,8 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "project.yml defines a single watchOS app target DigiVPet (SwiftUI @main App, no iOS companion, TARGETED_DEVICE_FAMILY=4, WKApplication=true for standalone). Verified: xcodegen 2.46.0 already installed; 'xcodegen generate' creates DigiVPet.xcodeproj with no errors; WATCHOS_DEPLOYMENT_TARGET=10.0; built Info.plist (Support/Info.plist, GENERATE_INFOPLIST_FILE=NO) contains NSHealthShareUsageDescription; clean build for Series 11 (46mm) BUILD SUCCEEDED with zero source warnings. Sources/ holds DigiVPetApp.swift + placeholder ContentView.swift. No test target yet — US-002 is the first story that needs one and should add it to project.yml."
     },
     {
       "id": "US-002",
