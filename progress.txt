@@ -109,3 +109,45 @@ DESIGN NOTE — US-005 depends on this:
   SpriteLoader.loadSheet directly from a view, or you re-decode per frame.
 
 Remains: US-005 onward (US-001/002/003/004 pass).
+
+## 2026-07-17 — US-005: Add DigimonSpriteView with animation loops — PASSES
+
+Did:
+- Sources/DigimonSpriteView.swift (one new file; no changes to SpriteSheet/SpriteLoader/project.yml):
+  - `SpriteAnimation`: idle/eat/sleep/hurt + `still(SpriteFrame)`. A pose is modelled as a
+    1-frame loop so every screen drives the view the same way. Owns the ONE frame-duration
+    constant: `SpriteAnimation.frameDuration = 0.5`.
+  - `frames(from: SpriteSheet)` resolves a loop against a sheet by kind — stage sheets use
+    `stageFrames`, eggs use `eggFrames`.
+  - `frameIndex(at:count:duration:)` — pure function of wall-clock time.
+  - `DigimonSpriteView`: pulls frames from SpriteSheetCache (injectable, defaults .shared),
+    renders `Image(decorative:).interpolation(.none).resizable()` at `scale` pts per pixel.
+- ContentView is now a TEMPORARY demo harness showing idle/eat/sleep/still/egg/missing side by
+  side, purely so the loops are observable in the Simulator. US-016 replaces it.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 26 tests (8 new), 0 failures.
+- Installed + launched on Apple Watch Series 11 (46mm). 6 screenshots at 250ms intervals
+  produce EXACTLY 2 distinct md5s, alternating with a 500ms period — the loop really advances
+  at 500ms rather than just compiling.
+- Pixel-compared the two shots: Agumon's legs change (walk1->walk2), the egg goes squat ->
+  rounded (idle->wobble), eat and sleep advance; `still(.attack)` and the '?' placeholder are
+  byte-identical across shots. Pixels are hard-edged at 4x = .interpolation(.none) is on.
+- The missing sprite ("NotADigimon") drew the '?' placeholder — no crash, no blank.
+
+DESIGN NOTES — later stories depend on these:
+- Poses are `.still(...)`: US-024 refuse -> `.still(.refuse)`, US-025 attack -> `.still(.attack)`,
+  US-028 sick/angry -> `.still(.angry)`, US-031 happy -> `.still(.happy)`. A 1-frame loop
+  deliberately skips the TimelineView — a held pose must not redraw forever.
+- Eggs honour the US-004 warning: `.idle` maps to EggFrame idle->wobble; eat/sleep/hurt/still
+  have NO egg art and return [] -> placeholder. They never borrow walk indices, which on a
+  48x16 sheet would land on the HATCH frame.
+- US-018 (hatching) needs the hatch frame, which no current animation exposes: add an egg-only
+  case to SpriteAnimation rather than reaching for `.still`, whose SpriteFrame cannot name it.
+- frameIndex derives from time, not a counter, so a rebuilt view resumes mid-loop. It guards
+  count<=1 and pre-2001 dates (a bare % would return a negative index and crash the lookup).
+- US-026 ("a sleeping Digimon does not idle-animate") is a caller concern: pass `.sleep`, or
+  `.still(.sleep1)` for a fully static sleeper. The view animates whatever it is given.
+
+Remains: US-006 onward (US-001..US-005 pass; 5/35).

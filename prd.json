@@ -84,8 +84,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Sources/DigimonSpriteView.swift adds SpriteAnimation (idle/eat/sleep/hurt + still(SpriteFrame)) and DigimonSpriteView. Observed: BUILD SUCCEEDED zero source warnings, TEST SUCCEEDED 26/26 (8 new), and the app installed+launched on Series 11 (46mm). Frame duration is the single constant SpriteAnimation.frameDuration = 0.5. VERIFIED IN SIM, not just by build: 6 screenshots 250ms apart alternate between EXACTLY 2 distinct md5s with a 500ms period — the loop genuinely advances at 500ms. Pixel-compared the two shots: big Agumon's legs change (walk1->walk2), the egg goes squat->rounded (idle->wobble), eat and sleep both advance, while still(.attack) and the missing-sprite '?' placeholder stay byte-identical. Pixels are hard-edged at 4x scale = .interpolation(.none) is really on. DESIGN: a pose is a 1-frame loop (case still), so US-024/025/028/031 render refuse/attack/angry/happy via .still(.refuse) etc. and get no TimelineView (a held pose must not redraw forever). Eggs follow the US-004 note: SpriteAnimation.idle maps to EggFrame idle->wobble via eggFrames, and eat/sleep/hurt/still have NO egg art (return []) so they show the placeholder rather than borrowing walk indices, which on a 48x16 sheet would land on the HATCH. frameIndex(at:count:) is a pure function of wall-clock time (not a stored counter) so a view rebuilt mid-loop resumes where the animation is; it is unit-tested at 0/0.49/0.5/0.99/1.0/1.5s with no real waiting, and guards count<=1 (no divide-by-zero) and pre-2001 dates (a bare % would return a negative index and crash the lookup). ContentView is now a temporary DigimonSpriteView demo harness — US-016 replaces it with the real main screen."
     },
     {
       "id": "US-006",
