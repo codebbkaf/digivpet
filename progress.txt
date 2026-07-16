@@ -428,3 +428,99 @@ DESIGN NOTES — later stories depend on these:
   graph is validated before it ships. If US-010 generates nodes, run validate() over its output.
 
 Remains: US-010 onward (US-001..US-009 pass; 9/35).
+
+## 2026-07-17 — US-010: Add roster import script — PASSES
+
+Did:
+- scripts/import_roster.py: walks the sprite tree, emits all 1022 nodes with id, displayName,
+  stage, spriteFile, variant, dexOnly derived from disk. Merges hand-authored data on re-run.
+- README.md: the repo had NONE. Created it (build/layout/sprites/roster shape/dev tools) and
+  documented the script there, per the AC.
+- docs/evolutions-schema.md: "Current contents" still described the US-007 4-node seed. Updated to
+  the real 22 nodes + a "Generating nodes" section, so it cannot contradict README.md.
+- .gitignore: roster.generated.json (dev-tool output, like sprites_cut/).
+- NO Swift changed. The 78 existing tests pass untouched.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, 78/78 (no regression).
+- 865 playable + 157 dexOnly = 1022, reproducing the PRD's verified counts EXACTLY; per-stage
+  57/43/47/120/192/169/221/16 matches the PRD's roster table.
+- Cross-checked the generated file against every applicable US-009 rule in Python (US-008 set this
+  precedent): 0 missing sprites, 0 duplicate ids, 0 empty spriteFiles, 0 edges to unknown or
+  dexOnly ids, 0 playable nodes lacking a stage, 0 ids off the lowercased-basename convention.
+- All 7 required variant suffixes verified to FIRE on real files rather than spot-checked:
+  X 112, Black 14, Blue 3, Virus 3, 2006 4, 2010 2, YnK 1. 137 nodes carry a variant and 0 of them
+  have a variant token that is not literally in the filename.
+
+THE MERGE AC IS PROVEN NON-VACUOUS — "re-running merges without clobbering" is the criterion here
+most easily faked, since a script that simply never writes edges would look like it passes:
+1. In-place re-run (--graph X --out X) is BYTE-IDENTICAL across runs (md5 twice). Idempotent.
+2. Hand-authored a NEW edge (wargreymon -> omegamon, minEnergy 99) and a NEW dexOnly stage
+   (ankylomon -> Adult) into the file, re-ran: BOTH survived verbatim.
+3. THE CONTROL: running with --graph pointed at a nonexistent file yields 0 nodes with edges. So
+   the 19 preserved edge-sets genuinely come from the merge and not from the generator inventing
+   them. Without this, tests 1-2 could pass on a script that hardcoded the seed.
+- All 22 seed nodes' evolutions[] are carried over byte-identical.
+
+THE dexOnly STAGE GAP IS ANSWERED, AND THE ANSWER IS "NOT DERIVABLE" — do not re-derive this:
+- US-009 handed US-010: "a dexOnly node's true stage is still NOT derivable from disk, so US-010
+  must source it from somewhere other than the folder tree." I checked EVERY candidate source:
+    * "Idle Frame Only/" is flat — no stage information by construction.
+    * "Black and White Sprites/" DOES have stage subfolders, but covers only 1 of the 157 (Bulkmon).
+    * LCD Checklist.xlsx has NO stage/level column. Parsed its sharedStrings: 0 cells equal
+      Child/Adult/Perfect/Ultimate/Baby/Level/Stage. Its columns are Walk 1..Attack — it is a
+      per-device FRAME checklist, exactly as the PRD says, and it does confirm the 12-frame order.
+    * Visual Checklist.png is an unlabeled completion collage (looked at it) — not scriptable.
+  There is no source. That question is closed.
+- Only 5 of the 157 name their own stage and those are derived: Arkadimon_Adult/_Perfect/_Ultimate/
+  _SuperUltimate and Meicoo_Child. Arkadimon_Baby is left UNKNOWN on purpose because "_Baby" maps to
+  both Baby I and Baby II (the animated Arkadimon_Baby is filed under Baby II) — ambiguous, so not
+  picked. The other 152 are emitted as "stage": null, meaning unknown.
+- I did NOT fill the 152 in from Digimon franchise knowledge. It would be unverifiable data that a
+  later reader trusts — the exact failure mode US-002 (arbitrary png), US-007 (requiredEnergy) and
+  US-008 (advisory thresholds) each caught. CLAUDE.md's "do not invent" applies to stages too.
+
+OPEN DECISION LEFT TO A LATER STORY — FLAGGED, NOT HIDDEN:
+- "stage": null is a GENERATOR convention that Sources/EvolutionGraph.swift does NOT accept:
+  EvolutionNode.stage is a non-optional Stage, so a null-stage node fails the decode and
+  EvolutionGraph.bundled would trap at LAUNCH (per US-007's trap, that also kills the TEST_HOST and
+  no test reports). NOTHING IS BROKEN TODAY: the generated file is not bundled and no shipped node
+  is dexOnly. But a dexOnly node must be given a stage before it is promoted into
+  Resources/evolutions.json. Re-runs preserve what you assign — that is exactly why the merge
+  harvests a dexOnly stage as well as edges.
+- The alternative is making stage optional (Stage? = "unknown", legal only when dexOnly) plus a
+  validator rule. I left it out as out of scope for a story about a script: it ripples into
+  SeedRosterTests and EvolutionGraphTests, which read node.stage.rawValue, and rewriting the tests
+  of two passing stories is how a green suite quietly gets weaker. Both options are in README.md.
+
+WHY THE SHIPPED GRAPH IS UNTOUCHED (git diff Resources/evolutions.json is empty) — DELIBERATE:
+- --out defaults to roster.generated.json (gitignored), NOT the shipped graph. Regenerating
+  Resources/evolutions.json wholesale would swap 3 complete playable lines for ~1000 TERMINAL nodes
+  and leave 54 of 57 Digitama with no hatch edge, which would break US-018's "new game starts at a
+  randomly selected Digitama" — the egg would never hatch. The PRD is explicit: build the loop on
+  3-4 lines, then grow the data. Expand it a line at a time; the script is the boilerplate, not the
+  graph. Note the validator would NOT catch this: 1000 terminal nodes are all individually legal.
+
+DESIGN NOTES — the script refuses to guess, in four places:
+- Only the 7 AC-named suffixes are variants. The tree carries ~40 other trailing tokens and they are
+  NOT all variants (Belphemon_Sleep, Choasmon_ValdurArm, Duftmon_Leopard are forms whose suffix
+  belongs in the name). Unlisted tokens stay in displayName and print under "unrecognized trailing
+  tokens" for a human to rule on. Promote one by adding to VARIANT_SUFFIXES.
+- A stage suffix is stripped ONLY when it names the folder the sprite is actually IN, so it can
+  never be wrong about a stage — the folder is the authority and the suffix merely agrees with it.
+  Verified against the whole Algomon family (BabyI/BabyII/Child/Adult/Ultimate, each in its matching
+  folder) and Rapidmon_Armor in Armor-Hybrid.
+- _Digitama is never stripped: it is part of the name, not a disambiguator. The hand-authored seed
+  spells it "Agu Digitama" and the generator reproduces that displayName exactly.
+- Digitama->Child: 47/57 matched, each checked against a file that EXISTS (prefix+"mon"; prefix+"-mon"
+  for V->V-mon; and a variant baked into the prefix for Agu2006->Agumon_2006, GabuBlack->Gabumon_Black).
+  The 10 unmatched are printed and each was verified genuinely unmatchable: Betamon, Kamemon, Kudamon,
+  Kudamon_2006, Zubamon, PawnChessmon_Black and PawnChessmon_White are idle-only with no animated Child
+  sheet; Espimon and Liollmon exist NOWHERE in the tree; Meicoo's child form is filed "MeicooChild" with
+  no underscore, so no suffix rule can see it (MeicooBaby likewise — left alone rather than splitting
+  camelCase, which would be a guess).
+  THE MATCH AUTHORS NO EDGE, on purpose: an egg's edge points at a BABY I, and which Baby I belongs to
+  which egg is derivable from nothing. The match is a report for the human authoring the line.
+
+Remains: US-011 onward (US-001..US-010 pass; 10/35).

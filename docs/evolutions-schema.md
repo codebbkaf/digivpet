@@ -80,9 +80,22 @@ The rest of the edge stays meaningful: `minEnergy` is the 50-point hatch thresho
 `maxCareMistakes` is deliberately permissive (99) because US-018 gates hatching on energy alone.
 The edge's real job is to name which Baby I this egg hatches into.
 
+## Generating nodes
+
+`scripts/import_roster.py` derives `id`, `displayName`, `stage`, `spriteFile`, `variant` and
+`dexOnly` for all 1,022 Digimon from the sprite filenames, and carries hand-authored
+`evolutions[]` over on a re-run. It never authors an edge — no artifact in this project holds
+evolution data. See README.md for what it derives and what it deliberately refuses to guess.
+
+It writes `roster.generated.json`, **not** this file: `Resources/evolutions.json` is curated, and
+regenerating it wholesale would swap three playable lines for ~1,000 terminal nodes.
+
+One generator convention is **not** part of this schema: a `dexOnly` node whose stage is unknown
+is emitted as `"stage": null`. `stage` is required and non-optional here, so such a node does not
+decode — give it a stage before promoting it into this file. README.md has the detail.
+
 ## Current contents
 
-`Resources/evolutions.json` holds one partial line — `Agu_Digitama → Botamon → Koromon →
-Agumon`, terminal at Agumon. US-008 seeds the three full lines (Agumon, Gabumon, Palmon, each
-Digitama through Ultimate, with a branching node); US-010 generates node boilerplate for the
-rest of the roster from the sprite filenames.
+`Resources/evolutions.json` holds 22 nodes: three complete lines from Digitama through Ultimate
+(Agumon, Gabumon, Palmon), plus Meramon as the target of the one branching node
+(Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).
