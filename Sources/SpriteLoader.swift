@@ -14,6 +14,11 @@ enum SpriteLoader {
     /// Root of the bundled sprite folder reference.
     static let spriteRoot = "16x16 Digimon Sprites"
 
+    /// Flat folder of single 16x16 sprites, holding the only art the 157 dexOnly Digimon have.
+    /// It sits alongside the stage folders but is not one: its sprites are not filed by stage, so
+    /// a dexOnly node's art resolves here instead of under `stage.rawValue`.
+    static let idleFrameOnlyFolder = "Idle Frame Only"
+
     /// URL of a sprite sheet, or nil when no such file is bundled.
     static func url(stage: String, name: String, in bundle: Bundle = .main) -> URL? {
         // `url(forResource:)` treats an empty name like nil and returns an arbitrary PNG from

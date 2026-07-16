@@ -361,3 +361,70 @@ DESIGN NOTES — later stories depend on these:
   harness that US-016 replaces.
 
 Remains: US-009 onward (US-001..US-008 pass; 8/35).
+
+## 2026-07-17 — US-009: Add evolution graph validator — PASSES
+
+Did:
+- Sources/EvolutionGraphValidator.swift: GraphValidationError (11 cases, CustomStringConvertible)
+  + EvolutionGraph.validate(spriteExists:). Returns ALL errors in node order rather than throwing
+  on the first — the errors are independent, and fixing a roster one error per test run would be
+  miserable.
+- The sprite check is the ONE rule that touches the world, so it is injected
+  (typealias SpriteExistsCheck). Fixture tests stub it TRUE so the other rules cannot fail on
+  art that was never meant to exist; the missing-sprite tests use the real
+  EvolutionGraph.spriteExists(in:) against the bundle.
+- Sources/SpriteLoader.swift: added `idleFrameOnlyFolder` next to `spriteRoot`.
+- Tests/EvolutionGraphValidatorTests.swift: 19 tests.
+- No project.yml change — Sources/ and Tests/ are globs.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 78 tests (19 new), 0 failures.
+
+THE AC TEST IS PROVEN NON-VACUOUS BY MUTATION — "runs against the real evolutions.json and fails
+the build on any error" is the criterion here most easily faked, so all FOUR required checks were
+made to fail on purpose against the REAL file (restored byte-identical each time; final md5
+06d248898b456e83193df91b87a55d97 == original, and `git diff Resources/evolutions.json` is empty):
+1. greymon -> "nosuchmon"        => "greymon -> nosuchmon: no node has id 'nosuchmon'"
+2. agumon spriteFile "NotADigimon" => "agumon: spriteFile does not exist on disk (Child/NotADigimon.png)"
+3. greymon stage -> "Perfect"    => "agumon -> greymon: Child to Perfect does not advance exactly
+   one stage" + "greymon -> metalgreymon: Perfect to Perfect ..." AND the resulting missing
+   Perfect/Greymon.png — one mutation, three errors, which is accumulation working.
+4. delete greymon isDefault      => "greymon: non-terminal node has no isDefault edge"
+Every mutation used a VALID enum string on purpose, so it stayed a SEMANTIC error the validator
+can actually see. Per the US-007 trap, a bad enum or syntax error kills the TEST_HOST at launch
+before any test reports — the validator can NEVER be what catches that class of error. All 78
+tests still reported under every mutation, so no mutation crashed the host.
+
+Two guards against the suite passing for the wrong reason:
+- testTheValidatedGraphIsTheRealNonEmptyRoster (22 nodes + Agumon present): validating an EMPTY
+  graph would trivially find no errors, so the AC test alone could pass on a broken load().
+- testASoundGraphHasNoErrors is the control. Without it, every "exactly one error" assertion could
+  be passing because the validator flags something unrelated in the baseline fixture.
+
+DESIGN NOTES — later stories depend on these:
+- Stage skip uses Stage.ladderIndex and SKIPS nil (Armor-Hybrid) rather than treating it as the
+  rung after Ultimate, exactly as the US-006 note asks; testDoesNotReportTransitionsInvolvingArmor
+  Hybrid pins it. Sideways and backwards edges are reported too — the same rung arithmetic catches
+  them and they are just as broken as a skip.
+- BEYOND THE AC, implemented the four rules earlier stories explicitly handed to US-009:
+  requiredEnergy present unless stage == Digitama AND absent when it IS one (US-007, both halves);
+  duplicate ids (found against `nodes`, the file as authored — `byId` keeps only the first of a
+  pair and so cannot see them, which is why EvolutionGraph.nodes must not be de-duped);
+  empty spriteFile as its OWN error; edges naming a dexOnly node.
+- The empty-spriteFile test stubs existence TRUE deliberately. Per the US-002 bug,
+  Bundle.url(forResource:) treats an empty name like nil and hands back an ARBITRARY png, so a
+  check that does not guard would "find" art and pass. The rule must not lean on SpriteLoader
+  happening to guard it.
+- Added SpriteLoader.idleFrameOnlyFolder = "Idle Frame Only" (flat, 842 sprites). A dexOnly node's
+  art lives there, NOT under its stage folder, so resolving it by stage would report all 157 as
+  missing. Verified on disk: "Baby I/Poyomon.png" does NOT exist, "Idle Frame Only/Poyomon.png"
+  does. testDexOnlyNodeResolvesItsSpriteInIdleFrameOnly asserts BOTH directions — Poyomon is clean
+  as dexOnly and reports missing art without the flag.
+- THIS ANSWERS HALF OF US-007's OPEN QUESTION: where a dexOnly node's art resolves is now settled
+  (Idle Frame Only/, via the flag). THE OTHER HALF STANDS: a dexOnly node's true STAGE is still not
+  derivable from disk at all, so US-010 must source it from somewhere other than the folder tree.
+- The validator is TEST-ONLY today: nothing calls validate() at runtime, by design — the shipped
+  graph is validated before it ships. If US-010 generates nodes, run validate() over its output.
+
+Remains: US-010 onward (US-001..US-009 pass; 9/35).
