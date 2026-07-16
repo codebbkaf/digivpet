@@ -1,0 +1,584 @@
+{
+  "project": "Digimon Health V-Pet",
+  "branchName": "ralph/digimon-health-vpet",
+  "description": "Standalone watchOS SwiftUI app that converts HealthKit data (steps, active calories, sleep, exercise minutes) into four energy types that hatch, grow, and evolve a Digimon through 7 stages. Dominant energy type determines the evolution branch. Includes feeding, training, battles, sickness, death and rebirth. Sprites are 48x64 PNGs = 3x4 grid of 16x16 frames (12 frames: walk1, walk2, eat1, eat2, sleep1, sleep2, refuse, happy, angry, hurt1, hurt2, attack). Source PRD: tasks/prd-digimon-health-vpet.md",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Create watchOS project via XcodeGen spec",
+      "description": "As a developer, I need a standalone watchOS app target defined as a text spec so the project can be generated and built reproducibly.",
+      "acceptanceCriteria": [
+        "Install xcodegen if missing (brew install xcodegen)",
+        "Create project.yml defining a standalone watchOS app target named DigiVPet, SwiftUI lifecycle, no iOS companion target",
+        "Deployment target set to watchOS 10.0",
+        "Info.plist includes NSHealthShareUsageDescription with a reason string",
+        "Running 'xcodegen generate' produces DigiVPet.xcodeproj with no errors",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 1,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Bundle sprite folder and add SpriteLoader",
+      "description": "As a developer, I need sprites bundled as a folder reference so they can be loaded by path at runtime.",
+      "acceptanceCriteria": [
+        "Add '16x16 Digimon Sprites' to the target as a folder reference (NOT an asset catalog) preserving stage subfolders",
+        "SpriteLoader.load(name:stage:) returns a non-nil image for stage 'Child', name 'Agumon'",
+        "SpriteLoader returns nil (never crashes) for a missing file",
+        "Unit test asserts Child/Agumon.png loads and a bogus name returns nil",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 2,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Add SpriteFrame enum and sheet slicing",
+      "description": "As a developer, I need to slice a 48x64 sheet into its 12 named frames so any Digimon can be rendered.",
+      "acceptanceCriteria": [
+        "SpriteFrame enum with 12 cases mapped to indices 0-11: walk1=0, walk2=1, eat1=2, eat2=3, sleep1=4, sleep2=5, refuse=6, happy=7, angry=8, hurt1=9, hurt2=10, attack=11",
+        "Slicing computes x = (index % 3) * 16, y = (index / 3) * 16, size 16x16",
+        "Handles 48x16 Digitama sheets as 3 frames without crashing",
+        "Unit test asserts frame 11 (attack) slices to rect (32, 48, 16, 16)",
+        "Unit test asserts a 48x16 Digitama sheet yields exactly 3 frames",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 3,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Add DigimonSpriteView with animation loops",
+      "description": "As a developer, I need a reusable view that renders and animates sprite frames so every screen can show a Digimon.",
+      "acceptanceCriteria": [
+        "DigimonSpriteView renders a given SpriteFrame scaled up with .interpolation(.none)",
+        "Supports named loops: idle (walk1 to walk2), eat (eat1 to eat2), sleep (sleep1 to sleep2), hurt (hurt1 to hurt2)",
+        "Frame duration is 500ms and defined in one constant",
+        "Renders a placeholder view when the sprite is missing",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "Add SwiftData persistence model",
+      "description": "As a developer, I need game state saved on-device so the Digimon survives app restarts.",
+      "acceptanceCriteria": [
+        "SwiftData model GameState with: currentDigimonId, stage, stageEnergy (4 values), lifetimeEnergy (4 values), birthDate, stageEnteredDate, careMistakeCount, hunger, strengthStat, healthStatus, battleWins, battleLosses",
+        "Model persists and reloads across app relaunch",
+        "resetGame() clears state back to a new Digitama",
+        "Unit test asserts save then load round-trips all fields",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 5,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Define evolutions.json schema and Swift models",
+      "description": "As a developer, I need the evolution tree as external data so the roster extends without code changes.",
+      "acceptanceCriteria": [
+        "evolutions.json schema documented with node fields: id, displayName, stage, spriteFile, variant, evolutions[]",
+        "Each edge carries: to, requiredEnergy (strength|vitality|spirit|stamina), minEnergy, maxCareMistakes, optional minBattleWins, optional isDefault",
+        "Schema supports multiple edges per node (branching) and multiple parents per node (converging)",
+        "Codable Swift models decode the file at launch",
+        "Unit test decodes a small fixture with a branching node and asserts both edges parse",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 6,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "Seed evolution data for three complete lines",
+      "description": "As a developer, I need real seed data so the whole loop can be exercised end-to-end before the full roster exists.",
+      "acceptanceCriteria": [
+        "evolutions.json contains 3 complete lines, each with Digitama, Baby I, Baby II, Child, Adult, Perfect, Ultimate",
+        "Line 1: Agumon to Greymon to MetalGreymon to WarGreymon",
+        "Line 2: Gabumon to Garurumon to WereGarurumon to MetalGarurumon",
+        "Line 3: Palmon to Togemon to Lilimon to Rosemon (Baby forms Yuramon, Tanemon)",
+        "Every node's spriteFile matches a real file that exists on disk under '16x16 Digimon Sprites'",
+        "Every node uses a 48x64 animated sheet from a stage folder — never an 'Idle Frame Only' sprite, since 157 of those have no animated sheet (e.g. Poyomon), which is why the Patamon line is NOT usable as seed data",
+        "At least one node has 2+ outgoing edges with different requiredEnergy values (branching is exercised)",
+        "Every non-terminal node has exactly one edge marked isDefault",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 7,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "Add evolution graph validator",
+      "description": "As a developer, I need the graph validated at build time so a broken edge fails the tests instead of the app.",
+      "acceptanceCriteria": [
+        "Validator reports edges whose 'to' references an unknown node id",
+        "Validator reports nodes whose spriteFile does not exist on disk",
+        "Validator reports stage transitions that skip a stage",
+        "Validator reports non-terminal nodes with no isDefault edge",
+        "Validator runs as a unit test against the real evolutions.json and fails the build on any error",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 8,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "Add roster import script",
+      "description": "As a developer, I need a script that generates node boilerplate from sprite filenames so 2270 nodes are not hand-typed.",
+      "acceptanceCriteria": [
+        "Script (scripts/import_roster.py) walks the sprite folders and emits a JSON node per sprite with id, displayName, stage, spriteFile",
+        "Parses variant suffixes (_X, _Black, _Blue, _Virus, _2006, _2010, _YnK) into a 'variant' field",
+        "Strips stage-disambiguating suffixes (_Child, _Adult) from displayName",
+        "Re-running the script merges with existing hand-authored evolutions[] edges without clobbering them",
+        "Script prints a summary count per stage and a list of Digitama it could not match to a Child form",
+        "Script flags Digimon that exist only in 'Idle Frame Only' with no animated stage sheet (157 expected) and marks them dexOnly: true so the evolution engine never selects them as playable",
+        "Script documented in README.md",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 9,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Add HealthKit authorization flow",
+      "description": "As a user, I want to grant health access on first launch so the app can feed my Digimon.",
+      "acceptanceCriteria": [
+        "Requests read-only authorization for stepCount, activeEnergyBurned, sleepAnalysis, appleExerciseTime",
+        "Onboarding screen explains what is read and that data never leaves the watch, shown BEFORE the system prompt",
+        "Denial shows an explanatory state with guidance to Settings and does not crash or hang",
+        "Partial authorization is handled: unavailable types read zero rather than erroring",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 10,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Query today's steps, calories and exercise",
+      "description": "As a developer, I need current-day health values so they can be converted into energy.",
+      "acceptanceCriteria": [
+        "Queries stepCount, activeEnergyBurned and appleExerciseTime for today from local-timezone midnight",
+        "Each value exposes a 'no data' state distinct from a real zero",
+        "Unit test with fixture samples asserts only today's samples are summed and yesterday's are excluded",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 11,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Query last night's sleep with windowing and dedup",
+      "description": "As a developer, I need reliable sleep minutes so Spirit energy is accurate.",
+      "acceptanceCriteria": [
+        "Queries sleepAnalysis in the window 18:00 previous day to 12:00 today and selects the longest asleep block",
+        "Sums only asleepCore, asleepDeep, asleepREM, asleepUnspecified; excludes inBed and awake",
+        "De-duplicates overlapping samples from multiple sources so time is never double-counted",
+        "Unit test asserts inBed samples are excluded from the total",
+        "Unit test asserts two overlapping sources produce the union, not the sum",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 12,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Convert health metrics to energy with delta crediting",
+      "description": "As a user, I want my activity to become energy so my Digimon grows from what I actually did.",
+      "acceptanceCriteria": [
+        "EnergyRates constants file defines: 1 Strength per 100 steps, 1 Vitality per 20 active kcal, 1 Spirit per 15 min asleep, 1 Stamina per 2 exercise minutes",
+        "Energy is credited only for the delta since the last read; reopening the app never double-credits",
+        "Daily cap of 100 points per energy type per day is enforced",
+        "Energy accrues to both stageEnergy and lifetimeEnergy",
+        "Unit test asserts reading twice with no new health data credits zero the second time",
+        "Unit test asserts the 100/day cap holds when a huge sample arrives",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 13,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Compute dominant energy type",
+      "description": "As a developer, I need the dominant energy type so the evolution engine can pick a branch.",
+      "acceptanceCriteria": [
+        "Dominant energy = the type with the highest stageEnergy total",
+        "Ties are broken by the most recently incremented type",
+        "Returns nil when all four totals are zero",
+        "Unit test covers a clear winner, a two-way tie broken by recency, and the all-zero case",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Build main screen with Digimon and stage info",
+      "description": "As a user, I want to open the app and see my Digimon so I know how it is doing.",
+      "acceptanceCriteria": [
+        "Digimon renders center-screen using DigimonSpriteView with the idle loop",
+        "Stage name and Digimon display name are shown",
+        "Refreshes health data when scenePhase becomes .active",
+        "Layout has no clipping at 41mm or 49mm",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator at 41mm and 49mm (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "Add four energy bars to main screen",
+      "description": "As a user, I want to see my four energy types so I know what is feeding my Digimon.",
+      "acceptanceCriteria": [
+        "Four bars or pip rows rendered with symbols: Strength=力, Vitality=活, Spirit=心, Stamina=耐",
+        "Each shows progress toward the current node's next evolution minEnergy",
+        "The dominant energy type is visually distinguished from the other three",
+        "Layout has no clipping at 41mm",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Implement egg hatching",
+      "description": "As a new user, I want to start with an egg that hatches from my activity so my first Digimon feels earned.",
+      "acceptanceCriteria": [
+        "New game starts at a randomly selected Digitama node animating its 3 frames",
+        "Hatches when total energy across all four types reaches 50",
+        "Hatch resolves to the Baby I form linked to that Digitama in the graph",
+        "Hatched Digimon is written to persistence and recorded in the Dex",
+        "Unit test asserts 49 total energy does not hatch and 50 does",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Implement evolution edge evaluation",
+      "description": "As a user, I want my Digimon to evolve based on which energy I earned most so my habits shape the outcome.",
+      "acceptanceCriteria": [
+        "On each energy update the engine evaluates the current node's outgoing edges",
+        "An edge qualifies only if dominant energy matches requiredEnergy AND stageEnergy >= minEnergy AND careMistakes <= maxCareMistakes AND battleWins >= minBattleWins when set",
+        "When multiple edges qualify, the one with the highest minEnergy wins",
+        "Evolution resets stageEnergy to zero, preserves lifetimeEnergy, sets stageEnteredDate, and adds to the Dex",
+        "Unit test asserts strength-dominant and spirit-dominant states from the same node produce different results",
+        "Unit test asserts an edge is blocked when careMistakes exceeds maxCareMistakes",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Add evolution time gating and default fallback",
+      "description": "As a user, I want stages to take real time so my Digimon cannot skip its whole life in one session.",
+      "acceptanceCriteria": [
+        "Minimum time-in-stage enforced: 24h for Baby I and Baby II, 72h for Child and above",
+        "No evolution occurs before the time gate even when energy thresholds are met",
+        "When the time gate has passed and no edge qualifies, the node's isDefault edge is taken so a Digimon is never permanently stuck",
+        "Time thresholds live in one constants file",
+        "Clock is injectable so tests do not wait real hours",
+        "Unit test with a mock clock asserts no evolution at 23h and evolution at 25h for a Baby I",
+        "Unit test asserts the default edge fires when no edge qualifies after the gate",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "Add evolution animation and haptic",
+      "description": "As a user, I want a moment of ceremony when my Digimon evolves so the payoff feels real.",
+      "acceptanceCriteria": [
+        "Full-screen animation plays: old sprite, flash or silhouette, new sprite",
+        "WKInterfaceDevice haptic .success fires at the reveal",
+        "New Digimon name is announced on screen",
+        "Animation triggers on app open if the evolution happened while the app was closed",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-021",
+      "title": "Build Digimon Dex screen",
+      "description": "As a user, I want to see every Digimon I have raised so I have a reason to try different habits.",
+      "acceptanceCriteria": [
+        "Scrollable LazyVGrid of discovered Digimon using 'Idle Frame Only' 16x16 sprites",
+        "Undiscovered entries render a silhouette or ? placeholder",
+        "Tapping an entry shows name, stage, and date first obtained",
+        "Header shows discovered/total count",
+        "Images load lazily; the full roster is never decoded eagerly",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Add hunger that increases over real time",
+      "description": "As a developer, I need hunger to grow with elapsed time so feeding has a purpose.",
+      "acceptanceCriteria": [
+        "Hunger increases one unit per 4 hours of elapsed real time, computed from the last-updated timestamp",
+        "Hunger is capped at a max value defined in the constants file",
+        "Hunger is correct after the app has been closed for days (computed from elapsed time, not ticks)",
+        "Unit test with a mock clock asserts 12 elapsed hours adds exactly 3 hunger units",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Add feeding action with refuse behavior",
+      "description": "As a user, I want to spend earned energy feeding my Digimon so my activity has a direct use.",
+      "acceptanceCriteria": [
+        "Feed button costs Vitality energy and reduces hunger by one unit",
+        "Plays the eat loop (eat1 to eat2) with a light haptic",
+        "Feeding at zero hunger plays the refuse frame (index 6) and consumes no energy",
+        "Feeding is blocked with a visible reason when the Digimon is asleep",
+        "Unit test asserts feeding at zero hunger consumes no energy and increments the refusal count",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Add training action",
+      "description": "As a user, I want to train my Digimon so I can steer it toward stronger evolutions.",
+      "acceptanceCriteria": [
+        "Train button costs Strength or Stamina energy and raises the strengthStat",
+        "Plays the attack frame (index 11) with a haptic",
+        "Training is blocked with a visible reason when the Digimon is asleep or sick",
+        "Unit test asserts training raises strengthStat and deducts the correct energy",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "Mirror real sleep with sleep state",
+      "description": "As a user, I want my Digimon asleep when I am asleep so it mirrors my life.",
+      "acceptanceCriteria": [
+        "Digimon shows sleep frames (4 and 5) during the sleep window inferred from HealthKit sleep history",
+        "Falls back to a fixed 22:00-07:00 window when sleep history is unavailable",
+        "A sleeping Digimon does not idle-animate and cannot be fed or trained",
+        "Unit test asserts isAsleep is true inside the window and false outside it",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-026",
+      "title": "Track care mistakes",
+      "description": "As a developer, I need care mistakes recorded so neglect can gate evolution and cause sickness.",
+      "acceptanceCriteria": [
+        "Care mistake recorded for: a full day with no health data, hunger at max for 8h or more, 3+ refusals in one day, waking the Digimon early",
+        "careMistakeCount persists and is computed from elapsed real time on launch",
+        "Clock is injectable for tests",
+        "Unit test asserts hunger at max for 9 mock hours records exactly one care mistake",
+        "Unit test asserts a day with no health data records exactly one care mistake",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Add sickness state and cure",
+      "description": "As a user, I want neglect to visibly harm my Digimon so care has stakes.",
+      "acceptanceCriteria": [
+        "3 accumulated care mistakes sets healthStatus to sick",
+        "A sick Digimon shows the angry frame (index 8), does not idle-animate, and evolution is paused",
+        "Sickness cures when the user earns 30 or more energy in a day, resetting care mistakes to zero",
+        "Unit test asserts 3 care mistakes triggers sick and 30 energy in a day cures it",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Add death, memorial and rebirth",
+      "description": "As a user, I want real stakes so that neglecting my Digimon has a lasting consequence.",
+      "acceptanceCriteria": [
+        "A Digimon sick and untreated for 72 hours dies",
+        "Memorial screen shows name, lifespan in days, and final stats",
+        "Dismissing the memorial starts a new random Digitama",
+        "lifetimeEnergy totals and the Dex survive death and are never wiped",
+        "All time thresholds live in the constants file",
+        "Unit test with a mock clock asserts death at 72h sick and no death at 71h",
+        "Unit test asserts the Dex is intact after death",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Compute battle power from health stats",
+      "description": "As a developer, I need battle power derived from real activity so fitness translates into strength.",
+      "acceptanceCriteria": [
+        "Battle power is a pure function of stage, strengthStat and lifetimeEnergy totals",
+        "Formula documented in a comment with each term's weight",
+        "Unit test asserts a higher stage and higher strengthStat produce higher power",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Add turn-based battle resolution and animation",
+      "description": "As a user, I want to battle AI opponents so my Digimon's power has an outlet.",
+      "acceptanceCriteria": [
+        "Opponent is selected from the roster near the player's stage",
+        "Turn-based resolution runs off an injectable seeded RNG",
+        "Attacker plays the attack frame (11), defender plays the hurt loop (9 to 10)",
+        "Result screen shows the happy frame (7) on a win or a hurt frame on a loss, with a haptic",
+        "Losing never causes death or a care mistake",
+        "Unit test with a seeded RNG asserts a deterministic winner",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Add battle daily limit and win/loss record",
+      "description": "As a developer, I need battles capped and recorded so they cannot be farmed and can gate evolution.",
+      "acceptanceCriteria": [
+        "Battles are limited to 5 per day, with the counter resetting at local midnight",
+        "battleWins and battleLosses persist and are readable by the evolution engine's minBattleWins check",
+        "The battle button is disabled with a visible reason once the daily limit is hit",
+        "Unit test asserts the 6th battle in a day is refused and the counter resets the next day",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-032",
+      "title": "Add background refresh and HealthKit observers",
+      "description": "As a user, I want energy to accrue without opening the app so the Digimon feels alive.",
+      "acceptanceCriteria": [
+        "WKApplicationRefreshBackgroundTask scheduled to update energy and evaluate evolution and sickness",
+        "HKObserverQuery with background delivery registered for stepCount and activeEnergyBurned",
+        "All time-based state recomputes correctly from elapsed time on launch even if background refresh never ran",
+        "Unit test asserts state after a simulated 48h closure matches state as if the app had been open",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-033",
+      "title": "Add WidgetKit complication",
+      "description": "As a user, I want my Digimon on my watch face so I see it all day.",
+      "acceptanceCriteria": [
+        "Widget extension target added to project.yml and generated by xcodegen",
+        "Complication renders the current Digimon's 16x16 idle sprite",
+        "Supports .accessoryCircular and .accessoryRectangular families",
+        "Rectangular family shows sprite plus dominant energy progress",
+        "Tapping the complication opens the app",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-034",
+      "title": "Add local notifications with settings toggles",
+      "description": "As a user, I want to be told when something important happens so I do not lose my Digimon to neglect.",
+      "acceptanceCriteria": [
+        "Local notification fires on evolution",
+        "Local notification fires on sickness onset and 24h before death",
+        "Each notification type is individually toggleable in a settings screen, default on",
+        "No notification fires while the Digimon is asleep except the death warning",
+        "Unit test asserts a notification is suppressed during the sleep window but the death warning is not",
+        "Tests pass",
+        "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
+        "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": ""
+    }
+  ]
+}

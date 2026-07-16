@@ -1,0 +1,19 @@
+# macOS
+.DS_Store
+
+# Xcode — project is generated from project.yml by xcodegen
+*.xcodeproj
+*.xcworkspace
+!*.xcodeproj/project.pbxproj.keep
+xcuserdata/
+DerivedData/
+build/
+*.xcuserstate
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# Ralph runtime state
+.last-branch
