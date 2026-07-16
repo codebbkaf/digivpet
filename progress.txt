@@ -27,3 +27,45 @@ Notes for next iterations:
 - Xcode 26.4 accepts watchOS 10.0 deployment fine; RECOMMENDED_WATCHOS_DEPLOYMENT_TARGET is 8.0.
 
 Remains: US-002 onward (all still passes: false except US-003, done pre-Ralph).
+
+## 2026-07-17 — US-002: Bundle sprite folder and add SpriteLoader — PASSES
+
+Did:
+- project.yml: added "16x16 Digimon Sprites" as `type: folder` + `buildPhase: resources`
+  (a folder reference — NOT an asset catalog).
+- Sources/SpriteLoader.swift: `url(stage:name:in:)` and `loadSheet(stage:name:in:)`.
+  Decodes with CGImageSourceCreateWithURL; returns nil on missing/undecodable, never crashes.
+  The bundle is an injectable param defaulting to .main.
+- Added the FIRST test target: DigiVPetTests (bundle.unit-test, watchOS 10.0, sources Tests/,
+  TEST_HOST + BUNDLE_LOADER pointing at DigiVPet.app/DigiVPet), and wired scheme testTargets.
+  Used XCTest, not Swift Testing (deployment target is watchOS 10.0).
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 6 tests, 0 failures.
+- Inspected the built .app directly: "16x16 Digimon Sprites/Child/Agumon.png" present with
+  stage subfolders intact, NO Assets.car (so it is genuinely a folder reference), and
+  sprites_cut/ is NOT in the bundle.
+- Child/Agumon loads at 48x64; Digitama/Agu_Digitama loads at 48x16; bogus names return nil.
+
+TWO REAL BUGS FOUND — later iterations should know both:
+1. **WKWatchOnly: true was missing from Info.plist.** WKApplication alone BUILDS FINE but the
+   app FAILS TO INSTALL: "This app does not indicate that it is Watch-only ... must specify
+   WKCompanionAppBundleIdentifier". US-001 marked the plist verified, but it only ever ran
+   `build` — install is what exposes this. Fixed in project.yml. Any story that runs tests or
+   the Simulator depends on this key; do not remove it.
+2. **`Bundle.url(forResource:)` returns an ARBITRARY png for an empty name.** It treats "" like
+   nil, so `loadSheet(stage:"Child", name:"")` returned Morphomon, and stage "" returned
+   "Pendulum Cycle.png" — a blank spriteFile would have silently loaded the WRONG Digimon
+   instead of failing. SpriteLoader now guards `!name.isEmpty && !stage.isEmpty`. The US-009
+   graph validator should treat an empty spriteFile as an error, not rely on a nil load.
+
+Notes for next iterations:
+- SpriteLoader deliberately only decodes WHOLE sheets. US-004 owns slicing + the 12-frame cache;
+  build it on top of loadSheet rather than re-decoding.
+- Bundled sprite payload is 9.5MB. The folder reference sweeps in things the app never uses:
+  "Black and White Sprites/" (v2 at best, per PRD Non-Goals), "LCD Checklist.xlsx" (36K), and
+  "Visual Checklist.png" (404K). `type: folder` cannot exclude children. Not in any AC, so left
+  alone — worth trimming before shipping if bundle size matters.
+
+Remains: US-004 onward (US-001/002/003 pass).

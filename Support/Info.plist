@@ -24,5 +24,7 @@
 	<string>DigiVPet reads your steps, active energy, sleep and exercise minutes to feed and grow your Digimon. Your health data never leaves this watch.</string>
 	<key>WKApplication</key>
 	<true/>
+	<key>WKWatchOnly</key>
+	<true/>
 </dict>
 </plist>

@@ -33,8 +33,8 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "'16x16 Digimon Sprites' added to project.yml as type: folder (folder reference, buildPhase: resources) — verified in the built .app: stage subfolders preserved, no Assets.car, sprites_cut absent. Sources/SpriteLoader.swift exposes url(stage:name:in:) and loadSheet(stage:name:in:) (bundle injectable, defaults to .main); decodes via CGImageSourceCreateWithURL, returns nil for missing/undecodable. Added the first test target DigiVPetTests (bundle.unit-test, TEST_HOST/BUNDLE_LOADER on DigiVPet, XCTest not Swift Testing) + scheme testTargets. 6/6 tests pass, BUILD SUCCEEDED. TWO REAL BUGS FOUND AND FIXED: (1) Info.plist needed WKWatchOnly: true — WKApplication alone builds but FAILS TO INSTALL ('must specify WKCompanionAppBundleIdentifier'), which US-001 could not catch since it only ran build, never install; any story that installs/tests depends on this. (2) Bundle.url(forResource:) treats an EMPTY name like nil and returns an ARBITRARY png from the directory (stage Child yielded Morphomon), so loadSheet now guards !name.isEmpty && !stage.isEmpty — an empty spriteFile must fail loudly, relevant to the US-009 validator."
     },
     {
       "id": "US-003",

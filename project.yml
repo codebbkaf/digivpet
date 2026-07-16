@@ -13,11 +13,20 @@ targets:
     deploymentTarget: "10.0"
     sources:
       - path: Sources
+      # Folder reference (type: folder), NOT an asset catalog — stage subfolders are
+      # preserved so sheets stay addressable by path at runtime. sprites_cut/ is dev-tool
+      # output and is deliberately not listed here.
+      - path: "16x16 Digimon Sprites"
+        type: folder
+        buildPhase: resources
     info:
       path: Support/Info.plist
       properties:
         CFBundleDisplayName: DigiVPet
         WKApplication: true
+        # Required to INSTALL, not just build: without it the installer demands a
+        # WKCompanionAppBundleIdentifier. There is no iPhone companion by design.
+        WKWatchOnly: true
         NSHealthShareUsageDescription: >-
           DigiVPet reads your steps, active energy, sleep and exercise minutes to
           feed and grow your Digimon. Your health data never leaves this watch.
@@ -30,4 +39,21 @@ targets:
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
     scheme:
-      testTargets: []
+      testTargets:
+        - DigiVPetTests
+
+  DigiVPetTests:
+    type: bundle.unit-test
+    platform: watchOS
+    deploymentTarget: "10.0"
+    sources:
+      - path: Tests
+    dependencies:
+      - target: DigiVPet
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.digivpet.DigiVPetTests
+        SWIFT_VERSION: "5.0"
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/DigiVPet.app/DigiVPet"
+        BUNDLE_LOADER: "$(TEST_HOST)"
