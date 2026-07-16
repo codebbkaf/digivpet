@@ -17,3 +17,6 @@ Packages/
 
 # Ralph runtime state
 .last-branch
+
+# Generated verification output — the app slices at runtime, these are not shipped
+sprites_cut/

@@ -51,7 +51,22 @@ Frame index → source rect: `x = (index % 3) * 16`, `y = (index / 3) * 16`, siz
 
 **This layout is confirmed by pixel content, not just the xlsx.** The frames were cut and inspected: `eat1` has an open mouth, `sleep1`/`sleep2` have closed eyes, `happy` is a closed-eye cheerful pose, `angry` has an angry brow. The labels match the art.
 
-**Frames are pre-cut to disk**, not sliced at runtime. `scripts/cut_sprites.swift` (CoreGraphics, no external dependency) writes `sprites_cut/<Stage>/<Name>/01_walk1.png` … `12_attack.png`. Run `--demo` for the 3 seed lines (21 sheets → 225 frames, 98 KB); run `--all` for the full roster (865 sheets → ~10,380 frames, ~4.6 MB). Trade-off: cutting costs ~4× the bytes of the sheets (PNG per-file overhead) and turns 865 files into ~10,380. If that degrades build or launch time, the fallback is runtime slicing from the original sheets using the same math.
+### Frames are sliced at runtime — do NOT ship cut frames (benchmarked)
+
+The app bundles the **865 original sheets** and crops frames at runtime with `CGImage.cropping(to:)`. Pre-cutting frames into individual PNGs was measured and rejected:
+
+| | Runtime slicing | Pre-cut PNGs |
+|---|---|---|
+| Load 216 frames (decode only) | **1.26 ms** | 18.87 ms |
+| Load 216 frames (pixels realized) | **4.41 ms** | 27.48 ms |
+| File opens for 18 Digimon | **18** | 216 |
+| Full roster on disk | **1.2 MB / 865 files** | 4.6 MB / 10,380 files |
+
+**Why:** PNG decode cost is dominated by a *fixed* per-file overhead (file open, header parse, zlib stream init) that dwarfs the pixels in a 16×16 image — twelve tiny decodes pay it twelve times, one 48×64 decode pays it once. And `cropping(to:)` references the sheet's existing backing buffer instead of copying pixels, so the twelve crops are near-free. Pre-cutting is slower, 4× the bytes, 12× the files, and slower to build.
+
+**Implementation rule:** decode each sheet **once**, crop to 12 `CGImage`s at load, cache the array. Never re-crop per animation tick; never re-decode per frame.
+
+`scripts/cut_sprites.swift` remains as a **dev tool only** — it exports frames to `sprites_cut/` (gitignored, never bundled) for visual inspection. It earned its keep: cutting the frames is what confirmed the xlsx frame order matches the actual art, and revealed that Digitama frame 3 is the hatch.
 
 - **Digitama (eggs)** are **48×16** = 3 frames of 16×16: `idle`, `wobble`, `hatch`. **Frame 3 is the egg cracking open with the Digimon emerging** — a ready-made hatch animation (verified by cutting it).
 - **`Idle Frame Only/`** (842 files) are single **16×16** PNGs — use for the Dex list, pickers, and complications.

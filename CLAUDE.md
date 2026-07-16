@@ -63,7 +63,9 @@ xcodebuild test \
 - **Never fake, stub, or skip a test to make it green.** If a test is wrong, say so in `notes`.
 - **Never hand-edit `.xcodeproj`** — edit `project.yml`, re-run `xcodegen generate`.
 - **Sprite rendering must use `.interpolation(.none)`.** Smoothed pixel art is a bug.
-- **Sprite sheets are 48×64 = a 3×4 grid of 16×16 frames**, row-major, indices 0–11: walk1, walk2, eat1, eat2, sleep1, sleep2, refuse, happy, angry, hurt1, hurt2, attack. Digitama are 48×16 = 3 frames. Slice with `x = (i % 3) * 16`, `y = (i / 3) * 16`.
+- **Sprite sheets are 48×64 = a 3×4 grid of 16×16 frames**, row-major, indices 0–11: walk1, walk2, eat1, eat2, sleep1, sleep2, refuse, happy, angry, hurt1, hurt2, attack. Digitama are 48×16 = 3 frames (idle, wobble, hatch — frame 3 is the egg cracking open). Slice with `x = (i % 3) * 16`, `y = (i / 3) * 16`.
+- **Slice at RUNTIME with `CGImage.cropping(to:)`. Never ship pre-cut frame PNGs.** This was benchmarked: runtime slicing is 15× faster to load (1.26ms vs 18.87ms for 216 frames), uses 18 file opens instead of 216, and 1.2MB/865 files instead of 4.6MB/10,380. Decode each sheet **once**, crop to 12 CGImages at load, cache the array — never re-crop per animation tick or re-decode per frame.
+- `sprites_cut/` is gitignored dev-tool output from `scripts/cut_sprites.swift`, used only for eyeballing frames. **Do not bundle it.**
 - **Do not invent Digimon names or sprite paths.** Every `spriteFile` must exist on disk — verify with `ls` before referencing it. 157 Digimon exist ONLY in `Idle Frame Only/` with no animated sheet (e.g. Poyomon, Ankylomon, Aquilamon); those are `dexOnly` and must never be playable or appear in an evolution edge.
 - **The clock must be injectable** for anything time-based (hunger, sickness, death, stage gating). Tests must never wait real time.
 - **HealthKit has no data in the Simulator by default.** Test energy/health logic against injected fixture samples, not live queries.

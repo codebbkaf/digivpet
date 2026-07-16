@@ -22,12 +22,13 @@
     {
       "id": "US-002",
       "title": "Bundle sprite folder and add SpriteLoader",
-      "description": "As a developer, I need sprites bundled as a folder reference so they can be loaded by path at runtime.",
+      "description": "As a developer, I need the sprite sheets bundled as a folder reference so they can be loaded by path at runtime.",
       "acceptanceCriteria": [
-        "Add 'sprites_cut' to the target as a folder reference (NOT an asset catalog), preserving <Stage>/<Name>/ structure",
-        "SpriteLoader.load(path:) returns a non-nil image for sprites_cut/Child/Agumon/01_walk1.png",
+        "Add '16x16 Digimon Sprites' to the target as a folder reference (NOT an asset catalog), preserving stage subfolders",
+        "sprites_cut/ is NOT bundled — it is generated verification output, not a shipped asset",
+        "SpriteLoader.loadSheet(stage:name:) returns a non-nil CGImage for stage 'Child', name 'Agumon'",
         "SpriteLoader returns nil (never crashes) for a missing file",
-        "Unit test asserts a known frame loads and a bogus path returns nil",
+        "Unit test asserts Child/Agumon loads at 48x64 and a bogus name returns nil",
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
@@ -37,33 +38,32 @@
     },
     {
       "id": "US-003",
-      "title": "Cut demo sprite frames (3 Digimon per stage)",
-      "description": "As a developer, I need each 48x64 sheet split into its 12 individual frames so the demo Digimon can be animated from real frame files.",
+      "title": "Sprite frame verification tool",
+      "description": "As a developer, I need to export frames as individual PNGs so I can visually confirm the slicing math and frame labels are correct.",
       "acceptanceCriteria": [
-        "scripts/cut_sprites.swift slices a 48x64 sheet into 12 16x16 PNGs, row-major, using x = (i % 3) * 16, y = (i / 3) * 16",
+        "scripts/cut_sprites.swift slices a 48x64 sheet into 12 16x16 PNGs, row-major, using x = (i % 3) * 16, y = (i / 3) * 16 — the SAME math the app uses at runtime",
         "Digitama sheets (48x16) are handled as 3 frames named idle, wobble, hatch (frame 3 is the egg cracking open)",
         "Script rejects any sheet that is not 48x64 or 48x16 rather than emitting garbage frames",
-        "Running 'swift scripts/cut_sprites.swift --demo' cuts exactly 3 Digimon per stage folder: the Agumon, Gabumon and Palmon seed lines",
-        "Output is sprites_cut/<Stage>/<Name>/01_walk1.png through 12_attack.png",
-        "Demo cut produces 21 sheets / 225 frames with zero failures",
-        "Frame content matches its label (verified visually: 03_eat1 has an open mouth, 05_sleep1 has closed eyes)",
-        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
+        "'swift scripts/cut_sprites.swift --demo' cuts the 3 seed lines (Agumon, Gabumon, Palmon): 21 sheets, 225 frames, zero failures",
+        "Frame content verified against its label (03_eat1 open mouth, 05_sleep1 closed eyes)",
+        "Output sprites_cut/ is gitignored generated output and is NOT bundled into the app"
       ],
       "priority": 3,
       "passes": true,
-      "notes": "DONE (pre-Ralph, 2026-07-17). scripts/cut_sprites.swift written using CoreGraphics (no Pillow/ImageMagick dependency). Demo cut run and verified: 21 sheets -> 225 frames, 97.8 KB. Visual montage confirmed the xlsx frame order matches actual pixels. Digitama frame 3 is the hatch (egg cracking open), not a wobble."
+      "notes": "DONE (pre-Ralph, 2026-07-17). This is a DEV TOOL ONLY — the app slices at runtime; it does not ship cut frames. Benchmarked 2026-07-17 over 216 frames x50: runtime slicing 1.26ms vs pre-cut 18.87ms decode-only (15x), 4.41ms vs 27.48ms realized (6.2x); 18 file opens vs 216; full roster 1.2MB/865 files vs 4.6MB/10,380. PNG per-file decode overhead dominates at 16x16, and cropping(to:) shares the sheet's backing buffer so it is near-free. The tool earned its keep: cutting the frames is what visually confirmed the xlsx frame order matches the art, and revealed Digitama frame 3 is the hatch."
     },
     {
       "id": "US-004",
-      "title": "Add SpriteFrame enum and frame loading",
-      "description": "As a developer, I need to address the 12 pre-cut frames by name so any Digimon can be rendered.",
+      "title": "Add SpriteFrame enum and runtime sheet slicing",
+      "description": "As a developer, I need to slice a 48x64 sheet into its 12 frames at runtime so frames cost one decode instead of twelve.",
       "acceptanceCriteria": [
         "SpriteFrame enum with 12 cases mapped to indices 0-11: walk1=0, walk2=1, eat1=2, eat2=3, sleep1=4, sleep2=5, refuse=6, happy=7, angry=8, hurt1=9, hurt2=10, attack=11",
-        "Each case maps to its cut filename, e.g. .attack -> '12_attack.png'",
-        "SpriteLoader.frame(name:stage:frame:) loads from sprites_cut/<Stage>/<Name>/ and returns nil (never crashes) when absent",
-        "Digitama expose only idle, wobble and hatch; requesting .attack on an egg returns nil rather than crashing",
-        "Unit test asserts Child/Agumon .attack loads and is 16x16",
-        "Unit test asserts a Digitama returns nil for .attack",
+        "Slicing uses CGImage.cropping(to:) with x = (index % 3) * 16, y = (index / 3) * 16, size 16x16",
+        "The sheet is decoded ONCE per Digimon and the 12 cropped CGImages are cached in an array — never re-crop per animation tick, and never re-decode the sheet per frame",
+        "Handles 48x16 Digitama sheets as 3 frames (idle, wobble, hatch); requesting .attack on an egg returns nil rather than crashing",
+        "Unit test asserts frame 11 (attack) slices to rect (32, 48, 16, 16)",
+        "Unit test asserts a 48x16 Digitama yields exactly 3 frames",
+        "Unit test asserts loading a Digimon twice decodes the sheet only once (cache is hit)",
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
@@ -158,24 +158,6 @@
     },
     {
       "id": "US-010",
-      "title": "Cut all sprite frames for the full roster",
-      "description": "As a developer, I need every animated sheet cut into frames so the full roster can be rendered.",
-      "acceptanceCriteria": [
-        "GATED: do not start this until the demo Digimon renders and animates on screen (US-005) and the seed evolution lines work (US-009)",
-        "Running 'swift scripts/cut_sprites.swift --all' cuts every 48x64 sheet across all 7 stage folders",
-        "Produces approximately 10,380 frames from 865 animated sheets with zero failures",
-        "Script reports any sheet with an unexpected size instead of silently emitting bad frames",
-        "The 157 idle-only Digimon (no animated sheet, e.g. Poyomon) are skipped and listed in the output",
-        "Bundle impact measured and recorded in notes (expected ~4.6 MB actual across ~10,380 files)",
-        "If the file count degrades build or launch time, note it and propose reverting to runtime slicing from the 865 sheets instead",
-        "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
-      ],
-      "priority": 10,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-011",
       "title": "Add roster import script",
       "description": "As a developer, I need a script that generates node boilerplate from sprite filenames so 2270 nodes are not hand-typed.",
       "acceptanceCriteria": [
@@ -188,12 +170,12 @@
         "Script documented in README.md",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 11,
+      "priority": 10,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-012",
+      "id": "US-011",
       "title": "Add HealthKit authorization flow",
       "description": "As a user, I want to grant health access on first launch so the app can feed my Digimon.",
       "acceptanceCriteria": [
@@ -204,12 +186,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 12,
+      "priority": 11,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-013",
+      "id": "US-012",
       "title": "Query today's steps, calories and exercise",
       "description": "As a developer, I need current-day health values so they can be converted into energy.",
       "acceptanceCriteria": [
@@ -219,12 +201,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 13,
+      "priority": 12,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-014",
+      "id": "US-013",
       "title": "Query last night's sleep with windowing and dedup",
       "description": "As a developer, I need reliable sleep minutes so Spirit energy is accurate.",
       "acceptanceCriteria": [
@@ -236,12 +218,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 14,
+      "priority": 13,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-015",
+      "id": "US-014",
       "title": "Convert health metrics to energy with delta crediting",
       "description": "As a user, I want my activity to become energy so my Digimon grows from what I actually did.",
       "acceptanceCriteria": [
@@ -254,12 +236,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 15,
+      "priority": 14,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-016",
+      "id": "US-015",
       "title": "Compute dominant energy type",
       "description": "As a developer, I need the dominant energy type so the evolution engine can pick a branch.",
       "acceptanceCriteria": [
@@ -270,12 +252,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 16,
+      "priority": 15,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-017",
+      "id": "US-016",
       "title": "Build main screen with Digimon and stage info",
       "description": "As a user, I want to open the app and see my Digimon so I know how it is doing.",
       "acceptanceCriteria": [
@@ -286,12 +268,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator at 41mm and 49mm (xcrun simctl io booted screenshot)"
       ],
-      "priority": 17,
+      "priority": 16,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-018",
+      "id": "US-017",
       "title": "Add four energy bars to main screen",
       "description": "As a user, I want to see my four energy types so I know what is feeding my Digimon.",
       "acceptanceCriteria": [
@@ -302,12 +284,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 18,
+      "priority": 17,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-019",
+      "id": "US-018",
       "title": "Implement egg hatching",
       "description": "As a new user, I want to start with an egg that hatches from my activity so my first Digimon feels earned.",
       "acceptanceCriteria": [
@@ -319,12 +301,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 19,
+      "priority": 18,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-020",
+      "id": "US-019",
       "title": "Implement evolution edge evaluation",
       "description": "As a user, I want my Digimon to evolve based on which energy I earned most so my habits shape the outcome.",
       "acceptanceCriteria": [
@@ -337,12 +319,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 20,
+      "priority": 19,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-021",
+      "id": "US-020",
       "title": "Add evolution time gating and default fallback",
       "description": "As a user, I want stages to take real time so my Digimon cannot skip its whole life in one session.",
       "acceptanceCriteria": [
@@ -356,12 +338,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 21,
+      "priority": 20,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-022",
+      "id": "US-021",
       "title": "Add evolution animation and haptic",
       "description": "As a user, I want a moment of ceremony when my Digimon evolves so the payoff feels real.",
       "acceptanceCriteria": [
@@ -372,12 +354,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 22,
+      "priority": 21,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-023",
+      "id": "US-022",
       "title": "Build Digimon Dex screen",
       "description": "As a user, I want to see every Digimon I have raised so I have a reason to try different habits.",
       "acceptanceCriteria": [
@@ -389,12 +371,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 23,
+      "priority": 22,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-024",
+      "id": "US-023",
       "title": "Add hunger that increases over real time",
       "description": "As a developer, I need hunger to grow with elapsed time so feeding has a purpose.",
       "acceptanceCriteria": [
@@ -405,12 +387,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 24,
+      "priority": 23,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-025",
+      "id": "US-024",
       "title": "Add feeding action with refuse behavior",
       "description": "As a user, I want to spend earned energy feeding my Digimon so my activity has a direct use.",
       "acceptanceCriteria": [
@@ -423,12 +405,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 25,
+      "priority": 24,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-026",
+      "id": "US-025",
       "title": "Add training action",
       "description": "As a user, I want to train my Digimon so I can steer it toward stronger evolutions.",
       "acceptanceCriteria": [
@@ -440,12 +422,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 26,
+      "priority": 25,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-027",
+      "id": "US-026",
       "title": "Mirror real sleep with sleep state",
       "description": "As a user, I want my Digimon asleep when I am asleep so it mirrors my life.",
       "acceptanceCriteria": [
@@ -457,12 +439,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 27,
+      "priority": 26,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-028",
+      "id": "US-027",
       "title": "Track care mistakes",
       "description": "As a developer, I need care mistakes recorded so neglect can gate evolution and cause sickness.",
       "acceptanceCriteria": [
@@ -474,12 +456,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 28,
+      "priority": 27,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-029",
+      "id": "US-028",
       "title": "Add sickness state and cure",
       "description": "As a user, I want neglect to visibly harm my Digimon so care has stakes.",
       "acceptanceCriteria": [
@@ -491,12 +473,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 29,
+      "priority": 28,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-030",
+      "id": "US-029",
       "title": "Add death, memorial and rebirth",
       "description": "As a user, I want real stakes so that neglecting my Digimon has a lasting consequence.",
       "acceptanceCriteria": [
@@ -511,12 +493,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 30,
+      "priority": 29,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-031",
+      "id": "US-030",
       "title": "Compute battle power from health stats",
       "description": "As a developer, I need battle power derived from real activity so fitness translates into strength.",
       "acceptanceCriteria": [
@@ -526,12 +508,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 31,
+      "priority": 30,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-032",
+      "id": "US-031",
       "title": "Add turn-based battle resolution and animation",
       "description": "As a user, I want to battle AI opponents so my Digimon's power has an outlet.",
       "acceptanceCriteria": [
@@ -545,12 +527,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 32,
+      "priority": 31,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-033",
+      "id": "US-032",
       "title": "Add battle daily limit and win/loss record",
       "description": "As a developer, I need battles capped and recorded so they cannot be farmed and can gate evolution.",
       "acceptanceCriteria": [
@@ -562,12 +544,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 33,
+      "priority": 32,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-034",
+      "id": "US-033",
       "title": "Add background refresh and HealthKit observers",
       "description": "As a user, I want energy to accrue without opening the app so the Digimon feels alive.",
       "acceptanceCriteria": [
@@ -578,12 +560,12 @@
         "Tests pass",
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
-      "priority": 34,
+      "priority": 33,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-035",
+      "id": "US-034",
       "title": "Add WidgetKit complication",
       "description": "As a user, I want my Digimon on my watch face so I see it all day.",
       "acceptanceCriteria": [
@@ -595,12 +577,12 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 35,
+      "priority": 34,
       "passes": false,
       "notes": ""
     },
     {
-      "id": "US-036",
+      "id": "US-035",
       "title": "Add local notifications with settings toggles",
       "description": "As a user, I want to be told when something important happens so I do not lose my Digimon to neglect.",
       "acceptanceCriteria": [
@@ -613,7 +595,7 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)",
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
-      "priority": 36,
+      "priority": 35,
       "passes": false,
       "notes": ""
     }
