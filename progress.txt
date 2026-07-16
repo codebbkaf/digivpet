@@ -291,3 +291,73 @@ DESIGN NOTES — later stories depend on these:
   adds the Gabumon and Palmon lines plus the 2+ edge branching node.
 
 Remains: US-008 onward (US-001..US-007 pass; 7/35).
+
+## 2026-07-17 — US-008: Seed evolution data for three complete lines — PASSES
+
+Did:
+- Resources/evolutions.json: 22 nodes replacing the 4-node US-007 seed. Three COMPLETE lines,
+  Digitama -> Baby I -> Baby II -> Child -> Adult -> Perfect -> Ultimate:
+    Agu_Digitama  -> Botamon -> Koromon  -> Agumon -> Greymon   -> MetalGreymon   -> WarGreymon
+    Gabu_Digitama -> Punimon -> Tsunomon -> Gabumon-> Garurumon -> WereGarurumon  -> MetalGarurumon
+    Pal_Digitama  -> Yuramon -> Tanemon  -> Palmon -> Togemon   -> Lilimon        -> Rosemon
+  Plus Meramon (Adult), the 22nd node, as the branch target.
+- Tests/SeedRosterTests.swift (8 tests). It tests the SHIPPED DATA; EvolutionGraphTests keeps
+  owning the model against its fixture. US-009 still owns general validation — these are the
+  US-008 criteria specifically.
+- No project.yml change: Resources/ and Tests/ are globs, so xcodegen picked both up.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 59 tests (8 new), 0 failures.
+- All 21 seed sprites checked with ls + sips BEFORE authoring: the 3 Digitama are 48x16, the
+  other 18 are 48x64, every one under a real stage folder. The demo list in
+  scripts/cut_sprites.swift named them, but I re-verified rather than trusting it.
+- Built .app carries the 22-node evolutions.json. Tests run inside the app (TEST_HOST) and
+  load through Bundle.main, so launch-decode of the bigger graph is covered.
+- Cross-checked the file independently of Swift: 0 spriteFiles missing on disk, 0 edges pointing
+  at unknown ids, exactly 3 terminal nodes (the 3 Ultimates), stages 3/3/3/3/4/3/3.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION — a data test that reads the real file is easy to fake, so
+each AC test was made to FAIL on purpose (file restored byte-identical after every run):
+1. botamon spriteFile -> "Poyomon" (idle-only, no animated sheet in Baby I/):
+   -> testEverySeedNodeHasAnAnimatedSheetWithTheRightFrameCount + the US-007 sprite test go red.
+2. delete greymon's isDefault:
+   -> testEveryNonTerminalNodeHasExactlyOneDefaultEdge AND both line-completeness tests go red.
+3. collapse the Agumon branch to strength/strength:
+   -> testAtLeastOneNodeBranchesOnDominantEnergy + testAgumonBranchesOnStrengthOrStamina go red.
+
+MUTATION 3 FOUND A REAL BUG IN MY OWN TEST — the reason mutation testing was worth the time:
+- testAgumonBranchesOnStrengthOrStamina built a Dictionary(uniqueKeysWithValues:) keyed on
+  requiredEnergy. Two edges sharing an energy is EXACTLY the condition the test exists to catch,
+  and it made the dictionary TRAP: "Fatal error: Duplicate values for key: 'strength'". That
+  killed the TEST HOST, so only 33 of 59 tests ran — the precise failure US-007's note warns
+  about. The suite still went red (via the other branch test), so the AC was never unprotected,
+  but the diagnostic would have been near-useless.
+- Rewritten to first(where:) plus a Set-count assertion. Re-ran the identical mutation: 0 crashes,
+  all 59 tests run, and it now fails cleanly with a real message. LESSON: in a test that asserts a
+  uniqueness property, never build the trapping construct out of the thing you are asserting.
+
+DESIGN NOTES — later stories depend on these:
+- Energy per line uses all four types: line 1 strength (steps), line 2 vitality (kcal),
+  line 3 spirit (sleep); stamina (exercise) gates Agumon -> Meramon.
+- THE BRANCH: Agumon -> Greymon (strength, isDefault) | Meramon (stamina). Meramon converges back
+  into MetalGreymon, so it is a detour, not a dead end — no line acquires an Ultimate-less tail.
+  parents(of: "metalgreymon") == [greymon, meramon] is asserted.
+- **Thresholds on single-edge nodes are ADVISORY, and this is inherent, not sloppy data.** Per
+  US-020 the isDefault edge fires once the time gate passes and nothing qualifies, so a node with
+  one edge always takes it. Only the Agumon branch has data that actually decides an outcome.
+  US-019 should not expect the seed to block progress on minEnergy alone.
+- **No seed edge sets minBattleWins, deliberately.** Every non-terminal seed node's default edge
+  is its only battle-gateable edge, and per the point above the default fires regardless — so a
+  minBattleWins there would be a lie a later reader would "fix" the engine to respect. US-019's
+  minBattleWins AC needs a fixture, not the seed. Add a real one only alongside a non-default
+  edge (e.g. a second Perfect->Ultimate branch).
+- maxCareMistakes graded 5/4/3/2/2 up the ladder. Note US-028 makes 3 mistakes = sick = evolution
+  paused, so 0-2 is the live range; values above 3 are effectively permissive.
+- Digitama hatch edges keep requiredEnergy nil + minEnergy 50 + maxCareMistakes 99, per the US-007
+  note: US-018 hatches on TOTAL energy, and neglect must never be able to block hatching.
+  testOnlyDigitamaEdgesOmitRequiredEnergy pins both halves of that rule.
+- ContentView still prints "graph: N nodes" (now 22) — it remains the temporary US-005 demo
+  harness that US-016 replaces.
+
+Remains: US-009 onward (US-001..US-008 pass; 8/35).

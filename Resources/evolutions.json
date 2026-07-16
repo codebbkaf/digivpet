@@ -24,7 +24,7 @@
           "to": "koromon",
           "requiredEnergy": "strength",
           "minEnergy": 20,
-          "maxCareMistakes": 3,
+          "maxCareMistakes": 5,
           "isDefault": true
         }
       ]
@@ -39,7 +39,7 @@
           "to": "agumon",
           "requiredEnergy": "strength",
           "minEnergy": 30,
-          "maxCareMistakes": 3,
+          "maxCareMistakes": 4,
           "isDefault": true
         }
       ]
@@ -48,7 +48,263 @@
       "id": "agumon",
       "displayName": "Agumon",
       "stage": "Child",
-      "spriteFile": "Agumon"
+      "spriteFile": "Agumon",
+      "evolutions": [
+        {
+          "to": "greymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "isDefault": true
+        },
+        {
+          "to": "meramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        }
+      ]
+    },
+    {
+      "id": "greymon",
+      "displayName": "Greymon",
+      "stage": "Adult",
+      "spriteFile": "Greymon",
+      "evolutions": [
+        {
+          "to": "metalgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "meramon",
+      "displayName": "Meramon",
+      "stage": "Adult",
+      "spriteFile": "Meramon",
+      "evolutions": [
+        {
+          "to": "metalgreymon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "metalgreymon",
+      "displayName": "MetalGreymon",
+      "stage": "Perfect",
+      "spriteFile": "MetalGreymon",
+      "evolutions": [
+        {
+          "to": "wargreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "wargreymon",
+      "displayName": "WarGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "WarGreymon"
+    },
+    {
+      "id": "gabu_digitama",
+      "displayName": "Gabu Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Gabu_Digitama",
+      "evolutions": [
+        {
+          "to": "punimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "punimon",
+      "displayName": "Punimon",
+      "stage": "Baby I",
+      "spriteFile": "Punimon",
+      "evolutions": [
+        {
+          "to": "tsunomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tsunomon",
+      "displayName": "Tsunomon",
+      "stage": "Baby II",
+      "spriteFile": "Tsunomon",
+      "evolutions": [
+        {
+          "to": "gabumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gabumon",
+      "displayName": "Gabumon",
+      "stage": "Child",
+      "spriteFile": "Gabumon",
+      "evolutions": [
+        {
+          "to": "garurumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "garurumon",
+      "displayName": "Garurumon",
+      "stage": "Adult",
+      "spriteFile": "Garurumon",
+      "evolutions": [
+        {
+          "to": "weregarurumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "weregarurumon",
+      "displayName": "WereGarurumon",
+      "stage": "Perfect",
+      "spriteFile": "WereGarurumon",
+      "evolutions": [
+        {
+          "to": "metalgarurumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "metalgarurumon",
+      "displayName": "MetalGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalGarurumon"
+    },
+    {
+      "id": "pal_digitama",
+      "displayName": "Pal Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Pal_Digitama",
+      "evolutions": [
+        {
+          "to": "yuramon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "yuramon",
+      "displayName": "Yuramon",
+      "stage": "Baby I",
+      "spriteFile": "Yuramon",
+      "evolutions": [
+        {
+          "to": "tanemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tanemon",
+      "displayName": "Tanemon",
+      "stage": "Baby II",
+      "spriteFile": "Tanemon",
+      "evolutions": [
+        {
+          "to": "palmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "palmon",
+      "displayName": "Palmon",
+      "stage": "Child",
+      "spriteFile": "Palmon",
+      "evolutions": [
+        {
+          "to": "togemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "togemon",
+      "displayName": "Togemon",
+      "stage": "Adult",
+      "spriteFile": "Togemon",
+      "evolutions": [
+        {
+          "to": "lilimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "lilimon",
+      "displayName": "Lilimon",
+      "stage": "Perfect",
+      "spriteFile": "Lilimon",
+      "evolutions": [
+        {
+          "to": "rosemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "rosemon",
+      "displayName": "Rosemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rosemon"
     }
   ]
 }
