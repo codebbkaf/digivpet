@@ -68,8 +68,8 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Sources/SpriteSheet.swift adds SpriteFrame (Int-raw, walk1=0...attack=11), EggFrame (idle/wobble/hatch), SpriteSheet (crops a decoded sheet via cropping(to:) using x=(i%3)*16, y=(i/3)*16) and SpriteSheetCache (decode-once, injectable decoder, NSLock). Observed: BUILD SUCCEEDED, TEST SUCCEEDED 18/18 (12 new), zero source warnings. Verified attack.sourceRect == (32,48,16,16); Child/Agumon -> 12 frames of 16x16; Digitama/Agu_Digitama -> exactly 3; counting decoder proves 3 sheet() calls = 1 decode and the second call returns the IDENTICAL CGImage objects (=== per frame), so frames are never re-cropped. DESIGN NOTE for US-005: EggFrame and SpriteFrame are SEPARATE enums and each subscript returns nil for the other kind of sheet — egg index 2 is the hatch where a stage sheet's index 2 is eat1, so one shared enum would let sheet[.eat1] silently return the hatch. Consequence: sheet[SpriteFrame.walk1] on a Digitama is nil, so DigimonSpriteView must drive eggs with EggFrame (idle->wobble) and must not fall back to walk frames. Sheets that are not 48x64/48x16 return nil from SpriteSheet(sheet:) rather than garbage frames. Failed loads are cached too, so a missing sprite does not re-hit the disk every animation tick."
     },
     {
       "id": "US-005",

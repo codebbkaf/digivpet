@@ -69,3 +69,43 @@ Notes for next iterations:
   alone — worth trimming before shipping if bundle size matters.
 
 Remains: US-004 onward (US-001/002/003 pass).
+
+## 2026-07-17 — US-004: Add SpriteFrame enum and runtime sheet slicing — PASSES
+
+Did:
+- Sources/SpriteSheet.swift (one new file, no changes to SpriteLoader or project.yml):
+  - `SpriteFrame`: Int-raw enum, walk1=0 ... attack=11. Raw value IS the sheet index, so the
+    case order is the sheet layout — do not reorder.
+  - `EggFrame`: idle=0, wobble=1, hatch=2 for 48x16 Digitama.
+  - `SpriteSheet`: init?(sheet:) crops a DECODED sheet into frames with cropping(to:) at
+    x=(i%3)*16, y=(i/3)*16. Rejects anything not 48x64/48x16 (same validation as the dev tool).
+    `kind` is .stage (12 frames) or .egg (3 frames).
+  - `SpriteSheetCache`: decode-once cache keyed by stage+name, injectable `decode` closure
+    (defaults to SpriteLoader.loadSheet), NSLock-guarded, `.shared` singleton.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 18 tests (12 new), 0 failures.
+- SpriteFrame.attack.sourceRect == (32, 48, 16, 16); walk1/eat1/eat2/hurt1 rects asserted as
+  hand-read literals, not by recomputing the formula against itself.
+- Child/Agumon -> kind .stage, 12 frames, each 16x16. Digitama/Agu_Digitama -> kind .egg,
+  exactly 3 frames.
+- Cache: a counting decoder shows 3 sheet() calls for Child/Agumon = 1 decode, and Gabumon
+  decodes separately (right key). Second sheet() returns the IDENTICAL CGImage objects (===
+  on every frame) — proves frames are cropped once at load, never per tick.
+- Pixel-compared walk1/sleep1/attack after drawing them into bitmap contexts: all differ, so
+  the crop rect genuinely moves (a stuck rect would pass a size-only test).
+
+DESIGN NOTE — US-005 depends on this:
+- EggFrame and SpriteFrame are SEPARATE enums, and each subscript returns nil for the other
+  kind of sheet. Egg index 2 is the HATCH but a stage sheet's index 2 is EAT1, so one shared
+  enum would make sheet[.eat1] silently return the hatch — the same class of quiet-wrong-art
+  bug US-002 found in Bundle.url(forResource:).
+  Consequence: `sheet[SpriteFrame.walk1]` on a Digitama is nil BY DESIGN. DigimonSpriteView
+  must animate eggs with EggFrame (idle -> wobble) and must NOT fall back to walk frames.
+- Failed loads are cached too (cache is [Key: SpriteSheet?]), so a missing sprite does not
+  re-hit the disk on every 500ms animation tick.
+- Build sprite views on SpriteSheetCache.shared.sheet(stage:name:) — do not call
+  SpriteLoader.loadSheet directly from a view, or you re-decode per frame.
+
+Remains: US-005 onward (US-001/002/003/004 pass).
