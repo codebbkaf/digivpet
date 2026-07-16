@@ -49,7 +49,11 @@ Every stage sprite is a **48×64 PNG** = a **3-wide × 4-tall grid of 16×16 fra
 
 Frame index → source rect: `x = (index % 3) * 16`, `y = (index / 3) * 16`, size `16×16`.
 
-- **Digitama (eggs)** are **48×16** = 3 frames of 16×16 (egg idle + wiggle).
+**This layout is confirmed by pixel content, not just the xlsx.** The frames were cut and inspected: `eat1` has an open mouth, `sleep1`/`sleep2` have closed eyes, `happy` is a closed-eye cheerful pose, `angry` has an angry brow. The labels match the art.
+
+**Frames are pre-cut to disk**, not sliced at runtime. `scripts/cut_sprites.swift` (CoreGraphics, no external dependency) writes `sprites_cut/<Stage>/<Name>/01_walk1.png` … `12_attack.png`. Run `--demo` for the 3 seed lines (21 sheets → 225 frames, 98 KB); run `--all` for the full roster (865 sheets → ~10,380 frames, ~4.6 MB). Trade-off: cutting costs ~4× the bytes of the sheets (PNG per-file overhead) and turns 865 files into ~10,380. If that degrades build or launch time, the fallback is runtime slicing from the original sheets using the same math.
+
+- **Digitama (eggs)** are **48×16** = 3 frames of 16×16: `idle`, `wobble`, `hatch`. **Frame 3 is the egg cracking open with the Digimon emerging** — a ready-made hatch animation (verified by cutting it).
 - **`Idle Frame Only/`** (842 files) are single **16×16** PNGs — use for the Dex list, pickers, and complications.
 
 ### Real roster size (verified — the raw file count is misleading)
