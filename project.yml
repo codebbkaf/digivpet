@@ -13,6 +13,10 @@ targets:
     deploymentTarget: "10.0"
     sources:
       - path: Sources
+      # The evolution graph ships as data so adding a Digimon needs no code change.
+      # See docs/evolutions-schema.md for the file format.
+      - path: Resources
+        buildPhase: resources
       # Folder reference (type: folder), NOT an asset catalog — stage subfolders are
       # preserved so sheets stay addressable by path at runtime. sprites_cut/ is dev-tool
       # output and is deliberately not listed here.

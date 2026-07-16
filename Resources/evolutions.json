@@ -1,0 +1,54 @@
+{
+  "nodes": [
+    {
+      "id": "agu_digitama",
+      "displayName": "Agu Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Agu_Digitama",
+      "evolutions": [
+        {
+          "to": "botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "botamon",
+      "displayName": "Botamon",
+      "stage": "Baby I",
+      "spriteFile": "Botamon",
+      "evolutions": [
+        {
+          "to": "koromon",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 3,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "koromon",
+      "displayName": "Koromon",
+      "stage": "Baby II",
+      "spriteFile": "Koromon",
+      "evolutions": [
+        {
+          "to": "agumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 3,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "agumon",
+      "displayName": "Agumon",
+      "stage": "Child",
+      "spriteFile": "Agumon"
+    }
+  ]
+}

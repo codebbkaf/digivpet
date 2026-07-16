@@ -211,3 +211,83 @@ Notes for next iterations:
   launch the app and find it — reset or delete the app if a clean first-launch is needed.
 
 Remains: US-007 onward (US-001..US-006 pass; 6/35).
+
+## 2026-07-17 — US-007: Define evolutions.json schema and Swift models — PASSES
+
+Did:
+- Sources/EvolutionGraph.swift: EvolutionEdge, EvolutionNode, EvolutionGraph (all Codable),
+  plus load(from:) (bundle injectable) and `bundled` (decoded once, on first use).
+  Lookups: node(id:), parents(of:), nodes(at:). Edges live on the parent, so converging is
+  a scan — fine at 865 nodes, off the hot path.
+- Resources/evolutions.json + project.yml (path: Resources, buildPhase: resources).
+  It lands at the BUNDLE ROOT, so url(forResource:"evolutions", withExtension:"json") needs
+  no subdirectory. Seed is ONE PARTIAL LINE: Agu_Digitama -> Botamon -> Koromon -> Agumon,
+  terminal at Agumon. All four `ls`-verified on disk. US-008 owns the 3 full lines.
+- docs/evolutions-schema.md: the field-by-field schema doc. docs/ is not bundled.
+- DigiVPetApp.init() touches EvolutionGraph.bundled so a broken graph surfaces at launch,
+  not mid-game. ContentView (still the temporary US-005 demo) prints the node count.
+- Hand-written init(from:) on node and edge: synthesized Codable has NO concept of a default,
+  so it would reject every edge omitting isDefault. Defaults: isDefault false, dexOnly false,
+  evolutions [] (a terminal node omits the key rather than writing []).
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 51 tests (14 new), 0 failures.
+- DECODE AT LAUNCH VERIFIED IN SIM, not by proxy: installed + launched on Series 11 (46mm),
+  screenshot reads "graph: 4 nodes". The shipped JSON really decodes on the watch.
+- Confirmed evolutions.json is in the built .app and holds the 4 seed ids.
+- Branching AC test asserts BOTH edges of a 2-edge node parse with every field, and that they
+  differ in `to` AND `requiredEnergy` — a decoder that dropped one, or crossed them, fails.
+- Converging is covered too: parents(of: "metalgreymon") == [greymon, meramon].
+- Decode failures throw rather than defaulting: unknown stage, unknown energy type, missing
+  spriteFile. Same lesson as the US-002 Bundle.url bug — wrong-but-plausible is the enemy.
+
+THE BUNDLED-FILE TEST IS PROVEN NON-VACUOUS (a test that reads the real file is easy to fake):
+- Mutated the REAL evolutions.json (requiredEnergy "strength" -> "wisdom") and re-ran: the suite
+  went RED. Restored it and re-ran: green, 51/51. So testBundledEvolutionsJsonDecodes genuinely
+  reads the shipped file rather than passing on a fixture.
+
+TRAP — THE NEXT ITERATION WILL HIT THIS AND SHOULD NOT LOSE AN HOUR TO IT:
+- A graph that fails to DECODE crashes the TEST HOST at launch: the app IS the TEST_HOST, and
+  `EvolutionGraph.bundled` traps. xcodebuild then reports only
+    "Testing failed: DigiVPet encountered an error (Early unexpected exit, operation never
+     finished bootstrapping ... test runner crashed before establishing connection)"
+  and NOT ONE TEST REPORTS. That message names neither the file nor the graph.
+- The real diagnostic is in the log ABOVE it. Grep for "Could not load the evolution graph":
+    EvolutionGraph.swift:202: Fatal error: Could not load the evolution graph:
+    DecodingError.dataCorrupted: Path: nodes[1].evolutions[0].requiredEnergy.
+    Cannot initialize EnergyType from invalid String value wisdom
+  It gives the exact JSON path. A whole suite red for one JSON typo is the price of catching a
+  broken graph at launch instead of mid-game; the trade is deliberate, not an oversight.
+- CONSEQUENCE FOR US-009: its validator test can only ever report SEMANTIC errors (unknown ids,
+  missing sprites, stage skips, no isDefault) — those decode fine. A syntax/enum error never
+  reaches the validator, because the host is already dead.
+
+DEVIATION FROM THE AC — FLAGGED, NOT HIDDEN:
+- `requiredEnergy` is OPTIONAL in the model; the AC implies required (it marks only
+  minBattleWins/isDefault optional). Nil is legal on exactly ONE kind of edge: a Digitama's
+  hatch edge. US-018 hatches on TOTAL energy across all four types, so no single type gates it,
+  and writing e.g. "strength" on 58 egg edges would be data that lies — a later reader would
+  eventually "fix" the engine to respect it and break hatching. Every edge out of a HATCHED
+  node carries it, in both the seed and the fixture.
+- US-009 should therefore validate: requiredEnergy present unless stage == Digitama.
+
+DESIGN NOTES — later stories depend on these:
+- Added `dexOnly` (optional, default false) though the AC does not list it. US-010 must emit it,
+  and US-009 cannot otherwise tell "missing sheet" from "one of the 157 idle-only Digimon" when
+  checking spriteFile exists on disk. OPEN QUESTION LEFT TO US-010: a dexOnly node's art is in
+  the FLAT "Idle Frame Only/" folder, so (a) its spriteFile does NOT resolve under its stage
+  folder, and (b) its true stage is NOT derivable from disk at all. Poyomon is confirmed
+  idle-only by `find`, but nothing on disk says which stage it is.
+- `id` is deliberately NOT `spriteFile`: art can be renamed or shared without rewriting edges.
+  Convention is the sprite basename lowercased.
+- EvolutionGraph.nodes is the file AS AUTHORED, duplicate ids included; the private byId index
+  keeps the first of a duplicate pair. Reporting duplicates is US-009's job and it needs to see
+  them, so do not de-dup `nodes`.
+- The egg edge sets minEnergy 50 (the US-018 hatch threshold) and maxCareMistakes 99
+  (deliberately permissive — US-018 gates hatching on energy alone, so the edge must not block;
+  its real job is naming which Baby I the egg hatches into).
+- The seed's Agumon node is TERMINAL on purpose. US-008 extends it to Adult/Perfect/Ultimate and
+  adds the Gabumon and Palmon lines plus the 2+ edge branching node.
+
+Remains: US-008 onward (US-001..US-007 pass; 7/35).

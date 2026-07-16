@@ -14,6 +14,10 @@ struct ContentView: View {
                 DigimonSpriteView(stage: "Digitama", name: "Agu_Digitama", animation: .idle, scale: 2)
                 DigimonSpriteView(stage: "Child", name: "NotADigimon", scale: 2)
             }
+
+            // Proof the bundled graph decoded at launch, visible in a Simulator screenshot.
+            Text("graph: \(EvolutionGraph.bundled.nodes.count) nodes")
+                .font(.footnote)
         }
     }
 }
