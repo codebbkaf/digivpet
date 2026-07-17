@@ -41,6 +41,18 @@ enum Stage: String, Codable, CaseIterable {
     /// A side branch, not a rung on the ladder — hence no `ladderIndex`.
     case armorHybrid = "Armor-Hybrid"
 
+    /// What the UI calls this stage. Free to change — unlike `rawValue`, nothing persists it.
+    ///
+    /// It differs from `rawValue` only where the folder name is not a stage name: the art for the
+    /// final stage is filed under "Ultimate-Super Ultimate" because that one folder holds both,
+    /// but the stage a Digimon reaches is the PRD's sixth rung, Ultimate.
+    var displayName: String {
+        switch self {
+        case .ultimate: return "Ultimate"
+        default: return rawValue
+        }
+    }
+
     /// Position on the linear Digitama -> Ultimate ladder, or nil for stages off it.
     ///
     /// Nil is why this is not just `allCases.firstIndex(of:)`: Armor-Hybrid has no rung, so a

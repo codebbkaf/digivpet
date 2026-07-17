@@ -12,9 +12,10 @@ struct DigiVPetApp: App {
     var body: some Scene {
         WindowGroup {
             // The gate explains health access before the system prompt and shows the blocked
-            // state if the request fails. US-016 replaces what it wraps, not the gate itself.
+            // state if the request fails. The main screen only ever runs behind it, so it never
+            // has to read health data that was never asked for.
             HealthAuthorizationGate(model: Self.makeAuthorizationModel()) {
-                ContentView()
+                ContentView(model: MainScreenModel())
             }
         }
     }

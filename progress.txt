@@ -994,3 +994,109 @@ OPEN — HANDED ON, NOT HIDDEN:
   must handle the nil case rather than defaulting to a type.
 
 Remains: US-016 onward (US-001..US-015 pass; 15/35).
+
+================================================================================
+2026-07-17 — US-016 — Build main screen with Digimon and stage info — PASSES
+
+WHAT I DID:
+- Sources/MainScreenModel.swift (new): DigimonPresentation (displayName/stage/spriteFile),
+  EvolutionGraph.presentation(forId:), and @MainActor MainScreenModel (loading/playing/failed).
+  This is the FIRST RUNTIME CALLER of EnergyCreditor + HealthEnergySource — US-014 handed it here.
+- Sources/ContentView.swift: no longer the US-005 demo harness. The real screen: name, idle sprite
+  at scale 6, stage. Drives model.refresh() from scenePhase; model.start() from .task.
+- Sources/GameState.swift: added Stage.displayName, which US-006's own note promised existed.
+- Sources/DigiVPetApp.swift: passes MainScreenModel in (the gate is untouched, as US-011 asked).
+- Tests/MainScreenTests.swift (new): 18 tests.
+- Observed: BUILD SUCCEEDED zero source warnings. TEST SUCCEEDED 201/201 (was 183).
+
+THE scenePhase AC WAS OBSERVED, NOT INFERRED FROM THE CODE — here is exactly how, because it is
+the one criterion here that no unit test can reach (XCTest cannot make a SwiftUI view go active):
+- MainScreenModel logs one Logger line per refresh. Stream it with:
+    xcrun simctl spawn <udid> log stream --style compact --level info \
+      --predicate 'subsystem == "com.digivpet.DigiVPet"'
+  **--level info is required.** Without it Logger.info lines are silently absent and it looks like
+  the refresh never ran. That cost a confused minute; do not re-derive it.
+- The run: backgrounded the app with com.apple.NanoSettings at 19:54:45 -> NO refresh. Idled 4s in
+  the background -> NO refresh. Brought it back at 19:54:55 -> refresh logged at 19:54:56.376.
+- WHAT MAKES IT PROOF: the PID was 69959 before AND after. Same process = the app was RESUMED, not
+  relaunched, so start() never re-ran and the refresh can only have come from scenePhase going
+  .active. A test that let the process restart would have proven nothing — start() refreshes too.
+- Note com.apple.Carousel (the watch face) will NOT launch via simctl; NanoSettings does. That is
+  how you background a watchOS Simulator app — nothing can script a crown press (US-011's note).
+
+VERIFIED IN SIM AT BOTH SIZES REQUIRED BY THE AC:
+- 41mm = Series 9 (41mm), 49mm = Ultra 2 (49mm), both watchOS 10.4, installed with simctl install
+  after building against a 26.4 destination — exactly the workaround US-011 wrote down.
+- Both show "Agu Digitama" / egg / "Digitama", centred, no clipping.
+- IDLE LOOP PROVEN RUNNING, not merely compiled: 6 screenshots 250ms apart, clock cropped off with
+  sips (it ticks on its own and would make every shot unique), yield EXACTLY 2 distinct md5s — the
+  egg's idle->wobble. Same method US-005 used.
+- WORST-CASE LAYOUT CHECKED RATHER THAN ASSUMED: terminated the app, edited its REAL default.store
+  with sqlite3 to currentDigimonId='metalgarurumon' (the seed's longest displayName, 14 chars) and
+  relaunched. It fits at 41mm via minimumScaleFactor(0.7), and the stage line reads "Ultimate"
+  while the art still loaded out of "Ultimate-Super Ultimate/" — displayName and rawValue doing
+  their two different jobs, visible in one screenshot. sqlite3 on the live store is a good way to
+  reach a game state the app cannot yet produce (nothing evolves until US-019).
+- The store the app wrote read back as `agu_digitama|Digitama|healthy`, so start() really persisted
+  a game through the shipping GameStore — not just through a temp-file test.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION — 5 mutations, each caught by exactly the right tests. All 201
+still reported under every one, so none crashed the TEST_HOST (the US-007 trap). Both files restored
+byte-identical (md5 cea6fab3093584f3ea7c68f14d1d2d78 / 730f11289b7f2c7d5e0e98cdc21e2c21):
+1. presentation takes its stage from the SAVED copy => testTheStageShownComesFromTheGraphNotFrom
+   TheSavedCopy (3 assertion failures, all in that one test).
+2. refresh credits against a FRESH ledger      => the 3 delta tests, incl. testRefreshingAgainWith
+   NoNewActivityCreditsNothingMore. THE ONE THAT MATTERS MOST: this is US-014's "reopening the app
+   double-credits" bug arriving at the screen's seam, where scenePhase now fires a read on every
+   single activation.
+3. refresh never saves                         => testCreditedEnergyIsSaved.
+4. starting egg hard-coded                     => testTheStartingEggComesFromTheGraph +
+   testAGraphWithNoDigitamaFailsRatherThanGuessing.
+5. Stage.displayName returns rawValue          => testTheFinalStageIsShownAsUltimateButStill
+   ResolvesItsFolder.
+
+A GAP IN MY OWN TESTS, FOUND AND FIXED BEFORE CLAIMING THE STORY:
+- Nothing pinned that the rendered stage comes from the GRAPH. My first "names the saved Digimon"
+  test set BOTH currentDigimonId AND stage, so the two agreed — and mutation 1 would have SURVIVED.
+  A test whose fixture is internally consistent cannot catch a bug about two sources disagreeing.
+- testTheStageShownComesFromTheGraphNotFromTheSavedCopy now leaves the saved stage stale on purpose
+  (id=greymon, stage=.digitama) and asserts the art still resolves. Writing the mutation first is
+  what exposed this; the tests looked complete until something tried to get past them.
+
+DESIGN CALLS — later stories depend on these:
+- **THE STAGE IS RENDERED FROM THE NODE, NEVER FROM GameState.stage.** GameState.stage is a saved
+  DUPLICATE of a fact the graph already knows. The graph's stage is where the art actually lives, so
+  a screen trusting the save would draw the '?' placeholder for a Digimon whose sheet is on disk the
+  whole time. US-018/US-019 MUST keep the two in step when they move a Digimon — the duplication is
+  US-006's AC and is not going away.
+- The starting egg is the FIRST non-dexOnly Digitama in the graph, deliberately NOT random. "A new
+  game starts at a randomly selected Digitama" is US-018's criterion; choosing here would either
+  pre-empt it or leave two places picking the egg. US-018 owns it — see startingDigitamaId.
+- A store that will not open lands on .failed with an explanation rather than trapping the way
+  EvolutionGraph.bundled does. The two are not the same: a broken graph is a broken BUILD that
+  US-009's validator catches before it ships, but a store that will not open is a real runtime
+  condition on a real watch (full disk, a migration that failed). Trapping there would crash the
+  app on exactly the watches that already have a Digimon.
+- refresh() guards on isRefreshing: a read is several awaits long, and two overlapping reads would
+  both see the same pre-credit ledger and could pay for the same steps twice.
+- A failed save is LOGGED and the in-memory energy kept, not surfaced as an error screen. The ledger
+  did not persist either, so the next launch simply re-credits it — consistent, and not worth taking
+  the screen away from the user over.
+- Sprite scale is 6 (96pt), deliberately not screen-filling: US-017 puts four energy bars under it.
+- The health gate is untouched, per US-011: the main screen only ever runs behind it, so it never
+  reads health data that was never asked for.
+- Stage.displayName differs from rawValue for EXACTLY ONE case (.ultimate -> "Ultimate", folder is
+  "Ultimate-Super Ultimate"), and testEveryOtherStageShowsItsFolderName pins that the other seven
+  do not drift. rawValue must keep naming the folder: it resolves sprites AND it is what saved games
+  persist (US-006), so renaming a case rewrites saved games.
+
+OPEN — HANDED ON, NOT HIDDEN:
+- US-017 adds the energy bars to this screen. model.state.stageEnergy and dominantEnergyType are
+  both already reachable from the view, and dominantEnergyType still has no runtime caller (US-015
+  handed that to US-019, which must treat nil as "no branch yet" rather than picking a type).
+- ContentView shows a placeholder-ish "No Digimon" state for a saved id the graph does not know.
+  That is a roster edit dropping a Digimon out from under a live save; nothing produces it today.
+- The 41mm/49mm Simulators now hold a saved game at metalgarurumon (I edited it, then left it).
+  Uninstall the app there if a story needs a clean first launch — the same trap US-006 left behind.
+
+Remains: US-017 onward (US-001..US-016 pass; 16/35).
