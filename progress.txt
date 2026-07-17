@@ -617,3 +617,102 @@ TWO ENVIRONMENT FACTS WORTH NOT RE-DISCOVERING:
   device and `simctl install` onto the 10.4 one.
 
 Remains: US-012 onward (US-001..US-011 pass; 11/35).
+
+## 2026-07-17 — US-012: Query today's steps, calories and exercise — PASSES
+
+Did:
+- Sources/HealthQuery.swift (one new file):
+  - `HealthSample` (start/end/value) — the plain value type fixtures are written in. `end` is
+    carried though today's totals only read `start`: US-013's dedup needs the span.
+  - `QuantityMetric`: steps/activeEnergy/exercise, each with its HKQuantityType and its unit.
+  - `HealthDay.interval(containing:calendar:)` — local midnight to the next midnight.
+  - `HealthReading.total(of:in:)` — the pure summer. THE one place the day rule lives.
+  - `HealthSampleFetching` + `HealthKitSampleFetcher` (real HKSampleQuery) + `TodayHealthReader`.
+- Sources/HealthAuthorization.swift: broadened `HealthReading.unavailable`'s doc only — it now
+  covers a failed query, not just HealthKit being off on the device. No behaviour change.
+- Tests/HealthQueryTests.swift: 16 tests.
+- No project.yml change — Sources/ and Tests/ are globs.
+
+Verified (observed, not assumed):
+- `xcodebuild clean build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 110 tests (16 new), 0 failures.
+- The three HK identifiers asserted BY IDENTITY (stepCount/activeEnergyBurned/appleExerciseTime),
+  not merely counted three, and each asserted to be read over today's interval.
+
+THE KEY DESIGN CALL — THE DAY RULE LIVES IN EXACTLY ONE PLACE. Do not "optimize" this away:
+- The shipped predicate is `HKQuery.predicateForSamples(withStart:end:)` with NO `.strictStartDate`.
+  It is a FETCH LIMIT, not the day rule. `HealthReading.total` decides what belongs to today.
+- Why: with `.strictStartDate`, the rule would live half in a HealthKit flag and half in Swift, and
+  EVERY fixture test below would still pass with the flag set wrong — fixtures never go through a
+  predicate. The filter would be untested redundancy guarding untested HealthKit behaviour.
+  As built, the fixture tests exercise the code that really decides. The cost is at most a couple of
+  boundary samples fetched per day.
+- `FixtureSampleFetcher` therefore returns its samples IGNORING the interval, mimicking what the
+  overlap predicate really hands back. A fixture that pre-filtered would test itself and let a
+  reader with NO filter at all pass. (Mutation 1 proves it does not.)
+- A sample belongs to the day its START falls in: counted exactly once, in exactly one day, never
+  split. A walk from 23:50 to 00:10 lands wholly in the day it began.
+- Bounds are half-open [start, end). `DateInterval.contains` is deliberately NOT used — it includes
+  the END instant, so a sample starting exactly at midnight would belong to BOTH days.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION — 6 mutations of the real source, each caught by exactly the
+right tests. All 110 still reported under every one, so none crashed the TEST_HOST (the US-007
+trap). File restored byte-identical: md5 85fe052aa7030c8d8382d94858b74e6e, git diff clean.
+1. drop the day filter entirely  => 4 red, incl. testOnlyTodaysSamplesAreSummedAndYesterdaysAre
+   Excluded ("value(2440.0)" vs "value(750.0)") — the AC test.
+2. DateInterval.contains (closed end) => testTheDayBoundaryIsHalfOpen ("value(7.0)" vs "noData").
+3. empty samples report .value(0)    => 6 red, incl. testNoSamplesIsNoDataAndNotZero.
+4. window as midnight + 86400        => testADaylightSavingDayIsStillExactlyOneDay (both ways).
+5. exercise unit .second()           => testEachMetricIsReadInTheUnitTheEnergyRatesAssume ("s"/"min").
+6. reader ignores the injected calendar and uses UTC => 3 red incl. the AC test. THIS ONE MATTERS
+   MOST: it is what proves "LOCAL-timezone midnight" is genuinely pinned, rather than passing
+   because the test machine happens to sit in one time zone.
+
+A FIXTURE BUG I CAUGHT BEFORE RUNNING, WORTH THE HABIT:
+- I hand-wrote the Auckland assertion as 19:00 LA. It is 05:00. I checked the arithmetic in a
+  throwaway Swift script instead of trusting my head, so the test was right the first time rather
+  than being "fixed" later to match whatever the code printed — which would have made it assert
+  the bug. The DST day lengths (23h/25h) were confirmed the same way before being asserted.
+
+DESIGN NOTES — later stories depend on these:
+- noData vs a real zero, both halves: no samples in the window is `.noData`; samples summing to 0
+  is `.value(0)`. Filtering happens BEFORE emptiness is judged, so yesterday's samples cannot
+  rescue today from being silent (testADayWithOnlyYesterdaysSamplesIsNoData).
+  US-027 leans on this: a lazy day (value(0)) must not look like a silent HealthKit (noData).
+- A FAILED read is `.unavailable`, NOT `.noData`. Both read zero energy, but they are not the same
+  fact — US-027 must not charge a care mistake for a HealthKit error the user did nothing to cause.
+- Each metric is read independently, so one failing or denied type costs its own energy type and
+  nothing else — US-011's partial-authorization rule, now tested against real reads.
+- **QuantityMetric excludes sleep as a CASE**, so "read today's sleep from midnight" cannot be
+  written at all. Sleep is a category type over a different window (18:00 yesterday -> 12:00 today)
+  needing cross-source dedup — US-013's, whole. Same reasoning as US-004's separate SpriteFrame/
+  EggFrame: a shared type lets the wrong question compile and answer plausibly.
+  US-013 should add its own reader alongside this one, not a `.sleep` case here.
+- QuantityMetric.quantityType restates types HealthMetric.objectType also names, so
+  testQuantityMetricsAgreeWithTheMetricsAuthorizationAsksFor pins them together — a metric must
+  never be authorized as one type and then read as another.
+- **The units are load-bearing on US-014's rates** (1 Strength/100 steps, 1 Vitality/20 kcal,
+  1 Stamina/2 exercise minutes). They are read as .count()/.kilocalorie()/.minute(). Reading
+  exercise in seconds would inflate Stamina 60-fold and still look like a working query — hence
+  mutation 5 and its test. US-014 must write its rates against these units.
+- HKSampleQuery, not HKStatisticsQuery: the sum has to be ours for the fixture tests to mean
+  anything, and US-013 needs raw samples for dedup regardless. HKStatisticsQuery's cumulativeSum
+  would also happily double-count the same steps written by two sources.
+- testRealFetcherAnswersWithoutHanging is the ONE test that runs a real HKSampleQuery. The
+  Simulator has no health data and this container is unauthorized, so it comes back empty or
+  errors — asserting WHICH would be flaky. That the continuation RESUMES is the point, and no
+  fixture would ever catch a query that resumes on no path (a hang) or twice (a crash).
+
+NO SIMULATOR SCREENSHOT THIS ITERATION, and that is per the AC, not an omission: US-012 lists only
+"Tests pass" + "Typecheck passes", and nothing renders these readings yet — US-016 wires them to
+the main screen. The real query does execute inside the test host on the Simulator (above).
+
+OPEN — HANDED ON, NOT HIDDEN:
+- US-011 handed US-012: "once it can see every metric reading noData, route to
+  HealthAccessBlockedView." NOT done, deliberately. It is not in this AC, and a SINGLE reading
+  cannot support it: at 00:05 every metric legitimately reads noData on a perfectly authorized
+  watch, so routing on one read would show the blocked screen to a healthy user every night.
+  It needs a full-DAY judgment — exactly the elapsed-time machinery US-027 builds. Leave it there.
+- Nothing calls TodayHealthReader at runtime yet. US-014 (delta crediting) is its first caller.
+
+Remains: US-013 onward (US-001..US-012 pass; 12/35).

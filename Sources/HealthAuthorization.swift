@@ -60,7 +60,9 @@ enum HealthReading: Equatable {
     /// Authorized but nothing recorded — or denied. HealthKit deliberately makes those two
     /// indistinguishable for read access, so this case covers both.
     case noData
-    /// The type cannot be read at all here: HealthKit is off on this device.
+    /// The read itself could not happen: HealthKit is off on this device, or the query failed.
+    /// Distinct from `noData`, where the read succeeded and returned nothing — US-027 must not
+    /// charge a care mistake for a HealthKit failure the user did nothing to cause.
     case unavailable
 
     /// The number energy conversion uses.
