@@ -716,3 +716,99 @@ OPEN — HANDED ON, NOT HIDDEN:
 - Nothing calls TodayHealthReader at runtime yet. US-014 (delta crediting) is its first caller.
 
 Remains: US-013 onward (US-001..US-012 pass; 12/35).
+
+## 2026-07-17 — US-013: Query last night's sleep with windowing and dedup — PASSES
+
+Did:
+- Sources/SleepQuery.swift (one new file; nothing existing changed):
+  - `SleepCategory`: Int-raw enum whose raw values ARE HKCategoryValueSleepAnalysis's
+    (inBed 0, asleepUnspecified 1, awake 2, asleepCore 3, asleepDeep 4, asleepREM 5).
+    `isAsleep` is the AC's four-versus-two rule, in one place.
+  - `SleepSample`: start/end/category, plus `clipped(to:)`.
+  - `SleepNight.window(for:calendar:)`: 18:00 the previous day -> 12:00 today.
+  - `SleepBlock`: span + asleepDuration (+ asleepMinutes).
+  - `SleepAnalysis`: `longestAsleepBlock` / `asleepMinutes`, and the ONE tunable
+    `blockGapTolerance = 60 min`.
+  - `SleepSampleFetching` + `HealthKitSleepFetcher` (real HKSampleQuery) + `LastNightSleepReader`.
+- Tests/SleepQueryTests.swift: 28 tests.
+- No project.yml change — Sources/ and Tests/ are globs.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 138 tests (28 new), 0 failures.
+- HKCategoryType(.sleepAnalysis) and the six raw values asserted BY IDENTITY against HealthKit's
+  own, not merely counted six. A case wired to the wrong number would read deep sleep as awake.
+
+THE MODEL — four steps, and each is separately testable:
+  clip to window -> drop inBed/awake -> UNION the overlapping asleep spans (THE dedup) ->
+  group merged spans into blocks, breaking at gaps over the tolerance -> take the block with the
+  most sleep, in minutes.
+- A block's duration sums the MERGED SPANS only, so an awake gap inside the block is part of its
+  span but not of its total. That is how "excludes awake" and "a brief awakening must not split
+  the night" hold at the same time.
+- "Longest" is measured in time ASLEEP, not span width: a restless 5h spread over 7h must not beat
+  6h solid. testTheLongestBlockIsTheOneWithTheMostSleepNotTheWidestSpan pins it, and mutation 4
+  below is exactly that bug.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION — 6 mutations of the real source, each caught by exactly the
+right tests. All 138 still reported under every one, so none crashed the TEST_HOST (the US-007
+trap). File restored byte-identical: md5 ce9c78ffb43d19682619fded151a8f22.
+1. inBed counts as asleep        => testInBedSamplesAreExcludedFromTheTotal (AC) +
+   testInBedButNeverAsleepIsARealZero.
+2. no de-duplication             => testTwoOverlappingSourcesProduceTheUnionNotTheSum (AC) —
+   two sources on one night would pay 960 min for a 540 min night — plus
+   testASampleContainedInAnotherAddsNothingAndTruncatesNothing.
+3. window opens at midnight      => 7 red, incl. testAnAfternoonNapIsNotLastNightsSleep and
+   testConsecutiveNightsDoNotOverlap.
+4. longest block chosen by span  => testTheLongestBlockIsTheOneWithTheMostSleepNotTheWidestSpan.
+5. reading in seconds            => 12 red incl. testTheReadingIsInMinutes.
+6. samples not clipped           => both clipping tests.
+
+THE ONE JUDGEMENT CALL — FLAGGED, NOT HIDDEN:
+- `blockGapTolerance = 60 min` is NOT in the AC and nothing in the data picks it. It is needed:
+  Apple Watch records ordinary awakenings as `awake` segments minutes long, so strict contiguity
+  would split a real night at every one and report a fragment. The tolerance has to exceed an
+  awakening (minutes) and stay under the nap-to-bedtime gap (hours); an hour sits in that wide gap.
+- It is tunable in one place, and `gapTolerance` is injectable, so
+  testAGapLongerThanTheToleranceStartsANewBlock names its OWN values (60 min vs 10 min on the same
+  fixture) and asserts the RULE rather than the shipped constant.
+
+DELIBERATE DIFFERENCE FROM US-012 — do not "unify" these two windowing rules:
+- Sleep is CLIPPED to its window. US-012's daily quantities are assigned WHOLE to the day they
+  START in. The rules differ because the data does: a 900-step sample never says when each step was
+  taken, so splitting it would be invention, while a sleep sample's value IS its span and clipping
+  it is exact.
+- It matters at the 18:00 edge. Someone asleep at 17:30 would otherwise lose the whole night, since
+  no other window claims it: consecutive nights do NOT overlap (last night's ends at noon, tonight's
+  opens at 18:00), so the afternoon between belongs to neither — which is exactly why an afternoon
+  nap is not last night's sleep. testConsecutiveNightsDoNotOverlap pins the no-double-count half.
+- The window is anchored to the local DAY, not to `now`, so it does not drift while the user
+  watches. 03:00 reads the night in progress; 23:00 reads the night that ended this morning, not
+  the one just beginning.
+- DST is covered: the spring-forward night is 17 hours, not 18. Offsets from midnight would run
+  past noon into the afternoon the window must never claim.
+
+DESIGN NOTES — later stories depend on these:
+- SleepSample is deliberately NOT HealthSample. A sleep sample's value is a CATEGORY and the number
+  Spirit is paid for is its DURATION, so a shared type would let HealthReading.total sum sleep and
+  return the sum of six category raw values — a number, and wrong. Same reasoning as US-004's
+  SpriteFrame/EggFrame and US-012 keeping sleep out of QuantityMetric.
+- noData vs a real zero, per US-012 exactly: nothing recorded in the window is .noData; a night
+  HealthKit DID describe as inBed/awake is .value(0). Lying awake all night is data. A failed read
+  is .unavailable, not .noData — US-027 must not charge a care mistake for a HealthKit error.
+- Minutes are the unit because US-014 rates Spirit at 1 point per 15 min asleep.
+- The real fetcher uses an overlap predicate (no .strictStartDate), like US-012's. Here the samples
+  it drags in over the edges are WANTED — clipped(to:) keeps the part inside the window, where
+  .strictStartDate would throw away the first hours of a sleep that began at 17:30.
+- An unknown category raw value is DROPPED, never guessed at: it cannot be counted as sleep without
+  knowing it is sleep.
+- Added LastNightSleepReader.readBlock(now:) returning the SleepBlock itself. US-026 infers the
+  Digimon's sleep window from real sleep history and will need the SPAN, which minutes cannot give.
+- Nothing calls LastNightSleepReader at runtime yet. US-014 is its first caller and must read Spirit
+  through it — TodayHealthReader cannot be asked for sleep at all, by construction.
+
+NO SIMULATOR SCREENSHOT, per the AC not by omission: US-013 lists only "Tests pass" + "Typecheck
+passes", and nothing renders sleep yet. The real HKSampleQuery does execute inside the test host on
+the Simulator (testRealFetcherAnswersWithoutHanging).
+
+Remains: US-014 onward (US-001..US-013 pass; 13/35).
