@@ -101,6 +101,39 @@ struct EnergyTotals: Codable, Equatable {
     var total: Int { strength + vitality + spirit + stamina }
 }
 
+/// When each energy type last went up, or nil for one that never has.
+///
+/// Exists only to break a tie for `dominantEnergyType`. Dates rather than a counter because the
+/// clock is already injected everywhere energy is earned, so a test can order two increments
+/// without waiting real time.
+struct EnergyRecency: Codable, Equatable {
+    var strength: Date?
+    var vitality: Date?
+    var spirit: Date?
+    var stamina: Date?
+
+    static let never = EnergyRecency()
+
+    subscript(type: EnergyType) -> Date? {
+        get {
+            switch type {
+            case .strength: return strength
+            case .vitality: return vitality
+            case .spirit: return spirit
+            case .stamina: return stamina
+            }
+        }
+        set {
+            switch type {
+            case .strength: strength = newValue
+            case .vitality: vitality = newValue
+            case .spirit: spirit = newValue
+            case .stamina: stamina = newValue
+            }
+        }
+    }
+}
+
 /// The saved game: one record, holding everything about the Digimon currently being raised.
 ///
 /// Time-based state (hunger, care mistakes, sickness, death) is stored as the timestamps it is
@@ -115,6 +148,14 @@ final class GameState {
     var stageEnergy: EnergyTotals
     /// Energy earned over the Digimon's whole life. Survives evolution and death.
     var lifetimeEnergy: EnergyTotals
+    /// Backing store for `energyLastEarned`, and the reason it is optional: this property was
+    /// added to an already-shipped model, and an OPTIONAL attribute is the one shape SwiftData
+    /// will migrate into an existing store without a default. A non-optional composite is not —
+    /// it opens, then fails validation on the next save with "energyLastEarned is a required
+    /// value", because the macro's default never reaches the store. `nil` means "written before
+    /// this existed", which is exactly what `.never` means, so nothing is lost by folding them
+    /// together.
+    private var energyLastEarnedStorage: EnergyRecency?
     var birthDate: Date
     var stageEnteredDate: Date
     var careMistakeCount: Int
@@ -133,6 +174,7 @@ final class GameState {
         self.stage = stage
         self.stageEnergy = .zero
         self.lifetimeEnergy = .zero
+        self.energyLastEarnedStorage = .never
         self.birthDate = now
         self.stageEnteredDate = now
         self.careMistakeCount = 0
@@ -141,5 +183,53 @@ final class GameState {
         self.healthStatus = .healthy
         self.battleWins = 0
         self.battleLosses = 0
+    }
+}
+
+extension GameState {
+    /// When each type of `stageEnergy` last went up. Read only to break a `dominantEnergyType`
+    /// tie, and written everywhere `stageEnergy` is — miss one and that increment silently stops
+    /// counting as recent.
+    ///
+    /// Computed, so the optionality that persistence needs stops at the model boundary: a saved
+    /// game from before this property existed reads as `.never` rather than as a `nil` every
+    /// caller would have to remember to unwrap.
+    var energyLastEarned: EnergyRecency {
+        get { energyLastEarnedStorage ?? .never }
+        set { energyLastEarnedStorage = newValue }
+    }
+
+    /// The energy type this stage has earned the most of — the branch the evolution engine takes.
+    ///
+    /// Deliberately `stageEnergy`, not `lifetimeEnergy`: the branch is chosen by what this stage
+    /// was fed, so a Digimon that spent its childhood walking can still evolve down the sleep
+    /// branch if that is how it spends adulthood.
+    ///
+    /// Nil while all four totals are zero. A caller must get "no leaning yet" rather than an
+    /// arbitrary type, because a fresh egg has genuinely not chosen anything and picking for it
+    /// would silently hard-code the first branch.
+    var dominantEnergyType: EnergyType? {
+        guard stageEnergy.total > 0 else { return nil }
+        // `allCases` order decides nothing on its own — `outranks` is a strict test, so a later
+        // type replaces an earlier one only by really beating it.
+        return EnergyType.allCases.reduce(nil) { leader, type in
+            guard let leader else { return type }
+            return outranks(type, leader) ? type : leader
+        }
+    }
+
+    /// Whether `type` beats `other`: more energy wins, and a tie goes to the one earned most
+    /// recently.
+    private func outranks(_ type: EnergyType, _ other: EnergyType) -> Bool {
+        guard stageEnergy[type] == stageEnergy[other] else {
+            return stageEnergy[type] > stageEnergy[other]
+        }
+        // Tied. A type never earned this stage cannot outrank one that has; if neither has a
+        // timestamp, or both were earned in the same instant — every type credited by one read
+        // shares its `now` — nothing distinguishes them, so the incumbent keeps it and the answer
+        // stays stable across calls.
+        guard let mine = energyLastEarned[type] else { return false }
+        guard let theirs = energyLastEarned[other] else { return true }
+        return mine > theirs
     }
 }

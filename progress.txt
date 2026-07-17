@@ -908,3 +908,89 @@ OPEN — HANDED ON, NOT HIDDEN:
   construction (US-012).
 
 Remains: US-015 onward (US-001..US-014 pass; 14/35).
+
+================================================================================
+2026-07-17 — US-015 — Compute dominant energy type — PASSES
+
+WHAT I DID:
+- Sources/GameState.swift: added `EnergyRecency` (four optional Dates, subscriptable by EnergyType,
+  shaped like EnergyTotals), a private `energyLastEarnedStorage: EnergyRecency?` on GameState behind
+  a computed non-optional `energyLastEarned` facade, and `dominantEnergyType` + private `outranks`.
+- Sources/EnergyLedger.swift: EnergyCreditor now stamps `state.energyLastEarned[type] = now` on
+  every type it credits (and only on types it actually credits).
+- Tests/DominantEnergyTests.swift: new, 16 tests.
+- Observed: BUILD SUCCEEDED, zero source warnings. TEST SUCCEEDED, 183/183 (was 167).
+
+WHY THE MODEL HAD TO CHANGE:
+"Ties are broken by the most recently incremented type" is unanswerable from stageEnergy alone —
+nothing recorded WHEN a type went up. Recency had to become saved state, stamped everywhere
+stageEnergy is written. US-024 (feeding) and US-025 (training) MUST stamp it too, or their
+increments silently stop counting as recent.
+
+THE BUG THIS STORY ALMOST SHIPPED — READ BEFORE ADDING ANY @Model PROPERTY:
+- I first wrote the obvious `var energyLastEarned: EnergyRecency = EnergyRecency.never`. It BUILDS.
+  It CRASHES THE APP AT LAUNCH for every watch that already has a Digimon.
+- SwiftData never gets the macro's default into the store for a NON-OPTIONAL COMPOSITE attribute. A
+  store written before the property existed opens with it null: touching it crashes the process, and
+  saving fails validation with "energyLastEarned is a required value".
+- Two PRE-EXISTING GameStateTests went red the moment I ran them — they, not my new tests, caught it.
+  This is what "run the tests, do not trust that the code looks right" buys.
+- THE FIX: private optional storage (an optional attribute is the one shape SwiftData will migrate
+  into an existing store without a default) behind a computed non-optional facade, so
+  nil-means-.never stops at the model boundary and no caller ever unwraps.
+- FOR US-018/US-019 ADDING THE DEX: an added ENTITY is safe (US-014 proved it). An added
+  NON-OPTIONAL ATTRIBUTE is not. Add it optional, or add a real VersionedSchema migration.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION — 6 mutations, each caught by exactly the right tests, both
+files restored byte-identical (md5 aabd0e47b90852935de425c5f5342aba / 02d1b10646196a4a509accc11d0ffbd9):
+1. tie ignores recency        => 5 red incl. testATwoWayTieIsBrokenByTheMostRecentlyEarnedType (AC)
+2. nil guard removed          => testAllZeroTotalsHaveNoDominantType + ...EvenWithTimestamps (AC)
+3. reads lifetimeEnergy       => 11 red incl. testTheDominantTypeIgnoresLifetimeEnergy
+4. credit does not stamp      => the three crediting tests
+5. tie goes to the OLDEST     => 4 red incl. both AC tie tests
+6. non-optional attribute     => the 2 GameStateTests, AND
+   testASaveGameWrittenBeforeRecencyExistedStillOpens CRASHES the TEST_HOST ("Restarting after
+   unexpected exit, crash") instead of failing cleanly — the launch crash itself, observed.
+- The tie tests assert BOTH directions on the same pair, and again on a pair LAST in allCases, so
+  they cannot pass by declaration order rather than by recency. That is the trap mutation 1 exposes.
+
+THE MIGRATION TEST AND THE TRICK THAT MAKES IT REAL:
+- US-014's testAStoreWrittenBeforeTheLedgerExistedStillOpens writes its "old" store with the CURRENT
+  GameState class, so it covers an added ENTITY and can NEVER catch an added ATTRIBUTE.
+- testASaveGameWrittenBeforeRecencyExistedStillOpens defines PreRecencySchema.GameState (GameState
+  minus energyLastEarned) NESTED in a private enum, so it keeps the unqualified type name SwiftData
+  names the entity on — which is what makes the store it writes genuinely the store the app wrote one
+  version ago. Verified it really reads that file back: its control asks loadOrCreate for
+  "gabu_digitama" and must get the pre-existing "agu_digitama".
+- It asserts a SAVE after migrating, not just an open. My first version only saved AFTER stamping a
+  timestamp, and so passed under the broken model. The save is the whole point.
+
+DESIGN CALLS — later stories depend on these:
+- Dominant reads stageEnergy and NEVER lifetimeEnergy: the branch is what THIS stage was fed, so a
+  childhood of walking must not force adulthood down the step branch (mutation 3 pins it).
+- nil for an all-zero egg is a REAL answer, not a missing one. Returning .strength would silently
+  hard-code the first branch for every Digimon that has yet to do anything. US-019/US-020 must treat
+  nil as "no branch yet" and use their default fallback, not pick a type.
+- Recency is deliberately NOT reset on evolution, and does not need to be: a reset stage is all-zero,
+  so dominant is nil until something is earned, and a stale timestamp can only ever meet a type it is
+  TIED with.
+- Two types credited by ONE read share its `now`, so a tie between them has genuinely nothing to
+  separate it and falls back to allCases order. testATieWithNothingToSeparateItIsStable pins only
+  that the answer is STABLE — it does not bless the order as meaningful.
+- Timestamps, not a counter, per the injectable-clock rule: the suite orders increments with
+  hand-written instants and waits no real time.
+
+MY OWN TEST BUG, FOUND BY RUNNING THEM:
+- My first fixture instants were 100k seconds apart — over a day — so the ledger rolled over and
+  credited the same steps twice (strength 2, not 1). Fixed by moving to a fixed America/Los_Angeles
+  calendar with same-day hand-written instants, matching EnergyCreditingTests, which also keeps the
+  machine-timezone trap US-012 caught out of this suite.
+
+NO SIMULATOR SCREENSHOT, per the AC not by omission: US-015 lists only "Tests pass" + "Typecheck
+passes", and nothing renders the dominant type yet — US-016 owns the first screen.
+
+OPEN — HANDED ON, NOT HIDDEN:
+- dominantEnergyType has NO runtime caller yet. US-019 (evolution edge evaluation) is its first, and
+  must handle the nil case rather than defaulting to a type.
+
+Remains: US-016 onward (US-001..US-015 pass; 15/35).

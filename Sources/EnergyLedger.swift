@@ -71,6 +71,10 @@ enum EnergyCreditor {
             // where they are meant to: evolution resets `stageEnergy` and leaves `lifetimeEnergy`.
             state.stageEnergy[type] += delta
             state.lifetimeEnergy[type] += delta
+            // Stamped with the read time, not the moment the activity happened — the readings are
+            // whole-day totals and cannot say when within the day a step was taken. It only ever
+            // orders one type against another, and every type this read credits is stamped alike.
+            state.energyLastEarned[type] = now
         }
         return credited
     }
