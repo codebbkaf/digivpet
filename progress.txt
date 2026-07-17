@@ -812,3 +812,99 @@ passes", and nothing renders sleep yet. The real HKSampleQuery does execute insi
 the Simulator (testRealFetcherAnswersWithoutHanging).
 
 Remains: US-014 onward (US-001..US-013 pass; 13/35).
+
+## 2026-07-17 — US-014: Convert health metrics to energy with delta crediting — PASSES
+
+Started with Sources/EnergyRates.swift, Sources/EnergyLedger.swift, Tests/EnergyCreditingTests.swift
+and a GameStore.swift edit already on disk UNCOMMITTED — a previous iteration wrote them but died
+before building or committing, exactly as happened to US-006. Treated them as unverified: read them,
+confirmed every API they lean on really exists, then built, tested and MUTATION-tested from scratch
+rather than trusting that the code looked right. It was in fact complete and correct.
+
+Did:
+- Sources/EnergyRates.swift: the four v1 rates + the 100/day cap, and nothing else restates them.
+  points(from:of:) rounds DOWN and guards isFinite/>0; cappedDailyPoints applies the cap.
+- Sources/EnergyLedger.swift: @Model EnergyLedger (day + creditedToday), EnergyCreditor.credit(...)
+  and HealthEnergySource — the seam where TodayHealthReader's three quantities and
+  LastNightSleepReader's sleep become one [EnergyType: HealthReading].
+- Sources/GameStore.swift: loadOrCreateLedger(now:calendar:) + EnergyLedger added to the schema.
+- Tests/EnergyCreditingTests.swift: 29 tests (28 inherited + 1 I added, the migration test below).
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 167 tests (29 new), 0 failures.
+
+THE DELTA IS THE WHOLE STORY:
+- Health metrics are CUMULATIVE daily totals — "steps today" is 4,000 at noon and still those same
+  4,000 at 18:00 — so an app that credited the reading would pay for the same steps on every open.
+  The ledger remembers what was already bought; only the difference is charged.
+- The ledger is PERSISTED because "reopening the app never double-credits" is a claim about a COLD
+  LAUNCH, and an in-memory baseline would be zero again on every one. The relaunch test drops the
+  entire SwiftData stack and opens a NEW container on the same file. Its control
+  (testAReopenedStoreStillCreditsGenuinelyNewActivity) matters: without it, "credits zero after a
+  relaunch" would also pass on a store that lost the GameState and credited into a discarded object.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION — 6 mutations of the real source, each caught by exactly the
+right tests. All 167 still reported under every one, so none crashed the TEST_HOST (the US-007 trap).
+Both files restored byte-identical (md5 a716c9e8ef413ded9980691ad0c6402a / bbbf72b550d1a4dfcfc3ab2c98c17235):
+1. delta crediting removed   => 24 red incl. testReadingTwiceWithNoNewHealthDataCreditsZeroTheSecond
+   Time (THE AC TEST) and both relaunch tests.
+2. daily cap removed         => 12 red incl. testTheDailyCapHoldsWhenAHugeSampleArrives (THE OTHER
+   AC TEST).
+3. lifetimeEnergy not credited => testEnergyAccruesToBothStageAndLifetimeTotals.
+4. day never rolls over      => testTheDayRollsOverAtLocalMidnight + testANewDayCreditsAgainstAFresh
+   BaselineAndAFreshCap.
+5. Spirit rate 15 -> 30 min  => testTheFourRatesAreOnePointPerTheSpecifiedMeasurement + the
+   HealthEnergySource rate test.
+6. rounds up instead of down => testPartialProgressRoundsDown.
+- The rate tests assert at the BOUNDARY both ways (99 steps buys nothing, 100 buys one), which pins
+  the rate to 100 rather than merely to "something 100 divides".
+
+THE ONE TEST I ADDED, AND THE REAL RISK IT COVERS — US-018 SHOULD RE-RUN IT:
+- Adding EnergyLedger to GameStore.schema CHANGES THE MODEL a saved game was written under. A store
+  that cannot migrate THROWS ON OPEN, which for the app is a crash at launch on exactly the watches
+  that already have a Digimon. NOTHING ELSE WOULD CATCH IT: every other test writes its store under
+  the CURRENT schema, so the pre-ledger schema is never exercised. I went looking for the app's real
+  default.store to check, and it had been cleaned — so the risk was unproven either way, which is
+  not the same as safe.
+- testAStoreWrittenBeforeTheLedgerExistedStillOpens writes a store with Schema([GameState.self])
+  ALONE (the schema as US-006 shipped it), then opens it with GameStore. SwiftData's automatic
+  lightweight migration handles the added entity; the saved game survives and a fresh ledger arrives
+  beside it. It carries its OWN control: loadOrCreate is asked for "gabu_digitama" but must return
+  the pre-existing "agu_digitama", which can only happen if the old-schema file was genuinely read
+  back rather than silently replaced by a new store.
+- US-006's note says the Dex (US-018/US-019) needs its own @Model added to GameStore.schema. This is
+  the test that tells it whether that addition was safe.
+
+DESIGN CALLS — later stories depend on these:
+- The ledger is deliberately NOT a field on GameState. resetGame is a TOTAL wipe (US-006), so a
+  ledger living there would hand a reborn Digimon today's full 400 points a second time out of the
+  SAME day's steps. The day belongs to the WATCH, not to whoever is currently living on it.
+  testResettingTheGameDoesNotRefundTheDaysCap pins it — US-029's rebirth must not refund the cap.
+- Energy is NEVER taken back: a day's reading can go DOWN (data deleted from the Health app, or a
+  night still being written that a source revises), so the delta is max(0, ...). A Digimon does not
+  un-grow because the watch changed its mind, and a metric falling silent mid-day does not erase the
+  morning's energy.
+- Rounding is DOWN so a point always means the whole activity behind it was really done: 199 steps is
+  one point. Rounding up would let four short walks buy four points from 4 steps.
+- points() guards isFinite/>0 BEFORE Int(Double), which TRAPS out of range. The number comes from
+  HealthKit and may be written by any app on the phone, so infinity/NaN/1e308/negative are all
+  handled — a wrong Digimon beats a crashed one.
+- The cap is PER TYPE and is a ceiling on the DAY, not a per-read allowance. A capped type does not
+  hold back the others, keeping US-011's partial-authorization rule intact.
+- The day rolls over at LOCAL midnight from the INJECTED calendar. The whole suite runs in a fixed
+  America/Los_Angeles calendar with hand-written instants, so it cannot pass merely because the
+  machine happens to sit in one time zone (the same trap US-012's mutation 6 caught).
+- noData/unavailable are worth zero rather than an error (US-011), and stay DISTINCT from a real
+  value(0) (US-012/US-013) — US-027 needs that, since only one of them is the user's doing.
+
+NO SIMULATOR SCREENSHOT, per the AC not by omission: US-014 lists only "Tests pass" + "Typecheck
+passes" and nothing renders energy yet — the same call US-012 and US-013 made.
+
+OPEN — HANDED ON, NOT HIDDEN:
+- EnergyCreditor has NO runtime caller yet. US-016 owns the scenePhase refresh that becomes its
+  first one, and must credit through HealthEnergySource.readings(now:) + EnergyCreditor.credit so
+  Spirit keeps coming from the sleep reader — TodayHealthReader cannot be asked for sleep at all, by
+  construction (US-012).
+
+Remains: US-015 onward (US-001..US-014 pass; 14/35).
