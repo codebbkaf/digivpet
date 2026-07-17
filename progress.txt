@@ -524,3 +524,96 @@ DESIGN NOTES — the script refuses to guess, in four places:
   which egg is derivable from nothing. The match is a report for the human authoring the line.
 
 Remains: US-011 onward (US-001..US-010 pass; 10/35).
+
+## 2026-07-17 — US-011: Add HealthKit authorization flow — PASSES
+
+Did:
+- Sources/HealthAuthorization.swift: HealthMetric (the 4 read types, each mapped to its
+  EnergyType), HealthReading, HealthRequestStatus, the HealthAuthorizing protocol,
+  HealthKitAuthorizer (real HKHealthStore) and @MainActor HealthAuthorizationModel
+  (checking/explaining/requesting/ready/denied/unavailable).
+- Sources/HealthAuthorizationView.swift: HealthAuthorizationGate + the onboarding, blocked and
+  unavailable screens. DigiVPetApp wraps ContentView in the gate (US-016 replaces what it wraps,
+  not the gate).
+- project.yml: generated Support/DigiVPet.entitlements (com.apple.developer.healthkit). Like
+  Info.plist it is GENERATED — edit project.yml, never the .entitlements.
+- Added EnergyType.displayName, which GameState.swift's doc comment already promised existed.
+- Tests/HealthAuthorizationTests.swift: 16 tests.
+
+Verified (observed, not assumed):
+- `xcodebuild clean build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 94 tests (16 new), 0 failures.
+- THE REAL SYSTEM PROMPT WAS RAISED IN THE SIM, not simulated by a stub: clean install on
+  Series 11 (46mm) shows the explainer FIRST having issued zero requests, and confirming raises
+  the real HealthKit sheet ("健康資料取用 / DigiVPet 想要取用你的「健康」資料", locale zh-TW).
+  That is what proves the entitlement and NSHealthShareUsageDescription work — both build fine
+  when absent and fail only at runtime. Same class of bug as US-002's WKWatchOnly.
+- Screenshotted all four gate states + the returning-user path passing through to ContentView.
+
+THE BIG TRAP — DO NOT RE-DERIVE THIS, IT COST REAL TIME:
+- **HealthKit never reveals whether READ access was granted.** Apple: "your app cannot determine
+  whether or not a user has granted permission to read data... it simply appears as if there is
+  no data of the requested type."
+- So `authorizationStatus(for:)` is NOT usable here. It answers a question about WRITING and
+  returns .sharingDenied even for a read type the user GRANTED — the naive implementation shows
+  the denial screen to a user who said yes. getRequestStatusForAuthorization returns
+  .unnecessary for granted and denied alike.
+- CONSEQUENCE, FLAGGED AS A DEVIATION FROM THE AC: "denial shows an explanatory state" is only
+  half-implementable at request time. `.denied` is reachable only from a request that genuinely
+  FAILED (restricted device, missing entitlement). A real user denial is invisible and arrives
+  later as HealthReading.noData -> 0 energy, which is exactly what AC4 asks for. US-012 owns the
+  other half: once it can see every metric reading noData, route to HealthAccessBlockedView.
+- watchOS has NO openSettingsURLString (no UIApplication at all) — a watch app cannot deep-link
+  into Settings. The guidance is text; Try Again re-runs start() so a user who fixes it in
+  Settings is not dead-ended.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION (4 mutations of the real source, each caught by exactly the
+right tests; file restored byte-identical, md5 af81be3c0f772ff2f935558f302c379b):
+1. start() raises the prompt on launch => 7 failures incl. testConfirmingIsWhatPrompts. So
+   "explainer before prompt" is really pinned, by the request count being 0 after start().
+2. an unreadable metric reads 1 not 0  => testUnreadableMetricsConvertToZeroEnergy +
+   testPartialAuthorizationCostsOnlyTheDeniedType + testARealZeroIsDistinctFromNoData.
+3. exercise wired to distanceWalkingRunning => testEachMetricMapsToItsHealthKitTypeAndEnergyType,
+   which asserts the four HKObjectTypes BY IDENTITY rather than just counting four.
+4. a failed request lands on .ready => testFailedRequestLandsOnTheBlockedStateWithADetail.
+All 94 tests still reported under every mutation, so none crashed the TEST_HOST.
+
+- testRealAuthorizerAnswersWithoutHanging is the ONE test touching a real HKHealthStore. It asks
+  only for the STATUS, which never prompts — requesting there would hang the suite forever, since
+  no test can answer a system prompt. It proves the continuation resumes, which is the literal
+  "does not hang" AC and something no stub could ever catch.
+
+DESIGN NOTES — later stories depend on these:
+- HealthReading keeps "no data" distinct from a real zero (.value(0)) via hasData. US-012's
+  "no data state distinct from a real zero" AC needs it, and so does US-027: a lazy day
+  (value(0), no care mistake) must not look like a silent HealthKit (noData, a care mistake).
+- Both noData and unavailable convert to 0 energy rather than throwing, so one denied metric
+  costs its own energy type and nothing else — deny Sleep and Strength/Vitality/Stamina still
+  accrue. testPartialAuthorizationCostsOnlyTheDeniedType is the AC's example, literally.
+- DEBUG-ONLY SIM HOOKS: nothing can script a tap on the watchOS Simulator and `simctl privacy`
+  has no health service, so StubHealthAuthorizer (-healthDenied/-healthUnavailable/
+  -healthAnswered) and -healthAutoConfirm reach states HealthKit will not produce on demand.
+  Both are #if DEBUG; launch arguments are unreachable on a real watch; and
+  testStubAuthorizerRequiresItsLaunchArgument pins that the stub cannot fire without its
+  argument, so it can never fake authorization in a shipping build. -healthAutoConfirm calls
+  exactly the method the Continue button calls, against the REAL authorizer.
+- The onboarding fits the SMALLEST screen (41mm) with Continue fully visible — verified at
+  41mm/42mm/46mm. Its wording is load-bearing on line count ("Exercise" not "Exercise minutes",
+  "Never leaves this watch."); re-check 41mm before lengthening it. First attempt was a scrolling
+  wall of text with Continue hidden below the fold, which is how a user denies access they would
+  have granted.
+- The gate calls model.start() from .task, and start() NEVER prompts. Only confirmAndRequest()
+  does, and the only route to it is the Continue button. That ordering IS the AC — do not add a
+  request to start().
+
+TWO ENVIRONMENT FACTS WORTH NOT RE-DISCOVERING:
+- `codesign -d --entitlements` on a SIMULATOR build prints an empty [Dict], and that is EXPECTED.
+  Simulator entitlements live in the binary's __TEXT,__entitlements section (built from
+  DigiVPet.app-Simulated.xcent); verified it carries com.apple.developer.healthkit. The .app.xcent
+  used for the signature is empty by design. Do not go bug-hunting there.
+- watchOS 10.0 deployment really does run on the watchOS 10.4 runtime (installed + launched on
+  Series 9 41mm). BUT Series 9 is not a usable `xcodebuild -destination` with this Xcode:
+  "Unable to find a device matching the provided destination specifier". Build against a 26.4
+  device and `simctl install` onto the 10.4 one.
+
+Remains: US-012 onward (US-001..US-011 pass; 11/35).

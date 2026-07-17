@@ -14,6 +14,16 @@ enum EnergyType: String, Codable, CaseIterable {
     case spirit
     /// Exercise minutes.
     case stamina
+
+    /// What the UI calls this. Free to change — unlike `rawValue`, nothing persists it.
+    var displayName: String {
+        switch self {
+        case .strength: return "Strength"
+        case .vitality: return "Vitality"
+        case .spirit: return "Spirit"
+        case .stamina: return "Stamina"
+        }
+    }
 }
 
 /// A Digimon's stage of life.

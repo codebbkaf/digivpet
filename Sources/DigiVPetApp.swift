@@ -11,7 +11,21 @@ struct DigiVPetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // The gate explains health access before the system prompt and shows the blocked
+            // state if the request fails. US-016 replaces what it wraps, not the gate itself.
+            HealthAuthorizationGate(model: Self.makeAuthorizationModel()) {
+                ContentView()
+            }
         }
+    }
+
+    @MainActor
+    private static func makeAuthorizationModel() -> HealthAuthorizationModel {
+        #if DEBUG
+        if let stub = StubHealthAuthorizer.fromLaunchArguments() {
+            return HealthAuthorizationModel(authorizer: stub)
+        }
+        #endif
+        return HealthAuthorizationModel()
     }
 }
