@@ -95,6 +95,16 @@ final class MainScreenModel: ObservableObject {
         state.flatMap { graph.presentation(forId: $0.currentDigimonId) }
     }
 
+    /// The four energy bars for the Digimon currently being raised, or nil if the graph does not
+    /// know it.
+    ///
+    /// The thresholds come from the CURRENT NODE's edges, so the bars re-aim themselves when a
+    /// Digimon evolves without anything here having to notice.
+    var energyProgress: EnergyProgress? {
+        guard let state, let node = graph.node(id: state.currentDigimonId) else { return nil }
+        return node.energyProgress(for: state.stageEnergy)
+    }
+
     /// The egg a brand-new game starts at: the FIRST Digitama in the graph.
     ///
     /// Deliberately not a random one. "A new game starts at a randomly selected Digitama" is

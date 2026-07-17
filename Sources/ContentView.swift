@@ -49,7 +49,7 @@ struct ContentView: View {
                     stage: presentation.spriteStage,
                     name: presentation.spriteFile,
                     animation: .idle,
-                    scale: 6
+                    scale: 5
                 )
 
                 Text(presentation.stage.displayName)
@@ -57,6 +57,11 @@ struct ContentView: View {
                     .foregroundStyle(.secondary)
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
+
+                if let progress = model.energyProgress {
+                    EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
+                        .padding(.top, 2)
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {

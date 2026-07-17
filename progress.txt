@@ -1100,3 +1100,44 @@ OPEN — HANDED ON, NOT HIDDEN:
   Uninstall the app there if a story needs a clean first launch — the same trap US-006 left behind.
 
 Remains: US-017 onward (US-001..US-016 pass; 16/35).
+
+## 2026-07-18 — US-017: Add four energy bars to main screen — PASSES
+
+Did:
+- Sources/EnergyBarsView.swift (already on disk uncommitted from a dead iteration, verified from
+  scratch): EnergyGoal (a type's earned amount + optional per-type target), EnergyProgress (four
+  goals + optional totalGate for an egg's TOTAL-energy hatch + totalEarned + fraction(of:)),
+  EvolutionNode.energyProgress(for:), and EnergyBarsView/EnergyBarRow.
+- Sources/GameState.swift: EnergyType.symbol -> 力/活/心/耐 (nothing persists it, like displayName).
+- Sources/MainScreenModel.swift: energyProgress computed from the CURRENT NODE's edges.
+- Sources/ContentView.swift: renders EnergyBarsView under the sprite, dominant = state.dominantEnergyType.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 228 tests (27 new), 0 failures.
+- VERIFIED IN SIM AT 41mm (Series 9, watchOS 10.4, simctl install per US-011's note):
+  * Fresh egg: 力/活/心/耐 all show 0 with a 'Hatch 0/50' total row, no clipping.
+  * Edited default.store with sqlite3 to agumon/Child stageEnergy 45/10/20/30 (stageEnergy is the
+    '2'-suffixed composite columns ZSTRENGTH2..; '1' is lifetimeEnergy) and relaunched:
+    力 45/60 bar ~75% ORANGE+BOLD (dominant), 耐 30/60 bar ~50% gray, 活 10 / 心 20 amount-only
+    with empty tracks (Agumon has no vitality/spirit edge). No clipping.
+  * Uninstalled afterward to leave a clean store for US-018.
+- All six AC observed literally: four symbol'd bars; progress toward the current node's next
+  minEnergy (Agumon's real branches strength->Greymon 60 and stamina->Meramon 60 render as x/60);
+  dominant distinguished by BOTH orange hue AND bold weight (not hue alone).
+
+DESIGN NOTES — later stories depend on these:
+- Bars are aimed by the CURRENT NODE (graph.node(id:)), NEVER GameState.stage — same shape US-016
+  pinned for the sprite. A saved id the graph does not know draws NO bars.
+- A type no edge names has target nil and shows its amount alone ('12', not '12/0' / '12/—').
+- An egg's hatch edge leaves requiredEnergy nil (US-007/US-018 hatch on the SUM), so no single bar
+  claims it: bars fill toward their SHARE of the total AND a 'Hatch N/gate' row shows the real gate.
+- dominant color is Color.orange as a LITERAL, deliberately not accentColor: no asset catalog on
+  this target (folder-reference sprites, US-002) means no AccentColor, and watchOS falls back to a
+  gray DIMMER than the .secondary of the other three — the highlight would be less prominent than
+  what it highlights. Only a screenshot catches this; it builds and runs either way.
+- Nil dominant (fresh egg) crowns nothing (US-015).
+
+Remains: US-018 onward (US-001..US-017 pass; 17/35). US-018 owns egg hatching — what the 'Hatch
+N/50' row counts toward — and must keep GameState.stage + currentDigimonId in step with the graph
+when it moves the Digimon; the bars re-aim automatically since they read the current node.
