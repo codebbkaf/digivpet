@@ -64,6 +64,7 @@ final class MainScreenModel: ObservableObject {
     private let energySource: HealthEnergySource
     private let calendar: Calendar
     private let now: () -> Date
+    private let chooseStartingDigitama: ([EvolutionNode]) -> EvolutionNode?
 
     private var store: GameStore?
     private var ledger: EnergyLedger?
@@ -76,18 +77,23 @@ final class MainScreenModel: ObservableObject {
     ///     throws and touches the disk — neither belongs in a `View.init`. `@MainActor` because
     ///     `GameStore` is, and this runs when `start()` does rather than where it was written.
     ///   - now: the clock. Injected so a test can place a read on a chosen day without waiting.
+    ///   - chooseStartingDigitama: picks a new game's egg from the graph's playable Digitama.
+    ///     Random by default, per US-018's "a new game starts at a randomly selected Digitama";
+    ///     injected so a test can pin one deterministically instead of chasing randomness.
     init(
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
         graph: EvolutionGraph = .bundled,
         energySource: HealthEnergySource = HealthEnergySource(),
         calendar: Calendar = .current,
-        now: @escaping () -> Date = Date.init
+        now: @escaping () -> Date = Date.init,
+        chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() }
     ) {
         self.makeStore = makeStore
         self.graph = graph
         self.energySource = energySource
         self.calendar = calendar
         self.now = now
+        self.chooseStartingDigitama = chooseStartingDigitama
     }
 
     /// How to draw the Digimon currently being raised, or nil if the graph does not know it.
@@ -105,13 +111,13 @@ final class MainScreenModel: ObservableObject {
         return node.energyProgress(for: state.stageEnergy)
     }
 
-    /// The egg a brand-new game starts at: the FIRST Digitama in the graph.
+    /// The egg a brand-new game starts at: one of the graph's playable Digitama, chosen by
+    /// `chooseStartingDigitama` (random in the app).
     ///
-    /// Deliberately not a random one. "A new game starts at a randomly selected Digitama" is
-    /// US-018's acceptance criterion, and choosing here would either pre-empt it or leave two
-    /// places picking the starting egg.
+    /// `dexOnly` Digitama are excluded — an egg that hatches has to animate, and a dexOnly node has
+    /// no animated sheet to slice.
     private var startingDigitamaId: String? {
-        graph.nodes(at: .digitama).first { !$0.dexOnly }?.id
+        chooseStartingDigitama(graph.nodes(at: .digitama).filter { !$0.dexOnly })?.id
     }
 
     /// Opens the saved game, starting a new one if there is none, then reads health data once so
@@ -151,6 +157,12 @@ final class MainScreenModel: ObservableObject {
         let readings = await energySource.readings(now: now())
         let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
                                              calendar: calendar)
+        // The energy just credited may be what tips an egg over its hatch threshold or a Digimon
+        // over an evolution's, so both run after crediting and before the save, letting one flush
+        // persist the change. A hatch leaves the new Baby I with zero stage energy, so evolving in
+        // the same refresh is a natural no-op — never a double move.
+        hatchIfReady(state)
+        evolveIfReady(state)
         do {
             try store?.save()
         } catch {
@@ -160,6 +172,55 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save after crediting: \(String(describing: error))")
         }
         Self.log.info("Refreshed health: credited \(credited.total) energy")
+    }
+
+    /// Hatches the egg into its linked Baby I form once total energy crosses the threshold.
+    ///
+    /// A no-op unless the current Digimon is a Digitama that is ready to hatch. Moves the saved game
+    /// onto the Baby I node and keeps `GameState.stage` in step with the graph — the two are a saved
+    /// duplicate (US-006) and the screen renders the stage from the graph, so a stale saved stage
+    /// would draw a placeholder. `stageEnergy` resets for the new stage while `lifetimeEnergy` is
+    /// left to carry the whole life; the Dex records the hatched form.
+    private func hatchIfReady(_ state: GameState) {
+        guard let node = graph.node(id: state.currentDigimonId),
+              let target = EggHatcher.hatchTarget(for: node, stageEnergy: state.stageEnergy),
+              let baby = graph.node(id: target) else { return }
+        advance(state, to: baby)
+        Self.log.info("Hatched \(node.id) into \(baby.id)")
+    }
+
+    /// Evolves the Digimon into whichever branch its earned energy qualifies for, once one does.
+    ///
+    /// A no-op unless the current node has an outgoing edge that qualifies (US-019's `qualifies`
+    /// rule: dominant type, per-type threshold, care mistakes, battle wins). The branch is chosen
+    /// from the CURRENT node's edges and by the CURRENT `stageEnergy`/`dominantEnergyType`, so a
+    /// Digimon that was fed steps as a child can still take the sleep branch as an adult. Applies
+    /// the same stage reset a hatch does — see `advance`.
+    private func evolveIfReady(_ state: GameState) {
+        guard let node = graph.node(id: state.currentDigimonId),
+              let target = EvolutionEngine.evolutionTarget(
+                for: node,
+                stageEnergy: state.stageEnergy,
+                dominant: state.dominantEnergyType,
+                careMistakes: state.careMistakeCount,
+                battleWins: state.battleWins),
+              let next = graph.node(id: target) else { return }
+        advance(state, to: next)
+        Self.log.info("Evolved \(node.id) into \(next.id)")
+    }
+
+    /// Moves the saved game onto `next`, the one reset a hatch and an evolution both perform: the
+    /// current id and `GameState.stage` step to the new node (the saved stage is a duplicate of a
+    /// graph fact the screen renders from, so a stale one would draw a placeholder), `stageEnergy`
+    /// resets so the new stage starts fresh, `stageEnteredDate` is stamped for the time gate US-020
+    /// will read, `lifetimeEnergy` is left untouched to carry the whole life, and the new form is
+    /// recorded in the Dex.
+    private func advance(_ state: GameState, to next: EvolutionNode) {
+        state.currentDigimonId = next.id
+        state.stage = next.stage
+        state.stageEnergy = .zero
+        state.stageEnteredDate = now()
+        store?.recordDiscovery(id: next.id, now: now())
     }
 
     private enum GraphError: Error, CustomStringConvertible {

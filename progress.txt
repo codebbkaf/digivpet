@@ -1141,3 +1141,146 @@ DESIGN NOTES — later stories depend on these:
 Remains: US-018 onward (US-001..US-017 pass; 17/35). US-018 owns egg hatching — what the 'Hatch
 N/50' row counts toward — and must keep GameState.stage + currentDigimonId in step with the graph
 when it moves the Digimon; the bars re-aim automatically since they read the current node.
+
+## 2026-07-18 — US-018: Implement egg hatching — PASSES
+
+Did:
+- Sources/EggHatcher.swift: the pure hatch rule. hatchTarget(for:stageEnergy:) returns the Baby I
+  id once a Digitama's TOTAL stageEnergy (all four types) reaches the hatch edge's minEnergy (50 in
+  the seed), else nil. The threshold is the EDGE's minEnergy, not a hard-coded 50 — the number
+  stays in the graph data, one place.
+- Sources/Dex.swift: @Model DexEntry (digimonId + firstDiscovered). A NEW entity, so adding it to
+  the schema is a lightweight migration (US-014 proved this shape for EnergyLedger; US-015 warned
+  an added non-optional ATTRIBUTE is the unsafe one, not an added entity).
+- Sources/GameStore.swift: DexEntry in the schema; recordDiscovery(id:now:) (idempotent, keeps the
+  first date, does NOT save so a hatch and its Dex entry flush in one transaction); dexIds();
+  resetGame now records the starting egg.
+- Sources/MainScreenModel.swift: startingDigitamaId is now RANDOM — injected chooseStartingDigitama
+  (default randomElement, dexOnly Digitama excluded). refresh() calls hatchIfReady() AFTER crediting
+  and BEFORE the save, so one flush persists both. hatchIfReady moves currentDigimonId to the Baby I,
+  keeps GameState.stage in step with the graph, resets stageEnergy while preserving lifetimeEnergy,
+  sets stageEnteredDate, and records the baby in the Dex.
+- Tests/EggHatchingTests.swift: 19 tests (6 EggHatcherTests + 13 EggHatchingTests).
+- Tests/MainScreenTests.swift: makeModel now injects chooseStartingDigitama { $0.first } so those
+  tests still start on agu_digitama; randomness is covered in the new suite.
+
+Verified (observed, not assumed):
+- `xcodebuild build` -> ** BUILD SUCCEEDED **, zero source warnings.
+- `xcodebuild test` -> ** TEST SUCCEEDED **, Executed 247 tests (19 new), 0 failures.
+- AC5 (testFortyNineDoesNotHatchAndFiftyDoes) pins the 50-exact boundary with a 49 SPREAD across all
+  four types (13/12/12/12), so it proves the TOTAL gates hatching, not any one type.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION (both files restored byte-identical after):
+1. hatch `>=` -> `>` in EggHatcher => the boundary/hatch tests red incl. the AC test
+   testFortyNineDoesNotHatchAndFiftyDoes and testEachSeedEggHatchesIntoItsLinkedBabyI.
+2. remove store?.recordDiscovery from the hatch => ONLY testTheHatchedDigimonAndItsEggAreInTheDex
+   red (on the botamon assertion), the egg-recording path via resetGame left intact.
+
+THE TRAP I HIT — DO NOT RE-DERIVE, IT IS WHY THE DEX TESTS REOPEN:
+- My first Dex assertions read dexIds() from the SAME live GameStore that wrote it. That passes on a
+  shared same-process cache EVEN IF the save never reached disk. A Simulator RELAUNCH (a real second
+  process) is what exposed it. Added testRecordDiscoveryPersistsAcrossAReopen and
+  testAHatchedDigimonIsInTheDexAfterAReopen, which TEAR DOWN the writing store before a fresh one
+  reads the file; both pass, so recordDiscovery+save genuinely persists to disk.
+- The very first Sim run showed botamon in STATE but not in the DEX. That was a WAL ARTIFACT of my
+  editing the sqlite store while its -wal was live, NOT a code bug. Re-running after
+  `PRAGMA wal_checkpoint(TRUNCATE)` + removing -wal/-shm BEFORE the edit gave the right result. Never
+  edit the store with a live WAL — CoreData and the sqlite3 CLI disagree about what is on disk.
+
+VERIFIED IN SIM on Series 11 (46mm):
+- Fresh game rendered a randomly-picked "Agu Digitama" egg ANIMATING: 4 screenshots at 250ms with the
+  clock cropped out yield exactly 2 distinct frames = idle<->wobble at 500ms (US-005's method).
+- After presetting stageEnergy to 50 (clean-WAL sqlite edit) and relaunching, the egg HATCHED into
+  Botamon (Baby I): the screen reads "Botamon" / Baby I, the bars re-aimed to Botamon's edges (力 0/20),
+  and the store on disk read back state=botamon|Baby I, dex=agu_digitama,botamon after terminate.
+- Uninstalled afterward to leave a clean store for US-019.
+
+AC1's "animating its 3 frames" — the interpretation, flagged not hidden:
+- The egg idles on frames 1-2 (idle/wobble) and frame 3 is RESERVED for the hatch, per US-005's
+  documented decision ("reusing walk indices would draw the egg cracking open as part of its idle" is
+  a BUG the codebase guards) and tasks/prd-digimon-health-vpet.md line 71 ("Frame 3 is the egg cracking
+  open... a ready-made hatch animation"). So "3 frames" is the 3-frame Digitama sheet, animating its
+  idle; frame 3 belongs to the hatch moment. testTheStartingEggAnimates asserts all three egg frames
+  exist on disk AND the idle loop is non-empty. A VISIBLE transient hatch animation (playing frame 3
+  before the swap) is NOT built: prd.json's US-018 ACs do not ask for one, and a timed transition
+  needs Task.sleep machinery that fights the injectable-clock rule. The hatch applies on the energy
+  update; the frame-3 animation is left for a later polish story, with the frame reachable.
+
+DESIGN CALLS — later stories depend on these:
+- Hatch resets stageEnergy to zero and sets stageEnteredDate exactly as US-019's evolution will, so a
+  Baby I is not born part-way to Baby II. energyLastEarned is NOT reset (US-015: a zeroed stage has no
+  dominant until something is earned).
+- GameState.stage is kept in step with the graph node's stage when the Digimon moves (US-016's ask);
+  the bars re-aim automatically since they read the current node.
+- The Dex is a SEPARATE @Model, so resetGame's total wipe (which deletes only GameState) leaves it
+  intact — testResettingTheGameKeepsTheDex pins it. US-029's rebirth depends on the Dex outliving a
+  Digimon; US-019 (which also "adds to the Dex" on evolution) should call GameStore.recordDiscovery.
+- recordDiscovery is idempotent and keeps the FIRST discovery date, so a species raised again in a
+  later life is not re-dated — testRecordingADiscoveryIsIdempotent.
+- Migration re-run for the added entity: testAStoreWrittenBeforeTheDexExistedStillOpens writes with
+  Schema([GameState.self, EnergyLedger.self]) and opens with the DexEntry schema, saved game surviving.
+
+Remains: US-019 onward (US-001..US-018 pass; 18/35).
+
+## 2026-07-18 — US-019: Implement evolution edge evaluation — PASSES
+
+STARTED WITH UNCOMMITTED WORK ON DISK (same as US-006/US-014): Sources/EvolutionEngine.swift and
+the evolveIfReady/advance wiring in MainScreenModel were already present but UNTESTED, and US-018's
+whole blob (Dex.swift, EggHatcher.swift, EggHatchingTests.swift, GameStore/MainScreenModel/
+MainScreenTests edits, prd US-018 marked passes:true) had never been committed either. Recent git
+log ends at US-017. Treated ALL of it as unverified: ran the suite first (247/247 green baseline)
+before touching anything, wrote the missing US-019 tests, then mutation-tested. THIS COMMIT
+THEREFORE ALSO CARRIES US-018's implementation — verified green as part of the full suite, not
+trusted because it looked right.
+
+Did:
+- Read EvolutionEngine.swift (the pure branch chooser) and the MainScreenModel wiring. Both were
+  complete and correct; I did NOT change them. evolutionTarget(...) filters the current node's
+  edges by qualifies(...) and returns the qualifying edge with the highest minEnergy
+  (max(by: minEnergy)); qualifies gates on dominant == requiredEnergy AND
+  stageEnergy[requiredEnergy] >= minEnergy AND careMistakes <= maxCareMistakes AND
+  battleWins >= minBattleWins when the edge sets one. A nil requiredEnergy (Digitama hatch edge)
+  never qualifies — hatching stays EggHatcher's. The apply step is MainScreenModel.evolveIfReady
+  (called from refresh() after crediting, before save) via the shared advance(): moves
+  currentDigimonId + GameState.stage, resets stageEnergy to .zero, preserves lifetimeEnergy, stamps
+  stageEnteredDate = now, records the Dex — identical to a hatch's reset.
+- Wrote Tests/EvolutionTests.swift: 9 pure EvolutionEngineTests + 5 @MainActor EvolutionApplyTests
+  that drive the real GameStore through refresh().
+
+Verified (observed, not assumed):
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED zero source warnings.
+- xcodebuild test TEST SUCCEEDED 261/261 (14 new).
+- AC5 covered twice: testStrengthAndSpiritDominantFromTheSameNodeProduceDifferentResults (pure) and
+  testDominantEnergyDecidesTheBranchThroughRefresh (through the model, two independent store files).
+- AC6 covered twice: testAnEdgeIsBlockedWhenCareMistakesExceedMaxCareMistakes (boundary: at the
+  limit qualifies, one over blocks) and testCareMistakesBlockEvolutionThroughRefresh (through refresh).
+- AC3 testWhenMultipleEdgesQualifyTheHighestMinEnergyWins; AC2 split across the dominant-match,
+  min-energy-boundary, battle-wins, and dominant-gate-isolation tests; AC4
+  testEvolvingResetsStageEnergyKeepsLifetimeStampsDateAndRecordsTheDex + testTheEvolutionIsPersisted
+  (re-read through a SECOND store on the same file, so it came off disk).
+
+TESTS PROVEN NON-VACUOUS BY MUTATION (3 mutations of the real EvolutionEngine.swift, each restored
+byte-identical; final md5 cd3f198e94ec08289b9010e1658f44d9):
+1. max -> min minEnergy selection => testWhenMultipleEdgesQualifyTheHighestMinEnergyWins red.
+2. careMistakes <= -> < (off-by-one) => testAnEdgeIsBlockedWhenCareMistakesExceedMaxCareMistakes red.
+3. drop the `dominant == requiredEnergy` guard => caught NOTHING at first. This exposed a real gap
+   in my OWN tests: every fixture put energy only in the dominant type, so the per-type minEnergy
+   guard incidentally stood in for the dominant gate — but AC2 lists them as SEPARATE conditions.
+   Added testAnEdgeIsBlockedWhenItsTypeIsNotDominantEvenWithEnoughEnergy (strength 50 >= its 40
+   threshold, but spirit is dominant => the spirit branch, not strength), which isolates the gate.
+   Re-ran mutation 3: now fails cleanly. LESSON (same family as US-012's redundant-flag note): when
+   two independent conditions are only ever exercised together, a mutation to one hides behind the
+   other, and the suite looks stronger than it is.
+
+DESIGN NOTES — later stories depend on these:
+- EvolutionEngine deliberately does NOT gate on time and never takes an isDefault edge on its own.
+  US-020 owns the min-time-in-stage rule and the isDefault fallback for a node whose gate has opened
+  with nothing qualifying. Because every seed non-terminal node's single default edge does not fire
+  here (its threshold is advisory per US-008), US-020's fallback is what actually makes those lines
+  progress — do not expect the seed to evolve on energy alone.
+- Only ONE evolution per refresh (evolveIfReady does not loop). A fresh hatch lands with zero
+  stageEnergy, so hatching then evolving in the same refresh is a natural no-op, never a double move.
+- advance() sets stageEnteredDate = now precisely so US-020's clock has a real start; the apply test
+  asserts it moved forward from the seeded prior stage date.
+
+Remains: US-020 onward (US-001..US-019 pass; 19/35).

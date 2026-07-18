@@ -10,7 +10,7 @@ import SwiftData
 final class GameStore {
     /// Every model that gets persisted. Adding a `@Model` type means adding it here too, or it
     /// silently will not be saved.
-    static let schema = Schema([GameState.self, EnergyLedger.self])
+    static let schema = Schema([GameState.self, EnergyLedger.self, DexEntry.self])
 
     let container: ModelContainer
 
@@ -46,8 +46,33 @@ final class GameStore {
         try context.delete(model: GameState.self)
         let fresh = GameState(currentDigimonId: digitamaId, now: now)
         context.insert(fresh)
+        // The egg you are handed is itself a discovered Digimon. Recorded here rather than at the
+        // call site so a new game and its first Dex entry are one transaction; the Dex survives the
+        // `delete` above because it is a separate entity.
+        recordDiscovery(id: digitamaId, now: now)
         try context.save()
         return fresh
+    }
+
+    /// Records a Digimon in the Dex the first time it is discovered.
+    ///
+    /// Idempotent: a Digimon already in the Dex is not duplicated and its `firstDiscovered` date is
+    /// kept. Does NOT save — the caller flushes, so a discovery and the game change that produced it
+    /// (a hatch, an evolution) reach disk together or not at all. Returns whether a new entry was
+    /// added.
+    @discardableResult
+    func recordDiscovery(id: String, now: Date = Date()) -> Bool {
+        // The Dex is small — one entry per Digimon ever raised — so a scan is cheaper than a
+        // predicate and avoids leaning on SwiftData's unique-constraint upsert semantics.
+        let existing = (try? context.fetch(FetchDescriptor<DexEntry>())) ?? []
+        guard !existing.contains(where: { $0.digimonId == id }) else { return false }
+        context.insert(DexEntry(digimonId: id, firstDiscovered: now))
+        return true
+    }
+
+    /// Every Digimon id in the Dex, in no particular order.
+    func dexIds() throws -> [String] {
+        try context.fetch(FetchDescriptor<DexEntry>()).map(\.digimonId)
     }
 
     /// The energy credit ledger, starting a fresh one at today if there is none yet.

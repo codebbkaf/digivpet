@@ -64,6 +64,9 @@ final class MainScreenModelTests: XCTestCase {
     }
 
     /// The model under test, reading whatever `steps` is loaded with and nothing else.
+    ///
+    /// The starting egg is pinned to the FIRST playable Digitama rather than a random one, so these
+    /// tests can name it (agu_digitama); the randomness itself is exercised in `EggHatchingTests`.
     private func makeModel(
         graph: EvolutionGraph = .bundled,
         now: @escaping () -> Date = { Fixture.morning }
@@ -78,7 +81,8 @@ final class MainScreenModelTests: XCTestCase {
             graph: graph,
             energySource: source,
             calendar: Fixture.losAngeles,
-            now: now
+            now: now,
+            chooseStartingDigitama: { $0.first }
         )
     }
 
