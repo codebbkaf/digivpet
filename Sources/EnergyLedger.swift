@@ -108,4 +108,14 @@ struct HealthEnergySource {
         readings[.spirit] = await sleepReader.read(now: now)
         return readings
     }
+
+    /// Last night's longest asleep block, or nil if there was none to read.
+    ///
+    /// Separate from `readings` because the two want different things out of the same night: energy
+    /// is paid for the MINUTES asleep, while US-026's sleep window needs WHEN the block was. Routed
+    /// through here rather than by handing `MainScreenModel` its own reader, so a test that has
+    /// already injected a fixture sleep fetcher drives both answers from the one seam.
+    func lastNightSleepBlock(now: Date) async -> SleepBlock? {
+        await sleepReader.readBlock(now: now)
+    }
 }

@@ -1714,3 +1714,85 @@ the user's sleep history (22:00-07:00 fallback window). Both feed() and train() 
 it and both blocked paths are tested, so US-026 only has to compute the boolean and swap the idle
 loop for .sleep.
 US-027 (care mistakes): `state.refusalCount` is already the today-only overfeeding counter.
+
+================================================================================
+2026-07-18 — US-026: Mirror real sleep with sleep state
+================================================================================
+
+WHAT I BUILT
+
+- `Sources/SleepSchedule.swift` — a nightly window as two minutes-past-midnight. A TIME OF DAY,
+  not a DateInterval: `LastNightSleepReader` gives one concrete night, and this turns that night
+  into the recurring habit it stands for, so the Digimon sleeps tonight at the hour the user slept
+  last night with no new health data.
+  - `init?(inferredFrom: SleepBlock, calendar:)` uses the block's SPAN, not its asleepDuration —
+    the window must cover the awakenings inside the night or the Digimon flickers awake at 03:00
+    alongside the user rolling over.
+  - `minimumInferableSleep = 3h`. `longestAsleepBlock` picks the night's longest block, but on a
+    night whose ONLY record is a 40-minute evening doze that block IS the doze, and a 40-minute
+    window starting 20:15 is worse than 22:00-07:00. v1 judgement, well below a night and well
+    above a nap. Returns nil -> caller falls back.
+  - `contains` handles the wrap: `wrapsMidnight` is `wake <= bedtime`, so a night-shift sleeper's
+    02:00-10:00 gets the non-wrapping branch instead of being inverted into asleep-all-day.
+    Bedtime inclusive, waking exclusive, so consecutive days never both claim a minute.
+- `HealthEnergySource.lastNightSleepBlock(now:)` exposes `readBlock` (which US-013 had already
+  written for this). Routed through the energy source rather than giving MainScreenModel its own
+  reader, so a test that already injects a fixture sleep fetcher drives both answers from one seam.
+- `MainScreenModel`: `@Published private(set) var sleepSchedule`, `updateSleepState()` called at
+  the top of `refresh()`, and `restingAnimation` (= `.sleep` when asleep, `.idle` otherwise).
+
+THE RESTING-POSE CHANGE (touches US-024/US-025)
+
+`show()` now reverts to `restingAnimation` instead of `.idle`, and `show(nil, ...)` — a BLOCKED
+action — rests rather than idling. So a blocked-while-asleep feed/train now leaves the Digimon in
+the sleep loop, not the walk loop. Two existing tests asserted `.idle` there and now assert
+`.sleep`; both were updated with a comment saying US-026 changed the behaviour. That is a real
+behaviour change, not a test being bent: a sleeping Digimon showing frames 4/5 is AC1.
+
+`updateSleepState` only swaps the pose when it is ALREADY a resting one (`.idle`/`.sleep`). An eat
+loop or attack pose mid-action is left alone and its own timer reverts it to whatever resting pose
+is current by then — covered by testAnActionRevertsToTheSleepLoopWhenTheDigimonIsAsleep.
+
+GOTCHA THAT COST ME A WRONG SCREENSHOT
+
+*** Forcing `isAsleep = true` in a demo DOES NOT SURVIVE LAUNCH. *** `ContentView` refreshes on
+every scenePhase `.active`, including the one right after `start()`, and that refresh re-derives
+isAsleep from the window and undoes it. My first -sleepDemo screenshot came back with Agumon's
+green OPEN eye — the walk loop. I only caught it by cropping frames 0/1/4/5 out of
+`Child/Agumon.png` and comparing: sleep1/sleep2 are crouched with a CLOSED eye, walk1/walk2 stand
+with a green open one. File size was no help (20231 vs 20261 bytes — nearly identical, both wrong).
+Fix: DEBUG-only `sleepScheduleOverride` + `forceAsleepForDemo()`, which puts a 2h window around
+`now()` so the REAL derivation puts it to sleep and it stays asleep across any number of refreshes.
+`-feedAsleepDemo`/`-trainAsleepDemo` now use the same helper.
+
+NOTE: sips cannot crop from the top-left (`--cropOffset` is from CENTRE). Use CGImage.cropping —
+/tmp/crop.swift, same slicing the app does.
+
+VERIFIED (observed, not assumed)
+
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED (twice — before and after the demo fix).
+- xcodebuild test TEST SUCCEEDED 355/355 (was 340; +15 in Tests/SleepStateTests.swift).
+- AC4 testIsAsleepIsTrueInsideTheInferredWindowAndFalseOutside — one night (23:30-06:15) read at
+  01:00 (asleep), 09:00 (awake) and 22:00 (AWAKE, though the fallback would say asleep — that is
+  what proves the inferred window is in use and not the default).
+- AC2 testTheFallbackWindowIsTenPmToSeven, testWithNoSleepHistoryTheFallbackWindowIsUsed,
+  testAFailedSleepReadFallsBackRatherThanStayingAwake, testANapOnlyNightFallsBack.
+- AC1 testTheSleepLoopIsFramesFourAndFive (by NUMBER: sleep1==4, sleep2==5, and != idle's frames),
+  testASleepingDigimonShowsTheSleepLoopAndAnAwakeOneIdles.
+- AC3 testASleepingDigimonCannotBeFedOrTrained — driven by the DERIVED state, nothing hand-set;
+  this is the part US-024/US-025 could not test. Plus
+  testTheSameDigimonCanBeFedOnceItIsOutOfTheWindow, so the block is the window's doing.
+- Also testTheWindowSpansTheWholeNightIncludingItsAwakenings, testADaytimeWindowDoesNotWrapMidnight,
+  testANapIsTooShortToBecomeTheWindow, testExactlyTheMinimumIsLongEnough.
+- Simulator (Apple Watch Series 11 (46mm), screenshots in /tmp, not committed):
+  -sleepDemo         -> Agumon crouched, eye CLOSED, and two shots 1s apart differ => it is
+                        alternating frames 4 and 5, not holding one.
+  (no demo arg)      -> real fallback path end-to-end: sim clock 15:36 is outside 22:00-07:00, so
+                        the open-eye walk loop.
+  -feedAsleepDemo    -> "Asleep - let it rest.", 活 30 unspent, and now in the SLEEP pose.
+
+REMAINS: US-027 onward (US-001..US-026 pass; 26/35).
+US-027 (care mistakes): `state.refusalCount` is already the today-only overfeeding counter, and
+`SleepAnalysis.asleepMinutes` already distinguishes `.noData` (HealthKit said nothing) from
+`.value(0)` (it described a night with no sleep) — US-027 should charge a care mistake for only
+one of those. `sleepSchedule` is now published, so "slept far less than usual" is available too.

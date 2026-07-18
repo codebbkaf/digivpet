@@ -90,10 +90,15 @@ final class MainScreenModel: ObservableObject {
 
     /// Whether the Digimon is in its sleep window, which blocks feeding and training.
     ///
-    /// Settable and defaulted to false because US-026 is what infers it from the user's sleep
-    /// history; until then it is only ever true in a test or the Simulator demo. Deliberately NOT on
-    /// `GameState` — sleep is derived from health data, not saved-game state.
+    /// DERIVED, not saved: `refresh()` recomputes it from `sleepSchedule` and the clock, so it is
+    /// deliberately NOT on `GameState` — sleep comes from health data, not from the saved game. It
+    /// stays settable so the Simulator demos can force it, since the Simulator has neither sleep
+    /// history nor a way to wait until 22:00.
     @Published var isAsleep = false
+
+    /// The nightly window the Digimon sleeps in: inferred from the user's last night of sleep, or
+    /// `.fallback` (22:00–07:00) when HealthKit had no usable history to infer from.
+    @Published private(set) var sleepSchedule: SleepSchedule = .fallback
 
     private let makeStore: @MainActor () throws -> GameStore
     private let graph: EvolutionGraph
@@ -106,6 +111,17 @@ final class MainScreenModel: ObservableObject {
     /// `var` only so the DEBUG Simulator demo can hold a pose long enough to be screenshotted —
     /// nothing in the app or the tests reassigns it. See `seedFeedDemoIfRequested`.
     private var actionDuration: TimeInterval
+
+    #if DEBUG
+    /// Debug-only: a sleep window forced by a demo launch argument, winning over the inferred one.
+    ///
+    /// Needed because forcing `isAsleep` alone does not survive: `ContentView` refreshes on every
+    /// return to `.active`, including the one right after launch, and that refresh re-derives
+    /// `isAsleep` from the window and undoes it. Overriding the WINDOW instead means the real
+    /// derivation is what puts the Digimon to sleep, so it stays asleep across any number of
+    /// refreshes — and the demo exercises the shipped path rather than its output.
+    private var sleepScheduleOverride: SleepSchedule?
+    #endif
 
     private var store: GameStore?
     private var ledger: EnergyLedger?
@@ -199,6 +215,7 @@ final class MainScreenModel: ObservableObject {
         seedCeremonyDemoIfRequested()
         seedFeedDemoIfRequested()
         seedTrainDemoIfRequested()
+        seedSleepDemoIfRequested()
         #endif
     }
 
@@ -243,7 +260,7 @@ final class MainScreenModel: ObservableObject {
         }
         state.stageEnergy[.vitality] = 30
         state.hunger = refusing ? 0 : 3
-        isAsleep = sleeping
+        if sleeping { forceAsleepForDemo() }
         actionDuration = 60
         feed()
     }
@@ -271,9 +288,41 @@ final class MainScreenModel: ObservableObject {
         }
         state.stageEnergy[.strength] = 30
         state.healthStatus = sick ? .sick : .healthy
-        isAsleep = sleeping
+        if sleeping { forceAsleepForDemo() }
         actionDuration = 60
         train()
+    }
+
+    /// Debug-only: forces the Digimon into its sleep window so the sleep loop can be screenshotted.
+    /// The Simulator has no sleep history to infer a window from, and no way to wait until 22:00.
+    ///
+    /// - `-sleepDemo` — asleep: the sleep1 <-> sleep2 loop instead of the walk loop.
+    private func seedSleepDemoIfRequested() {
+        guard CommandLine.arguments.contains("-sleepDemo"), let state else { return }
+
+        // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
+        // sleep frames, so an egg would screenshot as the placeholder however well this worked.
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        forceAsleepForDemo()
+        animation = restingAnimation
+    }
+
+    /// Debug-only: puts a two-hour sleep window around the current moment and derives from it, so
+    /// the Digimon is asleep NOW and stays asleep across the refresh every foregrounding runs.
+    ///
+    /// A window rather than `isAsleep = true` for exactly that reason — see `sleepScheduleOverride`.
+    private func forceAsleepForDemo() {
+        let parts = calendar.dateComponents([.hour, .minute], from: now())
+        let minute = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+        // Modulo 1440, so a demo run at 00:30 or 23:30 wraps rather than going out of range.
+        sleepScheduleOverride = SleepSchedule(bedtimeMinute: (minute + 1440 - 60) % 1440,
+                                              wakeMinute: (minute + 60) % 1440)
+        sleepSchedule = sleepScheduleOverride ?? .fallback
+        isAsleep = sleepSchedule.contains(now(), calendar: calendar)
     }
     #endif
 
@@ -294,6 +343,8 @@ final class MainScreenModel: ObservableObject {
         // several awaits long. Nothing here depends on the energy about to be credited.
         state.advanceHunger(now: now())
 
+        await updateSleepState()
+
         let readings = await energySource.readings(now: now())
         let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
                                              calendar: calendar)
@@ -312,6 +363,37 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save after crediting: \(String(describing: error))")
         }
         Self.log.info("Refreshed health: credited \(credited.total) energy")
+    }
+
+    /// The pose the Digimon returns to when nothing else is happening: the sleep loop
+    /// (sleep1 <-> sleep2) while it is in its sleep window, the walk loop otherwise.
+    ///
+    /// Everything that ends an action reverts to THIS rather than to `.idle`, which is what keeps a
+    /// Digimon fed at 23:59 from going back to pacing about.
+    var restingAnimation: SpriteAnimation { isAsleep ? .sleep : .idle }
+
+    /// Re-infers the sleep window from last night's sleep and puts the Digimon into or out of it.
+    ///
+    /// Runs on every `refresh()`, i.e. every time the app comes to the front. That is enough to be
+    /// right whenever anyone is looking: nothing observes the window closing while the screen is
+    /// dark, and US-033's background refresh is what will re-evaluate it without a foreground.
+    private func updateSleepState() async {
+        let block = await energySource.lastNightSleepBlock(now: now())
+        // A night too short to be a habit, or no night at all, both land on 22:00-07:00. Neither
+        // tells us anything about when this user sleeps, so neither should move the window.
+        let inferred = block.flatMap { SleepSchedule(inferredFrom: $0, calendar: calendar) } ?? .fallback
+        #if DEBUG
+        sleepSchedule = sleepScheduleOverride ?? inferred
+        #else
+        sleepSchedule = inferred
+        #endif
+        isAsleep = sleepSchedule.contains(now(), calendar: calendar)
+
+        // Only a RESTING pose is swapped. An eat loop or an attack pose mid-action is left alone,
+        // and its own timer reverts it to whichever resting pose is current by then.
+        if animation == .idle || animation == .sleep {
+            animation = restingAnimation
+        }
     }
 
     /// Feeds the Digimon: spends Vitality, takes a unit off hunger, and plays the eat loop with a
@@ -379,19 +461,22 @@ final class MainScreenModel: ObservableObject {
         return outcome
     }
 
-    /// Shows an action's pose and caption, then returns to idle after `actionDuration`.
+    /// Shows an action's pose and caption, then returns to the resting pose after `actionDuration`.
     ///
     /// The previous reset is cancelled first, so tapping Feed twice in quick succession holds the
     /// second action for its full duration instead of being cut short by the first one's timer.
+    ///
+    /// A nil animation means "nothing happened to the Digimon" — a blocked action — so it keeps
+    /// RESTING, which for a sleeping Digimon is the sleep loop and not the walk loop.
     private func show(_ animation: SpriteAnimation?, message: String?) {
         actionResetTask?.cancel()
-        self.animation = animation ?? .idle
+        self.animation = animation ?? restingAnimation
         self.actionMessage = message
 
         actionResetTask = Task { [actionDuration] in
             try? await Task.sleep(for: .seconds(actionDuration))
             guard !Task.isCancelled else { return }
-            self.animation = .idle
+            self.animation = self.restingAnimation
             self.actionMessage = nil
         }
     }

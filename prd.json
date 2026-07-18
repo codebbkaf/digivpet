@@ -440,8 +440,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 26,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SleepSchedule infers a nightly window from last night's longest asleep block (span, min 3h) and falls back to 22:00-07:00; MainScreenModel.refresh() derives isAsleep from it and rests in the sleep loop (frames 4/5) instead of idling. 355 tests pass; -sleepDemo screenshot shows the closed-eye sleep frames."
     },
     {
       "id": "US-027",

@@ -336,7 +336,9 @@ final class FeedApplyTests: XCTestCase {
 
         guard case .blocked = outcome else { return XCTFail("expected a block, got \(String(describing: outcome))") }
         XCTAssertNotNil(model.actionMessage, "the reason is what the screen shows")
-        XCTAssertEqual(model.animation, .idle, "nothing happened to it, so it keeps idling")
+        // US-026 made the resting pose depend on the sleep window: nothing happened to it, so it
+        // keeps RESTING, and a sleeping Digimon rests in the sleep loop rather than the walk loop.
+        XCTAssertEqual(model.animation, .sleep)
         XCTAssertEqual(hapticCount, 0)
         XCTAssertEqual(model.state?.hunger, 3)
     }
