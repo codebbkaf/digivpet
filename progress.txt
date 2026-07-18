@@ -2425,3 +2425,76 @@ WHAT US-034 INHERITS
 - `Idle Frame Only/` 16x16 sprites are what the complication draws (PRD FR-22), not the 48x64 sheets.
 
 REMAINS: US-034, US-035 (US-001..US-033 pass; 33/35).
+
+================================================================================
+2026-07-19 — US-034: Add WidgetKit complication
+================================================================================
+
+WHAT WAS BUILT
+
+- `DigiVPetComplicationExtension` in `project.yml`: an `app-extension`, embedded via a dependency on
+  the app target, `NSExtensionPointIdentifier = com.apple.widgetkit-extension`, bundle id under the
+  app's own (`com.digivpet.DigiVPet.Complication`). Verified in the built product: the `.appex` is in
+  `DigiVPet.app/PlugIns/`.
+- `ComplicationSnapshot` + `ComplicationSnapshotStore`: the app writes a small JSON file into the
+  `group.com.digivpet.DigiVPet` container at the end of EVERY `MainScreenModel.refresh()`, and the
+  widget only reads it. The widget never opens a `GameStore` — a second store on the same file means
+  a second in-memory `EnergyLedger` and the same steps credited twice, which is the exact bug
+  `GameSession` exists to prevent. The snapshot deliberately carries no `GameState`, no `EnergyType`
+  and no graph, so the extension links neither SwiftData nor the evolution model.
+- `ComplicationViews.swift` (compiled into BOTH targets) holds the provider and the two family views;
+  `Sources/Complication/DigiVPetComplication.swift` holds only the `Widget` and the `@main`
+  `WidgetBundle`, and `Sources` excludes `Complication/**` from the app so there is one entry point.
+- Sprites are bundled a SECOND time into the `.appex`: an extension's `Bundle.main` is its own, so
+  without that copy every complication would draw the '?' placeholder. Confirmed the PNG is inside
+  the appex.
+
+WHAT WAS OBSERVED
+
+- `xcodebuild build` SUCCEEDED; `xcodebuild test` SUCCEEDED, 492/492, was 482 (+10).
+- Simulator, Series 11 (46mm), `-complicationDemo` (a DEBUG-only screen that pushes the extension's
+  OWN views inside the app — `simctl` cannot add a complication to a watch face, so this is the only
+  way to see what the face will show). Two runs:
+  - fresh game: circular and rectangular both draw the real `Agu_Digitama` egg, unsmoothed, and the
+    rectangular says "No energy yet" — a fresh egg has no dominant type and must not be given one.
+  - after `-trainDemo`: both draw Agumon; rectangular shows the name, the 力 glyph, a gauge at 0.5
+    and the value 30.
+- The snapshot really crossed the container boundary: `complication-snapshot.json` was read back out
+  of `Containers/Shared/AppGroup/...` with the expected fields after each launch.
+
+AC5 — TAP OPENS THE APP — IS STRUCTURAL ONLY, NOT OBSERVED
+
+The entry view carries `.widgetURL(DigiVPetURL.open)` and the app registers `CFBundleURLTypes` for
+the `digivpet` scheme, and `testTheComplicationTapURLUsesTheAppsRegisteredScheme` pins the two
+together so they cannot drift (a widget URL on an unclaimed scheme opens nothing, silently). But NO
+TAP WAS OBSERVED: `xcrun simctl openurl` is not supported on the watchOS simulator at all — it fails
+for `digivpet://open` (LSApplicationWorkspace 115) and for plain `https://apple.com` (ENOTSUP 45)
+alike, so the failure is the tool, not the registration. watchOS opens the containing app for a
+complication tap even with no URL, so the behaviour does not depend on the scheme; the scheme is what
+would let a future story deep-link. This is the one AC that was not literally verified.
+
+REGRESSION FOUND AND FIXED IN THE SAME STORY
+
+Adding the app-group entitlement MOVED THE SAVED GAME. `NSPersistentContainer.defaultDirectoryURL()`
+returns the group container as soon as an app has app groups, so SwiftData's default store jumped to
+`Shared/AppGroup/.../default.store` — seen in the test host's CoreData log the moment the entitlement
+landed. On a real watch that would have orphaned an existing save and handed the user a fresh egg.
+`GameStore.defaultStoreURL()` now names Application Support inside the APP's own container
+explicitly, `testTheSavedGameStaysInTheAppsOwnContainer` asserts it, and the Simulator confirms
+`default.store` back in the app container with only the snapshot in the group one.
+
+STILL OPEN, NOT US-034
+
+The pre-existing '?' placeholder for a Digitama on the MAIN screen (noted under US-033) is still
+there. Note that the complication does NOT have it: it draws through `IdleSpriteCache`, whose egg
+fallback to sheet frame 0 works — which narrows the main-screen bug to that screen's own frame
+lookup, not to the art or the loader.
+
+WHAT US-035 INHERITS
+
+- `MainScreenModel.refresh()` is where anything wanting to run after every state change belongs; it
+  already ends in `publishComplicationSnapshot()`.
+- The DEBUG launch-argument demo pattern (`-complicationDemo`, `-dexDemo`, `-feedDemo`) is how a
+  Simulator screenshot reaches a screen `simctl` cannot tap to.
+
+REMAINS: US-035 (US-001..US-034 pass; 34/35).

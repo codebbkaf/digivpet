@@ -515,6 +515,9 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save after crediting: \(String(describing: error))")
         }
         Self.log.info("Refreshed health: credited \(credited.total) energy")
+        // Last, once every rule above has settled: the complication must never show a Digimon
+        // mid-refresh — hatched but not yet evolved, or sick but not yet dead.
+        publishComplicationSnapshot()
     }
 
     /// The pose the Digimon returns to when nothing else is happening: the angry frame held still

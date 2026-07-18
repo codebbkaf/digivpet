@@ -578,8 +578,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 34,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Widget extension target DigiVPetComplicationExtension in project.yml (embedded, NSExtensionPointIdentifier com.apple.widgetkit-extension, its own copy of the sprite folder); app publishes a ComplicationSnapshot to the group.com.digivpet.DigiVPet container at the end of every refresh and reloads timelines; circular draws the idle sprite, rectangular adds name + dominant-energy gauge. 492/492 tests, build green, both families screenshotted in the Simulator via -complicationDemo. AC5 (tap opens the app) is STRUCTURAL ONLY: watchOS sim rejects simctl openurl entirely (https fails too, ENOTSUP), so the widgetURL + registered digivpet scheme are pinned by a test but no tap was observed. Also pinned GameStore.defaultStoreURL to the app container — the new app-group entitlement had moved SwiftData's default store into the shared container, orphaning saved games."
     },
     {
       "id": "US-035",

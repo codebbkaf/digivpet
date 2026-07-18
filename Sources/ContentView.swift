@@ -10,6 +10,7 @@ struct ContentView: View {
 
     #if DEBUG
     @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
+    @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
     #endif
 
     /// Scroll anchors for the action controls, so the Simulator demos can bring them into view.
@@ -73,6 +74,13 @@ struct ContentView: View {
             // without a way to push it from the launch command. Compiled out of release builds.
             .navigationDestination(isPresented: $showsDexDemo) {
                 DexView(model: DexModel())
+            }
+            // Same reason, and one more: `simctl` cannot add a complication to a watch face either,
+            // so this pushes the extension's own views inside the app where a screenshot can reach
+            // them. Pushed rather than shown instead of the game, so `start()` has already run and
+            // published the snapshot this draws.
+            .navigationDestination(isPresented: $showsComplicationDemo) {
+                ComplicationDemoView()
             }
             #endif
         }

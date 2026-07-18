@@ -20,12 +20,33 @@ final class GameStore {
         self.container = container
     }
 
-    /// - Parameter url: the store file. Defaults to SwiftData's usual on-disk location for the
-    ///   app; tests pass a temp file so each one gets a clean store.
+    /// - Parameter url: the store file. Defaults to `defaultStoreURL`; tests pass a temp file so
+    ///   each one gets a clean store.
     convenience init(url: URL? = nil) throws {
-        let configuration = url.map { ModelConfiguration(schema: Self.schema, url: $0) }
-            ?? ModelConfiguration(schema: Self.schema)
+        let configuration = ModelConfiguration(schema: Self.schema, url: url ?? Self.defaultStoreURL())
         self.init(container: try ModelContainer(for: Self.schema, configurations: configuration))
+    }
+
+    /// Where the saved game lives: Application Support inside the APP's OWN container.
+    ///
+    /// Spelled out rather than left to SwiftData's default, because that default is not stable.
+    /// `NSPersistentContainer.defaultDirectoryURL()` moves the store into the app group container as
+    /// soon as the app has an app-groups entitlement — which US-034 added for the complication — so
+    /// a build that gained a complication would silently stop finding the game it had already saved
+    /// and hand the user a fresh egg. Observed: the test host's store jumped to
+    /// `Shared/AppGroup/.../default.store` the moment the entitlement landed.
+    ///
+    /// The complication reads a published `ComplicationSnapshot` from the group container, never
+    /// this — the widget must not open a second store on it (see `ComplicationSnapshot`), so nothing
+    /// wants the store shared.
+    static func defaultStoreURL(fileManager: FileManager = .default) -> URL {
+        let directory = URL.applicationSupportDirectory
+        // CoreData would create this itself; doing it here keeps the failure at the store's own
+        // door rather than inside SwiftData, where it reads as a corrupt-store error.
+        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        // The name SwiftData itself uses, so an install that saved under the old default opens the
+        // same file rather than starting over.
+        return directory.appendingPathComponent("default.store")
     }
 
     /// The saved game, starting a new one at `digitamaId` if there is none yet.
