@@ -327,7 +327,11 @@ final class TrainApplyTests: XCTestCase {
 
         guard case .blocked = model.train() else { return XCTFail("expected a block") }
         XCTAssertNotNil(model.actionMessage)
-        XCTAssertEqual(model.animation, .idle)
+        // US-028 made the resting pose depend on health too, the same way US-026 made it depend on
+        // the sleep window above: nothing happened to it, so it keeps RESTING, and a sick Digimon
+        // rests on the held angry frame rather than the walk loop. Still not animating — which is
+        // what this test is named for — because a held pose has no second frame.
+        XCTAssertEqual(model.animation, .still(.angry))
         XCTAssertEqual(trainHaptics, 0)
         XCTAssertEqual(model.state?.stageEnergy[.strength], 20)
     }

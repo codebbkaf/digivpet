@@ -1883,3 +1883,102 @@ cumulative and NOTHING ever decreases it yet — if sickness is meant to be cura
 decide whether curing forgives mistakes or whether sickness keys off a rate instead. And
 `auditCareMistakes` is the one place time-derived neglect is charged, so a sickness check belongs
 immediately after it in refresh(), before evolveIfReady.
+
+================================================================================
+2026-07-18 — US-028 — Add sickness state and cure
+================================================================================
+
+WHAT I BUILT
+
+Sources/Sickness.swift — the thresholds (3 care mistakes make it sick, 30 energy in one local day
+cures it) and `GameState.updateSickness(energyEarnedToday:)`. Nothing here derives anything from
+elapsed time: US-027's audit has already turned time into mistakes by the time this runs, so
+sickness is a pure function of the count and the day's energy and needs no clock or marker of its
+own. Called from `refresh()` immediately after `auditCareMistakes` and before `evolveIfReady`, for
+both of the same reasons the audit sits there — the mistake that tips a Digimon over is usually one
+the audit has only just charged, and a sick Digimon's evolution is paused, so settling sickness
+after `evolveIfReady` would let it evolve one refresh into an illness it already had.
+
+THE ONE REAL DESIGN DECISION: THE CURE IS CHECKED BEFORE THE ILLNESS
+
+`updateSickness` switches on the CURRENT status rather than running both checks in sequence, and
+the cure case comes first. Consequence: a Digimon that crosses 3 mistakes on a day it has already
+earned 30+ energy goes sick on this refresh and is cured on the NEXT one. That is deliberate. The
+alternative order cures it inside the same call, so three mistakes would never once be visible on
+an active day and AC1 would be unobservable in the app. Pinned by
+testFallingSickOnAnActiveDayIsNotUndoneInTheSameRefresh, which asserts BOTH halves — sick now,
+healthy on the following call — so nobody later "fixes" the ordering without seeing the intent.
+
+The cure resetting careMistakeCount to 0 (AC3) is the ONLY thing in the whole game that ever
+lowers that count. It is not decoration: without it a cured Digimon relapses on its very next
+refresh off the same three mistakes it was just forgiven. testACuredDigimonDoesNotRelapse-
+Immediately is that test. NOTE FOR US-029: this means care mistakes are no longer monotonic, so a
+death rule keyed on "ever reached N" needs its own marker rather than reading the live count.
+
+WHERE THE DAY'S ENERGY COMES FROM
+
+`EnergyLedger.creditedToday.total`, passed in rather than read off `GameState`. The ledger is
+deliberately not part of the saved game (its own docs say why: `resetGame` would hand a reborn
+Digimon the same day's steps a second time), and it is already the thing that knows what today
+credited, so no new state was added for this story. `GameState` gained no new fields at all —
+`healthStatus` already existed from US-006.
+
+AC2's THREE CLAUSES
+
+- Angry frame: `restingAnimation` returns `.still(.angry)` when sick. SICKNESS WINS OVER SLEEP —
+  the AC states it unconditionally and it is the more urgent state.
+- Does not idle-animate: falls out of the pose rather than needing a flag. `.still` is a one-frame
+  loop, and `DigimonSpriteView` renders a single frame with no `TimelineView` at all.
+- Evolution paused: `evolveIfReady` guards on `.healthy`. Paused, not cancelled — nothing consumes
+  the energy that opened the edge. HATCHING IS DELIBERATELY NOT GATED: an egg has no care record of
+  its own to have spoiled, and stalling one would leave a new game with nothing to look at.
+
+Extracted `settleRestingPose()` out of `updateSleepState` and called it from both places, because
+falling sick or being cured changes the resting pose too and the two are decided at different
+points of a refresh. It now also swaps out of `.still(.angry)`, or a cured Digimon would keep
+holding the angry frame forever.
+
+ONE PRE-EXISTING TEST WENT RED, AND IT WAS RIGHT TO
+
+TrainingTests.testTrainingWhileSickShowsAReasonAndDoesNotAnimate expected `.idle` after a blocked
+train while sick. Its premise is exactly what US-028 changed; US-026 had already amended its
+sleeping sibling two lines above for the same reason. Updated the assertion to `.still(.angry)`
+with a comment saying why — the test still measures what it is named for, since a held pose is
+still not animating.
+
+MY OWN FIRST DRAFT HAD A WORTHLESS CONTROL
+
+testASickDigimonDoesNotEvolveButAHealthyOneDoes seeds the fixture through `loadOrCreate`, which
+stamps `stageEnteredDate = now` — so US-020's 24h Baby time gate held the HEALTHY control back too,
+and the sick Digimon staying put would have proved nothing. Fixed by seeding
+`stageEnteredDate = now - 2 days`. The control now really does evolve to "grown", so the sick one
+not evolving is attributable to the illness alone.
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED.
+- xcodebuild test TEST SUCCEEDED 391/391, was 379 (+12 in Tests/SicknessTests.swift).
+- AC1 boundary: testThreeCareMistakesMakeItSickAndTwoDoNot pins 0/2 healthy, 3/7 sick — so it
+  cannot be passing under a looser "any neglect at all" rule.
+- AC3 boundary: testThirtyEnergyInADayCuresItAndTwentyNineDoesNot pins 0/29 still sick, 30/55
+  cured, and asserts the reset in both directions.
+- AC3 end to end through the REAL ledger, not a hand-passed number:
+  testEarningThirtyEnergyInADayCuresIt walks a 3,000-step fixture sample (100 steps a point =
+  exactly 30 energy) through `refresh()`; testTwentyNineEnergyDoesNotCureIt walks 2,900 and stays
+  sick. testTheCureIsPersisted reads a healthy Digimon back off disk on a second cold launch.
+- AC2 in the Simulator: launched with `-healthAnswered -sickDemo` (the health stub is needed or the
+  authorization gate is all you screenshot). Cropped Agumon's sheet with sips and compared — the
+  on-screen sprite is frame 8, NOT frame 0. Seven screenshots at irregular intervals (1s, and
+  0.25-0.4s to defeat any aliasing against the 0.5s frame duration) are all byte-identical, so it
+  really is holding still rather than being caught on the same walk frame.
+- AC2's evolution clause has a working control, per the note above.
+- Death is already handled: testADeadDigimonIsNeitherSickenedNorCured pins the boundary before
+  US-029 writes it.
+
+REMAINS: US-029 onward (US-001..US-028 pass; 28/35).
+US-029 (death/memorial/rebirth) inherits two things from here. (1) `careMistakeCount` is no longer
+monotonic — see the note above; a death rule must not read the live count as a lifetime total.
+(2) `resetGame` already exists in GameStore and deliberately leaves the EnergyLedger alone, which
+is what a rebirth wants. `healthStatus == .dead` is already respected by `updateSickness` and by
+`TrainAction`, but NOT yet by `FeedAction` or by hatching — check both before assuming a dead
+Digimon is inert.

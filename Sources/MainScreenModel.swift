@@ -216,6 +216,7 @@ final class MainScreenModel: ObservableObject {
         seedFeedDemoIfRequested()
         seedTrainDemoIfRequested()
         seedSleepDemoIfRequested()
+        seedSickDemoIfRequested()
         #endif
     }
 
@@ -311,6 +312,29 @@ final class MainScreenModel: ObservableObject {
         animation = restingAnimation
     }
 
+    /// Debug-only: makes the Digimon ill so the sick pose can be screenshotted. The Simulator has no
+    /// HealthKit data, so a real game there can never accrue the health-data mistakes that would
+    /// make it sick on its own — and waiting out three eight-hour starving spells is not a demo.
+    ///
+    /// - `-sickDemo` — three care mistakes, settled through the real rule: the held angry frame.
+    ///
+    /// The mistakes are set and `updateSickness` is what turns them into an illness, so the demo
+    /// exercises the shipped rule rather than hand-setting the status it is supposed to produce.
+    private func seedSickDemoIfRequested() {
+        guard CommandLine.arguments.contains("-sickDemo"), let state else { return }
+
+        // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
+        // angry frame, so an egg would screenshot as the placeholder however well this worked.
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        state.careMistakeCount = Sickness.careMistakesUntilSick
+        state.updateSickness(energyEarnedToday: 0)
+        settleRestingPose()
+    }
+
     /// Debug-only: puts a two-hour sleep window around the current moment and derives from it, so
     /// the Digimon is asleep NOW and stays asleep across the refresh every foregrounding runs.
     ///
@@ -354,6 +378,14 @@ final class MainScreenModel: ObservableObject {
         state.auditCareMistakes(now: now(),
                                 health: CareMistakes.HealthDataVerdict(readings.values),
                                 calendar: calendar)
+        // Straight after the audit and before evolving, for both of the same reasons: the mistake
+        // that tips a Digimon over is usually one the audit has only just charged, and a sick
+        // Digimon's evolution is paused — so a sickness settled after `evolveIfReady` would let it
+        // evolve one refresh into an illness it already had.
+        state.updateSickness(energyEarnedToday: ledger.creditedToday.total)
+        // The pose is settled again here and not only in `updateSleepState`, because falling sick
+        // or being cured changes the resting pose too and both are decided after the sleep window.
+        settleRestingPose()
         // The energy just credited may be what tips an egg over its hatch threshold or a Digimon
         // over an evolution's, so both run after crediting and before the save, letting one flush
         // persist the change. A hatch leaves the new Baby I with zero stage energy, so evolving in
@@ -371,12 +403,20 @@ final class MainScreenModel: ObservableObject {
         Self.log.info("Refreshed health: credited \(credited.total) energy")
     }
 
-    /// The pose the Digimon returns to when nothing else is happening: the sleep loop
-    /// (sleep1 <-> sleep2) while it is in its sleep window, the walk loop otherwise.
+    /// The pose the Digimon returns to when nothing else is happening: the angry frame held still
+    /// while it is sick, the sleep loop (sleep1 <-> sleep2) while it is in its sleep window, the
+    /// walk loop otherwise.
     ///
     /// Everything that ends an action reverts to THIS rather than to `.idle`, which is what keeps a
     /// Digimon fed at 23:59 from going back to pacing about.
-    var restingAnimation: SpriteAnimation { isAsleep ? .sleep : .idle }
+    ///
+    /// SICKNESS WINS OVER SLEEP, and it is the one state that stops the sprite moving at all — a
+    /// held `.still` has no second frame to alternate with, so US-028's "does not idle-animate"
+    /// falls out of the pose rather than needing a flag the view has to remember to honour.
+    var restingAnimation: SpriteAnimation {
+        if state?.healthStatus == .sick { return .still(.angry) }
+        return isAsleep ? .sleep : .idle
+    }
 
     /// Re-infers the sleep window from last night's sleep and puts the Digimon into or out of it.
     ///
@@ -395,9 +435,18 @@ final class MainScreenModel: ObservableObject {
         #endif
         isAsleep = sleepSchedule.contains(now(), calendar: calendar)
 
-        // Only a RESTING pose is swapped. An eat loop or an attack pose mid-action is left alone,
-        // and its own timer reverts it to whichever resting pose is current by then.
-        if animation == .idle || animation == .sleep {
+        settleRestingPose()
+    }
+
+    /// Swaps whichever resting pose is on screen for the one that is now current.
+    ///
+    /// Only a RESTING pose is swapped. An eat loop or an attack pose mid-action is left alone, and
+    /// its own timer reverts it to whichever resting pose is current by then.
+    ///
+    /// Called both after the sleep window is re-derived and after sickness is settled, because
+    /// either can change the answer and the two are decided at different points of a refresh.
+    private func settleRestingPose() {
+        if animation == .idle || animation == .sleep || animation == .still(.angry) {
             animation = restingAnimation
         }
     }
@@ -542,6 +591,11 @@ final class MainScreenModel: ObservableObject {
     /// `stageEnergy`/`dominantEnergyType`, so a Digimon that was fed steps as a child can still
     /// take the sleep branch as an adult. Applies the same stage reset a hatch does — see `advance`.
     private func evolveIfReady(_ state: GameState) {
+        // Paused, not cancelled, while the Digimon is unwell (US-028): an edge that qualifies now
+        // still qualifies once it is cured, because nothing here consumes the energy that opened
+        // it. Hatching is deliberately NOT gated — an egg has no care record of its own to have
+        // spoiled, and stalling one would leave a new game with nothing to look at.
+        guard state.healthStatus == .healthy else { return }
         guard let node = graph.node(id: state.currentDigimonId),
               let target = EvolutionEngine.scheduledEvolutionTarget(
                 for: node,
