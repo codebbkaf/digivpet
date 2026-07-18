@@ -12,6 +12,9 @@ struct ContentView: View {
     @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
     #endif
 
+    /// Scroll anchor for the feed controls, so the Simulator demo can bring them into view.
+    private static let feedControlsId = "feedControls"
+
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
     /// and a default argument would be evaluated in this `init`'s non-isolated context. Same
     /// reason as `HealthAuthorizationGate`.
@@ -75,35 +78,94 @@ struct ContentView: View {
     @ViewBuilder
     private var digimon: some View {
         if let presentation = model.presentation {
-            VStack(spacing: 2) {
-                Text(presentation.displayName)
-                    .font(.headline)
-                    .minimumScaleFactor(0.7)
-                    .lineLimit(1)
+            // Scrolling, because the four bars plus the feed controls are taller than a 41mm screen.
+            // The sprite and name still sit at the top, where they are without scrolling.
+            ScrollViewReader { scroller in
+            ScrollView {
+                VStack(spacing: 2) {
+                    Text(presentation.displayName)
+                        .font(.headline)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
 
-                DigimonSpriteView(
-                    stage: presentation.spriteStage,
-                    name: presentation.spriteFile,
-                    animation: .idle,
-                    scale: 5
-                )
+                    // The pose comes from the model, so a feed shows the eat loop and a refusal the
+                    // refuse frame — both revert to idle on their own.
+                    DigimonSpriteView(
+                        stage: presentation.spriteStage,
+                        name: presentation.spriteFile,
+                        animation: model.animation,
+                        scale: 5
+                    )
 
-                Text(presentation.stage.displayName)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .minimumScaleFactor(0.7)
-                    .lineLimit(1)
+                    // The caption slot is always present, so showing a message does not shove the
+                    // sprite up the screen mid-animation.
+                    Text(model.actionMessage ?? presentation.stage.displayName)
+                        .font(.caption2)
+                        .foregroundStyle(model.actionMessage == nil ? Color.secondary : Color.orange)
+                        .minimumScaleFactor(0.7)
+                        .lineLimit(1)
 
-                if let progress = model.energyProgress {
-                    EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
-                        .padding(.top, 2)
+                    if let progress = model.energyProgress {
+                        EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
+                            .padding(.top, 2)
+                    }
+
+                    if let state = model.state {
+                        FeedControls(hunger: state.hunger) { model.feed() }
+                            .padding(.top, 4)
+                            .id(Self.feedControlsId)
+                    }
                 }
+                .frame(maxWidth: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            #if DEBUG
+            // Debug-only: `simctl` can drive neither the Digital Crown nor a tap, so the feed
+            // controls sit below the fold and are unscreenshottable without a way to scroll to
+            // them from the launch command. Compiled out of release builds.
+            .onAppear {
+                guard CommandLine.arguments.contains("-feedScrollDemo") else { return }
+                scroller.scrollTo(Self.feedControlsId, anchor: .bottom)
+            }
+            #endif
+            }
         } else {
             // The graph has no node for the saved id — a roster edit that dropped a Digimon out
             // from under a live save. Nothing to draw, so say so rather than showing an empty box.
             SavedGameUnavailableView(detail: model.state.map { "Unknown Digimon '\($0.currentDigimonId)'." })
+        }
+    }
+}
+
+/// The hunger meter and the Feed button.
+///
+/// The meter is filled pips rather than a number because hunger is a small integer with a hard
+/// ceiling — four pips say "one more and it is starving" at a glance, where "2" does not.
+struct FeedControls: View {
+    let hunger: Int
+    let feed: () -> Void
+
+    var body: some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                Text("Hunger")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+
+                ForEach(0..<HungerClock.maximumHunger, id: \.self) { pip in
+                    Circle()
+                        .fill(pip < hunger ? Color.orange : Color.secondary.opacity(0.3))
+                        .frame(width: 6, height: 6)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Hunger")
+            .accessibilityValue("\(hunger) of \(HungerClock.maximumHunger)")
+
+            Button(action: feed) {
+                Label("Feed", systemImage: "fork.knife")
+                    .font(.caption2)
+            }
+            .buttonStyle(.bordered)
         }
     }
 }

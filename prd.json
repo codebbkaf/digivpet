@@ -406,8 +406,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 24,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "FeedAction (pure, clock-injected) spends 5 Vitality from stageEnergy, drops hunger one unit and restamps hungerUpdatedAt; refuses free at hunger 0 and counts the refusal per-day on GameState.refusalCount/refusalDay (US-027 reads it); blocked with a reason when asleep or short on Vitality. MainScreenModel.feed() plays .eat + .click haptic (injected), .still(.refuse) on refusal, reason-only on a block, all reverting after actionDuration. Build green, 324/324 tests (+16 in Tests/FeedingTests.swift). Simulator-verified via -feedDemo/-feedRefuseDemo/-feedAsleepDemo/-feedScrollDemo: eat frame with Vitality 30->25, refuse frame with 30 unspent, 'Asleep - let it rest.', and hunger pips 3->2 beside the Feed button."
     },
     {
       "id": "US-025",

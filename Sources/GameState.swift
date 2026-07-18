@@ -191,6 +191,15 @@ final class GameState {
     /// `nil` means "saved before hunger was tracked", which `HungerClock.advance` reads as "start
     /// the clock now".
     var hungerUpdatedAt: Date?
+    /// Backing store for `refusalCount`/`refusalDay`: how many feeds have been turned down, and the
+    /// local day they were counted against. Optional for the same migration reason as
+    /// `energyLastEarnedStorage` — an optional attribute is the one shape SwiftData migrates into an
+    /// already-shipped store without a default. Both `nil` reads as "no refusals yet".
+    ///
+    /// A DAY is kept alongside the count because the count is only ever asked about per-day:
+    /// US-027's care mistake is "3+ refusals in a day", not three refusals ever.
+    private var refusalCountStorage: Int?
+    private var refusalDayStorage: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -211,6 +220,8 @@ final class GameState {
         self.careMistakeCount = 0
         self.hunger = 0
         self.hungerUpdatedAt = now
+        self.refusalCountStorage = 0
+        self.refusalDayStorage = nil
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -229,6 +240,36 @@ extension GameState {
     var energyLastEarned: EnergyRecency {
         get { energyLastEarnedStorage ?? .never }
         set { energyLastEarnedStorage = newValue }
+    }
+
+    /// How many feeds have been refused on `refusalDay`.
+    ///
+    /// Computed for the same reason `energyLastEarned` is: the optionality persistence needs stops
+    /// at the model boundary, so a save written before refusals were tracked reads as 0 rather than
+    /// as a `nil` every caller has to unwrap.
+    var refusalCount: Int {
+        get { refusalCountStorage ?? 0 }
+        set { refusalCountStorage = newValue }
+    }
+
+    /// The local day `refusalCount` is counted against, or nil before the first refusal.
+    var refusalDay: Date? {
+        get { refusalDayStorage }
+        set { refusalDayStorage = newValue }
+    }
+
+    /// Counts one refused feed against the local day containing `now`.
+    ///
+    /// Rolls the count over when the day changes, so `refusalCount` always means "today's", which is
+    /// the only question anyone asks of it — US-027's overfeeding mistake is three refusals in ONE
+    /// day, and a lifetime counter would trip it for someone who refused once a month for a quarter.
+    func recordRefusal(now: Date, calendar: Calendar = .current) {
+        let today = calendar.startOfDay(for: now)
+        if refusalDay != today {
+            refusalDay = today
+            refusalCount = 0
+        }
+        refusalCount += 1
     }
 
     /// The energy type this stage has earned the most of — the branch the evolution engine takes.

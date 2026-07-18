@@ -1,6 +1,9 @@
 import Foundation
 import OSLog
 import SwiftUI
+#if canImport(WatchKit)
+import WatchKit
+#endif
 
 /// Everything the main screen needs to draw one Digimon: what to call it, and where its art is.
 ///
@@ -77,16 +80,36 @@ final class MainScreenModel: ObservableObject {
     /// The most recent stage transition awaiting its on-screen ceremony, or nil once shown.
     @Published private(set) var pendingEvolution: EvolutionEvent?
 
+    /// What the Digimon is doing on screen. `.idle` except for the moment after an action — feeding
+    /// swaps in the eat loop, a refusal the refuse pose — and back again after `actionDuration`.
+    @Published private(set) var animation: SpriteAnimation = .idle
+
+    /// A short line about the last action, shown under the Digimon and cleared with the animation.
+    /// This is where a blocked feed says WHY it was blocked, per US-024's "visible reason".
+    @Published private(set) var actionMessage: String?
+
+    /// Whether the Digimon is in its sleep window, which blocks feeding.
+    ///
+    /// Settable and defaulted to false because US-026 is what infers it from the user's sleep
+    /// history; until then it is only ever true in a test or the Simulator demo. Deliberately NOT on
+    /// `GameState` — sleep is derived from health data, not saved-game state.
+    @Published var isAsleep = false
+
     private let makeStore: @MainActor () throws -> GameStore
     private let graph: EvolutionGraph
     private let energySource: HealthEnergySource
     private let calendar: Calendar
     private let now: () -> Date
     private let chooseStartingDigitama: ([EvolutionNode]) -> EvolutionNode?
+    private let playFeedHaptic: () -> Void
+    /// `var` only so the DEBUG Simulator demo can hold a pose long enough to be screenshotted —
+    /// nothing in the app or the tests reassigns it. See `seedFeedDemoIfRequested`.
+    private var actionDuration: TimeInterval
 
     private var store: GameStore?
     private var ledger: EnergyLedger?
     private var isRefreshing = false
+    private var actionResetTask: Task<Void, Never>?
 
     private static let log = Logger(subsystem: "com.digivpet.DigiVPet", category: "main")
 
@@ -98,13 +121,20 @@ final class MainScreenModel: ObservableObject {
     ///   - chooseStartingDigitama: picks a new game's egg from the graph's playable Digitama.
     ///     Random by default, per US-018's "a new game starts at a randomly selected Digitama";
     ///     injected so a test can pin one deterministically instead of chasing randomness.
+    ///   - playFeedHaptic: the light tap a feed plays. Injected for the same reason
+    ///     `EvolutionCeremonyView.playHaptic` is — it is the one acceptance criterion no screenshot
+    ///     can show, so a test spies on it instead.
+    ///   - actionDuration: how long the eat loop or refuse pose is held before returning to idle.
+    ///     Injected so a test drives the whole action in milliseconds rather than waiting it out.
     init(
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
         graph: EvolutionGraph = .bundled,
         energySource: HealthEnergySource = HealthEnergySource(),
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init,
-        chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() }
+        chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() },
+        playFeedHaptic: @escaping () -> Void = MainScreenModel.feedHaptic,
+        actionDuration: TimeInterval = 2.0
     ) {
         self.makeStore = makeStore
         self.graph = graph
@@ -112,6 +142,8 @@ final class MainScreenModel: ObservableObject {
         self.calendar = calendar
         self.now = now
         self.chooseStartingDigitama = chooseStartingDigitama
+        self.playFeedHaptic = playFeedHaptic
+        self.actionDuration = actionDuration
     }
 
     /// How to draw the Digimon currently being raised, or nil if the graph does not know it.
@@ -159,6 +191,7 @@ final class MainScreenModel: ObservableObject {
         await refresh()
         #if DEBUG
         seedCeremonyDemoIfRequested()
+        seedFeedDemoIfRequested()
         #endif
     }
 
@@ -172,6 +205,40 @@ final class MainScreenModel: ObservableObject {
               let from = graph.presentation(forId: "agumon"),
               let to = graph.presentation(forId: "greymon") else { return }
         pendingEvolution = EvolutionEvent(from: from, to: to)
+    }
+
+    /// Debug-only: puts the saved game into a state where feeding is worth screenshotting, since the
+    /// Simulator has no HealthKit data and so a real game there is never hungry and never has the
+    /// Vitality to spend. Unreachable without a launch argument and compiled out of release builds,
+    /// the same discipline as `seedCeremonyDemoIfRequested`.
+    ///
+    /// - `-feedDemo` — hungry and funded, then fed: the eat loop and the spent Vitality.
+    /// - `-feedRefuseDemo` — funded but not hungry, then fed: the refuse frame.
+    /// - `-feedAsleepDemo` — hungry and funded but asleep, then fed: the blocked reason.
+    ///
+    /// The pose is held for a minute in demo mode because `simctl` cannot tap Feed itself — the app
+    /// has to arrive already showing the outcome, and two seconds is not long enough to boot,
+    /// install, launch and screenshot inside.
+    private func seedFeedDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        let refusing = arguments.contains("-feedRefuseDemo")
+        let sleeping = arguments.contains("-feedAsleepDemo")
+        guard arguments.contains("-feedDemo") || refusing || sleeping, let state else { return }
+
+        // Moved off the starting egg, because a Digitama sheet has no eat or refuse frames — an egg
+        // would screenshot as the placeholder no matter how well feeding worked.
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            // Restamped, or US-020's time gate is already open on a save from an earlier launch and
+            // the next refresh evolves the demo out from under the screenshot.
+            state.stageEnteredDate = now()
+        }
+        state.stageEnergy[.vitality] = 30
+        state.hunger = refusing ? 0 : 3
+        isAsleep = sleeping
+        actionDuration = 60
+        feed()
     }
     #endif
 
@@ -210,6 +277,64 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save after crediting: \(String(describing: error))")
         }
         Self.log.info("Refreshed health: credited \(credited.total) energy")
+    }
+
+    /// Feeds the Digimon: spends Vitality, takes a unit off hunger, and plays the eat loop with a
+    /// light tap.
+    ///
+    /// Returns the outcome so a test can assert on it directly; the screen reacts to `animation` and
+    /// `actionMessage` instead. A refusal or a block still saves nothing new in the energy sense but
+    /// is still flushed, because a refusal increments a counter US-027 will read on a later launch.
+    @discardableResult
+    func feed() -> FeedOutcome? {
+        guard let state else { return nil }
+        let outcome = FeedAction.feed(state, isAsleep: isAsleep, now: now(), calendar: calendar)
+
+        switch outcome {
+        case .fed:
+            playFeedHaptic()
+            show(.eat, message: nil)
+        case .refused:
+            show(.still(.refuse), message: "Not hungry.")
+        case .blocked(let reason):
+            // No animation: nothing happened to the Digimon, so it keeps idling and only the
+            // reason appears. Animating a block would read as the action having half-worked.
+            show(nil, message: reason)
+        }
+
+        do {
+            try store?.save()
+        } catch {
+            // Same call as `refresh()`: the in-memory change stands and the screen is not taken
+            // away, but a lost save does not pass in silence.
+            Self.log.error("Could not save after feeding: \(String(describing: error))")
+        }
+        return outcome
+    }
+
+    /// Shows an action's pose and caption, then returns to idle after `actionDuration`.
+    ///
+    /// The previous reset is cancelled first, so tapping Feed twice in quick succession holds the
+    /// second action for its full duration instead of being cut short by the first one's timer.
+    private func show(_ animation: SpriteAnimation?, message: String?) {
+        actionResetTask?.cancel()
+        self.animation = animation ?? .idle
+        self.actionMessage = message
+
+        actionResetTask = Task { [actionDuration] in
+            try? await Task.sleep(for: .seconds(actionDuration))
+            guard !Task.isCancelled else { return }
+            self.animation = .idle
+            self.actionMessage = nil
+        }
+    }
+
+    /// The light tap a feed plays. No-ops where `WKInterfaceDevice` is unavailable (never on
+    /// watchOS), mirroring `EvolutionCeremonyView.successHaptic`.
+    static func feedHaptic() {
+        #if canImport(WatchKit)
+        WKInterfaceDevice.current().play(.click)
+        #endif
     }
 
     /// Hatches the egg into its linked Baby I form once total energy crosses the threshold.

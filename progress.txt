@@ -1535,3 +1535,87 @@ No Simulator verification: US-023 has no "verify in Simulator" criterion, and hu
 yet — nothing is drawn from it until US-024 adds the feed action.
 
 Remains: US-024 onward (US-001..US-023 pass; 23/35).
+
+================================================================================
+2026-07-18 — US-024: Add feeding action with refuse behavior — PASSED
+================================================================================
+
+WHAT WAS BUILT:
+- Sources/FeedAction.swift: the whole rule, pure and clock-injected like HungerClock.
+  `feed(_:isAsleep:now:calendar:) -> FeedOutcome` with three endings the screen renders
+  differently: .fed(cost:), .refused, .blocked(reason:).
+  Cost is `vitalityCostPerFeed = 5` (100 active kcal at EnergyRates' 20 kcal/point). The PRD
+  fixes that feeding COSTS Vitality but never how much — filling a starving Digimon (4 units)
+  is 20 Vitality, a fifth of the 100/day per-type cap. One number in one place if it is wrong.
+- Sources/GameState.swift: refusalCountStorage/refusalDayStorage (OPTIONAL, same migration
+  reason as energyLastEarnedStorage), exposed as refusalCount/refusalDay + recordRefusal(now:
+  calendar:) which rolls the count over at midnight.
+- Sources/MainScreenModel.swift: feed(), plus @Published animation / actionMessage / isAsleep.
+- Sources/ContentView.swift: sprite pose now comes from model.animation; caption slot shows
+  actionMessage when there is one; FeedControls (4 hunger pips + Feed button) at the bottom.
+
+THE THREE DESIGN DECISIONS LATER STORIES MUST KNOW:
+
+1. *** ORDER OF GUARDS: asleep -> hunger==0 -> too little Vitality. ***
+   Asleep is checked FIRST deliberately: a sleeping Digimon that is also full is reported as
+   asleep, not charged a refusal it never made. testSleepingAndFullIsBlockedRatherThanCounted
+   AsARefusal pins this. US-026 must not reorder it.
+
+2. *** `isAsleep` is a PARAMETER, not saved state. ***
+   MainScreenModel.isAsleep is a @Published var defaulting to false. It is NOT on GameState,
+   because sleep is DERIVED from the user's sleep history — US-026 computes it from the
+   inferred window (22:00-07:00 fallback) and assigns it; it must not persist a flag.
+   The blocked-while-asleep path is already built and tested, so US-026 only has to supply
+   the boolean and swap the idle loop for .sleep.
+
+3. *** Vitality is spent from `stageEnergy` ONLY. ***
+   lifetimeEnergy is the record of what was ever EARNED, so spending must not rewrite it
+   (testFeedingDoesNotTakeBackLifetimeEnergy). And the EnergyLedger keys on what was CREDITED,
+   never on what is held, so a spend can never be re-credited by the next health read.
+   Consequence worth knowing: feeding competes with evolution, since evolution thresholds read
+   stageEnergy. That is the intended tradeoff, not a bug.
+
+*** US-027 (care mistakes): the overfeeding counter is ALREADY HERE. ***
+`state.refusalCount` is today's refusals — recordRefusal resets it when the day changes, so
+"3+ refusals in a day" is `refusalCount >= 3` and needs no new field. refusalDay is the local
+day it is counted against, from the injected calendar.
+
+Also for US-024's sibling US-025 (training): feed() is the template — pure rule in its own
+file, model method that renders the outcome as an animation + message + save, haptic injected
+through the initializer. `show(_:message:)` on MainScreenModel already handles hold-then-revert
+and cancels a prior action's timer, so training can reuse it for the attack pose.
+
+GOTCHAS (both cost me a red/wrong run):
+- ContentView now SCROLLS. The four bars plus the feed controls are taller than a 41mm screen.
+- The Simulator demo initially screenshotted as the "?" placeholder: the starting save is a
+  DIGITAMA, and an egg sheet has NO eat or refuse frames (SpriteAnimation.eggFrames returns []
+  for .eat and .still, by design — an egg's index 2 is the hatch). The demo now moves the save
+  to agumon first. It also restamps stageEnteredDate, or US-020's time gate is already open on
+  a save from an earlier launch and the next refresh EVOLVES the demo out from under the
+  screenshot (this actually happened — the shot came back reading "Adult" with stageEnergy
+  reset to 0).
+- `.foregroundStyle(cond ? .secondary : .orange)` does not typecheck; both branches need the
+  explicit `Color.` prefix or they resolve to HierarchicalShapeStyle.
+
+Verified (observed, not assumed):
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED.
+- xcodebuild test TEST SUCCEEDED 324/324 (was 308; +16 in Tests/FeedingTests.swift).
+- AC1 testFeedingSpendsVitalityAndRemovesOneUnitOfHunger, ...SpendsNothingButVitality,
+  ...DoesNotTakeBackLifetimeEnergy, testAFedHungerAndItsCostArePersisted.
+- AC2 testFeedingPlaysTheEatLoopWithAHapticAndThenReturnsToIdle — asserts .eat resolves to
+  [.eat1, .eat2] and that the haptic spy fired exactly once, then that the pose reverts.
+- AC3/AC5 testFeedingAtZeroHungerConsumesNoEnergyAndCountsTheRefusal (the story's headline),
+  testRefusingHoldsTheRefuseFrameAndPlaysNoHaptic (asserts SpriteFrame.refuse.rawValue == 6
+  by NUMBER as well as by name — the name alone could point at the wrong art and still read
+  fine), testARefusalIsPersisted (reopened off disk), testRefusalsAccumulateWithinADay,
+  testRefusalsResetOnANewDay.
+- AC4 testFeedingIsBlockedWhileAsleep, testFeedingWhileAsleepShowsAReasonAndDoesNotAnimate.
+- US-023's restamp contract: testFeedingAtMaximumHungerDoesNotImmediatelyReAccrue — feed at
+  max with a 12h-stale frozen timestamp, then advanceHunger, and the feed still stands.
+- Simulator (Apple Watch Series 11 (46mm), screenshots in /tmp/us024, not committed):
+  -feedDemo         -> Agumon in the eat pose, Vitality 30 -> 25.
+  -feedRefuseDemo   -> the refuse pose (visibly different art), "Not hungry.", 30 unspent.
+  -feedAsleepDemo   -> "Asleep - let it rest.", 30 unspent, still idling.
+  -feedDemo -feedScrollDemo -> hunger pips 2/4 filled beside a reachable Feed button.
+
+Remains: US-025 onward (US-001..US-024 pass; 24/35).
