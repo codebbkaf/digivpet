@@ -2120,3 +2120,102 @@ come from US-031's own seeded RNG, which is what the PRD's "seeded RNG" test req
 Note US-030 deliberately did NOT gate power on `healthStatus`: a sick Digimon computes full power.
 If battles should be blocked while sick, that belongs in US-031's entry check alongside the daily
 limit, the way `TrainAction` guards, not inside the formula.
+
+================================================================================
+2026-07-18 — US-031: Add turn-based battle resolution and animation
+================================================================================
+
+WHAT I DID
+
+Two new files — `Sources/Battle.swift` (the rules) and `Sources/BattleView.swift` (the screen) —
+plus a `battle()`/`finishBattle()` pair on `MainScreenModel`, a `BattleControls` row and a battle
+overlay in `ContentView`, and `Tests/BattleTests.swift`.
+
+THE SPLIT THAT MAKES THIS TESTABLE
+
+The battle is RESOLVED IN FULL before a single frame is drawn. `BattleEngine.resolve` is pure, takes
+its randomness `inout` from an injected generator, and returns a `BattleReport` — every exchange in
+order, plus the winner. `BattleView` is then a REPLAY of a decided outcome. That is why AC6 is
+assertable without a screen, and why the view needs no rules.
+
+THE MODEL, AND WHY THE NUMBERS ARE THESE NUMBERS
+
+    both sides start on 10 HP; damage = random(1...maximumDamage)
+    maximumDamage(attacker, defender) = max(1, 8 * attacker / (attacker + defender))
+
+- SHARED hit points, with power deciding how hard you HIT rather than how much you TAKE. Scaling HP
+  with power would make a strong Digimon's battles LONGER precisely because it is strong, and the
+  screen has to animate every exchange at 0.7s.
+- The ceiling is the attacker's SHARE of the two powers, not its absolute power. So the RATIO is what
+  matters: an even match at 10-vs-10 and one at 1000-vs-1000 roll the same range
+  (testTheDamageCeilingDependsOnTheRatioNotTheMagnitude pins this). Absolute scaling would mean an
+  Ultimate one-shots a Child and two Ultimates trade 40-point blows — the same battle, bigger numbers.
+- minimum damage 1 is what GUARANTEES TERMINATION: a hopeless underdog still chips, so no battle can
+  stall. The 40-turn cap is therefore unreachable at these constants (double the worst case) and
+  exists only so a retune cannot produce an infinite loop. Its tiebreak is documented and tested.
+- The player always swings first. A battle is something the user chose to start, and losing the
+  initiative to an invisible coin flip reads as the game cheating.
+
+AC5 IS THE ONE I WOULD NOT LET PASS ON INSPECTION
+
+`GameState.recordBattle` moves `battleWins`/`battleLosses` and NOTHING else — that "nothing else" IS
+the criterion. Two tests hold it: `testLosingCausesNeitherDeathNorACareMistake` asserts healthStatus,
+sickSince, diedAt, careMistakeCount and hunger all unchanged, and
+`testALosingStreakStillCausesNeitherDeathNorACareMistake` runs 25 straight losses, because the
+single-loss version would pass on a rule that kills after five. Through the real model,
+`testLosingAFoughtBattleLeavesTheDigimonAliveAndUnmarked` fights a REAL losing battle and then runs
+`refresh()` — sickness and death are settled there, so a punishment deferred to the next foregrounding
+would still be a punishment, and this catches it.
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED; xcodebuild test TEST SUCCEEDED 453/453, was 416 (+37).
+- AC1: swept over the WHOLE shipped roster, not a fixture — every playable node finds an opponent at
+  20 seeds (testEveryPlayableDigimonFindsAnOpponentInTheRoster), always within one rung
+  (testTheOpponentIsAlwaysWithinOneRungOfThePlayer), never itself, never `dexOnly` (no animated
+  sheet = two placeholders fighting), and the pool is genuinely more than one Digimon wide.
+- AC2/AC6: testASeededBattleIsDeterministic replays one seed 10x and compares the WHOLE report, not
+  just the winner. testAPinnedSeedProducesAPinnedWinner pins the literal turn count (5) and damages
+  ([4,2,3,2,4]) for seed 2026, which is what would catch a changed draw order that stayed
+  self-consistent. testEvenlyMatchedBattlesGoBothWays proves "deterministic" is not "fixed" — over
+  200 seeds an even match is sometimes lost, so the defeat branch is reachable in the shipped game.
+- AC3: testTheAttackerAttacksAndTheDefenderIsHurtOnEveryTurn walks a real battle and asserts the
+  mapping on BOTH sides of every exchange, against `BattleView.animation(for:during:)` — which is a
+  STATIC pure function precisely so a test can reach it (a `@State` beat cannot be driven outside a
+  view graph). Frame indices pinned separately: attack 11, hurt [9,10], happy 7.
+- AC4: haptic covered the way US-021's is — injected spy, fast pacing. testOneHapticFiresAtTheResult
+  pins exactly one tap AFTER every exchange (an onAppear haptic lands near 0 and fails), and
+  testTheHapticCarriesTheOutcome pins win->true / loss->false, so a hard-coded `.success` cannot pass.
+- SIMULATOR (46mm, watchOS 26.4, `-healthAnswered` or you screenshot the auth gate forever):
+  `-battleTurnDemo` -> Agumon mid-attack beside Togemon in the hurt frame, "10 — 8".
+  `-battleResultDemo` -> "Victory! / Gabumon is beaten." over the happy frame.
+  `-battleLossDemo -battleResultDemo` -> "Defeat / Punimon was too strong." over the hurt frame.
+  `-battleScrollDemo` -> the Battle button under "PWR 9  0W 0L".
+
+TWO GOTCHAS THAT COST ME A SCREENSHOT PASS EACH
+
+1. THE DEMO SCREENSHOTTED "Asleep — let it rest." The watch face reads 12-hour, so the sim clock
+   showing "12:06" was MIDNIGHT, inside the 22:00-07:00 fallback sleep window, and a sleeping Digimon
+   refuses to battle. Fixed with `forceAwakeForDemo()` (DEBUG-only, the inverse of the existing
+   `forceAsleepForDemo`) — any demo taken at an arbitrary hour needs it. Do not read the sim's watch
+   face as 24-hour.
+2. `strings` on `DigiVPet.app/DigiVPet` finds NOTHING of the Swift code. The app binary is a 58KB
+   stub; all the code is in `DigiVPet.debug.dylib` beside it. I briefly concluded my files were not
+   in the target. Grep the dylib.
+
+WHAT US-032 INHERITS
+
+- `GameState.recordBattle` is the ONE place a result is filed, and `MainScreenModel.finishBattle()`
+  is the only caller (idempotent — a second Done tap is a no-op, tested). The daily limit belongs as
+  a guard at the TOP of `MainScreenModel.battle()`, beside the asleep/dead guards, which is where I
+  deliberately did NOT put it: the counter it needs (battles-today + the day it counts against) is
+  US-032's to add to `GameState`, in the shape `refusalCount`/`refusalDay` already uses.
+- Battling is blocked while ASLEEP (and charges the waking-early mistake, exactly as a blocked feed
+  or train does) and while DEAD. It is deliberately NOT blocked while SICK — no AC asks for it, and
+  US-030's note flagged it as a decision for this story. If US-032 wants it, it goes beside the
+  daily limit, not inside the formula.
+- The W/L record persists through the existing store save and is already surfaced by `MemorialView`
+  and now `BattleControls`, so "usable as `minBattleWins`" needs nothing new — `EvolutionEngine`
+  already reads `state.battleWins`.
+
+REMAINS: US-032 onward (US-001..US-031 pass; 31/35).

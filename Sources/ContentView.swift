@@ -15,6 +15,28 @@ struct ContentView: View {
     /// Scroll anchors for the action controls, so the Simulator demos can bring them into view.
     private static let feedControlsId = "feedControls"
     private static let trainControlsId = "trainControls"
+    private static let battleControlsId = "battleControls"
+
+    /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
+    /// it down to nothing so a `simctl` screenshot lands on the result screen rather than mid-
+    /// exchange, and `-battleTurnDemo` stretches one exchange out long enough to catch the attack and
+    /// hurt frames. `simctl` can neither tap nor time a screenshot to a 0.7s beat, so the pacing is
+    /// what has to move.
+    private static var battleIntroDuration: TimeInterval {
+        #if DEBUG
+        if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
+        if CommandLine.arguments.contains("-battleTurnDemo") { return 0.01 }
+        #endif
+        return 1.0
+    }
+
+    private static var battleTurnDuration: TimeInterval {
+        #if DEBUG
+        if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
+        if CommandLine.arguments.contains("-battleTurnDemo") { return 60 }
+        #endif
+        return 0.7
+    }
 
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
     /// and a default argument would be evaluated in this `init`'s non-isolated context. Same
@@ -66,6 +88,19 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingEvolution)
+        // The battle sits above the ceremony for the same reason the ceremony sits above the bars:
+        // it is a moment, not a place, and the Feed and Train buttons underneath must not be
+        // tappable through it. `finishBattle` is what files the win or loss and takes it down.
+        .overlay {
+            if let bout = model.pendingBattle {
+                BattleView(bout: bout,
+                           onFinish: { model.finishBattle() },
+                           introDuration: Self.battleIntroDuration,
+                           turnDuration: Self.battleTurnDuration)
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingBattle)
         // Applied AFTER the ceremony's overlay, so it layers above it: a Digimon that died has
         // nothing left to celebrate. This is also what stops the Feed and Train buttons underneath
         // from being tapped while the memorial is up.
@@ -131,6 +166,12 @@ struct ContentView: View {
                         TrainControls(strengthStat: state.strengthStat) { model.train() }
                             .padding(.top, 4)
                             .id(Self.trainControlsId)
+
+                        BattleControls(power: state.battlePower,
+                                       wins: state.battleWins,
+                                       losses: state.battleLosses) { model.battle() }
+                            .padding(.top, 4)
+                            .id(Self.battleControlsId)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -144,6 +185,8 @@ struct ContentView: View {
                     scroller.scrollTo(Self.feedControlsId, anchor: .bottom)
                 } else if CommandLine.arguments.contains("-trainScrollDemo") {
                     scroller.scrollTo(Self.trainControlsId, anchor: .bottom)
+                } else if CommandLine.arguments.contains("-battleScrollDemo") {
+                    scroller.scrollTo(Self.battleControlsId, anchor: .bottom)
                 }
             }
             #endif
@@ -215,6 +258,45 @@ struct TrainControls: View {
 
             Button(action: train) {
                 Label("Train", systemImage: "dumbbell")
+                    .font(.caption2)
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+}
+
+/// The battle power, the win/loss record, and the Battle button.
+///
+/// Power is shown next to the record because it is the number the battle is actually resolved from
+/// (US-030), and a user who trains should be able to watch it move — a W/L record alone would leave
+/// training feeling like it did nothing until the next fight.
+struct BattleControls: View {
+    let power: Int
+    let wins: Int
+    let losses: Int
+    let battle: () -> Void
+
+    var body: some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                Text("PWR")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+
+                Text("\(power)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.purple)
+
+                Text("\(wins)W \(losses)L")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Battle power")
+            .accessibilityValue("\(power), \(wins) wins, \(losses) losses")
+
+            Button(action: battle) {
+                Label("Battle", systemImage: "bolt.fill")
                     .font(.caption2)
             }
             .buttonStyle(.bordered)

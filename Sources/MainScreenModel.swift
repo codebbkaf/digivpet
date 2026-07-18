@@ -80,6 +80,10 @@ final class MainScreenModel: ObservableObject {
     /// The most recent stage transition awaiting its on-screen ceremony, or nil once shown.
     @Published private(set) var pendingEvolution: EvolutionEvent?
 
+    /// The battle currently being played out on screen, or nil when none is. Already RESOLVED when it
+    /// lands here — see `BattleBout` — so the screen replays a decided outcome rather than rolling.
+    @Published private(set) var pendingBattle: BattleBout?
+
     /// What the Digimon is doing on screen. `.idle` except for the moment after an action — feeding
     /// swaps in the eat loop, a refusal the refuse pose — and back again after `actionDuration`.
     @Published private(set) var animation: SpriteAnimation = .idle
@@ -108,6 +112,7 @@ final class MainScreenModel: ObservableObject {
     private let chooseStartingDigitama: ([EvolutionNode]) -> EvolutionNode?
     private let playFeedHaptic: () -> Void
     private let playTrainHaptic: () -> Void
+    private let makeBattleGenerator: () -> SeededGenerator
     /// `var` only so the DEBUG Simulator demo can hold a pose long enough to be screenshotted —
     /// nothing in the app or the tests reassigns it. See `seedFeedDemoIfRequested`.
     private var actionDuration: TimeInterval
@@ -146,6 +151,10 @@ final class MainScreenModel: ObservableObject {
     ///     different on the wrist and a test has to be able to tell which one fired.
     ///   - actionDuration: how long the eat loop or refuse pose is held before returning to idle.
     ///     Injected so a test drives the whole action in milliseconds rather than waiting it out.
+    ///   - makeBattleGenerator: the seeded RNG one battle is resolved from. Freshly seeded per battle
+    ///     in the app, so two battles differ; injected with a FIXED seed by a test, which is what
+    ///     makes US-031's "deterministic winner" assertable through the real model rather than only
+    ///     against `BattleEngine` in isolation.
     init(
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
         graph: EvolutionGraph = .bundled,
@@ -155,7 +164,10 @@ final class MainScreenModel: ObservableObject {
         chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() },
         playFeedHaptic: @escaping () -> Void = MainScreenModel.feedHaptic,
         playTrainHaptic: @escaping () -> Void = MainScreenModel.trainHaptic,
-        actionDuration: TimeInterval = 2.0
+        actionDuration: TimeInterval = 2.0,
+        makeBattleGenerator: @escaping () -> SeededGenerator = {
+            SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
+        }
     ) {
         self.makeStore = makeStore
         self.graph = graph
@@ -166,6 +178,7 @@ final class MainScreenModel: ObservableObject {
         self.playFeedHaptic = playFeedHaptic
         self.playTrainHaptic = playTrainHaptic
         self.actionDuration = actionDuration
+        self.makeBattleGenerator = makeBattleGenerator
     }
 
     /// How to draw the Digimon currently being raised, or nil if the graph does not know it.
@@ -218,6 +231,7 @@ final class MainScreenModel: ObservableObject {
         seedSleepDemoIfRequested()
         seedSickDemoIfRequested()
         seedDeathDemoIfRequested()
+        seedBattleDemoIfRequested()
         #endif
     }
 
@@ -362,6 +376,43 @@ final class MainScreenModel: ObservableObject {
         settleRestingPose()
     }
 
+    /// Debug-only: starts a battle on launch so it can be screenshotted. The Simulator has no
+    /// HealthKit data, so a real game there never trains up anything to fight with — and `simctl`
+    /// cannot tap the Battle button in any case.
+    ///
+    /// - `-battleDemo` — a well-trained Child, then battled: the attack and hurt frames.
+    /// - `-battleTurnDemo` — the same, with `ContentView` holding one exchange for a minute so the
+    ///   screenshot catches the attack and hurt frames rather than a 0.7s beat.
+    /// - `-battleResultDemo` — the same, with `ContentView` pacing the replay down to nothing so the
+    ///   screenshot lands on the result screen instead of mid-exchange.
+    /// - `-battleLossDemo` — an untrained Baby I against the stages above it: very likely the losing
+    ///   result. Genuinely fought rather than hand-set, so what is screenshotted is the real rule.
+    ///
+    /// The outcome is left to the real matchmaker and the real engine — only the player's stats and
+    /// the seed are staged, so this exercises the shipped path rather than its output.
+    private func seedBattleDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        let losing = arguments.contains("-battleLossDemo")
+        let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo"]
+        guard staged.contains(where: arguments.contains) || losing, let state else { return }
+
+        // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
+        // attack or hurt frames, so an egg would screenshot as placeholders however well this worked.
+        if let node = graph.node(id: losing ? "botamon" : "agumon") {
+            state.currentDigimonId = node.id
+            state.stage = node.stage
+            // Restamped, or US-020's gate is already open on a save from an earlier launch and the
+            // next refresh evolves the demo out from under the screenshot.
+            state.stageEnteredDate = now()
+        }
+        state.strengthStat = losing ? 0 : 12
+        // Forced awake, because a sleeping Digimon refuses to battle and the fallback window is
+        // 22:00-07:00 — so without this the demo screenshots "Asleep — let it rest." on any evening
+        // run, which is exactly what happened the first time it was tried.
+        forceAwakeForDemo()
+        battle()
+    }
+
     /// Debug-only: puts a two-hour sleep window around the current moment and derives from it, so
     /// the Digimon is asleep NOW and stays asleep across the refresh every foregrounding runs.
     ///
@@ -372,6 +423,22 @@ final class MainScreenModel: ObservableObject {
         // Modulo 1440, so a demo run at 00:30 or 23:30 wraps rather than going out of range.
         sleepScheduleOverride = SleepSchedule(bedtimeMinute: (minute + 1440 - 60) % 1440,
                                               wakeMinute: (minute + 60) % 1440)
+        sleepSchedule = sleepScheduleOverride ?? .fallback
+        isAsleep = sleepSchedule.contains(now(), calendar: calendar)
+    }
+
+    /// Debug-only: the inverse of `forceAsleepForDemo` — a sleep window on the far side of the clock
+    /// from now, so the Digimon is definitely AWAKE and stays awake across every refresh.
+    ///
+    /// Needed because the demos run at whatever hour the screenshot pass happens to be taken, and the
+    /// inferred window in a Simulator with no sleep history is the 22:00-07:00 fallback. An evening
+    /// run without this screenshots the sleep block instead of the feature under test.
+    private func forceAwakeForDemo() {
+        let parts = calendar.dateComponents([.hour, .minute], from: now())
+        let minute = (parts.hour ?? 0) * 60 + (parts.minute ?? 0)
+        // Ten to twelve hours from now, modulo the day — a window that cannot contain this moment.
+        sleepScheduleOverride = SleepSchedule(bedtimeMinute: (minute + 600) % 1440,
+                                              wakeMinute: (minute + 720) % 1440)
         sleepSchedule = sleepScheduleOverride ?? .fallback
         isAsleep = sleepSchedule.contains(now(), calendar: calendar)
     }
@@ -558,6 +625,79 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save after training: \(String(describing: error))")
         }
         return outcome
+    }
+
+    /// Picks an opponent near the player's stage, fights the battle out, and hands the replay to the
+    /// screen via `pendingBattle`.
+    ///
+    /// The whole battle is RESOLVED HERE, before a single frame is drawn: `BattleEngine` is pure and
+    /// takes its randomness from `makeBattleGenerator()`, so the outcome is fixed by the seed and the
+    /// view is a replay. Nothing is written to the saved game yet — the record is filed by
+    /// `finishBattle()`, once the user has actually seen the result.
+    ///
+    /// Blocked while asleep or dead, and blocked the same way feeding and training are: a message,
+    /// no animation, and the waking-early mistake charged if it was the sleep window that stopped it.
+    /// Prodding a sleeping Digimon into a fight is the same neglect as prodding it to eat. The DAILY
+    /// LIMIT (5/day) is deliberately not here — it is US-032's, and belongs beside the record it caps.
+    ///
+    /// Returns the bout so a test can assert on it directly; the screen reacts to `pendingBattle`.
+    @discardableResult
+    func battle() -> BattleBout? {
+        guard let state else { return nil }
+        guard state.healthStatus != .dead else {
+            show(nil, message: "It cannot battle.")
+            return nil
+        }
+        guard !isAsleep else {
+            show(nil, message: "Asleep — let it rest.")
+            noteWakingEarly()
+            return nil
+        }
+        guard let player = graph.presentation(forId: state.currentDigimonId) else {
+            show(nil, message: "No Digimon to fight with.")
+            return nil
+        }
+
+        var generator = makeBattleGenerator()
+        guard let opponent = BattleMatchmaker.choose(in: graph,
+                                                    playerId: state.currentDigimonId,
+                                                    using: &generator) else {
+            show(nil, message: "Nobody to fight.")
+            return nil
+        }
+
+        let report = BattleEngine.resolve(playerPower: state.battlePower,
+                                          opponentPower: opponent.power,
+                                          using: &generator)
+        let bout = BattleBout(
+            player: player,
+            opponent: DigimonPresentation(displayName: opponent.node.displayName,
+                                          stage: opponent.node.stage,
+                                          spriteFile: opponent.node.spriteFile),
+            report: report
+        )
+        pendingBattle = bout
+        Self.log.info("Battle vs \(opponent.node.id): \(report.playerWon ? "won" : "lost")")
+        return bout
+    }
+
+    /// Files the battle's result and takes the screen down, so a battle is recorded exactly once.
+    ///
+    /// `recordBattle` moves the win/loss counters and NOTHING else — losing never kills and never
+    /// counts as a care mistake (US-031), which is why this does not touch `healthStatus` or run any
+    /// of the audits `refresh()` does.
+    func finishBattle() {
+        guard let bout = pendingBattle else { return }
+        pendingBattle = nil
+        state?.recordBattle(bout.report)
+
+        do {
+            try store?.save()
+        } catch {
+            // Same call as `feed()`: the in-memory result stands and the screen is not taken away,
+            // but a lost save does not pass in silence.
+            Self.log.error("Could not save after battling: \(String(describing: error))")
+        }
     }
 
     /// Charges the waking-early care mistake if the action that was just blocked was blocked by the
