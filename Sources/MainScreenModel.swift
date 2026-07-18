@@ -53,11 +53,29 @@ final class MainScreenModel: ObservableObject {
         case failed(String)
     }
 
+    /// A stage transition that just happened and has not yet been shown off: the form left behind
+    /// and the form arrived at. The screen plays a full-screen ceremony for it (US-021) and then
+    /// clears it via `acknowledgeEvolution()`.
+    ///
+    /// Set inside `advance()`, so it covers both an egg hatching and a Digimon evolving — either is
+    /// a "you are now something new" moment worth a haptic. Because `advance()` runs during
+    /// `refresh()`, and `refresh()` runs on `start()`, an evolution that became due while the app was
+    /// closed lands here the first time the app is opened and reads its accumulated energy.
+    struct EvolutionEvent: Equatable {
+        /// The form left behind — its sprite is what the ceremony fades out from.
+        let from: DigimonPresentation
+        /// The form arrived at — its sprite and name are the reveal.
+        let to: DigimonPresentation
+    }
+
     @Published private(set) var phase: Phase = .loading
 
     /// The saved game. `@Model` types are observable, so a view that reads its properties inside
     /// `body` redraws when energy is credited into it — this does not have to republish anything.
     @Published private(set) var state: GameState?
+
+    /// The most recent stage transition awaiting its on-screen ceremony, or nil once shown.
+    @Published private(set) var pendingEvolution: EvolutionEvent?
 
     private let makeStore: @MainActor () throws -> GameStore
     private let graph: EvolutionGraph
@@ -139,7 +157,23 @@ final class MainScreenModel: ObservableObject {
             }
         }
         await refresh()
+        #if DEBUG
+        seedCeremonyDemoIfRequested()
+        #endif
     }
+
+    #if DEBUG
+    /// Debug-only: forces the evolution ceremony to play on launch so it can be screenshotted in the
+    /// Simulator, which has no HealthKit data to drive a real evolution. Unreachable without the
+    /// `-evolutionCeremonyDemo` launch argument, and the whole method is compiled out of release
+    /// builds — the same discipline as US-011's `StubHealthAuthorizer`.
+    private func seedCeremonyDemoIfRequested() {
+        guard CommandLine.arguments.contains("-evolutionCeremonyDemo"),
+              let from = graph.presentation(forId: "agumon"),
+              let to = graph.presentation(forId: "greymon") else { return }
+        pendingEvolution = EvolutionEvent(from: from, to: to)
+    }
+    #endif
 
     /// Credits whatever health data has been earned since the last read.
     ///
@@ -219,11 +253,24 @@ final class MainScreenModel: ObservableObject {
     /// will read, `lifetimeEnergy` is left untouched to carry the whole life, and the new form is
     /// recorded in the Dex.
     private func advance(_ state: GameState, to next: EvolutionNode) {
+        // Captured before the id moves so the ceremony has the form being left behind.
+        let from = graph.presentation(forId: state.currentDigimonId)
         state.currentDigimonId = next.id
         state.stage = next.stage
         state.stageEnergy = .zero
         state.stageEnteredDate = now()
         store?.recordDiscovery(id: next.id, now: now())
+        // A transition the screen has not celebrated yet. Both forms are drawn from the graph, so a
+        // missing node (a save whose id the roster dropped) simply skips the ceremony rather than
+        // showing half of one.
+        if let from, let to = graph.presentation(forId: next.id) {
+            pendingEvolution = EvolutionEvent(from: from, to: to)
+        }
+    }
+
+    /// Clears the pending evolution once its ceremony has finished, so it plays exactly once.
+    func acknowledgeEvolution() {
+        pendingEvolution = nil
     }
 
     private enum GraphError: Error, CustomStringConvertible {

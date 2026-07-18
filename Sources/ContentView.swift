@@ -26,6 +26,18 @@ struct ContentView: View {
                 SavedGameUnavailableView(detail: detail)
             }
         }
+        // The evolution ceremony sits above everything, so it covers the bars and stage text too.
+        // It appears whenever a refresh moved the Digimon — including the refresh `start()` runs on
+        // app open, which is how an evolution that came due while the app was closed is celebrated.
+        .overlay {
+            if let evolution = model.pendingEvolution {
+                EvolutionCeremonyView(event: evolution) {
+                    model.acknowledgeEvolution()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingEvolution)
         .task { await model.start() }
         .onChange(of: scenePhase) { _, phase in
             // The whole refresh: health data is only read when the app is in front, since

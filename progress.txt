@@ -1338,3 +1338,67 @@ DESIGN NOTES — later stories depend on these:
   animation and any future caller can ask "would this evolve now?" without a store.
 
 Remains: US-021 onward (US-001..US-020 pass; 20/35).
+
+## 2026-07-18 — US-021: Add evolution animation and haptic — PASSES
+
+NOTE ON STARTING STATE: this iteration inherited UNCOMMITTED work from an interrupted previous
+iteration (EvolutionCeremonyView.swift + EvolutionCeremonyTests.swift untracked, ContentView and
+MainScreenModel modified). It was reviewed, found sound, verified, extended, and committed here
+rather than redone. prd.json still had US-021 passes:false, correctly — nothing had been verified.
+
+Did:
+- Sources/EvolutionCeremonyView.swift (inherited): three-beat ceremony — the old form alone, a full
+  white flash, then the new form under its announced name. `.success` haptic fires exactly at the
+  reveal. playHaptic is injected so a preview/test can run without a real device.
+- Sources/MainScreenModel.swift (inherited): EvolutionEvent {from, to} + @Published pendingEvolution,
+  set inside advance() (so it covers BOTH an egg hatching and an evolution) and cleared by
+  acknowledgeEvolution(). Both forms come from the graph, so a save whose id the roster dropped
+  skips the ceremony rather than showing half of one.
+- Sources/ContentView.swift (inherited): ceremony as an .overlay above everything (covers bars and
+  stage text), driven off pendingEvolution.
+- MINE THIS ITERATION: made the three beat durations injectable instance properties (they were
+  static lets) and un-privated run(), so the 4.2s sequence is testable in milliseconds; replaced the
+  two weak haptic tests with one that pins the tap to AFTER the before+flash beats.
+
+Verified (observed, not assumed):
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED, zero warnings from Sources/.
+- xcodebuild test TEST SUCCEEDED 279/279.
+- AC1/AC3 by TIMESTAMPED Simulator screenshots (the real app, not a preview): t0.68-1.49 Agumon
+  alone on black; t1.63-1.93 full white flash; t2.07 reveal mid-crossfade; t2.62 settled Greymon
+  sprite + "Greymon" name. Pixels crisp, so .interpolation(.none) is holding through the ceremony.
+- AC4 by testTheCeremonyIsPresentOnTheFirstAppOpen: the evolution is applied by refresh(), which
+  start() runs on app open, so an evolution that came due while closed is celebrated on open.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION (5 mutations, each caught, all restored; final 279/279):
+1. playHaptic() removed        => both haptic assertions red (2 failures).
+2. haptic moved to run()'s top => testTheHapticFiresOnceAtTheReveal red (this is the mutation the
+                                  ORIGINAL two tests both survived — the reason I rewrote them).
+3. afterDuration hold dropped  => the "reveal held after the tap" assertion red.
+4. advance() publishes nothing => 3 model-seam tests red.
+5. acknowledgeEvolution() no-op=> 2 tests red.
+
+GOTCHA FOR LATER SIMULATOR WORK — cost me two failed screenshot passes:
+- The app boots into US-011's HealthAuthorizationGate, so a plain launch screenshots the "Feed Your
+  Digimon / Continue" onboarding screen forever and NOTHING of the game is reachable. Launch with
+  `-healthAnswered` (StubHealthAuthorizer, DEBUG-only launch arg) to get past it.
+- `xcrun simctl io screenshot` takes ~140ms, and app launch to first frame is ~0.7s. A tight loop of
+  screenshots with no sleep samples the animation about every 0.14s, which is what caught the flash.
+  Name the files with elapsed time (t0.68 etc) or the frames are unorderable and meaningless.
+- Identical FILE SIZES across a burst mean you captured a static screen, not an animation. That is
+  the fastest way to notice the app never got where you thought it did.
+- Full ceremony wall-clock is 1.0 + 0.6 + 2.6 = 4.2s from when start() finishes.
+
+DESIGN NOTES — later stories depend on these:
+- MainScreenModel.seedCeremonyDemoIfRequested() is DEBUG-only and fires on `-evolutionCeremonyDemo`,
+  forcing an agumon->greymon ceremony at launch so it can be screenshotted (the Simulator has no
+  HealthKit data, so a REAL evolution cannot be driven there). It runs AFTER refresh(), so it
+  overwrites any genuine event. Delete or guard it if a later story needs to screenshot a real one.
+- pendingEvolution is set in advance(), which US-018's hatching also routes through, so an egg
+  hatching already gets the same ceremony for free. US-029's rebirth should decide deliberately
+  whether it wants that too.
+- The haptic is the one AC the Simulator can never show. It is covered by a unit test on the
+  injected closure, NOT by observation on hardware. If this ever ships to a real watch, confirm it
+  there.
+- run() is internal and its durations injectable purely for testability; the app never passes them.
+
+Remains: US-022 onward (US-001..US-021 pass; 21/35).

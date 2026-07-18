@@ -355,8 +355,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 21,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "EvolutionCeremonyView (old sprite -> white flash -> new sprite + announced name, .success haptic at the reveal), driven by MainScreenModel.pendingEvolution set in advance() and cleared by acknowledgeEvolution(). Build green, 279/279 tests, all beats confirmed by timestamped Simulator screenshots. Haptic itself is not observable in the Simulator (no haptic hardware, simctl cannot capture it) so it is pinned by a unit test on the injected playHaptic closure instead; 5 mutations each caught by the right tests."
     },
     {
       "id": "US-022",
