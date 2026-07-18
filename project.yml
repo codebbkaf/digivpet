@@ -43,6 +43,12 @@ targets:
       properties:
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        # US-033's observers. Without it `enableBackgroundDelivery` FAILS with "Missing
+        # com.apple.developer.healthkit.background-delivery entitlement" — it builds and launches
+        # fine, so only reading the log of a running app catches its absence, exactly as US-001
+        # missed WKWatchOnly. The observer queries themselves still work; what is lost without this
+        # is the wake, which is the entire point of observing.
+        com.apple.developer.healthkit.background-delivery: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digivpet.DigiVPet

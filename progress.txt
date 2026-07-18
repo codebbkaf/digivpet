@@ -2302,3 +2302,126 @@ WHAT US-033 INHERITS
   needs nothing from background refresh, which is worth asserting in US-033's 48h-closure test.
 
 REMAINS: US-033, US-034, US-035 (US-001..US-032 pass; 32/35).
+
+================================================================================
+2026-07-19 — US-033: Add background refresh and HealthKit observers — PASSES
+================================================================================
+
+WHAT SHIPPED
+
+- `Sources/BackgroundRefresh.swift` — `BackgroundRefreshSchedule` (interval 30min, observedMetrics
+  [.steps, .activeEnergy], `next(after:)`), the two seams `BackgroundRefreshScheduling` and
+  `HealthUpdateObserving`, `WatchBackgroundRefreshScheduler` (WKApplication.scheduleBackgroundRefresh),
+  and `BackgroundRefreshCoordinator`.
+- `Sources/HealthObserver.swift` — `HealthKitUpdateObserver`: one `HKObserverQuery` per metric plus
+  `enableBackgroundDelivery(.hourly)`.
+- `Sources/DigiVPetApp.swift` — `GameSession` (the one model + coordinator) and
+  `DigiVPetAppDelegate` via `@WKApplicationDelegateAdaptor`.
+- `project.yml` — `com.apple.developer.healthkit.background-delivery` entitlement.
+- `Tests/BackgroundRefreshTests.swift` — 13 tests, two suites.
+
+ONE MODEL, ONE STORE, ONE LEDGER
+
+`WKApplicationDelegate` is handed background tasks with no reference to any view, so the delegate
+cannot be given the screen's model. Building its own would open a SECOND `GameStore` on the same
+file with its own in-memory `EnergyLedger` — and two ledgers credit the same steps twice, the exact
+bug US-014's delta crediting exists to prevent. Hence `GameSession`, a `@MainActor enum` holding
+`static let model` / `static let coordinator`, which `DigiVPetApp.body` now hands to `ContentView`
+instead of constructing a fresh `MainScreenModel()` inline.
+
+EVERY PATH ENDS IN `MainScreenModel.refresh()`
+
+A background wake and a foregrounding do exactly the same work. There is deliberately no second,
+weaker set of rules that only runs in the background — that is how the two drift.
+
+TWO REAL BUGS, BOTH FOUND ONLY BY RUNNING THE APP
+
+1. `enableBackgroundDelivery` failed at runtime: "Missing
+   com.apple.developer.healthkit.background-delivery entitlement". It BUILDS and LAUNCHES fine
+   without it and every test passes, so nothing but the log of a running app catches it — the same
+   class of miss as US-001's WKWatchOnly. Added to `project.yml`; the error is gone on relaunch and
+   nothing replaced it. The observer queries themselves still work without the entitlement; what is
+   lost is the wake, i.e. the entire point.
+2. Observers registered from `applicationDidFinishLaunching` failed with "Authorization not
+   determined" for both metrics. A failed observer is NEVER retried, so a first-run app would go its
+   whole life unwatched. Split `begin()` (schedule — needs nobody's permission) from
+   `beginObservingHealthUpdates()`, which now runs from a `.task` on the content BEHIND the
+   authorization gate, guarded by `isObserving` because that view can appear more than once.
+   `testLaunchingDoesNotObserveBeforeAuthorizationHasBeenAnswered` is the regression pin.
+
+THE RESCHEDULE IS UNCONDITIONAL
+
+`performRefresh()` re-arms AFTER the refresh, whether or not it succeeded. A chain that only re-armed
+on success stops dead at the first failed read and nothing wakes the app again until a user opens it.
+Likewise the delegate's `default:` branch completes task kinds this app never asks for — watchOS
+suspends an app that leaves one outstanding and stops granting it wakes.
+
+AN OBSERVED UPDATE DOES NOT RESCHEDULE
+
+`healthDataChanged()` refreshes but does NOT re-arm the timer. An observer that did would push the
+next guaranteed wake half an hour further out every time the user took a walk, so a busy day would
+starve the schedule of exactly the wake it exists to guarantee.
+`testAnObservedUpdateCreditsWithoutWaitingForTheNextWake` asserts `requestedDates.count == 1` after
+an update, which is what pins that.
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED; xcodebuild test TEST SUCCEEDED 482/482, was 469 (+13).
+- AC1: scheduled at launch, re-armed per wake, and a wake really moves the game —
+  `testAWakeAdvancesTheGameWithoutTheAppBeingOpened` (hunger 0 -> 1 over 4h with no foregrounding),
+  `testAWakeEvaluatesSickness` (healthy -> sick at hour 40), and
+  `testAWakeEvolvesADigimonThatCameOfAgeWhileTheAppWasAway` (Baby I -> Child past the 24h gate; a
+  Baby I and not a Child because a Child's gate is 72h and 72h unfed makes it sick, which PAUSES
+  evolution and would have made the test pass for the wrong reason).
+- AC2: `testTheObserversWatchStepsAndActiveEnergy` pins the metric list; the Simulator log is the
+  proof the REAL query path runs — before the entitlement it logged the missing-entitlement error
+  for both metrics, after it that line is gone.
+- AC3/AC4: `testFortyEightHoursShutMatchesFortyEightHoursOpen`. One game refreshes hourly for 48
+  hours; the other is shut at hour 0, gets NO wake at all, and is opened at hour 48. `ElapsedTimeState`
+  equality across id, stage, hunger, hungerUpdatedAt, careMistakeCount, starvationMistakesCharged,
+  healthDataLastSeen, healthStatus, stageEnergy, lifetimeEnergy and battlesRemaining. The expected
+  values are ALSO spelled out (hunger 4, timestamp frozen at +16h, 4 starvation spells + 1 missed
+  data day = 5 mistakes, sick), because an equality assertion alone cannot catch a change that broke
+  both runs identically.
+- Supporting: `testTheBattleAllowanceRollsOverWhileTheAppIsShut` (US-032's rollover needs nothing to
+  run at midnight) and `testTheReopenAfterAClosureStillCreditsTodaysHealthData`.
+
+WHY THE SILENT-DATA FIXTURE IS THE ONE THE 48h TEST USES
+
+With an empty fetcher every metric reads `noData` -> verdict `.silent`, and the silent path charges
+missed days WITHOUT stamping `healthDataLastSeen = now`, so the open and shut runs charge identically.
+Under a `.seen` fixture they would NOT: the open app stamps the marker every hour and charges nothing,
+while the shut one charges 1 for the day it never observed. That is not a bug in the recompute — it is
+data the closed app genuinely never had, and the same reason ENERGY cannot be reconstructed from
+elapsed time (it is read for the day it is read on). That is precisely what the schedule buys, and
+`testTheReopenAfterAClosureStillCreditsTodaysHealthData` covers the day it comes back to.
+
+KNOWN, PINNED, NOT FIXED
+
+`sickSince` and `diedAt` are stamped when the app NOTICES, not when the state became due — the
+instant `careMistakeCount` crossed three is not saved anywhere to derive it from. So a Digimon that
+fell ill during a closure starts its 72h death countdown at the reopen rather than at the hour it
+became ill. It errs towards LENIENCY (the countdown starts later, never earlier), which is the right
+way for it to be wrong. `ElapsedTimeState` excludes the two markers and
+`testAnIllnessThatBeganWhileClosedIsDatedFromTheReopen` asserts the behaviour, so it cannot change
+unnoticed. Fixing it properly means timestamping each care mistake, which is a change to US-027's
+rule and does not belong in this story.
+
+PRE-EXISTING BUG SEEN WHILE VERIFYING (NOT US-033, NOT INTRODUCED HERE)
+
+A brand-new game's Digitama draws the '?' PLACEHOLDER on the main screen instead of the egg
+("Pal Digitama" / "Agu Digitama", both with a valid 48x16 sheet on disk). Confirmed pre-existing by
+stashing this story's work, rebuilding at 35a8d09+US-032 and screenshotting: "Agu Digitama" shows the
+same '?'. Consistent with the US-004 note that `sheet[SpriteFrame.walk1]` on a Digitama is nil BY
+DESIGN — something on the egg path is asking for a stage frame rather than an `EggFrame`. It is
+user-visible on every first launch and worth a story of its own.
+
+WHAT US-034 INHERITS
+
+- `GameSession.model` is the single shared game; a complication must read through it or through its
+  own store, never a second `MainScreenModel`.
+- The delegate's `handle(_:)` already switches on task kind and completes every one — a WidgetKit
+  refresh reload belongs in `performRefresh()` alongside the existing work, not in a new wake.
+- `Idle Frame Only/` 16x16 sprites are what the complication draws (PRD FR-22), not the 48x64 sheets.
+
+REMAINS: US-034, US-035 (US-001..US-033 pass; 33/35).
