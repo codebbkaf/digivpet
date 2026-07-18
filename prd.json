@@ -509,8 +509,8 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
       "priority": 30,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattlePower.power(stage:strengthStat:lifetimeEnergy:) = 1 + 8/rung + 3/strengthStat + total lifetime energy/25, weights documented per term; GameState.battlePower is sugar over it. Armor-Hybrid has no ladderIndex so it fights as an Adult (4). 11 tests in Tests/BattlePowerTests.swift pin monotonicity across the whole ladder and 0..10 strength at every stage; build green, 416/416 tests pass."
     },
     {
       "id": "US-031",

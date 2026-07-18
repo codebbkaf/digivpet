@@ -2061,3 +2061,62 @@ them yet, so a battle story needs no memorial change. (2) `GameStore.rebirth` re
 record along with everything else on the new Digimon, which is deliberate: the PRD carries only
 lifetime energy and the Dex across a death. If US-032 wants a lifetime battle record it must add a
 carry to `rebirth` explicitly, exactly as `lifetimeEnergy` has one.
+
+================================================================================
+2026-07-18 — US-030: Compute battle power from health stats
+================================================================================
+
+WHAT I DID
+
+Added `Sources/BattlePower.swift` and `Tests/BattlePowerTests.swift`. Nothing else changed: no
+existing file was touched, because battle power is read-only over state US-006 has held since the
+beginning (`stage`, `strengthStat`, `lifetimeEnergy` were all already on `GameState`).
+
+THE FORMULA, AND WHY EACH WEIGHT IS THAT SIZE
+
+    power = 1 + 8 * battleRung(stage) + 3 * strengthStat + lifetimeEnergy.total / 25
+
+- base 1 keeps power STRICTLY positive. US-031 is likely to want a ratio of two powers, and a fresh
+  Digitama would otherwise be a zero to guard at every such site.
+- stage at 8/rung is deliberately the dominant term — evolving is the reward the game is built on,
+  and Ultimate is worth 48. This is what makes testAHigherStageAndStrengthBeatsAHoarderOfLifetime-
+  Energy true: an Adult with 10 training beats a Baby I holding 400 lifetime energy.
+- strengthStat at 3 makes TRAINING the fastest lever the user has. A `TrainAction` session costs 5
+  energy and buys 3 power; the same 5 energy merely accumulated would buy 0.2. Spending on purpose
+  should beat hoarding, and at these weights it does, 15x.
+- lifetime energy at 1 per 25 is the slow floor, and it is `lifetimeEnergy` and NOT `stageEnergy`
+  precisely because it is the one term that survives evolution and (via US-029's carry) death.
+
+ARMOR-HYBRID IS THE ONE STAGE THAT NEEDED A DECISION
+
+`Stage.ladderIndex` is nil for `.armorHybrid` by design (US-006: it is a side branch, not a rung).
+A `?? 0` fallback would have made an Armored Digimon fight exactly as hard as an egg, which is the
+one answer that is certainly wrong. `BattlePower.battleRung` scores it as an Adult (4), the tier it
+branches toward, and testArmorHybridFightsAsAnAdult pins that so the nil is never silently defaulted
+again.
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED.
+- xcodebuild test TEST SUCCEEDED 416/416, was 405 (+11 in Tests/BattlePowerTests.swift).
+- AC1 tested as two separate claims, because "pure function of stage, strengthStat and lifetime
+  energy" says both that nothing ELSE gets in and that nothing hidden varies:
+  testOnlyStageStrengthAndLifetimeEnergyAffectPower builds two Digimon agreeing on the three terms
+  and differing in stageEnergy(500), hunger(max), careMistakeCount(9), healthStatus(.sick),
+  battleWins/Losses and birthDate, and asserts equal power. testPowerIsDeterministicForTheSameInputs
+  calls it 10x for one answer.
+- AC3 asserted as MONOTONICITY, not at a single pair, so retuning the weights cannot silently make a
+  bigger Digimon weaker: testAHigherStageAlwaysProducesHigherPower walks every adjacent pair of the
+  seven-rung ladder, and testAHigherStrengthStatAlwaysProducesHigherPower walks strength 0->10 at
+  every one of the eight stages including Armor-Hybrid.
+- AC2: testPowerMatchesTheDocumentedFormula evaluates the doc comment by hand (Adult, 6 sessions,
+  260 lifetime -> 1+32+18+10 = 61). If a constant is retuned without updating the comment, this
+  fails — the comment is the spec.
+
+REMAINS: US-031 onward (US-001..US-030 pass; 30/35).
+US-031 (battle resolution) inherits: `GameState.battlePower` is the number to resolve against, it is
+never 0 so it is safe to divide by, and it is deterministic — ALL the randomness in a battle must
+come from US-031's own seeded RNG, which is what the PRD's "seeded RNG" test requirement needs.
+Note US-030 deliberately did NOT gate power on `healthStatus`: a sick Digimon computes full power.
+If battles should be blocked while sick, that belongs in US-031's entry check alongside the daily
+limit, the way `TrainAction` guards, not inside the formula.
