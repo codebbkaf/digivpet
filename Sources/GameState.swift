@@ -182,7 +182,15 @@ final class GameState {
     var birthDate: Date
     var stageEnteredDate: Date
     var careMistakeCount: Int
+    /// Units of hunger, 0...`HungerClock.maximumHunger`. Grown by elapsed time, never by a tick —
+    /// `hungerUpdatedAt` is what it is derived from.
     var hunger: Int
+    /// The instant `hunger` was last brought up to date. Optional for the same migration reason as
+    /// `energyLastEarnedStorage`: it was added to an already-shipped model, and an optional
+    /// attribute is the one shape SwiftData migrates into an existing store without a default.
+    /// `nil` means "saved before hunger was tracked", which `HungerClock.advance` reads as "start
+    /// the clock now".
+    var hungerUpdatedAt: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -202,6 +210,7 @@ final class GameState {
         self.stageEnteredDate = now
         self.careMistakeCount = 0
         self.hunger = 0
+        self.hungerUpdatedAt = now
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0

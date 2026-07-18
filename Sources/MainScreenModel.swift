@@ -188,6 +188,10 @@ final class MainScreenModel: ObservableObject {
         isRefreshing = true
         defer { isRefreshing = false }
 
+        // Before the read, not after: hunger is owed for time already elapsed, and the read is
+        // several awaits long. Nothing here depends on the energy about to be credited.
+        state.advanceHunger(now: now())
+
         let readings = await energySource.readings(now: now())
         let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
                                              calendar: calendar)

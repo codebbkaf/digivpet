@@ -388,8 +388,8 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "HungerClock (Sources/HungerClock.swift) holds the 4h/unit rate and the max (4); GameState gains optional hungerUpdatedAt and MainScreenModel.refresh() calls advanceHunger(now:) before the health read. Timestamp advances by APPLIED intervals, never to now, so partial intervals carry and the max-hunger instant is preserved for US-027. Build green; 308/308 tests pass (+15 in Tests/HungerTests.swift), incl. 12h -> exactly 3 units."
     },
     {
       "id": "US-024",

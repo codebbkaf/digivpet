@@ -1471,3 +1471,67 @@ DESIGN NOTES — later stories depend on these:
   reason it is its own @Model; resetGame already deletes only GameState.
 
 Remains: US-023 onward (US-001..US-022 pass; 22/35).
+
+================================================================================
+2026-07-18 — US-023: Add hunger that increases over real time — PASSES
+================================================================================
+
+WHAT WAS BUILT:
+- Sources/HungerClock.swift: the whole rule, plus the two constants (secondsPerHungerUnit =
+  4h per PRD FR-27; maximumHunger = 4). The PRD fixes the RATE but never states a ceiling —
+  4 is the classic V-Pet meter and puts fed->starving at 16h, i.e. inside one neglected day.
+  If a later story finds 4 wrong, it is one number in one place.
+  `advance(hunger:lastUpdated:now:) -> Advanced` is pure and takes the clock as a parameter,
+  so no test waits real time.
+- Sources/GameState.swift: added `hungerUpdatedAt: Date?`. OPTIONAL for the same migration
+  reason as energyLastEarnedStorage (see its comment) — an optional attribute is the one
+  shape SwiftData migrates into an already-shipped store without a default. init stamps `now`.
+- Sources/MainScreenModel.swift: refresh() calls state.advanceHunger(now:) BEFORE the health
+  read (hunger is owed for time already elapsed; the read is several awaits long and nothing
+  here depends on the energy about to be credited). The existing save at the end flushes it.
+
+THE ONE DESIGN DECISION LATER STORIES MUST KNOW:
+`updatedAt` moves forward by exactly the intervals APPLIED — never to `now`. Two consequences,
+both deliberate and both tested:
+1. A part-worn interval is CARRIED. Stamping `now` would mean two 3h sessions accrue nothing,
+   and anyone who opens the app more often than every 4h would never get hungry at all.
+2. At the cap nothing is applied, so the timestamp FREEZES at the instant hunger hit max.
+   US-027's "hunger at max for 8h+" care mistake reads (now - hungerUpdatedAt) and needs no
+   second saved date. testTheTimestampStopsAtTheInstantHungerHitTheMaximum pins this.
+
+*** US-024 (feeding) MUST RESTAMP hungerUpdatedAt = now WHEN IT FEEDS. ***
+That is the cost of point 2: without it, feeding a starving Digimon down to 3 would instantly
+re-accrue every interval the stale timestamp had been sitting at max, and the feed would look
+like it did nothing. Restamping on feed is the natural reading of a feed anyway.
+
+Edge cases handled (all tested): nil timestamp (a save written before this existed) starts the
+clock and adds nothing, rather than inventing elapsed hunger from birthDate and double-counting
+against the hunger such a save already holds; a BACKWARDS clock restamps rather than parking
+the timestamp in the future where hunger would freeze until the wall clock caught up; an absurd
+elapsed time saturates instead of trapping (the cap comparison is done in Double space BEFORE
+Int(), because Int(Double) traps outside Int's range and elapsed is only as sane as the device
+clock).
+
+Verified (observed, not assumed):
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED.
+- xcodebuild test TEST SUCCEEDED 308/308 (was 293; +15 in Tests/HungerTests.swift).
+- AC1 testHungerAccruesOnlyOnWholeFourHourIntervals — 3.98h=0, 4h=1, 8h=2, 12h=3, 16h=4.
+- AC2 testHungerIsCappedAtTheMaximum / ...AlreadyPartlyFullStillStopsAtTheMaximum.
+- AC3 testHungerIsCorrectAfterTheAppWasClosedForDays (72h in ONE call, no ticks) and
+  testHungerIsCorrectAcrossAnAppRestart (container dropped and reopened, so the 12h is
+  measured against a timestamp that came OFF DISK, not one held live in memory).
+- AC4 testTwelveElapsedHoursAddsExactlyThreeHungerUnits.
+- Persistence: testAgedHungerAndItsTimestampArePersisted — without the timestamp being
+  flushed, the next launch would re-age from the old one and double-charge.
+
+GOTCHA FOR ANY LATER APPLY-STYLE TEST (cost me a red run):
+MainScreenModel.start() resolves startingDigitamaId BEFORE loading, and throws .noDigitama if
+the graph has no Digitama — so phase goes .failed and `state` stays nil EVEN WHEN A SAVED GAME
+EXISTS. A fixture graph must contain a Digitama node whether or not the test uses it.
+Also: EmptySampleFetcher/EmptySleepFetcher are `private` in each apply-suite. Copy them into a
+new file, do not try to import them.
+
+No Simulator verification: US-023 has no "verify in Simulator" criterion, and hunger has no UI
+yet — nothing is drawn from it until US-024 adds the feed action.
+
+Remains: US-024 onward (US-001..US-023 pass; 23/35).
