@@ -11,12 +11,14 @@ struct ContentView: View {
     #if DEBUG
     @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
     @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
+    @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     #endif
 
     /// Scroll anchors for the action controls, so the Simulator demos can bring them into view.
     private static let feedControlsId = "feedControls"
     private static let trainControlsId = "trainControls"
     private static let battleControlsId = "battleControls"
+    private static let settingsControlsId = "settingsControls"
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
     /// it down to nothing so a `simctl` screenshot lands on the result screen rather than mid-
@@ -81,6 +83,11 @@ struct ContentView: View {
             // published the snapshot this draws.
             .navigationDestination(isPresented: $showsComplicationDemo) {
                 ComplicationDemoView()
+            }
+            // Same reason again: the Settings link sits at the bottom of a scroll view `simctl`
+            // cannot scroll, and cannot be tapped even once it is on screen.
+            .navigationDestination(isPresented: $showsSettingsDemo) {
+                NotificationSettingsView(settings: model.notificationSettings)
             }
             #endif
         }
@@ -182,6 +189,18 @@ struct ContentView: View {
                             .padding(.top, 4)
                             .id(Self.battleControlsId)
                     }
+
+                    // Last on the screen, below the actions: a preference is something you visit
+                    // once, not something you reach for while playing. A link rather than a
+                    // toolbar item because the toolbar's one slot is the Dex's.
+                    NavigationLink {
+                        NotificationSettingsView(settings: model.notificationSettings)
+                    } label: {
+                        Label("Notifications", systemImage: "bell")
+                            .font(.caption2)
+                    }
+                    .padding(.top, 6)
+                    .id(Self.settingsControlsId)
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -196,6 +215,8 @@ struct ContentView: View {
                     scroller.scrollTo(Self.trainControlsId, anchor: .bottom)
                 } else if CommandLine.arguments.contains("-battleScrollDemo") {
                     scroller.scrollTo(Self.battleControlsId, anchor: .bottom)
+                } else if CommandLine.arguments.contains("-settingsScrollDemo") {
+                    scroller.scrollTo(Self.settingsControlsId, anchor: .bottom)
                 }
             }
             #endif

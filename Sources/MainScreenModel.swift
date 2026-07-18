@@ -113,6 +113,12 @@ final class MainScreenModel: ObservableObject {
     private let playFeedHaptic: () -> Void
     private let playTrainHaptic: () -> Void
     private let makeBattleGenerator: () -> SeededGenerator
+    private let notifications: NotificationDispatcher
+    /// The three notification toggles, handed to `NotificationSettingsView`. Owned here rather than
+    /// created by the settings screen so the screen and the dispatcher read the same object — a
+    /// second `NotificationSettings` would work (both read `UserDefaults`) but would not redraw the
+    /// toggles, and would defeat the injected-defaults suite a test relies on.
+    let notificationSettings: NotificationSettings
     /// `var` only so the DEBUG Simulator demo can hold a pose long enough to be screenshotted —
     /// nothing in the app or the tests reassigns it. See `seedFeedDemoIfRequested`.
     private var actionDuration: TimeInterval
@@ -155,6 +161,13 @@ final class MainScreenModel: ObservableObject {
     ///     in the app, so two battles differ; injected with a FIXED seed by a test, which is what
     ///     makes US-031's "deterministic winner" assertable through the real model rather than only
     ///     against `BattleEngine` in isolation.
+    ///   - notificationSettings: the three toggles. Nil builds one over `UserDefaults.standard`;
+    ///     a test passes its own suite so it neither reads nor writes the real preferences.
+    ///   - notificationDeliverer: where a notification goes. Nil builds the real
+    ///     `UNUserNotificationCenter` one; a test passes a spy, which is the only way to assert
+    ///     that something was suppressed — a notification that was not sent leaves no other trace.
+    ///     Both are optional-and-nil rather than defaulted values because constructing either is a
+    ///     `@MainActor` call, which a default argument would evaluate in the caller's context.
     init(
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
         graph: EvolutionGraph = .bundled,
@@ -167,7 +180,9 @@ final class MainScreenModel: ObservableObject {
         actionDuration: TimeInterval = 2.0,
         makeBattleGenerator: @escaping () -> SeededGenerator = {
             SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
-        }
+        },
+        notificationSettings: NotificationSettings? = nil,
+        notificationDeliverer: PetNotificationDelivering? = nil
     ) {
         self.makeStore = makeStore
         self.graph = graph
@@ -179,6 +194,12 @@ final class MainScreenModel: ObservableObject {
         self.playTrainHaptic = playTrainHaptic
         self.actionDuration = actionDuration
         self.makeBattleGenerator = makeBattleGenerator
+        let settings = notificationSettings ?? NotificationSettings()
+        self.notificationSettings = settings
+        self.notifications = NotificationDispatcher(
+            settings: settings,
+            deliverer: notificationDeliverer ?? UserNotificationDeliverer()
+        )
     }
 
     /// How to draw the Digimon currently being raised, or nil if the graph does not know it.
@@ -223,6 +244,7 @@ final class MainScreenModel: ObservableObject {
                 return
             }
         }
+        requestNotificationAuthorization()
         await refresh()
         #if DEBUG
         seedCeremonyDemoIfRequested()
@@ -233,6 +255,22 @@ final class MainScreenModel: ObservableObject {
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
         #endif
+    }
+
+    /// Asks the system for permission to notify, before the refresh that may hatch an egg or find
+    /// the Digimon sick — an unauthorized `add` fails silently, so the ask has to precede the first
+    /// send rather than follow it.
+    ///
+    /// `-noNotificationPrompt` suppresses the ask in DEBUG builds only, and exists for exactly one
+    /// reason: the system's permission alert is a full-screen sheet that `simctl` can neither tap
+    /// nor dismiss, so every Simulator screenshot after this shipped would land on the alert instead
+    /// of the screen under test. It suppresses the ASK, never a notification — the rules and the
+    /// dispatcher are untouched by it.
+    private func requestNotificationAuthorization() {
+        #if DEBUG
+        guard !CommandLine.arguments.contains("-noNotificationPrompt") else { return }
+        #endif
+        notifications.requestAuthorization()
     }
 
     #if DEBUG
@@ -472,6 +510,11 @@ final class MainScreenModel: ObservableObject {
         isRefreshing = true
         defer { isRefreshing = false }
 
+        // Captured before any rule runs, because the sickness notification is owed for the
+        // TRANSITION into illness (AC2), not for being ill: a Digimon left sick for three days
+        // must be told about once, not once per refresh.
+        let healthBefore = state.healthStatus
+
         // Before the read, not after: hunger is owed for time already elapsed, and the read is
         // several awaits long. Nothing here depends on the energy about to be credited.
         state.advanceHunger(now: now())
@@ -496,6 +539,10 @@ final class MainScreenModel: ObservableObject {
         // has run — and a cure decided above must be able to stop the countdown in the same refresh
         // it happened, rather than a Digimon dying of an illness it no longer has.
         state.updateDeath(now: now())
+        // After both, so neither can be told to the user before the game itself has settled it —
+        // and after `updateDeath` in particular, because a Digimon that has just been found dead
+        // is past both messages.
+        notifyHealthChanges(state, healthBefore: healthBefore)
         // The pose is settled again here and not only in `updateSleepState`, because falling sick,
         // being cured or dying all change the resting pose too and are decided after the sleep
         // window.
@@ -847,6 +894,29 @@ final class MainScreenModel: ObservableObject {
         Self.log.info("Evolved \(node.id) into \(next.id)")
     }
 
+    /// Tells the user about the two health moments worth interrupting them for (US-035 AC2): the
+    /// Digimon falling ill, and its illness being 24 hours from killing it.
+    ///
+    /// Both are decided from the state AFTER every rule in `refresh()` has run, so neither can
+    /// announce something the game then changes its mind about. Whether either actually reaches the
+    /// wrist is `NotificationDispatcher`'s call — the toggle and the sleep window are its business,
+    /// not this method's, which is why nothing here looks at either.
+    private func notifyHealthChanges(_ state: GameState, healthBefore: HealthStatus) {
+        let name = presentation?.displayName ?? "Your Digimon"
+        if healthBefore != .sick && state.healthStatus == .sick {
+            notifications.send(.sickness,
+                               body: "\(name) has fallen ill. Care for it to make it well again.",
+                               isAsleep: isAsleep)
+        }
+        // Claimed rather than merely checked, so the warning is decided once per illness even
+        // across relaunches — see `claimDeathWarning`.
+        if state.claimDeathWarning(now: now()) {
+            notifications.send(.deathWarning,
+                               body: "\(name) has 24 hours left. Earn 30 energy today to cure it.",
+                               isAsleep: isAsleep)
+        }
+    }
+
     /// Moves the saved game onto `next`, the one reset a hatch and an evolution both perform: the
     /// current id and `GameState.stage` step to the new node (the saved stage is a duplicate of a
     /// graph fact the screen renders from, so a stale one would draw a placeholder), `stageEnergy`
@@ -866,6 +936,12 @@ final class MainScreenModel: ObservableObject {
         // showing half of one.
         if let from, let to = graph.presentation(forId: next.id) {
             pendingEvolution = EvolutionEvent(from: from, to: to)
+            // Sent from `advance` rather than from `evolveIfReady`, so a HATCH is announced too:
+            // both are the same "you are now something new" moment the ceremony already treats
+            // alike, and an egg opening while the app is shut is the one a user most wants told.
+            notifications.send(.evolution,
+                               body: "\(from.displayName) digivolved into \(to.displayName)!",
+                               isAsleep: isAsleep)
         }
     }
 

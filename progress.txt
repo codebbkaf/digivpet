@@ -2498,3 +2498,76 @@ WHAT US-035 INHERITS
   Simulator screenshot reaches a screen `simctl` cannot tap to.
 
 REMAINS: US-035 (US-001..US-034 pass; 34/35).
+
+================================================================================
+2026-07-19 — US-035 — Add local notifications with settings toggles
+================================================================================
+
+WHAT WAS BUILT
+
+- `Notifications.swift` — the whole feature's rules, with no SwiftUI and no SwiftData in it:
+  - `NotificationKind` (evolution / sickness / deathWarning), each carrying its own title, its
+    settings copy, and `firesWhileAsleep` — which is TRUE for the death warning and nothing else.
+    That property is the AC4 exception expressed as data, so a fourth kind cannot inherit it by
+    accident, and `testOnlyTheDeathWarningFiresWhileAsleep` pins the set.
+  - `NotificationSettings` — `UserDefaults`-backed, and it reads through `object(forKey:)` rather
+    than `bool(forKey:)` ON PURPOSE: `bool(forKey:)` returns false for a key never written, which
+    would default every toggle OFF on a fresh install — the exact opposite of AC3, silently.
+    Backed by defaults and not by `GameState` because it is a fact about the person, not the
+    Digimon, so it must survive a death and a rebirth.
+  - `NotificationDispatcher.send` — the two gates (toggle, then sleep) and nothing else. A
+    suppressed notification is DROPPED, not queued for morning: a queue would fire a burst at 07:00
+    about things the user will already have seen on screen.
+- `GameState.deathWarningSentAt` + `Death.claimDeathWarning(now:)` — the 24-hours-left moment.
+  SAVED, not held in memory, because it falls 48 hours into an illness at a moment nobody is
+  watching (as likely a background wake as a foregrounding); an in-memory flag would be lost on the
+  next launch and warn the user a second time. `updateDeath`'s healthy branch clears it alongside
+  `sickSince`, so the NEXT illness gets its own warning rather than inheriting a spent one.
+  The claim is stamped WHETHER OR NOT a notification goes out — the marker records that the game
+  reached the moment, not that the user was told, so switching the toggle on at hour 71 cannot
+  deliver a "24 hours left" that is really one hour. Suppression is downstream of it.
+- `MainScreenModel` — `notifyHealthChanges` runs after `updateSickness`/`updateDeath` (so nothing is
+  announced that the game then changes its mind about) and fires sickness on the TRANSITION only,
+  off a `healthBefore` captured at the top of `refresh()`. The evolution notice is sent from
+  `advance()`, not `evolveIfReady()`, so a HATCH is announced too — both are the same moment the
+  ceremony already treats alike.
+- `NotificationSettingsView` — a `List` over `allCases`, so a fourth kind cannot be added without a
+  way to turn it off. Reached by a link at the bottom of the main screen (the toolbar's one slot is
+  the Dex's).
+
+WHAT WAS OBSERVED
+
+- `xcodebuild build` SUCCEEDED; `xcodebuild test` SUCCEEDED, 508/508, was 492 (+16).
+- Simulator, Series 11 (46mm): the settings screen draws all three toggles ON with no toggle ever
+  having been written (AC3's default, observed rather than inferred), and the Notifications link is
+  reachable at the bottom of the main screen.
+- The system's "DigiVPet would like to send you notifications" alert was screenshotted on first
+  launch — direct evidence `requestAuthorization` runs against the REAL `UNUserNotificationCenter`.
+
+WHAT WAS NOT OBSERVED, AND WHY
+
+The final hand-off to the OS. `simctl privacy` has no `notifications` service (checked — the list is
+calendar/contacts/location/photos/media-library/microphone/motion/reminders/siri), and nothing can
+tap the alert on the watchOS Simulator, so the app cannot be authorized unattended. Delivery is
+therefore asserted with a spy at the `PetNotificationDelivering` boundary, driven by the REAL
+`refresh()` over a real `GameStore` — same standard the haptics have used since US-024. Everything
+up to `UNUserNotificationCenter.add` is exercised by a test; `add` itself is not.
+
+A DEBUG-only `-noNotificationPrompt` was added because that alert is a full-screen sheet `simctl`
+can neither tap nor dismiss — without it EVERY future Simulator screenshot would land on the alert
+instead of the screen under test. It suppresses the ASK only; the rules and the dispatcher are
+untouched by it, and it is compiled out of release builds.
+
+ALSO NOTE
+
+`simctl privacy reset` wipes the HealthKit grant too, so a screenshot run after one needs
+`-healthAnswered` or it lands on the onboarding screen. Demo launch: `-healthAnswered -settingsDemo
+-noNotificationPrompt`.
+
+STILL OPEN, NOT US-035
+
+The '?' placeholder for a Digitama on the MAIN screen, first noted under US-033 and narrowed under
+US-034 to that screen's own frame lookup (the complication draws the same egg correctly through
+`IdleSpriteCache`). No story covers it.
+
+REMAINS: nothing — US-001..US-035 all pass, 35/35.

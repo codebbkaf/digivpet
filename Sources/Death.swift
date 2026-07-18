@@ -12,6 +12,17 @@ enum Death {
 
     /// Seconds in a day, for turning a lifespan into the whole days a memorial reports.
     static let secondsPerDay: TimeInterval = 24 * 60 * 60
+
+    /// How long before death the user is warned: 24 hours (US-035 AC2).
+    ///
+    /// Expressed as a lead time rather than as "48 hours into the illness", so it stays 24 hours'
+    /// notice if `secondsSickUntilDeath` is ever retuned.
+    static let secondsWarningBeforeDeath: TimeInterval = 24 * 60 * 60
+
+    /// How long an illness must have run before the warning is due: 48 hours.
+    static var secondsSickUntilWarning: TimeInterval {
+        secondsSickUntilDeath - secondsWarningBeforeDeath
+    }
 }
 
 /// What a memorial screen says about the Digimon that just died.
@@ -60,13 +71,37 @@ extension GameState {
             diedAt = now
         case .healthy:
             // Cured, so the next illness is measured from its own beginning rather than inheriting a
-            // countdown that was already most of the way to killing it.
+            // countdown that was already most of the way to killing it. The warning marker goes with
+            // it for the same reason: the next illness deserves its own warning.
             sickSince = nil
+            deathWarningSentAt = nil
         case .dead:
             // Death is final, and `diedAt` is already stamped. `sickSince` is deliberately left
             // alone: clearing it would erase the record of how the Digimon came to die.
             break
         }
+    }
+
+    /// Whether this refresh is the one that owes the user a "24 hours left" warning, claiming it as
+    /// it answers so no later refresh asks again.
+    ///
+    /// Runs AFTER `updateDeath`, which is what may already have killed the Digimon: a game reopened
+    /// after four days is past warning, and the memorial is the message.
+    ///
+    /// THE CLAIM IS STAMPED WHETHER OR NOT A NOTIFICATION GOES OUT, and that is deliberate. The
+    /// marker records that the game reached the moment, not that the user was told — a user who has
+    /// the warning switched off and switches it on at hour 71 has already lived through the moment
+    /// this describes, and re-deciding it then would deliver a "24 hours left" that is really one
+    /// hour. Suppression is `NotificationDispatcher`'s job, and it is downstream of this.
+    ///
+    /// - Returns: true exactly once per illness, on the first refresh at or after 48 hours in.
+    func claimDeathWarning(now: Date) -> Bool {
+        guard healthStatus == .sick, deathWarningSentAt == nil, let since = sickSince else {
+            return false
+        }
+        guard now.timeIntervalSince(since) >= Death.secondsSickUntilWarning else { return false }
+        deathWarningSentAt = now
+        return true
     }
 
     /// What to put on this Digimon's memorial, or nil while it is still alive.

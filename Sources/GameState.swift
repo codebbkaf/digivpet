@@ -228,6 +228,15 @@ final class GameState {
     /// Digimon that is well, which no default could express.
     private var sickSinceStorage: Date?
     private var diedAtStorage: Date?
+    /// Backing store for `deathWarningSentAt` (US-035): when the 24-hours-left warning was decided
+    /// for the CURRENT illness, or nil while it has not been. Optional for the same migration reason
+    /// as every other storage property here.
+    ///
+    /// Saved rather than held in memory because the warning is due at a moment nobody is watching:
+    /// it falls 48 hours into an illness, and the refresh that notices is as likely to be a
+    /// background wake as a foregrounding. An in-memory flag would be lost on the next launch and
+    /// the user would be warned their Digimon is dying a second time.
+    private var deathWarningSentStorage: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -260,6 +269,7 @@ final class GameState {
         self.wakeMistakeDayStorage = nil
         self.sickSinceStorage = nil
         self.diedAtStorage = nil
+        self.deathWarningSentStorage = nil
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -354,6 +364,14 @@ extension GameState {
     var diedAt: Date? {
         get { diedAtStorage }
         set { diedAtStorage = newValue }
+    }
+
+    /// When the 24-hours-left warning was decided for the current illness, or nil while it has not
+    /// been. `Death.settleDeathWarning` owns it, and clears it with the cure so the NEXT illness
+    /// gets its own warning rather than inheriting a spent one.
+    var deathWarningSentAt: Date? {
+        get { deathWarningSentStorage }
+        set { deathWarningSentStorage = newValue }
     }
 
     /// Counts one refused feed against the local day containing `now`.
