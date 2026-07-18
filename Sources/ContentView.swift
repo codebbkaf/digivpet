@@ -12,8 +12,9 @@ struct ContentView: View {
     @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
     #endif
 
-    /// Scroll anchor for the feed controls, so the Simulator demo can bring them into view.
+    /// Scroll anchors for the action controls, so the Simulator demos can bring them into view.
     private static let feedControlsId = "feedControls"
+    private static let trainControlsId = "trainControls"
 
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
     /// and a default argument would be evaluated in this `init`'s non-isolated context. Same
@@ -114,6 +115,10 @@ struct ContentView: View {
                         FeedControls(hunger: state.hunger) { model.feed() }
                             .padding(.top, 4)
                             .id(Self.feedControlsId)
+
+                        TrainControls(strengthStat: state.strengthStat) { model.train() }
+                            .padding(.top, 4)
+                            .id(Self.trainControlsId)
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -123,8 +128,11 @@ struct ContentView: View {
             // controls sit below the fold and are unscreenshottable without a way to scroll to
             // them from the launch command. Compiled out of release builds.
             .onAppear {
-                guard CommandLine.arguments.contains("-feedScrollDemo") else { return }
-                scroller.scrollTo(Self.feedControlsId, anchor: .bottom)
+                if CommandLine.arguments.contains("-feedScrollDemo") {
+                    scroller.scrollTo(Self.feedControlsId, anchor: .bottom)
+                } else if CommandLine.arguments.contains("-trainScrollDemo") {
+                    scroller.scrollTo(Self.trainControlsId, anchor: .bottom)
+                }
             }
             #endif
             }
@@ -163,6 +171,38 @@ struct FeedControls: View {
 
             Button(action: feed) {
                 Label("Feed", systemImage: "fork.knife")
+                    .font(.caption2)
+            }
+            .buttonStyle(.bordered)
+        }
+    }
+}
+
+/// The strength stat and the Train button.
+///
+/// A number rather than pips, unlike hunger: `strengthStat` has no ceiling to read a bar against,
+/// and the thing worth seeing is that a session moved it.
+struct TrainControls: View {
+    let strengthStat: Int
+    let train: () -> Void
+
+    var body: some View {
+        VStack(spacing: 3) {
+            HStack(spacing: 3) {
+                Text("STR")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+
+                Text("\(strengthStat)")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Color.red)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Strength")
+            .accessibilityValue("\(strengthStat)")
+
+            Button(action: train) {
+                Label("Train", systemImage: "dumbbell")
                     .font(.caption2)
             }
             .buttonStyle(.bordered)

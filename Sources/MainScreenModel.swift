@@ -88,7 +88,7 @@ final class MainScreenModel: ObservableObject {
     /// This is where a blocked feed says WHY it was blocked, per US-024's "visible reason".
     @Published private(set) var actionMessage: String?
 
-    /// Whether the Digimon is in its sleep window, which blocks feeding.
+    /// Whether the Digimon is in its sleep window, which blocks feeding and training.
     ///
     /// Settable and defaulted to false because US-026 is what infers it from the user's sleep
     /// history; until then it is only ever true in a test or the Simulator demo. Deliberately NOT on
@@ -102,6 +102,7 @@ final class MainScreenModel: ObservableObject {
     private let now: () -> Date
     private let chooseStartingDigitama: ([EvolutionNode]) -> EvolutionNode?
     private let playFeedHaptic: () -> Void
+    private let playTrainHaptic: () -> Void
     /// `var` only so the DEBUG Simulator demo can hold a pose long enough to be screenshotted —
     /// nothing in the app or the tests reassigns it. See `seedFeedDemoIfRequested`.
     private var actionDuration: TimeInterval
@@ -124,6 +125,9 @@ final class MainScreenModel: ObservableObject {
     ///   - playFeedHaptic: the light tap a feed plays. Injected for the same reason
     ///     `EvolutionCeremonyView.playHaptic` is — it is the one acceptance criterion no screenshot
     ///     can show, so a test spies on it instead.
+    ///   - playTrainHaptic: the firmer tap a training session plays. Separate from `playFeedHaptic`
+    ///     rather than one shared "action haptic", because the two actions are meant to FEEL
+    ///     different on the wrist and a test has to be able to tell which one fired.
     ///   - actionDuration: how long the eat loop or refuse pose is held before returning to idle.
     ///     Injected so a test drives the whole action in milliseconds rather than waiting it out.
     init(
@@ -134,6 +138,7 @@ final class MainScreenModel: ObservableObject {
         now: @escaping () -> Date = Date.init,
         chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() },
         playFeedHaptic: @escaping () -> Void = MainScreenModel.feedHaptic,
+        playTrainHaptic: @escaping () -> Void = MainScreenModel.trainHaptic,
         actionDuration: TimeInterval = 2.0
     ) {
         self.makeStore = makeStore
@@ -143,6 +148,7 @@ final class MainScreenModel: ObservableObject {
         self.now = now
         self.chooseStartingDigitama = chooseStartingDigitama
         self.playFeedHaptic = playFeedHaptic
+        self.playTrainHaptic = playTrainHaptic
         self.actionDuration = actionDuration
     }
 
@@ -192,6 +198,7 @@ final class MainScreenModel: ObservableObject {
         #if DEBUG
         seedCeremonyDemoIfRequested()
         seedFeedDemoIfRequested()
+        seedTrainDemoIfRequested()
         #endif
     }
 
@@ -239,6 +246,34 @@ final class MainScreenModel: ObservableObject {
         isAsleep = sleeping
         actionDuration = 60
         feed()
+    }
+
+    /// Debug-only: the training equivalent of `seedFeedDemoIfRequested`, for the same reason — the
+    /// Simulator has no HealthKit data, so a real game there never has the Strength to spend.
+    ///
+    /// - `-trainDemo` — funded and healthy, then trained: the attack pose and the raised stat.
+    /// - `-trainAsleepDemo` — funded but asleep, then trained: the blocked reason.
+    /// - `-trainSickDemo` — funded but sick, then trained: the other blocked reason.
+    private func seedTrainDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        let sleeping = arguments.contains("-trainAsleepDemo")
+        let sick = arguments.contains("-trainSickDemo")
+        guard arguments.contains("-trainDemo") || sleeping || sick, let state else { return }
+
+        // Off the starting egg for the same reason feeding's demo is: a Digitama sheet has no
+        // attack frame, so an egg would screenshot as the placeholder however well training worked.
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            // Restamped, or US-020's gate is already open on a save from an earlier launch and the
+            // next refresh evolves the demo out from under the screenshot.
+            state.stageEnteredDate = now()
+        }
+        state.stageEnergy[.strength] = 30
+        state.healthStatus = sick ? .sick : .healthy
+        isAsleep = sleeping
+        actionDuration = 60
+        train()
     }
     #endif
 
@@ -312,6 +347,38 @@ final class MainScreenModel: ObservableObject {
         return outcome
     }
 
+    /// Trains the Digimon: spends Strength or Stamina, raises `strengthStat`, and holds the attack
+    /// pose with a firm tap.
+    ///
+    /// Returns the outcome so a test can assert on it directly; the screen reacts to `animation` and
+    /// `actionMessage` instead. Saved even when blocked is cheap and keeps this identical to
+    /// `feed()` — there is simply nothing to write in that case.
+    @discardableResult
+    func train() -> TrainOutcome? {
+        guard let state else { return nil }
+        let outcome = TrainAction.train(state, isAsleep: isAsleep)
+
+        switch outcome {
+        case .trained(let spent, let cost, _):
+            playTrainHaptic()
+            // The attack frame, held: it is a pose in the sheet, not a loop, so there is no second
+            // frame to alternate with. The caption says which currency paid, because the Digimon
+            // picks that itself and the bar dropping would otherwise be unexplained.
+            show(.still(.attack), message: "Trained! -\(cost) \(spent.displayName)")
+        case .blocked(let reason):
+            // No animation, as with a blocked feed: nothing happened to the Digimon, so it keeps
+            // idling and only the reason appears.
+            show(nil, message: reason)
+        }
+
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save after training: \(String(describing: error))")
+        }
+        return outcome
+    }
+
     /// Shows an action's pose and caption, then returns to idle after `actionDuration`.
     ///
     /// The previous reset is cancelled first, so tapping Feed twice in quick succession holds the
@@ -334,6 +401,16 @@ final class MainScreenModel: ObservableObject {
     static func feedHaptic() {
         #if canImport(WatchKit)
         WKInterfaceDevice.current().play(.click)
+        #endif
+    }
+
+    /// The firmer tap a training session plays. `.directionUp` rather than feeding's `.click`
+    /// because the two actions should be distinguishable without looking at the watch — this one is
+    /// the Digimon getting stronger. No-ops where `WKInterfaceDevice` is unavailable (never on
+    /// watchOS).
+    static func trainHaptic() {
+        #if canImport(WatchKit)
+        WKInterfaceDevice.current().play(.directionUp)
         #endif
     }
 

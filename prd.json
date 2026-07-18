@@ -423,8 +423,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 25,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "TrainAction spends 5 Strength or Stamina (richer pays, ties to Strength) for +1 strengthStat; MainScreenModel.train() holds .still(.attack) with an injected .directionUp haptic and saves; blocked with a visible reason while asleep or sick. 340/340 tests pass (+16 in Tests/TrainingTests.swift); build green; verified in Simulator via -trainDemo/-trainAsleepDemo/-trainSickDemo/-trainScrollDemo."
     },
     {
       "id": "US-026",

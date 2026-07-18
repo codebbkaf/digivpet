@@ -1619,3 +1619,98 @@ Verified (observed, not assumed):
   -feedDemo -feedScrollDemo -> hunger pips 2/4 filled beside a reachable Feed button.
 
 Remains: US-025 onward (US-001..US-024 pass; 24/35).
+
+================================================================================
+2026-07-18 — US-025: Add training action
+================================================================================
+
+Sources/TrainAction.swift (new), Sources/MainScreenModel.swift, Sources/ContentView.swift,
+Tests/TrainingTests.swift (new, 16 tests).
+
+WHAT WAS BUILT
+
+`TrainAction.train(state, isAsleep:)` — the pure rule, modelled on FeedAction and deliberately
+shaped like it. Returns `TrainOutcome`: `.trained(spent:cost:gain:)` or `.blocked(reason:)`.
+There is no `.refused` ending — unlike food, a Digimon is never too full to train.
+
+  - energyCostPerTraining  = 5   (same as FeedAction.vitalityCostPerFeed, so neither action is
+                                  the obvious one to spam)
+  - strengthGainPerTraining = 1  (so strengthStat reads as "sessions trained", no exchange rate)
+  - payableWith = [.strength, .stamina]
+
+*** WHICH CURRENCY PAYS: the RICHER of Strength/Stamina, ties to Strength. ***
+The AC says "costs Strength or Stamina" and does not pick, so the Digimon picks: whichever of the
+two it holds more of. This is why a walker and a gym-goer can both train without knowing which
+currency the game wanted. `payableWith.max(by:)` relies on Swift's max(by:) keeping the FIRST of
+equal elements — that is what makes ties deterministic, and testATieIsPaidWithStrength pins it.
+If that ordering is ever "cleaned up" into a sort, the caption will start flickering between the
+two names on a tied save.
+
+*** Vitality and Spirit are NOT payable, on purpose. ***
+Vitality is feeding's currency (US-024) and Spirit is sleep. Letting training spend either would
+make the gym silently compete with dinner, which is not the tradeoff the PRD sets up.
+testTrainingSpendsNeitherVitalityNorSpirit guards this.
+
+*** Check order is asleep -> sick -> funds. ***
+Same discipline as FeedAction's asleep-before-hunger: report the state the user can do something
+about tonight, not the one they cannot. testAsleepAndSickIsReportedAsAsleep pins it by asserting
+a sick+asleep Digimon gives the SAME outcome as a healthy+asleep one.
+`.dead` blocks too — US-029 owns death, but without this a corpse keeps getting stronger in the
+meantime (testTrainingIsBlockedWhileDead).
+
+MODEL / UI
+
+- `MainScreenModel.train()` mirrors `feed()` exactly: outcome -> haptic + `show(_:message:)` +
+  save. Reuses US-024's show(), so the hold-then-revert and the cancel-the-previous-timer
+  behaviour came for free.
+- The pose is `.still(.attack)` — attack is a POSE in the sheet, not a loop, so there is no
+  second frame to alternate with. `SpriteFrame.attack.rawValue == 11` is asserted BY NUMBER as
+  well as by name, same reasoning as US-024 did for .refuse: the name alone could point at the
+  wrong art and still read fine.
+- Haptic is a SEPARATE injected `playTrainHaptic` (default `.directionUp`), not a shared "action
+  haptic" with feeding's `.click`. Two reasons: the actions should feel different on the wrist,
+  and a test has to be able to tell WHICH one fired — testTrainingHoldsTheAttackFrame... asserts
+  trainHaptics == 1 AND feedHaptics == 0.
+- Caption names the currency ("Trained! -5 Strength") because the Digimon chooses it itself, so
+  the bar dropping would otherwise be unexplained.
+- `TrainControls` in ContentView: STR as a NUMBER, not pips like hunger — strengthStat has no
+  ceiling to read a bar against.
+
+GOTCHA THAT COST ME A WRONG RUN
+
+*** The Simulator screenshots come back on the HEALTHKIT AUTH GATE unless you pass
+`-healthAnswered`. *** My first three -trainDemo screenshots were byte-identical (38607 bytes
+each) — all three were the "Feed Your Digimon / Continue" authorization screen, not the game.
+Identical file sizes across supposedly different demos is the tell. Relaunch with
+`-healthAnswered -trainDemo`.
+
+VERIFIED (observed, not assumed)
+
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED (twice — once before the -trainScrollDemo
+  ContentView change, once after).
+- xcodebuild test TEST SUCCEEDED 340/340 (was 324; +16 in Tests/TrainingTests.swift).
+- AC1/AC4 testTrainingRaisesStrengthStatAndDeductsStrengthEnergy,
+  ...SpendsStaminaWhenItIsTheRicherOfTheTwo, testATieIsPaidWithStrength,
+  ...SpendsNeitherVitalityNorSpirit, ...DoesNotTakeBackLifetimeEnergy,
+  testRepeatedTrainingAccumulates, testExactlyTheCostIsEnoughToTrain,
+  testTrainingIsBlockedWithoutEnoughOfEitherEnergy, testATrainedStatAndItsCostArePersisted
+  (reopened off disk).
+- AC2 testTrainingHoldsTheAttackFrameWithAHapticAndThenReturnsToIdle.
+- AC3 testTrainingIsBlockedWhileAsleep, ...WhileSick, ...WhileDead,
+  testAsleepAndSickIsReportedAsAsleep, testTrainingWhileAsleepShowsAReasonAndDoesNotAnimate,
+  testTrainingWhileSickShowsAReasonAndDoesNotAnimate.
+- Simulator (Apple Watch Series 11 (46mm), screenshots in /tmp, not committed):
+  -trainDemo        -> Agumon in the attack pose (visibly different art from idle),
+                       "Trained! -5 Strength", 力 bar 30 -> 25/60.
+  -trainAsleepDemo  -> "Asleep - let it rest.", 30/60 unspent, still idling.
+  -trainSickDemo    -> "Too sick to train.", 30/60 unspent, still idling.
+  -trainScrollDemo  -> the Train button below Feed, reading STR 2 (two demo launches against the
+                       same save — which incidentally shows the stat persisting).
+
+REMAINS: US-026 onward (US-001..US-025 pass; 25/35).
+US-026 is next and is the one that makes `isAsleep` real: it is still a @Published PARAMETER on
+MainScreenModel defaulting to false, deliberately NOT on GameState, because sleep is DERIVED from
+the user's sleep history (22:00-07:00 fallback window). Both feed() and train() already consume
+it and both blocked paths are tested, so US-026 only has to compute the boolean and swap the idle
+loop for .sleep.
+US-027 (care mistakes): `state.refusalCount` is already the today-only overfeeding counter.
