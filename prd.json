@@ -372,8 +372,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "DexView: ScrollView+LazyVGrid (3 cols) over the whole graph roster, discovered-first then alphabetical. New IdleSpriteCache decodes one 16x16 PNG from the flat 'Idle Frame Only' folder per cell, memoised (misses too), falling back to frame 0 of the stage sheet for Digitama, which that folder does not cover. Undiscovered cells render '?' and decode nothing. Tapping opens a sheet with name, stage and 'First met <date>'. Header is the navigation title '5/22'. Reached from ContentView via a NavigationStack toolbar button. GameStore gained dexDiscoveries(). Build green, 293/293 tests. Verified by Simulator screenshots of both the grid and the detail sheet. CAVEAT: the tap GESTURE itself was not exercised in the Simulator (no simctl touch command, no accessibility grant for UI scripting) - the -dexDetailDemo flag sets the same state the tap sets."
     },
     {
       "id": "US-023",

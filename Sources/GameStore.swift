@@ -75,6 +75,15 @@ final class GameStore {
         try context.fetch(FetchDescriptor<DexEntry>()).map(\.digimonId)
     }
 
+    /// Discovered id -> when it was first discovered, which is what the Dex screen puts on an
+    /// entry. Keyed rather than returned as entries so a caller cannot mutate a `@Model` it was
+    /// only meant to read. `recordDiscovery` keeps ids unique, so nothing is lost collapsing them.
+    func dexDiscoveries() throws -> [String: Date] {
+        let entries = try context.fetch(FetchDescriptor<DexEntry>())
+        return Dictionary(entries.map { ($0.digimonId, $0.firstDiscovered) },
+                          uniquingKeysWith: { earliest, other in min(earliest, other) })
+    }
+
     /// The energy credit ledger, starting a fresh one at today if there is none yet.
     ///
     /// Note what `resetGame` does NOT do: it does not touch this. A rebirth must not refund the

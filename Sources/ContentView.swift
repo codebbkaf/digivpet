@@ -8,6 +8,10 @@ struct ContentView: View {
     @StateObject private var model: MainScreenModel
     @Environment(\.scenePhase) private var scenePhase
 
+    #if DEBUG
+    @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
+    #endif
+
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
     /// and a default argument would be evaluated in this `init`'s non-isolated context. Same
     /// reason as `HealthAuthorizationGate`.
@@ -16,15 +20,35 @@ struct ContentView: View {
     }
 
     var body: some View {
-        Group {
-            switch model.phase {
-            case .loading:
-                ProgressView()
-            case .playing:
-                digimon
-            case .failed(let detail):
-                SavedGameUnavailableView(detail: detail)
+        // The stack exists to hold the Dex (US-022), which is pushed rather than presented so it
+        // keeps a back button and can push a detail of its own.
+        NavigationStack {
+            Group {
+                switch model.phase {
+                case .loading:
+                    ProgressView()
+                case .playing:
+                    digimon
+                case .failed(let detail):
+                    SavedGameUnavailableView(detail: detail)
+                }
             }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink {
+                        DexView(model: DexModel())
+                    } label: {
+                        Label("Dex", systemImage: "book")
+                    }
+                }
+            }
+            #if DEBUG
+            // Debug-only: `simctl` cannot tap the toolbar button, so the Dex is unscreenshottable
+            // without a way to push it from the launch command. Compiled out of release builds.
+            .navigationDestination(isPresented: $showsDexDemo) {
+                DexView(model: DexModel())
+            }
+            #endif
         }
         // The evolution ceremony sits above everything, so it covers the bars and stage text too.
         // It appears whenever a refresh moved the Digimon — including the refresh `start()` runs on

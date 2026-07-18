@@ -1402,3 +1402,72 @@ DESIGN NOTES — later stories depend on these:
 - run() is internal and its durations injectable purely for testability; the app never passes them.
 
 Remains: US-022 onward (US-001..US-021 pass; 21/35).
+
+================================================================================
+2026-07-18 — US-022: Build Digimon Dex screen
+================================================================================
+
+Did:
+- Sources/IdleSpriteCache.swift: NEW cache for the Dex's art. It is deliberately NOT
+  SpriteSheetCache — the Dex draws a different asset (one flat 16x16 PNG from
+  `Idle Frame Only/`), and SpriteSheet.init REJECTS 16x16 outright (it only accepts 48x64 and
+  48x16), so reusing the sheet cache could never have worked. Memoises hits AND misses.
+  Falls back to frame 0 of the animated stage sheet, which exists solely for the Digitama:
+  `Idle Frame Only/` covers hatched Digimon only and has no egg art at all. An egg sheet's
+  frame 0 IS its idle frame, so the fallback draws the right thing, not an arbitrary pose.
+  Also holds IdleSpriteView — a STILL frame, never a TimelineView: a grid of two-frame loops
+  would run dozens of animation schedules at once for art being scrolled past.
+- Sources/DexModel.swift: joins the graph roster with the store's discoveries into [DexRow].
+  Rows carry the NODE, never an image, so building all of them decodes nothing. Sorted
+  discovered-first then alphabetically (a trophy case should not bury what you earned).
+  An unopenable store degrades to an all-undiscovered Dex, not an error screen — it is a side
+  screen and losing it must not be louder than losing the game.
+- Sources/DexView.swift: ScrollView + LazyVGrid, 3 flexible columns (fits 41mm). Undiscovered
+  cells draw "?" and touch no sprite. navigationTitle is the "5/22" header. Tap -> .sheet with
+  sprite, name, stage, "First met <date>".
+- Sources/GameStore.swift: added dexDiscoveries() -> [String: Date]. Returns a keyed dict, not
+  the DexEntry models, so a read-only caller cannot mutate a @Model.
+- Sources/ContentView.swift: wrapped in a NavigationStack with a topBarTrailing "Dex" button.
+  The ceremony overlay stays OUTSIDE the stack so it still covers everything, nav bar included.
+
+Verified (observed, not assumed):
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED, zero warnings from Sources/.
+- xcodebuild test TEST SUCCEEDED 293/293 (was 279; +14 in Tests/DexScreenTests.swift).
+- AC1/AC2/AC4 by Simulator screenshot /tmp/dex_grid.png: header "5/22", five filled cells
+  (incl. the blue Digitama, so the frame-0 fallback works), the rest "?", pixels crisp.
+- AC3 by /tmp/dex_detail.png: "Agumon" / "Child" / "First met Jul 18, 2026".
+- AC5 by testASpriteIsDecodedPerShownCellAndNotWhenRowsAreBuilt: load() over the full roster
+  = 0 decodes; one shown cell = exactly 1.
+
+HONEST CAVEAT — do not read the screenshot as more than it is:
+- The tap GESTURE was never exercised in the Simulator. `simctl` has no touch command, and
+  Simulator UI scripting via System Events needs an accessibility grant this machine does not
+  have (osascript -1728). The -dexDetailDemo flag sets exactly the state the Button sets, so
+  everything AFTER the tap is verified and the tap wiring itself is only read, not run.
+
+GOTCHAS FOR LATER SIMULATOR WORK:
+- Launch needs BOTH -healthAnswered (past US-011's gate) and -dexDemo (see below).
+- App launch to first drawn frame was ~10s on a cold install here, not the ~0.7s the US-021
+  note measured. A 3s sleep caught only the ProgressView. Burst-screenshot and check for
+  IDENTICAL FILE SIZES — three identical sizes meant three copies of the same static frame.
+- The Simulator has no HealthKit data, so a real game there never evolves past its starting
+  egg and the Dex would screenshot as 1/22 with nothing to look at.
+
+DEBUG-ONLY SCAFFOLDING ADDED (all #if DEBUG, all compiled out of release):
+- -dexDemo        -> DexModel seeds botamon/koromon/agumon/greymon as discovered. It WRITES to
+                     the store, so a sim that has run it keeps those discoveries.
+- -dexDetailDemo  -> DexView selects the first discovered row on appear, opening the sheet.
+- ContentView.showsDexDemo pushes the Dex via .navigationDestination on -dexDemo, since
+  simctl cannot tap the toolbar button.
+Delete these if a later story gets a real way to drive touches.
+
+DESIGN NOTES — later stories depend on these:
+- The roster is 22 nodes today and every one is playable (dexOnly count is 0). The Dex draws
+  graph.nodes wholesale, so the moment a dexOnly node is authored it appears here for free —
+  which is correct, that is what dexOnly IS for.
+- Undiscovered cells draw "?" rather than a silhouette ON PURPOSE: a silhouette would have to
+  be derived from the sprite, i.e. decode the very art the screen is withholding.
+- US-029's rebirth must keep leaving DexEntry alone. The Dex outliving a death is the whole
+  reason it is its own @Model; resetGame already deletes only GameState.
+
+Remains: US-023 onward (US-001..US-022 pass; 22/35).
