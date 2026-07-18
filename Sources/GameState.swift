@@ -200,6 +200,17 @@ final class GameState {
     /// US-027's care mistake is "3+ refusals in a day", not three refusals ever.
     private var refusalCountStorage: Int?
     private var refusalDayStorage: Date?
+    /// Backing store for the four care-mistake markers (US-027). All optional for the same migration
+    /// reason as `energyLastEarnedStorage` — an optional attribute is the one shape SwiftData
+    /// migrates into an already-shipped store without a default.
+    ///
+    /// These are MARKERS, not counters: `careMistakeCount` is the counter, and each of these records
+    /// how much of the elapsed time or of the day has already been charged against it, so an audit
+    /// that runs on every foregrounding never charges the same neglect twice.
+    private var healthDataLastSeenStorage: Date?
+    private var starvationMistakesChargedStorage: Int?
+    private var refusalMistakeDayStorage: Date?
+    private var wakeMistakeDayStorage: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -222,6 +233,12 @@ final class GameState {
         self.hungerUpdatedAt = now
         self.refusalCountStorage = 0
         self.refusalDayStorage = nil
+        // Stamped with `now` rather than left nil, or a brand new game would be charged for every
+        // day between the epoch and today the first time the audit ran.
+        self.healthDataLastSeenStorage = now
+        self.starvationMistakesChargedStorage = 0
+        self.refusalMistakeDayStorage = nil
+        self.wakeMistakeDayStorage = nil
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -258,11 +275,45 @@ extension GameState {
         set { refusalDayStorage = newValue }
     }
 
+    /// The last instant HealthKit gave a real number for any metric, or nil on a save written
+    /// before this was tracked. `CareMistakes` charges a mistake per whole local day between this
+    /// and today, and moves it forward by exactly the days it charged.
+    var healthDataLastSeen: Date? {
+        get { healthDataLastSeenStorage }
+        set { healthDataLastSeenStorage = newValue }
+    }
+
+    /// How many mistakes the CURRENT starving spell has already been charged. Reset to zero the
+    /// moment hunger drops off the maximum, so a fed-then-starved-again Digimon starts over.
+    var starvationMistakesCharged: Int {
+        get { starvationMistakesChargedStorage ?? 0 }
+        set { starvationMistakesChargedStorage = newValue }
+    }
+
+    /// The local day an overfeeding mistake was last charged for, or nil if never. Distinct from
+    /// `refusalDay`, which counts the refusals themselves — this one caps the MISTAKE at one a day
+    /// however many refusals follow the third.
+    var refusalMistakeDay: Date? {
+        get { refusalMistakeDayStorage }
+        set { refusalMistakeDayStorage = newValue }
+    }
+
+    /// The local day a waking-early mistake was last charged for, or nil if never. One a day for the
+    /// same reason as `refusalMistakeDay`: prodding a sleeping Digimon six times is one bad night,
+    /// not six.
+    var wakeMistakeDay: Date? {
+        get { wakeMistakeDayStorage }
+        set { wakeMistakeDayStorage = newValue }
+    }
+
     /// Counts one refused feed against the local day containing `now`.
     ///
     /// Rolls the count over when the day changes, so `refusalCount` always means "today's", which is
     /// the only question anyone asks of it — US-027's overfeeding mistake is three refusals in ONE
     /// day, and a lifetime counter would trip it for someone who refused once a month for a quarter.
+    ///
+    /// The third refusal of a day is also a care mistake (US-027) — charged here rather than in the
+    /// audit, because the refusal count is already per-day and there is nothing elapsed to derive.
     func recordRefusal(now: Date, calendar: Calendar = .current) {
         let today = calendar.startOfDay(for: now)
         if refusalDay != today {
@@ -270,6 +321,13 @@ extension GameState {
             refusalCount = 0
         }
         refusalCount += 1
+
+        // `refusalMistakeDay` and not `refusalCount == 3`: the fourth and fifth refusals of a day
+        // must not each add another mistake, and the marker says so directly.
+        if refusalCount >= CareMistakes.refusalsPerMistake, refusalMistakeDay != today {
+            refusalMistakeDay = today
+            careMistakeCount += 1
+        }
     }
 
     /// The energy type this stage has earned the most of — the branch the evolution engine takes.

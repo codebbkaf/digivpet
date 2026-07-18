@@ -1796,3 +1796,90 @@ US-027 (care mistakes): `state.refusalCount` is already the today-only overfeedi
 `SleepAnalysis.asleepMinutes` already distinguishes `.noData` (HealthKit said nothing) from
 `.value(0)` (it described a night with no sleep) — US-027 should charge a care mistake for only
 one of those. `sleepSchedule` is now published, so "slept far less than usual" is available too.
+
+================================================================================
+2026-07-18 — US-027 Track care mistakes — PASSES
+
+INHERITED WORK. This iteration began with UNCOMMITTED, UNTESTED work in the tree from an
+interrupted predecessor: Sources/CareMistakes.swift (untracked) plus the four markers in
+GameState.swift and the audit/noteWakingEarly calls in MainScreenModel.swift. The rules were
+sound and I kept them. What was missing was every test, and the missing tests were hiding two
+real defects — see below.
+
+THE FOUR RULES (all feed the single `careMistakeCount` EvolutionEngine already gates on)
+
+- Starvation: 1 mistake per 8h at maximum hunger, charged as a RATE (24h = 3). Reads
+  `hungerUpdatedAt` directly, which works ONLY because HungerClock freezes that stamp at the
+  instant hunger hit the cap — no second saved date. `starvationMistakesCharged` is the marker;
+  it resets to 0 the moment hunger drops off the cap, so a fed-then-starved-again Digimon does
+  not have its first hour instantly charged.
+- Silent day: 1 per WHOLE elapsed local day with no health data. TODAY IS NEVER CHARGED (it is
+  still in progress). The marker moves forward by exactly the days CHARGED, never to today —
+  same discipline as HungerClock.advance — so the day in progress is charged once, after it ends.
+- 3 refusals in one day, and waking a sleeping Digimon: both capped at one mistake per day by
+  their own day markers (`refusalMistakeDay`, `wakeMistakeDay`), not by the raw counts. Prodding
+  a sleeping Digimon six times is one bad night, not six.
+
+BUG #1 IN THE INHERITED CODE (fixed — this is the important one)
+
+The audit was called with `healthDataSeen: readings.values.contains { $0.hasData }`. `hasData` is
+true only for `.value`, so it lumped `.unavailable` in with `.noData` and charged a care mistake
+for HEALTHKIT BEING OFF OR FAILING. `HealthReading.unavailable`'s own docstring says the opposite
+in as many words ("US-027 must not charge a care mistake for a HealthKit failure the user did
+nothing to cause"), and CareMistakes.swift's own parameter doc claimed it was doing that. It was
+not. Replaced the Bool with `CareMistakes.HealthDataVerdict` — seen / silent / unreadable:
+  - any `.value`      -> seen: stamp the marker, charge nothing.
+  - else any `.noData` -> silent: HealthKit answered and had nothing. The only case charged.
+  - else               -> unreadable: stamp WITHOUT charging. Not charging is obvious; the reason
+    it must still STAMP is not — leaving the marker behind would make the first read that finally
+    worked charge the whole week HealthKit was off.
+Note `.noData` also covers DENIED (HealthKit makes denied and empty indistinguishable for reads),
+so a user who denies everything does accrue mistakes. Not fixable at this layer; flagging it.
+
+BUG #2 (fixed) — my own first draft of the silent-day model test expected 1 and got 5. Not a
+flaky test: over the 2 days it spans, hunger also maxed out and 32h of starvation legitimately
+charged 4 more. The fixture, not the code, was wrong.
+
+SEVEN PRE-EXISTING TESTS WENT RED, AND THEY WERE RIGHT TO
+
+3 in EvolutionCeremonyTests + 4 in EvolutionTests. Their fixtures seed `careMistakes: 0` and then
+refresh 16 days later with EMPTY health readers — so after US-027 that premise is false by the
+time the edge is evaluated (16 silent days + a fortnight of starvation), the care gate blocks the
+edge, and nothing evolves. The BEHAVIOUR is correct; the fixtures had simply become
+self-contradictory. Fixed by making each fixture's premise true rather than by relaxing an
+assertion: `healthDataLastSeen = morning` and `hungerUpdatedAt = morning` ("seen just now, fed
+just now"), so those tests go back to measuring the branch they are named for. Both call sites
+carry a comment saying why. NOTE FOR LATER STORIES: any fixture that seeds a state in the past and
+refreshes in the present now needs these two stamps, or the audit will quietly gate its evolution.
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED (twice — after the source change and again at the end).
+- xcodebuild test TEST SUCCEEDED 379/379, was 355 (+24 in Tests/CareMistakeTests.swift).
+- AC4 testNineHoursAtMaximumHungerRecordsExactlyOneCareMistake — EXACTLY one. Backed by
+  testTheStarvationMistakeLandsOnTheEightHourBoundary, which pins 7.98h->0, 8h->1, 16h->2, 24h->3,
+  so the headline case cannot pass under a looser "any long spell" rule.
+- AC5 testADayWithNoHealthDataRecordsExactlyOneCareMistake, plus testTheDayInProgressIsNeverCharged,
+  testSeveralSilentDaysAreAllChargedInOneAudit (3 days in ONE audit — AC2's "computed from elapsed
+  time"), testSilentDaysAreChargedOnceEach.
+- AC1's other two: testThreeRefusalsInOneDayRecordExactlyOneCareMistake,
+  testFurtherRefusalsTheSameDayAddNothing, testRefusalsAreCountedPerDay,
+  testWakingTheDigimonEarlyIsChargedOncePerDay, and at the model layer
+  testAFeedAttemptedWhileAsleepIsChargedAsACareMistake (driven by the DERIVED sleep state, nothing
+  hand-set) with its mirror testAFeedWhileAwakeChargesNoCareMistake — so the mistake belongs to the
+  sleep window and not to every blocked action.
+- AC2 testTheCountAndItsMarkersArePersisted — count AND markers off disk through a dropped
+  container, then a second launch an hour later adds nothing.
+- AC3 the clock is injectable throughout; no test waits real time. Calendar is America/Los_Angeles
+  everywhere here, so a day boundary computed in the wrong zone fails rather than passing by luck.
+- Bug #1's own coverage: testAnUnreadableDayIsNotCharged, testTheVerdictSeparatesAFailedReadFrom-
+  AnEmptyOne.
+- testAllFourKindsOfNeglectAddToTheSameCount — all four at once = 4, so none of them shadows
+  another.
+
+REMAINS: US-028 onward (US-001..US-027 pass; 27/35).
+US-028 (sickness) reads this same `careMistakeCount`. Two things it will want: the count is
+cumulative and NOTHING ever decreases it yet — if sickness is meant to be curable, US-028 has to
+decide whether curing forgives mistakes or whether sickness keys off a rate instead. And
+`auditCareMistakes` is the one place time-derived neglect is charged, so a sickness check belongs
+immediately after it in refresh(), before evolveIfReady.

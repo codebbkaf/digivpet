@@ -137,6 +137,11 @@ final class EvolutionCeremonyModelTests: XCTestCase {
         totals[dominant] = stageAmount
         state.stageEnergy = totals
         state.careMistakeCount = careMistakes
+        // US-027, for the reason `EvolutionApplyTests.makeModelAtHero` documents: the empty readers
+        // would otherwise have the audit charge every day between `lastStage` and `morning`, and no
+        // ceremony would ever fire here.
+        state.healthDataLastSeen = Self.morning
+        state.hungerUpdatedAt = Self.morning
         state.stageEnteredDate = Self.lastStage
         try store.save()
 

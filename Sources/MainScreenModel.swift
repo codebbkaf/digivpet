@@ -348,6 +348,12 @@ final class MainScreenModel: ObservableObject {
         let readings = await energySource.readings(now: now())
         let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
                                              calendar: calendar)
+        // After crediting and before evolving, because `careMistakeCount` is one of the things an
+        // edge is gated on — an audit run after `evolveIfReady` would let a neglected Digimon take
+        // a branch it had just disqualified itself from, one refresh late.
+        state.auditCareMistakes(now: now(),
+                                health: CareMistakes.HealthDataVerdict(readings.values),
+                                calendar: calendar)
         // The energy just credited may be what tips an egg over its hatch threshold or a Digimon
         // over an evolution's, so both run after crediting and before the save, letting one flush
         // persist the change. A hatch leaves the new Baby I with zero stage energy, so evolving in
@@ -417,6 +423,7 @@ final class MainScreenModel: ObservableObject {
             // No animation: nothing happened to the Digimon, so it keeps idling and only the
             // reason appears. Animating a block would read as the action having half-worked.
             show(nil, message: reason)
+            noteWakingEarly()
         }
 
         do {
@@ -451,6 +458,7 @@ final class MainScreenModel: ObservableObject {
             // No animation, as with a blocked feed: nothing happened to the Digimon, so it keeps
             // idling and only the reason appears.
             show(nil, message: reason)
+            noteWakingEarly()
         }
 
         do {
@@ -459,6 +467,17 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save after training: \(String(describing: error))")
         }
         return outcome
+    }
+
+    /// Charges the waking-early care mistake if the action that was just blocked was blocked by the
+    /// sleep window.
+    ///
+    /// `isAsleep` is what identifies it, not the reason string: both `FeedAction` and `TrainAction`
+    /// check sleep FIRST, so a block while asleep is always the sleep block — and matching on prose
+    /// would silently stop charging the day someone reworded the message.
+    private func noteWakingEarly() {
+        guard isAsleep, let state else { return }
+        state.recordWakingEarly(now: now(), calendar: calendar)
     }
 
     /// Shows an action's pose and caption, then returns to the resting pose after `actionDuration`.

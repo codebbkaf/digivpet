@@ -272,6 +272,15 @@ final class EvolutionApplyTests: XCTestCase {
         // A distinct lifetime total so "lifetimeEnergy is preserved" cannot pass by coincidence.
         state.lifetimeEnergy = EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444)
         state.careMistakeCount = careMistakes
+        // US-027: the audit now charges a mistake per whole day that went by with no health data,
+        // and this fixture's readers are empty ones. Without this the days between `lastStage` and
+        // `morning` would each be charged, and a `careMistakes: 0` premise would not survive to the
+        // moment the edge is evaluated — these tests would be measuring the care gate rather than
+        // the branch they are about. Stamped at the refresh instant: health data was seen just now,
+        // and the Digimon was fed just now, so neither the silent-day nor the starvation rule has
+        // anything to charge for the fortnight this fixture spans.
+        state.healthDataLastSeen = Fixture.morning
+        state.hungerUpdatedAt = Fixture.morning
         state.stageEnteredDate = Fixture.lastStage
         try store.save()
 

@@ -457,8 +457,8 @@
         "Typecheck passes (xcodebuild build succeeds for the watchOS target)"
       ],
       "priority": 27,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "All four rules land on one careMistakeCount, each derived from a saved marker against the injected clock: starvation (1 per 8h at max hunger, read off HungerClock's frozen hungerUpdatedAt), silent days (1 per WHOLE elapsed day, today never charged), 3 refusals in a day, and waking a sleeping Digimon (both capped at 1/day by their own day markers). Fixed a bug in the partial implementation this iteration inherited: it keyed the silent-day rule on HealthReading.hasData, which charged a care mistake for HealthKit being unavailable — contradicting that enum's own doc. Replaced with a 3-way HealthDataVerdict (seen/silent/unreadable); unreadable moves the marker without charging. 379/379 tests pass (+24), build green."
     },
     {
       "id": "US-028",
