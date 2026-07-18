@@ -1284,3 +1284,57 @@ DESIGN NOTES — later stories depend on these:
   asserts it moved forward from the seeded prior stage date.
 
 Remains: US-020 onward (US-001..US-019 pass; 19/35).
+
+## 2026-07-18 — US-020: Add evolution time gating and default fallback — PASSES
+
+Did:
+- Sources/EvolutionTiming.swift (new constants file, matching EnergyRates' one-place discipline):
+  babyMinimumStageDuration = 24h, matureMinimumStageDuration = 72h; minimumStageDuration(for: Stage)
+  (Digitama nil, Baby I/II 24h, Child and above 72h); hasClearedTimeGate(stage:enteredAt:now:) with
+  a >= comparison so the gate opens exactly on the threshold.
+- Sources/EvolutionEngine.swift: added scheduledEvolutionTarget(...stageEnteredAt:now:) layering the
+  US-020 decision over US-019's pure evolutionTarget — gate closed => nil; open + a qualifying branch
+  => that branch; open + nothing qualifies => the node's isDefault edge (defaultEdge(of:)). The pure
+  evolutionTarget is UNCHANGED and still time-free; US-020 is a strict layer on top.
+- Sources/MainScreenModel.swift: evolveIfReady now calls scheduledEvolutionTarget with
+  state.stageEnteredDate + now() (the clock was already injected).
+- Tests/EvolutionTimingTests.swift: 12 tests (10 pure EvolutionTimingTests + 2 @MainActor
+  EvolutionTimingApplyTests through refresh()).
+
+Verified (observed, not assumed):
+- xcodegen generate clean; xcodebuild BUILD SUCCEEDED zero source warnings.
+- xcodebuild test TEST SUCCEEDED 273/273 (12 new).
+- AC6 covered twice: testABabyIDoesNotEvolveAt23hAndDoesAt25h (pure, mock clock) and the pair
+  testABabyIStaysPutBeforeTheGateThroughRefresh / testABabyIEvolvesAfterTheGateThroughRefresh
+  (through the real GameStore; only the elapsed time differs between them, so the GATE — not the
+  energy — is what decides).
+- AC7 (default fires when nothing qualifies after the gate): testTheDefaultEdgeFires...AfterTheGate.
+- AC1 both thresholds pinned by testAChildWaits72hNot24h (25h clears a Baby I but not a Child; 72h
+  clears the Child) + testTheGateThresholdsAreTheOnesTheStoryNames reading the constants file.
+
+TESTS PROVEN NON-VACUOUS BY MUTATION (4 mutations, each caught by exactly the right tests, all
+restored; final suite 273/273):
+1. gate >= -> >              => the exact-boundary tests (24h/72h) go red.
+2. gate always open          => the pure before-gate tests + testABabyIStaysPutBeforeTheGate...
+                                 ThroughRefresh + testADigitamaNeverEvolvesOnTheClock go red.
+3. drop the default fallback => ONLY testTheDefaultEdgeFiresWhenNothingQualifiesAfterTheGate red
+                                 (well-isolated).
+4. Child+ uses the 24h dur   => testAChildWaits72hNot24h + testNoEvolutionBeforeTheGate...
+                                 + testTheGateThresholdsAreTheOnesTheStoryNames red.
+
+DESIGN NOTES — later stories depend on these:
+- A Digitama has NO evolution gate (minimumStageDuration nil), so scheduledEvolutionTarget is always
+  nil for an egg. This is deliberate and load-bearing: the egg's hatch edge carries isDefault: true,
+  so if the gate ever opened for a Digitama the default fallback would HATCH IT ON THE CLOCK past a
+  starvation. Hatching stays EggHatcher's, on total energy alone (US-018).
+- US-019's EvolutionApplyTests seed stageEnteredDate ~16 days before now, so they clear the gate
+  untouched; their fixture "hero" has no isDefault edge, so the new default fallback is a no-op there
+  and testCareMistakesBlockEvolutionThroughRefresh still holds (nothing qualifies, no default => stays).
+- The default fallback fires UNCONDITIONALLY on care mistakes once the gate opens (the whole point is
+  "never permanently stuck"). US-028's "3 mistakes = sick = evolution paused" is a SEPARATE,
+  higher-level gate that must sit ABOVE evolveIfReady — do not push a care-mistake check into
+  scheduledEvolutionTarget's fallback, or a neglected Digimon would get stuck, which US-020 forbids.
+- scheduledEvolutionTarget takes stageEnteredAt/now as plain params (pure), so US-021's evolution
+  animation and any future caller can ask "would this evolve now?" without a store.
+
+Remains: US-021 onward (US-001..US-020 pass; 20/35).

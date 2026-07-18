@@ -191,19 +191,22 @@ final class MainScreenModel: ObservableObject {
 
     /// Evolves the Digimon into whichever branch its earned energy qualifies for, once one does.
     ///
-    /// A no-op unless the current node has an outgoing edge that qualifies (US-019's `qualifies`
-    /// rule: dominant type, per-type threshold, care mistakes, battle wins). The branch is chosen
-    /// from the CURRENT node's edges and by the CURRENT `stageEnergy`/`dominantEnergyType`, so a
-    /// Digimon that was fed steps as a child can still take the sleep branch as an adult. Applies
-    /// the same stage reset a hatch does — see `advance`.
+    /// A no-op until the stage's time gate has opened (US-020), and then unless the current node
+    /// has an outgoing edge that qualifies (US-019's `qualifies` rule: dominant type, per-type
+    /// threshold, care mistakes, battle wins) or an `isDefault` fallback to keep it from getting
+    /// stuck. The branch is chosen from the CURRENT node's edges and by the CURRENT
+    /// `stageEnergy`/`dominantEnergyType`, so a Digimon that was fed steps as a child can still
+    /// take the sleep branch as an adult. Applies the same stage reset a hatch does — see `advance`.
     private func evolveIfReady(_ state: GameState) {
         guard let node = graph.node(id: state.currentDigimonId),
-              let target = EvolutionEngine.evolutionTarget(
+              let target = EvolutionEngine.scheduledEvolutionTarget(
                 for: node,
                 stageEnergy: state.stageEnergy,
                 dominant: state.dominantEnergyType,
                 careMistakes: state.careMistakeCount,
-                battleWins: state.battleWins),
+                battleWins: state.battleWins,
+                stageEnteredAt: state.stageEnteredDate,
+                now: now()),
               let next = graph.node(id: target) else { return }
         advance(state, to: next)
         Self.log.info("Evolved \(node.id) into \(next.id)")

@@ -32,6 +32,45 @@ enum EvolutionEngine {
             .to
     }
 
+    /// The id to evolve into once the stage's time gate has opened, or nil while it is still
+    /// closed (or the node is terminal). This is the full US-020 decision, layered over the pure
+    /// energy chooser `evolutionTarget`:
+    ///
+    ///  1. Before the stage's minimum time has elapsed, nothing evolves — even holding the energy
+    ///     for the next stage. `EvolutionTiming` owns that gate.
+    ///  2. Once the gate is open, a qualifying branch wins exactly as `evolutionTarget` decides.
+    ///  3. If the gate is open but NOTHING qualifies, the node's `isDefault` edge is taken, so a
+    ///     Digimon whose owner never earned the precise branch energy is never permanently stuck.
+    ///
+    /// A Digitama has no evolution gate (`EvolutionTiming.minimumStageDuration` is nil), so this is
+    /// always nil for an egg — hatching stays `EggHatcher`'s job and the egg's `isDefault` hatch
+    /// edge is never taken on the clock.
+    static func scheduledEvolutionTarget(
+        for node: EvolutionNode,
+        stageEnergy: EnergyTotals,
+        dominant: EnergyType?,
+        careMistakes: Int,
+        battleWins: Int,
+        stageEnteredAt: Date,
+        now: Date
+    ) -> String? {
+        guard EvolutionTiming.hasClearedTimeGate(
+            stage: node.stage, enteredAt: stageEnteredAt, now: now
+        ) else { return nil }
+
+        if let qualified = evolutionTarget(for: node, stageEnergy: stageEnergy, dominant: dominant,
+                                           careMistakes: careMistakes, battleWins: battleWins) {
+            return qualified
+        }
+        return defaultEdge(of: node)?.to
+    }
+
+    /// The node's fallback edge — the one marked `isDefault` — or nil if it has none (a terminal
+    /// node). US-009 guarantees at most one per node, so `first` is unambiguous.
+    static func defaultEdge(of node: EvolutionNode) -> EvolutionEdge? {
+        node.evolutions.first { $0.isDefault }
+    }
+
     /// Whether a single edge qualifies to be taken right now.
     ///
     /// All four gates must hold: the dominant energy type matches `requiredEnergy`, the earned
