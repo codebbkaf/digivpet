@@ -217,6 +217,7 @@ final class MainScreenModel: ObservableObject {
         seedTrainDemoIfRequested()
         seedSleepDemoIfRequested()
         seedSickDemoIfRequested()
+        seedDeathDemoIfRequested()
         #endif
     }
 
@@ -335,6 +336,32 @@ final class MainScreenModel: ObservableObject {
         settleRestingPose()
     }
 
+    /// Debug-only: kills the Digimon so the memorial can be screenshotted. Waiting out 72 real hours
+    /// of illness is not a demo, and the Simulator has no HealthKit data to make it ill in the first
+    /// place.
+    ///
+    /// - `-deathDemo` — sick for 72 hours, settled through the real rule: the memorial screen.
+    ///
+    /// The illness and its start are set and `updateDeath` is what kills it, so the demo exercises
+    /// the shipped rule rather than hand-setting the status it is supposed to produce. A six-day
+    /// birth date gives the memorial a lifespan worth reading instead of "0 days".
+    private func seedDeathDemoIfRequested() {
+        guard CommandLine.arguments.contains("-deathDemo"), let state else { return }
+
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        state.birthDate = now().addingTimeInterval(-6 * Death.secondsPerDay)
+        state.lifetimeEnergy = EnergyTotals(strength: 120, vitality: 80, spirit: 40, stamina: 30)
+        state.strengthStat = 7
+        state.healthStatus = .sick
+        state.sickSince = now().addingTimeInterval(-Death.secondsSickUntilDeath)
+        state.updateDeath(now: now())
+        settleRestingPose()
+    }
+
     /// Debug-only: puts a two-hour sleep window around the current moment and derives from it, so
     /// the Digimon is asleep NOW and stays asleep across the refresh every foregrounding runs.
     ///
@@ -383,8 +410,13 @@ final class MainScreenModel: ObservableObject {
         // Digimon's evolution is paused — so a sickness settled after `evolveIfReady` would let it
         // evolve one refresh into an illness it already had.
         state.updateSickness(energyEarnedToday: ledger.creditedToday.total)
-        // The pose is settled again here and not only in `updateSleepState`, because falling sick
-        // or being cured changes the resting pose too and both are decided after the sleep window.
+        // Straight after the illness is settled, because death only measures how long that illness
+        // has run — and a cure decided above must be able to stop the countdown in the same refresh
+        // it happened, rather than a Digimon dying of an illness it no longer has.
+        state.updateDeath(now: now())
+        // The pose is settled again here and not only in `updateSleepState`, because falling sick,
+        // being cured or dying all change the resting pose too and are decided after the sleep
+        // window.
         settleRestingPose()
         // The energy just credited may be what tips an egg over its hatch threshold or a Digimon
         // over an evolution's, so both run after crediting and before the save, letting one flush
@@ -414,9 +446,19 @@ final class MainScreenModel: ObservableObject {
     /// held `.still` has no second frame to alternate with, so US-028's "does not idle-animate"
     /// falls out of the pose rather than needing a flag the view has to remember to honour.
     var restingAnimation: SpriteAnimation {
-        if state?.healthStatus == .sick { return .still(.angry) }
-        return isAsleep ? .sleep : .idle
+        switch state?.healthStatus {
+        case .dead: return .still(.hurt2)
+        case .sick: return .still(.angry)
+        default: return isAsleep ? .sleep : .idle
+        }
     }
+
+    /// Every pose `settleRestingPose` is allowed to swap out. Exactly the poses `restingAnimation`
+    /// can return — miss one and a Digimon that entered that state keeps holding it after leaving,
+    /// which is how a reborn egg would go on lying dead.
+    private static let restingPoses: Set<SpriteAnimation> = [
+        .idle, .sleep, .still(.angry), .still(.hurt2)
+    ]
 
     /// Re-infers the sleep window from last night's sleep and puts the Digimon into or out of it.
     ///
@@ -446,7 +488,7 @@ final class MainScreenModel: ObservableObject {
     /// Called both after the sleep window is re-derived and after sickness is settled, because
     /// either can change the answer and the two are decided at different points of a refresh.
     private func settleRestingPose() {
-        if animation == .idle || animation == .sleep || animation == .still(.angry) {
+        if Self.restingPoses.contains(animation) {
             animation = restingAnimation
         }
     }
@@ -575,6 +617,10 @@ final class MainScreenModel: ObservableObject {
     /// would draw a placeholder. `stageEnergy` resets for the new stage while `lifetimeEnergy` is
     /// left to carry the whole life; the Dex records the hatched form.
     private func hatchIfReady(_ state: GameState) {
+        // Unlike evolution, hatching is NOT paused by illness — an egg has no care record of its own
+        // to have spoiled (US-028). Death is different: a dead egg does not hatch, and without this
+        // it would, because the energy that opened the threshold is still sitting there.
+        guard state.healthStatus != .dead else { return }
         guard let node = graph.node(id: state.currentDigimonId),
               let target = EggHatcher.hatchTarget(for: node, stageEnergy: state.stageEnergy),
               let baby = graph.node(id: target) else { return }
@@ -635,6 +681,41 @@ final class MainScreenModel: ObservableObject {
     /// Clears the pending evolution once its ceremony has finished, so it plays exactly once.
     func acknowledgeEvolution() {
         pendingEvolution = nil
+    }
+
+    /// What to show on the memorial screen, or nil while the Digimon lives.
+    ///
+    /// Computed off `state` rather than published on death, so it cannot get out of step: the
+    /// memorial is up for exactly as long as the saved game says the Digimon is dead, and the
+    /// rebirth that replaces that game is what takes it down. The name comes from the graph, which
+    /// is the only thing that knows it — `GameState` saves only an id.
+    var memorial: Memorial? {
+        guard let state else { return nil }
+        let name = graph.presentation(forId: state.currentDigimonId)?.displayName
+        // A saved id the roster has since dropped still deserves a memorial, so the id itself is the
+        // fallback name rather than the whole screen being skipped.
+        return state.memorial(displayName: name ?? state.currentDigimonId)
+    }
+
+    /// Dismisses the memorial and starts the next Digimon at a fresh, randomly chosen Digitama.
+    ///
+    /// `lifetimeEnergy` and the Dex come across — see `GameStore.rebirth`. The pose is settled
+    /// afterwards because the Digimon on screen is currently holding the dead frame, and the new egg
+    /// has to go back to wobbling.
+    func dismissMemorial() {
+        guard let store, state?.healthStatus == .dead, let digitamaId = startingDigitamaId else {
+            return
+        }
+        do {
+            state = try store.rebirth(digitamaId: digitamaId, now: now())
+            // Cleared rather than left: a ceremony still pending from the dead Digimon's last
+            // evolution would otherwise play over its successor's first moments.
+            pendingEvolution = nil
+            animation = restingAnimation
+            Self.log.info("Rebirth at \(digitamaId)")
+        } catch {
+            Self.log.error("Could not start the next Digimon: \(String(describing: error))")
+        }
     }
 
     private enum GraphError: Error, CustomStringConvertible {

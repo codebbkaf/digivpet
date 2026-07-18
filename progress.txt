@@ -1982,3 +1982,82 @@ monotonic — see the note above; a death rule must not read the live count as a
 is what a rebirth wants. `healthStatus == .dead` is already respected by `updateSickness` and by
 `TrainAction`, but NOT yet by `FeedAction` or by hatching — check both before assuming a dead
 Digimon is inert.
+
+================================================================================
+2026-07-18 — US-029: Add death, memorial and rebirth
+================================================================================
+
+WHAT I BUILT
+
+Sources/Death.swift is the new constants-and-rule file: `Death.secondsSickUntilDeath` (72h) and
+`secondsPerDay`, the `Memorial` value, `GameState.updateDeath(now:)`, and
+`GameState.memorial(displayName:)`.
+
+WHY THE DEATH RULE OWNS `sickSince` RATHER THAN `updateSickness` STAMPING IT
+
+The obvious move was to add a `now:` to `updateSickness` and stamp the marker at the healthy->sick
+transition. I did not, and the reason is worth keeping: `Sickness.swift`'s own documentation
+promises the illness rule is "a pure function of the count and of the day's energy, and needs no
+clock or marker of its own". Threading a clock through it to serve death would have made that
+comment a lie and changed seven existing call sites for nothing. Instead `updateDeath` stamps the
+marker itself on the first refresh that observes `.sick`, clears it on `.healthy`, and leaves it
+standing on `.dead`. Consequence to know: THE COUNTDOWN STARTS AT THE REFRESH THAT DIAGNOSED THE
+ILLNESS, not at some earlier unobserved instant. That is the earliest moment the game can honestly
+say it knew, and testTheCountdownStartsAtTheRefreshThatDiagnosedTheIllness pins it so nobody
+"fixes" it by accident.
+
+REBIRTH WRAPS `resetGame` INSTEAD OF AVOIDING IT
+
+US-028's note (and `resetGame`'s own comment) said rebirth "must NOT route through here". I made it
+route through here anyway, and amended that comment: `GameStore.rebirth` reads `lifetimeEnergy` off
+the dead Digimon BEFORE the delete, calls `resetGame` for the fresh egg, then writes the total back.
+The Dex needs no carrying at all — it is a separate entity, so `resetGame`'s `delete(model:
+GameState.self)` never touched it — and the EnergyLedger is likewise untouched, which is what stops
+today's steps being earned twice by the new Digimon. Duplicating `resetGame`'s body would have been
+the real hazard: two places to keep in step every time a field is added to `GameState`.
+
+TWO PLACES A DEAD DIGIMON WAS NOT YET INERT — both flagged by US-028's note, both real
+
+- `hatchIfReady` had no death guard, so a dead EGG sitting on enough energy would hatch straight
+  through the memorial. Guarded. Note it is guarded on `.dead` ONLY, not on `.healthy` like
+  `evolveIfReady` — US-028 deliberately does not pause hatching for illness.
+- `FeedAction` had no death guard. Added, mirroring `TrainAction`'s asleep -> health -> funds order.
+  Sickness still does NOT block feeding (unlike training): eating is how a neglected Digimon is
+  looked after. testADeadDigimonNeitherHatchesNorEats covers both.
+
+A POSE BUG I ONLY FOUND BY WRITING THE REBIRTH TEST
+
+`settleRestingPose` swapped an explicit list of three poses. Adding `.still(.hurt2)` for the dead
+pose meant a reborn egg would have gone on lying dead forever, because the pose it was holding was
+not in the swap list. Replaced the `==` chain with `MainScreenModel.restingPoses`, a Set that is by
+construction exactly what `restingAnimation` can return — which required `SpriteAnimation: Hashable`
+(was Equatable; the frame's Int raw value makes it free).
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED.
+- xcodebuild test TEST SUCCEEDED 405/405, was 391 (+14 in Tests/DeathTests.swift).
+- AC1/AC6 boundary at the rule: testSeventyTwoHoursSickKillsItAndSeventyOneDoesNot pins 0/71/71.9
+  alive and 72/100 dead, so it cannot pass under a looser "sick for a while" rule.
+- AC1/AC6 boundary end to end through the REAL refresh() and the real store:
+  testTheDigimonIsFoundDeadAfterSeventyTwoHoursSickAndAliveAfterSeventyOne runs two seeded games an
+  hour apart on the threshold. The 71h control is alive AND has no memorial.
+- AC2 in the Simulator: launched with `-healthAnswered -deathDemo` (the health stub is needed or
+  the authorization gate is all you screenshot). The memorial reads "Agumon / Child / Lived 6 days
+  / Lifetime 270 / STR 7 / Battles 0W 0L" over the New Digitama button. The demo sets the illness
+  and lets `updateDeath` do the killing, so the screenshot is of the shipped rule's output.
+- AC3: testDismissingTheMemorialStartsANewDigitama asserts the new egg, stage, cleared care record,
+  cleared sickSince/diedAt, zeroed stageEnergy and strengthStat, and the pose back to .idle.
+- AC4/AC7 off DISK, not off the in-memory object: testLifetimeEnergyAndTheDexSurviveDeath dismisses
+  the memorial, then opens a SECOND GameStore on the same file and reads back
+  (111,222,333,444) plus a Dex still containing the dead Digimon's "hero".
+- AC5: testTheThresholdIsSeventyTwoHours pins the constant, and the rule reads it rather than a
+  literal.
+
+REMAINS: US-030 onward (US-001..US-029 pass; 29/35).
+US-030 (battle power) and US-032 (win/loss record) inherit two things from here. (1) `Memorial`
+already surfaces `battleWins`/`battleLosses` — they read 0W 0L today only because nothing writes
+them yet, so a battle story needs no memorial change. (2) `GameStore.rebirth` resets the battle
+record along with everything else on the new Digimon, which is deliberate: the PRD carries only
+lifetime energy and the Dex across a death. If US-032 wants a lifetime battle record it must add a
+carry to `rebirth` explicitly, exactly as `lifetimeEnergy` has one.

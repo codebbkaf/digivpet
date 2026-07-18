@@ -66,6 +66,18 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingEvolution)
+        // Applied AFTER the ceremony's overlay, so it layers above it: a Digimon that died has
+        // nothing left to celebrate. This is also what stops the Feed and Train buttons underneath
+        // from being tapped while the memorial is up.
+        .overlay {
+            if let memorial = model.memorial {
+                MemorialView(memorial: memorial) {
+                    model.dismissMemorial()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.memorial)
         .task { await model.start() }
         .onChange(of: scenePhase) { _, phase in
             // The whole refresh: health data is only read when the app is in front, since

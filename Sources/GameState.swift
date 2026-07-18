@@ -211,6 +211,13 @@ final class GameState {
     private var starvationMistakesChargedStorage: Int?
     private var refusalMistakeDayStorage: Date?
     private var wakeMistakeDayStorage: Date?
+    /// Backing store for the two death markers (US-029): when the current illness began, and when it
+    /// finally killed the Digimon. Optional for the same migration reason as every other storage
+    /// property here — an optional attribute is the one shape SwiftData migrates into an
+    /// already-shipped store without a default — and also because both are genuinely absent on a
+    /// Digimon that is well, which no default could express.
+    private var sickSinceStorage: Date?
+    private var diedAtStorage: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -239,6 +246,8 @@ final class GameState {
         self.starvationMistakesChargedStorage = 0
         self.refusalMistakeDayStorage = nil
         self.wakeMistakeDayStorage = nil
+        self.sickSinceStorage = nil
+        self.diedAtStorage = nil
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -304,6 +313,21 @@ extension GameState {
     var wakeMistakeDay: Date? {
         get { wakeMistakeDayStorage }
         set { wakeMistakeDayStorage = newValue }
+    }
+
+    /// When the CURRENT illness began, or nil while the Digimon is well. `Death.updateDeath` owns
+    /// it: stamped by the refresh that first saw the Digimon sick, cleared by the cure, and left
+    /// standing after death as the record of what killed it.
+    var sickSince: Date? {
+        get { sickSinceStorage }
+        set { sickSinceStorage = newValue }
+    }
+
+    /// When the Digimon died, or nil while it lives. Stored rather than derived, so a memorial reads
+    /// the same however long it sits on screen before it is dismissed.
+    var diedAt: Date? {
+        get { diedAtStorage }
+        set { diedAtStorage = newValue }
     }
 
     /// Counts one refused feed against the local day containing `now`.

@@ -494,8 +494,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 29,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "72h-sick death via Death.updateDeath with an injectable clock and a sickSince marker; MemorialView overlay shows name/lifespan/final stats; dismiss calls GameStore.rebirth, which carries lifetimeEnergy across and leaves the Dex and the ledger alone. Build green, 405/405 tests pass, memorial screenshotted in the Simulator with -deathDemo."
     },
     {
       "id": "US-030",

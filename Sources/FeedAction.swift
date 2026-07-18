@@ -45,6 +45,13 @@ enum FeedAction {
         guard !isAsleep else {
             return .blocked(reason: "Asleep — let it rest.")
         }
+        // Checked here rather than left to the memorial screen covering the button, so the rule is
+        // true of `FeedAction` itself. Mirrors `TrainAction`'s asleep -> health -> funds order.
+        // Sickness deliberately does NOT block feeding, unlike training: eating is how a neglected
+        // Digimon is looked after, and refusing to let the user feed it would be cruel.
+        guard state.healthStatus != .dead else {
+            return .blocked(reason: "It cannot eat.")
+        }
         guard state.hunger > 0 else {
             state.recordRefusal(now: now, calendar: calendar)
             return .refused

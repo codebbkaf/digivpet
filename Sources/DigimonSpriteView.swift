@@ -5,7 +5,9 @@ import SwiftUI
 ///
 /// A pose is modelled as a one-frame loop rather than a separate type, so every screen drives
 /// `DigimonSpriteView` the same way whether the art moves or not.
-enum SpriteAnimation: Equatable {
+/// `Hashable` so a caller can hold a SET of poses — `MainScreenModel.restingPoses` is one, and a
+/// set says "any resting pose" far more legibly than a chain of `==`.
+enum SpriteAnimation: Hashable {
     /// walk1 -> walk2 on a stage sheet; idle -> wobble on a Digitama.
     case idle
     case eat

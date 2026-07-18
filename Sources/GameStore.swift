@@ -39,8 +39,9 @@ final class GameStore {
     /// Throws away the saved game and starts over at a fresh Digitama.
     ///
     /// This is a total wipe — lifetime energy, the battle record and the care history all go.
-    /// Rebirth after death (US-029) must NOT route through here: it has to preserve
-    /// `lifetimeEnergy` and the Dex, which is the whole point of them outliving a Digimon.
+    /// Rebirth after death is `rebirth(digitamaId:now:)` and not this: it wraps this to get the
+    /// fresh egg, but carries `lifetimeEnergy` across, which is the whole point of it outliving a
+    /// Digimon.
     @discardableResult
     func resetGame(digitamaId: String, now: Date = Date()) throws -> GameState {
         try context.delete(model: GameState.self)
@@ -50,6 +51,22 @@ final class GameStore {
         // call site so a new game and its first Dex entry are one transaction; the Dex survives the
         // `delete` above because it is a separate entity.
         recordDiscovery(id: digitamaId, now: now)
+        try context.save()
+        return fresh
+    }
+
+    /// Starts the next Digimon after this one has died, carrying over what outlives it.
+    ///
+    /// The difference from `resetGame` is the whole point of US-029: `lifetimeEnergy` is read off the
+    /// dead Digimon BEFORE it is deleted and written onto the new egg, so a death costs the user its
+    /// Digimon and not its progress. The Dex needs no carrying — it is a separate entity, so the
+    /// `delete` inside `resetGame` never touches it — and neither does the `EnergyLedger`, which
+    /// must keep today's cap so the steps already spent on the dead Digimon cannot be earned twice.
+    @discardableResult
+    func rebirth(digitamaId: String, now: Date = Date()) throws -> GameState {
+        let carried = try context.fetch(FetchDescriptor<GameState>()).first?.lifetimeEnergy ?? .zero
+        let fresh = try resetGame(digitamaId: digitamaId, now: now)
+        fresh.lifetimeEnergy = carried
         try context.save()
         return fresh
     }
