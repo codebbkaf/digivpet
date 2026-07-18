@@ -2219,3 +2219,86 @@ WHAT US-032 INHERITS
   already reads `state.battleWins`.
 
 REMAINS: US-032 onward (US-001..US-031 pass; 31/35).
+
+================================================================================
+2026-07-19 — US-032 — Add battle daily limit and win/loss record
+
+WHAT I DID
+
+- `BattleLimits.perDay = 5` (Sources/Battle.swift), beside `recordBattle` — the record and the cap
+  on it live together.
+- `GameState` gained `battleCountStorage`/`battleDayStorage` (optional, for the same SwiftData
+  migration reason every other storage property here is) exposed as `battleCount`/`battleDay`, and
+  three methods: `battlesFought(now:calendar:)`, `battlesRemaining(now:calendar:)`,
+  `consumeBattleAllowance(now:calendar:)`. Shaped deliberately like `refusalCount`/`refusalDay`.
+- `MainScreenModel.battle()` guards on `battlesRemaining > 0` AFTER the asleep/dead guards, exposes
+  `battlesRemainingToday` and the shared `battleLimitReason` string.
+- `BattleControls` takes `battlesLeft`, disables the button at zero and captions why.
+- `-battleLimitDemo` (DEBUG) fights and dismisses the day's five for the screenshot.
+
+THE ONE DESIGN DECISION WORTH INHERITING — THE ROLLOVER IS READ, NOT WRITTEN
+
+`battlesFought` returns `battleDay == startOfDay(now) ? battleCount : 0`. A stale `battleDay` means
+the count belongs to a day that is over, and a day that is over has zero battles in it. NOTHING has
+to run at midnight — which matters because the app is usually CLOSED at midnight, and a design that
+reset the counter on a timer or on `refresh()` would leave a user who last opened the app at 23:00
+still capped at 09:00 the next morning. `testTheRolloverNeedsNothingToRunAtMidnight` pins exactly
+this: it consumes twice, calls NOTHING, moves the clock across midnight, and asserts both that the
+new day reads 0 AND that the raw `battleCount` is still 2 stamped with yesterday — so a future
+refactor that "fixes" it by zeroing on read fails the second half.
+
+THE ALLOWANCE IS SPENT WHEN THE FIGHT STARTS, NOT WHEN THE RESULT IS DISMISSED
+
+`consumeBattleAllowance` is called in `battle()` (and saved immediately), NOT in `finishBattle()`.
+`finishBattle()` still owns the W/L record, so the two are deliberately separate calls. If the spend
+had gone next to `recordBattle`, then backgrounding or force-quitting on the result screen would
+hand the allowance back and the cap would be farmable — five taps, five kills, quit, repeat.
+`testTheAllowanceIsSpentEvenIfTheResultIsNeverDismissed` is the guard on that, and the reopen test
+asserts `battlesRemaining` is still 2 after a quit at 3 battles.
+
+VERIFIED (observed, not assumed)
+
+- xcodebuild BUILD SUCCEEDED; xcodebuild test TEST SUCCEEDED 469/469, was 453 (+16).
+- AC1: `testTheAllowanceIsSpentOneBattleAtATime` walks the remaining count down step by step (an
+  off-by-one fails at the step it happens, not just at the end).
+  `testTheAllowanceResetsAtLocalMidnightNotOnAnElapsedDay` is the one that pins LOCAL MIDNIGHT and
+  not 24h: five battles at 23:00, full allowance at 00:30 — ninety minutes later. A cooldown
+  implementation passes every other test here and fails that one.
+- AC2: `testTheRecordAndTheCountSurviveAReopen` saves, reopens the store with the same
+  `loadOrCreate` the app calls on launch, and asserts wins/losses AND the day's count survived.
+  `testTheStoredRecordIsWhatGatesAMinBattleWinsEdge` feeds the state's own fields into the REAL
+  `EvolutionEngine.qualifies`, so a record that stopped persisting fails there rather than silently
+  ungating an edge.
+- AC3: `isBattleDisabled`/`limitCaption` are non-private on `BattleControls` for the same reason
+  US-031 made `animation(for:during:)` static — a `.disabled` modifier inside `body` is unreachable
+  outside a view graph. `testTheButtonIsDisabledWithTheModelsOwnReasonAtTheCap` asserts the caption
+  IS `MainScreenModel.battleLimitReason`, so the string a user reads cannot drift from the string
+  the model enforced.
+- AC4: `testTheSixthBattleOfADayIsRefused` (sixth returns nil, no `pendingBattle`, reason shown,
+  nothing recorded) and `testTheCounterResetsTheNextDay` (clock MOVED across midnight, then the tap
+  that was refused goes ahead).
+- Also pinned: hitting the cap is NOT a care mistake (`testHittingTheCapIsNotACareMistake`) — the
+  cap is a rule of the game, not neglect. Prodding a SLEEPING Digimon still is, which is why the
+  limit guard sits AFTER the sleep guard, not before it.
+- SIMULATOR (46mm, watchOS 26.4, always with `-healthAnswered`):
+  `-battleLimitDemo -battleScrollDemo` -> "PWR 61  4W 1L", a visibly DIMMED Battle button, and
+  "No battles left today." in orange. The 4W 1L is five REAL fights, not a hand-set counter.
+  Fresh install, `-battleScrollDemo` -> "PWR 1  0W 0L", no caption, and the Battle button rendered
+  at the same fill as Train. The pair is the proof the disabled state actually looks disabled —
+  neither screenshot alone shows that, since watchOS dims a `.bordered` button subtly.
+
+GOTCHA
+
+- The capped screenshot SURVIVED a relaunch (same local day), so the second launch still showed the
+  cap. That is correct behaviour, but it means you must `simctl uninstall` to get a clean allowance
+  back — relaunching is not enough, and I briefly thought the fresh-state screenshot had failed.
+
+WHAT US-033 INHERITS
+
+- Everything time-based now derives from the injected clock rather than ticking, and this story adds
+  one more: `battlesFought` joins hunger, sickness and death in recomputing from elapsed time. That
+  is exactly US-033's AC3 ("all time-based state recomputes correctly from elapsed time on launch
+  even if background refresh never ran") — the battle cap already satisfies it BY CONSTRUCTION and
+  needs nothing from background refresh, which is worth asserting in US-033's 48h-closure test.
+
+REMAINS: US-033, US-034, US-035 (US-001..US-032 pass; 32/35).

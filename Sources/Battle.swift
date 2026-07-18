@@ -216,6 +216,16 @@ enum BattleMatchmaker {
     }
 }
 
+/// How often a Digimon may be sent to fight (PRD FR-33).
+///
+/// A cap rather than a cooldown: five battles is a session, and the point is that a win/loss record
+/// cannot be farmed into an evolution edge's `minBattleWins` in an afternoon of tapping.
+enum BattleLimits {
+    /// Battles allowed per local day. Resets at local midnight — see
+    /// `GameState.battlesFought(now:calendar:)`, which derives "today's" count rather than ticking it.
+    static let perDay = 5
+}
+
 extension GameState {
     /// Files a finished battle in the win/loss record — and does NOTHING else.
     ///

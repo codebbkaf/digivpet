@@ -387,6 +387,8 @@ final class MainScreenModel: ObservableObject {
     ///   screenshot lands on the result screen instead of mid-exchange.
     /// - `-battleLossDemo` — an untrained Baby I against the stages above it: very likely the losing
     ///   result. Genuinely fought rather than hand-set, so what is screenshotted is the real rule.
+    /// - `-battleLimitDemo` — the day's five battles actually FOUGHT and dismissed, leaving the
+    ///   disabled button and its reason (US-032). Pair with `-battleScrollDemo` to bring it on screen.
     ///
     /// The outcome is left to the real matchmaker and the real engine — only the player's stats and
     /// the seed are staged, so this exercises the shipped path rather than its output.
@@ -394,7 +396,8 @@ final class MainScreenModel: ObservableObject {
         let arguments = CommandLine.arguments
         let losing = arguments.contains("-battleLossDemo")
         let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo"]
-        guard staged.contains(where: arguments.contains) || losing, let state else { return }
+        let limit = arguments.contains("-battleLimitDemo")
+        guard staged.contains(where: arguments.contains) || losing || limit, let state else { return }
 
         // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
         // attack or hurt frames, so an egg would screenshot as placeholders however well this worked.
@@ -410,6 +413,18 @@ final class MainScreenModel: ObservableObject {
         // 22:00-07:00 — so without this the demo screenshots "Asleep — let it rest." on any evening
         // run, which is exactly what happened the first time it was tried.
         forceAwakeForDemo()
+
+        if limit {
+            // Really fought and really dismissed, one at a time, so the screenshot shows the state
+            // the shipped rule produces rather than a hand-set counter. The last `finishBattle()`
+            // leaves no pending bout, so the main screen — not the battle screen — is what draws.
+            for _ in 0..<BattleLimits.perDay {
+                battle()
+                finishBattle()
+            }
+            return
+        }
+
         battle()
     }
 
@@ -637,8 +652,9 @@ final class MainScreenModel: ObservableObject {
     ///
     /// Blocked while asleep or dead, and blocked the same way feeding and training are: a message,
     /// no animation, and the waking-early mistake charged if it was the sleep window that stopped it.
-    /// Prodding a sleeping Digimon into a fight is the same neglect as prodding it to eat. The DAILY
-    /// LIMIT (5/day) is deliberately not here — it is US-032's, and belongs beside the record it caps.
+    /// Prodding a sleeping Digimon into a fight is the same neglect as prodding it to eat. Blocked
+    /// too once the day's `BattleLimits.perDay` battles are gone (US-032) — that guard sits AFTER the
+    /// sleep one, so a Digimon prodded awake at its limit is still charged the waking-early mistake.
     ///
     /// Returns the bout so a test can assert on it directly; the screen reacts to `pendingBattle`.
     @discardableResult
@@ -651,6 +667,10 @@ final class MainScreenModel: ObservableObject {
         guard !isAsleep else {
             show(nil, message: "Asleep — let it rest.")
             noteWakingEarly()
+            return nil
+        }
+        guard state.battlesRemaining(now: now(), calendar: calendar) > 0 else {
+            show(nil, message: Self.battleLimitReason)
             return nil
         }
         guard let player = graph.presentation(forId: state.currentDigimonId) else {
@@ -676,9 +696,37 @@ final class MainScreenModel: ObservableObject {
                                           spriteFile: opponent.node.spriteFile),
             report: report
         )
+        // Spent here and not in `finishBattle()`: the fight has happened by this line, so walking
+        // away from the result screen must not hand the allowance back. Saved immediately for the
+        // same reason — an allowance that only reaches disk when the result is dismissed would be
+        // returned by force-quitting mid-battle.
+        state.consumeBattleAllowance(now: now(), calendar: calendar)
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save the battle allowance: \(String(describing: error))")
+        }
+
         pendingBattle = bout
         Self.log.info("Battle vs \(opponent.node.id): \(report.playerWon ? "won" : "lost")")
         return bout
+    }
+
+    /// Why the Battle button is disabled once the day's battles are gone.
+    ///
+    /// One string, shown in two places — the caption when a blocked tap somehow gets through, and
+    /// the label under the disabled button — so the reason a user reads can never disagree with the
+    /// reason the model enforced.
+    static let battleLimitReason = "No battles left today."
+
+    /// How many battles are still allowed today, for the button to disable itself against.
+    ///
+    /// Computed off the injected clock rather than stored, so it rolls over at local midnight with
+    /// no timer: the same derivation the guard in `battle()` uses, which is what keeps the disabled
+    /// button and the refusal from ever disagreeing.
+    var battlesRemainingToday: Int {
+        guard let state else { return 0 }
+        return state.battlesRemaining(now: now(), calendar: calendar)
     }
 
     /// Files the battle's result and takes the screen down, so a battle is recorded exactly once.

@@ -200,6 +200,16 @@ final class GameState {
     /// US-027's care mistake is "3+ refusals in a day", not three refusals ever.
     private var refusalCountStorage: Int?
     private var refusalDayStorage: Date?
+    /// Backing store for `battleCount`/`battleDay` (US-032): how many battles have been fought, and
+    /// the local day they were counted against. Optional for the same migration reason as every
+    /// other storage property here — an optional attribute is the one shape SwiftData migrates into
+    /// an already-shipped store without a default. Both `nil` reads as "no battles yet today".
+    ///
+    /// Shaped exactly like `refusalCount`/`refusalDay`, and for the same reason: the count is only
+    /// ever asked about per-day, because the cap is five battles A DAY and a lifetime counter would
+    /// permanently retire a Digimon that fought five times last month.
+    private var battleCountStorage: Int?
+    private var battleDayStorage: Date?
     /// Backing store for the four care-mistake markers (US-027). All optional for the same migration
     /// reason as `energyLastEarnedStorage` — an optional attribute is the one shape SwiftData
     /// migrates into an already-shipped store without a default.
@@ -240,6 +250,8 @@ final class GameState {
         self.hungerUpdatedAt = now
         self.refusalCountStorage = 0
         self.refusalDayStorage = nil
+        self.battleCountStorage = 0
+        self.battleDayStorage = nil
         // Stamped with `now` rather than left nil, or a brand new game would be charged for every
         // day between the epoch and today the first time the audit ran.
         self.healthDataLastSeenStorage = now
@@ -282,6 +294,20 @@ extension GameState {
     var refusalDay: Date? {
         get { refusalDayStorage }
         set { refusalDayStorage = newValue }
+    }
+
+    /// How many battles have been fought on `battleDay`. Read through
+    /// `battlesFought(now:calendar:)`, which is the only form that answers the question anyone
+    /// actually asks — this raw count is meaningless without the day it belongs to.
+    var battleCount: Int {
+        get { battleCountStorage ?? 0 }
+        set { battleCountStorage = newValue }
+    }
+
+    /// The local day `battleCount` is counted against, or nil before the first battle.
+    var battleDay: Date? {
+        get { battleDayStorage }
+        set { battleDayStorage = newValue }
     }
 
     /// The last instant HealthKit gave a real number for any metric, or nil on a save written
@@ -352,6 +378,39 @@ extension GameState {
             refusalMistakeDay = today
             careMistakeCount += 1
         }
+    }
+
+    /// How many battles have been fought in the local day containing `now`.
+    ///
+    /// Reads the rollover rather than writing it: a stale `battleDay` means the count belongs to a
+    /// day that is over, and a day that is over always has zero battles fought in it. That is what
+    /// makes the cap reset at local midnight without anything having to run at midnight — the app
+    /// may have been closed straight through it.
+    func battlesFought(now: Date, calendar: Calendar = .current) -> Int {
+        battleDay == calendar.startOfDay(for: now) ? battleCount : 0
+    }
+
+    /// How many battles are still allowed in the local day containing `now`.
+    ///
+    /// Clamped at zero so a save whose cap was lowered in an update reads as "none left" rather than
+    /// as a negative the UI would have to defend against.
+    func battlesRemaining(now: Date, calendar: Calendar = .current) -> Int {
+        max(0, BattleLimits.perDay - battlesFought(now: now, calendar: calendar))
+    }
+
+    /// Spends one of the day's battles. Rolls the count over when the day changes, for the same
+    /// reason `recordRefusal` does.
+    ///
+    /// Separate from `recordBattle`, which files the RESULT: this is spent when the fight starts, so
+    /// dismissing the result screen — or force-quitting before it — cannot hand back an allowance
+    /// and let the cap be farmed.
+    func consumeBattleAllowance(now: Date, calendar: Calendar = .current) {
+        let today = calendar.startOfDay(for: now)
+        if battleDay != today {
+            battleDay = today
+            battleCount = 0
+        }
+        battleCount += 1
     }
 
     /// The energy type this stage has earned the most of — the branch the evolution engine takes.

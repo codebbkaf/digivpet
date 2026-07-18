@@ -169,7 +169,8 @@ struct ContentView: View {
 
                         BattleControls(power: state.battlePower,
                                        wins: state.battleWins,
-                                       losses: state.battleLosses) { model.battle() }
+                                       losses: state.battleLosses,
+                                       battlesLeft: model.battlesRemainingToday) { model.battle() }
                             .padding(.top, 4)
                             .id(Self.battleControlsId)
                     }
@@ -274,7 +275,22 @@ struct BattleControls: View {
     let power: Int
     let wins: Int
     let losses: Int
+    /// Battles still allowed today (US-032). Zero disables the button and shows why.
+    let battlesLeft: Int
     let battle: () -> Void
+
+    /// Whether the Battle button is disabled. Not `private`, like `limitCaption`, so a test can
+    /// assert the rule — a disabled modifier inside `body` is unreachable outside a view graph.
+    var isBattleDisabled: Bool { battlesLeft == 0 }
+
+    /// The caption under the button. Nil on a full allowance — a permanent "5 left" would be noise;
+    /// the count only earns its space once it is running out. At zero it is the model's OWN refusal
+    /// string, so what a user reads cannot disagree with what was enforced.
+    var limitCaption: String? {
+        if battlesLeft == 0 { return MainScreenModel.battleLimitReason }
+        if battlesLeft < BattleLimits.perDay { return "\(battlesLeft) left today" }
+        return nil
+    }
 
     var body: some View {
         VStack(spacing: 3) {
@@ -300,6 +316,15 @@ struct BattleControls: View {
                     .font(.caption2)
             }
             .buttonStyle(.bordered)
+            .disabled(isBattleDisabled)
+
+            if let limitCaption {
+                Text(limitCaption)
+                    .font(.system(size: 9))
+                    .foregroundStyle(battlesLeft == 0 ? Color.orange : Color.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
         }
     }
 }

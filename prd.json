@@ -545,8 +545,8 @@
         "Verify in watchOS Simulator (xcrun simctl io booted screenshot)"
       ],
       "priority": 32,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleLimits.perDay=5 capped in GameState via battleCount/battleDay (day-scoped like refusalCount); battlesFought/battlesRemaining DERIVE the rollover from the injected clock so it resets at local midnight with nothing running at midnight; MainScreenModel.battle() guards on it after the asleep/dead guards and spends the allowance when the fight starts (saved immediately, so quitting mid-battle cannot refill it); BattleControls disables the button and shows the model's own refusal string. 469 tests pass (+16); build green; screenshotted at the cap (4W 1L, dimmed button, \"No battles left today.\") and fresh (0W 0L, enabled) on the 46mm."
     },
     {
       "id": "US-033",
