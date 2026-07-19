@@ -176,6 +176,9 @@ final class ComplicationTests: XCTestCase {
             dominantEnergyName: "Strength",
             dominantEnergyFraction: 0.4,
             dominantEnergyEarned: 40,
+            // Deliberately not the default: a `pose` that failed to encode would round-trip
+            // invisibly if the fixture used `.idle`.
+            pose: .sick,
             published: Fixture.morning
         )
         XCTAssertTrue(ComplicationSnapshotStore.write(written, to: sharedDirectory))
@@ -217,6 +220,136 @@ final class ComplicationTests: XCTestCase {
                                                           name: ComplicationSnapshot.placeholder.spriteFile))
         XCTAssertEqual(image.width, SpriteSheet.frameSize)
         XCTAssertEqual(image.height, SpriteSheet.frameSize)
+    }
+
+    // MARK: - US-047: the pose
+
+    /// THE AC ("pose mapping is explicit and total"): every state maps, and every state maps to
+    /// something. Written as the full truth table of the four inputs — 16 rows — rather than as five
+    /// happy-path cases, because the mapping's only real risk is a combination nobody pictured.
+    func testThePoseMappingIsTotal() {
+        for isDead in [true, false] {
+            for isSick in [true, false] {
+                for isAsleep in [true, false] {
+                    for hasPoop in [true, false] {
+                        let pose = ComplicationPose.pose(isDead: isDead, isSick: isSick,
+                                                         isAsleep: isAsleep, hasPoop: hasPoop)
+                        let expected: ComplicationPose
+                        if isDead { expected = .dead }
+                        else if isSick { expected = .sick }
+                        else if isAsleep { expected = .sleeping }
+                        else if hasPoop { expected = .messy }
+                        else { expected = .idle }
+                        XCTAssertEqual(pose, expected,
+                                       "dead:\(isDead) sick:\(isSick) asleep:\(isAsleep) poop:\(hasPoop)")
+                    }
+                }
+            }
+        }
+    }
+
+    /// THE AC ("precedence when two apply at once"): the four overlaps that actually happen in play,
+    /// spelled out one by one so a reordered `if` chain fails here with a readable name rather than
+    /// only inside the loop above.
+    func testAMoreSeriousStateOutranksALesserOne() {
+        // The AC's own example. Sickness is about the Digimon; the mess is about the floor.
+        XCTAssertEqual(ComplicationPose.pose(isDead: false, isSick: true, isAsleep: false, hasPoop: true),
+                       .sick)
+        // Matches `restingAnimation`, where sickness already wins over sleep.
+        XCTAssertEqual(ComplicationPose.pose(isDead: false, isSick: true, isAsleep: true, hasPoop: false),
+                       .sick)
+        // A dead Digimon is not asleep, however the sleep window reads the clock.
+        XCTAssertEqual(ComplicationPose.pose(isDead: true, isSick: true, isAsleep: true, hasPoop: true),
+                       .dead)
+        // Poop is paused during sleep but persists into it, so this pairing is ordinary.
+        XCTAssertEqual(ComplicationPose.pose(isDead: false, isSick: false, isAsleep: true, hasPoop: true),
+                       .sleeping)
+    }
+
+    /// THE AC ("dead -> a DISTINCT held frame"): no two poses draw the same pixels. Two states that
+    /// shared a frame would be indistinguishable on a face that has no room for a caption.
+    func testEveryPoseHoldsADistinctFrame() {
+        let frames = ComplicationPose.allCases.map(\.frame)
+        XCTAssertEqual(Set(frames).count, ComplicationPose.allCases.count,
+                       "two poses share a frame: \(frames)")
+    }
+
+    /// The frames the poses name have to EXIST in the shipped art, not just in the enum. A stage
+    /// sheet is 48x64 so all twelve are there — this is what would catch the mapping being pointed
+    /// at an index the sheet does not hold.
+    func testEveryPoseResolvesToRealArt() throws {
+        let sheet = try XCTUnwrap(SpriteSheetCache().sheet(stage: "Adult", name: "Greymon"))
+        for pose in ComplicationPose.allCases {
+            let frame = try XCTUnwrap(sheet[pose.frame], "no art for \(pose)")
+            XCTAssertEqual(frame.width, SpriteSheet.frameSize)
+            XCTAssertEqual(frame.height, SpriteSheet.frameSize)
+        }
+    }
+
+    /// The pose reaches the snapshot off the REAL game state, not just off the mapping function —
+    /// this is the wiring between `healthStatus`/`poopCount` and the four booleans.
+    func testTheSnapshotCarriesThePoseDerivedFromTheGame() async throws {
+        let model = makeModel()
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+
+        // A plain awake, healthy, clean Digimon.
+        model.isAsleep = false
+        XCTAssertEqual(model.complicationSnapshot?.pose, .idle)
+
+        state.poopCount = 2
+        XCTAssertEqual(model.complicationSnapshot?.pose, .messy)
+
+        model.isAsleep = true
+        XCTAssertEqual(model.complicationSnapshot?.pose, .sleeping)
+
+        state.healthStatus = .sick
+        XCTAssertEqual(model.complicationSnapshot?.pose, .sick)
+
+        state.healthStatus = .dead
+        XCTAssertEqual(model.complicationSnapshot?.pose, .dead)
+    }
+
+    /// THE AC ("republished when the underlying state changes, so the pose is not stale"): cleaning
+    /// is the only ACTION that moves the pose, and the snapshot it would publish has already stopped
+    /// saying `.messy` by the time `clean()` returns.
+    func testCleaningTakesTheMessOffTheComplication() async throws {
+        let model = makeModel()
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        model.isAsleep = false
+
+        state.poopCount = 4
+        XCTAssertEqual(model.complicationSnapshot?.pose, .messy)
+
+        XCTAssertTrue(model.clean())
+        XCTAssertEqual(model.complicationSnapshot?.pose, .idle)
+    }
+
+    /// The upgrade case `init(from:)` exists for: the snapshot already on disk was written before
+    /// poses existed. It must still decode, as `.idle`, rather than dropping the whole complication
+    /// back to the placeholder until the next refresh.
+    func testASnapshotWrittenBeforePosesExistedStillDecodes() throws {
+        let legacy = """
+        {"displayName":"Greymon","spriteStage":"Adult","spriteFile":"Greymon",\
+        "dominantEnergyFraction":0.4,"dominantEnergyEarned":40,"published":774000000}
+        """
+        let decoded = try JSONDecoder().decode(ComplicationSnapshot.self,
+                                               from: Data(legacy.utf8))
+        XCTAssertEqual(decoded.pose, .idle)
+        XCTAssertEqual(decoded.displayName, "Greymon")
+        XCTAssertNil(decoded.dominantEnergySymbol)
+    }
+
+    /// The pose is drawn, so VoiceOver cannot see it. Idle says nothing extra on purpose: "Agumon,
+    /// idle" on every ordinary day is noise that would bury the day it matters.
+    func testVoiceOverIsToldWhatTheDigimonIsDoing() {
+        var snapshot = ComplicationSnapshot.placeholder
+        snapshot.pose = .sick
+        XCTAssertEqual(snapshot.accessibilityLabel, "Agumon, sick")
+
+        snapshot.pose = .idle
+        XCTAssertEqual(snapshot.accessibilityLabel, "Agumon")
     }
 }
 

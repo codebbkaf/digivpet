@@ -256,6 +256,11 @@ final class MainScreenModel: ObservableObject {
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
         seedPoopDemoIfRequested()
+        // Every seed above runs AFTER the refresh that published, so the snapshot on disk still
+        // describes the pre-demo game — a `-sickDemo -complicationDemo` run would screenshot an idle
+        // pose. Republishing here is the same rule as `clean()`'s, applied to the demos: the state
+        // changed outside a refresh, so the face is told. DEBUG only, like the seeds themselves.
+        publishComplicationSnapshot()
         #endif
     }
 
@@ -811,6 +816,11 @@ final class MainScreenModel: ObservableObject {
             // but a lost save does not pass in silence.
             Self.log.error("Could not save after cleaning: \(String(describing: error))")
         }
+        // Cleaning is the one ACTION that changes the complication's pose (US-047): it takes the
+        // mess away, so the face must stop showing the angry frame. Feeding and training do not
+        // reach the pose at all, and everything else that does — sickness, sleep, death — is settled
+        // inside `refresh()`, which publishes for itself.
+        publishComplicationSnapshot()
         return true
     }
 

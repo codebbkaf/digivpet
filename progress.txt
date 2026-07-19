@@ -779,3 +779,77 @@ Passed: build green; `Executed 619 tests, with 0 failures` (was 609, +10).
 Screenshot at 46mm shows the Mess toggle, on by default, under Death Warning.
 
 Remains: the four complication stories US-047, US-048, US-049, US-050.
+
+================================================================================
+2026-07-20 — US-047: Complication sprite pose reflects live state
+================================================================================
+
+The complication drew one frame regardless of what the Digimon was doing:
+`ComplicationSprite` went straight to `IdleSpriteCache`, so a dead Digimon and a
+healthy one were the same picture. Added `ComplicationPose` to the SHARED
+`ComplicationSnapshot.swift` — a decided pose, not the raw inputs, for the same
+reason the dominant energy type already arrives pre-chosen: `HealthStatus` lives
+in `GameState`, which is SwiftData, which the widget process must not link.
+
+Mapping is one frame per pose because a complication does not animate:
+idle->walk1, sleeping->sleep1, sick->hurt1, messy->angry, dead->hurt2. Sick and
+dead take the two DIFFERENT hurt frames rather than sharing one — there is no
+caption on a watch face to tell them apart, and `testEveryPoseHoldsADistinct
+Frame` pins that as a set-count assertion so a future pose cannot quietly
+collide.
+
+Precedence is dead > sick > asleep > messy > idle. The first three are not a new
+opinion — `MainScreenModel.restingAnimation` already ranks them that way, and two
+screens disagreeing about what a sick sleeping Digimon is doing would be a bug in
+one of them. The mess ranks LAST of the non-idle poses, below sleep, on the
+argument that it is the only one of the four that already has its own route to
+the wrist (US-054's notification); sickness and death have none, so the glance is
+all they get. Tested as the full 16-row truth table rather than five happy paths,
+because the only real risk in a mapping like this is a combination nobody
+pictured.
+
+Rendering: non-idle poses need a specific frame, which only the 48x64 sheet has,
+so they go through `SpriteSheetCache` — already compiled into the widget target,
+so `project.yml` needed no change. Idle KEEPS the `Idle Frame Only` art: one file
+instead of a decode plus twelve crops, and it is the only source that covers the
+Digitama. That fallback is load-bearing rather than defensive — `SpriteSheet`'s
+subscript returns nil for `.egg`, and an egg that is asleep or sick is an
+ordinary state, so an egg would otherwise draw '?'. Better the right Digimon in
+the wrong pose.
+
+AC4 ("not stale") had one real gap. `publishComplicationSnapshot()` was called
+only at the end of `refresh()`, which settles sickness, sleep and death for
+itself — but `clean()` changes `poopCount` outside any refresh, and it is the one
+ACTION that moves the pose. Feeding and training do not touch it. Added the
+publish there.
+
+Two things worth knowing:
+
+- `pose` is a new non-optional `Codable` key, and the synthesised decoder
+  requires every one of them. The snapshot already on disk from the previous
+  version would have failed to decode outright, dropping the face to the Agumon
+  placeholder until the next refresh. Hand-wrote `init(from:)` (and so had to
+  restore the memberwise init) to `decodeIfPresent` that one key. Eight lines,
+  and `testASnapshotWrittenBeforePosesExistedStillDecodes` holds it.
+- The demo seeds all run AFTER the `refresh()` that published, so
+  `-sickDemo -complicationDemo` screenshotted an IDLE pose on the first attempt —
+  the snapshot on disk still described the pre-demo game. Added a DEBUG-only
+  republish at the end of the seed block in `start()`. Same rule as `clean()`'s,
+  applied to the demos.
+
+Also gave VoiceOver the pose (`spokenDescription`, folded into a new
+`snapshot.accessibilityLabel` both families use). The pose is carried entirely by
+which pixels are drawn and the sprite is `Image(decorative:)`, so it was the one
+thing on the complication a VoiceOver user could not reach. Idle says nothing
+extra on purpose: "Agumon, idle" every ordinary day would bury the day it
+matters.
+
+Passed: build green; `Executed 627 tests, with 0 failures` (was 619, +8).
+Verification was not eyeballing — cropped the reference frames out of
+`sprites_cut/Child/Agumon/` and compared: the `-sickDemo` screenshot is pixel-for
+-pixel `10_hurt1.png` (head-down slump), the `-poopDemo` screenshot is
+`09_angry.png` (upright), and both differ from `Idle Frame Only/Agumon.png`.
+Same Digimon, two poses, so the pose is demonstrably what drives the frame.
+
+Remains: the three complication stories US-048 (refresh-granularity spike),
+US-049 and US-050.

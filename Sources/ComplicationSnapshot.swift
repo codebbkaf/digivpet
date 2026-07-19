@@ -1,5 +1,67 @@
 import Foundation
 
+/// What the Digimon is doing, as one held frame the complication can draw.
+///
+/// A decided pose rather than the raw inputs (`HealthStatus`, `isAsleep`, `poopCount`) for the same
+/// reason the dominant type arrives already chosen: `HealthStatus` lives in `GameState`, which is
+/// SwiftData, which the widget process must not link. The app decides, the widget draws.
+///
+/// A pose, not a `SpriteAnimation`: a complication does not animate, so each case is exactly one
+/// frame held still — `sleep1`, not the sleep loop.
+enum ComplicationPose: String, Codable, CaseIterable {
+    case idle
+    case sleeping
+    case sick
+    case messy
+    case dead
+
+    /// The one sheet frame this pose holds.
+    ///
+    /// `sick` and `dead` take the two hurt frames rather than sharing one, because the AC asks for a
+    /// distinct held frame per state and a complication has no caption to tell them apart.
+    var frame: SpriteFrame {
+        switch self {
+        case .idle: return .walk1
+        case .sleeping: return .sleep1
+        case .sick: return .hurt1
+        case .messy: return .angry
+        case .dead: return .hurt2
+        }
+    }
+
+    /// How VoiceOver says this pose, or nil for `idle` — which is the absence of news, not news.
+    ///
+    /// Without this the pose is the one thing on the complication a VoiceOver user cannot get at:
+    /// it is carried entirely by which pixels are drawn, and the sprite is `Image(decorative:)`.
+    var spokenDescription: String? {
+        switch self {
+        case .idle: return nil
+        case .sleeping: return "asleep"
+        case .sick: return "sick"
+        case .messy: return "needs cleaning"
+        case .dead: return "has died"
+        }
+    }
+
+    /// The total mapping from every state that can change the pose, in precedence order.
+    ///
+    /// Death, sickness and sleep rank in that order because `MainScreenModel.restingAnimation`
+    /// already ranks them that way on the main screen, and two screens disagreeing about what a sick
+    /// sleeping Digimon is doing would be a bug in one of them.
+    ///
+    /// The mess ranks LAST of the non-idle poses, below sleep. It is the least severe of the four —
+    /// nothing about the Digimon itself — and it is the only one that already has its own way of
+    /// reaching the user's wrist (US-054 notifies when the screen fills). Sickness and death have no
+    /// such notice, so the glance is the only thing that carries them.
+    static func pose(isDead: Bool, isSick: Bool, isAsleep: Bool, hasPoop: Bool) -> ComplicationPose {
+        if isDead { return .dead }
+        if isSick { return .sick }
+        if isAsleep { return .sleeping }
+        if hasPoop { return .messy }
+        return .idle
+    }
+}
+
 /// The little the complication needs to draw itself, in a form that crosses a process boundary.
 ///
 /// The widget extension is a SEPARATE PROCESS with its own container, so it cannot read the app's
@@ -29,6 +91,9 @@ struct ComplicationSnapshot: Codable, Equatable {
     /// Points earned of the dominant type this stage, shown as a number beside the bar.
     var dominantEnergyEarned: Int
 
+    /// What the Digimon is doing, already decided by the app. See `ComplicationPose`.
+    var pose: ComplicationPose = .idle
+
     /// When the app last published this. The widget shows what it is given without asking how old
     /// it is; this is here so a stale complication can be recognised in a screenshot or a log.
     var published: Date
@@ -47,6 +112,54 @@ struct ComplicationSnapshot: Codable, Equatable {
         dominantEnergyEarned: 25,
         published: .distantPast
     )
+
+    /// The Digimon and what it is doing, spoken. Just the name when it is doing nothing notable.
+    var accessibilityLabel: String {
+        guard let pose = pose.spokenDescription else { return displayName }
+        return "\(displayName), \(pose)"
+    }
+
+    /// Hand-written only so `pose` can be MISSING from the file.
+    ///
+    /// The synthesised decoder requires every non-optional key, so on the launch that first installs
+    /// this version the snapshot already on disk — written before `pose` existed — would fail to
+    /// decode outright and the complication would drop to the Agumon placeholder until the next
+    /// refresh republished it. Defaulting the one new key costs eight lines and nobody sees the gap.
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        displayName = try container.decode(String.self, forKey: .displayName)
+        spriteStage = try container.decode(String.self, forKey: .spriteStage)
+        spriteFile = try container.decode(String.self, forKey: .spriteFile)
+        dominantEnergySymbol = try container.decodeIfPresent(String.self, forKey: .dominantEnergySymbol)
+        dominantEnergyName = try container.decodeIfPresent(String.self, forKey: .dominantEnergyName)
+        dominantEnergyFraction = try container.decode(Double.self, forKey: .dominantEnergyFraction)
+        dominantEnergyEarned = try container.decode(Int.self, forKey: .dominantEnergyEarned)
+        pose = try container.decodeIfPresent(ComplicationPose.self, forKey: .pose) ?? .idle
+        published = try container.decode(Date.self, forKey: .published)
+    }
+
+    /// Restored because writing `init(from:)` suppresses the memberwise initialiser.
+    init(
+        displayName: String,
+        spriteStage: String,
+        spriteFile: String,
+        dominantEnergySymbol: String?,
+        dominantEnergyName: String?,
+        dominantEnergyFraction: Double,
+        dominantEnergyEarned: Int,
+        pose: ComplicationPose = .idle,
+        published: Date
+    ) {
+        self.displayName = displayName
+        self.spriteStage = spriteStage
+        self.spriteFile = spriteFile
+        self.dominantEnergySymbol = dominantEnergySymbol
+        self.dominantEnergyName = dominantEnergyName
+        self.dominantEnergyFraction = dominantEnergyFraction
+        self.dominantEnergyEarned = dominantEnergyEarned
+        self.pose = pose
+        self.published = published
+    }
 }
 
 /// The app's own URL scheme, which is how a complication tap gets back to it.

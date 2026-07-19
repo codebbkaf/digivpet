@@ -23,7 +23,22 @@ extension MainScreenModel {
             // No dominant type means no bar rather than an empty one aimed at an arbitrary type.
             dominantEnergyFraction: goal.flatMap { energyProgress?.fraction(of: $0) } ?? 0,
             dominantEnergyEarned: goal?.earned ?? 0,
+            pose: complicationPose,
             published: Date()
+        )
+    }
+
+    /// What the watch face should show this Digimon doing.
+    ///
+    /// The mapping itself lives in `ComplicationPose` — shared with the widget target and testable
+    /// without a model — so all this does is name the four inputs. `isAsleep` comes from the model
+    /// rather than from `state` because the sleep window is derived per refresh and is not saved.
+    var complicationPose: ComplicationPose {
+        ComplicationPose.pose(
+            isDead: state?.healthStatus == .dead,
+            isSick: state?.healthStatus == .sick,
+            isAsleep: isAsleep,
+            hasPoop: poopCount > 0
         )
     }
 

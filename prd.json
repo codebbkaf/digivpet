@@ -286,8 +286,8 @@
         "Verify in watchOS Simulator via -complicationDemo: screenshot shows a non-idle pose"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ComplicationPose (idle/sleeping/sick/messy/dead -> walk1/sleep1/hurt1/angry/hurt2) carried on the snapshot; precedence dead > sick > asleep > messy > idle, matching restingAnimation and putting the mess last because US-054 already notifies it. Non-idle poses render from SpriteSheetCache, falling back to the idle art for eggs (whose sheet has no such frames). clean() and the DEBUG demo seeds republish so the pose is not stale. init(from:) defaults a missing pose so the pre-upgrade snapshot still decodes. 627 tests pass (+8); screenshots verified -sickDemo draws hurt1 and -poopDemo draws angry, both matching the cut reference frames."
     },
     {
       "id": "US-048",

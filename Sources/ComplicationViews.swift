@@ -1,3 +1,4 @@
+import CoreGraphics
 import SwiftUI
 import WidgetKit
 
@@ -43,18 +44,34 @@ struct ComplicationProvider: TimelineProvider {
     }
 }
 
-/// The Digimon's idle frame at complication scale.
+/// The Digimon at complication scale, in the pose the app decided (US-047).
 ///
-/// `Idle Frame Only` art, not the 48x64 animated sheet (PRD FR-22): a complication does not animate,
-/// and `IdleSpriteCache` already falls back to frame 0 of the sheet for the Digitama, which have no
-/// entry in that folder.
+/// An IDLE pose keeps the `Idle Frame Only` art (PRD FR-22): it is one file rather than a decode
+/// plus twelve crops, and it is the only source that covers the Digitama, which have no entry in
+/// that folder and get frame 0 of their egg sheet from `IdleSpriteCache`'s own fallback.
+///
+/// Every other pose needs a specific frame, which only the 48x64 sheet has — so those go through
+/// `SpriteSheetCache` and fall back to the idle art when the sheet cannot supply it. That fallback
+/// is not theoretical: an egg sheet has no sleep, hurt or angry frame at all (`SpriteSheet`'s
+/// subscript returns nil for `.egg`), and an egg that is asleep or sick is an ordinary state. Better
+/// the right Digimon in the wrong pose than a '?'.
 private struct ComplicationSprite: View {
     let snapshot: ComplicationSnapshot
     var side: CGFloat
 
+    private var image: CGImage? {
+        if snapshot.pose != .idle,
+           let sheet = SpriteSheetCache.shared.sheet(stage: snapshot.spriteStage,
+                                                     name: snapshot.spriteFile),
+           let frame = sheet[snapshot.pose.frame] {
+            return frame
+        }
+        return IdleSpriteCache.shared.image(stage: snapshot.spriteStage, name: snapshot.spriteFile)
+    }
+
     var body: some View {
         Group {
-            if let image = IdleSpriteCache.shared.image(stage: snapshot.spriteStage, name: snapshot.spriteFile) {
+            if let image {
                 Image(decorative: image, scale: 1)
                     // Pixel art. Smoothing it is a bug, complication or not.
                     .interpolation(.none)
@@ -82,7 +99,7 @@ struct CircularComplicationView: View {
             AccessoryWidgetBackground()
             ComplicationSprite(snapshot: snapshot, side: 24)
         }
-        .accessibilityLabel(Text(snapshot.displayName))
+        .accessibilityLabel(Text(snapshot.accessibilityLabel))
     }
 }
 
@@ -119,9 +136,10 @@ struct RectangularComplicationView: View {
         .accessibilityLabel(Text(accessibilityLabel))
     }
 
+    /// The circular family's label plus the energy the rectangular one actually draws.
     private var accessibilityLabel: String {
-        guard let name = snapshot.dominantEnergyName else { return snapshot.displayName }
-        return "\(snapshot.displayName), \(name) \(snapshot.dominantEnergyEarned)"
+        guard let name = snapshot.dominantEnergyName else { return snapshot.accessibilityLabel }
+        return "\(snapshot.accessibilityLabel), \(name) \(snapshot.dominantEnergyEarned)"
     }
 }
 
