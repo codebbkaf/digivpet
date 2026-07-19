@@ -124,8 +124,8 @@
         "Verify in watchOS Simulator: screenshots of the line list and of one opened tree"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "DexView is now a List of DexSections (one per line, then Others for dexOnly) each opening EvolutionTreeView; the flat LazyVGrid moved to DexGridView and serves only Others. Sections built in DexModel in authored order, not from the discovered-first rows. 5 new tests; 554 total, 0 failures. Screenshots of the line list (5/22, counts reconcile) and the opened Agumon tree. NOTE: shipped roster is 22 nodes / 0 dexOnly, so Others is test-only for now."
     },
     {
       "id": "US-043",

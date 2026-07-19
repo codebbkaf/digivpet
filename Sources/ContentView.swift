@@ -84,7 +84,9 @@ struct ContentView: View {
             .navigationDestination(isPresented: $showsSettingsDemo) {
                 NotificationSettingsView(settings: model.notificationSettings)
             }
-            // US-041's tree, which has no way onto the screen until US-042 puts it on the Dex.
+            // US-041's tree in isolation, on a fixture line. Since US-042 the Dex opens the real
+            // thing (`-dexDemo -dexLineDemo`); this stays as the layout's own screenshot path,
+            // independent of whatever the shipped roster happens to hold.
             .navigationDestination(isPresented: $showsTreeDemo) {
                 EvolutionTreeDemoView()
             }

@@ -12,6 +12,33 @@ struct DexRow: Identifiable, Equatable {
     var isDiscovered: Bool { firstDiscovered != nil }
 }
 
+/// One entry in the Dex's list of lines: either an evolution line, drawn as a tree, or the flat
+/// "Others" catch-all.
+///
+/// The two are one type rather than two because the list has to add their counts up: every row is
+/// in exactly one section, so `discoveredCount` over all sections is the header's count. A
+/// separate "and also these" collection alongside the lines is the shape that lets a Digimon fall
+/// into both or neither without anything noticing.
+struct DexSection: Identifiable, Equatable {
+    /// The `line` key, or `othersID`.
+    let id: String
+    /// What the list shows: the line's namesake Digimon, or "Others".
+    let title: String
+    /// Authored order for a line, so the tree's columns read as the JSON lists them; discovered-
+    /// first then alphabetical for Others, which is a grid and has no structure to preserve.
+    let rows: [DexRow]
+
+    /// Sentinel id for the flat section. Prefixed so it cannot collide with a real line key,
+    /// which `EvolutionGraphValidator` requires to be a non-empty name.
+    static let othersID = "__others"
+
+    /// False only for `Others`, which has no edges to draw and so gets a grid instead of a tree.
+    var isLine: Bool { id != Self.othersID }
+
+    var discoveredCount: Int { rows.filter(\.isDiscovered).count }
+    var totalCount: Int { rows.count }
+}
+
 /// Drives the Dex screen: the whole roster, marked up with what the player has actually met.
 ///
 /// The roster comes from the graph and the discoveries from the store, and this joins them. It
@@ -28,6 +55,13 @@ final class DexModel: ObservableObject {
     /// Discovered-first because the Dex is a trophy case: what the player has earned should not be
     /// buried among placeholders. Sorting is done once here rather than in `body`, which re-runs.
     @Published private(set) var rows: [DexRow] = []
+
+    /// The same rows, partitioned into what the screen actually lists: one section per evolution
+    /// line, in authored order, then `Others` if the roster has any `dexOnly` entries.
+    ///
+    /// Built here rather than in `body` for the reason `rows` is: `body` re-runs, and this groups
+    /// and sorts 865 entries.
+    @Published private(set) var sections: [DexSection] = []
 
     /// True once `load()` has run, so the screen can tell "no Digimon yet" from "not read yet".
     @Published private(set) var isLoaded = false
@@ -74,7 +108,66 @@ final class DexModel: ObservableObject {
                 return left.node.displayName.localizedCaseInsensitiveCompare(right.node.displayName)
                     == .orderedAscending
             }
+        sections = Self.sections(of: graph, discoveries: discoveries)
         isLoaded = true
+    }
+
+    /// Groups the roster the way the screen lists it.
+    ///
+    /// Built from `graph.nodes` rather than from `rows` because the two want opposite orders: a
+    /// tree's columns must follow authored order (so a branch reads as the JSON lists it and
+    /// adding a node cannot reshuffle its siblings), whereas `rows` is deliberately sorted
+    /// discovered-first for the flat grid. Sharing the sorted array would silently hand the tree
+    /// an order that changes as the player discovers things.
+    ///
+    /// `dexOnly` entries are pulled out of their line and into `Others`. They carry a line like
+    /// anything else, but no edge may name one, so on a tree they would be unreachable nodes
+    /// floating beside the ladder with no connector — and listing them in both places would
+    /// double-count them against the header.
+    private static func sections(of graph: EvolutionGraph, discoveries: [String: Date]) -> [DexSection] {
+        func row(_ node: EvolutionNode) -> DexRow {
+            DexRow(node: node, firstDiscovered: discoveries[node.id])
+        }
+
+        var lineOrder: [String] = []
+        var byLine: [String: [DexRow]] = [:]
+        var others: [DexRow] = []
+
+        for node in graph.nodes {
+            if node.dexOnly {
+                others.append(row(node))
+                continue
+            }
+            if byLine[node.line] == nil { lineOrder.append(node.line) }
+            byLine[node.line, default: []].append(row(node))
+        }
+
+        var sections = lineOrder.map { line in
+            DexSection(id: line, title: title(ofLine: line, in: graph), rows: byLine[line] ?? [])
+        }
+
+        // Omitted rather than shown empty when nothing is `dexOnly`, which is the roster today:
+        // an "Others" row opening onto nothing is a dead end the count does not need.
+        if !others.isEmpty {
+            sections.append(DexSection(
+                id: DexSection.othersID,
+                title: "Others",
+                rows: others.sorted { left, right in
+                    if left.isDiscovered != right.isDiscovered { return left.isDiscovered }
+                    return left.node.displayName
+                        .localizedCaseInsensitiveCompare(right.node.displayName) == .orderedAscending
+                }
+            ))
+        }
+        return sections
+    }
+
+    /// A line's heading. The key is a node id by convention (`agumon`, `patamon`), so the line is
+    /// named after its namesake's display name — which keeps the casing and any punctuation the
+    /// roster already chose. A key naming no node falls back to itself rather than failing: a
+    /// heading reading `patamon` is a cosmetic slip, a missing line is a lost tree.
+    private static func title(ofLine line: String, in graph: EvolutionGraph) -> String {
+        graph.node(id: line)?.displayName ?? line
     }
 
     #if DEBUG

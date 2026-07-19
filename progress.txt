@@ -275,3 +275,57 @@ Remains: US-042 (replace the Dex grid with the tree) is next. It needs a per-lin
 `DexModel.rows` — the model currently sorts discovered-first across the WHOLE roster, which is the
 wrong order once rows are grouped by `line`. Note also that 157 dexOnly Digimon carry a line but sit
 in no edge, so a line's tree may have nodes with no connector at all.
+
+## 2026-07-19 — US-042: Replace the Dex grid with the tree
+
+Found this story ALREADY MOSTLY WRITTEN in the working tree, uncommitted — a previous iteration
+implemented `DexSection`/`DexModel.sections` and rewrote `DexView` but was cut off before it ran a
+build, wrote a test, or committed. I reviewed that diff, kept it, and did the verification it never
+reached. Nothing in it needed rewriting.
+
+The Dex is now a `List` of `DexSection` — one per evolution line, each a `NavigationLink` into that
+line's `EvolutionTreeView`. The `LazyVGrid` is not gone but demoted: it moved out of `DexView` into
+`DexGridView`, which now serves only the `Others` section.
+
+Three things worth not re-deriving:
+
+- **THE SHIPPED ROSTER IS 22 NODES ACROSS 3 LINES, WITH ZERO `dexOnly`.** The "865 entries / 157
+  dexOnly" in this file, in CLAUDE.md, and in several doc comments is the INTENDED end state, not
+  what `Resources/evolutions.json` holds today. US-043 through US-046 are the stories that seed
+  more. Consequence for this story: the `Others` section cannot appear on a Simulator screenshot at
+  all, because nothing is `dexOnly`, so it is verified by
+  `testDexOnlyEntriesAreMovedOutOfTheirLineIntoOthers` against a synthetic 2-node graph instead.
+  Do not read the screenshot's absence of `Others` as a bug.
+
+- **Sections are built from `graph.nodes`, not from `rows`.** The two want opposite orders — a
+  tree's columns must follow authored order, `rows` is deliberately sorted discovered-first — so
+  sharing the sorted array would reshuffle a branch as the player discovered things.
+  `testALinesRowsKeepAuthoredOrderEvenAsDiscoveriesChangeTheFlatOrder` pins both at once.
+
+- **The count reconciliation is the load-bearing test.** Every row must be in exactly one section,
+  or a Digimon counted twice (or not at all) makes the header disagree with the sections silently.
+  `testTheSectionsPartitionTheRosterSoTheCountReconciles` asserts the sum AND that the union of ids
+  is the full roster size.
+
+Lazy rendering is not merely preserved but improved: the list rows are text only, so opening the
+Dex now decodes ZERO sprites (it previously decoded one per on-screen grid cell), and a tree only
+ever decodes the one line it was opened for.
+
+SIMULATOR NOTE, adding to the standing one: `-dexLineDemo` is new, and needed because `simctl`
+cannot tap a list row any more than it can tap the toolbar — it pushes the Agumon line, chosen
+because it is the only shipped line that branches. The queued-notification-alert gotcha bit again
+and the fix is NOT just `simctl erase`: erase FAILS with code 405 while the device is booted, and
+the failure is easy to miss because the next launch still works and still shows the stale alert.
+Must be `shutdown` -> `erase` -> `boot`. Also `-noNotificationPrompt` already exists for exactly
+this and is easier than erasing; use it.
+
+Passed: build green; full suite `Executed 554 tests, with 0 failures` (was 549, +5, all 5 confirmed
+run by name). Screenshots on Series 11 46mm: the line list showing Agumon 4/8, Gabumon 0/7, Palmon
+1/7 under a 5/22 header (4+0+1=5 and 8+7+7=22, so the sections reconcile on screen, not just in a
+test), and the opened Agumon tree titled "Agumon" with the egg as '?', Botamon/Koromon/Agumon drawn
+crisp, connectors, and the branch leaving the right edge. `-dexDetailDemo` re-verified by
+screenshot (Agumon detail sheet) since the sheet stayed on `DexView` while the grid moved away.
+
+Remains: US-043 (verify and record sprite availability for the new lines) is next. It and US-044 to
+US-046 are what will actually populate the line list this story built — expect the list to go from
+3 rows to 6, and `Others` to appear for the first time once any `dexOnly` node is seeded.

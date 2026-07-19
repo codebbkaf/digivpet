@@ -238,6 +238,95 @@ final class DexModelTests: XCTestCase {
         XCTAssertEqual(undiscovered, undiscovered.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
     }
 
+    // MARK: - AC: the screen lists evolution lines, each opening its tree
+
+    func testEachLineInTheRosterBecomesOneSection() throws {
+        let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
+
+        model.load()
+
+        var expected: [String] = []
+        for node in EvolutionGraph.bundled.nodes where !node.dexOnly {
+            if !expected.contains(node.line) { expected.append(node.line) }
+        }
+        XCTAssertEqual(model.sections.filter(\.isLine).map(\.id), expected,
+                       "One section per line, in the order the roster first mentions each.")
+        XCTAssertTrue(model.sections.allSatisfy(\.isLine),
+                      "The shipped roster has no dexOnly entries, so there is no Others section.")
+    }
+
+    /// A line is named after its namesake node, so the heading keeps the roster's own casing.
+    func testALineIsTitledAfterItsNamesakeDigimon() throws {
+        let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
+
+        model.load()
+
+        let agumon = try XCTUnwrap(model.sections.first { $0.id == "agumon" })
+        XCTAssertEqual(agumon.title, "Agumon")
+    }
+
+    /// The tree's columns must read as the JSON lists them. `rows` is sorted discovered-first for
+    /// the flat grid, so a section that reused it would reshuffle a branch as the player played.
+    func testALinesRowsKeepAuthoredOrderEvenAsDiscoveriesChangeTheFlatOrder() throws {
+        let store = try makeStore()
+        // Sorts last in the line as authored, but discovering it floats it to the top of `rows`.
+        store.recordDiscovery(id: "wargreymon", now: Self.met)
+        try store.save()
+
+        let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
+        model.load()
+
+        XCTAssertEqual(model.rows.first?.id, "wargreymon", "The flat grid still sorts met-first.")
+
+        let agumon = try XCTUnwrap(model.sections.first { $0.id == "agumon" })
+        let authored = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }.map(\.id)
+        XCTAssertEqual(agumon.rows.map(\.id), authored)
+    }
+
+    /// The header counts every row, so the sections have to add back up to it — otherwise a
+    /// Digimon in two sections, or none, would go unnoticed.
+    func testTheSectionsPartitionTheRosterSoTheCountReconciles() throws {
+        let store = try makeStore()
+        store.recordDiscovery(id: "agumon", now: Self.met)
+        store.recordDiscovery(id: "gabumon", now: Self.met)
+        try store.save()
+
+        let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
+        model.load()
+
+        XCTAssertEqual(model.sections.reduce(0) { $0 + $1.totalCount }, model.totalCount)
+        XCTAssertEqual(model.sections.reduce(0) { $0 + $1.discoveredCount }, model.discoveredCount)
+        XCTAssertEqual(Set(model.sections.flatMap { $0.rows.map(\.id) }).count, model.totalCount,
+                       "No Digimon may appear in two sections.")
+    }
+
+    // MARK: - AC: dexOnly entries stay reachable in a flat Others section
+
+    /// The shipped roster has no dexOnly nodes yet, so this is the only place the Others section
+    /// is exercised. A dexOnly node carries a line like anything else but may be named by no edge,
+    /// so on its line's tree it would be an unreachable node floating beside the ladder.
+    func testDexOnlyEntriesAreMovedOutOfTheirLineIntoOthers() throws {
+        let graph = EvolutionGraph(nodes: [
+            EvolutionNode(id: "agumon", displayName: "Agumon", stage: .child,
+                          line: "agumon", spriteFile: "Agumon"),
+            EvolutionNode(id: "aquilamon", displayName: "Aquilamon", stage: .adult,
+                          line: "agumon", spriteFile: "Aquilamon", dexOnly: true),
+        ])
+        let model = DexModel(graph: graph, makeStore: { try self.makeStore() })
+
+        model.load()
+
+        XCTAssertEqual(model.sections.map(\.id), ["agumon", DexSection.othersID])
+        XCTAssertEqual(model.sections.first?.rows.map(\.id), ["agumon"],
+                       "A dexOnly node must not be left in its line's tree.")
+
+        let others = try XCTUnwrap(model.sections.last)
+        XCTAssertFalse(others.isLine, "Others is a flat grid, not a tree.")
+        XCTAssertEqual(others.title, "Others")
+        XCTAssertEqual(others.rows.map(\.id), ["aquilamon"])
+        XCTAssertEqual(model.sections.reduce(0) { $0 + $1.totalCount }, model.totalCount)
+    }
+
     // MARK: - Degradation
 
     /// A Dex that cannot be read still shows the roster: it is a side screen, and losing it must
