@@ -109,13 +109,13 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — three nodes have one today, all in the `patamon` line.
+prose — seven nodes have one today, in the `patamon` and `piyomon` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 37 nodes across four `line` values — `agumon` (8 nodes),
-`gabumon` (7), `palmon` (7) and `patamon` (15) — each a complete line from Digitama through
-Ultimate.
+`Resources/evolutions.json` holds 52 nodes across five `line` values — `agumon` (8 nodes),
+`gabumon` (7), `palmon` (7), `patamon` (15) and `piyomon` (15) — each a complete line from
+Digitama through Ultimate.
 
 The first three are US-008's seed. `agumon` includes Meramon as the target of its one branching
 node (Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).
@@ -130,3 +130,19 @@ about it are worth knowing before editing it:
 - **Five Champions, four energy types.** Scumon — the V3 tree's junk evolution — is the
   `isDefault` edge rather than an earned one, and shares Bakemon's `vitality` gate from below on
   `minEnergy`. A neglected Patamon lands on Scumon; a well-raised vitality one still gets Bakemon.
+
+`piyomon` is US-045's Digital Monster Color V4 line and has the same five-wide shape: Piyomon
+branches into Monochromon / Leomon / Kuwagamon / Coelamon / Mojyamon, converging into Megadramon /
+Piccolomon / Digitamamon and then Darkdramon / BloomLordmon / Gankoomon. Three things about it:
+
+- **Its Baby I and Baby II are `piyo_yuramon` and `piyo_tanemon`, not `yuramon` and `tanemon`.**
+  The V4 tree roots both this line and Palmon's at Yuramon → Tanemon, and the `palmon` line
+  already owned those ids. They are the same Digimon on the same art with line-scoped ids, not
+  copies. Sharing the nodes was the alternative and was rejected: `line` is single-valued and the
+  Dex draws one tree per line, so a shared node sits in one tree and `EvolutionTreeLayout` drops
+  every connector crossing into the other. See the `comment` on `piyo_yuramon`.
+- **Two Champions are omitted for want of art** — Kokatorimon (absent entirely) and Nanimon
+  (idle-only). Coelamon and Mojyamon, which the V4 tree hangs off its Palmon rookie, fill the gap.
+- **Digitamamon is rehomed onto Kuwagamon.** Its only tree parent is Nanimon, which cannot be
+  seeded, so it and Gankoomon would be unreachable. Kuwagamon is also this line's `isDefault`
+  Champion, so the neglect path is one thread: Piyomon → Kuwagamon → Digitamamon → Gankoomon.

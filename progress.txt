@@ -424,3 +424,65 @@ not have — V4's Fresh/In-Training are Yuramon and Tanemon, and BOTH ids are al
 `palmon` line. Duplicate ids are a validator error, so US-045 must either share those nodes across
 two lines (they can only carry one `line`, so the Dex would draw them in one tree only) or give
 them distinct ids. Decide deliberately; it is not a naming detail.
+
+## 2026-07-19 — US-045: Seed the V4 Piyomon line
+
+Added 15 nodes to `Resources/evolutions.json` as line `piyomon`, taking the roster from 37 to 52:
+Piyo_Digitama -> Yuramon -> Tanemon -> Piyomon, then Piyomon branching five ways into
+Monochromon / Leomon / Kuwagamon / Coelamon / Mojyamon, converging into three Perfects
+(Megadramon, Piccolomon, Digitamamon) and three Ultimates (Darkdramon, BloomLordmon, Gankoomon).
+No Swift changed — data plus tests, same as US-044.
+
+**The Yuramon/Tanemon collision US-044 flagged, resolved: LINE-SCOPED IDS, not shared nodes.**
+The V4 tree roots both this line and Palmon's at Fresh: Yuramon -> In-Training: Tanemon, and the
+`palmon` line (US-008) already owned both ids. Sharing them was the other option and is the one
+that looks cheaper, but it is wrong here: `line` is single-valued and the Dex draws one tree per
+line, so a shared node can sit in only ONE tree — piyo_digitama's edge would point at a node
+outside its own line, and `EvolutionTreeLayout` drops such connectors silently (see the comment on
+`connectors` in EvolutionTreeView.swift, which says exactly that). The user would get a Piyomon
+tree with a detached egg and no visible cause. So `piyo_yuramon` / `piyo_tanemon`: same
+displayName, same spriteFile, distinct id — which is precisely what the id/spriteFile split in
+docs/evolutions-schema.md exists for. `testEveryEdgeInBothLinesStaysInsideItsOwnLine` pins the
+property that motivated the choice, so a later "cleanup" that merges the nodes fails a test that
+explains why.
+
+**Two Champions omitted, and one Perfect rehomed to keep it reachable.** Kokatorimon is absent
+from the asset pack entirely and Nanimon is idle-only (docs/sprite-availability.md), so neither
+may be named by an edge; the omission is recorded in a `comment` on the `piyomon` node. That left
+Piyomon with three Champions, so Coelamon and Mojyamon — which the V4 tree hangs off its *Palmon*
+rookie — were attached here rather than going unseeded, since the existing `palmon` line in this
+file is the classic Palmon -> Togemon -> Lilimon line, not V4's. Dropping Nanimon also orphaned
+**Digitamamon**, whose only parent in the tree is Nanimon, which would have taken Gankoomon down
+with it. Rehomed it onto Kuwagamon as a second edge. Kuwagamon is already this line's `isDefault`
+Champion, so the neglect path stays one coherent thread end to end — Piyomon that earns nothing
+-> Kuwagamon that earns nothing -> Digitamamon -> Gankoomon — which is a fair stand-in for
+Nanimon's role as the tree's unearned Champion. Recorded on the `kuwagamon` node.
+
+**Five Champions, four energy types**, same squeeze as Patamon. Earned: Leomon (strength),
+Monochromon (vitality), Mojyamon (spirit), Coelamon (stamina), all at minEnergy 60 /
+maxCareMistakes 3. Kuwagamon is the `isDefault`, sharing Leomon's strength gate from below (0 /
+99). Unlike V3 there is no natural junk Champion to put there — the tree's is Nanimon, which
+cannot be seeded — so the pick is arbitrary and says so in the comment. Asserted against the real
+`EvolutionEngine` at both rungs, not just read off the data.
+
+Three tests pinned to the 37-node roster moved, all real assertions rather than fixtures:
+`EvolutionGraphValidatorTests` node count 37 -> 52; `EvolutionGraphTests` byLine gained
+`"piyomon": 15`; `EggHatchingTests.testTheDefaultChooserPicksARandomDigitama` gained
+`piyo_digitama` (a new egg in the roster is a new starting egg, which is correct). `seedLines` in
+SeedRosterTests gained the Piyomon default path, so it is checked for all seven rungs like the
+others. Nothing in DexScreenTests needed changing — it derives from `.bundled`, so the Dex picked
+the fifth tree up for free.
+
+All 15 spriteFiles were `ls`-verified on disk with dimensions before commit (48x64, 48x16 for the
+egg), and `SeedRosterTests` slices all 52 nodes through `SpriteSheetCache`, so an unsliceable
+sheet fails the suite.
+
+Passed: build green; `Executed 568 tests, with 0 failures` (was 560, +8, all 8 confirmed by name
+in an `-only-testing:DigiVPetTests/SeedRosterTests` run). `EvolutionGraphValidator` reports zero
+errors on the extended graph.
+
+Remains: US-046 (seed the V5 Gazimon line) is next. Two things it inherits: Flymon is dexOnly, and
+**Gizamon has no Digitama** (docs/sprite-availability.md) — every other rookie across V3/V4/V5 has
+one but `Giza_Digitama.png` does not exist. Seeding only the Gazimon rookie sidesteps it, since
+`Gazi_Digitama` is present. Also note V5's Ultra (Chaosdramon) is a Jogress, which the schema
+still cannot express — this story omitted V4's Chaosmon for the same reason, noted on `megadramon`.

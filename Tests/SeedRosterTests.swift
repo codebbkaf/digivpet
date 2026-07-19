@@ -21,11 +21,13 @@ final class SeedRosterTests: XCTestCase {
     /// The Patamon line (US-044) is the odd one: its fallback runs through Scumon, the V3 tree's
     /// junk evolution, because Patamon has five Champions and only four energy types to gate them
     /// with. That is the path a neglected Patamon walks, and it still covers all seven rungs.
+    /// The Piyomon line (US-045) has the same shape, through Kuwagamon and Digitamamon.
     private let seedLines: [[String]] = [
         ["agu_digitama", "botamon", "koromon", "agumon", "greymon", "metalgreymon", "wargreymon"],
         ["gabu_digitama", "punimon", "tsunomon", "gabumon", "garurumon", "weregarurumon", "metalgarurumon"],
         ["pal_digitama", "yuramon", "tanemon", "palmon", "togemon", "lilimon", "rosemon"],
         ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "bancholeomon"],
+        ["piyo_digitama", "piyo_yuramon", "piyo_tanemon", "piyomon", "kuwagamon", "digitamamon", "gankoomon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.
@@ -274,5 +276,153 @@ final class SeedRosterTests: XCTestCase {
             EvolutionEngine.evolutionTarget(for: patamon, stageEnergy: plenty, dominant: .vitality,
                                             careMistakes: 9, battleWins: 0),
             "scumon", "past Bakemon's care-mistake limit, only the junk branch is left")
+    }
+
+    // MARK: - US-045: the V4 Piyomon line
+
+    /// Every node the line may reach, checked against the set US-045's AC names as verified
+    /// available. A node from outside it is either a Digimon with no sheet or one invented.
+    private let piyomonLineVerifiedSet: Set<String> = [
+        "Monochromon", "Leomon", "Kuwagamon", "Coelamon", "Mojyamon",
+        "Megadramon", "Piccolomon", "Digitamamon", "Darkdramon", "BloomLordmon", "Gankoomon",
+    ]
+
+    func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
+        let adult = Stage.adult.ladderIndex!
+        let above = graph.nodes.filter { $0.line == "piyomon" && ($0.stage.ladderIndex ?? -1) >= adult }
+
+        XCTAssertFalse(above.isEmpty, "the Piyomon line has no Adult-or-later nodes at all")
+        for node in above {
+            XCTAssertTrue(piyomonLineVerifiedSet.contains(node.displayName),
+                          "\(node.displayName) is not in the US-045 verified-available set")
+        }
+    }
+
+    /// Kokatorimon is absent from the asset pack entirely and Nanimon is one of the 157 idle-only
+    /// Digimon, so the V4 tree's other two Champions must appear nowhere — not as nodes, and not
+    /// as edge targets.
+    func testTheLineOmitsKokatorimonAndNanimon() {
+        for missing in ["kokatorimon", "nanimon"] {
+            XCTAssertNil(graph.node(id: missing), "\(missing) has no animated sheet and may not be a node")
+            for node in graph.nodes {
+                for edge in node.evolutions {
+                    XCTAssertNotEqual(edge.to, missing, "\(node.id) points at unseedable \(missing)")
+                }
+            }
+        }
+    }
+
+    /// The V4 tree roots this line at Yuramon -> Tanemon, ids the palmon line already owns. This
+    /// line was given its own ids rather than sharing those nodes, so assert BOTH survive: the two
+    /// pairs are distinct nodes on the same art, and each sits in its own line.
+    func testTheYuramonCollisionIsResolvedWithLineScopedIds() throws {
+        for (shared, scoped) in [("yuramon", "piyo_yuramon"), ("tanemon", "piyo_tanemon")] {
+            let palmonNode = try XCTUnwrap(graph.node(id: shared))
+            let piyomonNode = try XCTUnwrap(graph.node(id: scoped))
+
+            XCTAssertEqual(palmonNode.line, "palmon")
+            XCTAssertEqual(piyomonNode.line, "piyomon")
+            XCTAssertEqual(piyomonNode.displayName, palmonNode.displayName, "same Digimon in two trees")
+            XCTAssertEqual(piyomonNode.spriteFile, palmonNode.spriteFile, "and the same art, not a copy")
+            XCTAssertEqual(piyomonNode.stage, palmonNode.stage)
+        }
+    }
+
+    /// The reason for those scoped ids: `line` is single-valued and the Dex draws one tree per
+    /// line, so a shared node would sit in ONE tree and `EvolutionTreeLayout` would silently drop
+    /// every connector crossing into the other. Prove no edge in either line leaves its own line —
+    /// which is what sharing the nodes would have broken.
+    func testEveryEdgeInBothLinesStaysInsideItsOwnLine() throws {
+        for line in ["palmon", "piyomon"] {
+            for node in graph.nodes where node.line == line {
+                for edge in node.evolutions {
+                    let target = try XCTUnwrap(graph.node(id: edge.to))
+                    XCTAssertEqual(target.line, line,
+                                   "\(node.id) -> \(edge.to) leaves line '\(line)', so the Dex would not draw it")
+                }
+            }
+        }
+    }
+
+    /// Both divergences from the source tree are written down in the data file itself, so the next
+    /// reader diffing `evolutions.json` against the tree markdown finds the reason there.
+    func testThePiyomonDivergencesAreRecordedInTheDataFile() throws {
+        // The raw file, not the decoded graph: `comment` is not a schema field, so the decoder
+        // drops it and only re-reading the JSON can prove it is actually written down.
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "evolutions", withExtension: "json"))
+        let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: try Data(contentsOf: url)) as? [String: Any])
+        let nodes = try XCTUnwrap(raw["nodes"] as? [[String: Any]])
+
+        func comment(on id: String) throws -> String {
+            let authored = try XCTUnwrap(nodes.first { $0["id"] as? String == id }, "no authored node \(id)")
+            return try XCTUnwrap(authored["comment"] as? String, "\(id) carries no comment")
+        }
+
+        XCTAssertTrue(try comment(on: "piyo_yuramon").contains("palmon"),
+                      "the scoped id must explain which line it collides with")
+        let piyomon = try comment(on: "piyomon")
+        XCTAssertTrue(piyomon.contains("Kokatorimon"), "the omitted Champions must be named")
+        XCTAssertTrue(piyomon.contains("Nanimon"), "the omitted Champions must be named")
+        XCTAssertTrue(try comment(on: "kuwagamon").contains("Digitamamon"),
+                      "rehoming Digitamamon off Nanimon must be explained where it happens")
+    }
+
+    /// Piyomon's five Champions, and every one of them leads to an Ultimate rather than
+    /// dead-ending partway up the ladder.
+    func testPiyomonBranchesFiveWaysAndEveryBranchReachesUltimate() throws {
+        let piyomon = try XCTUnwrap(graph.node(id: "piyomon"))
+
+        XCTAssertEqual(piyomon.evolutions.map(\.to).sorted(),
+                       ["coelamon", "kuwagamon", "leomon", "mojyamon", "monochromon"])
+
+        for edge in piyomon.evolutions {
+            let path = try defaultPath(from: edge.to)
+            XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
+                           "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
+        }
+    }
+
+    /// The four earned branches each need a distinct dominant type, or two of them are unreachable.
+    /// Kuwagamon is deliberately excluded: it shares Leomon's strength gate and wins only when
+    /// Leomon's higher `minEnergy` or stricter `maxCareMistakes` shuts Leomon out.
+    func testPiyomonsEarnedBranchesUseFourDistinctEnergies() throws {
+        let piyomon = try XCTUnwrap(graph.node(id: "piyomon"))
+        let earned = piyomon.evolutions.filter { !$0.isDefault }
+
+        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 4,
+                       "two earned branches share a dominant type, so one can never be chosen")
+
+        let kuwagamon = try XCTUnwrap(piyomon.evolutions.first { $0.isDefault })
+        let leomon = try XCTUnwrap(piyomon.evolutions.first { $0.to == "leomon" })
+        XCTAssertEqual(kuwagamon.to, "kuwagamon")
+        XCTAssertEqual(kuwagamon.requiredEnergy, leomon.requiredEnergy)
+        XCTAssertLessThan(kuwagamon.minEnergy, leomon.minEnergy,
+                          "Kuwagamon must sit below Leomon or it would win the strength branch outright")
+    }
+
+    /// The fallback branches are not just declared — prove the engine routes to them, at both the
+    /// Child and the Adult rung, and that a well-raised Digimon still gets the earned target.
+    func testTheNeglectPathRunsPiyomonToKuwagamonToDigitamamon() throws {
+        let piyomon = try XCTUnwrap(graph.node(id: "piyomon"))
+        let kuwagamon = try XCTUnwrap(graph.node(id: "kuwagamon"))
+        let plenty = EnergyTotals(strength: 150, vitality: 0, spirit: 0, stamina: 0)
+
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: piyomon, stageEnergy: plenty, dominant: .strength,
+                                            careMistakes: 0, battleWins: 0),
+            "leomon")
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: piyomon, stageEnergy: plenty, dominant: .strength,
+                                            careMistakes: 9, battleWins: 0),
+            "kuwagamon", "past Leomon's care-mistake limit, only the fallback branch is left")
+
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: kuwagamon, stageEnergy: plenty, dominant: .strength,
+                                            careMistakes: 0, battleWins: 0),
+            "piccolomon")
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: kuwagamon, stageEnergy: plenty, dominant: .strength,
+                                            careMistakes: 9, battleWins: 0),
+            "digitamamon", "Digitamamon is reachable only off the neglect path, since Nanimon cannot be seeded")
     }
 }

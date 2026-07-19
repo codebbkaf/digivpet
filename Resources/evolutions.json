@@ -566,6 +566,253 @@
       "stage": "Ultimate-Super Ultimate",
       "line": "patamon",
       "spriteFile": "BanchoLeomon"
+    },
+    {
+      "id": "piyo_digitama",
+      "displayName": "Piyo Digitama",
+      "stage": "Digitama",
+      "line": "piyomon",
+      "spriteFile": "Piyo_Digitama",
+      "evolutions": [
+        {
+          "to": "piyo_yuramon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "piyo_yuramon",
+      "displayName": "Yuramon",
+      "stage": "Baby I",
+      "line": "piyomon",
+      "spriteFile": "Yuramon",
+      "comment": "NOT a duplicate of the `yuramon` node in the palmon line — it is the same Digimon in a second tree. The V4 tree roots both Piyomon and Palmon at Fresh: Yuramon -> In-Training: Tanemon, and both ids were already taken by the palmon line (US-008). US-045 gave this line its own ids rather than sharing the existing nodes, because `line` is single-valued and the Dex draws one tree per line: a shared node can sit in only one tree, which would leave piyo_digitama's edge pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. Same art, same displayName, distinct id — which is exactly what the id/spriteFile split in docs/evolutions-schema.md is for.",
+      "evolutions": [
+        {
+          "to": "piyo_tanemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "piyo_tanemon",
+      "displayName": "Tanemon",
+      "stage": "Baby II",
+      "line": "piyomon",
+      "spriteFile": "Tanemon",
+      "comment": "The palmon line's `tanemon` under a piyomon-scoped id — see the comment on piyo_yuramon for why this line does not share those nodes.",
+      "evolutions": [
+        {
+          "to": "piyomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "piyomon",
+      "displayName": "Piyomon",
+      "stage": "Child",
+      "line": "piyomon",
+      "spriteFile": "Piyomon",
+      "comment": "DIVERGENCES FROM THE SOURCE TREE (US-045). (1) Two of Piyomon's six Champions are dropped for want of art: Kokatorimon is absent from the asset pack entirely, and Nanimon exists only as a single idle frame, so neither may be named by an edge (docs/sprite-availability.md). (2) Coelamon and Mojyamon belong to the V4 tree's OTHER rookie, Palmon, but the existing palmon line in this file is the classic Palmon -> Togemon -> Lilimon line, not V4's, so they are attached here instead of going unseeded. (3) That leaves five Champions and four energy types, as with Patamon. The tree's unearned Champion is Nanimon, which cannot be seeded, so the isDefault slot has no natural occupant: Kuwagamon takes it, sharing Leomon's strength gate from below on minEnergy and maxCareMistakes. A well-raised strength Piyomon still reaches Leomon.",
+      "evolutions": [
+        {
+          "to": "leomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "monochromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "mojyamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "coelamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "kuwagamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "leomon",
+      "displayName": "Leomon",
+      "stage": "Adult",
+      "line": "piyomon",
+      "spriteFile": "Leomon",
+      "evolutions": [
+        {
+          "to": "megadramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "monochromon",
+      "displayName": "Monochromon",
+      "stage": "Adult",
+      "line": "piyomon",
+      "spriteFile": "Monochromon",
+      "evolutions": [
+        {
+          "to": "megadramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "mojyamon",
+      "displayName": "Mojyamon",
+      "stage": "Adult",
+      "line": "piyomon",
+      "spriteFile": "Mojyamon",
+      "evolutions": [
+        {
+          "to": "piccolomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "coelamon",
+      "displayName": "Coelamon",
+      "stage": "Adult",
+      "line": "piyomon",
+      "spriteFile": "Coelamon",
+      "evolutions": [
+        {
+          "to": "megadramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kuwagamon",
+      "displayName": "Kuwagamon",
+      "stage": "Adult",
+      "line": "piyomon",
+      "spriteFile": "Kuwagamon",
+      "comment": "DIVERGENCE FROM THE SOURCE TREE (US-045). The tree's only parent of Digitamamon is Nanimon, which is dexOnly and cannot be seeded, so Digitamamon and its Ultimate Gankoomon would be unreachable. Kuwagamon carries the second edge instead: it is already this line's isDefault Champion, so the neglect path stays one thread end to end — a Piyomon that earns nothing lands on Kuwagamon, and a Kuwagamon that earns nothing lands on Digitamamon. Its earned edge to Piccolomon is the tree as written.",
+      "evolutions": [
+        {
+          "to": "piccolomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2
+        },
+        {
+          "to": "digitamamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "megadramon",
+      "displayName": "Megadramon",
+      "stage": "Perfect",
+      "line": "piyomon",
+      "spriteFile": "Megadramon",
+      "comment": "The V4 tree's Ultra, Chaosmon, hangs off Darkdramon but is a Jogress with BanchoLeomon — a two-parent edge the schema cannot express (docs/sprite-availability.md). This line ends at its three Ultimates.",
+      "evolutions": [
+        {
+          "to": "darkdramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "piccolomon",
+      "displayName": "Piccolomon",
+      "stage": "Perfect",
+      "line": "piyomon",
+      "spriteFile": "Piccolomon",
+      "evolutions": [
+        {
+          "to": "bloomlordmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "digitamamon",
+      "displayName": "Digitamamon",
+      "stage": "Perfect",
+      "line": "piyomon",
+      "spriteFile": "Digitamamon",
+      "evolutions": [
+        {
+          "to": "gankoomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "darkdramon",
+      "displayName": "Darkdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "piyomon",
+      "spriteFile": "Darkdramon"
+    },
+    {
+      "id": "bloomlordmon",
+      "displayName": "BloomLordmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "piyomon",
+      "spriteFile": "BloomLordmon"
+    },
+    {
+      "id": "gankoomon",
+      "displayName": "Gankoomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "piyomon",
+      "spriteFile": "Gankoomon"
     }
   ]
 }

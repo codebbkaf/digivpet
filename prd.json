@@ -107,7 +107,7 @@
       ],
       "priority": 6,
       "passes": true,
-      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen \u2014 that is US-042."
+      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen — that is US-042."
     },
     {
       "id": "US-042",
@@ -176,8 +176,8 @@
         "Tests pass"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Seeded 15 nodes as line `piyomon` (roster 37 -> 52). Yuramon/Tanemon collision resolved with LINE-SCOPED IDS (piyo_yuramon, piyo_tanemon) rather than sharing the palmon nodes: `line` is single-valued and the Dex draws one tree per line, so a shared node sits in one tree and EvolutionTreeLayout silently drops every connector crossing into the other. Same displayName, same spriteFile, distinct id. Kokatorimon (missing) and Nanimon (dexOnly) omitted, noted in a `comment` on the piyomon node; Coelamon and Mojyamon (V4's Palmon branch) fill the gap. Digitamamon rehomed onto Kuwagamon since Nanimon was its only tree parent, keeping the neglect path one thread: Piyomon -> Kuwagamon -> Digitamamon -> Gankoomon. All 15 spriteFiles ls-verified on disk with dimensions. Build green; 568 tests, 0 failures (was 560, +8 new, all confirmed by name)."
     },
     {
       "id": "US-046",
