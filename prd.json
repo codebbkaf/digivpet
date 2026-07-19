@@ -107,7 +107,7 @@
       ],
       "priority": 6,
       "passes": true,
-      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen \u2014 that is US-042."
+      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen — that is US-042."
     },
     {
       "id": "US-042",
@@ -196,7 +196,7 @@
       ],
       "priority": 11,
       "passes": true,
-      "notes": "Seeded 17 nodes as line `gazimon` (roster 52 -> 69). Gazi_Digitama -> Zurumon -> Pagumon, which BRANCHES to both V5 Rookies: Gazimon (strength, isDefault) and Gizamon (stamina) \u2014 the first branching Baby II in the file. Both were seeded because Deltamon hangs off Gizamon alone, and Gizamon's missing Digitama stops mattering once it is reached through Pagumon. Flymon omitted (dexOnly), noted on the `gizamon` node; Chaosdramon omitted (Jogress), noted on `metaltyranomon`. Raremon is the isDefault on both Rookies, sharing each one's strength gate from below. All 17 spriteFiles ls-verified on disk. Build green; 576 tests, 0 failures (+8)."
+      "notes": "Seeded 17 nodes as line `gazimon` (roster 52 -> 69). Gazi_Digitama -> Zurumon -> Pagumon, which BRANCHES to both V5 Rookies: Gazimon (strength, isDefault) and Gizamon (stamina) — the first branching Baby II in the file. Both were seeded because Deltamon hangs off Gizamon alone, and Gizamon's missing Digitama stops mattering once it is reached through Pagumon. Flymon omitted (dexOnly), noted on the `gizamon` node; Chaosdramon omitted (Jogress), noted on `metaltyranomon`. Raremon is the isDefault on both Rookies, sharing each one's strength gate from below. All 17 spriteFiles ls-verified on disk. Build green; 576 tests, 0 failures (+8)."
     },
     {
       "id": "US-051",
@@ -216,7 +216,7 @@
       ],
       "priority": 12,
       "passes": true,
-      "notes": "PoopClock (Sources/Poop.swift) accrues one poop per 3 elapsed AWAKE hours, ceiling 4, derived from GameState.poopUpdatedAt like HungerClock rather than ticked; elapsed time rather than feeding was chosen so a never-fed Digimon still makes a mess. advancePoop(isAsleep:now:) pauses on asleep-or-dead by restamping, so the paused stretch is skipped rather than banked. poopCountStorage/poopUpdatedAtStorage added to GameState as optionals for SwiftData migration. 16 new tests in Tests/PoopTests.swift; 592 tests, 0 failures. Not yet wired into MainScreenModel.refresh \u2014 US-052 does that when it draws the poop."
+      "notes": "PoopClock (Sources/Poop.swift) accrues one poop per 3 elapsed AWAKE hours, ceiling 4, derived from GameState.poopUpdatedAt like HungerClock rather than ticked; elapsed time rather than feeding was chosen so a never-fed Digimon still makes a mess. advancePoop(isAsleep:now:) pauses on asleep-or-dead by restamping, so the paused stretch is skipped rather than banked. poopCountStorage/poopUpdatedAtStorage added to GameState as optionals for SwiftData migration. 16 new tests in Tests/PoopTests.swift; 592 tests, 0 failures. Not yet wired into MainScreenModel.refresh — US-052 does that when it draws the poop."
     },
     {
       "id": "US-052",
@@ -305,7 +305,7 @@
       ],
       "priority": 17,
       "passes": false,
-      "notes": ""
+      "notes": "NOT DONE - no floor measured, and none guessed. Spike instrument is built and green (Sources/Complication/RefreshGranularitySpike.swift, DEBUG-only, batched 1s/5s/30s/60s/5min ladder) and chronod ingests it, but a widget that is not on a watch face is never asked for a timeline - every chronod log line said 'on no host' and only placeholder requests ever reached the extension. Putting it on a face needs touch, and this environment has none: simctl has no tap/crown command, osascript is denied assistive access (-1728), and CGEvent posting is swallowed (AXIsProcessTrusted false). Got ~90% of the way to a touch-free install by editing the sim's face.json - recovered the full slot schema from NanoTimeKit's validation errors (see docs/widget-refresh-granularity.md) - but NanoTimeKit classifies the result as a 'Remote' (iPhone-side) complication instead of a native 'Apricot' one, so it never attaches to a host. The one unknown left is which JSON key marks a slot native; lead is chronod's nativeContainerBundleIdentifier. AOD is blocked twice over (Features menu is the same missing GUI, and a simulator is not a trustworthy model of display throttling) and should ONLY be measured on real hardware. Doc written with the floor stated as Unknown, the recipe, the four failed attempts and their error strings, and the recommendation to read chronod's timeline logs rather than screenshots next time. US-049 must NOT be started off this doc - it contains no cadence to design against. Build green on watchOS 10.4 and 26.4; 627 tests pass, unchanged."
     },
     {
       "id": "US-049",

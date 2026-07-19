@@ -19,5 +19,10 @@ struct DigiVPetComplication: Widget {
 struct DigiVPetComplicationBundle: WidgetBundle {
     var body: some Widget {
         DigiVPetComplication()
+        // US-048's instrument, not a feature. Compiled out of release entirely — see
+        // RefreshGranularitySpike.swift, and delete both once US-049 has landed.
+        #if DEBUG
+        RefreshGranularitySpikeWidget()
+        #endif
     }
 }
