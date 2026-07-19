@@ -85,13 +85,21 @@ struct EnergyBarsView: View {
     let dominant: EnergyType?
 
     var body: some View {
-        VStack(spacing: 1) {
-            ForEach(progress.goals) { goal in
-                EnergyBarRow(
-                    goal: goal,
-                    fraction: progress.fraction(of: goal),
-                    isDominant: goal.type == dominant
-                )
+        // Two by two rather than four stacked rows (US-039). Measured on a 42mm screen, four rows
+        // cost 44 of the 136 points the whole screen has; the same four bars in two rows cost 22,
+        // and that 22 is most of the difference between a 32pt Digimon and a 48pt one. The pairing
+        // is by `EnergyType.allCases` order, so a type does not move between builds.
+        VStack(spacing: 2) {
+            ForEach(Array(rowPairs.enumerated()), id: \.offset) { _, pair in
+                HStack(spacing: 6) {
+                    ForEach(pair) { goal in
+                        EnergyBarRow(
+                            goal: goal,
+                            fraction: progress.fraction(of: goal),
+                            isDominant: goal.type == dominant
+                        )
+                    }
+                }
             }
 
             if let gate = progress.totalGate {
@@ -103,6 +111,14 @@ struct EnergyBarsView: View {
             }
         }
     }
+
+    /// The goals two at a time. Not `chunked` — there is no such thing in the standard library, and
+    /// a stride is clearer than importing Algorithms for one call.
+    private var rowPairs: [[EnergyGoal]] {
+        stride(from: 0, to: progress.goals.count, by: 2).map { start in
+            Array(progress.goals[start..<min(start + 2, progress.goals.count)])
+        }
+    }
 }
 
 private struct EnergyBarRow: View {
@@ -111,9 +127,10 @@ private struct EnergyBarRow: View {
     let isDominant: Bool
 
     /// Wide enough for the seed's longest label ("150/150") so the bars line up regardless of
-    /// what any one type has earned.
-    private static let labelWidth: CGFloat = 36
-    private static let barHeight: CGFloat = 5
+    /// what any one type has earned. Two of these now share a screen width, so it is as tight as
+    /// that label allows rather than as tight as it looks.
+    private static let labelWidth: CGFloat = 28
+    private static let barHeight: CGFloat = 4
 
     /// The dominant bar's colour.
     ///
@@ -130,10 +147,12 @@ private struct EnergyBarRow: View {
     var body: some View {
         HStack(spacing: 3) {
             // Weight carries the distinction too, so the dominant bar is not marked by hue alone.
+            // Size 9, not 11: the row is as tall as its tallest element, so the symbol's line
+            // height — not the 4pt bar — is what four of these rows actually cost the sprite.
             Text(goal.type.symbol)
-                .font(.system(size: 11, weight: isDominant ? .bold : .regular))
+                .font(.system(size: 9, weight: isDominant ? .bold : .regular))
                 .foregroundStyle(tint)
-                .frame(width: 13)
+                .frame(width: 11)
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -146,7 +165,7 @@ private struct EnergyBarRow: View {
             .frame(height: Self.barHeight)
 
             Text(label)
-                .font(.system(size: 9, weight: isDominant ? .semibold : .regular).monospacedDigit())
+                .font(.system(size: 8, weight: isDominant ? .semibold : .regular).monospacedDigit())
                 .foregroundStyle(tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)

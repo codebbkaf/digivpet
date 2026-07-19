@@ -447,7 +447,8 @@ final class MainScreenModel: ObservableObject {
     /// - `-battleLossDemo` — an untrained Baby I against the stages above it: very likely the losing
     ///   result. Genuinely fought rather than hand-set, so what is screenshotted is the real rule.
     /// - `-battleLimitDemo` — the day's five battles actually FOUGHT and dismissed, leaving the
-    ///   disabled button and its reason (US-032). Pair with `-battleScrollDemo` to bring it on screen.
+    ///   disabled button and its reason (US-032). No scroll flag needed since US-039 — the action
+    ///   row is on screen on both watch sizes.
     ///
     /// The outcome is left to the real matchmaker and the real engine — only the player's stats and
     /// the seed are staged, so this exercises the shipped path rather than its output.

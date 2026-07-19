@@ -132,3 +132,57 @@ Note for whoever hits it: the row still sits below the fold on 46mm, which is wh
 needed for the screenshot at all. That is exactly the problem US-039 exists to fix.
 
 Remains: US-039 (fit the main screen without scrolling) is next.
+
+## 2026-07-19 — US-039: Fit the main screen without scrolling
+
+Removed the ScrollView/ScrollViewReader from the playing path. The screen is now one VStack of
+fixed-height rows with the sprite as the single flexible one: a GeometryReader measures the slot
+the other rows leave and `SpriteScale.fitting(_:)` picks the largest WHOLE scale that fits it.
+Whole only — a fractional scale resamples 16x16 art onto a grid it does not line up with, and
+`.interpolation(.none)` renders that as uneven pixel widths rather than hiding it as blur.
+
+MEASURE BEFORE YOU BUDGET — this cost most of the iteration. My first cut did only what the AC
+literally asked (stats -> one strip, drop the ScrollView) and it BUILT AND RAN, but the screenshot
+showed Agumon's head sitting on top of the energy bars. Instrumenting the layout with two throwaway
+`print`s gave the real numbers, and they are worth not re-deriving:
+
+- A 42mm screen offers **136pt** of content height to this view (46mm: 150pt). The nav bar with the
+  clock and the Dex button eats far more than it looks like it does.
+- The fixed rows as they stood cost **123pt** of that 136, leaving the sprite **13pt**.
+- The slot is also reported twice per launch and shrinks between passes (35 -> 17.5 on 46mm) as the
+  nav bar settles. It converges, and the scale is floor-quantised, so the final value governs — but
+  do not trust a single reading.
+
+So the AC's two changes alone could never have fitted a legible Digimon; two more rows had to be
+reclaimed, and both are in scope only because the story's actual goal is fitting the screen:
+
+- `EnergyBarsView` went from four stacked rows to a **2x2 grid**: 44pt -> 22pt. The lever that
+  mattered was the FONTS, not the bar — a row is as tall as its tallest text, so the 11pt symbol
+  was setting the height and the 5pt bar was not. Symbol 11->9, label 9->8, bar 5->4.
+- The name's own headline row merged into the caption row as `Name · Stage`, another 16pt. An
+  action message still replaces the whole slot, so there is still no layout shift mid-animation;
+  what it now costs is the name for the two seconds "Yum!" is up, which is not what the user is
+  reading at that moment.
+
+Fixed rows are now ~85pt, so 42mm lands on scale 3 (48pt) with room to spare rather than on the
+floor. `SpriteScale.minimum` is **2, not 3** — and this is the actual lesson from the overlap: the
+sprite is drawn with `.offset`, so it OVERFLOWS its slot rather than clipping. A floor set above
+what the layout can supply does not fail loudly, it silently draws the Digimon over its neighbours.
+At 2 it degrades to a small Digimon before anything can collide.
+
+The four `-*ScrollDemo` flags are deleted with the scroll view and are now inert; nothing reads
+them. `MainScreenModel`'s `-battleLimitDemo` doc no longer tells the reader to pair one.
+
+Verified: `xcodebuild build` SUCCEEDED. Full suite `Executed 536 tests, with 0 failures` (was 531,
++5 in Tests/MainScreenLayoutTests.swift — whole-number scale, never overflows the offered height,
+monotonic in height, full scale when ample, floored rather than shrinking to nothing).
+
+Simulator screenshots, nothing clipped and nothing overlapping in any of the four:
+- Series 11 **46mm**, `-wanderDemo` — strip, sprite, `Agumon · Child`, 2x2 bars, four circles.
+- Series 11 **42mm**, `-wanderDemo` — same, sprite mirrored at the right of centre.
+- Series 11 **42mm**, fresh erase, plain launch — the **Digitama**, which is the worst case for
+  height because its `Hatch 0/50` row is a fifth energy row. Still fits.
+- Series 11 **42mm**, `-battleLimitDemo` — greyed bolt plus `No battles left today.` under the row,
+  which is the worst case below the buttons. Still fits.
+
+Remains: US-040 (line metadata on the evolution graph) is next.

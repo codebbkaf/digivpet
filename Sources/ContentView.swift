@@ -14,12 +14,6 @@ struct ContentView: View {
     @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     #endif
 
-    /// Scroll anchor for the action row, so the Simulator demos can bring it into view. One anchor
-    /// where there were four, because US-038 put all four actions in a single row — there is no
-    /// longer a Feed block to scroll to independently of a Battle block. US-039 removes the scroll
-    /// view outright, and with it this and the flags below.
-    private static let actionControlsId = "actionControls"
-
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
     /// it down to nothing so a `simctl` screenshot lands on the result screen rather than mid-
     /// exchange, and `-battleTurnDemo` stretches one exchange out long enough to catch the attack and
@@ -84,8 +78,8 @@ struct ContentView: View {
             .navigationDestination(isPresented: $showsComplicationDemo) {
                 ComplicationDemoView()
             }
-            // Same reason again: the Settings link sits at the bottom of a scroll view `simctl`
-            // cannot scroll, and cannot be tapped even once it is on screen.
+            // Same reason again: since US-039 the bell is on screen without scrolling, but `simctl`
+            // still cannot tap it.
             .navigationDestination(isPresented: $showsSettingsDemo) {
                 NotificationSettingsView(settings: model.notificationSettings)
             }
@@ -141,84 +135,70 @@ struct ContentView: View {
     @ViewBuilder
     private var digimon: some View {
         if let presentation = model.presentation {
-            // Scrolling, because the four bars plus the feed controls are taller than a 41mm screen.
-            // The sprite and name still sit at the top, where they are without scrolling.
-            ScrollViewReader { scroller in
-            ScrollView {
-                VStack(spacing: 2) {
-                    Text(presentation.displayName)
-                        .font(.headline)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
+            // No ScrollView (US-039). Everything the user acts with has to be reachable without
+            // scrolling away from the Digimon, so the rows are all fixed-height and the sprite
+            // takes whatever they leave — see `SpriteScale`. What used to be three stacked stat
+            // blocks is one strip, which is most of the room that bought.
+            VStack(spacing: 1) {
+                if let state = model.state {
+                    StatsStrip(hunger: state.hunger,
+                               strengthStat: state.strengthStat,
+                               power: state.battlePower,
+                               wins: state.battleWins,
+                               losses: state.battleLosses)
+                }
 
-                    // The pose comes from the model, so a feed shows the eat loop and a refusal the
-                    // refuse frame — both revert to idle on their own. `isWandering` is what stops
-                    // the Digimon walking while it sleeps, eats, is sick or dead, or is behind an
-                    // overlay; it resumes from where it stood when that clears.
+                // The pose comes from the model, so a feed shows the eat loop and a refusal the
+                // refuse frame — both revert to idle on their own. `isWandering` is what stops
+                // the Digimon walking while it sleeps, eats, is sick or dead, or is behind an
+                // overlay; it resumes from where it stood when that clears.
+                //
+                // The sprite is the one flexible row: it claims the leftover height and draws
+                // itself at the largest whole-pixel scale that fits it, so a 42mm screen shows a
+                // smaller Digimon rather than a clipped action row.
+                GeometryReader { geometry in
                     WanderingSpriteView(
                         stage: presentation.spriteStage,
                         name: presentation.spriteFile,
                         animation: model.animation,
-                        scale: 5,
+                        scale: SpriteScale.fitting(geometry.size.height),
                         isMoving: model.isWandering
                     )
-
-                    // The caption slot is always present, so showing a message does not shove the
-                    // sprite up the screen mid-animation.
-                    Text(model.actionMessage ?? presentation.stage.displayName)
-                        .font(.caption2)
-                        .foregroundStyle(model.actionMessage == nil ? Color.secondary : Color.orange)
-                        .minimumScaleFactor(0.7)
-                        .lineLimit(1)
-
-                    if let progress = model.energyProgress {
-                        EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
-                            .padding(.top, 2)
-                    }
-
-                    if let state = model.state {
-                        HungerReadout(hunger: state.hunger)
-                            .padding(.top, 4)
-
-                        StrengthReadout(strengthStat: state.strengthStat)
-                            .padding(.top, 2)
-
-                        BattleReadout(power: state.battlePower,
-                                      wins: state.battleWins,
-                                      losses: state.battleLosses)
-                            .padding(.top, 2)
-
-                        // All four actions in one row (US-038), Notifications among them: a
-                        // preference is something you visit once, but it is still a destination
-                        // like the others, and a fourth circle costs less room than the labelled
-                        // link below the fold that it replaces.
-                        ActionControls(battlesLeft: model.battlesRemainingToday,
-                                       feed: { model.feed() },
-                                       train: { model.train() },
-                                       battle: { model.battle() }) {
-                            NotificationSettingsView(settings: model.notificationSettings)
-                        }
-                        .padding(.top, 6)
-                        .id(Self.actionControlsId)
-                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .frame(maxWidth: .infinity)
-            }
-            #if DEBUG
-            // Debug-only: `simctl` can drive neither the Digital Crown nor a tap, so the action
-            // row sits below the fold and is unscreenshottable without a way to scroll to it from
-            // the launch command. All four flags now land on the same row — they are kept as
-            // aliases only so existing screenshot commands still work until US-039 deletes them
-            // along with the scroll view. Compiled out of release builds.
-            .onAppear {
-                let scrollFlags = ["-feedScrollDemo", "-trainScrollDemo",
-                                   "-battleScrollDemo", "-settingsScrollDemo"]
-                if scrollFlags.contains(where: CommandLine.arguments.contains) {
-                    scroller.scrollTo(Self.actionControlsId, anchor: .bottom)
+                .frame(maxHeight: .infinity)
+
+                // Name, stage and action message share ONE row since US-039, where the name had a
+                // headline row to itself above the sprite. That row cost 16 of the 136 points a
+                // 42mm screen has, which is a third of the Digimon. The slot is still always
+                // present, so a message still does not shove the sprite up mid-animation; what a
+                // message now costs is the name for the two seconds it is up, and while a Digimon
+                // is refusing food its name is not the thing the user needs to read.
+                Text(model.actionMessage ?? "\(presentation.displayName) · \(presentation.stage.displayName)")
+                    .font(.system(size: 12, weight: model.actionMessage == nil ? .semibold : .regular))
+                    .foregroundStyle(model.actionMessage == nil ? Color.primary : Color.orange)
+                    .minimumScaleFactor(0.6)
+                    .lineLimit(1)
+
+                if let progress = model.energyProgress {
+                    EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
+                }
+
+                if model.state != nil {
+                    // All four actions in one row (US-038), Notifications among them: a
+                    // preference is something you visit once, but it is still a destination
+                    // like the others, and a fourth circle costs less room than the labelled
+                    // link below the fold that it replaces.
+                    ActionControls(battlesLeft: model.battlesRemainingToday,
+                                   feed: { model.feed() },
+                                   train: { model.train() },
+                                   battle: { model.battle() }) {
+                        NotificationSettingsView(settings: model.notificationSettings)
+                    }
+                    .padding(.top, 2)
                 }
             }
-            #endif
-            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             // The graph has no node for the saved id — a roster edit that dropped a Digimon out
             // from under a live save. Nothing to draw, so say so rather than showing an empty box.
@@ -227,86 +207,99 @@ struct ContentView: View {
     }
 }
 
-/// The hunger meter.
+/// How large to draw the sprite in whatever height the fixed rows leave it (US-039).
 ///
-/// The meter is filled pips rather than a number because hunger is a small integer with a hard
-/// ceiling — four pips say "one more and it is starving" at a glance, where "2" does not.
+/// A whole number of screen points per sprite pixel, always: a fractional scale resamples 16x16 art
+/// onto a grid it does not line up with, and `.interpolation(.none)` then makes that visible as
+/// uneven pixel widths rather than hiding it as blur.
 ///
-/// The Feed button that used to sit under it moved into `ActionControls` in US-038.
-struct HungerReadout: View {
+/// Free-standing rather than a static on the view that uses it, because the view is generic over
+/// nothing useful here and a test should not have to build a view graph to check the arithmetic.
+enum SpriteScale {
+    /// The scale the screen showed before there was anything to compete with it for room.
+    static let maximum: CGFloat = 5
+
+    /// The floor, and it is a real floor: the sprite is drawn with `.offset` inside its slot and so
+    /// OVERFLOWS rather than clips when it does not fit, which on a 42mm screen meant Agumon's head
+    /// landing on top of the energy bars. Two is where it stops shrinking because 32pt is still a
+    /// recognisable Digimon — the complication draws one no larger. The rows above and below were
+    /// trimmed until 42mm lands above this rather than on it; if a later row pushes it back down
+    /// here, the sprite gets small before anything starts overlapping.
+    static let minimum: CGFloat = 2
+
+    static func fitting(_ height: CGFloat) -> CGFloat {
+        let whole = (height / CGFloat(SpriteSheet.frameSize)).rounded(.down)
+        return min(max(whole, minimum), maximum)
+    }
+}
+
+/// Every stat in one strip: hunger pips, STR, PWR and the W/L record (US-039).
+///
+/// One row where there were three stacked blocks, because those blocks plus the bars and the action
+/// row did not fit a 42mm screen and the ScrollView that hid the overflow was scrolling the user
+/// away from the Digimon to reach a button.
+///
+/// Hunger stays pips while the rest stay numbers: hunger is a small integer with a hard ceiling, so
+/// four pips say "one more and it is starving" at a glance where "2" does not, and `strengthStat`
+/// and `battlePower` have no ceiling to read a bar against. Power sits next to the record because it
+/// is the number the battle is actually resolved from (US-030) — a user who trains should be able to
+/// watch it move, rather than wait for the next fight to find out training did anything.
+///
+/// The Feed/Train/Battle buttons that used to sit under each block moved into `ActionControls` in
+/// US-038; the three separate accessibility elements survive here unchanged, so VoiceOver still
+/// reads three stats and not one run-on line.
+struct StatsStrip: View {
     let hunger: Int
-
-    var body: some View {
-        HStack(spacing: 3) {
-            Text("Hunger")
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
-
-            ForEach(0..<HungerClock.maximumHunger, id: \.self) { pip in
-                Circle()
-                    .fill(pip < hunger ? Color.orange : Color.secondary.opacity(0.3))
-                    .frame(width: 6, height: 6)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Hunger")
-        .accessibilityValue("\(hunger) of \(HungerClock.maximumHunger)")
-    }
-}
-
-/// The strength stat.
-///
-/// A number rather than pips, unlike hunger: `strengthStat` has no ceiling to read a bar against,
-/// and the thing worth seeing is that a session moved it.
-struct StrengthReadout: View {
     let strengthStat: Int
-
-    var body: some View {
-        HStack(spacing: 3) {
-            Text("STR")
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
-
-            Text("\(strengthStat)")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.red)
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Strength")
-        .accessibilityValue("\(strengthStat)")
-    }
-}
-
-/// The battle power and the win/loss record.
-///
-/// Power is shown next to the record because it is the number the battle is actually resolved from
-/// (US-030), and a user who trains should be able to watch it move — a W/L record alone would leave
-/// training feeling like it did nothing until the next fight.
-///
-/// The Battle button, its disabled rule and its daily-limit caption moved into `ActionControls` in
-/// US-038, since the caption belongs under the row the button now lives in.
-struct BattleReadout: View {
     let power: Int
     let wins: Int
     let losses: Int
 
     var body: some View {
-        HStack(spacing: 3) {
-            Text("PWR")
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
+        HStack(spacing: 6) {
+            HStack(spacing: 2) {
+                ForEach(0..<HungerClock.maximumHunger, id: \.self) { pip in
+                    Circle()
+                        .fill(pip < hunger ? Color.orange : Color.secondary.opacity(0.3))
+                        .frame(width: 5, height: 5)
+                }
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Hunger")
+            .accessibilityValue("\(hunger) of \(HungerClock.maximumHunger)")
 
-            Text("\(power)")
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundStyle(Color.purple)
+            stat("STR", value: "\(strengthStat)", tint: .red)
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Strength")
+                .accessibilityValue("\(strengthStat)")
 
-            Text("\(wins)W \(losses)L")
-                .font(.system(size: 9))
-                .foregroundStyle(.secondary)
+            HStack(spacing: 3) {
+                stat("PWR", value: "\(power)", tint: .purple)
+
+                Text("\(wins)W \(losses)L")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
+            }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Battle power")
+            .accessibilityValue("\(power), \(wins) wins, \(losses) losses")
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Battle power")
-        .accessibilityValue("\(power), \(wins) wins, \(losses) losses")
+        // The strip is one line on both watch sizes; on the narrower one it shrinks rather than
+        // wrapping, since a second line would come straight back out of the sprite's height.
+        .lineLimit(1)
+        .minimumScaleFactor(0.7)
+    }
+
+    private func stat(_ label: String, value: String, tint: Color) -> some View {
+        HStack(spacing: 2) {
+            Text(label)
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
+
+            Text(value)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(tint)
+        }
     }
 }
 

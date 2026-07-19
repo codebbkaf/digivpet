@@ -40,9 +40,8 @@ struct ActionButtonFace: View {
 /// pushed the Digimon off the top of the screen — the thing the user actually came to look at. The
 /// action names survive as accessibility labels, so nothing is lost to VoiceOver.
 ///
-/// The stat readouts that used to sit above each button (hunger pips, STR, PWR/record) stay where
-/// they were, as `HungerReadout` / `StrengthReadout` / `BattleReadout`; US-039 is what collapses
-/// them into a single strip.
+/// The stat readouts that used to sit above each button (hunger pips, STR, PWR/record) are now one
+/// `StatsStrip` above the sprite, which is what let US-039 drop the screen's ScrollView.
 struct ActionControls<Settings: View>: View {
     /// Battles still allowed today (US-032). Zero disables the Battle button and shows why.
     let battlesLeft: Int
