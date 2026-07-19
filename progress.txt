@@ -661,3 +661,57 @@ name usually is, Clean greyed out, happy pose held.
 Remains: US-053 (uncleaned poop charges care mistakes and causes sickness) — the frozen
 `poopUpdatedAt` at the ceiling is already the "how long has it been full" it needs, with no second
 saved date. Then US-054 (notify), then the four complication stories US-047..US-050.
+
+================================================================================
+2026-07-20 — US-053: Uncleaned poop charges care mistakes and causes sickness
+================================================================================
+
+Picked up a working tree the previous iteration left mid-story: `chargeUncleanedPoopMistakes` and
+its tests were written but uncommitted and never run. Two things were wrong with it, one trivial
+and one that mattered.
+
+**The trivial one:** the rule divided elapsed time by `secondsAtMaximumHungerPerMistake` (8h) rather
+than its own 6h constant — a copy-paste from the starvation rule it was modelled on. Every test
+asserting a six-hour unit would have failed.
+
+**The one that mattered: the rule was written as a RATE, and a rate is not implementable here.**
+The constant's own doc comment argued at length for once-per-spell and the code directly under it
+did the opposite, so one of the two had to go. The tests settled it rather than my judgement:
+`ClosedAppRecomputeTests.testFortyEightHoursShutMatchesFortyEightHoursOpen` failed with open=7 and
+closed=11 for the very same 48 hours. The cause is real and is in shipped code — `PoopClock.advance`
+takes its `isPaused` branch BEFORE the ceiling check, so every refresh that runs during sleep
+restamps `poopUpdatedAt` even on a full screen. An app open through the night therefore pushes the
+"how long has it been full" marker forward and an app that was shut cannot, and under a rate that
+gap compounds into a different number of mistakes depending only on whether the app happened to be
+running. That is exactly what that test exists to forbid.
+
+So the prose was right and the code was wrong. Charging once per spell makes the two runs agree —
+both cross 6h, neither can cross it twice — and the open/closed equality assertion went green on the
+change. The rule that falls out is a fair one anyway: leaving the screen filthy is ONE act of
+neglect, and letting it fill again after cleaning is what costs a second. No Double-to-Int
+conversion happens any more either, so the saturation guard is starvation's alone again and I
+reverted the `maximumTimedMistakesCharged` rename back to `maximumStarvationMistakesCharged`.
+
+The knock-on is that poop cannot carry a Digimon to sickness by itself — one mistake, and
+`careMistakesUntilSick` is three. AC3 says "CAN trigger sickness through the existing path", so the
+test now has poop be the mistake that TIPS a Digimon already one short of the threshold. That is the
+honest shape of the rule after AC2, and I would rather the test say so than inflate the rule to make
+a headline read better.
+
+Two pre-existing tests moved, and they are different cases. `ClosedAppRecomputeTests` genuinely
+gained a mistake — its fixture fills the screen at hour 12 and never cleans it — so 5 became 6 with
+the reason spelled out. `testLaunchingAfterASilentDayRecordsOneCareMistake` I did NOT renumber: it
+already restamps `hungerUpdatedAt` so that "the silent day is the only rule that can move the count",
+and the right move was to restamp `poopUpdatedAt` for that same stated reason and keep it a test of
+one rule. Renumbering it to 2 would have quietly turned it into a test of two.
+
+Passed: build green; `Executed 609 tests, with 0 failures` (was 601, +8). New `PoopNeglectTests`
+covers the 6h boundary AND that 12h/24h/a week are still one, the once-not-per-refresh marker, the
+below-ceiling no-op, cleaning clearing the spell and a re-filled screen being charged afresh,
+`.distantPast`→`.distantFuture` not trapping, and the sickness tip. Two more drive `clean()` and the
+charge through the real `MainScreenModel.refresh()`.
+
+Remains: US-054 (notify), then the four complication stories US-047..US-050. Worth knowing for
+whoever takes a future poop story: the `isPaused`-before-ceiling restamp in `PoopClock.advance` is
+still there. It is harmless under once-per-spell and I left it alone rather than widen this story,
+but any rule that measures a duration at the poop ceiling will hit it again.

@@ -18,6 +18,25 @@ enum CareMistakes {
     /// therefore exactly one mistake, which is US-027's headline test.
     static let secondsAtMaximumHungerPerMistake: TimeInterval = 8 * 60 * 60
 
+    /// How long a full screen of poop may sit uncleaned before it is a mistake: six real hours.
+    ///
+    /// Charged from the CEILING rather than from the first poop, because one poop is a Digimon that
+    /// has been alive for three hours, not a Digimon anyone has neglected — `PoopClock.maximumPoops`
+    /// is the point at which the screen says nobody has visited. Six hours against starvation's
+    /// eight, matching poop accruing faster than hunger: the mess is the more visible neglect, so it
+    /// is the one that bites sooner.
+    ///
+    /// **ONCE PER SPELL, NOT A RATE — and unlike starvation, that is forced rather than chosen.**
+    /// Poop is PAUSED while the Digimon sleeps, and `PoopClock` is explicit that the pause is only
+    /// observed by a refresh that actually runs during it: an app left open through the night skips
+    /// those hours, an app that was shut cannot know to. A rate would turn that gap into a different
+    /// number of mistakes for the same 48 hours depending only on whether the app happened to be
+    /// running — which is exactly what `ClosedAppRecomputeTests` exists to forbid. Charging the
+    /// spell once makes the two agree, because both runs cross the threshold and neither can cross
+    /// it twice. The game rule that falls out is a fair one: leaving the screen filthy is one act of
+    /// neglect, and letting it happen AGAIN after cleaning is what costs a second.
+    static let secondsAtMaximumPoopBeforeMistake: TimeInterval = 6 * 60 * 60
+
     /// Refusals in one local day that add up to overfeeding: three (PRD FR-30).
     static let refusalsPerMistake = 3
 
@@ -25,6 +44,9 @@ enum CareMistakes {
     /// `Int(Double)` traps outside `Int`'s range and elapsed time is only as sane as the device
     /// clock, so a save restored onto a watch set to the year 3000 must saturate rather than crash.
     /// A million eight-hour spells is roughly 913 years, well past any real neglect.
+    ///
+    /// Starvation only. The uncleaned-poop rule charges once per spell rather than by rate, so it
+    /// converts no Double to Int and needs no guard of its own.
     static let maximumStarvationMistakesCharged = 1_000_000
 
     /// What a refresh's readings say about whether the user's day was really empty.
@@ -88,6 +110,7 @@ extension GameState {
             healthDataLastSeen = now
         }
         chargeStarvationMistakes(now: now)
+        chargeUncleanedPoopMistakes(now: now)
     }
 
     /// One mistake per whole local day that passed with no health data at all.
@@ -146,6 +169,37 @@ extension GameState {
         guard uncharged > 0 else { return }
         careMistakeCount += uncharged
         starvationMistakesCharged = earned
+    }
+
+    /// One mistake per six hours a FULL screen of poop has gone uncleaned.
+    ///
+    /// Reads `poopUpdatedAt` directly, exactly as `chargeStarvationMistakes` reads `hungerUpdatedAt`
+    /// and for exactly the same reason: `PoopClock.advance` FREEZES that timestamp at the instant the
+    /// ceiling was reached and leaves it there while the screen stays full. So the gap between it and
+    /// `now` is already "how long has the mess been at its worst", and this rule needs no second
+    /// saved date of its own.
+    ///
+    /// Cleaning is what stops the charging, and it stops it twice over: `clean()` zeroes `poopCount`,
+    /// which fails the guard below and resets the marker, and it restamps `poopUpdatedAt`, so the
+    /// screen's next spell at the ceiling is measured from the clean rather than from before it.
+    private func chargeUncleanedPoopMistakes(now: Date) {
+        guard poopCount >= PoopClock.maximumPoops, let fullSince = poopUpdatedAt else {
+            // Not full. The spell is over, so the next one starts from zero rather than inheriting a
+            // count that would make its first hour instantly a mistake.
+            poopMistakesCharged = 0
+            return
+        }
+
+        let elapsed = now.timeIntervalSince(fullSince)
+        // Backwards means the clock or the timezone moved, not that anybody cleaned up.
+        guard elapsed >= CareMistakes.secondsAtMaximumPoopBeforeMistake else { return }
+
+        // ONE, not `elapsed / threshold`. No Double-to-Int conversion happens here at all, so this
+        // rule needs no saturation guard of the kind starvation carries — a spell of any length,
+        // up to `.distantFuture`, is worth exactly this.
+        guard poopMistakesCharged == 0 else { return }
+        careMistakeCount += 1
+        poopMistakesCharged = 1
     }
 
     /// Charges the mistake for disturbing a sleeping Digimon, at most once per local day.

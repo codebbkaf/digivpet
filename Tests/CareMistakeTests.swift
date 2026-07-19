@@ -478,6 +478,9 @@ final class CareMistakeApplyTests: XCTestCase {
             // Digimon would also be starving by the second morning and be charged for that too —
             // correctly, but it would stop being a test of THIS rule.
             state.hungerUpdatedAt = CareClock.at("2026-03-12 12:00")
+            // And restamped for exactly the same reason (US-053): two elapsed days would otherwise
+            // fill the screen with poop and leave it full, which is neglect this rule is not about.
+            state.poopUpdatedAt = CareClock.at("2026-03-12 12:00")
             state.healthDataLastSeen = CareClock.at("2026-03-10 12:00")
             try store.save()
         }

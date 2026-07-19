@@ -244,6 +244,9 @@ final class GameState {
     /// `Poop.swift` for the computed accessors.
     private var poopCountStorage: Int?
     private var poopUpdatedAtStorage: Date?
+    /// Backing store for `poopMistakesCharged` (US-053). A MARKER in the same sense as
+    /// `starvationMistakesChargedStorage`, and optional for the same migration reason.
+    private var poopMistakesChargedStorage: Int?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -281,6 +284,7 @@ final class GameState {
         // Stamped with `now` rather than left nil, so a brand new game's poop clock starts at the
         // hatch instead of at whichever refresh happens to look first.
         self.poopUpdatedAtStorage = now
+        self.poopMistakesChargedStorage = 0
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -402,6 +406,14 @@ extension GameState {
     var poopUpdatedAt: Date? {
         get { poopUpdatedAtStorage }
         set { poopUpdatedAtStorage = newValue }
+    }
+
+    /// How many mistakes the CURRENT full screen of poop has already been charged. Reset to zero the
+    /// moment the count drops off the ceiling — which cleaning is what does — so a screen cleaned and
+    /// left to fill again starts over rather than being charged instantly.
+    var poopMistakesCharged: Int {
+        get { poopMistakesChargedStorage ?? 0 }
+        set { poopMistakesChargedStorage = newValue }
     }
 
     /// Counts one refused feed against the local day containing `now`.

@@ -424,6 +424,11 @@ final class ClosedAppRecomputeTests: XCTestCase {
     /// cost nothing. Hunger caps and freezes its timestamp, starvation is charged by the eight-hour
     /// spell, the missed day of health data is charged once, sickness follows from the count, and
     /// the battle allowance rolls over on a read rather than at midnight.
+    ///
+    /// US-053's uncleaned-poop mistake is charged once per spell rather than as a rate PRECISELY so
+    /// that it can hold here. Sleep pauses poop only when a refresh runs to observe it, so the open
+    /// run below skips hours the closed run cannot know to skip; as a rate that scored 2 mistakes
+    /// against 6 for the very same 48 hours. See `secondsAtMaximumPoopBeforeMistake`.
     func testFortyEightHoursShutMatchesFortyEightHoursOpen() async throws {
         let openGame = try Fixture.make(directory: directory, name: "Open",
                                         clock: { [weak self] in self?.openClock ?? Fixture.start })
@@ -456,8 +461,11 @@ final class ClosedAppRecomputeTests: XCTestCase {
                        "the timestamp freezes at the moment hunger maxed, 4 units x 4h in")
         XCTAssertEqual(closed.starvationMistakesCharged, 4,
                        "starving from hour 16 to hour 48 is four whole eight-hour spells")
-        XCTAssertEqual(closed.careMistakeCount, 5,
-                       "four starvation spells, plus the one whole day that went by with no data")
+        XCTAssertEqual(closed.careMistakeCount, 6,
+                       """
+                       four starvation spells, the one whole day that went by with no data, and one \
+                       for the screen of poop that filled at hour 12 and was never cleaned
+                       """)
         XCTAssertEqual(closed.healthStatus, .sick, "five mistakes is well past the threshold")
     }
 

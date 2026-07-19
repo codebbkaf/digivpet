@@ -426,6 +426,50 @@ final class MainScreenModelTests: XCTestCase {
         XCTAssertTrue(model.isAsleep, "the fixture night really is inside the sleep window")
         XCTAssertEqual(model.poopCount, 0)
     }
+
+    // MARK: - US-053: neglect through the real refresh
+
+    /// US-053 AC1 end to end, through the ordering `refresh()` actually runs in: `advancePoop` fills
+    /// the screen and FREEZES the timestamp at the moment it filled, then `auditCareMistakes` reads
+    /// the gap since that freeze. The freeze is what makes a second saved date unnecessary, so it is
+    /// worth pinning through the real refresh rather than against a hand-built state.
+    ///
+    /// Thirty hours since the last stamp: twelve of them fill the screen, and the eighteen that
+    /// remain are one spell's worth of neglect. Nothing is hand-set but the stale timestamp, so what
+    /// is asserted is the shipped rules composing.
+    func testAFullScreenLeftUncleanedIsChargedThroughARefresh() async throws {
+        let model = makeModel(now: { Fixture.morning })
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        let before = state.careMistakeCount
+        state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-30 * 60 * 60)
+
+        await model.refresh()
+
+        XCTAssertEqual(model.poopCount, PoopClock.maximumPoops)
+        XCTAssertEqual(state.careMistakeCount, before + 1)
+        XCTAssertEqual(state.poopMistakesCharged, 1)
+    }
+
+    /// AC4 through the real `clean()`: cleaning ends the spell, so the next refresh charges nothing
+    /// more however long the screen had been full before the user got to it.
+    func testCleaningStopsTheChargingThroughTheRealModel() async throws {
+        let model = makeModel(now: { Fixture.morning })
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        let before = state.careMistakeCount
+        state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-18 * 60 * 60)
+        await model.refresh()
+        let chargedBeforeCleaning = state.careMistakeCount
+        XCTAssertEqual(chargedBeforeCleaning, before + 1,
+                       "twelve hours filled the screen, the remaining six are one spell")
+
+        model.clean()
+        await model.refresh()
+
+        XCTAssertEqual(state.careMistakeCount, chargedBeforeCleaning, "a clean screen charges nothing")
+        XCTAssertEqual(state.poopMistakesCharged, 0)
+    }
 }
 
 final class StageDisplayNameTests: XCTestCase {

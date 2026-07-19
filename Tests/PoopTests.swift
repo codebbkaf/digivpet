@@ -262,3 +262,140 @@ final class PoopPileTests: XCTestCase {
         XCTAssertLessThan(PoopShape.baseWidth, SpriteScale.minimum * CGFloat(SpriteSheet.frameSize))
     }
 }
+
+// MARK: - US-053: uncleaned poop as neglect
+
+/// US-053 — a full screen left uncleaned charges care mistakes, and enough of them make the
+/// Digimon sick.
+///
+/// Every fixture here neutralises the OTHER two rules `auditCareMistakes` runs — hunger is empty
+/// and health data was seen at this very instant — so any movement in `careMistakeCount` belongs to
+/// the rule under test and nothing else.
+final class PoopNeglectTests: XCTestCase {
+    private let calendar = Calendar(identifier: .gregorian)
+
+    /// A Digimon standing in a full screen of poop since `fullSince`.
+    ///
+    /// `poopUpdatedAt` is set rather than accrued because that is precisely the fixture's premise:
+    /// `PoopClock.advance` freezes the timestamp at the instant the ceiling was reached, and this
+    /// state is one that reached it then.
+    private func fullState(since fullSince: Date) -> GameState {
+        let state = GameState(currentDigimonId: "hero", stage: .babyI, now: fullSince)
+        state.hunger = 0
+        state.poopCount = PoopClock.maximumPoops
+        state.poopUpdatedAt = fullSince
+        return state
+    }
+
+    private func audit(_ state: GameState, at now: Date) {
+        state.healthDataLastSeen = now
+        state.auditCareMistakes(now: now, health: .seen, calendar: calendar)
+    }
+
+    // MARK: AC1 — the threshold
+
+    /// The boundary, and the fact that it is a CEILING rather than a rate. Six hours at maximum poop
+    /// is worth one mistake and 5h59m is worth none, so the unit really is six hours — but a day and
+    /// a week are also worth exactly one, because the spell is charged once.
+    ///
+    /// That last column is the load-bearing one: see `secondsAtMaximumPoopBeforeMistake`. Sleep
+    /// pauses poop only when a refresh runs to observe it, so a rate would score the same 48 hours
+    /// differently depending on whether the app was open — which is what
+    /// `ClosedAppRecomputeTests.testFortyEightHoursShutMatchesFortyEightHoursOpen` forbids.
+    func testOneMistakeIsChargedPerSpellAtTheCeilingHoweverLongItLasts() {
+        let cases: [(hours: Double, expected: Int)] = [
+            (0, 0), (5.9, 0), (6, 1), (11.9, 1), (12, 1), (24, 1), (24 * 7, 1)
+        ]
+        for (hours, expected) in cases {
+            let state = fullState(since: Clock.start)
+            audit(state, at: Clock.after(hours))
+            XCTAssertEqual(state.careMistakeCount, expected, "at \(hours)h full")
+        }
+    }
+
+    /// AC2, the headline: the audit runs on every foregrounding, and seven hours of neglect is one
+    /// mistake however many times anyone looks at it.
+    func testTheMistakeIsChargedOnceNotOnEveryRefresh() {
+        let state = fullState(since: Clock.start)
+
+        for _ in 0..<5 { audit(state, at: Clock.after(7)) }
+
+        XCTAssertEqual(state.careMistakeCount, 1)
+        XCTAssertEqual(state.poopMistakesCharged, 1, "and the marker records what was charged")
+    }
+
+    /// Only a FULL screen counts. One poop is a Digimon that has been alive three hours, not one
+    /// anybody has neglected — so nothing below the ceiling is ever charged, however long it sits.
+    func testPoopBelowTheCeilingIsNeverAMistake() {
+        let state = fullState(since: Clock.start)
+        state.poopCount = PoopClock.maximumPoops - 1
+
+        audit(state, at: Clock.after(48))
+
+        XCTAssertEqual(state.careMistakeCount, 0)
+    }
+
+    /// AC4: cleaning stops the charging. The marker is cleared with the spell, so the screen's next
+    /// fill is measured from the clean rather than inheriting a tally that would make its first hour
+    /// instantly another mistake.
+    func testCleaningStopsFurtherCharging() {
+        let state = fullState(since: Clock.start)
+        audit(state, at: Clock.after(7))
+        XCTAssertEqual(state.careMistakeCount, 1)
+
+        // Cleaned, exactly as `MainScreenModel.clean()` does it: zeroed and restamped.
+        state.poopCount = 0
+        state.poopUpdatedAt = Clock.after(7)
+        audit(state, at: Clock.after(30))
+        XCTAssertEqual(state.careMistakeCount, 1, "a clean screen is not being neglected")
+        XCTAssertEqual(state.poopMistakesCharged, 0, "and the spell's tally was cleared")
+
+        // Full again, from the new stamp: six hours from THERE, not from the old spell. This is the
+        // only way to be charged twice, and it is the fair one — letting the screen fill AGAIN after
+        // cleaning is a second act of neglect.
+        state.poopCount = PoopClock.maximumPoops
+        state.poopUpdatedAt = Clock.after(30)
+        audit(state, at: Clock.after(35))
+        XCTAssertEqual(state.careMistakeCount, 1, "five hours into the new spell is not yet a mistake")
+        audit(state, at: Clock.after(36))
+        XCTAssertEqual(state.careMistakeCount, 2)
+    }
+
+    /// An absurd elapsed time must not trap. Starvation needs a saturation ceiling for this because
+    /// it converts `elapsed / threshold` to `Int`; charging once per spell never converts anything,
+    /// so the answer here is simply one.
+    func testAnAbsurdSpellIsStillOneMistakeAndDoesNotTrap() {
+        let state = fullState(since: .distantPast)
+
+        audit(state, at: .distantFuture)
+
+        XCTAssertEqual(state.careMistakeCount, 1)
+    }
+
+    // MARK: AC3 — the sickness path
+
+    /// The point of the whole story: a filthy screen makes the Digimon ill, through the EXISTING
+    /// `Sickness` path — nothing here knows what illness is, it only feeds the counter
+    /// `updateSickness` already reads.
+    ///
+    /// One spell is one mistake, so poop is the mistake that TIPS a Digimon already one short of the
+    /// threshold rather than one that can carry it there alone. That is the honest shape of the rule
+    /// after AC2: a single uncleaned screen is one act of neglect, and illness is what a Digimon
+    /// neglected in several ways at once gets.
+    func testAFullScreenIsTheMistakeThatTipsADigimonIntoSickness() {
+        let state = fullState(since: Clock.start)
+        state.careMistakeCount = Sickness.careMistakesUntilSick - 1
+
+        audit(state, at: Clock.after(5))
+        state.updateSickness(energyEarnedToday: 0)
+        XCTAssertEqual(state.careMistakeCount, Sickness.careMistakesUntilSick - 1,
+                       "five hours at the ceiling has not yet crossed the threshold")
+        XCTAssertEqual(state.healthStatus, .healthy)
+
+        audit(state, at: Clock.after(6))
+
+        XCTAssertEqual(state.careMistakeCount, Sickness.careMistakesUntilSick)
+        state.updateSickness(energyEarnedToday: 0)
+        XCTAssertEqual(state.healthStatus, .sick)
+    }
+}

@@ -249,8 +249,8 @@
         "Tests pass"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Uncleaned poop at the ceiling charges ONE care mistake per spell after 6h, via chargeUncleanedPoopMistakes reading the poopUpdatedAt freeze; cleaning clears the marker so a re-filled screen is charged again. Deliberately once-per-spell, not a rate: sleep pauses poop only when a refresh observes it, so a rate scored 2 mistakes open vs 6 closed for the same 48h and broke ClosedAppRecomputeTests. Build green, 609 tests 0 failures (+8)."
     },
     {
       "id": "US-054",
