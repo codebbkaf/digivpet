@@ -110,8 +110,8 @@ final class MainScreenModel: ObservableObject {
     private let calendar: Calendar
     private let now: () -> Date
     private let chooseStartingDigitama: ([EvolutionNode]) -> EvolutionNode?
-    private let playFeedHaptic: () -> Void
-    private let playTrainHaptic: () -> Void
+    private let playFeedHaptic: @MainActor () -> Void
+    private let playTrainHaptic: @MainActor () -> Void
     private let makeBattleGenerator: () -> SeededGenerator
     private let notifications: NotificationDispatcher
     /// The three notification toggles, handed to `NotificationSettingsView`. Owned here rather than
@@ -175,8 +175,8 @@ final class MainScreenModel: ObservableObject {
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init,
         chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() },
-        playFeedHaptic: @escaping () -> Void = MainScreenModel.feedHaptic,
-        playTrainHaptic: @escaping () -> Void = MainScreenModel.trainHaptic,
+        playFeedHaptic: @escaping @MainActor () -> Void = MainScreenModel.feedHaptic,
+        playTrainHaptic: @escaping @MainActor () -> Void = MainScreenModel.trainHaptic,
         actionDuration: TimeInterval = 2.0,
         makeBattleGenerator: @escaping () -> SeededGenerator = {
             SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
