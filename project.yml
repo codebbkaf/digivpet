@@ -70,6 +70,10 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digivpet.DigiVPet
+        # Set HERE, not in the Xcode UI: `xcodegen generate` regenerates the .xcodeproj every
+        # Ralph iteration and discards anything the UI wrote, so a team picked in Signing &
+        # Capabilities silently reverts and device builds fail with "requires a development team".
+        DEVELOPMENT_TEAM: S8YH22BDWN
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
         TARGETED_DEVICE_FAMILY: 4
@@ -115,7 +119,8 @@ targets:
       base:
         # Must be prefixed with the app's id: watchOS rejects an extension whose bundle id is not
         # underneath its container app's.
-        PRODUCT_BUNDLE_IDENTIFIER: com.digivpet.DigiVPet.Complication
+        PRODUCT_BUNDLE_IDENTIFIER: com.digivpet.DigiVPet.Widget
+        DEVELOPMENT_TEAM: S8YH22BDWN
         CURRENT_PROJECT_VERSION: 1
         MARKETING_VERSION: "1.0"
         TARGETED_DEVICE_FAMILY: 4
@@ -133,6 +138,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.digivpet.DigiVPetTests
+        DEVELOPMENT_TEAM: S8YH22BDWN
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: YES
         TEST_HOST: "$(BUILT_PRODUCTS_DIR)/DigiVPet.app/DigiVPet"

@@ -2571,3 +2571,31 @@ US-034 to that screen's own frame lookup (the complication draws the same egg co
 `IdleSpriteCache`). No story covers it.
 
 REMAINS: nothing — US-001..US-035 all pass, 35/35.
+
+---
+
+2026-07-19 — DEVICE SIGNING (not a story; user hit this in Xcode)
+
+Fixed two MainActor warnings in MainScreenModel: the class is @MainActor, so its static
+feedHaptic/trainHaptic are `@MainActor () -> ()`, but they defaulted into parameters typed plain
+`() -> Void`, which drops the global actor (an error under strict concurrency). Parameters and
+stored properties are now `@MainActor`, matching `makeStore`.
+
+Then made the real-device build work. Two independent causes:
+
+1. `project.yml` set no DEVELOPMENT_TEAM. Every `xcodegen generate` regenerated the .xcodeproj and
+   discarded whatever team was picked in Xcode's Signing & Capabilities UI, so device builds failed
+   with "requires a development team" and Xcode fell back to guessing an iOS wildcard profile.
+   DEVELOPMENT_TEAM: S8YH22BDWN is now pinned in project.yml on all three targets. DO NOT set the
+   team in the Xcode UI — it will not survive the next iteration.
+
+2. The App ID `com.digivpet.DigiVPet.Complication` cannot be registered to this team ("not
+   available" — taken or blocked upstream; the parent `com.digivpet.DigiVPet` registers fine, so
+   the prefix itself is NOT the problem). The extension's bundle id is now
+   `com.digivpet.DigiVPet.Widget`, which registers. The suffix is arbitrary; only the
+   `com.digivpet.DigiVPet.` prefix is required. Nothing in code referenced the old id — the app
+   group `group.com.digivpet.DigiVPet` is a separate string and is UNCHANGED.
+
+Verified: device build (Apple Watch Ultra 2) SUCCEEDED; `codesign -d --entitlements` on both the
+app and the .appex shows `group.com.digivpet.DigiVPet` present in each, plus healthkit and
+healthkit.background-delivery on the app. Simulator build and full test suite still green.
