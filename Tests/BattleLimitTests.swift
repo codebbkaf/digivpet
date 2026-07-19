@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import XCTest
 
 @testable import DigiVPet
@@ -146,10 +147,16 @@ final class BattleAllowanceTests: XCTestCase {
 // MARK: - AC3: the button's disabled state and its reason
 
 final class BattleControlsLimitTests: XCTestCase {
+    /// The rule moved from `BattleControls` to `ActionControls` in US-038; the assertions did not,
+    /// because the limit is the same limit wherever the button is drawn.
+    private func controls(battlesLeft: Int) -> ActionControls<EmptyView> {
+        ActionControls(battlesLeft: battlesLeft, feed: {}, train: {}, battle: {}) { EmptyView() }
+    }
+
     /// AC3: at the cap the button is disabled and the reason is the SAME string the model refuses
     /// with, so what the user reads can never disagree with what was enforced.
     func testTheButtonIsDisabledWithTheModelsOwnReasonAtTheCap() {
-        let controls = BattleControls(power: 9, wins: 2, losses: 1, battlesLeft: 0) {}
+        let controls = controls(battlesLeft: 0)
 
         XCTAssertTrue(controls.isBattleDisabled)
         XCTAssertEqual(controls.limitCaption, MainScreenModel.battleLimitReason)
@@ -157,7 +164,7 @@ final class BattleControlsLimitTests: XCTestCase {
 
     /// Below the cap the button works and the caption counts down, so a user can see it coming.
     func testTheCaptionCountsDownWhileBattlesRemain() {
-        let controls = BattleControls(power: 9, wins: 0, losses: 0, battlesLeft: 2) {}
+        let controls = controls(battlesLeft: 2)
 
         XCTAssertFalse(controls.isBattleDisabled)
         XCTAssertEqual(controls.limitCaption, "2 left today")
@@ -166,7 +173,7 @@ final class BattleControlsLimitTests: XCTestCase {
     /// With the full allowance there is no caption at all — a permanent "5 left" would be noise on a
     /// screen this small.
     func testThereIsNoCaptionOnAFullAllowance() {
-        let controls = BattleControls(power: 9, wins: 0, losses: 0, battlesLeft: BattleLimits.perDay) {}
+        let controls = controls(battlesLeft: BattleLimits.perDay)
 
         XCTAssertFalse(controls.isBattleDisabled)
         XCTAssertNil(controls.limitCaption)

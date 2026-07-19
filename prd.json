@@ -53,8 +53,8 @@
         "Verify in watchOS Simulator: capture a screenshot via simctl showing the circular button row"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New Sources/ActionControls.swift: one HStack of four 32x32 circles (fork.knife/dumbbell/bolt.fill/bell), each with an accessibility label naming the action. The circle is an exact .frame on a shared ActionButtonFace rather than padding around a glyph, so all four match and none exceeds the cap regardless of symbol metrics; the face reads isEnabled from the environment instead of taking a flag, so the disabled Battle look cannot disagree with the .disabled modifier that causes it. buttonDiameter lives on ActionButtonFace, not ActionControls, because ActionControls is generic over its bell destination and ActionControls.buttonDiameter will not infer. The bell is a NavigationLink taking a @ViewBuilder destination, so this file need not know about NotificationSettingsView and tests can pass EmptyView. isBattleDisabled/limitCaption moved across from BattleControls UNCHANGED, so the daily limit and MainScreenModel.battleLimitReason are the same rule in a new place; BattleLimitTests now builds an ActionControls and asserts exactly what it asserted before. The three old *Controls structs became stat-only HungerReadout/StrengthReadout/BattleReadout in the same screen positions - US-039 owns collapsing them into a strip. The four -*ScrollDemo flags now all scroll to one anchor, since there is one row where there were three blocks. Build green; 531 tests, 0 failures (was 529, +2). Simulator 46mm: screenshotted the four-circle row, and separately -battleLimitDemo showing the bolt greyed with 'No battles left today.' under it."
     },
     {
       "id": "US-039",

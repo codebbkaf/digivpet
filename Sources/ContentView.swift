@@ -14,11 +14,11 @@ struct ContentView: View {
     @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     #endif
 
-    /// Scroll anchors for the action controls, so the Simulator demos can bring them into view.
-    private static let feedControlsId = "feedControls"
-    private static let trainControlsId = "trainControls"
-    private static let battleControlsId = "battleControls"
-    private static let settingsControlsId = "settingsControls"
+    /// Scroll anchor for the action row, so the Simulator demos can bring it into view. One anchor
+    /// where there were four, because US-038 put all four actions in a single row — there is no
+    /// longer a Feed block to scroll to independently of a Battle block. US-039 removes the scroll
+    /// view outright, and with it this and the flags below.
+    private static let actionControlsId = "actionControls"
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
     /// it down to nothing so a `simctl` screenshot lands on the result screen rather than mid-
@@ -177,49 +177,44 @@ struct ContentView: View {
                     }
 
                     if let state = model.state {
-                        FeedControls(hunger: state.hunger) { model.feed() }
+                        HungerReadout(hunger: state.hunger)
                             .padding(.top, 4)
-                            .id(Self.feedControlsId)
 
-                        TrainControls(strengthStat: state.strengthStat) { model.train() }
-                            .padding(.top, 4)
-                            .id(Self.trainControlsId)
+                        StrengthReadout(strengthStat: state.strengthStat)
+                            .padding(.top, 2)
 
-                        BattleControls(power: state.battlePower,
-                                       wins: state.battleWins,
-                                       losses: state.battleLosses,
-                                       battlesLeft: model.battlesRemainingToday) { model.battle() }
-                            .padding(.top, 4)
-                            .id(Self.battleControlsId)
+                        BattleReadout(power: state.battlePower,
+                                      wins: state.battleWins,
+                                      losses: state.battleLosses)
+                            .padding(.top, 2)
+
+                        // All four actions in one row (US-038), Notifications among them: a
+                        // preference is something you visit once, but it is still a destination
+                        // like the others, and a fourth circle costs less room than the labelled
+                        // link below the fold that it replaces.
+                        ActionControls(battlesLeft: model.battlesRemainingToday,
+                                       feed: { model.feed() },
+                                       train: { model.train() },
+                                       battle: { model.battle() }) {
+                            NotificationSettingsView(settings: model.notificationSettings)
+                        }
+                        .padding(.top, 6)
+                        .id(Self.actionControlsId)
                     }
-
-                    // Last on the screen, below the actions: a preference is something you visit
-                    // once, not something you reach for while playing. A link rather than a
-                    // toolbar item because the toolbar's one slot is the Dex's.
-                    NavigationLink {
-                        NotificationSettingsView(settings: model.notificationSettings)
-                    } label: {
-                        Label("Notifications", systemImage: "bell")
-                            .font(.caption2)
-                    }
-                    .padding(.top, 6)
-                    .id(Self.settingsControlsId)
                 }
                 .frame(maxWidth: .infinity)
             }
             #if DEBUG
-            // Debug-only: `simctl` can drive neither the Digital Crown nor a tap, so the feed
-            // controls sit below the fold and are unscreenshottable without a way to scroll to
-            // them from the launch command. Compiled out of release builds.
+            // Debug-only: `simctl` can drive neither the Digital Crown nor a tap, so the action
+            // row sits below the fold and is unscreenshottable without a way to scroll to it from
+            // the launch command. All four flags now land on the same row — they are kept as
+            // aliases only so existing screenshot commands still work until US-039 deletes them
+            // along with the scroll view. Compiled out of release builds.
             .onAppear {
-                if CommandLine.arguments.contains("-feedScrollDemo") {
-                    scroller.scrollTo(Self.feedControlsId, anchor: .bottom)
-                } else if CommandLine.arguments.contains("-trainScrollDemo") {
-                    scroller.scrollTo(Self.trainControlsId, anchor: .bottom)
-                } else if CommandLine.arguments.contains("-battleScrollDemo") {
-                    scroller.scrollTo(Self.battleControlsId, anchor: .bottom)
-                } else if CommandLine.arguments.contains("-settingsScrollDemo") {
-                    scroller.scrollTo(Self.settingsControlsId, anchor: .bottom)
+                let scrollFlags = ["-feedScrollDemo", "-trainScrollDemo",
+                                   "-battleScrollDemo", "-settingsScrollDemo"]
+                if scrollFlags.contains(where: CommandLine.arguments.contains) {
+                    scroller.scrollTo(Self.actionControlsId, anchor: .bottom)
                 }
             }
             #endif
@@ -232,132 +227,86 @@ struct ContentView: View {
     }
 }
 
-/// The hunger meter and the Feed button.
+/// The hunger meter.
 ///
 /// The meter is filled pips rather than a number because hunger is a small integer with a hard
 /// ceiling — four pips say "one more and it is starving" at a glance, where "2" does not.
-struct FeedControls: View {
+///
+/// The Feed button that used to sit under it moved into `ActionControls` in US-038.
+struct HungerReadout: View {
     let hunger: Int
-    let feed: () -> Void
 
     var body: some View {
-        VStack(spacing: 3) {
-            HStack(spacing: 3) {
-                Text("Hunger")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+        HStack(spacing: 3) {
+            Text("Hunger")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
 
-                ForEach(0..<HungerClock.maximumHunger, id: \.self) { pip in
-                    Circle()
-                        .fill(pip < hunger ? Color.orange : Color.secondary.opacity(0.3))
-                        .frame(width: 6, height: 6)
-                }
+            ForEach(0..<HungerClock.maximumHunger, id: \.self) { pip in
+                Circle()
+                    .fill(pip < hunger ? Color.orange : Color.secondary.opacity(0.3))
+                    .frame(width: 6, height: 6)
             }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Hunger")
-            .accessibilityValue("\(hunger) of \(HungerClock.maximumHunger)")
-
-            Button(action: feed) {
-                Label("Feed", systemImage: "fork.knife")
-                    .font(.caption2)
-            }
-            .buttonStyle(.bordered)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Hunger")
+        .accessibilityValue("\(hunger) of \(HungerClock.maximumHunger)")
     }
 }
 
-/// The strength stat and the Train button.
+/// The strength stat.
 ///
 /// A number rather than pips, unlike hunger: `strengthStat` has no ceiling to read a bar against,
 /// and the thing worth seeing is that a session moved it.
-struct TrainControls: View {
+struct StrengthReadout: View {
     let strengthStat: Int
-    let train: () -> Void
 
     var body: some View {
-        VStack(spacing: 3) {
-            HStack(spacing: 3) {
-                Text("STR")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+        HStack(spacing: 3) {
+            Text("STR")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
 
-                Text("\(strengthStat)")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.red)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Strength")
-            .accessibilityValue("\(strengthStat)")
-
-            Button(action: train) {
-                Label("Train", systemImage: "dumbbell")
-                    .font(.caption2)
-            }
-            .buttonStyle(.bordered)
+            Text("\(strengthStat)")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.red)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Strength")
+        .accessibilityValue("\(strengthStat)")
     }
 }
 
-/// The battle power, the win/loss record, and the Battle button.
+/// The battle power and the win/loss record.
 ///
 /// Power is shown next to the record because it is the number the battle is actually resolved from
 /// (US-030), and a user who trains should be able to watch it move — a W/L record alone would leave
 /// training feeling like it did nothing until the next fight.
-struct BattleControls: View {
+///
+/// The Battle button, its disabled rule and its daily-limit caption moved into `ActionControls` in
+/// US-038, since the caption belongs under the row the button now lives in.
+struct BattleReadout: View {
     let power: Int
     let wins: Int
     let losses: Int
-    /// Battles still allowed today (US-032). Zero disables the button and shows why.
-    let battlesLeft: Int
-    let battle: () -> Void
-
-    /// Whether the Battle button is disabled. Not `private`, like `limitCaption`, so a test can
-    /// assert the rule — a disabled modifier inside `body` is unreachable outside a view graph.
-    var isBattleDisabled: Bool { battlesLeft == 0 }
-
-    /// The caption under the button. Nil on a full allowance — a permanent "5 left" would be noise;
-    /// the count only earns its space once it is running out. At zero it is the model's OWN refusal
-    /// string, so what a user reads cannot disagree with what was enforced.
-    var limitCaption: String? {
-        if battlesLeft == 0 { return MainScreenModel.battleLimitReason }
-        if battlesLeft < BattleLimits.perDay { return "\(battlesLeft) left today" }
-        return nil
-    }
 
     var body: some View {
-        VStack(spacing: 3) {
-            HStack(spacing: 3) {
-                Text("PWR")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+        HStack(spacing: 3) {
+            Text("PWR")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
 
-                Text("\(power)")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(Color.purple)
+            Text("\(power)")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(Color.purple)
 
-                Text("\(wins)W \(losses)L")
-                    .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Battle power")
-            .accessibilityValue("\(power), \(wins) wins, \(losses) losses")
-
-            Button(action: battle) {
-                Label("Battle", systemImage: "bolt.fill")
-                    .font(.caption2)
-            }
-            .buttonStyle(.bordered)
-            .disabled(isBattleDisabled)
-
-            if let limitCaption {
-                Text(limitCaption)
-                    .font(.system(size: 9))
-                    .foregroundStyle(battlesLeft == 0 ? Color.orange : Color.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
+            Text("\(wins)W \(losses)L")
+                .font(.system(size: 9))
+                .foregroundStyle(.secondary)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Battle power")
+        .accessibilityValue("\(power), \(wins) wins, \(losses) losses")
     }
 }
 

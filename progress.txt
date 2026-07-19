@@ -90,3 +90,45 @@ is what clears it; after that `-healthAnswered` is needed or the run lands on on
 Remains: US-038 (circular icon buttons) is next. Note for it — this story deliberately did NOT
 touch the ScrollView or the three controls; the sprite still sits inside the scroll view, which is
 US-039's problem.
+
+## 2026-07-19 — US-038: Replace the action controls with circular icon buttons
+
+Replaced the three stacked labelled control blocks with one row of four 32x32 circular icon
+buttons. New `Sources/ActionControls.swift` (ActionButtonFace + ActionControls); ContentView's
+FeedControls/TrainControls/BattleControls became stat-only HungerReadout/StrengthReadout/
+BattleReadout. New Tests/ActionControlsTests.swift (2); BattleLimitTests retargeted.
+
+Design decisions worth not re-deriving:
+- The circle is an exact `.frame(width:height:)` on a shared `ActionButtonFace`, NOT padding around
+  a glyph. Padding would size each button to its own symbol's metrics — fork.knife and bolt.fill
+  are not the same width — so the four circles would not match and the cap would be unenforceable.
+- `ActionButtonFace` reads `@Environment(\.isEnabled)` rather than taking an `isDisabled` flag. The
+  Battle button is disabled by `.disabled(isBattleDisabled)` on the Button that wraps it; a second
+  flag for the same fact is a second thing to keep in sync, and could show an enabled-looking
+  circle that refuses taps.
+- `diameter` lives on `ActionButtonFace`, not `ActionControls`. `ActionControls` is generic over its
+  bell destination, so `ActionControls.buttonDiameter` fails to infer `Settings` at the use site —
+  this cost one build. The face applies the frame, so it is also the honest owner.
+- The bell is a `NavigationLink` with a `@ViewBuilder` destination, so ActionControls does not
+  import knowledge of NotificationSettingsView and a test can hand it `EmptyView`. That is why the
+  type is generic at all. It also puts Notifications IN the row rather than as a labelled link
+  below the fold, which is a fourth circle instead of a whole extra line.
+- `isBattleDisabled` and `limitCaption` moved across UNCHANGED, both still non-private. The limit is
+  the same limit wherever the button is drawn; BattleLimitTests asserts exactly what it did before,
+  only constructing an ActionControls. At zero it is still MainScreenModel's OWN refusal string.
+- The stat readouts were deliberately left in their old screen positions rather than compacted.
+  US-039 owns the single stats strip; doing it here would have been two stories in one iteration.
+- The four `-*ScrollDemo` flags now all resolve to one anchor. There is no longer a Feed block to
+  scroll to independently of a Battle block. Kept as aliases so existing screenshot commands work;
+  US-039 deletes them with the ScrollView.
+
+Verified: `xcodebuild build` SUCCEEDED. Full suite `Executed 531 tests, with 0 failures` (was 529).
+Simulator, Series 11 (46mm), `-healthAnswered -noNotificationPrompt -wanderDemo -battleScrollDemo`:
+screenshot shows the four circles in one row, orange/red/purple/blue, no caption on a full
+allowance. Second run with `-battleLimitDemo`: the bolt circle is greyed and "No battles left
+today." sits under the row in orange.
+
+Note for whoever hits it: the row still sits below the fold on 46mm, which is why a scroll flag was
+needed for the screenshot at all. That is exactly the problem US-039 exists to fix.
+
+Remains: US-039 (fit the main screen without scrolling) is next.
