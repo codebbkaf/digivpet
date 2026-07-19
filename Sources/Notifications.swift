@@ -18,6 +18,9 @@ enum NotificationKind: String, CaseIterable, Identifiable {
     case sickness
     /// Twenty-four hours of the illness left before it kills. The last chance to act.
     case deathWarning
+    /// The screen has filled with mess. Fires when it FILLS, not while it is full — see
+    /// `GameState.claimPoopNotification`.
+    case poop
 
     var id: String { rawValue }
 
@@ -27,6 +30,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .evolution: return "Evolution"
         case .sickness: return "Sickness"
         case .deathWarning: return "Death Warning"
+        case .poop: return "Mess"
         }
     }
 
@@ -38,6 +42,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .evolution: return "Becoming something new."
         case .sickness: return "When neglect makes it ill."
         case .deathWarning: return "24 hours before it dies."
+        case .poop: return "When the screen needs cleaning."
         }
     }
 
@@ -55,6 +60,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .evolution: return "Digivolution!"
         case .sickness: return "Your Digimon is sick"
         case .deathWarning: return "Your Digimon is dying"
+        case .poop: return "Time to clean up"
         }
     }
 }
@@ -116,6 +122,12 @@ protocol PetNotificationDelivering: AnyObject {
     /// Asked once, at `MainScreenModel.start()`. Defaulted to nothing, because a test double has
     /// nobody to ask.
     func requestAuthorization()
+    /// Withdraws a notification of `kind` that has already gone out, because the thing it asked for
+    /// has been done. Only the poop notice uses this — a sickness or a death warning describes a
+    /// moment that HAPPENED and stays true after the fact, but "there is a mess" stops being true
+    /// the instant the user cleans, and a notice still sitting on the wrist telling them to do
+    /// something they have already done is worse than no notice at all.
+    func cancel(_ kind: NotificationKind)
 }
 
 extension PetNotificationDelivering {
@@ -163,6 +175,18 @@ final class UserNotificationDeliverer: PetNotificationDelivering {
         }
         #endif
     }
+
+    /// BOTH lists, and both are needed. `deliver` uses a nil trigger, so a notice is normally
+    /// already delivered rather than pending by the time anything cancels it — but a notice posted
+    /// in the same instant may not have left the pending list yet, and removing only the one it
+    /// happens to be in leaves the other behind.
+    func cancel(_ kind: NotificationKind) {
+        #if canImport(UserNotifications)
+        let center = UNUserNotificationCenter.current()
+        center.removePendingNotificationRequests(withIdentifiers: [kind.rawValue])
+        center.removeDeliveredNotifications(withIdentifiers: [kind.rawValue])
+        #endif
+    }
 }
 
 /// Decides whether a notification goes out, and sends it if it does.
@@ -199,5 +223,15 @@ final class NotificationDispatcher {
         guard !isAsleep || kind.firesWhileAsleep else { return false }
         deliverer.deliver(PetNotification(kind: kind, title: kind.title, body: body))
         return true
+    }
+
+    /// Withdraws an already-sent `kind`.
+    ///
+    /// Deliberately NOT gated on the toggle. The toggle says whether the user wants to be
+    /// interrupted, and a user who switches the mess notice off while one is already on their wrist
+    /// wants it gone, not left there for the one path that could remove it to be switched off with
+    /// it. Removing what was never posted is a no-op at the system level anyway.
+    func cancel(_ kind: NotificationKind) {
+        deliverer.cancel(kind)
     }
 }

@@ -96,4 +96,36 @@ extension GameState {
         poopCount = advanced.poopCount
         poopUpdatedAt = advanced.updatedAt
     }
+
+    /// Whether this refresh is the one that owes the user a "there is a mess" notice, claiming it as
+    /// it answers so no later refresh asks again.
+    ///
+    /// **The threshold is the screen FILLING**, `PoopClock.maximumPoops`, and it is the same
+    /// threshold US-053 charges its care mistake from — deliberately, because that is what makes the
+    /// notice worth sending. It arrives at the instant the mess starts costing something and
+    /// `CareMistakes.secondsAtMaximumPoopBeforeMistake` hours before it does, so a user who acts on
+    /// it pays nothing. Notifying on the FIRST poop would be notifying that the Digimon has been
+    /// alive three hours.
+    ///
+    /// Claimed once per mess rather than once per refresh, on the same reasoning as
+    /// `claimDeathWarning`: a user who opens the app five times over a filthy afternoon is told
+    /// once. Dropping off the ceiling re-arms it — cleaning is the only thing that does that — so a
+    /// screen cleaned and left to fill again is a NEW mess and is notified about afresh.
+    ///
+    /// THE CLAIM IS STAMPED WHETHER OR NOT A NOTIFICATION GOES OUT, exactly as `claimDeathWarning`
+    /// stamps its own and for the same reason: the marker records that the game reached the moment,
+    /// not that the user was told. Suppression is `NotificationDispatcher`'s job and is downstream
+    /// of this.
+    ///
+    /// Call AFTER `advancePoop`, which is what may have just filled the screen.
+    func claimPoopNotification() -> Bool {
+        guard poopCount >= PoopClock.maximumPoops else {
+            // Below the ceiling: nothing is owed, and the next fill starts clean.
+            poopNotified = false
+            return false
+        }
+        guard !poopNotified else { return false }
+        poopNotified = true
+        return true
+    }
 }

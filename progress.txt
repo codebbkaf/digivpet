@@ -715,3 +715,67 @@ Remains: US-054 (notify), then the four complication stories US-047..US-050. Wor
 whoever takes a future poop story: the `isPaused`-before-ceiling restamp in `PoopClock.advance` is
 still there. It is harmless under once-per-spell and I left it alone rather than widen this story,
 but any rule that measures a duration at the poop ceiling will hit it again.
+
+================================================================================
+2026-07-20 — US-054: Notify when poop needs cleaning — PASSES
+================================================================================
+
+Added `NotificationKind.poop`, and the threshold is the screen FILLING —
+`PoopClock.maximumPoops` — not the first poop. That is deliberately the same
+threshold US-053 charges its care mistake from, which is what makes the notice
+worth sending: it lands at the instant the mess starts costing something and a
+full `CareMistakes.secondsAtMaximumPoopBeforeMistake` (6h) before it does, so a
+user who acts on it pays nothing. Notifying on one poop would be notifying that
+the Digimon has been alive three hours.
+
+Once-per-mess is `GameState.claimPoopNotification()`, modelled on
+`claimDeathWarning` and stamped whether or not a notification actually goes out,
+for the same stated reason: the marker records that the game reached the moment,
+not that the user was told. The backing `poopNotifiedStorage` is SAVED rather
+than in-memory, and that is the half of AC4 an in-memory flag gets wrong — the
+screen fills while nobody is watching, so a flag lost on relaunch would notify
+again on every launch onto the same filthy screen. There is a test for exactly
+that (`testTheMessNoticeIsNotRepeatedOnTheNextLaunch`) separate from the
+same-session one.
+
+AC5 needed a new verb: `deliver` used a nil trigger, so there was nothing in the
+codebase that could take a notification BACK. Added `cancel(_:)` to
+`PetNotificationDelivering` (removing from both the pending and the delivered
+list — a notice posted in the same instant may not have left pending yet) and to
+`NotificationDispatcher`. The dispatcher's `cancel` is deliberately NOT gated on
+the toggle: the toggle says whether the user wants to be interrupted, and
+someone who switches Mess off while a notice is already on their wrist wants it
+gone, not stranded because the one path that could remove it went off with it.
+`clean()` calls it and re-arms `poopNotified` in the same place, so both halves
+of ending a mess are in one method and are saved by one flush.
+
+The toggle row was free — `NotificationSettingsView` is driven off
+`allCases` — which is the property that comment claimed and it held.
+
+Two things worth knowing for whoever screenshots next:
+
+- I `simctl uninstall`ed the app to get a clean launch and that WIPED the
+  simulator's HealthKit grant, which cannot be restored from the CLI
+  (`simctl privacy` has no `health` service) and cannot be tapped (osascript has
+  no accessibility permission here). The way back in is
+  `-healthAnswered` (StubHealthAuthorizer) alongside `-noNotificationPrompt`.
+  Do not uninstall unless you are ready to use the stub.
+- A fourth toggle does not fit the screen, and `simctl` cannot scroll, so the
+  Mess row could not be photographed at all. Added `-settingsBottomDemo`, a
+  DEBUG-only `ScrollViewReader.scrollTo` on the last kind, in the same spirit as
+  `-battleResultDemo` and `-healthAutoConfirm`. It needs a 500ms beat first:
+  scrolling from `.task` before the rows are measured lands short, which it
+  visibly did on the first attempt.
+
+One test caught a real modelling trap rather than a code bug:
+`testARefilledScreenIsNotifiedAfresh` runs the clock 12h forward and I first
+based it on `dayTime` (12:00) — noon plus twelve is midnight, inside the
+22:00-07:00 fallback sleep window, where poop is PAUSED. The screen never
+refilled and the test failed honestly. Rebased on 08:00 with the reason in a
+comment. Any future poop test that advances the clock by more than a few hours
+needs to check where it lands.
+
+Passed: build green; `Executed 619 tests, with 0 failures` (was 609, +10).
+Screenshot at 46mm shows the Mess toggle, on by default, under Death Warning.
+
+Remains: the four complication stories US-047, US-048, US-049, US-050.

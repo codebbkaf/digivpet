@@ -268,8 +268,8 @@
         "Verify in watchOS Simulator via -settingsDemo: screenshot shows the new toggle"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "NotificationKind.poop notifies when the screen fills (PoopClock.maximumPoops), claimed once per mess via GameState.claimPoopNotification and saved so a relaunch does not repeat it; clean() re-arms the claim and cancels the delivered notice through a new PetNotificationDelivering.cancel. Mess toggle appears in NotificationSettingsView by allCases, defaults on. 619 tests pass (was 609); 46mm screenshot shows the Mess toggle via a new -settingsBottomDemo scroll hook."
     },
     {
       "id": "US-047",

@@ -51,9 +51,16 @@ private enum NoteClock {
 @MainActor
 private final class SpyDeliverer: PetNotificationDelivering {
     private(set) var delivered: [PetNotification] = []
+    /// What was withdrawn, in order. Kept separate from `delivered` rather than removing from it,
+    /// so a test can tell "sent then cancelled" from "never sent" — US-054 AC5 is about the first.
+    private(set) var cancelled: [NotificationKind] = []
 
     func deliver(_ notification: PetNotification) {
         delivered.append(notification)
+    }
+
+    func cancel(_ kind: NotificationKind) {
+        cancelled.append(kind)
     }
 
     var kinds: [NotificationKind] { delivered.map(\.kind) }
@@ -454,5 +461,205 @@ final class NotificationDeliveryTests: XCTestCase {
 
         XCTAssertFalse(model.isAsleep)
         XCTAssertEqual(spy.kinds, [.sickness])
+    }
+
+    // MARK: US-054 — the mess notice
+
+    /// Seeds a healthy `hero` whose poop clock was last stamped `hoursOfMess` ago, so the first
+    /// refresh accrues the mess through the SHIPPED rule rather than hand-setting `poopCount` —
+    /// 12 hours is four 3h intervals, i.e. exactly `PoopClock.maximumPoops`.
+    ///
+    /// Every other care marker is stamped at `now` so the audit charges nothing: the only thing a
+    /// refresh over this game can have to say is about the mess.
+    private func seedMessyGame(url: URL, now: Date, hoursOfMess: Double) throws {
+        let store = try GameStore(url: url)
+        let state = try store.loadOrCreate(digitamaId: "egg", now: now)
+        state.currentDigimonId = "hero"
+        state.stage = .babyI
+        state.birthDate = now.addingTimeInterval(-6 * NoteClock.hour * 24)
+        state.stageEnteredDate = now.addingTimeInterval(-6 * NoteClock.hour * 24)
+        state.healthDataLastSeen = now
+        state.hungerUpdatedAt = now
+        state.poopCount = 0
+        state.poopUpdatedAt = now.addingTimeInterval(-hoursOfMess * NoteClock.hour)
+        try store.save()
+    }
+
+    /// AC1 and AC4 together, through the real `refresh()`: the refresh that fills the screen
+    /// notifies, and a second refresh over the same uncleaned mess does not.
+    func testAFullScreenNotifiesOnceAndNotAgain() async throws {
+        let url = storeURL("Messy")
+        try seedMessyGame(url: url, now: NoteClock.dayTime, hoursOfMess: 12)
+        let spy = SpyDeliverer()
+        let model = makeModel(url: url, now: NoteClock.dayTime, spy: spy, settings: isolatedSettings())
+
+        await model.start()
+
+        XCTAssertEqual(model.poopCount, PoopClock.maximumPoops, "the control: it really filled")
+        XCTAssertEqual(spy.kinds, [.poop])
+        XCTAssertEqual(spy.delivered.first?.body, "Hero's screen is filthy. Clean it before it gets sick.")
+
+        await model.refresh()
+        XCTAssertEqual(spy.kinds, [.poop], "a mess that is still there is not new news")
+    }
+
+    /// AC4's harder half: the claim is SAVED, so relaunching onto the same uncleaned mess does not
+    /// notify a second time. An in-memory flag would pass the test above and fail this one.
+    func testTheMessNoticeIsNotRepeatedOnTheNextLaunch() async throws {
+        let url = storeURL("MessyRelaunch")
+        try seedMessyGame(url: url, now: NoteClock.dayTime, hoursOfMess: 12)
+
+        let firstSpy = SpyDeliverer()
+        let first = makeModel(url: url, now: NoteClock.dayTime, spy: firstSpy,
+                              settings: isolatedSettings())
+        await first.start()
+        XCTAssertEqual(firstSpy.kinds, [.poop])
+
+        // A whole new model over the same store: a fresh launch, an hour later.
+        let laterSpy = SpyDeliverer()
+        let later = makeModel(url: url, now: NoteClock.dayTime.addingTimeInterval(NoteClock.hour),
+                              spy: laterSpy, settings: isolatedSettings())
+        await later.start()
+
+        XCTAssertEqual(later.poopCount, PoopClock.maximumPoops, "the control: still filthy")
+        XCTAssertEqual(laterSpy.delivered, [], "the mess was already announced")
+    }
+
+    /// The control for AC1's threshold: nine hours is three poops, one short of the ceiling, and
+    /// says nothing. Without this the test above would pass under a "there is any poop at all" rule.
+    func testAPartlyDirtyScreenSaysNothing() async throws {
+        let url = storeURL("PartlyMessy")
+        try seedMessyGame(url: url, now: NoteClock.dayTime, hoursOfMess: 9)
+        let spy = SpyDeliverer()
+        let model = makeModel(url: url, now: NoteClock.dayTime, spy: spy, settings: isolatedSettings())
+
+        await model.start()
+
+        XCTAssertEqual(model.poopCount, PoopClock.maximumPoops - 1, "the control: one short")
+        XCTAssertEqual(spy.delivered, [])
+    }
+
+    /// AC3: with the Mess toggle off, the screen still fills and nothing is delivered.
+    func testTheMessNoticeIsSuppressedWhenTheToggleIsOff() async throws {
+        let url = storeURL("MessyMuted")
+        try seedMessyGame(url: url, now: NoteClock.dayTime, hoursOfMess: 12)
+        let spy = SpyDeliverer()
+        let settings = isolatedSettings()
+        settings.setEnabled(false, for: .poop)
+        let model = makeModel(url: url, now: NoteClock.dayTime, spy: spy, settings: settings)
+
+        await model.start()
+
+        XCTAssertEqual(model.poopCount, PoopClock.maximumPoops, "the mess itself is unaffected")
+        XCTAssertEqual(spy.delivered, [])
+    }
+
+    /// AC5: cleaning withdraws the notice that asked for it.
+    func testCleaningCancelsTheMessNotice() async throws {
+        let url = storeURL("MessyCleaned")
+        try seedMessyGame(url: url, now: NoteClock.dayTime, hoursOfMess: 12)
+        let spy = SpyDeliverer()
+        let model = makeModel(url: url, now: NoteClock.dayTime, spy: spy, settings: isolatedSettings())
+
+        await model.start()
+        XCTAssertEqual(spy.kinds, [.poop])
+        XCTAssertEqual(spy.cancelled, [], "nothing is withdrawn before it is cleaned")
+
+        XCTAssertTrue(model.clean())
+
+        XCTAssertEqual(model.poopCount, 0)
+        XCTAssertEqual(spy.cancelled, [.poop])
+    }
+
+    /// AC4's other edge: cleaning re-arms the claim, so a screen left to fill AGAIN is a new mess
+    /// and earns its own notice. Without the re-arm a user who cleans once is never told again.
+    func testARefilledScreenIsNotifiedAfresh() async throws {
+        let url = storeURL("MessyRefilled")
+        // Morning rather than `dayTime`, because this test runs the clock twelve hours forward and
+        // noon plus twelve is midnight — inside the 22:00–07:00 fallback sleep window, where poop
+        // is PAUSED and the screen would never refill. 08:00 + 12h = 20:00 is still awake.
+        let morning = NoteClock.at("2026-03-10 08:00")
+        try seedMessyGame(url: url, now: morning, hoursOfMess: 12)
+        let spy = SpyDeliverer()
+        var currentTime = morning
+        let model = MainScreenModel(
+            makeStore: { try GameStore(url: url) },
+            graph: fixtureGraph(),
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: EmptySampleFetcher(),
+                                               calendar: NoteClock.calendar),
+                sleepReader: LastNightSleepReader(fetcher: EmptySleepFetcher(),
+                                                  calendar: NoteClock.calendar)
+            ),
+            calendar: NoteClock.calendar,
+            now: { currentTime },
+            chooseStartingDigitama: { $0.first },
+            actionDuration: 0.05,
+            notificationSettings: isolatedSettings(),
+            notificationDeliverer: spy
+        )
+
+        await model.start()
+        XCTAssertEqual(spy.kinds, [.poop])
+
+        XCTAssertTrue(model.clean())
+        // Twelve more hours: the clock restarted at the clean, so this fills the screen a second
+        // time.
+        currentTime = morning.addingTimeInterval(12 * NoteClock.hour)
+        await model.refresh()
+
+        XCTAssertEqual(model.poopCount, PoopClock.maximumPoops, "the control: it filled again")
+        XCTAssertEqual(spy.kinds, [.poop, .poop], "a second mess is a second notice")
+    }
+}
+
+// MARK: - The mess claim, without a model
+
+/// The threshold and the re-arm, asserted directly on `GameState` — the model tests above drive the
+/// same rule through `refresh()`, but these pin the boundary without a store or a clock.
+final class PoopNotificationClaimTests: XCTestCase {
+    private func state(poopCount: Int) -> GameState {
+        let state = GameState(currentDigimonId: "hero", stage: .child,
+                              now: NoteClock.at("2026-03-01 12:00"))
+        state.poopCount = poopCount
+        return state
+    }
+
+    /// The claim is owed at the ceiling and at nothing below it.
+    func testOnlyAFullScreenIsClaimed() {
+        for count in 0...PoopClock.maximumPoops {
+            let expected = count >= PoopClock.maximumPoops
+            XCTAssertEqual(state(poopCount: count).claimPoopNotification(), expected,
+                           "\(count) poops")
+        }
+    }
+
+    /// Claimed once however many times it is asked, which is what makes AC4 hold across refreshes.
+    func testTheClaimIsTakenOnlyOnce() {
+        let messy = state(poopCount: PoopClock.maximumPoops)
+
+        XCTAssertTrue(messy.claimPoopNotification())
+        XCTAssertFalse(messy.claimPoopNotification())
+        XCTAssertFalse(messy.claimPoopNotification())
+    }
+
+    /// Dropping off the ceiling re-arms it: the next mess is claimed afresh.
+    func testCleaningRearmsTheClaim() {
+        let messy = state(poopCount: PoopClock.maximumPoops)
+        XCTAssertTrue(messy.claimPoopNotification())
+
+        messy.poopCount = 0
+        XCTAssertFalse(messy.claimPoopNotification(), "an empty screen owes nothing")
+        XCTAssertFalse(messy.poopNotified, "and the marker is re-armed by asking")
+
+        messy.poopCount = PoopClock.maximumPoops
+        XCTAssertTrue(messy.claimPoopNotification())
+    }
+
+    /// A fresh game has never been notified — the default matters because `poopNotified` is backed
+    /// by an optional for migration, and a save written before US-054 must read as "not yet told"
+    /// rather than as "already told", which would swallow the first notice on every upgraded game.
+    func testAFreshGameHasNotBeenNotified() {
+        XCTAssertFalse(state(poopCount: 0).poopNotified)
     }
 }

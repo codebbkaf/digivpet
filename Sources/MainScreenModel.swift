@@ -606,6 +606,11 @@ final class MainScreenModel: ObservableObject {
         // and after `updateDeath` in particular, because a Digimon that has just been found dead
         // is past both messages.
         notifyHealthChanges(state, healthBefore: healthBefore)
+        // Alongside the health notices and after `updateDeath` for the same reason: the mess notice
+        // is decided from the settled state, and a Digimon just found dead is past being nagged.
+        // The count it reads was settled by `advancePoop` above, and the claim it stamps is saved by
+        // the same flush that saves that count.
+        notifyPoop(state)
         // The pose is settled again here and not only in `updateSleepState`, because falling sick,
         // being cured or dying all change the resting pose too and are decided after the sleep
         // window.
@@ -791,6 +796,12 @@ final class MainScreenModel: ObservableObject {
         guard let state, state.poopCount > 0 else { return false }
         state.poopCount = 0
         state.poopUpdatedAt = now()
+        // The mess notice is withdrawn from the wrist, and the claim is re-armed here rather than
+        // being left to the next refresh's `claimPoopNotification` — cleaning is the whole of what
+        // ends a mess, so both halves of ending it belong in one place and are saved by the flush
+        // below. A screen left to fill again is a new mess and earns a new notice.
+        state.poopNotified = false
+        notifications.cancel(.poop)
         show(.still(.happy), message: "All clean!")
 
         do {
@@ -1030,6 +1041,22 @@ final class MainScreenModel: ObservableObject {
                                body: "\(name) has 24 hours left. Earn 30 energy today to cure it.",
                                isAsleep: isAsleep)
         }
+    }
+
+    /// Tells the user the screen has filled with mess, once per mess (US-054).
+    ///
+    /// A dead Digimon is not nagged about its litter: `advancePoop` pauses while dead so the count
+    /// cannot grow, but a Digimon that died on a full screen would otherwise be claimed against on
+    /// the next refresh. The memorial is the only message that state owes anyone.
+    ///
+    /// The claim is what makes this once-per-mess across relaunches — see `claimPoopNotification`.
+    private func notifyPoop(_ state: GameState) {
+        guard state.healthStatus != .dead else { return }
+        guard state.claimPoopNotification() else { return }
+        let name = presentation?.displayName ?? "Your Digimon"
+        notifications.send(.poop,
+                           body: "\(name)'s screen is filthy. Clean it before it gets sick.",
+                           isAsleep: isAsleep)
     }
 
     /// Moves the saved game onto `next`, the one reset a hatch and an evolution both perform: the

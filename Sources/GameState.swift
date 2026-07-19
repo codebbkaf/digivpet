@@ -247,6 +247,15 @@ final class GameState {
     /// Backing store for `poopMistakesCharged` (US-053). A MARKER in the same sense as
     /// `starvationMistakesChargedStorage`, and optional for the same migration reason.
     private var poopMistakesChargedStorage: Int?
+    /// Backing store for `poopNotified` (US-054): whether the CURRENT full screen of mess has
+    /// already been notified about. Optional for the same migration reason as every other storage
+    /// property here.
+    ///
+    /// Saved rather than held in memory for the same reason as `deathWarningSentStorage`: the
+    /// screen fills at a moment nobody is watching, and an in-memory flag would be lost on the next
+    /// launch — so every launch onto a full screen would notify again. See
+    /// `claimPoopNotification`.
+    private var poopNotifiedStorage: Bool?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -285,6 +294,7 @@ final class GameState {
         // hatch instead of at whichever refresh happens to look first.
         self.poopUpdatedAtStorage = now
         self.poopMistakesChargedStorage = 0
+        self.poopNotifiedStorage = false
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -414,6 +424,14 @@ extension GameState {
     var poopMistakesCharged: Int {
         get { poopMistakesChargedStorage ?? 0 }
         set { poopMistakesChargedStorage = newValue }
+    }
+
+    /// Whether the CURRENT full screen of mess has already been notified about. Re-armed by
+    /// `claimPoopNotification` the moment the count drops off the ceiling, on the same rule as
+    /// `poopMistakesCharged`.
+    var poopNotified: Bool {
+        get { poopNotifiedStorage ?? false }
+        set { poopNotifiedStorage = newValue }
     }
 
     /// Counts one refused feed against the local day containing `now`.
