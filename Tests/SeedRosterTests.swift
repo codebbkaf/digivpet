@@ -13,14 +13,19 @@ import XCTest
 final class SeedRosterTests: XCTestCase {
     private var graph: EvolutionGraph!
 
-    /// The three seed lines, each as its full Digitama -> Ultimate default path.
+    /// The seed lines, each as its full Digitama -> Ultimate default path.
     ///
     /// Written out as literals rather than derived from the file: a test that walks whatever the
     /// data says and asserts it matches the data would pass on any roster at all.
+    ///
+    /// The Patamon line (US-044) is the odd one: its fallback runs through Scumon, the V3 tree's
+    /// junk evolution, because Patamon has five Champions and only four energy types to gate them
+    /// with. That is the path a neglected Patamon walks, and it still covers all seven rungs.
     private let seedLines: [[String]] = [
         ["agu_digitama", "botamon", "koromon", "agumon", "greymon", "metalgreymon", "wargreymon"],
         ["gabu_digitama", "punimon", "tsunomon", "gabumon", "garurumon", "weregarurumon", "metalgarurumon"],
         ["pal_digitama", "yuramon", "tanemon", "palmon", "togemon", "lilimon", "rosemon"],
+        ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "bancholeomon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.
@@ -169,5 +174,105 @@ final class SeedRosterTests: XCTestCase {
                 }
             }
         }
+    }
+
+    // MARK: - US-044: the V3 Patamon line
+
+    /// Every node the line may reach, checked against the set US-043 verified has animated art.
+    /// A node from outside it is either a Digimon with no sheet or one invented out of thin air.
+    private let patamonLineVerifiedSet: Set<String> = [
+        "Unimon", "Centalmon", "Ogremon", "Bakemon", "Shellmon", "Drimogemon", "Scumon",
+        "Andromon", "Giromon", "Etemon", "HiAndromon", "Gokumon", "BanchoLeomon",
+    ]
+
+    func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
+        let adult = Stage.adult.ladderIndex!
+        let above = graph.nodes.filter { $0.line == "patamon" && ($0.stage.ladderIndex ?? -1) >= adult }
+
+        XCTAssertFalse(above.isEmpty, "the Patamon line has no Adult-or-later nodes at all")
+        for node in above {
+            XCTAssertTrue(patamonLineVerifiedSet.contains(node.displayName),
+                          "\(node.displayName) is not in the US-043 verified-available set")
+        }
+    }
+
+    /// Poyomon, the V3 tree's Fresh stage, is one of the 157 idle-only Digimon. The line must not
+    /// name it anywhere — not as a node, and not as an edge target.
+    func testTheLineDoesNotUsePoyomon() {
+        XCTAssertNil(graph.node(id: "poyomon"), "Poyomon is dexOnly and may not be a node")
+        for node in graph.nodes {
+            for edge in node.evolutions {
+                XCTAssertNotEqual(edge.to, "poyomon", "\(node.id) points at dexOnly Poyomon")
+            }
+        }
+    }
+
+    /// The substitute Baby I is real, animated, and its divergence from the source tree is written
+    /// down in the data file itself — the next reader will diff `evolutions.json` against the tree
+    /// markdown and needs to find the reason there, not in a commit message.
+    func testThePoyomonSubstitutionIsRecordedInTheDataFile() throws {
+        let substitute = try XCTUnwrap(graph.node(id: "puttimon"))
+        XCTAssertEqual(substitute.stage, .babyI)
+        XCTAssertFalse(substitute.dexOnly)
+        XCTAssertEqual(substitute.evolutions.first(where: \.isDefault)?.to, "tokomon")
+
+        // The raw file, not the decoded graph: `comment` is not a schema field, so the decoder
+        // drops it and only re-reading the JSON can prove it is actually written down.
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "evolutions", withExtension: "json"))
+        let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: try Data(contentsOf: url)) as? [String: Any])
+        let nodes = try XCTUnwrap(raw["nodes"] as? [[String: Any]])
+        let authored = try XCTUnwrap(nodes.first { $0["id"] as? String == "puttimon" })
+        let comment = try XCTUnwrap(authored["comment"] as? String,
+                                    "the Baby I substitute carries no comment explaining the divergence")
+        XCTAssertTrue(comment.contains("Poyomon"), "the comment must name what it diverges from")
+    }
+
+    /// Patamon's five Champions are the V3 tree's five, and every one of them leads to an Ultimate
+    /// rather than dead-ending partway up the ladder.
+    func testPatamonBranchesFiveWaysAndEveryBranchReachesUltimate() throws {
+        let patamon = try XCTUnwrap(graph.node(id: "patamon"))
+
+        XCTAssertEqual(patamon.evolutions.map(\.to).sorted(),
+                       ["bakemon", "centalmon", "ogremon", "scumon", "unimon"])
+
+        for edge in patamon.evolutions {
+            let path = try defaultPath(from: edge.to)
+            XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
+                           "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
+        }
+    }
+
+    /// The four earned branches each need a distinct dominant type, or two of them are unreachable.
+    /// Scumon is deliberately excluded: it shares Bakemon's vitality gate and wins only when
+    /// Bakemon's higher `minEnergy` or stricter `maxCareMistakes` shuts Bakemon out.
+    func testPatamonsEarnedBranchesUseFourDistinctEnergies() throws {
+        let patamon = try XCTUnwrap(graph.node(id: "patamon"))
+        let earned = patamon.evolutions.filter { !$0.isDefault }
+
+        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 4,
+                       "two earned branches share a dominant type, so one can never be chosen")
+
+        let scumon = try XCTUnwrap(patamon.evolutions.first { $0.isDefault })
+        let bakemon = try XCTUnwrap(patamon.evolutions.first { $0.to == "bakemon" })
+        XCTAssertEqual(scumon.to, "scumon")
+        XCTAssertEqual(scumon.requiredEnergy, bakemon.requiredEnergy)
+        XCTAssertLessThan(scumon.minEnergy, bakemon.minEnergy,
+                          "Scumon must sit below Bakemon or it would win the vitality branch outright")
+    }
+
+    /// The junk branch is not just declared — prove the engine actually routes to it, and that a
+    /// well-raised vitality Patamon still gets Bakemon instead.
+    func testANeglectedVitalityPatamonGetsScumonAndAWellRaisedOneGetsBakemon() throws {
+        let patamon = try XCTUnwrap(graph.node(id: "patamon"))
+        let plenty = EnergyTotals(strength: 0, vitality: 90, spirit: 0, stamina: 0)
+
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: patamon, stageEnergy: plenty, dominant: .vitality,
+                                            careMistakes: 0, battleWins: 0),
+            "bakemon")
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: patamon, stageEnergy: plenty, dominant: .vitality,
+                                            careMistakes: 9, battleWins: 0),
+            "scumon", "past Bakemon's care-mistake limit, only the junk branch is left")
     }
 }

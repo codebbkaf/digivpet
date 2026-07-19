@@ -306,7 +306,7 @@ final class EvolutionGraphTests: XCTestCase {
         let nodes = try EvolutionGraph.load().nodes
         let byLine = Dictionary(grouping: nodes, by: \.line).mapValues(\.count)
 
-        XCTAssertEqual(byLine, ["agumon": 8, "gabumon": 7, "palmon": 7])
+        XCTAssertEqual(byLine, ["agumon": 8, "gabumon": 7, "palmon": 7, "patamon": 15])
         XCTAssertEqual(graph_lineOf(nodes, "meramon"), "agumon")
         XCTAssertEqual(graph_lineOf(nodes, "agu_digitama"), "agumon")
         XCTAssertEqual(graph_lineOf(nodes, "metalgarurumon"), "gabumon")

@@ -374,3 +374,53 @@ docs+script story). Both `--tree` and bare-argv modes exercised; spot-checked Ex
 Hi-Andromon, Scumon, Centalmon, Patamon, Gazi_Digitama with `ls`.
 
 Remains: US-044 (seed the V3 Patamon line) is next, and it inherits the Poyomon problem above.
+
+## 2026-07-19 — US-044: Seed the V3 Patamon line
+
+Added 15 nodes to `Resources/evolutions.json` as line `patamon`, taking the roster from 22 to 37:
+Pata_Digitama -> Puttimon -> Tokomon -> Patamon, then Patamon branching five ways into
+Unimon / Centalmon / Ogremon / Bakemon / Scumon, converging into three Perfects
+(Andromon, Giromon, Etemon) and three Ultimates (HiAndromon, Gokumon, BanchoLeomon). No Swift
+changed — the whole story is data plus tests, which is what the schema promises.
+
+**The Poyomon problem US-043 flagged, resolved.** The V3 tree starts this line at Fresh: Poyomon,
+which is dexOnly, so it may never be playable or named by an edge. Substituted **Puttimon** as the
+Baby I: it is animated (verified 48x64) and is the Baby I of the same Angel family Patamon belongs
+to, so it is the closest stand-in rather than an arbitrary one. Recorded on the `puttimon` node as
+a `comment` key — JSON has no comment syntax, but `EvolutionNode`'s CodingKeys never mention
+`comment`, so the decoder silently ignores it and it costs nothing at runtime. A test re-reads the
+RAW json (not the decoded graph, which drops the key) and asserts the comment exists and names
+Poyomon, so the explanation cannot rot away unnoticed. Documented the convention in
+`docs/evolutions-schema.md`.
+
+**Five Champions, four energy types.** The V3 tree gives Patamon five Champions and there are only
+four energies to gate them with, so one cannot be earned by dominance. Made it Scumon — the tree's
+own junk evolution, shared with the Kunemon branch — as the `isDefault` edge, sharing Bakemon's
+`vitality` gate but sitting under it on `minEnergy` (0 vs 60) and `maxCareMistakes` (99 vs 3).
+`EvolutionEngine.evolutionTarget` takes the highest `minEnergy` among qualifying edges, so a
+well-raised vitality Patamon gets Bakemon and a neglected one falls to Scumon. That is asserted
+against the real engine, not just read off the data.
+
+Three existing tests were pinned to the 22-node roster and had to move. All three are real
+assertions, not fixtures, so each was updated rather than loosened:
+`EvolutionGraphValidatorTests` node count 22 -> 37; `EvolutionGraphTests` byLine gained
+`"patamon": 15`; and `EggHatchingTests.testTheDefaultChooserPicksARandomDigitama` — a new egg in
+the roster means a new starting egg, which is correct behaviour, so the expected set gained
+`pata_digitama`. Everything in `DexScreenTests` derives from `.bundled` and needed no change,
+which is why the Dex picked the fourth line up for free.
+
+Every one of the 15 spriteFiles was `ls`-verified on disk with its dimensions before commit
+(48x64, or 48x16 for the egg) — plus `SeedRosterTests` slices all 37 nodes through
+`SpriteSheetCache`, so an unsliceable sheet fails the suite. HiAndromon's art is `Hi-Andromon.png`
+per US-043; the node uses id `hiandromon`, displayName `HiAndromon`, spriteFile `Hi-Andromon`,
+with a `comment` recording the mismatch.
+
+Passed: build green; `Executed 560 tests, with 0 failures` (was 554, +6, all 6 confirmed by name
+in an `-only-testing:DigiVPetTests/SeedRosterTests` run). `EvolutionGraphValidator` reports zero
+errors on the extended graph.
+
+Remains: US-045 (seed the V4 Piyomon line) is next. Note it inherits a collision this story did
+not have — V4's Fresh/In-Training are Yuramon and Tanemon, and BOTH ids are already taken by the
+`palmon` line. Duplicate ids are a validator error, so US-045 must either share those nodes across
+two lines (they can only carry one `line`, so the Dex would draw them in one tree only) or give
+them distinct ids. Decide deliberately; it is not a naming detail.

@@ -156,13 +156,13 @@ final class EggHatchingTests: XCTestCase {
     // MARK: Random starting egg
 
     /// AC1: a new game starts at a RANDOMLY selected Digitama. The default chooser is
-    /// `randomElement`, so over many picks it must land on more than one of the three seed eggs —
+    /// `randomElement`, so over many picks it must land on more than one of the seed eggs —
     /// and never on anything that is not a candidate.
     func testTheDefaultChooserPicksARandomDigitama() {
         let candidates = EvolutionGraph.bundled.nodes(at: .digitama).filter { !$0.dexOnly }
         XCTAssertEqual(Set(candidates.map(\.id)),
-                       ["agu_digitama", "gabu_digitama", "pal_digitama"],
-                       "the three seed eggs are the candidates")
+                       ["agu_digitama", "gabu_digitama", "pal_digitama", "pata_digitama"],
+                       "every seeded egg is a candidate — US-044's Pata Digitama joined the three US-008 ones")
 
         var seen: Set<String> = []
         for _ in 0..<200 {

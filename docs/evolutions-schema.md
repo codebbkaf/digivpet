@@ -102,9 +102,31 @@ One generator convention is **not** part of this schema: a `dexOnly` node whose 
 is emitted as `"stage": null`. `stage` is required and non-optional here, so such a node does not
 decode — give it a stage before promoting it into this file. README.md has the detail.
 
+## Comments
+
+JSON has no comment syntax, so a node may carry a **`comment`** string. It is not a schema field:
+`EvolutionNode`'s `CodingKeys` do not mention it, so the decoder never reads it and it costs
+nothing at runtime. Use it where the data departs from the source evolution trees in
+`Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
+two finds the reason in the file rather than in a commit message. It is not a place for general
+prose — three nodes have one today, all in the `patamon` line.
+
 ## Current contents
 
-`Resources/evolutions.json` holds 22 nodes across three `line` values — `agumon` (8 nodes),
-`gabumon` (7) and `palmon` (7) — each a complete line from Digitama through Ultimate, plus
-Meramon (in the `agumon` line) as the target of the one branching node
-(Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).
+`Resources/evolutions.json` holds 37 nodes across four `line` values — `agumon` (8 nodes),
+`gabumon` (7), `palmon` (7) and `patamon` (15) — each a complete line from Digitama through
+Ultimate.
+
+The first three are US-008's seed. `agumon` includes Meramon as the target of its one branching
+node (Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).
+
+`patamon` is US-044's Digital Monster Color V3 line and is much wider: Patamon branches five ways
+into Unimon / Centalmon / Ogremon / Bakemon / Scumon, which converge into three Perfects
+(Andromon, Giromon, Etemon) and three Ultimates (HiAndromon, Gokumon, BanchoLeomon). Two things
+about it are worth knowing before editing it:
+
+- **Its Baby I is Puttimon, not the V3 tree's Poyomon.** Poyomon is one of the 157 idle-only
+  Digimon, so it may never be playable. See the `comment` on the `puttimon` node.
+- **Five Champions, four energy types.** Scumon — the V3 tree's junk evolution — is the
+  `isDefault` edge rather than an earned one, and shares Bakemon's `vitality` gate from below on
+  `minEnergy`. A neglected Patamon lands on Scumon; a well-raised vitality one still gets Bakemon.

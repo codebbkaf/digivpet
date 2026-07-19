@@ -107,7 +107,7 @@
       ],
       "priority": 6,
       "passes": true,
-      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen — that is US-042."
+      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen \u2014 that is US-042."
     },
     {
       "id": "US-042",
@@ -157,8 +157,8 @@
         "Tests pass"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Seeded 15 nodes as line 'patamon' (37 total): Pata_Digitama -> Puttimon -> Tokomon -> Patamon, branching five ways into Unimon/Centalmon/Ogremon/Bakemon/Scumon, converging into Andromon/Giromon/Etemon and HiAndromon/Gokumon/BanchoLeomon. Poyomon is dexOnly so Puttimon substitutes as Baby I; the divergence is a 'comment' key on that node (decoder ignores it) and a test re-reads the raw JSON to prove it is there. Five Champions vs four energy types: Scumon is the isDefault edge, under Bakemon's vitality gate on minEnergy. All 15 spriteFiles ls-verified 48x64 (48x16 egg); HiAndromon's art is Hi-Andromon.png. Build green, 560 tests 0 failures (was 554; +6 US-044 tests all confirmed by name)."
     },
     {
       "id": "US-045",

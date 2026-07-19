@@ -327,6 +327,245 @@
       "stage": "Ultimate-Super Ultimate",
       "line": "palmon",
       "spriteFile": "Rosemon"
+    },
+    {
+      "id": "pata_digitama",
+      "displayName": "Pata Digitama",
+      "stage": "Digitama",
+      "line": "patamon",
+      "spriteFile": "Pata_Digitama",
+      "evolutions": [
+        {
+          "to": "puttimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "puttimon",
+      "displayName": "Puttimon",
+      "stage": "Baby I",
+      "line": "patamon",
+      "spriteFile": "Puttimon",
+      "comment": "DIVERGENCE FROM THE SOURCE TREE (US-044). The Digital Monster Color V3 tree (Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md) starts this line at Fresh: Poyomon, but Poyomon exists only as a single 16x16 frame in 'Idle Frame Only/' with no 48x64 animated sheet (verified in docs/sprite-availability.md), so it is dexOnly and may never be playable or named by an edge. Puttimon is substituted as the Baby I: it is the closest animated stand-in, being the Baby I of the same Angel family Patamon belongs to. Poyomon is the ONLY divergence in this line; every other node is the V3 tree as written.",
+      "evolutions": [
+        {
+          "to": "tokomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tokomon",
+      "displayName": "Tokomon",
+      "stage": "Baby II",
+      "line": "patamon",
+      "spriteFile": "Tokomon",
+      "evolutions": [
+        {
+          "to": "patamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "patamon",
+      "displayName": "Patamon",
+      "stage": "Child",
+      "line": "patamon",
+      "spriteFile": "Patamon",
+      "comment": "The V3 tree gives Patamon five Champions but there are only four energy types. Scumon \u2014 the tree's junk evolution, shared with the Kunemon branch \u2014 is the one that is not earned: it is the isDefault edge, so a Patamon that qualifies for nothing else lands there. Bakemon shares Scumon's vitality gate but sits above it on minEnergy, so a well-raised vitality Patamon still reaches Bakemon.",
+      "evolutions": [
+        {
+          "to": "unimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "centalmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "ogremon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "bakemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3
+        },
+        {
+          "to": "scumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "unimon",
+      "displayName": "Unimon",
+      "stage": "Adult",
+      "line": "patamon",
+      "spriteFile": "Unimon",
+      "evolutions": [
+        {
+          "to": "andromon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "centalmon",
+      "displayName": "Centalmon",
+      "stage": "Adult",
+      "line": "patamon",
+      "spriteFile": "Centalmon",
+      "evolutions": [
+        {
+          "to": "andromon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "ogremon",
+      "displayName": "Ogremon",
+      "stage": "Adult",
+      "line": "patamon",
+      "spriteFile": "Ogremon",
+      "evolutions": [
+        {
+          "to": "giromon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "bakemon",
+      "displayName": "Bakemon",
+      "stage": "Adult",
+      "line": "patamon",
+      "spriteFile": "Bakemon",
+      "evolutions": [
+        {
+          "to": "giromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "scumon",
+      "displayName": "Scumon",
+      "stage": "Adult",
+      "line": "patamon",
+      "spriteFile": "Scumon",
+      "evolutions": [
+        {
+          "to": "etemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "andromon",
+      "displayName": "Andromon",
+      "stage": "Perfect",
+      "line": "patamon",
+      "spriteFile": "Andromon",
+      "evolutions": [
+        {
+          "to": "hiandromon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "giromon",
+      "displayName": "Giromon",
+      "stage": "Perfect",
+      "line": "patamon",
+      "spriteFile": "Giromon",
+      "evolutions": [
+        {
+          "to": "gokumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "etemon",
+      "displayName": "Etemon",
+      "stage": "Perfect",
+      "line": "patamon",
+      "spriteFile": "Etemon",
+      "evolutions": [
+        {
+          "to": "bancholeomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hiandromon",
+      "displayName": "HiAndromon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "patamon",
+      "spriteFile": "Hi-Andromon",
+      "comment": "The V3 tree spells this HiAndromon; the art is filed as Hi-Andromon.png (docs/sprite-availability.md)."
+    },
+    {
+      "id": "gokumon",
+      "displayName": "Gokumon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "patamon",
+      "spriteFile": "Gokumon"
+    },
+    {
+      "id": "bancholeomon",
+      "displayName": "BanchoLeomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "patamon",
+      "spriteFile": "BanchoLeomon"
     }
   ]
 }
