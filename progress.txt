@@ -601,3 +601,63 @@ Remains: the model is NOT wired into `MainScreenModel.refresh()` — nothing cal
 so poop does not accumulate in the running app. That is deliberate: US-052 (show poop and add the
 clean action) is the story that draws it and is the natural place to add the call. US-052..US-054
 finish the poop arc, then the four complication stories US-047..US-050.
+
+## 2026-07-19 — US-052: Show poop and add the clean action
+
+The poop model from US-051 becomes visible and cleanable, and — the part the AC does not mention but
+the story is dead without — `advancePoop` is finally CALLED. It went into `refresh()` after
+`updateSleepState()` and before the health read: after the sleep window, because poop is paused while
+the Digimon sleeps and `isAsleep` is what says so, so running it earlier would charge the elapsed
+stretch against last launch's answer; before the read, because like hunger it is owed for time
+already elapsed and the read is several awaits long.
+
+**The art is SwiftUI, and had to be.** There is no poop anywhere in the 865-file pack — every file
+is a Digimon — so a `spriteFile` path would have been invented, and an invented path is a bundle
+reference that fails silently as a blank square at runtime. `PoopShape` is three overlapping
+ellipses in brown, widest at the base: the classic coil, and about the most that reads at 8pt.
+Sized in POINTS, not sprite pixels, and deliberately without `.interpolation(.none)` — it is a
+vector standing in for pixel art, so it has no pixel grid to align to and nothing to gain from
+nearest-neighbour. One shape per poop rather than a count badge, because the whole point of poop in
+a V-Pet is that neglect reads at a glance without anyone parsing a number.
+
+**Placement: bottom-trailing of the sprite slot, as an overlay.** Not sharing the sprite's centre,
+because the sprite is drawn with `.offset` and walks the full width of the screen — anything on its
+centre line gets walked over. The corner is the one place a pile of four is always beside whatever
+the Digimon is doing. Nothing is drawn at zero, so a clean screen costs no layout.
+
+**A fifth circle forced the button diameter down from 32 to 30.** Five 32pt buttons with 6pt gaps
+come to 184pt and the narrowest supported screen (41mm, watchOS 10.0 is still the deployment
+target) is 176pt wide — the row would have been clipped at BOTH ends, and the 46mm simulator this
+project builds against would never have shown it. 5 x 30 + 4 x 4 = 166pt, which clears 176 with a
+margin at each end. `testTheRowOfFiveFitsTheNarrowestScreen` pins that arithmetic so a sixth button
+or a bumped diameter fails here rather than on a small wrist.
+
+**`clean()` restamps `poopUpdatedAt`, and that is not cosmetic.** `PoopClock` freezes the timestamp
+at the instant the ceiling was reached (US-051 relies on that freeze for US-053), so a screen full
+for twelve hours carries a twelve-hour-old timestamp. Zeroing the count without moving it would let
+the very next `refresh()` find four intervals of elapsed time and put all four poops straight back —
+cleaning visibly undoing itself. `testCleaningIsNotUndoneByTheNextRefresh` drives a real `refresh()`
+after a real clean rather than asserting on the timestamp, because the visible outcome is the point.
+This was the one real trap in the story.
+
+Clean sits third, between Train and Battle: cleaning up is the third thing you do FOR the Digimon,
+where Battle and the bell are what you do WITH it. `sparkles`/teal, and it holds the happy frame for
+its two seconds — it is the one action whose entire reward is the Digimon being pleased. Disabled
+off `poopCount`, the same value the pile is drawn from, so the button and the mess cannot disagree.
+
+Passed: build green; `Executed 601 tests, with 0 failures` (was 592, +9). New: `isCleanDisabled`
+across 0...4, the row-width arithmetic, the closure fan-out extended to five, clean/no-op-clean/
+not-undone-by-refresh through the real `MainScreenModel`, refresh ageing the count, and refresh
+ageing NOTHING at 02:00 inside the inferred sleep window. `PoopPileTests` pins that a full pile fits
+beside a full-scale sprite — which is the actual reason `maximumPoops` is 4.
+
+AC6 verified on TWO sizes, via new `-poopDemo` / `-poopCleanDemo` launch flags (the count is accrued
+by winding the timestamp back 12h and running the real `advancePoop`, never hand-set). Both need
+`-healthAnswered` too — the authorization gate is the first screen otherwise, which cost one wasted
+screenshot. 42mm and 41mm: four distinct poops on the ground beside Agumon, five circles in one
+unclipped row. After cleaning: bare ground, "All clean!" in orange in the caption slot where the
+name usually is, Clean greyed out, happy pose held.
+
+Remains: US-053 (uncleaned poop charges care mistakes and causes sickness) — the frozen
+`poopUpdatedAt` at the ceiling is already the "how long has it been full" it needs, with no second
+saved date. Then US-054 (notify), then the four complication stories US-047..US-050.

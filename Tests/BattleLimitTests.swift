@@ -150,7 +150,8 @@ final class BattleControlsLimitTests: XCTestCase {
     /// The rule moved from `BattleControls` to `ActionControls` in US-038; the assertions did not,
     /// because the limit is the same limit wherever the button is drawn.
     private func controls(battlesLeft: Int) -> ActionControls<EmptyView> {
-        ActionControls(battlesLeft: battlesLeft, feed: {}, train: {}, battle: {}) { EmptyView() }
+        ActionControls(battlesLeft: battlesLeft, poopCount: 0,
+                       feed: {}, train: {}, clean: {}, battle: {}) { EmptyView() }
     }
 
     /// AC3: at the cap the button is disabled and the reason is the SAME string the model refuses

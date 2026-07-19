@@ -1,3 +1,4 @@
+import CoreGraphics
 import Foundation
 import SwiftData
 import XCTest
@@ -231,5 +232,33 @@ final class PoopStateTests: XCTestCase {
         loaded.advancePoop(isAsleep: false, now: Clock.after(4))
         XCTAssertEqual(loaded.poopCount, 1)
         XCTAssertNoThrow(try reopened.save())
+    }
+}
+
+/// US-052 — what the mess looks like.
+///
+/// A SwiftUI shape has no output a unit test can read, so what is pinned here is the arithmetic
+/// that decides whether it FITS. That the pile actually looks like poop, and sits beside the
+/// Digimon rather than under it, is a Simulator screenshot recorded in progress.txt.
+final class PoopPileTests: XCTestCase {
+    /// The reason `PoopClock.maximumPoops` is four: a full pile has to fit the room left beside a
+    /// full-scale sprite on the narrowest supported screen (176pt at 41mm), or the last poop is
+    /// drawn off the bezel and neglect stops being visible at exactly the point it matters most.
+    func testAFullPileFitsBesideTheDigimon() {
+        let count = CGFloat(PoopClock.maximumPoops)
+        let spacing: CGFloat = 3
+        let pile = count * PoopShape.baseWidth + (count - 1) * spacing
+
+        let sprite = SpriteScale.maximum * CGFloat(SpriteSheet.frameSize)
+        let roomBesideIt = (176 - sprite) / 2
+
+        XCTAssertLessThanOrEqual(pile, roomBesideIt)
+    }
+
+    /// A poop is smaller than the Digimon standing next to it. Obvious, and exactly the kind of
+    /// thing a "just make it a bit clearer" edit breaks — at which point the screen reads as five
+    /// characters rather than one Digimon and its mess.
+    func testOnePoopIsSmallerThanTheSprite() {
+        XCTAssertLessThan(PoopShape.baseWidth, SpriteScale.minimum * CGFloat(SpriteSheet.frameSize))
     }
 }

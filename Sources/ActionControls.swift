@@ -9,11 +9,14 @@ import SwiftUI
 /// is disabled by the `.disabled` modifier on the `Button` that wraps this, and a second source of
 /// truth for the same fact could disagree with it.
 struct ActionButtonFace: View {
-    /// The button diameter. The AC caps it at 32pt, which is also about the smallest circle a
-    /// fingertip hits reliably on a 41mm screen — so this is both the ceiling and the right value.
+    /// The button diameter. US-038 caps it at 32pt; it sits at 30 since US-052 added a fifth
+    /// circle, because five 32pt buttons plus their gaps come to 184pt and the narrowest supported
+    /// screen is 176pt wide — the row would have been clipped at both ends. Thirty is still
+    /// comfortably above the ~28pt where a fingertip starts missing.
+    ///
     /// It lives here rather than on `ActionControls` because the face is what applies the frame,
     /// and because `ActionControls` is generic: `ActionControls.buttonDiameter` would not infer.
-    static let diameter: CGFloat = 32
+    static let diameter: CGFloat = 30
 
     @Environment(\.isEnabled) private var isEnabled
 
@@ -34,7 +37,8 @@ struct ActionButtonFace: View {
     }
 }
 
-/// The action row: Feed, Train, Battle and Notifications as circular icon-only buttons (US-038).
+/// The action row: Feed, Train, Clean, Battle and Notifications as circular icon-only buttons
+/// (US-038, with Clean joining in US-052).
 ///
 /// Icon-only, in one row, because the labelled buttons this replaces were three stacked blocks that
 /// pushed the Digimon off the top of the screen — the thing the user actually came to look at. The
@@ -45,8 +49,12 @@ struct ActionButtonFace: View {
 struct ActionControls<Settings: View>: View {
     /// Battles still allowed today (US-032). Zero disables the Battle button and shows why.
     let battlesLeft: Int
+    /// Poops on screen (US-051). Zero disables the Clean button — there is nothing to clean, and a
+    /// tap that did nothing would read as the button being broken.
+    let poopCount: Int
     let feed: () -> Void
     let train: () -> Void
+    let clean: () -> Void
     let battle: () -> Void
     /// What the bell pushes. A builder rather than a concrete type so this view does not have to
     /// know about `NotificationSettingsView`, and so a test can hand it an `EmptyView`.
@@ -55,6 +63,10 @@ struct ActionControls<Settings: View>: View {
     /// Whether the Battle button is disabled. Not `private`, like `limitCaption`, so a test can
     /// assert the rule — a `.disabled` modifier inside `body` is unreachable outside a view graph.
     var isBattleDisabled: Bool { battlesLeft == 0 }
+
+    /// Whether the Clean button is disabled. Derived from the count the pile is DRAWN from, not
+    /// from a separate flag, so the button and the mess on screen cannot disagree.
+    var isCleanDisabled: Bool { poopCount == 0 }
 
     /// The caption under the row. Nil on a full allowance — a permanent "5 left" would be noise;
     /// the count only earns its space once it is running out. At zero it is the model's OWN refusal
@@ -67,7 +79,10 @@ struct ActionControls<Settings: View>: View {
 
     var body: some View {
         VStack(spacing: 3) {
-            HStack(spacing: 6) {
+            // Four points between five circles: 5 * 30 + 4 * 4 = 166pt, which clears the 176pt of
+            // the narrowest supported screen with a margin at each end. The spacing came down with
+            // the diameter when Clean made this a row of five — see `ActionButtonFace.diameter`.
+            HStack(spacing: 4) {
                 Button(action: feed) {
                     ActionButtonFace(systemImage: "fork.knife", tint: .orange)
                 }
@@ -79,6 +94,15 @@ struct ActionControls<Settings: View>: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Train")
+
+                // Beside Feed and Train rather than out at the end, because cleaning up is the
+                // third thing you do FOR the Digimon; Battle and the bell are what you do with it.
+                Button(action: clean) {
+                    ActionButtonFace(systemImage: "sparkles", tint: .teal)
+                }
+                .buttonStyle(.plain)
+                .disabled(isCleanDisabled)
+                .accessibilityLabel("Clean")
 
                 Button(action: battle) {
                     ActionButtonFace(systemImage: "bolt.fill", tint: .purple)

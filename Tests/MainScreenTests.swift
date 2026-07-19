@@ -347,6 +347,85 @@ final class MainScreenModelTests: XCTestCase {
         XCTAssertNil(model.state)
         XCTAssertEqual(model.phase, .loading)
     }
+
+    // MARK: - US-052: the clean action
+
+    /// AC3: cleaning zeroes the count and says so in the caption slot the screen already draws —
+    /// `actionMessage` is the same property a refused feed puts its reason in.
+    func testCleaningClearsThePoopAndConfirmsIt() async throws {
+        let model = makeModel()
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-12 * 60 * 60)
+        state.advancePoop(isAsleep: false, now: Fixture.morning)
+        XCTAssertEqual(state.poopCount, PoopClock.maximumPoops, "staged a full screen to clean")
+
+        XCTAssertTrue(model.clean())
+
+        XCTAssertEqual(model.poopCount, 0)
+        XCTAssertEqual(model.actionMessage, "All clean!")
+    }
+
+    /// The bug the restamp exists to stop. `PoopClock` freezes `poopUpdatedAt` at the instant the
+    /// ceiling was reached, so without moving it, the very next refresh finds twelve hours of
+    /// elapsed time and puts all four poops straight back — cleaning would undo itself in front of
+    /// the user. Asserted through a real `refresh()` rather than against the timestamp, because it
+    /// is the visible outcome that matters.
+    func testCleaningIsNotUndoneByTheNextRefresh() async throws {
+        let model = makeModel()
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-12 * 60 * 60)
+        state.advancePoop(isAsleep: false, now: Fixture.morning)
+        model.clean()
+
+        await model.refresh()
+
+        XCTAssertEqual(model.poopCount, 0)
+    }
+
+    /// AC4's other side: with nothing to clean the action is a no-op that leaves no caption behind.
+    /// The disabled button already prevents the tap; the rule lives in the model regardless.
+    func testCleaningWithNoPoopDoesNothing() async {
+        let model = makeModel()
+        await model.start()
+
+        XCTAssertEqual(model.poopCount, 0)
+        XCTAssertFalse(model.clean())
+        XCTAssertNil(model.actionMessage)
+    }
+
+    /// The wiring US-051 deliberately left undone: `refresh()` is what ages the count, so poop
+    /// actually accumulates in the running app rather than only in `PoopClock`'s tests.
+    func testARefreshAgesThePoopCount() async throws {
+        // Nine hours after the save was stamped, and awake — three poops at 3h each.
+        let model = makeModel(now: { Fixture.morning })
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-9 * 60 * 60)
+
+        await model.refresh()
+
+        XCTAssertEqual(model.poopCount, 3)
+    }
+
+    /// And the pause holds through the real refresh too: a Digimon inside its sleep window accrues
+    /// nothing, however long the app was shut. `isAsleep` is forced rather than inferred because
+    /// the fixture fetcher has no sleep history and `refresh()` re-derives the window from it.
+    func testARefreshWhileAsleepAgesNothing() async throws {
+        // 02:00, inside the 22:00-07:00 fallback window every one of these fixtures infers.
+        let night = Fixture.date("2026-07-18 02:00")
+        let model = makeModel(now: { night })
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        state.poopCount = 0
+        state.poopUpdatedAt = night.addingTimeInterval(-9 * 60 * 60)
+
+        await model.refresh()
+
+        XCTAssertTrue(model.isAsleep, "the fixture night really is inside the sleep window")
+        XCTAssertEqual(model.poopCount, 0)
+    }
 }
 
 final class StageDisplayNameTests: XCTestCase {

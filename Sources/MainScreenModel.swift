@@ -255,6 +255,7 @@ final class MainScreenModel: ObservableObject {
         seedSickDemoIfRequested()
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
+        seedPoopDemoIfRequested()
         #endif
     }
 
@@ -488,6 +489,40 @@ final class MainScreenModel: ObservableObject {
         battle()
     }
 
+    /// Debug-only: fills the screen with poop so US-052's pile and its Clean button can be
+    /// screenshotted. Waiting out twelve real hours is not a demo, and `simctl` cannot tap Clean.
+    ///
+    /// - `-poopDemo` — a full four poops beside the Digimon, and an enabled Clean button.
+    /// - `-poopCleanDemo` — the same, then cleaned: an empty ground and the confirmation caption.
+    ///
+    /// The count is ACCRUED by winding the timestamp back twelve hours and running the real
+    /// `advancePoop`, not hand-set, so what is screenshotted is the shipped rule's output. The
+    /// Digimon is forced awake first because a sleeping one accrues nothing and the fallback window
+    /// is 22:00-07:00 — an evening screenshot run would otherwise come back clean.
+    private func seedPoopDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        let cleaning = arguments.contains("-poopCleanDemo")
+        guard arguments.contains("-poopDemo") || cleaning, let state else { return }
+
+        // Off the starting egg like every other demo: an egg sheet has no happy frame, so the
+        // clean demo would screenshot the placeholder however well cleaning worked.
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        forceAwakeForDemo()
+        state.poopUpdatedAt = now().addingTimeInterval(-12 * 60 * 60)
+        state.advancePoop(isAsleep: isAsleep, now: now())
+
+        if cleaning {
+            // Held for a minute, because the caption clears itself in two and that is not long
+            // enough to boot, install, launch and screenshot inside.
+            actionDuration = 60
+            clean()
+        }
+    }
+
     /// Debug-only: puts a two-hour sleep window around the current moment and derives from it, so
     /// the Digimon is asleep NOW and stays asleep across the refresh every foregrounding runs.
     ///
@@ -542,6 +577,12 @@ final class MainScreenModel: ObservableObject {
         state.advanceHunger(now: now())
 
         await updateSleepState()
+
+        // After the sleep window is known, because poop is paused while the Digimon sleeps and
+        // `isAsleep` is what says so — running this before `updateSleepState` would charge the
+        // stretch against last launch's answer. Like hunger, it is owed for time already elapsed,
+        // so it is settled before the health read rather than after it.
+        state.advancePoop(isAsleep: isAsleep, now: now())
 
         let readings = await energySource.readings(now: now())
         let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
@@ -730,6 +771,41 @@ final class MainScreenModel: ObservableObject {
         }
         return outcome
     }
+
+    /// Clears the mess: sets `poopCount` to zero and says so in the caption slot.
+    ///
+    /// A no-op with nothing to clean, which the disabled button already prevents — but the guard is
+    /// here too, because "the button was disabled" is a fact about a view and this is where the
+    /// rule belongs. Returning it is also what lets a test assert the no-op without a view graph.
+    ///
+    /// **The restamp is not cosmetic.** `PoopClock` freezes `poopUpdatedAt` at the instant the
+    /// ceiling was reached, so a screen that has been full for a day carries a timestamp a day old.
+    /// Clearing the count without moving that timestamp would let the very next refresh find four
+    /// intervals' worth of elapsed time and put all four poops straight back — cleaning would
+    /// visibly undo itself. The clock starts again from the moment the user cleaned.
+    ///
+    /// The happy frame, held: it is a pose in the sheet rather than a loop, and it is the one
+    /// action in the row whose whole reward is the Digimon being pleased about it.
+    @discardableResult
+    func clean() -> Bool {
+        guard let state, state.poopCount > 0 else { return false }
+        state.poopCount = 0
+        state.poopUpdatedAt = now()
+        show(.still(.happy), message: "All clean!")
+
+        do {
+            try store?.save()
+        } catch {
+            // Same call as `feed()`: the in-memory clean stands and the screen is not taken away,
+            // but a lost save does not pass in silence.
+            Self.log.error("Could not save after cleaning: \(String(describing: error))")
+        }
+        return true
+    }
+
+    /// How many poops are on screen, for the pile to draw and the Clean button to disable itself
+    /// against. Zero when there is no game, which is also what leaves the button disabled.
+    var poopCount: Int { state?.poopCount ?? 0 }
 
     /// Picks an opponent near the player's stage, fights the battle out, and hands the replay to the
     /// screen via `pendingBattle`.

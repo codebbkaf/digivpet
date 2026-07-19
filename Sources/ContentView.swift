@@ -172,6 +172,17 @@ struct ContentView: View {
                         isMoving: model.isWandering
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // On the ground at the near edge, beside the Digimon rather than under it:
+                    // the sprite is drawn with `.offset` and walks the full width, so anything
+                    // sharing its centre would be walked over. The bottom-trailing corner is the
+                    // one place a pile of four is always beside whatever the Digimon is doing.
+                    // Nothing is drawn at zero, so a clean screen costs no layout at all.
+                    .overlay(alignment: .bottomTrailing) {
+                        if model.poopCount > 0 {
+                            PoopPile(count: model.poopCount)
+                                .padding(.trailing, 6)
+                        }
+                    }
                 }
                 .frame(maxHeight: .infinity)
 
@@ -197,8 +208,10 @@ struct ContentView: View {
                     // like the others, and a fourth circle costs less room than the labelled
                     // link below the fold that it replaces.
                     ActionControls(battlesLeft: model.battlesRemainingToday,
+                                   poopCount: model.poopCount,
                                    feed: { model.feed() },
                                    train: { model.train() },
+                                   clean: { model.clean() },
                                    battle: { model.battle() }) {
                         NotificationSettingsView(settings: model.notificationSettings)
                     }

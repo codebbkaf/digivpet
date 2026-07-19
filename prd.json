@@ -231,8 +231,8 @@
         "Verify in watchOS Simulator: screenshot with poop visible, and one after cleaning showing it gone"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SwiftUI PoopPile (no sprite exists) sits bottom-trailing in the sprite slot; Clean joins the action row as a 5th circle (diameter 30, spacing 4 = 166pt, fits the 176pt 41mm screen), disabled at 0 poops; clean() zeroes the count, RESTAMPS poopUpdatedAt so the next refresh does not re-accrue, and shows \"All clean!\" in the existing caption slot. advancePoop is now wired into refresh(). Build green, 601 tests 0 failures (+9); 41mm and 42mm screenshots taken with and without poop via -poopDemo/-poopCleanDemo."
     },
     {
       "id": "US-053",
