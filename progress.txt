@@ -8,3 +8,32 @@ Previous run (digimon-health-vpet, US-001..US-035, all passing) archived to
 Story ids continue from that run at US-036 rather than restarting at US-001,
 so commit messages stay unambiguous across the two waves.
 ---
+
+## 2026-07-19 — US-036: Add a movement model for horizontal wandering
+
+Added `Sources/Movement.swift` (`MovementModel`) and `Tests/MovementTests.swift` (13 tests).
+
+Design decisions worth not re-deriving:
+- Advanced by `advance(to: Date)`, never a timer. Integration is in fixed 0.25s steps
+  (`MovementModel.step`) rather than over raw elapsed time, so the path is a function of the seed
+  and TOTAL elapsed only — 10x1s lands exactly where 1x10s does. That invariant is what lets
+  US-037's TimelineView redraw at any cadence without the walk drifting.
+- Part-worn steps are carried, `updatedAt` moves by APPLIED steps only — same reasoning as
+  `HungerClock.advance`.
+- Absences over `maximumCatchUp` (60s) are DROPPED, not simulated: an unwatched walk did not
+  happen, unlike unwatched hunger. Position kept, clock restamped.
+- Randomness uses the existing `SeededGenerator` from Battle.swift. 3/8 left, 3/8 right, 2/8 rest;
+  4-12 steps per heading. A rest HOLDS facing so a resting sprite does not spin.
+- Bound turn uses `>=`/`<=`, not `>`/`<`. Found by a failing test: 30pt/s x 0.25s = 7.5, and
+  60/7.5 = 8, so the sprite LANDS exactly on a 60pt bound without overshooting. With `>` it did
+  not turn there, sat pinned an extra step, then overshot and turned — a visible stutter that only
+  shows up when the bound is a whole multiple of the step distance.
+- `bound` is a settable var with a clamping didSet, so US-037 can hand it the real screen width and
+  a shrink can never strand the sprite off screen.
+
+Verified: `xcodebuild build` SUCCEEDED. Full suite `Executed 521 tests, with 0 failures`.
+project.yml needed no edit — it lists `Sources` and `Tests` as directory paths, so new files are
+picked up by `xcodegen generate` alone, which was re-run.
+
+Remains: US-037 (render it in ContentView, suspend while sleeping/eating/sick/dead/overlay) is the
+next story and is the first consumer of this model.

@@ -18,8 +18,8 @@
         "Tests pass"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MovementModel advances in fixed 0.25s steps from an injected Date (no timer), so many small advances equal one large one; seeded via the existing SeededGenerator, bounded with turn-on-reach (>= not >, else a bound that is a whole multiple of the step distance pins the sprite for an extra step). 13 tests in Tests/MovementTests.swift, incl. an exact-path literal for seed 1. project.yml needed no edit (Sources/ and Tests/ are directory-wide paths); xcodegen re-run anyway. Full suite 521 tests, 0 failures; build green."
     },
     {
       "id": "US-037",
