@@ -329,3 +329,48 @@ screenshot (Agumon detail sheet) since the sheet stayed on `DexView` while the g
 Remains: US-043 (verify and record sprite availability for the new lines) is next. It and US-044 to
 US-046 are what will actually populate the line list this story built — expect the list to go from
 3 rows to 6, and `Others` to appear for the first time once any `dexOnly` node is seeded.
+
+## 2026-07-19 — US-043: Verify and record sprite availability for the new lines
+
+Wrote `scripts/check_sprites.py` and `docs/sprite-availability.md`. No Swift changed, so the build
+and the 554-test suite are the same green they were after US-042 (re-ran both; 0 failures).
+
+The script classifies a name as `animated` (sheet under a stage folder), `dexOnly` (only in
+`Idle Frame Only/`), or `missing`. It imports the index-building pieces from `import_roster.py`
+rather than re-deriving the sprite-tree facts, so the two cannot drift on what a stage folder is.
+Names come either from argv or from `--tree "Version 3"`, which parses the `### ` sections of
+`Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` — hand-typing 55 names is how a
+typo becomes a fake "missing". Exits non-zero when anything is not animated, so US-044/045/046 can
+gate on it.
+
+**All four exceptions the story names are real, and I verified each on disk rather than trusting
+the story text:** Poyomon / Nanimon / Flymon are `dexOnly`, and Kokatorimon is absent from the pack
+entirely — `find "16x16 Digimon Sprites" -iname "*kokatori*"` returns zero hits. None may be seeded
+as playable.
+
+Three findings the story did NOT anticipate, and the seeding stories will trip on all three:
+
+- **V3 has no animated Fresh stage at all.** Poyomon being dexOnly means the Patamon line cannot
+  start where the tree says it starts. US-044 has to decide what to do — V4 (Yuramon) and V5
+  (Zurumon) are both fine, so this is V3's problem alone.
+- **`HiAndromon` in the tree is `Hi-Andromon.png` on disk.** The spriteFile needs the hyphen; the
+  check only matched because lookup normalizes hyphens away.
+- **Gizamon has no Digitama.** Every other Rookie in these three lines has one (Pata_, Kune_,
+  Piyo_, Pal_, Gazi_), but no `Giza_Digitama.png` exists.
+
+Also: both Ultra nodes (Chaosmon, Chaosdramon) have art, but each is a Jogress with a node from
+another version's line, which the graph schema cannot express. Listed as available art, not as a
+seedable edge.
+
+Two parser bugs I hit and fixed, in case the parsing is ever extended to Pendulum Color: group
+headers like `* Champion to Ultimate (Perfect):` parse as names unless chunks ending in `:` are
+skipped; and a tree names one node two ways (`Mugendramon (Machinedramon)` as Mega, bare
+`Mugendramon` on the Ultra arrow's left side), so dedupe is keyed on the name minus its
+parenthetical. Note `--tree` reads Part 1 only — Pendulum Color reuses the same `Version N`
+headings and would otherwise match two sections.
+
+Passed: build green; `Executed 554 tests, with 0 failures` (unchanged, as expected for a
+docs+script story). Both `--tree` and bare-argv modes exercised; spot-checked Ex-Tyranomon,
+Hi-Andromon, Scumon, Centalmon, Patamon, Gazi_Digitama with `ls`.
+
+Remains: US-044 (seed the V3 Patamon line) is next, and it inherits the Poyomon problem above.

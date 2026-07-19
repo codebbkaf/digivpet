@@ -129,6 +129,23 @@ The remaining 152 are emitted as **`"stage": null`**, meaning *unknown* — not 
 > preserve what you assign. Making `stage` optional (`Stage?` = "unknown", legal only when
 > `dexOnly`) is the alternative, and is a schema change with its own validator rule.
 
+### `scripts/check_sprites.py` — art availability, before seeding a line
+
+Answers one question for a list of names: does this Digimon have an animated sheet (`animated`),
+only a single idle frame (`dexOnly`, never playable), or no art at all (`missing`)? Run it before
+writing `spriteFile` values, not after — Kokatorimon is absent from the asset pack entirely and
+Poyomon has no sheet, and both look like perfectly ordinary names until you check.
+
+```bash
+python3 scripts/check_sprites.py Patamon Poyomon Kokatorimon
+python3 scripts/check_sprites.py --eggs --tree "Version 3"   # names read from the trees md
+```
+
+`--tree` pulls the names from `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`,
+the source of truth for the trees — do not re-parse the PDFs. Exits non-zero if anything checked
+is not `animated`, so it can gate a seeding change. The committed result for the Color V3/V4/V5
+lines is [docs/sprite-availability.md](docs/sprite-availability.md).
+
 ### `scripts/cut_sprites.swift` — frame inspection
 
 Exports frames as individual PNGs to `sprites_cut/` (gitignored) so slicing math and frame labels

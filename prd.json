@@ -139,8 +139,8 @@
         "Typecheck passes (xcodebuild build succeeds)"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "scripts/check_sprites.py reports animated/dexOnly/missing per name, reading names from the trees md via --tree; docs/sprite-availability.md records V3/V4/V5. All four exceptions confirmed on disk: Poyomon, Nanimon, Flymon dexOnly; Kokatorimon absent entirely (find -iname '*kokatori*' = 0 hits). Also found: HiAndromon is filed Hi-Andromon.png, and Gizamon has no Digitama. Build green, 554 tests 0 failures."
     },
     {
       "id": "US-044",
