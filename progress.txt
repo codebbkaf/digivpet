@@ -545,3 +545,59 @@ errors on the extended graph. docs/evolutions-schema.md "Current contents" updat
 Remains: US-051 (add the poop model) is next — the start of the four-story poop arc
 (US-051..US-054), which is Swift work rather than data. The three complication stories
 (US-047..US-050) sit behind it by priority.
+
+## 2026-07-19 — US-051: Add the poop model
+
+New `Sources/Poop.swift` holding `PoopClock`, shaped deliberately as a twin of `HungerClock`: poop
+is never ticked, it is recomputed from `GameState.poopUpdatedAt` against an injected clock, so a
+Digimon left alone for a day is found standing in a day's worth of mess rather than in none. One
+poop per **3 elapsed awake hours**, ceiling **4**.
+
+**Elapsed time, NOT feeding — the one real design call here.** The obvious V-Pet rule is "eating
+produces poop", and the AC allows either. It is wrong for this game: poop exists to be the visible
+face of neglect (US-053 charges care mistakes for leaving it), and tying it to feeding would mean a
+Digimon nobody ever feeds makes no mess at all — the most neglected Digimon would have the cleanest
+screen. Time is the one input that keeps running while the user is not looking. Reasoning recorded
+in the `PoopClock` doc comment, not just here. 3h against hunger's 4h so cleaning is its own errand
+rather than always being done on the same visit as feeding; ceiling 4 matches
+`HungerClock.maximumHunger` and is also what fits beside the Digimon on a 41mm screen.
+
+**The sleep pause is a restamp, not a bank.** `advancePoop(isAsleep:now:)` treats asleep-or-dead as
+paused, and a paused call accrues nothing AND moves the timestamp to `now`, so the paused stretch is
+genuinely skipped instead of being paid out all at once by the next waking refresh. The honest limit,
+documented on `advance`: pausing is only observed by a refresh that RUNS during it, so a night the
+app slept through is still charged. Reconstructing which of the closed hours were asleep would be
+guesswork — `SleepSchedule` is inferred from last night alone — so it is left as a known
+approximation rather than faked. `isAsleep` is passed in (sleep is derived, not saved state, same as
+`FeedAction.feed`); death is read off `healthStatus` because that one IS saved.
+
+The part-worn-interval carry and the freeze-at-ceiling behaviour are inherited from `HungerClock`
+on purpose: the frozen `poopUpdatedAt` is how long the screen has been full of mess, which US-053
+gets for free rather than needing a second saved date.
+
+`poopCountStorage`/`poopUpdatedAtStorage` added to `GameState` as OPTIONALS with computed
+`poopCount`/`poopUpdatedAt` facades, for the migration reason every other storage property there
+records — an optional attribute is the one shape SwiftData migrates into an already-shipped store
+without a default. Accessors live in GameState.swift, not Poop.swift, because `private` is
+file-scoped: an extension in another file cannot see the backing store. `init` stamps
+`poopUpdatedAt` with `now` so a new game's clock starts at the hatch.
+
+No `project.yml` edit was needed — `Sources` and `Tests` are directory globs, so both new files were
+picked up by `xcodegen generate` alone (AC8 satisfied, verified by the files compiling).
+
+Passed: build green; `Executed 592 tests, with 0 failures` (was 576, +16, all 16 confirmed by name in
+an `-only-testing:DigiVPetTests/PoopClockTests -only-testing:DigiVPetTests/PoopStateTests` run).
+`PoopClockTests` pins accumulation, the 3h boundary, the partial-interval carry, the ceiling, the
+timestamp freeze and the pause; `PoopStateTests` drives the real `GameState` and `GameStore`,
+including a drop-and-reopen for persistence.
+
+One test is weaker than its name would suggest and is labelled as such:
+`testAReopenedGameCanBeAdvancedAndSavedAgain` proves the reopen-advance-save round trip, NOT a real
+pre-poop migration — writing a genuinely old store needs a second `@Model` copy of the schema, the
+way `DominantEnergyTests.PreRecencySchema` does. Worth doing if poop ever ships to a real device
+with existing saves.
+
+Remains: the model is NOT wired into `MainScreenModel.refresh()` — nothing calls `advancePoop` yet,
+so poop does not accumulate in the running app. That is deliberate: US-052 (show poop and add the
+clean action) is the story that draws it and is the natural place to add the call. US-052..US-054
+finish the poop arc, then the four complication stories US-047..US-050.

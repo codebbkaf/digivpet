@@ -237,6 +237,13 @@ final class GameState {
     /// background wake as a foregrounding. An in-memory flag would be lost on the next launch and
     /// the user would be warned their Digimon is dying a second time.
     private var deathWarningSentStorage: Date?
+    /// Backing store for `poopCount`/`poopUpdatedAt` (US-051): how many poops are on screen, and the
+    /// instant that count was last brought up to date. Optional for the same migration reason as
+    /// every other storage property here — an optional attribute is the one shape SwiftData migrates
+    /// into an already-shipped store without a default. See `PoopClock` for the accrual rule and
+    /// `Poop.swift` for the computed accessors.
+    private var poopCountStorage: Int?
+    private var poopUpdatedAtStorage: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -270,6 +277,10 @@ final class GameState {
         self.sickSinceStorage = nil
         self.diedAtStorage = nil
         self.deathWarningSentStorage = nil
+        self.poopCountStorage = 0
+        // Stamped with `now` rather than left nil, so a brand new game's poop clock starts at the
+        // hatch instead of at whichever refresh happens to look first.
+        self.poopUpdatedAtStorage = now
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -372,6 +383,25 @@ extension GameState {
     var deathWarningSentAt: Date? {
         get { deathWarningSentStorage }
         set { deathWarningSentStorage = newValue }
+    }
+
+    /// How many poops are on screen, 0...`PoopClock.maximumPoops`. Grown by elapsed time, never by a
+    /// tick — `poopUpdatedAt` is what it is derived from, and `advancePoop(isAsleep:now:)` is what
+    /// derives it. See `PoopClock` for the rule.
+    ///
+    /// Computed for the same reason `refusalCount` is: the optionality persistence needs stops at
+    /// the model boundary, so a save written before poop was tracked reads as 0 rather than as a
+    /// `nil` every caller has to unwrap.
+    var poopCount: Int {
+        get { poopCountStorage ?? 0 }
+        set { poopCountStorage = newValue }
+    }
+
+    /// The instant `poopCount` was last brought up to date, or nil on a save written before poop was
+    /// tracked, which `PoopClock.advance` reads as "start the clock now".
+    var poopUpdatedAt: Date? {
+        get { poopUpdatedAtStorage }
+        set { poopUpdatedAtStorage = newValue }
     }
 
     /// Counts one refused feed against the local day containing `now`.

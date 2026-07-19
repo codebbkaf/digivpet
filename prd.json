@@ -107,7 +107,7 @@
       ],
       "priority": 6,
       "passes": true,
-      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen — that is US-042."
+      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen \u2014 that is US-042."
     },
     {
       "id": "US-042",
@@ -196,7 +196,7 @@
       ],
       "priority": 11,
       "passes": true,
-      "notes": "Seeded 17 nodes as line `gazimon` (roster 52 -> 69). Gazi_Digitama -> Zurumon -> Pagumon, which BRANCHES to both V5 Rookies: Gazimon (strength, isDefault) and Gizamon (stamina) — the first branching Baby II in the file. Both were seeded because Deltamon hangs off Gizamon alone, and Gizamon's missing Digitama stops mattering once it is reached through Pagumon. Flymon omitted (dexOnly), noted on the `gizamon` node; Chaosdramon omitted (Jogress), noted on `metaltyranomon`. Raremon is the isDefault on both Rookies, sharing each one's strength gate from below. All 17 spriteFiles ls-verified on disk. Build green; 576 tests, 0 failures (+8)."
+      "notes": "Seeded 17 nodes as line `gazimon` (roster 52 -> 69). Gazi_Digitama -> Zurumon -> Pagumon, which BRANCHES to both V5 Rookies: Gazimon (strength, isDefault) and Gizamon (stamina) \u2014 the first branching Baby II in the file. Both were seeded because Deltamon hangs off Gizamon alone, and Gizamon's missing Digitama stops mattering once it is reached through Pagumon. Flymon omitted (dexOnly), noted on the `gizamon` node; Chaosdramon omitted (Jogress), noted on `metaltyranomon`. Raremon is the isDefault on both Rookies, sharing each one's strength gate from below. All 17 spriteFiles ls-verified on disk. Build green; 576 tests, 0 failures (+8)."
     },
     {
       "id": "US-051",
@@ -215,8 +215,8 @@
         "Tests pass"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PoopClock (Sources/Poop.swift) accrues one poop per 3 elapsed AWAKE hours, ceiling 4, derived from GameState.poopUpdatedAt like HungerClock rather than ticked; elapsed time rather than feeding was chosen so a never-fed Digimon still makes a mess. advancePoop(isAsleep:now:) pauses on asleep-or-dead by restamping, so the paused stretch is skipped rather than banked. poopCountStorage/poopUpdatedAtStorage added to GameState as optionals for SwiftData migration. 16 new tests in Tests/PoopTests.swift; 592 tests, 0 failures. Not yet wired into MainScreenModel.refresh \u2014 US-052 does that when it draws the poop."
     },
     {
       "id": "US-052",
