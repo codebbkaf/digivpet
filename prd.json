@@ -36,8 +36,8 @@
         "Verify in watchOS Simulator (Apple Watch Series 11 46mm): capture a screenshot via simctl showing the sprite off-centre"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "DigimonSpriteView gained `offset` (an .offset, so the walk cannot re-lay-out the name/caption around it) and `flipped` (.scaleEffect(x: -1) applied AFTER .interpolation(.none) on the Image, so both headings sample identically). The pack's art faces LEFT, verified by eye on Agumon.png, so flipped == facing right. New Sources/WanderingSpriteView.swift holds the walk: a TimelineView ticking at exactly MovementModel.step drives a non-observable SpriteWanderer box in @State (no @Published, so no publishing-during-view-update), safe to call from body because advance(to:) is idempotent within a step. Suspension is MainScreenModel.isWandering = `animation == .idle && no overlay`, which is the same fact as the sleep/sick/dead list said once instead of twice - a state added to restingAnimation later suspends movement for free, and eating falls out of it. Added MovementModel.hold(at:) for the suspended stretches: skipping the advance alone would leave the clock behind and teleport the sprite the instant a 5s eat ended. Added DEBUG -wanderDemo (healthy Agumon), because every other demo flag seeds a state that SUSPENDS movement and the default save is a near-symmetric egg in which a flip cannot be seen. Build green; 529 tests, 0 failures (was 521, +8). Simulator 46mm: sprite screenshotted at the far right AND far left of centre, mirrored when heading right and native when heading left, pixels crisp both ways, walk frames alternating."
     },
     {
       "id": "US-038",

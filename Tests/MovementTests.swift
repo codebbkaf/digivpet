@@ -244,4 +244,44 @@ final class MovementTests: XCTestCase {
         model.advance(to: Clock.after(10 + MovementModel.maximumCatchUp + 6))
         XCTAssertNotEqual(model.offset, settled, "walking resumes after the gap")
     }
+
+    // MARK: - US-037: suspending the walk
+
+    /// The defect `hold(at:)` exists to prevent: a suspension that only SKIPS advancing leaves the
+    /// clock behind, and the first advance afterwards applies the whole pause at once. Held
+    /// properly, a paused stretch costs exactly the steps it lasted and no more.
+    func testHoldingSuspendsTheWalkWithoutBankingIt() {
+        var held = MovementModel(bound: wideBound, seed: 3, start: Clock.start)
+        held.advance(to: Clock.after(2))
+        let paused = held.offset
+
+        // Five seconds asleep, eating, or behind an overlay.
+        for second in 3...7 { held.hold(at: Clock.after(Double(second))) }
+        XCTAssertEqual(held.offset, paused, "a held sprite does not walk")
+
+        // One step after resuming is ONE step of travel, not twenty banked up.
+        held.advance(to: Clock.after(7 + MovementModel.step))
+        XCTAssertLessThanOrEqual(
+            abs(held.offset - paused),
+            MovementModel.pointsPerSecond * CGFloat(MovementModel.step),
+            "resuming must not teleport the sprite across the screen"
+        )
+    }
+
+    /// A held pause costs the walk nothing but time: what resumes is the same path the same seed
+    /// would have walked, just later. This is what lets the sprite pick up where it stood.
+    func testAHeldPauseDoesNotChangeThePathThatFollows() {
+        var uninterrupted = MovementModel(bound: wideBound, seed: 11, start: Clock.start)
+        var interrupted = MovementModel(bound: wideBound, seed: 11, start: Clock.start)
+
+        uninterrupted.advance(to: Clock.after(4))
+
+        interrupted.advance(to: Clock.after(2))
+        interrupted.hold(at: Clock.after(30))
+        interrupted.advance(to: Clock.after(32))
+
+        XCTAssertEqual(interrupted.offset, uninterrupted.offset,
+                       "four seconds of walking is four seconds of walking, paused or not")
+        XCTAssertEqual(interrupted.facing, uninterrupted.facing)
+    }
 }

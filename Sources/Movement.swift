@@ -107,6 +107,18 @@ struct MovementModel {
         updatedAt = updatedAt.addingTimeInterval(Double(steps) * Self.step)
     }
 
+    /// Keeps the Digimon where it is and moves its clock to `now` without walking it.
+    ///
+    /// For the stretches US-037 suspends movement over — asleep, eating, sick, dead, or an overlay
+    /// up. Without this the model would still be stamped at the moment movement stopped, and the
+    /// first `advance(to:)` after a five-second eat loop would apply twenty steps at once: the
+    /// sprite would teleport across the screen the instant it finished its meal. Holding says the
+    /// same thing `maximumCatchUp` says about a long absence — a walk nobody took did not happen —
+    /// but says it for pauses far too short to trip that limit.
+    mutating func hold(at now: Date) {
+        updatedAt = now
+    }
+
     private mutating func advanceOneStep() {
         if stepsUntilDecision <= 0 { decide() }
         stepsUntilDecision -= 1

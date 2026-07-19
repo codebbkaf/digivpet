@@ -37,3 +37,56 @@ picked up by `xcodegen generate` alone, which was re-run.
 
 Remains: US-037 (render it in ContentView, suspend while sleeping/eating/sick/dead/overlay) is the
 next story and is the first consumer of this model.
+
+## 2026-07-19 — US-037: Render movement in the main screen
+
+Wired US-036's MovementModel into the main screen. New `Sources/WanderingSpriteView.swift`, plus
+`offset`/`flipped` on DigimonSpriteView, `isWandering` on MainScreenModel, `hold(at:)` on
+MovementModel, and a `-wanderDemo` flag. New tests: Tests/WanderingTests.swift (5), 2 in
+MovementTests, 1 in SleepStateTests.
+
+Design decisions worth not re-deriving:
+- The pack's art faces LEFT. Confirmed by eye on an upscaled Agumon.png, not assumed. So
+  `flipped == (facing == .right)`. Get this backwards and the Digimon moonwalks.
+- `.scaleEffect(x: -1)` is applied to the Image AFTER `.interpolation(.none)`, so interpolation is
+  what governs sampling on BOTH headings. Verified in the Simulator, not just reasoned about:
+  screenshots facing each way are equally crisp. x of exactly -1 is a mirror, so each source pixel
+  lands on exactly one destination pixel anyway.
+- The sprite moves with `.offset`, which does NOT reserve the ground it covers — that is the point,
+  a walking Digimon must not shove the name above it or the caption below it around. The consequence
+  is the row must claim `.frame(maxWidth: .infinity)` itself or a sprite at the left bound gets
+  clipped by a parent sized to one sprite.
+- `SpriteWanderer` is a reference type in @State that publishes NOTHING. The TimelineView is already
+  scheduling the redraw, so an ObservableObject would only add "Publishing changes from within view
+  updates" warnings for a repaint that was happening regardless. Calling it from `body` is safe
+  because `advance(to:)` is idempotent within a step.
+- The TimelineView ticks at exactly `MovementModel.step`, so one tick is one step. Faster redraws
+  the same position; slower applies several at once and stutters.
+- SUSPENSION IS ONE EXPRESSION, NOT A LIST: `animation == .idle && pendingEvolution == nil &&
+  pendingBattle == nil && memorial == nil`. Sleeping, sickness and death are ALREADY exactly what
+  makes `restingAnimation` return non-idle, so restating them here would be the same fact twice and
+  a state added to that switch later would silently keep walking. Eating and every momentary pose
+  fall out for free.
+- Added `MovementModel.hold(at:)`. A suspension that merely SKIPS advancing leaves `updatedAt`
+  behind, and the first advance afterwards applies the whole pause at once — the sprite would
+  teleport across the screen the instant it finished a 5s meal. Pauses that short never trip
+  `maximumCatchUp`, so that existing guard does not cover this. Two tests pin it, including one
+  asserting a held pause does not change the path that follows.
+- Added DEBUG-only `-wanderDemo` (healthy Agumon). Necessary, not convenience: every other demo flag
+  seeds a state that SUSPENDS movement (sleep/sick/death), and the default save is a Digitama whose
+  art is near enough symmetric that a flip is invisible in it. Without it the mirroring AC could not
+  be observed at all.
+
+Verified: `xcodebuild build` SUCCEEDED. Full suite `Executed 529 tests, with 0 failures` (was 521).
+Simulator, Series 11 (46mm), `-healthAnswered -noNotificationPrompt -wanderDemo`: Agumon
+screenshotted at the far right of centre MIRRORED, and at the far left NATIVE, never clipped,
+pixels crisp both ways, walk1/walk2 alternating throughout.
+
+SIMULATOR GOTCHA, cost ~15 minutes: the notification-authorization alert from an earlier launch
+SURVIVES `simctl terminate` AND `simctl uninstall` — every screenshot lands on the alert. Launching
+with `-noNotificationPrompt` does not help once one is already queued. `simctl erase` on the device
+is what clears it; after that `-healthAnswered` is needed or the run lands on onboarding.
+
+Remains: US-038 (circular icon buttons) is next. Note for it — this story deliberately did NOT
+touch the ScrollView or the three controls; the sprite still sits inside the scroll view, which is
+US-039's problem.

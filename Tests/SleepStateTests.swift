@@ -284,6 +284,23 @@ final class SleepStateTests: XCTestCase {
         XCTAssertEqual(awake.animation, .idle)
     }
 
+    /// US-037: a sleeping Digimon does not wander. Driven by the DERIVED sleep state, same as the
+    /// test above — nothing here says "asleep" except the sleep history, so this cannot pass by
+    /// someone having set a flag.
+    func testASleepingDigimonDoesNotWanderAndAnAwakeOneDoes() async throws {
+        let asleep = try await startedModel(named: "wanderAsleep",
+                                            now: SleepClock.at("2026-03-11 01:00"),
+                                            samples: [SleepClock.night])
+        XCTAssertTrue(asleep.isAsleep)
+        XCTAssertFalse(asleep.isWandering, "a sleeping Digimon must not walk about")
+
+        let awake = try await startedModel(named: "wanderAwake",
+                                           now: SleepClock.at("2026-03-11 09:00"),
+                                           samples: [SleepClock.night])
+        XCTAssertFalse(awake.isAsleep)
+        XCTAssertTrue(awake.isWandering, "and an awake one must, or nothing moves at all")
+    }
+
     // MARK: AC3 — cannot be fed or trained
 
     /// Driven by the DERIVED sleep state rather than by setting `isAsleep` by hand, which is the

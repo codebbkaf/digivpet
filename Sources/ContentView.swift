@@ -152,12 +152,15 @@ struct ContentView: View {
                         .lineLimit(1)
 
                     // The pose comes from the model, so a feed shows the eat loop and a refusal the
-                    // refuse frame — both revert to idle on their own.
-                    DigimonSpriteView(
+                    // refuse frame — both revert to idle on their own. `isWandering` is what stops
+                    // the Digimon walking while it sleeps, eats, is sick or dead, or is behind an
+                    // overlay; it resumes from where it stood when that clears.
+                    WanderingSpriteView(
                         stage: presentation.spriteStage,
                         name: presentation.spriteFile,
                         animation: model.animation,
-                        scale: 5
+                        scale: 5,
+                        isMoving: model.isWandering
                     )
 
                     // The caption slot is always present, so showing a message does not shove the

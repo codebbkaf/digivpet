@@ -74,6 +74,15 @@ struct DigimonSpriteView: View {
     var animation: SpriteAnimation = .idle
     /// Screen points per sprite pixel. 16x16 art is unreadable at 1x on a watch.
     var scale: CGFloat = 4
+    /// Points to shift the sprite horizontally from where it was laid out; US-037's wander.
+    ///
+    /// An `.offset`, deliberately, not padding or a spacer: offset moves the drawing WITHOUT
+    /// re-running layout, so a walking Digimon cannot shove the name above it or the caption below
+    /// it around as it goes.
+    var offset: CGFloat = 0
+    /// Mirrors the sprite horizontally. Every sheet in the pack is drawn facing LEFT, so this is
+    /// what a caller sets to show the Digimon walking right.
+    var flipped: Bool = false
     var cache: SpriteSheetCache = .shared
 
     private var side: CGFloat { CGFloat(SpriteSheet.frameSize) * scale }
@@ -95,12 +104,19 @@ struct DigimonSpriteView: View {
             }
         }
         .frame(width: side, height: side)
+        .offset(x: offset)
     }
 
     private func image(_ frame: CGImage) -> some View {
         Image(decorative: frame, scale: 1)
+            // Stays on the Image, ahead of the mirroring below, so `.interpolation(.none)` is what
+            // governs how these 16 pixels are sampled no matter which way the sprite faces. Pixel
+            // art smoothed on one heading and crisp on the other would be worse than either.
             .interpolation(.none)
             .resizable()
+            // A mirror, not a resize: x of exactly -1 maps every source pixel onto exactly one
+            // destination pixel, so there is nothing for a filter to blur even where one applies.
+            .scaleEffect(x: flipped ? -1 : 1)
     }
 
     /// Shown when the sheet is missing, malformed, or has no art for this loop. A visible gap

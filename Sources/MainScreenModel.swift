@@ -251,6 +251,7 @@ final class MainScreenModel: ObservableObject {
         seedFeedDemoIfRequested()
         seedTrainDemoIfRequested()
         seedSleepDemoIfRequested()
+        seedWanderDemoIfRequested()
         seedSickDemoIfRequested()
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
@@ -363,6 +364,26 @@ final class MainScreenModel: ObservableObject {
         }
         forceAsleepForDemo()
         animation = restingAnimation
+    }
+
+    /// Debug-only: puts a healthy Child on screen so US-037's walk — and in particular the MIRRORED
+    /// sprite it draws when heading right — can be screenshotted.
+    ///
+    /// - `-wanderDemo` — a healthy Agumon, walking.
+    ///
+    /// Needed because every other demo flag seeds a state that SUSPENDS movement, and the default
+    /// save is a Digitama, whose art is near enough symmetric that a flip cannot be seen in it. The
+    /// walk itself is untouched: this only chooses who is doing it.
+    private func seedWanderDemoIfRequested() {
+        guard CommandLine.arguments.contains("-wanderDemo"), let state else { return }
+
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            // Restamped for the same reason the other demos restamp it: an old `stageEnteredDate`
+            // lets the next refresh evolve the demo out from under the screenshot.
+            state.stageEnteredDate = now()
+        }
     }
 
     /// Debug-only: makes the Digimon ill so the sick pose can be screenshotted. The Simulator has no
@@ -583,6 +604,23 @@ final class MainScreenModel: ObservableObject {
         case .sick: return .still(.angry)
         default: return isAsleep ? .sleep : .idle
         }
+    }
+
+    /// Whether the Digimon should be walking about the screen right now (US-037).
+    ///
+    /// Expressed as "the pose is the plain idle walk, and nothing is covering the screen" rather
+    /// than as a list of the states that forbid it. That is not a shortcut — it is the same fact
+    /// said once instead of twice. Sleeping, sickness and death are ALREADY exactly what makes
+    /// `restingAnimation` return something other than `.idle`, so a state added to that switch
+    /// later suspends movement automatically instead of needing to be remembered here. Eating and
+    /// every other momentary pose fall out of the same rule for free: a Digimon holding still to
+    /// eat should not slide across the screen while it does.
+    ///
+    /// The three overlays are checked because a battle, a ceremony or a memorial has the screen,
+    /// and a sprite pacing on unseen underneath it is work spent drawing nothing. Each clears on
+    /// its own, at which point this returns true again and the walk resumes from where it stood.
+    var isWandering: Bool {
+        animation == .idle && pendingEvolution == nil && pendingBattle == nil && memorial == nil
     }
 
     /// Every pose `settleRestingPose` is allowed to swap out. Exactly the poses `restingAnimation`
