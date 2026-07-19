@@ -20,6 +20,7 @@ without breaking every decoder.
   "id": "koromon",
   "displayName": "Koromon",
   "stage": "Baby II",
+  "line": "agumon",
   "spriteFile": "Koromon",
   "variant": null,
   "dexOnly": false,
@@ -32,6 +33,7 @@ without breaking every decoder.
 | `id` | string | yes | Unique key that edges point at. Separate from `spriteFile` so art can be renamed or shared without rewriting edges. Convention: the sprite basename, lowercased. |
 | `displayName` | string | yes | Shown to the user. Stage-disambiguating suffixes (`_Child`, `_Adult`) are stripped here but kept in `spriteFile`. |
 | `stage` | string | yes | One of `Digitama`, `Baby I`, `Baby II`, `Child`, `Adult`, `Perfect`, `Ultimate-Super Ultimate`, `Armor-Hybrid`. These are the `Stage` raw values, which are also the sprite subfolder names. |
+| `line` | string | yes | Which evolution line the node belongs to, e.g. `agumon`, `patamon`. The Dex draws one tree per line. Convention: the `id` of the line's Child-stage Digimon. Required and never blank — a node with no line appears in no tree, and nothing at runtime would say so. Unlike `dexOnly` and `evolutions` this has **no default**: omitting the key fails the whole load. |
 | `spriteFile` | string | yes | Filename **without** `.png`, under `16x16 Digimon Sprites/<stage>/`. Must exist on disk — US-009 checks. Never blank: `Bundle.url(forResource:)` treats an empty name like nil and returns an arbitrary PNG. |
 | `variant` | string | no | Variant suffix parsed off the filename: `X`, `Black`, `Blue`, `Virus`, `2006`, `2010`, `YnK`. Omitted for the base form. Variants are separate nodes, not skins. |
 | `dexOnly` | bool | no, default `false` | True for the 157 Digimon that exist only in `Idle Frame Only/` with no animated 48×64 sheet. They may appear in the Dex but must never be playable or named by an edge — animating one means slicing a sheet that does not exist. |
@@ -69,6 +71,10 @@ Both fall out of the shape rather than needing special support:
 - **Converging**: several nodes may name the same `to`. Nothing enforces one parent — edges are
   stored on the parent, so `EvolutionGraph.parents(of:)` scans for them.
 
+`line` is display grouping only; no validator rule ties it to edges. A branch that stays in the
+family keeps the family's line (Meramon is `agumon`, not its own line), so the Dex draws it as a
+branch of that tree rather than a one-node tree of its own.
+
 ## Digitama hatch edges
 
 A Digitama's single edge omits `requiredEnergy`. Hatching (US-018) fires on **total** energy
@@ -83,7 +89,9 @@ The edge's real job is to name which Baby I this egg hatches into.
 ## Generating nodes
 
 `scripts/import_roster.py` derives `id`, `displayName`, `stage`, `spriteFile`, `variant` and
-`dexOnly` for all 1,022 Digimon from the sprite filenames, and carries hand-authored
+`dexOnly` for all 1,022 Digimon. It does **not** derive `line` — nothing in a sprite filename
+says which family a Digimon belongs to — so a generated node must be given one by hand before it
+is promoted into this file, exactly as `stage: null` must be resolved (see below) from the sprite filenames, and carries hand-authored
 `evolutions[]` over on a re-run. It never authors an edge — no artifact in this project holds
 evolution data. See README.md for what it derives and what it deliberately refuses to guess.
 
@@ -96,6 +104,7 @@ decode — give it a stage before promoting it into this file. README.md has the
 
 ## Current contents
 
-`Resources/evolutions.json` holds 22 nodes: three complete lines from Digitama through Ultimate
-(Agumon, Gabumon, Palmon), plus Meramon as the target of the one branching node
+`Resources/evolutions.json` holds 22 nodes across three `line` values — `agumon` (8 nodes),
+`gabumon` (7) and `palmon` (7) — each a complete line from Digitama through Ultimate, plus
+Meramon (in the `agumon` line) as the target of the one branching node
 (Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).

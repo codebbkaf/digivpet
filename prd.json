@@ -87,8 +87,8 @@
         "Tests pass"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added required 'line' to EvolutionNode (decode, not decodeIfPresent, so a node missing it fails the load); tagged all 22 nodes agumon/gabumon/palmon; added GraphValidationError.emptyLine; docs/evolutions-schema.md updated. 541 tests green."
     },
     {
       "id": "US-041",

@@ -69,6 +69,15 @@ struct EvolutionNode: Codable, Equatable, Identifiable {
     let displayName: String
     let stage: Stage
 
+    /// Which evolution line this node belongs to, e.g. `agumon`, `patamon`. Purely a grouping
+    /// key: the Dex draws one tree per line (US-041), and nothing in the evolution engine reads
+    /// it, so an edge may still cross lines if a roster ever wants that.
+    ///
+    /// Every node carries one. There is no "unassigned" — a node with no line is invisible to
+    /// the Dex tree, which is a silent disappearance rather than a visible error, so the decoder
+    /// below requires the key and `validate()` rejects an empty one.
+    let line: String
+
     /// Filename without extension under `16x16 Digimon Sprites/<stage.rawValue>/`, which is all
     /// `SpriteLoader.loadSheet(stage:name:)` needs. US-009 checks it exists on disk.
     let spriteFile: String
@@ -86,10 +95,15 @@ struct EvolutionNode: Codable, Equatable, Identifiable {
     /// not yet authored).
     let evolutions: [EvolutionEdge]
 
+    /// `line` defaults ONLY here, for the many fixtures that build a node to exercise something
+    /// unrelated to grouping. The decoder deliberately does not default it: a fixture with the
+    /// wrong line is a test that reads oddly, whereas a shipped node with the wrong line is a
+    /// Digimon missing from its tree.
     init(
         id: String,
         displayName: String,
         stage: Stage,
+        line: String = "test",
         spriteFile: String,
         variant: String? = nil,
         dexOnly: Bool = false,
@@ -98,6 +112,7 @@ struct EvolutionNode: Codable, Equatable, Identifiable {
         self.id = id
         self.displayName = displayName
         self.stage = stage
+        self.line = line
         self.spriteFile = spriteFile
         self.variant = variant
         self.dexOnly = dexOnly
@@ -105,13 +120,16 @@ struct EvolutionNode: Codable, Equatable, Identifiable {
     }
 
     // As on EvolutionEdge: hand-written so `dexOnly` and `evolutions` may be omitted. A
-    // terminal node leaves `evolutions` out entirely rather than writing `[]`.
+    // terminal node leaves `evolutions` out entirely rather than writing `[]`. `line` is NOT in
+    // that set — it is `decode`, not `decodeIfPresent`, so a node missing it fails the whole
+    // load rather than quietly joining a default line and vanishing from the Dex tree.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
             id: try container.decode(String.self, forKey: .id),
             displayName: try container.decode(String.self, forKey: .displayName),
             stage: try container.decode(Stage.self, forKey: .stage),
+            line: try container.decode(String.self, forKey: .line),
             spriteFile: try container.decode(String.self, forKey: .spriteFile),
             variant: try container.decodeIfPresent(String.self, forKey: .variant),
             dexOnly: try container.decodeIfPresent(Bool.self, forKey: .dexOnly) ?? false,

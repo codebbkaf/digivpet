@@ -20,6 +20,12 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
     /// caller that does not guard would "find" art and pass.
     case emptySpriteFile(node: String)
 
+    /// A node's `line` is blank. The Dex groups trees by line (US-041), so a blank one is its own
+    /// nameless group: the Digimon does not appear in the tree a user would look for it in, and
+    /// nothing at runtime complains. A missing `line` key cannot reach here — the decoder rejects
+    /// it — so this catches only `""`.
+    case emptyLine(node: String)
+
     /// An edge that does not advance exactly one rung of the Digitama -> Ultimate ladder.
     /// Stages off the ladder (Armor-Hybrid, whose `ladderIndex` is nil) are not checked.
     case invalidStageTransition(from: String, to: String, fromStage: Stage, toStage: Stage)
@@ -56,6 +62,8 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
             return "\(node): spriteFile does not exist on disk (\(path))"
         case let .emptySpriteFile(node):
             return "\(node): spriteFile is empty — it would load an arbitrary sprite"
+        case let .emptyLine(node):
+            return "\(node): line is empty — it would not appear in any Dex tree"
         case let .invalidStageTransition(from, to, fromStage, toStage):
             return "\(from) -> \(to): \(fromStage.rawValue) to \(toStage.rawValue) does not advance exactly one stage"
         case let .noDefaultEdge(node):
@@ -112,6 +120,10 @@ extension EvolutionGraph {
 
     private func validate(node: EvolutionNode, spriteExists: SpriteExistsCheck) -> [GraphValidationError] {
         var errors: [GraphValidationError] = []
+
+        if node.line.isEmpty {
+            errors.append(.emptyLine(node: node.id))
+        }
 
         if node.spriteFile.isEmpty {
             errors.append(.emptySpriteFile(node: node.id))

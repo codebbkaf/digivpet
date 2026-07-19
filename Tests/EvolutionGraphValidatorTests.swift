@@ -109,6 +109,27 @@ final class EvolutionGraphValidatorTests: XCTestCase {
         XCTAssertEqual(errors(graph), [.emptySpriteFile(node: "blank")])
     }
 
+    // MARK: - AC: reports a node with no line
+
+    /// A blank line is not a missing key — the decoder rejects those — so this rule exists only
+    /// for `""`, which decodes cleanly and then groups the node under a nameless tree nobody
+    /// looks at. Art existence is stubbed true so the ONLY thing wrong here is the line.
+    func testReportsEmptyLine() {
+        let graph = EvolutionGraph(nodes: [
+            EvolutionNode(id: "stray", displayName: "Stray", stage: .child, line: "", spriteFile: "Agumon"),
+        ])
+
+        XCTAssertEqual(errors(graph), [.emptyLine(node: "stray")])
+    }
+
+    func testANonEmptyLineIsNotReported() {
+        let graph = EvolutionGraph(nodes: [
+            EvolutionNode(id: "ok", displayName: "OK", stage: .child, line: "agumon", spriteFile: "Agumon"),
+        ])
+
+        XCTAssertEqual(errors(graph), [])
+    }
+
     // MARK: - AC: reports stage transitions that skip a stage
 
     func testReportsStageSkip() {

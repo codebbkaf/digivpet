@@ -186,3 +186,42 @@ Simulator screenshots, nothing clipped and nothing overlapping in any of the fou
   which is the worst case below the buttons. Still fits.
 
 Remains: US-040 (line metadata on the evolution graph) is next.
+
+## 2026-07-19 — US-040: Add line metadata to the evolution graph
+
+Added a required `line` field to `EvolutionNode` and tagged all 22 shipped nodes: agumon (8),
+gabumon (7), palmon (7). New `GraphValidationError.emptyLine`; docs/evolutions-schema.md updated.
+No evolution logic reads `line` — it is purely the grouping key US-041's tree view will need.
+
+Two decisions worth not re-deriving:
+
+- **`line` is `decode`, not `decodeIfPresent`.** Every other optional-ish node field (`dexOnly`,
+  `evolutions`, `variant`) defaults, so defaulting this one would have matched the file's habit —
+  but the failure mode is the argument against it. A node that quietly joined a fallback line
+  decodes fine, then goes missing from the Dex tree a user looks for it in, and the symptom
+  (absent art, one screen away) names neither the node nor the JSON. Failing the whole load puts
+  the error on the line that caused it. The validator's `emptyLine` rule therefore only ever
+  catches `""` — a MISSING key cannot reach validation at all.
+
+- **The memberwise init defaults `line` to `"test"`; the decoder does not.** There are 83
+  `EvolutionNode(...)` sites in Tests/ and none in Sources/ (verified by grep), essentially all of
+  them building a node to exercise something unrelated to grouping. Threading a real line through
+  all 83 would have been churn that made every fixture read as if grouping mattered to it. The
+  default is unreachable from shipped code, so it cannot mask a real missing line.
+
+Meramon is tagged `agumon`, not a line of its own: it is the target of the one branching edge and
+converges back at MetalGreymon, so it belongs in the Agumon tree as a branch. US-041 will draw it
+that way. `testBundledNodesAreTaggedWithTheirLine` asserts the exact per-line COUNTS rather than
+just non-emptiness, which is what would catch a future node landing in a typo'd line ("agumonn") —
+no per-node check can see that.
+
+`scripts/import_roster.py` was deliberately NOT changed. Nothing in a sprite filename says which
+family a Digimon belongs to, so the generator cannot derive `line`; a generated node now needs one
+by hand before promotion into evolutions.json, the same way `"stage": null` already did. Noted in
+the schema doc.
+
+Passed: build green; full suite 541 tests, 0 failures (was 537, +4 net — 5 new, and the pre-existing
+`testMissingRequiredFieldFailsToDecode` fixture gained a `line` so it still fails for the missing
+spriteFile rather than for the new key). All 5 new tests confirmed to run by name.
+
+Remains: US-041 (build the evolution tree layout view) is next.

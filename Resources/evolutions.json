@@ -4,6 +4,7 @@
       "id": "agu_digitama",
       "displayName": "Agu Digitama",
       "stage": "Digitama",
+      "line": "agumon",
       "spriteFile": "Agu_Digitama",
       "evolutions": [
         {
@@ -18,6 +19,7 @@
       "id": "botamon",
       "displayName": "Botamon",
       "stage": "Baby I",
+      "line": "agumon",
       "spriteFile": "Botamon",
       "evolutions": [
         {
@@ -33,6 +35,7 @@
       "id": "koromon",
       "displayName": "Koromon",
       "stage": "Baby II",
+      "line": "agumon",
       "spriteFile": "Koromon",
       "evolutions": [
         {
@@ -48,6 +51,7 @@
       "id": "agumon",
       "displayName": "Agumon",
       "stage": "Child",
+      "line": "agumon",
       "spriteFile": "Agumon",
       "evolutions": [
         {
@@ -69,6 +73,7 @@
       "id": "greymon",
       "displayName": "Greymon",
       "stage": "Adult",
+      "line": "agumon",
       "spriteFile": "Greymon",
       "evolutions": [
         {
@@ -84,6 +89,7 @@
       "id": "meramon",
       "displayName": "Meramon",
       "stage": "Adult",
+      "line": "agumon",
       "spriteFile": "Meramon",
       "evolutions": [
         {
@@ -99,6 +105,7 @@
       "id": "metalgreymon",
       "displayName": "MetalGreymon",
       "stage": "Perfect",
+      "line": "agumon",
       "spriteFile": "MetalGreymon",
       "evolutions": [
         {
@@ -114,12 +121,14 @@
       "id": "wargreymon",
       "displayName": "WarGreymon",
       "stage": "Ultimate-Super Ultimate",
+      "line": "agumon",
       "spriteFile": "WarGreymon"
     },
     {
       "id": "gabu_digitama",
       "displayName": "Gabu Digitama",
       "stage": "Digitama",
+      "line": "gabumon",
       "spriteFile": "Gabu_Digitama",
       "evolutions": [
         {
@@ -134,6 +143,7 @@
       "id": "punimon",
       "displayName": "Punimon",
       "stage": "Baby I",
+      "line": "gabumon",
       "spriteFile": "Punimon",
       "evolutions": [
         {
@@ -149,6 +159,7 @@
       "id": "tsunomon",
       "displayName": "Tsunomon",
       "stage": "Baby II",
+      "line": "gabumon",
       "spriteFile": "Tsunomon",
       "evolutions": [
         {
@@ -164,6 +175,7 @@
       "id": "gabumon",
       "displayName": "Gabumon",
       "stage": "Child",
+      "line": "gabumon",
       "spriteFile": "Gabumon",
       "evolutions": [
         {
@@ -179,6 +191,7 @@
       "id": "garurumon",
       "displayName": "Garurumon",
       "stage": "Adult",
+      "line": "gabumon",
       "spriteFile": "Garurumon",
       "evolutions": [
         {
@@ -194,6 +207,7 @@
       "id": "weregarurumon",
       "displayName": "WereGarurumon",
       "stage": "Perfect",
+      "line": "gabumon",
       "spriteFile": "WereGarurumon",
       "evolutions": [
         {
@@ -209,12 +223,14 @@
       "id": "metalgarurumon",
       "displayName": "MetalGarurumon",
       "stage": "Ultimate-Super Ultimate",
+      "line": "gabumon",
       "spriteFile": "MetalGarurumon"
     },
     {
       "id": "pal_digitama",
       "displayName": "Pal Digitama",
       "stage": "Digitama",
+      "line": "palmon",
       "spriteFile": "Pal_Digitama",
       "evolutions": [
         {
@@ -229,6 +245,7 @@
       "id": "yuramon",
       "displayName": "Yuramon",
       "stage": "Baby I",
+      "line": "palmon",
       "spriteFile": "Yuramon",
       "evolutions": [
         {
@@ -244,6 +261,7 @@
       "id": "tanemon",
       "displayName": "Tanemon",
       "stage": "Baby II",
+      "line": "palmon",
       "spriteFile": "Tanemon",
       "evolutions": [
         {
@@ -259,6 +277,7 @@
       "id": "palmon",
       "displayName": "Palmon",
       "stage": "Child",
+      "line": "palmon",
       "spriteFile": "Palmon",
       "evolutions": [
         {
@@ -274,6 +293,7 @@
       "id": "togemon",
       "displayName": "Togemon",
       "stage": "Adult",
+      "line": "palmon",
       "spriteFile": "Togemon",
       "evolutions": [
         {
@@ -289,6 +309,7 @@
       "id": "lilimon",
       "displayName": "Lilimon",
       "stage": "Perfect",
+      "line": "palmon",
       "spriteFile": "Lilimon",
       "evolutions": [
         {
@@ -304,6 +325,7 @@
       "id": "rosemon",
       "displayName": "Rosemon",
       "stage": "Ultimate-Super Ultimate",
+      "line": "palmon",
       "spriteFile": "Rosemon"
     }
   ]

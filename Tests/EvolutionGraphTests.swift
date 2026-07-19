@@ -22,6 +22,7 @@ final class EvolutionGraphTests: XCTestCase {
           "id": "agumon",
           "displayName": "Agumon",
           "stage": "Child",
+          "line": "agumon",
           "spriteFile": "Agumon",
           "evolutions": [
             {
@@ -44,6 +45,7 @@ final class EvolutionGraphTests: XCTestCase {
           "id": "greymon",
           "displayName": "Greymon",
           "stage": "Adult",
+          "line": "agumon",
           "spriteFile": "Greymon",
           "evolutions": [
             {
@@ -59,6 +61,7 @@ final class EvolutionGraphTests: XCTestCase {
           "id": "meramon",
           "displayName": "Meramon",
           "stage": "Adult",
+          "line": "agumon",
           "spriteFile": "Meramon",
           "evolutions": [
             {
@@ -74,12 +77,14 @@ final class EvolutionGraphTests: XCTestCase {
           "id": "metalgreymon",
           "displayName": "MetalGreymon",
           "stage": "Perfect",
+          "line": "agumon",
           "spriteFile": "MetalGreymon"
         },
         {
           "id": "metalgreymon_virus",
           "displayName": "MetalGreymon",
           "stage": "Perfect",
+          "line": "agumon",
           "spriteFile": "MetalGreymon_Virus",
           "variant": "Virus"
         },
@@ -87,6 +92,7 @@ final class EvolutionGraphTests: XCTestCase {
           "id": "poyomon",
           "displayName": "Poyomon",
           "stage": "Baby I",
+          "line": "poyomon",
           "spriteFile": "Poyomon",
           "dexOnly": true
         }
@@ -199,7 +205,7 @@ final class EvolutionGraphTests: XCTestCase {
     /// wrong Digimon; wrong-but-plausible data is the thing to avoid.
     func testUnknownStageFailsToDecode() throws {
         let json = """
-        { "nodes": [{ "id": "x", "displayName": "X", "stage": "Rookie", "spriteFile": "Agumon" }] }
+        { "nodes": [{ "id": "x", "displayName": "X", "stage": "Rookie", "line": "agumon", "spriteFile": "Agumon" }] }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
         XCTAssertThrowsError(try JSONDecoder().decode(EvolutionGraph.self, from: data))
@@ -209,7 +215,7 @@ final class EvolutionGraphTests: XCTestCase {
         let json = """
         {
           "nodes": [{
-            "id": "x", "displayName": "X", "stage": "Child", "spriteFile": "Agumon",
+            "id": "x", "displayName": "X", "stage": "Child", "line": "agumon", "spriteFile": "Agumon",
             "evolutions": [{ "to": "y", "requiredEnergy": "wisdom", "minEnergy": 1, "maxCareMistakes": 1 }]
           }]
         }
@@ -219,12 +225,39 @@ final class EvolutionGraphTests: XCTestCase {
     }
 
     func testMissingRequiredFieldFailsToDecode() throws {
-        // No spriteFile — there is no sensible default, so this must throw.
+        // No spriteFile — there is no sensible default, so this must throw. Every OTHER required
+        // key is present, so a pass cannot be the decoder tripping over something else.
         let json = """
-        { "nodes": [{ "id": "x", "displayName": "X", "stage": "Child" }] }
+        { "nodes": [{ "id": "x", "displayName": "X", "stage": "Child", "line": "agumon" }] }
         """
         let data = try XCTUnwrap(json.data(using: .utf8))
         XCTAssertThrowsError(try JSONDecoder().decode(EvolutionGraph.self, from: data))
+    }
+
+    /// `line` is required, not defaulted. A node that quietly joined a fallback line would decode
+    /// fine and then be missing from the Dex tree a user goes looking for it in — the failure
+    /// would surface as absent art, nowhere near the JSON that caused it.
+    func testMissingLineFailsToDecode() throws {
+        let json = """
+        { "nodes": [{ "id": "x", "displayName": "X", "stage": "Child", "spriteFile": "Agumon" }] }
+        """
+        let data = try XCTUnwrap(json.data(using: .utf8))
+        XCTAssertThrowsError(try JSONDecoder().decode(EvolutionGraph.self, from: data)) { error in
+            guard case let DecodingError.keyNotFound(key, _)? = error as? DecodingError else {
+                return XCTFail("expected keyNotFound, got \(error)")
+            }
+            XCTAssertEqual(key.stringValue, "line")
+        }
+    }
+
+    func testLineDecodesAndGroupsNodes() throws {
+        let graph = try decodeFixture()
+
+        XCTAssertEqual(graph.node(id: "agumon")?.line, "agumon")
+        // A branch that stays in the family keeps the family's line, so the Dex draws Meramon as
+        // a branch of the Agumon tree rather than a tree of its own.
+        XCTAssertEqual(graph.node(id: "meramon")?.line, "agumon")
+        XCTAssertEqual(graph.node(id: "poyomon")?.line, "poyomon")
     }
 
     // MARK: - Codable round trip
@@ -264,6 +297,24 @@ final class EvolutionGraphTests: XCTestCase {
         XCTAssertEqual(graph.node(id: "botamon")?.stage, .babyI)
         XCTAssertEqual(graph.node(id: "koromon")?.stage, .babyII)
         XCTAssertEqual(graph.node(id: "agumon")?.stage, .child)
+    }
+
+    /// Every shipped node is tagged, and the tags partition the file into exactly the three
+    /// authored lines. Counting them is what would catch a new node landing in a typo'd line
+    /// ("agumonn"), which no per-node check can see.
+    func testBundledNodesAreTaggedWithTheirLine() throws {
+        let nodes = try EvolutionGraph.load().nodes
+        let byLine = Dictionary(grouping: nodes, by: \.line).mapValues(\.count)
+
+        XCTAssertEqual(byLine, ["agumon": 8, "gabumon": 7, "palmon": 7])
+        XCTAssertEqual(graph_lineOf(nodes, "meramon"), "agumon")
+        XCTAssertEqual(graph_lineOf(nodes, "agu_digitama"), "agumon")
+        XCTAssertEqual(graph_lineOf(nodes, "metalgarurumon"), "gabumon")
+        XCTAssertEqual(graph_lineOf(nodes, "rosemon"), "palmon")
+    }
+
+    private func graph_lineOf(_ nodes: [EvolutionNode], _ id: String) -> String? {
+        nodes.first { $0.id == id }?.line
     }
 
     /// Every `spriteFile` in the seed must name art that really loads. This is a spot check on
