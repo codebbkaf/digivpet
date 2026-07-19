@@ -486,3 +486,62 @@ Remains: US-046 (seed the V5 Gazimon line) is next. Two things it inherits: Flym
 one but `Giza_Digitama.png` does not exist. Seeding only the Gazimon rookie sidesteps it, since
 `Gazi_Digitama` is present. Also note V5's Ultra (Chaosdramon) is a Jogress, which the schema
 still cannot express — this story omitted V4's Chaosmon for the same reason, noted on `megadramon`.
+
+## 2026-07-19 — US-046: Seed the V5 Gazimon line
+
+Added 17 nodes to `Resources/evolutions.json` as line `gazimon`, taking the roster from 52 to 69:
+Gazi_Digitama -> Zurumon -> Pagumon, then Pagumon branching into BOTH V5 Rookies, Gazimon and
+Gizamon, each with five Champions, converging into three Perfects (MetalTyranomon, Ex-Tyranomon,
+Nanomon) and three Ultimates (Mugendramon, Gaioumon, Raidenmon). No Swift changed — data plus
+tests, same as US-044 and US-045.
+
+**The Gizamon egg problem US-045 flagged, resolved: hang Gizamon off Pagumon, not off an egg.**
+Gizamon is the only Rookie across V3/V4/V5 with no Digitama (docs/sprite-availability.md). The
+cheap move — the one both earlier stories took with their second Rookies — is to drop it and seed
+only Gazimon, and US-045's note suggested exactly that. It is wrong here, because **Deltamon hangs
+off Gizamon alone** in the V5 tree, and Deltamon is named in this story's AC as a
+verified-available node. Dropping Gizamon drops Deltamon with it. So `pagumon` gets two outgoing
+edges — Gazimon on strength (`isDefault`), Gizamon on stamina — which makes it the **first
+branching Baby II in the file**. The missing egg then stops being a problem rather than being
+worked around: reached through Gazimon's egg, Gizamon needs none of its own.
+`testGizamonIsReachedThroughPagumonRatherThanItsOwnEgg` pins both halves — Gizamon's only parent
+is Pagumon, and this line has exactly one Digitama — so a later "every Rookie should have an egg"
+cleanup fails a test that explains why it must not.
+
+**One Champion omitted.** Flymon is idle-only (docs/sprite-availability.md) so it may not be named
+by an edge; it is this line's ONLY divergence from the source tree, recorded in a `comment` on the
+`gizamon` node. Unlike V4 nothing was orphaned by the omission: Flymon's only child,
+MetalTyranomon, is also reached from DarkTyranomon and Cyclomon, so no rehoming was needed. The
+V5 Ultra (Chaosdramon) is omitted for the same reason V4's Chaosmon was — it is a Jogress with
+Darkdramon, which the schema still cannot express — noted on `metaltyranomon`.
+
+**Five Champions, four energy types, on each Rookie** — the same squeeze as Patamon and Piyomon,
+twice. Unlike Piyomon this line has a natural occupant for the `isDefault` slot: **Raremon**, a
+heap of rotting scrap, is V5's junk Champion in the way Scumon is V3's, so it takes the fallback
+on BOTH Rookies at strength 0/99, sharing each one's earned strength gate from below
+(DarkTyranomon for Gazimon, Deltamon for Gizamon). A well-raised strength Digimon still reaches
+the earned Champion from either side; only a neglected one lands on Raremon. Asserted against the
+real `EvolutionEngine` for both Rookies, not just read off the data.
+
+Four tests pinned to the 52-node roster moved, all real assertions rather than fixtures:
+`EvolutionGraphValidatorTests` node count 52 -> 69; `EvolutionGraphTests` byLine gained
+`"gazimon": 17`; `EggHatchingTests.testTheDefaultChooserPicksARandomDigitama` gained
+`gazi_digitama`, which is what carries the "egg selection at rebirth can reach all six lines"
+criterion — `MainScreenModel.startingDigitamaId` (Sources/MainScreenModel.swift:226) is the single
+candidate pool for both a new game and `dismissMemorial`'s rebirth, and that test pins the pool to
+exactly the six seeded eggs. `seedLines` in SeedRosterTests gained the Gazimon default path
+(through Raremon and Nanomon), so it is checked for all seven rungs like the others. DexScreenTests
+needed nothing — it derives from `.bundled`, so the Dex picked the sixth tree up for free.
+
+All 17 spriteFiles were `ls`-verified on disk with dimensions before commit (48x64, 48x16 for the
+egg), and `SeedRosterTests` slices all 69 nodes through `SpriteSheetCache`, so an unsliceable
+sheet fails the suite. Note the id convention for `Ex-Tyranomon`: id is `extyranomon`, hyphen
+stripped, following the existing `hiandromon` / `Hi-Andromon` precedent.
+
+Passed: build green; `Executed 576 tests, with 0 failures` (was 568, +8, all 8 confirmed by name
+in an `-only-testing:DigiVPetTests/SeedRosterTests` run). `EvolutionGraphValidator` reports zero
+errors on the extended graph. docs/evolutions-schema.md "Current contents" updated to six lines.
+
+Remains: US-051 (add the poop model) is next — the start of the four-story poop arc
+(US-051..US-054), which is Swift work rather than data. The three complication stories
+(US-047..US-050) sit behind it by priority.

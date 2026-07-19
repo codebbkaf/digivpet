@@ -195,8 +195,8 @@
         "Tests pass"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Seeded 17 nodes as line `gazimon` (roster 52 -> 69). Gazi_Digitama -> Zurumon -> Pagumon, which BRANCHES to both V5 Rookies: Gazimon (strength, isDefault) and Gizamon (stamina) — the first branching Baby II in the file. Both were seeded because Deltamon hangs off Gizamon alone, and Gizamon's missing Digitama stops mattering once it is reached through Pagumon. Flymon omitted (dexOnly), noted on the `gizamon` node; Chaosdramon omitted (Jogress), noted on `metaltyranomon`. Raremon is the isDefault on both Rookies, sharing each one's strength gate from below. All 17 spriteFiles ls-verified on disk. Build green; 576 tests, 0 failures (+8)."
     },
     {
       "id": "US-051",

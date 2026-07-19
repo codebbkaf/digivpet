@@ -21,13 +21,15 @@ final class SeedRosterTests: XCTestCase {
     /// The Patamon line (US-044) is the odd one: its fallback runs through Scumon, the V3 tree's
     /// junk evolution, because Patamon has five Champions and only four energy types to gate them
     /// with. That is the path a neglected Patamon walks, and it still covers all seven rungs.
-    /// The Piyomon line (US-045) has the same shape, through Kuwagamon and Digitamamon.
+    /// The Piyomon line (US-045) has the same shape, through Kuwagamon and Digitamamon, and the
+    /// Gazimon line (US-046) through Raremon, the V5 tree's junk Champion.
     private let seedLines: [[String]] = [
         ["agu_digitama", "botamon", "koromon", "agumon", "greymon", "metalgreymon", "wargreymon"],
         ["gabu_digitama", "punimon", "tsunomon", "gabumon", "garurumon", "weregarurumon", "metalgarurumon"],
         ["pal_digitama", "yuramon", "tanemon", "palmon", "togemon", "lilimon", "rosemon"],
         ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "bancholeomon"],
         ["piyo_digitama", "piyo_yuramon", "piyo_tanemon", "piyomon", "kuwagamon", "digitamamon", "gankoomon"],
+        ["gazi_digitama", "zurumon", "pagumon", "gazimon", "raremon", "nanomon", "raidenmon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.
@@ -424,5 +426,149 @@ final class SeedRosterTests: XCTestCase {
             EvolutionEngine.evolutionTarget(for: kuwagamon, stageEnergy: plenty, dominant: .strength,
                                             careMistakes: 9, battleWins: 0),
             "digitamamon", "Digitamamon is reachable only off the neglect path, since Nanimon cannot be seeded")
+    }
+
+    // MARK: - US-046: the V5 Gazimon line
+
+    /// Every node the line may reach, checked against the set US-046's AC names as verified
+    /// available. A node from outside it is either a Digimon with no sheet or one invented.
+    private let gazimonLineVerifiedSet: Set<String> = [
+        "DarkTyranomon", "Cyclomon", "Devidramon", "Tuskmon", "Raremon", "Deltamon",
+        "MetalTyranomon", "Ex-Tyranomon", "Nanomon", "Mugendramon", "Gaioumon", "Raidenmon",
+    ]
+
+    func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
+        let adult = Stage.adult.ladderIndex!
+        let above = graph.nodes.filter { $0.line == "gazimon" && ($0.stage.ladderIndex ?? -1) >= adult }
+
+        XCTAssertFalse(above.isEmpty, "the Gazimon line has no Adult-or-later nodes at all")
+        for node in above {
+            XCTAssertTrue(gazimonLineVerifiedSet.contains(node.displayName),
+                          "\(node.displayName) is not in the US-046 verified-available set")
+        }
+    }
+
+    /// Flymon is one of the 157 idle-only Digimon, so the V5 tree's sixth Champion must appear
+    /// nowhere — not as a node, and not as an edge target.
+    func testTheLineOmitsFlymon() {
+        XCTAssertNil(graph.node(id: "flymon"), "Flymon is dexOnly and may not be a node")
+        for node in graph.nodes {
+            for edge in node.evolutions {
+                XCTAssertNotEqual(edge.to, "flymon", "\(node.id) points at dexOnly Flymon")
+            }
+        }
+    }
+
+    /// The Flymon omission and the reason Gizamon hangs off Pagumon are written down in the data
+    /// file itself, so the next reader diffing `evolutions.json` against the tree markdown finds
+    /// them there rather than in a commit message.
+    func testTheGazimonDivergencesAreRecordedInTheDataFile() throws {
+        // The raw file, not the decoded graph: `comment` is not a schema field, so the decoder
+        // drops it and only re-reading the JSON can prove it is actually written down.
+        let url = try XCTUnwrap(Bundle.main.url(forResource: "evolutions", withExtension: "json"))
+        let raw = try XCTUnwrap(try JSONSerialization.jsonObject(with: try Data(contentsOf: url)) as? [String: Any])
+        let nodes = try XCTUnwrap(raw["nodes"] as? [[String: Any]])
+
+        func comment(on id: String) throws -> String {
+            let authored = try XCTUnwrap(nodes.first { $0["id"] as? String == id }, "no authored node \(id)")
+            return try XCTUnwrap(authored["comment"] as? String, "\(id) carries no comment")
+        }
+
+        XCTAssertTrue(try comment(on: "gizamon").contains("Flymon"),
+                      "the omitted Champion must be named where it is omitted")
+        XCTAssertTrue(try comment(on: "pagumon").contains("Gizamon"),
+                      "the branching Baby II must explain why it carries a second Rookie")
+    }
+
+    /// Gizamon is the one Rookie across V3/V4/V5 with no Digitama of its own (US-043). It is
+    /// seeded anyway, reached through Pagumon — so assert both halves: it is in the line, and it
+    /// roots nothing, because there is no egg that could hatch into it.
+    func testGizamonIsReachedThroughPagumonRatherThanItsOwnEgg() throws {
+        let gizamon = try XCTUnwrap(graph.node(id: "gizamon"))
+        XCTAssertEqual(gizamon.stage, .child)
+        XCTAssertEqual(gizamon.line, "gazimon")
+        XCTAssertEqual(graph.parents(of: "gizamon").map(\.id), ["pagumon"])
+
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == "gazimon" }
+        XCTAssertEqual(eggs.map(\.id), ["gazi_digitama"],
+                       "this line has exactly one egg — Gizamon has no Giza_Digitama on disk")
+    }
+
+    /// The first branching Baby II in the roster: both Rookies must be reachable, and each must
+    /// climb the whole ladder rather than dead-ending.
+    func testPagumonBranchesToBothRookiesAndEachReachesUltimate() throws {
+        let pagumon = try XCTUnwrap(graph.node(id: "pagumon"))
+
+        XCTAssertEqual(pagumon.evolutions.map(\.to).sorted(), ["gazimon", "gizamon"])
+        XCTAssertEqual(Set(pagumon.evolutions.compactMap(\.requiredEnergy)).count, 2,
+                       "the two Rookie edges must require DIFFERENT energies or the branch is fake")
+
+        for edge in pagumon.evolutions {
+            let path = try defaultPath(from: edge.to)
+            XCTAssertEqual(path.map(\.stage), [.child, .adult, .perfect, .ultimate],
+                           "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
+        }
+    }
+
+    /// Both Rookies branch five ways, and every Champion leads to an Ultimate. Deltamon is
+    /// Gizamon's alone — it is the node that would have been lost had this line seeded only
+    /// Gazimon, as US-044 and US-045 did with their second Rookies.
+    func testBothRookiesBranchFiveWaysAndEveryBranchReachesUltimate() throws {
+        let gazimon = try XCTUnwrap(graph.node(id: "gazimon"))
+        let gizamon = try XCTUnwrap(graph.node(id: "gizamon"))
+
+        XCTAssertEqual(gazimon.evolutions.map(\.to).sorted(),
+                       ["cyclomon", "darktyranomon", "devidramon", "raremon", "tuskmon"])
+        XCTAssertEqual(gizamon.evolutions.map(\.to).sorted(),
+                       ["cyclomon", "deltamon", "devidramon", "raremon", "tuskmon"])
+        XCTAssertEqual(graph.parents(of: "deltamon").map(\.id), ["gizamon"],
+                       "Deltamon hangs off Gizamon alone, which is why Gizamon is seeded")
+
+        for rookie in [gazimon, gizamon] {
+            for edge in rookie.evolutions {
+                let path = try defaultPath(from: edge.to)
+                XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
+                               "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
+            }
+        }
+    }
+
+    /// The four earned branches on each Rookie need distinct dominant types, or two of them are
+    /// unreachable. Raremon is deliberately excluded on both: it shares the strength gate from
+    /// below and wins only when the earned strength branch is shut out.
+    func testBothRookiesEarnedBranchesUseFourDistinctEnergies() throws {
+        for (rookie, earnedStrength) in [("gazimon", "darktyranomon"), ("gizamon", "deltamon")] {
+            let node = try XCTUnwrap(graph.node(id: rookie))
+            let earned = node.evolutions.filter { !$0.isDefault }
+
+            XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 4,
+                           "\(rookie): two earned branches share a dominant type, so one can never be chosen")
+
+            let raremon = try XCTUnwrap(node.evolutions.first { $0.isDefault })
+            let strength = try XCTUnwrap(node.evolutions.first { $0.to == earnedStrength })
+            XCTAssertEqual(raremon.to, "raremon")
+            XCTAssertEqual(raremon.requiredEnergy, strength.requiredEnergy)
+            XCTAssertLessThan(raremon.minEnergy, strength.minEnergy,
+                              "\(rookie): Raremon must sit below \(earnedStrength) or it wins the branch outright")
+        }
+    }
+
+    /// The junk branch is not just declared — prove the engine routes to it from both Rookies, and
+    /// that a well-raised strength Digimon still gets its earned Champion instead.
+    func testANeglectedStrengthRookieGetsRaremonFromEitherSide() throws {
+        let plenty = EnergyTotals(strength: 150, vitality: 0, spirit: 0, stamina: 0)
+
+        for (rookie, earned) in [("gazimon", "darktyranomon"), ("gizamon", "deltamon")] {
+            let node = try XCTUnwrap(graph.node(id: rookie))
+
+            XCTAssertEqual(
+                EvolutionEngine.evolutionTarget(for: node, stageEnergy: plenty, dominant: .strength,
+                                                careMistakes: 0, battleWins: 0),
+                earned)
+            XCTAssertEqual(
+                EvolutionEngine.evolutionTarget(for: node, stageEnergy: plenty, dominant: .strength,
+                                                careMistakes: 9, battleWins: 0),
+                "raremon", "\(rookie): past \(earned)'s care-mistake limit, only the junk branch is left")
+        }
     }
 }

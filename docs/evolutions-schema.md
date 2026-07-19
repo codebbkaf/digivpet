@@ -109,13 +109,13 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — seven nodes have one today, in the `patamon` and `piyomon` lines.
+prose — ten nodes have one today, in the `patamon`, `piyomon` and `gazimon` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 52 nodes across five `line` values — `agumon` (8 nodes),
-`gabumon` (7), `palmon` (7), `patamon` (15) and `piyomon` (15) — each a complete line from
-Digitama through Ultimate.
+`Resources/evolutions.json` holds 69 nodes across six `line` values — `agumon` (8 nodes),
+`gabumon` (7), `palmon` (7), `patamon` (15), `piyomon` (15) and `gazimon` (17) — each a complete
+line from Digitama through Ultimate.
 
 The first three are US-008's seed. `agumon` includes Meramon as the target of its one branching
 node (Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).
@@ -146,3 +146,19 @@ Piccolomon / Digitamamon and then Darkdramon / BloomLordmon / Gankoomon. Three t
 - **Digitamamon is rehomed onto Kuwagamon.** Its only tree parent is Nanimon, which cannot be
   seeded, so it and Gankoomon would be unreachable. Kuwagamon is also this line's `isDefault`
   Champion, so the neglect path is one thread: Piyomon → Kuwagamon → Digitamamon → Gankoomon.
+
+`gazimon` is US-046's Digital Monster Color V5 line and is the widest of the six, because it is
+the only one that seeds **both** of its tree's Rookies:
+
+- **Pagumon branches.** It is the first Baby II in the file with two outgoing edges — Gazimon on
+  strength (the `isDefault`) and Gizamon on stamina. V3 and V4 dropped their second Rookies;
+  this line keeps its, because Deltamon hangs off Gizamon alone and would go unseeded otherwise.
+- **Gizamon has no Digitama**, the only Rookie across V3/V4/V5 that does not
+  (docs/sprite-availability.md). Hanging it off Pagumon is what makes that a non-problem: reached
+  through Gazimon's egg, it needs none of its own.
+- **Flymon is the line's only omission** — idle-only, so it may not be named by an edge. That
+  leaves both Rookies with five Champions apiece, four of them shared, converging into
+  MetalTyranomon / Ex-Tyranomon / Nanomon and then Mugendramon / Gaioumon / Raidenmon.
+- **Raremon is the `isDefault` on both Rookies**, sharing each one's strength gate from below. It
+  is the V5 tree's junk Champion in the way Scumon is V3's, so unlike Piyomon's Kuwagamon the
+  fallback slot has a natural occupant here.
