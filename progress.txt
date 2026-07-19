@@ -2599,3 +2599,19 @@ Then made the real-device build work. Two independent causes:
 Verified: device build (Apple Watch Ultra 2) SUCCEEDED; `codesign -d --entitlements` on both the
 app and the .appex shows `group.com.digivpet.DigiVPet` present in each, plus healthkit and
 healthkit.background-delivery on the app. Simulator build and full test suite still green.
+
+APP ICON (same session)
+
+`Resources/digi_icon.png` (216x214, alpha) is now the app icon. It could not be used as-is: watchOS
+wants 1024x1024, Apple rejects any alpha channel in an icon, and a plain resize would have smoothed
+the pixel art. `scripts/make_appicon.swift` handles all three — nearest-neighbour 4x to 864x856,
+centred on an opaque 1024 canvas whose colour is sampled from the source's own corner pixel so the
+padding is invisible. Re-run it (`swift scripts/make_appicon.swift`) if digi_icon.png changes.
+
+Catalog lives at Resources/Assets.xcassets; `ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon` in
+project.yml is what actually wires it up — without that key the build still succeeds and the app
+just installs with a blank icon.
+
+Verified in the built .app, not just by a green build: Assets.car exists, Info.plist carries
+CFBundleIconName=AppIcon, and `assetutil --info` lists the AppIcon rendition. Device build and full
+test suite green.

@@ -79,6 +79,10 @@ targets:
         TARGETED_DEVICE_FAMILY: 4
         SWIFT_VERSION: "5.0"
         GENERATE_INFOPLIST_FILE: NO
+        # Names the app icon set inside Resources/Assets.xcassets. Without this the catalog still
+        # compiles and the build still succeeds — the app just installs with the blank placeholder
+        # icon, so only looking at the watch face catches it.
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
     scheme:
       testTargets:
         - DigiVPetTests
