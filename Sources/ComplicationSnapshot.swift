@@ -94,6 +94,15 @@ struct ComplicationSnapshot: Codable, Equatable {
     /// What the Digimon is doing, already decided by the app. See `ComplicationPose`.
     var pose: ComplicationPose = .idle
 
+    /// How many poops are on screen, 0...`PoopClock.maximumPoops`.
+    ///
+    /// Carried as a NUMBER even though nothing on the complication draws a pile, because `pose`
+    /// cannot answer the question the Clean button asks. The pose ranks the mess below death,
+    /// sickness and sleep (see `ComplicationPose.pose`), so a sick Digimon standing in four poops
+    /// poses `.sick` — and a button keyed off `.messy` would vanish exactly when there was most to
+    /// clean. This says only whether there is a mess, which is the whole of the button's rule.
+    var poopCount: Int = 0
+
     /// When the app last published this. The widget shows what it is given without asking how old
     /// it is; this is here so a stale complication can be recognised in a screenshot or a log.
     var published: Date
@@ -119,6 +128,24 @@ struct ComplicationSnapshot: Codable, Equatable {
         return "\(displayName), \(pose)"
     }
 
+    /// Whether the face should offer the Clean button. There is nothing to clean at zero, and a
+    /// button that did nothing would be worse than no button on a screen this small.
+    var needsCleaning: Bool { poopCount > 0 }
+
+    /// This snapshot as it will look once the app has applied a Clean tapped on the face.
+    ///
+    /// Drawn optimistically rather than waiting for the app to wake — see `ComplicationCleanRequest`
+    /// — so this has to answer "what pose replaces `.messy`" without re-deriving anything. It does
+    /// not have to guess: `.messy` is ranked BELOW death, sickness and sleep, so a snapshot posing
+    /// `.messy` is one in which none of those is true, and taking the mess away can only leave
+    /// `.idle`. Any other pose is about the Digimon itself and cleaning does not touch it.
+    func cleaned() -> ComplicationSnapshot {
+        var copy = self
+        copy.poopCount = 0
+        if copy.pose == .messy { copy.pose = .idle }
+        return copy
+    }
+
     /// Hand-written only so `pose` can be MISSING from the file.
     ///
     /// The synthesised decoder requires every non-optional key, so on the launch that first installs
@@ -135,6 +162,11 @@ struct ComplicationSnapshot: Codable, Equatable {
         dominantEnergyFraction = try container.decode(Double.self, forKey: .dominantEnergyFraction)
         dominantEnergyEarned = try container.decode(Int.self, forKey: .dominantEnergyEarned)
         pose = try container.decodeIfPresent(ComplicationPose.self, forKey: .pose) ?? .idle
+        // Defaulted for the same reason `pose` is: a snapshot written by the previous version has
+        // no such key, and requiring it would drop the face to the Agumon placeholder for one
+        // refresh. Zero is also the safe default — it hides the Clean button rather than offering
+        // one with nothing behind it.
+        poopCount = try container.decodeIfPresent(Int.self, forKey: .poopCount) ?? 0
         published = try container.decode(Date.self, forKey: .published)
     }
 
@@ -148,6 +180,7 @@ struct ComplicationSnapshot: Codable, Equatable {
         dominantEnergyFraction: Double,
         dominantEnergyEarned: Int,
         pose: ComplicationPose = .idle,
+        poopCount: Int = 0,
         published: Date
     ) {
         self.displayName = displayName
@@ -158,6 +191,7 @@ struct ComplicationSnapshot: Codable, Equatable {
         self.dominantEnergyFraction = dominantEnergyFraction
         self.dominantEnergyEarned = dominantEnergyEarned
         self.pose = pose
+        self.poopCount = poopCount
         self.published = published
     }
 }

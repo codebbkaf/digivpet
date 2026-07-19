@@ -134,6 +134,14 @@ final class MainScreenModel: ObservableObject {
     private var sleepScheduleOverride: SleepSchedule?
     #endif
 
+    /// The app group directory the complication's snapshot and its Clean requests cross through.
+    ///
+    /// A settable property, and injectable for exactly one reason: the real container needs a
+    /// signed entitlement that a test bundle does not have, so without this the round trip between
+    /// the face and the game could only be tested one half at a time. The app never assigns it —
+    /// resolved once here rather than per call, because it cannot change while the app runs.
+    var complicationDirectory: URL? = ComplicationSnapshotStore.sharedDirectory()
+
     private var store: GameStore?
     private var ledger: EnergyLedger?
     private var isRefreshing = false
@@ -576,6 +584,11 @@ final class MainScreenModel: ObservableObject {
         // TRANSITION into illness (AC2), not for being ill: a Digimon left sick for three days
         // must be told about once, not once per refresh.
         let healthBefore = state.healthStatus
+
+        // FIRST, ahead of every clock: a Clean tapped on the watch face happened at some point
+        // before this refresh, so it must land before anything ages the mess forward. See
+        // `applyPendingCleanRequest`.
+        applyPendingCleanRequest()
 
         // Before the read, not after: hunger is owed for time already elapsed, and the read is
         // several awaits long. Nothing here depends on the energy about to be credited.

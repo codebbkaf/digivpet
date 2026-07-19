@@ -351,6 +351,169 @@ final class ComplicationTests: XCTestCase {
         snapshot.pose = .idle
         XCTAssertEqual(snapshot.accessibilityLabel, "Agumon")
     }
+
+    // MARK: - US-050: cleaning from the watch face
+
+    private func messySnapshot(poopCount: Int, pose: ComplicationPose) -> ComplicationSnapshot {
+        ComplicationSnapshot(
+            displayName: "Greymon",
+            spriteStage: "Adult",
+            spriteFile: "Greymon",
+            dominantEnergySymbol: "力",
+            dominantEnergyName: "Strength",
+            dominantEnergyFraction: 0.4,
+            dominantEnergyEarned: 40,
+            pose: pose,
+            poopCount: poopCount,
+            published: Fixture.morning
+        )
+    }
+
+    /// THE AC ("the button appears only when there is poop to clean").
+    ///
+    /// The `.sick` row is the one that matters and is why the snapshot carries a COUNT rather than
+    /// being read off the pose: sickness outranks the mess, so a button keyed off `.messy` would
+    /// disappear from a sick Digimon standing in four poops — the case with the most to clean.
+    func testTheCleanButtonAppearsExactlyWhenThereIsAMess() {
+        XCTAssertFalse(messySnapshot(poopCount: 0, pose: .idle).needsCleaning)
+        XCTAssertTrue(messySnapshot(poopCount: 1, pose: .messy).needsCleaning)
+        XCTAssertTrue(messySnapshot(poopCount: 4, pose: .messy).needsCleaning)
+        XCTAssertTrue(messySnapshot(poopCount: 4, pose: .sick).needsCleaning)
+        XCTAssertTrue(messySnapshot(poopCount: 4, pose: .sleeping).needsCleaning)
+        // The gallery preview has no game behind it and must not offer to clean one.
+        XCTAssertFalse(ComplicationSnapshot.placeholder.needsCleaning)
+    }
+
+    /// The count has to SURVIVE the file, or the widget process decides the button's visibility from
+    /// a field that decoded back to zero and the button never appears on a real watch.
+    func testThePoopCountCrossesTheProcessBoundary() throws {
+        let written = messySnapshot(poopCount: 3, pose: .messy)
+        XCTAssertTrue(ComplicationSnapshotStore.write(written, to: sharedDirectory))
+        let read = try XCTUnwrap(ComplicationSnapshotStore.read(from: sharedDirectory))
+        XCTAssertEqual(read.poopCount, 3)
+        XCTAssertEqual(read, written)
+    }
+
+    /// A snapshot written by the version before this one has no `poopCount`, and must decode as
+    /// zero rather than failing outright — the same upgrade path `pose` has.
+    func testASnapshotWrittenBeforePoopCountsExistedStillDecodes() throws {
+        let legacy = """
+        {"displayName":"Greymon","spriteStage":"Adult","spriteFile":"Greymon",\
+        "dominantEnergyFraction":0.4,"dominantEnergyEarned":40,"pose":"messy",\
+        "published":774000000}
+        """
+        let decoded = try JSONDecoder().decode(ComplicationSnapshot.self, from: Data(legacy.utf8))
+        XCTAssertEqual(decoded.poopCount, 0)
+        XCTAssertFalse(decoded.needsCleaning)
+        XCTAssertEqual(decoded.pose, .messy)
+    }
+
+    /// The optimistic redraw: `.messy` is ranked below every other non-idle pose, so cleaning can
+    /// only leave `.idle` — and it must leave every other pose alone, because those are about the
+    /// Digimon and cleaning does not touch it.
+    func testCleaningASnapshotClearsTheMessAndNothingElse() {
+        XCTAssertEqual(messySnapshot(poopCount: 4, pose: .messy).cleaned().pose, .idle)
+        XCTAssertEqual(messySnapshot(poopCount: 4, pose: .sick).cleaned().pose, .sick)
+        XCTAssertEqual(messySnapshot(poopCount: 4, pose: .sleeping).cleaned().pose, .sleeping)
+        XCTAssertEqual(messySnapshot(poopCount: 4, pose: .dead).cleaned().pose, .dead)
+
+        let cleaned = messySnapshot(poopCount: 4, pose: .messy).cleaned()
+        XCTAssertEqual(cleaned.poopCount, 0)
+        XCTAssertFalse(cleaned.needsCleaning)
+        // Everything that is not about the mess is untouched.
+        XCTAssertEqual(cleaned.displayName, "Greymon")
+        XCTAssertEqual(cleaned.dominantEnergyEarned, 40)
+    }
+
+    /// THE AC ("pending poop notifications are cancelled, exactly as in-app cleaning does") for the
+    /// FACE's half: the tap withdraws the notice immediately rather than leaving it on the wrist
+    /// until the app next happens to run.
+    func testTappingCleanOnTheFaceWithdrawsTheMessNotice() {
+        var cancelled = 0
+        XCTAssertTrue(ComplicationCleanRequest.record(now: Fixture.morning,
+                                                      in: sharedDirectory,
+                                                      cancelNotice: { cancelled += 1 }))
+        XCTAssertEqual(cancelled, 1)
+    }
+
+    /// The tap redraws the face at once, without waiting for the app: the recorded request and the
+    /// rewritten snapshot are both there the instant `record` returns.
+    func testTappingCleanOnTheFaceRedrawsItImmediately() throws {
+        XCTAssertTrue(ComplicationSnapshotStore.write(messySnapshot(poopCount: 4, pose: .messy),
+                                                      to: sharedDirectory))
+
+        XCTAssertTrue(ComplicationCleanRequest.record(now: Fixture.morning,
+                                                      in: sharedDirectory,
+                                                      cancelNotice: {}))
+
+        XCTAssertEqual(CleanRequestStore.pending(in: sharedDirectory), Fixture.morning)
+        let redrawn = try XCTUnwrap(ComplicationSnapshotStore.read(from: sharedDirectory))
+        XCTAssertEqual(redrawn.poopCount, 0)
+        XCTAssertEqual(redrawn.pose, .idle)
+    }
+
+    /// A watch with no app group container must not pretend the tap worked: nothing recorded, and
+    /// crucially nothing redrawn — a face showing a clean screen over a mess the app will never
+    /// hear about is worse than a button that visibly did nothing.
+    func testTappingCleanWithoutASharedContainerChangesNothing() {
+        var cancelled = 0
+        XCTAssertFalse(ComplicationCleanRequest.record(now: Fixture.morning,
+                                                       in: nil,
+                                                       cancelNotice: { cancelled += 1 }))
+        XCTAssertEqual(cancelled, 0)
+        XCTAssertNil(CleanRequestStore.pending(in: nil))
+    }
+
+    /// THE AC ("tapping it zeroes the poop count through the SAME model path as the in-app Clean
+    /// button"): the end-to-end round trip. A request left by the face is picked up by an ordinary
+    /// `refresh()` and the saved game comes back clean — through `clean()`, which is also what
+    /// restamps `poopUpdatedAt` so the mess does not immediately re-accrue.
+    func testARequestFromTheFaceIsAppliedByTheNextRefresh() async throws {
+        let model = makeModel()
+        model.complicationDirectory = sharedDirectory
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        model.isAsleep = false
+
+        // Accrued by the real clock rather than hand-set: twelve hours is four 3h intervals, which
+        // is the ceiling.
+        state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-12 * 60 * 60)
+        state.advancePoop(isAsleep: false, now: Fixture.morning)
+        XCTAssertEqual(model.poopCount, PoopClock.maximumPoops)
+
+        XCTAssertTrue(ComplicationCleanRequest.record(now: Fixture.morning,
+                                                      in: sharedDirectory,
+                                                      cancelNotice: {}))
+        await model.refresh()
+
+        XCTAssertEqual(model.poopCount, 0)
+        XCTAssertEqual(state.poopCount, 0)
+        // Re-armed, so a screen left to fill again earns a fresh notice — the same thing the in-app
+        // button does, because it is the same method.
+        XCTAssertFalse(state.poopNotified)
+        // The timestamp moved to the clean, not left twelve hours back, or `advancePoop` later in
+        // that very refresh would have put all four straight back.
+        XCTAssertEqual(state.poopUpdatedAt, Fixture.morning)
+        // Consumed: a second refresh must not clean again.
+        XCTAssertNil(CleanRequestStore.pending(in: sharedDirectory))
+    }
+
+    /// A request is worth ONE attempt. Left on disk it would be retried on every refresh forever,
+    /// silently cancelling the mess notice long after the user stopped asking.
+    func testAFaceRequestIsConsumedEvenWhenThereIsNothingToClean() async throws {
+        let model = makeModel()
+        model.complicationDirectory = sharedDirectory
+        await model.start()
+        model.isAsleep = false
+        XCTAssertEqual(model.poopCount, 0)
+
+        XCTAssertTrue(CleanRequestStore.record(at: Fixture.morning, in: sharedDirectory))
+        // False: the request was found, but `clean()` had nothing to do.
+        XCTAssertFalse(model.applyPendingCleanRequest())
+        XCTAssertNil(CleanRequestStore.pending(in: sharedDirectory))
+        // And with no request waiting it is a no-op rather than a spurious clean.
+        XCTAssertFalse(model.applyPendingCleanRequest())
+    }
 }
 
 /// The app group US-034 adds is not free: it moves `NSPersistentContainer.defaultDirectoryURL()`,

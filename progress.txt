@@ -923,3 +923,79 @@ exact failure sequencing this spike first was meant to prevent. If the floor eve
 comes back coarser than ~2 min, close US-049 as not-viable rather than force it.
 Also still open: US-050 (interactive Clean button on the complication), which does
 not depend on this measurement and is the better next pick.
+
+================================================================================
+2026-07-20 — US-050: Interactive Clean button on the complication
+
+STORY CHOICE. US-048 is first-unpassed by priority but the previous iteration
+documented it as hard-blocked: it needs a widget on an actual watch face, and
+placing one is a touch interaction this box cannot perform (no simctl tap,
+osascript denied assistive access, CGEvent swallowed — a TCC grant only a human
+at the machine can give). US-049 must not be started off a doc with no measured
+cadence in it. Its own note names US-050 as the better next pick, so that is
+what I did. US-048 and US-049 remain false and untouched.
+
+WHAT WAS BUILT. The face's Clean button does NOT clean. It cannot: the saved
+game lives in the app's OWN container (GameStore.defaultStoreURL pins it there
+deliberately) and the widget extension has a different container, so the
+extension cannot open the store at all — a cannot, not a should-not. So:
+
+  Sources/CleanRequest.swift    CleanRequestStore — a tap recorded in the app
+                                group, alongside the snapshot. take() clears
+                                before the caller acts, so a failed clean is not
+                                retried forever.
+  Sources/CleanIntent.swift     ComplicationCleanRequest (the logic, injectable
+                                so a test can run it) + CleanPoopIntent (the
+                                AppIntent wrapper). openAppWhenRun = false.
+  ComplicationPublisher.swift   applyPendingCleanRequest(), called FIRST in
+                                refresh() — ahead of advancePoop, because
+                                clean() restamps poopUpdatedAt and the mess must
+                                not age forward past a tap that already happened.
+
+So the button is a remote control for MainScreenModel.clean(), not a second
+implementation of it. Same restamp, same poopNotified re-arm, same notification
+cancel, same republish.
+
+SNAPSHOT GAINED poopCount, and this is the non-obvious bit: the button could NOT
+be keyed off pose == .messy. The pose ranks the mess below death, sickness and
+sleep, so a sick Digimon standing in four poops poses .sick — the button would
+vanish exactly when there was most to clean. Decoded with decodeIfPresent
+(default 0) like `pose`, so a snapshot written by the previous version still
+decodes instead of dropping the face to the Agumon placeholder.
+
+cleaned() does the optimistic redraw. It does not guess at the new pose: .messy
+outranks only .idle, so a snapshot posing .messy is one where nothing worse is
+true and removing the mess can only leave .idle. Every other pose is untouched.
+
+ACCESSIBILITY TRAP AVOIDED. RectangularComplicationView had
+.accessibilityElement(children: .combine) over the whole HStack. Dropping the
+button inside that would have flattened it into a static label — an interactive
+widget VoiceOver cannot activate. Split the informational half into its own
+subview so the combine only wraps that.
+
+project.yml: CleanIntent.swift, CleanRequest.swift and Notifications.swift added
+to the extension target. Notifications.swift is there ONLY for
+UserNotificationDeliverer.cancel — the face withdraws the mess notice through
+the same deliverer the app cleans through rather than reaching for
+UNUserNotificationCenter a second time. No SwiftData in any of them.
+
+PASSED. Build green. Full suite: Executed 636 tests, 0 failures (was 627, +9).
+Screenshots at 46mm via -complicationDemo: with -poopDemo the rectangular family
+shows sprite + Agumon + trash button; with -poopCleanDemo the button is gone and
+the pose is back to idle. Both directions of AC2 seen.
+
+HONEST LIMIT ON AC4. WidgetCenter.reloadAllTimelines() is called from perform(),
+but a reload cannot be OBSERVED on this box for the reason US-048 is blocked:
+a widget not on a host is never asked for a timeline. What IS observed is that
+the snapshot a reload would read has already been rewritten, and that the demo
+screen renders the new one. If the face ever becomes placeable, re-check this.
+
+SCREENSHOT GOTCHAS, both already in this file but they cost time again:
+  - the notification-authorization alert survives terminate AND uninstall; only
+    simctl erase clears it. Better: launch with -noNotificationPrompt.
+  - simctl erase also resets HealthKit auth, so the launch lands on onboarding.
+    -healthAutoConfirm gets past it. Use both flags together.
+
+REMAINS. US-048 (needs a real watch, or the native-slot key in face.json —
+step 5 of the recipe in docs/widget-refresh-granularity.md) and US-049, which
+is gated on it. Those are the last two stories in the PRD.

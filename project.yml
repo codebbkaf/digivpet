@@ -98,6 +98,14 @@ targets:
       # that both processes would have to load.
       - path: Sources/ComplicationSnapshot.swift
       - path: Sources/ComplicationViews.swift
+      # US-050's Clean button. The intent must be compiled into BOTH targets: the extension runs
+      # `perform()`, and the app has to declare the same intent for the system to resolve it.
+      - path: Sources/CleanIntent.swift
+      - path: Sources/CleanRequest.swift
+      # Only for `UserNotificationDeliverer.cancel` — the face withdraws the mess notice the moment
+      # it is tapped, and it does it through the SAME deliverer the app cleans through rather than
+      # reaching for UNUserNotificationCenter a second time. No SwiftData in here.
+      - path: Sources/Notifications.swift
       - path: Sources/SpriteLoader.swift
       - path: Sources/SpriteSheet.swift
       - path: Sources/IdleSpriteCache.swift

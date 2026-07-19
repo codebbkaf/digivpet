@@ -24,6 +24,9 @@ extension MainScreenModel {
             dominantEnergyFraction: goal.flatMap { energyProgress?.fraction(of: $0) } ?? 0,
             dominantEnergyEarned: goal?.earned ?? 0,
             pose: complicationPose,
+            // The same count the in-app pile draws from, so the face's Clean button and the app's
+            // are offered and withheld on identical grounds.
+            poopCount: poopCount,
             published: Date()
         )
     }
@@ -49,11 +52,32 @@ extension MainScreenModel {
     /// the watch face without the user opening anything.
     func publishComplicationSnapshot() {
         guard let complicationSnapshot else { return }
-        guard ComplicationSnapshotStore.write(complicationSnapshot) else { return }
+        guard ComplicationSnapshotStore.write(complicationSnapshot, to: complicationDirectory) else { return }
         // Only after a successful write: reloading a timeline that would re-read the same stale file
         // spends the widget's refresh budget for nothing.
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
         #endif
+    }
+
+    /// Applies a Clean tapped on the WATCH FACE, if one is waiting.
+    ///
+    /// The whole of US-050 on this side of the boundary. The face cannot touch the store (see
+    /// `CleanRequestStore` for why it is a cannot, not a should-not), so it leaves a request and
+    /// this runs the ordinary `clean()` — the same method the in-app button calls, with the same
+    /// restamp, the same notification cancel and the same republish. There is deliberately no
+    /// second cleaning rule anywhere.
+    ///
+    /// Called at the TOP of `refresh()`, before `advancePoop`. `clean()` restamps `poopUpdatedAt`
+    /// to now, so whatever accrued between the tap and this refresh is forgiven rather than found
+    /// waiting — the user cleaned, and a screen already dirty again when they open the app would
+    /// read as the tap having done nothing. It is at most one 3h interval either way.
+    ///
+    /// - Returns: whether a request was found AND had something to clean, so a test can tell the
+    ///   two apart from the outside.
+    @discardableResult
+    func applyPendingCleanRequest() -> Bool {
+        guard CleanRequestStore.take(in: complicationDirectory) != nil else { return false }
+        return clean()
     }
 }

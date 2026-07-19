@@ -103,11 +103,44 @@ struct CircularComplicationView: View {
     }
 }
 
+/// The Clean button, drawn only when `ComplicationSnapshot.needsCleaning` (US-050).
+///
+/// Icon-only, matching the in-app action row from US-038 — there is no room for a word here, and the
+/// accessibility label carries it for anyone who needs it. `.plain`, because the bordered styles put
+/// a filled capsule behind it that reads as a second sprite at this size.
+struct CleanComplicationButton: View {
+    var body: some View {
+        Button(intent: CleanPoopIntent()) {
+            Image(systemName: "trash")
+                .font(.title3)
+        }
+        .buttonStyle(.plain)
+        .widgetAccentable()
+        .accessibilityLabel("Clean")
+    }
+}
+
 /// Sprite, name, and the dominant energy's progress.
 struct RectangularComplicationView: View {
     let snapshot: ComplicationSnapshot
 
     var body: some View {
+        HStack(spacing: 6) {
+            // The informational half is combined into ONE VoiceOver element, and the Clean button is
+            // deliberately outside it: `children: .combine` flattens whatever it wraps into a single
+            // static label, which would make the button unreachable to VoiceOver — an interactive
+            // widget nobody can activate.
+            information
+            // US-050. The rectangular family and not the circular one: circular is a 24pt sprite
+            // in a 52pt circle with no room for a second target, and a button crammed in there
+            // would be missed as often as it was hit.
+            if snapshot.needsCleaning {
+                CleanComplicationButton()
+            }
+        }
+    }
+
+    private var information: some View {
         HStack(spacing: 6) {
             ComplicationSprite(snapshot: snapshot, side: 28)
             VStack(alignment: .leading, spacing: 2) {

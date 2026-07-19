@@ -342,8 +342,8 @@
         "Verify in watchOS Simulator via -complicationDemo: screenshot showing the Clean button present when poop exists"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "AppIntent-backed Clean button on the rectangular complication. The extension CANNOT reach the store (it lives in the app's own container, not the app group), so the intent records a request in the group and MainScreenModel.refresh() applies it through the one real clean() - no second cleaning rule. Snapshot gained poopCount (the pose can't answer the button's question: a sick Digimon in 4 poops poses .sick). Tap also cancels the mess notice immediately via the same UserNotificationDeliverer, and optimistically rewrites the snapshot so the face redraws at once. 636 tests pass (was 627, +9). Screenshots at 46mm: trash button present with -poopDemo, absent with -poopCleanDemo. LIMIT ON AC4: reloadAllTimelines() is called but cannot be OBSERVED here - US-048 established a widget never gets a timeline without being on a face, and this box cannot place one. What is observed is that the snapshot the reload would read has already changed."
     }
   ]
 }
