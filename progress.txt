@@ -225,3 +225,53 @@ Passed: build green; full suite 541 tests, 0 failures (was 537, +4 net — 5 new
 spriteFile rather than for the new key). All 5 new tests confirmed to run by name.
 
 Remains: US-041 (build the evolution tree layout view) is next.
+
+## 2026-07-19 — US-041: Build the evolution tree layout view
+
+New `Sources/EvolutionTreeView.swift`, holding two things: `EvolutionTreeLayout`, which is pure
+arithmetic (ladder-ordered columns, siblings stacked within a column, every edge resolved to the
+pair of cells it joins), and `EvolutionTreeView`, which draws it. New `Tests/EvolutionTreeTests.swift`
+(8). The tree is NOT on the Dex screen yet — that is US-042. It is reachable only through the
+DEBUG-only `EvolutionTreeDemoView` behind `-dexTreeDemo`.
+
+Three decisions worth not re-deriving:
+
+- **Columns come from `ladderIndex`, not `Stage.allCases`.** Armor-Hybrid has no rung, so on a
+  stage-ordered tree it is not a column at all — `allCases` would have silently filed it after
+  Ultimate as an eighth stage. No shipped line has one yet; `testAnOffLadderStageIsNotGivenAColumn`
+  pins the behaviour before one does, so whoever adds the first Armor form gets a failing test
+  rather than a wrong column.
+
+- **The grid is fixed-size, so connectors need no preferences.** Cell 34x34, column gap 18, row gap
+  6, so cell (c,r) is at `(c*52, r*40)` and a connector is a plain `Path` between two known points.
+  The alternative — flexible cells reporting their frames up through a preference before a single
+  line can be drawn — is a lot of machinery for a grid whose geometry is a constant.
+
+- **Cells are a real `HStack` of `VStack`s, NOT `.offset`.** I wrote it with `.offset` first and
+  the drawing is identical to the pixel, because the sizes are fixed. What is not identical is that
+  `.offset` moves a view WITHOUT moving its layout frame: every column's frame stays at the origin,
+  so `ScrollViewProxy.scrollTo` cannot reach one and VoiceOver's spatial ordering has seven columns
+  piled on top of each other. This cost a screenshot to notice (see below) and would have cost far
+  more to notice as an accessibility bug.
+
+Edges pointing outside the line are dropped rather than drawn to nowhere. Nothing in the shipped
+roster does that, but `line` is a grouping key the evolution engine does not read, so an edge is
+free to cross lines and the tree must not assume otherwise.
+
+SIMULATOR NOTE, and the reason the `.offset` version had to be rewritten: the Agumon branch is at
+columns 4-5 of 7, so a plain launch screenshots the Digitama end and the branch is off screen right.
+`simctl` has no scroll command any more than it has a tap, so `-dexTreeScrollDemo` scrolls to the
+last column on appear — which is what needs real column frames. The earlier gotcha still holds and
+bit again: the queued notification alert survives `terminate` and `uninstall`, only `simctl erase`
+clears it, and after an erase `-healthAnswered` is needed or the run lands on onboarding.
+
+Passed: build green; full suite `Executed 549 tests, with 0 failures` (was 541, +8). Screenshots on
+Series 11 **46mm** and **42mm**, both with `-dexTreeDemo -dexTreeScrollDemo`: Agumon forking to
+Greymon (discovered, sprite drawn) and Meramon (undiscovered, '?'), both slanting connectors
+converging into MetalGreymon, then WarGreymon. Unscrolled 46mm screenshot confirms the other end —
+egg, Botamon, Koromon, Agumon, straight connectors, and the branch line leaving the right edge.
+
+Remains: US-042 (replace the Dex grid with the tree) is next. It needs a per-line grouping of
+`DexModel.rows` — the model currently sorts discovered-first across the WHOLE roster, which is the
+wrong order once rows are grouped by `line`. Note also that 157 dexOnly Digimon carry a line but sit
+in no edge, so a line's tree may have nodes with no connector at all.

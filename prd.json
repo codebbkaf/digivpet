@@ -106,8 +106,8 @@
         "Verify in watchOS Simulator: screenshot shows a branching tree with visible connectors"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen — that is US-042."
     },
     {
       "id": "US-042",

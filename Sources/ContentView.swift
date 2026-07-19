@@ -12,6 +12,7 @@ struct ContentView: View {
     @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
     @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
     @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
+    @State private var showsTreeDemo = CommandLine.arguments.contains("-dexTreeDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -82,6 +83,10 @@ struct ContentView: View {
             // still cannot tap it.
             .navigationDestination(isPresented: $showsSettingsDemo) {
                 NotificationSettingsView(settings: model.notificationSettings)
+            }
+            // US-041's tree, which has no way onto the screen until US-042 puts it on the Dex.
+            .navigationDestination(isPresented: $showsTreeDemo) {
+                EvolutionTreeDemoView()
             }
             #endif
         }
