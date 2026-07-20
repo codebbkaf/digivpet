@@ -865,3 +865,98 @@ WHAT REMAINS / FOR THE NEXT ITERATION
    `com.digivpet.DigiVPet`.
 
 Next: US-066 (render hints with progress-based reveal).
+
+================================================================================
+2026-07-21 — US-066: Render hints with progress-based reveal
+================================================================================
+
+WHAT WAS BUILT
+
+`Sources/ConditionReveal.swift` (new, pure — no clock, no store, no SwiftUI):
+
+  `RevealLevel` — far / close / met, plus `qualifier`, the extra sentence appended at that level.
+  Only `close` has one. `far` is silent so a nudge at 0% and at 49% read IDENTICALLY — a qualifier
+  that appeared at 10% would let a player bisect the threshold by watching for the wording to
+  change. `met` is silent because the checkmark already said it.
+
+  `ConditionReveal.progress` — 0...1, and TWO of its three cases are deliberate, not incidental:
+    - Unknown reads 0, not "no opinion". A denied or unreadable metric must not warm a hint up, or
+      the player is told to keep doing something the app cannot see them doing.
+    - An unsatisfied `atMost` is 0, NOT a graded overshoot. Those gates start satisfied and can only
+      be broken — every counter behind one (overfeeds, sleep disturbances) grows and never shrinks
+      within a stage. Grading the overshoot would show a hint COOLING as the player did more of the
+      wrong thing, which reads as progress in the wrong direction.
+
+  `level` decides `met` by calling `ConditionEvaluator.isSatisfied`, never by `progress >= 1`. That
+  is load-bearing: one of them rounding differently than the other would put a checkmark on a branch
+  that does not open. `testMetAgreesWithTheEvaluatorAtEveryStep` walks 0→200 and pins it.
+
+  `line(for:in:)` goes through `ConditionHint.resolve`, so US-065's blank/whitespace guard and the
+  metric defaults are not bypassed — exactly as the previous iteration's note demanded.
+
+`GameStore.savedState()` (new) — the saved game or nil, WITHOUT creating one. `DexModel` must never
+be the thing that hatches a game: opening a side screen before tapping the egg would otherwise save
+a Digimon the player never chose. `loadOrCreate` now wraps it.
+
+`DexModel.conditionContext` — built from the saved state in `load()`. `.unknown` on no saved game or
+a store that will not open, which degrades every hint to its COLDEST level. That is the right
+direction to fail: a hint saying nothing has moved beats a checkmark on something unearned.
+
+`DexDetailView` — an "It wants" list under the candidate grid, and a green ring + corner checkmark
+on an earned candidate.
+
+TWO JUDGEMENT CALLS WORTH KNOWING ABOUT
+
+1. **The hint list is FLAT across branches, not grouped per branch.** Most branch targets are
+   undiscovered and `DexCandidateCell` withholds their names, so a per-branch list would be a column
+   of "?" headings — and worse, it would tell the player exactly how many criteria stand between
+   them and each unnamed thing. Deduplicated on the criterion (metric|window|comparison|value), NOT
+   on its text, so two branches gated on the same metric at different thresholds each keep a line.
+
+2. **An unconditional edge is NOT drawn as earned, though `allMet([])` is true and right to be.**
+   The 41mm screenshot is what caught this: Numemon (the junk default, no conditions) and Meramon
+   both came up green. Every node's junk default is unconditional, so marking those would tick the
+   one branch the player is trying to AVOID, on every screen, from first launch. The vacuous truth
+   stays in the pure function — it is the correct answer to "is anything outstanding" — and the VIEW
+   requires `!conditions.isEmpty`.
+
+The screenshot also caught the run-on "Walk with it most days It is starting to notice." The
+authored hints are fragments; the metric defaults are sentences. `ConditionReveal.sentence` adds the
+full stop only when a qualifier actually follows, so the far case still shows the hint EXACTLY as
+US-065 authored and pinned it.
+
+VERIFIED THIS ITERATION (all observed, none assumed)
+
+  AC1  far/close/met driven by progress; `testTheBoundariesLandWhereTheStorySaysTheyDo`.
+  AC2  `testNoRevealedLineContainsADigit` scans both qualifiers AND every condition shipped in
+       evolutions.json, rendered at all THREE levels, asserting a non-zero count so it cannot pass
+       vacuously. Confirmed again on the screenshot — no number on screen.
+  AC3  Meramon (both criteria met) rings green; Greymon (close + far) and Numemon do not. Seen on
+       the 41mm screenshot, twice — before and after the unconditional-edge fix.
+  AC4  4,999 / 5,000 / 10,000 against a 10,000 threshold — far / close / met. Plus `testResolutionIsPure`.
+  AC5  Series 9 41mm, `-dexRevealDemo`. All four rows visible: flame+close on steps, hollow circle
+       +dimmed on training, two green checkmarks. `testTheDemoScenarioProducesAllThreeLevels` pins
+       the demo's arithmetic so the screenshot only ever has to check LAYOUT.
+  Build  BUILD SUCCEEDED on Series 11 46mm and Series 9 41mm.
+  Tests  818 passed / 0 failures (was 804). The 14 new ones were also run in isolation with
+         `-only-testing:DigiVPetTests/ConditionRevealTests` to confirm they actually execute.
+
+WHAT REMAINS / FOR THE NEXT ITERATION
+
+1. **Standing measurements never warm up on this screen.** `ConditionContext` is built from saved
+   totals only, so resting heart rate / VO2 max / HRV conditions read `.unknown` → `far` forever in
+   the Dex. No shipped edge uses one yet, so nothing is wrong today — but the first edge that does
+   will need `DexModel` to take a live `HealthMetricReader` read, and it will fail SILENTLY (as a
+   cold hint) rather than loudly.
+
+2. **The detail sheet is now genuinely full at 41mm.** US-064 warned the layout was fragile; it has
+   since absorbed a hint list. Four hint rows already need a scroll. Anything US-067 adds here must
+   be re-screenshotted on Series 9 41mm — do not reason about the fold.
+
+3. Launch flags for screenshots: `-dexDemo -noNotificationPrompt -healthAnswered` are mandatory
+   together, plus `-dexDetailDemo` (Agumon) or `-dexEmptyDetailDemo` (Aquilamon). NEW this
+   iteration: `-dexRevealDemo` seeds the part-met totals AND scrolls the sheet to the hint list,
+   which is otherwise below the fold and unreachable — `simctl` has no scroll command. Do NOT use
+   `-healthAutoConfirm`. Bundle id `com.digivpet.DigiVPet`.
+
+Next: US-067 (keep the evolution tree reachable from the flat Dex).

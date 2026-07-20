@@ -234,7 +234,7 @@
       ],
       "priority": 12,
       "passes": true,
-      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered \u2014 US-066 wires it into the view."
+      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered — US-066 wires it into the view."
     },
     {
       "id": "US-066",
@@ -250,8 +250,8 @@
         "Tests pass"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ConditionReveal (pure) grades far/close/met at a 0.5 boundary; unknown and an overshot atMost read as far, and met defers to ConditionEvaluator so a checkmark can never disagree with the engine. Dex detail sheet draws an 'It wants' list (symbol + warmed hint, no numbers) and rings a candidate green only when it has criteria AND all of them hold. 14 new tests; 818 pass, build green. Screenshotted on 41mm via -dexRevealDemo: all three levels visible."
     },
     {
       "id": "US-067",

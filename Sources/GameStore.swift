@@ -51,10 +51,17 @@ final class GameStore {
 
     /// The saved game, starting a new one at `digitamaId` if there is none yet.
     func loadOrCreate(digitamaId: String, now: Date = Date()) throws -> GameState {
-        if let saved = try context.fetch(FetchDescriptor<GameState>()).first {
-            return saved
-        }
+        if let saved = try savedState() { return saved }
         return try resetGame(digitamaId: digitamaId, now: now)
+    }
+
+    /// The saved game, or nil if there is none — WITHOUT starting one.
+    ///
+    /// For the read-only screens. The Dex reads the player's totals to warm up its evolution hints
+    /// (US-066), and it must not be the thing that hatches a game: opening a side screen before
+    /// ever tapping the egg would otherwise create and save a Digimon the player never chose.
+    func savedState() throws -> GameState? {
+        try context.fetch(FetchDescriptor<GameState>()).first
     }
 
     /// Throws away the saved game and starts over at a fresh Digitama.

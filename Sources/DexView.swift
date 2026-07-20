@@ -28,7 +28,7 @@ struct DexView: View {
     }
 
     var body: some View {
-        DexGridView(rows: model.rows, selectsDemoRow: true)
+        DexGridView(rows: model.rows, selectsDemoRow: true, context: model.conditionContext)
             .navigationTitle("\(model.discoveredCount)/\(model.totalCount)")
             #if DEBUG
             // Debug-only: `simctl` cannot tap a cell, so an opened line is unscreenshottable
@@ -77,6 +77,10 @@ struct DexGridView: View {
     /// so the flag lands on one screen rather than re-firing on every grid pushed after it.
     var selectsDemoRow = false
 
+    /// What the detail sheet's evolution hints are warmed up against. `.unknown` — every hint at
+    /// its coldest — for the grids that are not the Dex root and have no model to ask.
+    var context: ConditionContext = .unknown
+
     @State private var selected: DexRow?
 
     /// Three 32pt columns fit a 41mm watch, the narrowest screen the app supports.
@@ -120,7 +124,7 @@ struct DexGridView: View {
             #endif
         }
         .sheet(item: $selected) { row in
-            DexDetailView(row: row, pool: rowsById)
+            DexDetailView(row: row, pool: rowsById, context: context)
         }
     }
 
@@ -199,9 +203,31 @@ struct DexDetailView: View {
 
     var graph: EvolutionGraph = .bundled
 
+    /// The totals the hints are resolved against. `.unknown` shows every hint at its coldest,
+    /// which is what a preview or a grid with no model gets.
+    var context: ConditionContext = .unknown
+
     /// Cheap enough to recompute as `body` re-runs: at most three edges and a dictionary hit each.
-    private var candidates: [DexRow] {
-        DexRow.evolutionCandidates(of: row.id, in: graph, resolvedAgainst: pool)
+    private var candidates: [DexCandidate] {
+        DexRow.candidates(of: row.id, in: graph, resolvedAgainst: pool)
+    }
+
+    /// Every criterion on every branch out of here, in authored order, first mention only.
+    ///
+    /// Flattened across the branches rather than listed per branch ON PURPOSE. Most branch targets
+    /// are undiscovered, and `DexCandidateCell` withholds their names — so a per-branch list would
+    /// be a column of "?" headings, and worse, it would tell the player exactly how many criteria
+    /// stand between them and each unnamed thing. A flat list of what this Digimon is watching
+    /// says which directions matter without mapping them onto branches.
+    ///
+    /// Deduplicated on the criterion itself and not on its text, so two branches gated on the same
+    /// metric at DIFFERENT thresholds still each get their line — those are genuinely two things
+    /// to know, and collapsing them would hide one behind the other's checkmark.
+    private var conditions: [EvolutionCondition] {
+        var seen: Set<String> = []
+        return candidates.flatMap(\.conditions).filter { condition in
+            seen.insert("\(condition.metric)|\(condition.window)|\(condition.comparison)|\(condition.value)").inserted
+        }
     }
 
     /// Three columns, as on the Dex grid, so one to three candidates are a single line that fits a
@@ -214,6 +240,23 @@ struct DexDetailView: View {
     /// each of those, not arithmetic: the first two attempts put the section below the fold and
     /// then clipped the tiles halfway.
     var body: some View {
+        ScrollViewReader { scroller in
+            sheet
+            #if DEBUG
+            // Debug-only, and the same trick and the same reason as
+            // `EvolutionTreeView.scrollToTheBranchIfRequested`: the hint list sits below a 41mm
+            // fold by design, `simctl` has no scroll command, and this is the only way to
+            // screenshot it. Compiled out of release builds.
+            .onAppear {
+                guard CommandLine.arguments.contains("-dexRevealDemo") else { return }
+                scroller.scrollTo(Self.hintsAnchor, anchor: .bottom)
+            }
+            #endif
+        }
+    }
+
+    /// Split out of `body` only so the debug scroll hook above has one view to attach to.
+    private var sheet: some View {
         ScrollView {
             VStack(spacing: 2) {
                 IdleSpriteView(stage: row.stage.rawValue, name: row.spriteFile, scale: 3)
@@ -260,9 +303,91 @@ struct DexDetailView: View {
         } else {
             LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(candidates) { candidate in
-                    DexCandidateCell(row: candidate)
+                    DexCandidateCell(row: candidate.row, isEarned: isEarned(candidate))
                 }
             }
+
+            hints
+        }
+    }
+
+    /// Scroll target for the hint list. Read by the debug hook in `body`.
+    private static let hintsAnchor = "hints"
+
+    /// Whether this branch's criteria are all satisfied — the green cell.
+    ///
+    /// An UNCONDITIONAL edge is deliberately not marked, even though `ConditionReveal.allMet` says
+    /// true of it and is right to: vacuous truth is the correct answer to "is anything outstanding"
+    /// and the wrong thing to put a checkmark on. Every node's junk default is unconditional, so
+    /// marking those would tick the one branch the player is trying to AVOID, on every screen, from
+    /// the first launch — and a mark that is always on for two of three cells teaches nothing.
+    /// The screenshot on 41mm is what surfaced this: Numemon and Meramon both came up green.
+    private func isEarned(_ candidate: DexCandidate) -> Bool {
+        !candidate.conditions.isEmpty && ConditionReveal.allMet(candidate.conditions, in: context)
+    }
+
+    /// The reveal list: one warmed-up line per criterion. Omitted entirely when the branches out of
+    /// here are gated only by energy and care, which is most of the graph — a heading over nothing
+    /// is the "No evolutions recorded." mistake in a second place.
+    @ViewBuilder
+    private var hints: some View {
+        if !conditions.isEmpty {
+            Text("It wants")
+                .font(.system(size: 10))
+                .foregroundStyle(.secondary)
+                .padding(.top, 4)
+
+            VStack(alignment: .leading, spacing: 3) {
+                ForEach(Array(conditions.enumerated()), id: \.offset) { _, condition in
+                    ConditionHintRow(condition: condition, context: context)
+                }
+            }
+            .padding(.horizontal, 4)
+            .id(Self.hintsAnchor)
+        }
+    }
+}
+
+/// One criterion, said as flavour text and marked with how close it is.
+///
+/// The level is carried by a SYMBOL rather than by a number or a bar, because a bar has a length
+/// and a length is a percentage read off with a ruler. A symbol has three states and no more.
+private struct ConditionHintRow: View {
+    let condition: EvolutionCondition
+    let context: ConditionContext
+
+    private var level: RevealLevel { ConditionReveal.level(of: condition, in: context) }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 4) {
+            Image(systemName: symbolName)
+                .font(.system(size: 9))
+                .foregroundStyle(tint)
+
+            Text(ConditionReveal.line(for: condition, in: context))
+                .font(.system(size: 10))
+                .foregroundStyle(level == .far ? .secondary : .primary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var symbolName: String {
+        switch level {
+        case .far: return "circle"
+        // A flame and not a half-filled anything: a half-filled glyph would draw the very fraction
+        // the hint refuses to say.
+        case .close: return "flame.fill"
+        case .met: return "checkmark.circle.fill"
+        }
+    }
+
+    private var tint: Color {
+        switch level {
+        case .far: return .secondary
+        case .close: return .orange
+        case .met: return .green
         }
     }
 }
@@ -273,6 +398,14 @@ struct DexDetailView: View {
 /// would be answering the question the Dex exists to make you go and answer.
 private struct DexCandidateCell: View {
     let row: DexRow
+
+    /// Every criterion on the edge that reaches this candidate currently holds.
+    ///
+    /// Drawn as a green outline and a corner checkmark, and NOT as the cell brightening — the cell
+    /// already uses brightness for discovered-vs-not, and a second meaning on one channel would
+    /// make an undiscovered-but-earned branch indistinguishable from a discovered-but-unearned one.
+    /// That pair is exactly the interesting case: a branch you have qualified for and never seen.
+    var isEarned = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -294,7 +427,19 @@ private struct DexCandidateCell: View {
         .padding(.vertical, 1)
         .background(RoundedRectangle(cornerRadius: 6)
             .fill(.white.opacity(row.isDiscovered ? 0.08 : 0.03)))
-        .opacity(row.isDiscovered ? 1 : 0.55)
+        .overlay(alignment: .topTrailing) {
+            if isEarned {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 8))
+                    .foregroundStyle(.green)
+                    .padding(1)
+            }
+        }
+        .overlay(RoundedRectangle(cornerRadius: 6)
+            .strokeBorder(.green, lineWidth: isEarned ? 1 : 0))
+        // The earned mark stays at full strength on an undiscovered cell: dimming it would sink
+        // the one thing this cell has to say underneath the dimming that means "not met yet".
+        .opacity(row.isDiscovered || isEarned ? 1 : 0.55)
     }
 }
 

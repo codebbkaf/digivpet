@@ -40,6 +40,30 @@ struct DexRow: Identifiable, Equatable {
     }
 }
 
+/// One thing this Digimon can become, and what it is still waiting for.
+///
+/// The row and the edge's criteria travel together because the detail view needs both at once: the
+/// cell draws the row, and whether that cell is drawn as EARNED is a question only the edge's
+/// conditions can answer. Resolving them separately would mean walking the same edges twice and
+/// pairing them back up by target id, which converging lines make ambiguous.
+struct DexCandidate: Identifiable, Equatable {
+    let row: DexRow
+    /// The `conditions` of the edge that leads here. Empty for an edge gated only by energy, care
+    /// mistakes and battle wins — which is most of the shipped graph.
+    let conditions: [EvolutionCondition]
+
+    /// The target id paired with its position in the authored list. Two edges out of one node may
+    /// name the same target under different criteria, and a bare id would make those one row to
+    /// `ForEach` — silently dropping a branch from the screen.
+    let id: String
+
+    init(row: DexRow, conditions: [EvolutionCondition], index: Int) {
+        self.row = row
+        self.conditions = conditions
+        self.id = "\(index)-\(row.id)"
+    }
+}
+
 extension DexRow {
     /// What this Digimon can become: one row per outgoing edge, in authored order.
     ///
@@ -61,11 +85,27 @@ extension DexRow {
         in graph: EvolutionGraph,
         resolvedAgainst pool: [String: DexRow]
     ) -> [DexRow] {
+        candidates(of: id, in: graph, resolvedAgainst: pool).map(\.row)
+    }
+
+    /// As `evolutionCandidates`, but each row still carrying the criteria of the edge that reaches
+    /// it — what US-066 needs to draw a hint per branch and to mark a branch as earned.
+    static func candidates(
+        of id: String,
+        in graph: EvolutionGraph,
+        resolvedAgainst pool: [String: DexRow]
+    ) -> [DexCandidate] {
         guard let node = graph.node(id: id) else { return [] }
-        return node.evolutions.compactMap { edge in
-            if let known = pool[edge.to] { return known }
-            guard let target = graph.node(id: edge.to) else { return nil }
-            return DexRow(node: target, firstDiscovered: nil)
+        return node.evolutions.enumerated().compactMap { index, edge in
+            let row: DexRow
+            if let known = pool[edge.to] {
+                row = known
+            } else if let target = graph.node(id: edge.to) {
+                row = DexRow(node: target, firstDiscovered: nil)
+            } else {
+                return nil
+            }
+            return DexCandidate(row: row, conditions: edge.conditions, index: index)
         }
     }
 }
@@ -146,6 +186,16 @@ final class DexModel: ObservableObject {
     /// True once `load()` has run, so the screen can tell "no Digimon yet" from "not read yet".
     @Published private(set) var isLoaded = false
 
+    /// What the detail sheet's hints are resolved against — the current Digimon's totals.
+    ///
+    /// `.unknown` until `load()` runs, and `.unknown` still if there is no saved game or the store
+    /// will not open. That degrades every hint to its coldest level, which is the right direction
+    /// to fail: a hint that says nothing has moved is a smaller wrong than a checkmark on a branch
+    /// the player has not earned. Only accumulating and `care.*` conditions can be answered from
+    /// here — a standing measurement like resting heart rate needs a live read, which the Dex does
+    /// not do, so those stay `.unknown` and read as `far`.
+    @Published private(set) var conditionContext: ConditionContext = .unknown
+
     private let roster: Roster
     private let graph: EvolutionGraph
     private let makeStore: @MainActor () throws -> GameStore
@@ -172,17 +222,28 @@ final class DexModel: ObservableObject {
     /// A store that will not open degrades to an all-undiscovered Dex rather than an error screen:
     /// the roster is still worth showing, and the Dex is a side screen — losing it must not be
     /// louder than losing the game itself.
-    func load() {
+    func load(now: Date = Date()) {
         var discoveries: [String: Date] = [:]
+        var context = ConditionContext.unknown
         do {
             let store = try makeStore()
             #if DEBUG
             seedDexDemoIfRequested(store)
             #endif
             discoveries = try store.dexDiscoveries()
+            // `savedState` and not `loadOrCreate`: see `GameStore.savedState`. Nil is an ordinary
+            // first launch, not an error, and leaves every hint at its coldest.
+            if let state = try store.savedState() {
+                context = ConditionContext(state: state, now: now)
+            }
         } catch {
             Self.log.error("Could not read the Dex: \(String(describing: error))")
         }
+        #if DEBUG
+        conditionContext = Self.revealDemoContext ?? context
+        #else
+        conditionContext = context
+        #endif
 
         rows = roster.entries
             .map { DexRow(entry: $0, firstDiscovered: discoveries[$0.id]) }
@@ -267,6 +328,30 @@ final class DexModel: ObservableObject {
             store.recordDiscovery(id: id)
         }
         try? store.save()
+    }
+
+    /// Debug-only: the part-met totals `-dexRevealDemo` shows the hints against, or nil when the
+    /// flag is absent.
+    ///
+    /// Built to put all three reveal levels of US-066 on ONE screenshot of Agumon's detail sheet,
+    /// because the Simulator has no HealthKit data and a real game there earns nothing at all:
+    ///
+    /// - 39,000 of Greymon's 60,000 stage steps — 65%, so that hint is `close`.
+    /// - 2 of its 6 training sessions — 33%, so that one is `far`.
+    /// - Meramon's 1,200 active kilocalories cleared, and 0 overfeeds against a cap of 2, so BOTH
+    ///   of its conditions are met and its cell draws as earned while Greymon's does not.
+    ///
+    /// A context literal rather than seeded state, so it cannot write a fake game to the store.
+    /// Compiled out of release builds.
+    private static var revealDemoContext: ConditionContext? {
+        guard CommandLine.arguments.contains("-dexRevealDemo") else { return nil }
+        return ConditionContext(
+            stageTotals: MetricTotals(values: [
+                ConditionMetric.healthSteps.rawValue: 39_000,
+                ConditionMetric.healthActiveEnergy.rawValue: 1_500,
+            ]),
+            trainingSessionsThisStage: 2,
+            overfeedsThisStage: 0)
     }
     #endif
 }
