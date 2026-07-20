@@ -266,6 +266,19 @@ final class GameState {
     private var stageMetricTotalsStorage: [String: Double]?
     private var lifetimeMetricTotalsStorage: [String: Double]?
     private var stageBestDayMetricsStorage: [String: Double]?
+    /// Backing stores for the three stage-scoped care counters (US-084), the ones the `care.*`
+    /// conditions other than `careBattleCount`/`careBattleWinRatio` are compared against. Optional
+    /// for the same migration reason as every other storage property here.
+    ///
+    /// Stage-scoped and cumulative, which is what makes them worth keeping at all — none of the
+    /// three could be answered by a counter that already exists. `refusalCount` resets at local
+    /// midnight, so it can never express "3+ overfeeds this stage"; `wakeMistakeDay` is a marker
+    /// saying whether a night was disturbed, not how many times; and `strengthStat` is the REWARD
+    /// training paid out, which US-075's graded gain is about to make a bad proxy for how often the
+    /// user actually trained.
+    private var stageTrainingSessionsStorage: Int?
+    private var stageOverfeedsStorage: Int?
+    private var stageSleepDisturbancesStorage: Int?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -308,6 +321,9 @@ final class GameState {
         self.stageMetricTotalsStorage = [:]
         self.lifetimeMetricTotalsStorage = [:]
         self.stageBestDayMetricsStorage = [:]
+        self.stageTrainingSessionsStorage = 0
+        self.stageOverfeedsStorage = 0
+        self.stageSleepDisturbancesStorage = 0
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -483,6 +499,60 @@ extension GameState {
         set { stageBestDayMetricsStorage = newValue.values }
     }
 
+    /// How many training sessions have been run this stage — `care.trainingSessions`.
+    ///
+    /// Counted per SESSION and never per outcome. Digital Monster Color's branches ask how much you
+    /// trained, not how well: a session that missed every prompt is still a session, and the bands
+    /// US-061 authors ("8–31 trains the good branch, 32+ overtrains into the junk one") only mean
+    /// what they say if a miss costs the same as a hit. US-075's graded gain steers `strengthStat`;
+    /// it must never be the thing evolution reads.
+    ///
+    /// Computed for the same reason `refusalCount` is: the optionality persistence needs stops at
+    /// the model boundary.
+    var stageTrainingSessions: Int {
+        get { stageTrainingSessionsStorage ?? 0 }
+        set { stageTrainingSessionsStorage = newValue }
+    }
+
+    /// How many feeds have been refused this stage — `care.overfeeds`.
+    ///
+    /// Distinct from `refusalCount`, which is TODAY's and rolls over at local midnight. Both count
+    /// the same event and neither can be derived from the other: a stage-long gate cannot be read
+    /// off a daily count, and the daily care mistake cannot be read off a stage-long one.
+    var stageOverfeeds: Int {
+        get { stageOverfeedsStorage ?? 0 }
+        set { stageOverfeedsStorage = newValue }
+    }
+
+    /// How many times the Digimon has been disturbed in its sleep window this stage —
+    /// `care.sleepDisturbances`.
+    ///
+    /// Every disturbance, not one a night. `wakeMistakeDay` caps the MISTAKE at one a day, because
+    /// six prods is one bad night's care; this counter is the other question — how often it
+    /// happened at all — and a marker cannot answer it.
+    var stageSleepDisturbances: Int {
+        get { stageSleepDisturbancesStorage ?? 0 }
+        set { stageSleepDisturbancesStorage = newValue }
+    }
+
+    /// Wins as a 0.0–1.0 fraction of battles fought — `care.battleWinRatio`.
+    ///
+    /// Derived rather than stored, so it cannot drift from the record it summarises. Zero battles
+    /// is 0.0 and never a divide by zero: a Digimon that has never fought has not won, and any
+    /// `atLeast` gate on the ratio must fail it rather than crash — or, worse, read as a perfect
+    /// record. Lifetime, like the `battleWins`/`battleLosses` it comes from.
+    var battleWinRatio: Double {
+        let fought = battleWins + battleLosses
+        guard fought > 0 else { return 0 }
+        return Double(battleWins) / Double(fought)
+    }
+
+    /// Counts one training session, however it went. Called by `TrainAction.train` for every
+    /// session that actually ran — see `stageTrainingSessions` for why the grade is not consulted.
+    func recordTrainingSession() {
+        stageTrainingSessions += 1
+    }
+
     /// The reset a hatch and an evolution both perform: this stage's accumulated progress goes, the
     /// lifetime totals stay, and the stage clock restarts at `now`.
     ///
@@ -493,6 +563,9 @@ extension GameState {
         stageEnergy = .zero
         stageMetricTotals = .zero
         stageBestDayMetrics = .zero
+        stageTrainingSessions = 0
+        stageOverfeeds = 0
+        stageSleepDisturbances = 0
         stageEnteredDate = now
     }
 
@@ -511,6 +584,9 @@ extension GameState {
             refusalCount = 0
         }
         refusalCount += 1
+        // The stage-long tally is deliberately outside the rollover above: it counts refusals since
+        // the stage began, so nothing about the day it happened on may reset it.
+        stageOverfeeds += 1
 
         // `refusalMistakeDay` and not `refusalCount == 3`: the fourth and fifth refusals of a day
         // must not each add another mistake, and the marker says so directly.

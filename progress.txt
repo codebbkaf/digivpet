@@ -282,3 +282,61 @@ seam exists (`loadOrCreateMetricLedger` + `MetricCreditor.credit`) but nothing c
 yet, because deciding WHICH metrics are worth reading on every refresh is US-061's call (reading
 all 26 every refresh would be wrong). Still NOTHING evaluates conditions. Next: US-084, then
 US-059, US-060, US-061.
+
+================================================================================
+2026-07-20 — US-084: Stage-scoped care counters for evolution gating — PASSES
+
+WHAT WAS DONE
+`GameState` gains three stage-scoped counters — `stageTrainingSessions`, `stageOverfeeds`,
+`stageSleepDisturbances` — behind optional `Int?` storage, the same migration shape every other
+property there uses. Each is incremented at the event site that already existed, so nothing was
+rewired:
+  - `TrainAction.train` calls the new `GameState.recordTrainingSession()` on the `.trained` path
+    only. A `.blocked` training is not a session (pinned), or an empty energy bar could farm it.
+  - `recordRefusal` bumps `stageOverfeeds` OUTSIDE the daily rollover.
+  - `recordWakingEarly` bumps `stageSleepDisturbances` BEFORE the once-a-day guard.
+`enterStage(at:)` clears all three alongside the US-058 metric totals. `battleWinRatio` is a
+derived `Double` on `GameState`.
+
+Tests: `Tests/CareCounterTests.swift`, 15 tests, injected clock and a fixed America/Los_Angeles
+calendar throughout — nothing waits. Full suite 717 tests / 0 failures, build green.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
+
+1. **The training count is GRADE-BLIND, and this is the one US-075 is most likely to break.**
+   `recordTrainingSession()` takes no arguments on purpose — there is nothing to pass it that
+   could make a session count for less. DMC counts training whether it succeeded or not, and
+   US-061's bands ("8-31 trains the good branch, 32+ overtrains into the junk one") only mean what
+   they say if a miss costs the same as a hit. When US-075 adds graded gain, that grade steers
+   `strengthStat` and NOTHING ELSE. `testAMissGradedSessionStillCountsAsTraining` drives the seam
+   directly and asserts a zero-gain session still counts; if a later story makes the count
+   conditional on the grade, that test fails, which is the point.
+   Corollary: do NOT let evolution read `strengthStat` as a proxy for "how much did they train" —
+   after US-075 those two numbers diverge, which is exactly why this counter exists.
+
+2. **`stageOverfeeds` and `refusalCount` both count the same event and NEITHER derives from the
+   other.** `refusalCount` is TODAY's and rolls over at local midnight (US-027's mistake is 3+
+   refusals in ONE day); `stageOverfeeds` is the stage's and never rolls. A stage-long 3+ overfeed
+   gate cannot be read off a daily count, and the daily care mistake cannot be read off a
+   stage-long one. Deleting either as "a duplicate" breaks the other's rule.
+
+3. **`stageSleepDisturbances` counts EVERY disturbance; `wakeMistakeDay` still caps the MISTAKE at
+   one a night.** Two different questions — how often it happened vs. was this night's care bad —
+   and a day MARKER cannot answer the first. Hence the increment sits ahead of the guard.
+   `testTheOncePerNightWakeMistakeIsUnchanged` pins that three prods in one night is still exactly
+   one care mistake, so this story genuinely added and rewired nothing.
+
+4. **`battleWinRatio` is DERIVED, never stored**, so it cannot drift from the `battleWins`/
+   `battleLosses` it summarises. Zero battles returns 0.0 and never `0/0`: a NaN would silently
+   PASS an `atMost` gate and fail every comparison it was asked, which is worse than being wrong.
+   Note it is LIFETIME, like the two fields it comes from — it is deliberately NOT stage-scoped,
+   and `testEvolvingLeavesTheLifetimeAndDailyRecordsStanding` pins that `enterStage` leaves the
+   win/loss record alone. If US-061 wants a per-stage ratio it must add stage-scoped win/loss
+   fields; do not repurpose this one.
+
+5. `enterStage(at:)` remains the ONE place a stage-scoped quantity is cleared (US-058 note 5 still
+   holds). Three more lines went in there and nowhere else.
+
+REMAINS: nothing for this story. Still NOTHING evaluates conditions — `care.*` now has real
+numbers behind it, but no code reads them yet; that is US-060. `care.battleCount` is answered by
+the existing `battlesFought(now:calendar:)` and needed nothing here. Next: US-059, US-060, US-061.

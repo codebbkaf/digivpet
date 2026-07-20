@@ -208,6 +208,11 @@ extension GameState {
     /// the Digimon is not really woken — but the PRD counts the attempt, and once a day is the right
     /// cap: prodding it six times is one bad night's care, not six.
     func recordWakingEarly(now: Date, calendar: Calendar = .current) {
+        // Counted BEFORE the once-a-day guard, and so on every disturbance. The mistake is capped
+        // at one a night; `stageSleepDisturbances` (US-084) is the count of how often it happened,
+        // which is a different question and the one `care.sleepDisturbances` gates on.
+        stageSleepDisturbances += 1
+
         let today = calendar.startOfDay(for: now)
         guard wakeMistakeDay != today else { return }
         wakeMistakeDay = today

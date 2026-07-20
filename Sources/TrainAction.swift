@@ -67,6 +67,10 @@ enum TrainAction {
         // spend can never be re-credited by the next health read.
         state.stageEnergy[payer] -= energyCostPerTraining
         state.strengthStat += strengthGainPerTraining
+        // Filed here rather than alongside the gain, because the two answer to different rules: the
+        // gain is what the session EARNED and US-075 is about to grade it, while the count is that
+        // the session HAPPENED, which no grade can change. See `GameState.stageTrainingSessions`.
+        state.recordTrainingSession()
         return .trained(spent: payer, cost: energyCostPerTraining, gain: strengthGainPerTraining)
     }
 }

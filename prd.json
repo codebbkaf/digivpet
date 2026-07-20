@@ -99,8 +99,8 @@
         "Tests pass"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": "Sourced from the Digital Monster Color mechanics at humulos.com/digimon/dmc/. These are the quantities the real device branches on, and US-061 cannot author DMC-shaped criteria without them."
+      "passes": true,
+      "notes": "Stage-scoped stageTrainingSessions/stageOverfeeds/stageSleepDisturbances on GameState, persisted as optional Int storage (same migration shape as every other property there) and cleared by enterStage alongside the US-058 metric totals. Incremented at the existing event sites: TrainAction.train (on .trained only, via recordTrainingSession(), grade-blind), recordRefusal (outside the daily rollover), recordWakingEarly (before the once-a-day guard, so every disturbance counts). battleWinRatio is derived from battleWins/battleLosses and returns 0.0 at zero battles rather than NaN. refusalCount, wakeMistakeDay and the care-mistake rules are untouched and pinned by tests. 15 tests in Tests/CareCounterTests.swift; full suite 717 tests, 0 failures; build green."
     },
     {
       "id": "US-059",
