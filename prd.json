@@ -117,8 +117,8 @@
         "Tests pass"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": "DO NOT uninstall the app to reset the grant while testing this. progress.txt records that uninstalling wipes the HealthKit grant and strands the app on a system sheet simctl cannot tap, costing ~15 minutes to repair via healthdb.sqlite. Use a launch flag instead."
+      "passes": true,
+      "notes": "HealthReadSet unions the four energy metrics with every health.* metric named by a condition in the graph, DERIVED via EvolutionGraph.conditionHealthMetrics; HealthAuthorizing now takes the whole set so status and request both cover it in one call. 20 new tests, 737 total, 0 failures. CAVEATS: (a) 're-prompted only for the new types' is HealthKit's own documented behaviour for already-answered types - what is TESTED is the app-side mechanics (single request, wide status check, additionalObjectTypes), not a real prompt on hardware; (b) 'a denied type makes its conditions unsatisfiable' is US-060's own AC - what is verified here is the blast radius: a failed read is .unavailable and never a throw, and the care-mistake verdict is structurally unable to see a condition metric."
     },
     {
       "id": "US-060",

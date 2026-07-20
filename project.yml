@@ -35,9 +35,13 @@ targets:
         # Required to INSTALL, not just build: without it the installer demands a
         # WKCompanionAppBundleIdentifier. There is no iPhone companion by design.
         WKWatchOnly: true
+        # Covers BOTH halves of `HealthReadSet`: the four energy metrics, and whichever extra
+        # metrics the evolution graph's conditions name. One string has to serve every type in the
+        # ask, so it describes the two purposes rather than listing types that change with the JSON.
         NSHealthShareUsageDescription: >-
           DigiVPet reads your steps, active energy, sleep and exercise minutes to
-          feed and grow your Digimon. Your health data never leaves this watch.
+          feed and grow your Digimon, and a few other activity readings to decide
+          what it evolves into. Your health data never leaves this watch.
         # What a complication tap opens (`DigiVPetURL`). Without this the scheme is unclaimed and
         # the tap opens nothing at all — it builds fine, so only tapping catches it.
         CFBundleURLTypes:

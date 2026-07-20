@@ -340,3 +340,97 @@ DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
 REMAINS: nothing for this story. Still NOTHING evaluates conditions — `care.*` now has real
 numbers behind it, but no code reads them yet; that is US-060. `care.battleCount` is answered by
 the existing `battlesFought(now:calendar:)` and needed nothing here. Next: US-059, US-060, US-061.
+
+================================================================================
+2026-07-20 — US-059: Expand HealthKit authorization without breaking the existing grant — PASSES
+
+WHAT WAS DONE
+New `Sources/HealthReadSet.swift`. The authorization ask is now a `HealthReadSet` — two halves that
+stay separate because they answer different questions:
+  - `energyMetrics`: always all four `HealthMetric`. NOT derived from anything. An energy type with
+    no grant is a bar that can never fill.
+  - `conditionMetrics`: DERIVED from the graph via `EvolutionGraph.conditionHealthMetrics`, which
+    walks every node -> edge -> condition, keeps the `health.*` ones and drops `care.*`.
+`objectTypes` is the deduplicated union that actually goes to HealthKit; `additionalObjectTypes` is
+what a returning user is newly asked about.
+
+`HealthAuthorizing` now takes a `HealthReadSet` instead of `[HealthMetric]` — BOTH methods.
+`HealthAuthorizationModel` holds the set (default `.bundled`) and exposes it so the onboarding
+screen describes the ask it is about to raise. `HealthOnboardingView` gained a `readSet` parameter
+and one conditional line of copy. `NSHealthShareUsageDescription` in project.yml now covers both
+purposes.
+
+Tests: `Tests/HealthReadSetTests.swift`, 20 tests. Full suite 737 tests / 0 failures, build green.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
+
+1. **The condition half is DERIVED, and nothing may replace it with a literal list.** The failure
+   mode a hardcoded list produces is silent and very expensive to diagnose: HealthKit answers an
+   UNAUTHORIZED read with no samples, which is indistinguishable from a user who did not do the
+   thing. So a forgotten grant does not error — the edge just never fires, forever, and nothing in
+   any log says why. `testAuthoringAConditionIsWhatAddsItsTypeToTheGrant` is the guard: it derives
+   the same fixture graph with and without a condition and asserts the type appears. US-061 authors
+   ~8+ condition metrics and needs to touch NO authorization code at all; if it finds itself editing
+   a list of types, something has been undone.
+
+2. **`ConditionMetric.healthSleep` maps to `.sleepAnalysis` HERE, explicitly, and not via
+   `ReadableHealthMetric`.** `ReadableHealthMetric(.healthSleep)` is nil by design (US-057: sleep
+   needs the longest-block rule, not a flat total). Leaning on that nil would silently drop sleep
+   from the GRANT because it is not readable by that one reader — conflating "how it is read" with
+   "whether it is authorized". Today it is granted anyway through `HealthMetric.sleep`, so the bug
+   would be invisible until someone changed the energy model.
+   `testSleepIsGrantedEvenThoughItsReaderRefusesIt` pins both halves.
+
+3. **The STATUS check covers the wide set, not the four.** This is the whole of AC2 and it is easy
+   to get backwards. Narrowed to the four, every existing user's `requestStatus` returns `.answered`,
+   `start()` lands on `.ready`, and the new types are never requested — the user is not "re-prompted
+   for only the new types", they are never prompted at all. `testTheStatusCheckCoversTheWholeSetNotJustTheFour`.
+
+4. **ONE `requestAuthorization` call for the whole set.** Do not split it into "the old four" plus
+   "the new ones" to be polite — that raises two system prompts back to back, and the second one
+   gets denied. HealthKit already skips types the user has answered for; re-listing the four in the
+   same call cannot revoke or re-ask them. `testTheWholeSetGoesOutInASingleRequest`.
+
+5. `care.*` contributes NOTHING to the ask, and `readObjectType` is nil for it rather than some
+   placeholder type. Those counters live in `GameState`.
+
+6. The onboarding copy is a COUNT ("Plus 3 more readings, used only to decide what your Digimon
+   evolves into."), not a list. `HealthOnboardingView` fits a 41mm screen only because it is four
+   short lines — its own comment explains that burying Continue under a scroll is how a user ends up
+   denying access they would have granted, and US-061 will name a couple of dozen metrics. Nil, so
+   no line renders at all, when there is nothing extra to ask for.
+
+TESTS: `Tests/HealthAuthorizationTests.swift` still passes, all 15 of them. Every `func test...` BODY
+is unchanged except one line: `testRealAuthorizerAnswersWithoutHanging` now asks the real
+`HKHealthStore` about `.bundled` instead of `HealthMetric.allCases` — strictly stronger, since it
+now exercises the shipped read set. The private `SpyAuthorizer`'s two methods necessarily changed
+signature with the protocol; `requestedMetrics` survives as a computed property over the recorded
+read set's energy half, so `testRequestsExactlyTheFourReadTypes` still asserts exactly what it
+always did (all four energy metrics are in the ask) and would still catch one going missing.
+
+TWO ACs ARE NARROWER THAN THEY LOOK — READ BEFORE TRUSTING THEM:
+
+  - "A user holding the original four grants is re-prompted only for the new types" — the app-side
+    mechanics are tested (notes 3 and 4, plus `testOnlyTheGenuinelyNewTypesAreAdditional`). The
+    actual prompt behaviour is Apple's documented contract for already-answered types. It was NOT
+    observed on hardware or in the Simulator: nothing can script an answer to a system prompt, and
+    the story's own notes forbid uninstalling to reset the grant (it strands the app on a sheet
+    simctl cannot tap, ~15 min to repair via healthdb.sqlite). Use `-healthAnswered` if you need
+    that state.
+  - "A denied new type makes its conditions unsatisfiable" — the UNSATISFIABLE half is US-060's own
+    AC ("a metric whose reading is .unavailable FAILS its condition") and was deliberately left
+    there rather than half-built here. What IS verified is the containment: every readable metric
+    returns `.unavailable` and never throws when its fetch fails
+    (`testADeniedTypeReadsUnavailableRatherThanThrowing`), so an evaluator gets a value to judge
+    rather than an error mid-evaluation; and a denied condition metric cannot charge a care mistake,
+    structurally — `CareMistakes.HealthDataVerdict` is built from `HealthEnergySource.readings`,
+    which is keyed by `EnergyType` and so cannot carry a condition metric at all.
+    WATCH OUT in US-060: a denied metric reads `noData`/`unavailable` -> 0, and 0 SATISFIES an
+    `atMost` gate. Treating an unread metric as a number rather than as "unknown" would let a denial
+    hand out a branch the player did not earn. US-060's AC says `.unavailable` must FAIL its
+    condition — that has to hold for `atMost` too, not just `atLeast`.
+
+REMAINS: nothing for this story. Still NOTHING evaluates conditions — that is US-060. The shipped
+`evolutions.json` authors ZERO conditions today, so `HealthReadSet.bundled` currently derives to
+exactly the original four and the onboarding screen shows no extra line; both light up on their own
+the moment US-061 authors criteria, with no further authorization work. Next: US-060, then US-061.

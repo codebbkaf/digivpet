@@ -1,7 +1,12 @@
 import Foundation
 import HealthKit
 
-/// The four HealthKit metrics the app reads — one per `EnergyType`.
+/// The four HealthKit metrics that FEED the Digimon — one per `EnergyType`.
+///
+/// Not the whole of what the app reads: an evolution condition may name any `health.*`
+/// `ConditionMetric`, and `HealthReadSet` unions both families into the actual authorization ask.
+/// This enum stays the four because it is the energy model's vocabulary — every case maps to an
+/// `EnergyType`, and a fifth case would have nothing to map to.
 ///
 /// Read-only, always: the app never writes to HealthKit, so every request passes an empty
 /// `toShare` set. That is also why authorization here behaves the way it does — see
@@ -98,10 +103,14 @@ enum HealthRequestStatus: Equatable, CaseIterable {
 /// The HealthKit calls `HealthAuthorizationModel` needs, behind a protocol so tests drive the
 /// state machine without a real `HKHealthStore` — the Simulator has no health data, and no test
 /// can answer a system prompt.
+/// Takes a whole `HealthReadSet` rather than a list of metrics: the energy metrics and the metrics
+/// an evolution condition names have to be asked for TOGETHER, in one request. Two requests would
+/// raise two system prompts, and a status check covering only the four would report `.answered` for
+/// a returning user and never ask about the new types at all.
 protocol HealthAuthorizing {
     var isHealthDataAvailable: Bool { get }
-    func requestStatus(for metrics: [HealthMetric]) async -> HealthRequestStatus
-    func requestReadAuthorization(for metrics: [HealthMetric]) async throws
+    func requestStatus(for readSet: HealthReadSet) async -> HealthRequestStatus
+    func requestReadAuthorization(for readSet: HealthReadSet) async throws
 }
 
 /// The real thing: read-only authorization against `HKHealthStore`.
@@ -110,8 +119,8 @@ struct HealthKitAuthorizer: HealthAuthorizing {
 
     var isHealthDataAvailable: Bool { HKHealthStore.isHealthDataAvailable() }
 
-    func requestStatus(for metrics: [HealthMetric]) async -> HealthRequestStatus {
-        let read = Set(metrics.map(\.objectType))
+    func requestStatus(for readSet: HealthReadSet) async -> HealthRequestStatus {
+        let read = readSet.objectTypes
         return await withCheckedContinuation { continuation in
             store.getRequestStatusForAuthorization(toShare: [], read: read) { status, _ in
                 switch status {
@@ -124,8 +133,11 @@ struct HealthKitAuthorizer: HealthAuthorizing {
         }
     }
 
-    func requestReadAuthorization(for metrics: [HealthMetric]) async throws {
-        try await store.requestAuthorization(toShare: [], read: Set(metrics.map(\.objectType)))
+    /// ONE call for the whole set. HealthKit only prompts for types the user has not answered for,
+    /// so a user holding the original four grants is asked about the new types and nothing else —
+    /// re-listing the four here cannot revoke or re-ask them.
+    func requestReadAuthorization(for readSet: HealthReadSet) async throws {
+        try await store.requestAuthorization(toShare: [], read: readSet.objectTypes)
     }
 }
 
@@ -157,11 +169,11 @@ struct StubHealthAuthorizer: HealthAuthorizing {
 
     var isHealthDataAvailable: Bool { outcome != .unavailable }
 
-    func requestStatus(for metrics: [HealthMetric]) async -> HealthRequestStatus {
+    func requestStatus(for readSet: HealthReadSet) async -> HealthRequestStatus {
         outcome == .answered ? .answered : .shouldRequest
     }
 
-    func requestReadAuthorization(for metrics: [HealthMetric]) async throws {
+    func requestReadAuthorization(for readSet: HealthReadSet) async throws {
         guard outcome == .denied else { return }
         throw NSError(
             domain: HKErrorDomain,
@@ -209,12 +221,17 @@ final class HealthAuthorizationModel: ObservableObject {
     @Published private(set) var failureDetail: String?
 
     private let authorizer: HealthAuthorizing
-    private let metrics: [HealthMetric]
 
+    /// What is asked for. Exposed so `HealthOnboardingView` can explain the extra types it names —
+    /// the screen has to describe the ask it is about to raise, not a fixed four.
+    let readSet: HealthReadSet
+
+    /// `readSet` defaults to the SHIPPED graph's, so the app cannot drift out of step with
+    /// `evolutions.json` by forgetting an argument. Tests pass their own graph's set in.
     init(authorizer: HealthAuthorizing = HealthKitAuthorizer(),
-         metrics: [HealthMetric] = HealthMetric.allCases) {
+         readSet: HealthReadSet = .bundled) {
         self.authorizer = authorizer
-        self.metrics = metrics
+        self.readSet = readSet
     }
 
     /// Decides what the first screen is. Deliberately does NOT prompt: `confirmAndRequest()` is
@@ -226,7 +243,11 @@ final class HealthAuthorizationModel: ObservableObject {
             phase = .unavailable
             return
         }
-        switch await authorizer.requestStatus(for: metrics) {
+        // Asked about the WHOLE set. A status check narrowed to the four energy metrics would come
+        // back `.answered` for every existing user and jump straight to `.ready`, so the metrics a
+        // new evolution condition needs would never be requested — the exact silent failure the
+        // derived read set exists to prevent.
+        switch await authorizer.requestStatus(for: readSet) {
         case .shouldRequest, .unknown:
             phase = .explaining
         case .answered:
@@ -238,7 +259,7 @@ final class HealthAuthorizationModel: ObservableObject {
     func confirmAndRequest() async {
         phase = .requesting
         do {
-            try await authorizer.requestReadAuthorization(for: metrics)
+            try await authorizer.requestReadAuthorization(for: readSet)
             // Answered, not necessarily granted — see the note on this type.
             phase = .ready
         } catch {

@@ -14,8 +14,17 @@ private final class SpyAuthorizer: HealthAuthorizing, @unchecked Sendable {
     var requestError: Error?
 
     private(set) var requestCount = 0
-    private(set) var requestedMetrics: [HealthMetric] = []
     private(set) var statusCheckCount = 0
+
+    /// The whole set that was asked for, as US-059 made it.
+    private(set) var requestedReadSet: HealthReadSet?
+    /// The set the STATUS was checked against, which US-059 has to widen too — a check narrowed to
+    /// the four would report `.answered` and skip the prompt for every newly added type.
+    private(set) var statusCheckedReadSet: HealthReadSet?
+
+    /// The energy half of the last request, so the assertions written before the read set existed
+    /// still say what they always said: all four energy metrics are in the ask.
+    var requestedMetrics: [HealthMetric] { requestedReadSet?.energyMetrics ?? [] }
 
     init(isHealthDataAvailable: Bool = true,
          status: HealthRequestStatus = .shouldRequest,
@@ -25,14 +34,15 @@ private final class SpyAuthorizer: HealthAuthorizing, @unchecked Sendable {
         self.requestError = requestError
     }
 
-    func requestStatus(for metrics: [HealthMetric]) async -> HealthRequestStatus {
+    func requestStatus(for readSet: HealthReadSet) async -> HealthRequestStatus {
         statusCheckCount += 1
+        statusCheckedReadSet = readSet
         return status
     }
 
-    func requestReadAuthorization(for metrics: [HealthMetric]) async throws {
+    func requestReadAuthorization(for readSet: HealthReadSet) async throws {
         requestCount += 1
-        requestedMetrics = metrics
+        requestedReadSet = readSet
         if let requestError { throw requestError }
     }
 }
@@ -238,7 +248,10 @@ final class HealthAuthorizationTests: XCTestCase {
         let authorizer = HealthKitAuthorizer()
         XCTAssertTrue(authorizer.isHealthDataAvailable, "watchOS always has HealthKit")
 
-        let status = await authorizer.requestStatus(for: HealthMetric.allCases)
+        // The SHIPPED read set, not just the four: US-059 widened the ask to whatever the evolution
+        // graph's conditions name, and a real `getRequestStatusForAuthorization` is the only thing
+        // that can show a type in that set being rejected outright by HealthKit.
+        let status = await authorizer.requestStatus(for: .bundled)
 
         // Which status depends on whether this container has answered a prompt before, so
         // asserting a specific one would be flaky. That it returned at all is the point.

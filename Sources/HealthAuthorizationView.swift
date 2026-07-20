@@ -22,7 +22,7 @@ struct HealthAuthorizationGate<Content: View>: View {
             case .checking, .requesting:
                 ProgressView()
             case .explaining:
-                HealthOnboardingView { await model.confirmAndRequest() }
+                HealthOnboardingView(readSet: model.readSet) { await model.confirmAndRequest() }
             case .ready:
                 content()
             case .denied:
@@ -49,6 +49,9 @@ struct HealthAuthorizationGate<Content: View>: View {
 
 /// Shown BEFORE the system prompt, so the user knows what is being asked and why.
 struct HealthOnboardingView: View {
+    /// The ask this screen is explaining. Passed in rather than defaulted to the bundled graph's,
+    /// so the screen can only ever describe the set that is actually about to be requested.
+    let readSet: HealthReadSet
     let onContinue: () async -> Void
 
     var body: some View {
@@ -63,10 +66,19 @@ struct HealthOnboardingView: View {
                     .font(.headline)
 
                 VStack(alignment: .leading, spacing: 1) {
-                    ForEach(HealthMetric.allCases, id: \.self) { metric in
+                    ForEach(readSet.energyMetrics, id: \.self) { metric in
                         Text("\(metric.displayName) → \(metric.energyType.displayName)")
                             .font(.caption)
                     }
+                }
+
+                // One summary line, not a list — see `additionalTypesDescription` for why a
+                // couple of dozen metric names would break this screen. Absent entirely when the
+                // graph names no extra metrics, so the screen never promises a read it will not do.
+                if let extras = readSet.additionalTypesDescription {
+                    Text(extras)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
                 }
 
                 Text("Never leaves this watch.")
@@ -101,7 +113,10 @@ struct HealthAccessBlockedView: View {
                 Text("Your Digimon can't earn energy without it.")
                     .font(.footnote)
 
-                Text("On your watch, open Settings → Privacy & Security → Health → DigiVPet and turn on Steps, Active Energy, Sleep and Exercise Minutes.")
+                // Deliberately does not name the types one by one any more: the ask now includes
+                // whatever metrics the evolution graph's conditions name, and a hardcoded list here
+                // would go stale exactly the way `HealthReadSet` exists to stop.
+                Text("On your watch, open Settings → Privacy & Security → Health → DigiVPet and turn on everything listed there.")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
@@ -138,7 +153,13 @@ struct HealthUnavailableView: View {
 }
 
 #Preview("Onboarding") {
-    HealthOnboardingView {}
+    HealthOnboardingView(readSet: .bundled) {}
+}
+
+#Preview("Onboarding with evolution metrics") {
+    HealthOnboardingView(
+        readSet: HealthReadSet(conditionMetrics: [.healthFlightsClimbed, .healthMindfulMinutes])
+    ) {}
 }
 
 #Preview("Blocked") {
