@@ -1037,7 +1037,11 @@ final class MainScreenModel: ObservableObject {
                 careMistakes: state.careMistakeCount,
                 battleWins: state.battleWins,
                 stageEnteredAt: state.stageEnteredDate,
-                now: now()),
+                now: now(),
+                // US-060: the edge's own `conditions`, answered off the totals US-058 banks and the
+                // counters US-084 keeps. No live HealthKit read here — `refresh()` must not block
+                // on one, and everything an evolution asks about is already in the saved state.
+                conditions: ConditionContext(state: state, now: now(), calendar: calendar)),
               let next = graph.node(id: target) else { return }
         advance(state, to: next)
         Self.log.info("Evolved \(node.id) into \(next.id)")

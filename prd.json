@@ -137,8 +137,8 @@
         "Tests pass"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "EvolutionEngine.qualifies now also requires every EvolutionCondition on the edge, answered by new ConditionEvaluator/ConditionContext (Sources/ConditionEvaluator.swift): health.* accumulating metrics read the US-058 stage/lifetime/best-day totals, standing measurements read a direct HealthReading, care.* reads the US-084 counters. Unknown or unavailable fails the condition in BOTH directions, so a denied metric never passes an atMost gate. Bands are closed intervals; the isDefault fallback still fires. 13 tests in Tests/ConditionEvaluationTests.swift; suite 752 tests / 0 failures, build green."
     },
     {
       "id": "US-061",

@@ -434,3 +434,80 @@ REMAINS: nothing for this story. Still NOTHING evaluates conditions — that is 
 `evolutions.json` authors ZERO conditions today, so `HealthReadSet.bundled` currently derives to
 exactly the original four and the onboarding screen shows no extra line; both light up on their own
 the moment US-061 authors criteria, with no further authorization work. Next: US-060, then US-061.
+
+================================================================================
+2026-07-20 — US-060: EvolutionEngine evaluates conditions — PASSES
+
+WHAT WAS DONE
+New `Sources/ConditionEvaluator.swift`:
+  - `ConditionValue` — `.known(Double)` or `.unknown`. The whole point of the type is that unknown
+    is NOT zero.
+  - `ConditionContext` — a value type carrying the US-058 totals (stage / lifetime / best-day),
+    the US-084 care counters, and a `readings: [ConditionMetric: HealthReading]` dictionary for
+    metrics no running total can answer. `init(state:now:calendar:readings:)` builds it from a
+    `GameState`.
+  - `ConditionEvaluator.isSatisfied(_:in:)` — `atLeast` is `>=`, `atMost` is `<=`, anything
+    unanswerable is false.
+`EvolutionEngine.qualifies`/`evolutionTarget`/`scheduledEvolutionTarget` each gained a DEFAULTED
+`conditions context: ConditionContext = .unknown` parameter, and `qualifies` ends with
+`edge.conditions.allSatisfy { ... }`. `MainScreenModel.evolveIfReady` passes a real context built
+from the saved state (no live HealthKit read — `refresh()` must not block on one).
+
+Tests: `Tests/ConditionEvaluationTests.swift`, 13 tests. Full suite 752 tests / 0 failures, build
+green. `Tests/EvolutionTests.swift` was NOT edited (AC3) — `git status` shows it unmodified and all
+its assertions still pass.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
+
+1. **`.unknown` is not zero, and it fails `atMost` as hard as it fails `atLeast`.** This is the
+   trap US-059's notes flagged. `HealthReading.energyValue` deliberately flattens `noData` and
+   `unavailable` to 0 (so one denial cannot cost three energy types), and 0 SATISFIES an `atMost`
+   gate — a denied metric would otherwise BUY the "you barely did this" junk branch. Every
+   unanswerable value fails whichever way the comparison points.
+   `testAnUnavailableMetricFailsItsConditionInBothDirections` and
+   `testTheUnknownContextFailsEveryCondition` (which sweeps all 34 metrics x 3 windows against an
+   `atMost 1_000_000` gate) pin it. Do NOT "simplify" `ConditionValue` down to a `Double`.
+
+2. **The default context is `.unknown` — a context that answers NOTHING.** A caller that forgets to
+   pass one fails every condition rather than passing the `atMost`-shaped ones. That is the
+   direction an omission has to fail in. Every field is optional and nil means unknown; do not give
+   them zero defaults.
+
+3. **A reading of `.unavailable` OVERRIDES the ledger, for accumulating metrics too.** The ledger
+   cannot tell "walked no steps" from "we were never allowed to look"; only a caller that saw the
+   read fail can. Today `MainScreenModel` passes no readings, so an accumulating condition is
+   answered off the totals — correct, because a denied metric was never credited. Whoever wires
+   live reads should pass the `.unavailable`s through.
+
+4. **Standing measurements are answerable ONLY from `readings`.** `restingHeartRate`, `vo2Max` etc.
+   have `accumulatesOverTime == false` (US-058 note); a stage-long "total" resting heart rate is a
+   five-figure number that satisfies every criterion ever written. Absent or `noData` -> unknown ->
+   the condition fails. `testAStandingMeasurementNeedsADirectReadingAndFailsWithout`.
+
+5. **A `care.*` counter asked about a window it does not keep returns `.unknown`, not the nearest
+   number it does keep.** The three stage counters are stage-only; `care.battleCount` is per-day
+   (US-032's cap) with a lifetime total from the win/loss record but NO stage-scoped one;
+   `care.battleWinRatio` is lifetime only (US-084 note 4 — a per-stage ratio needs new fields, do
+   not repurpose it). Answering `.lifetime` with a stage number would make an edge silently gate on
+   something other than what it says. US-061 MUST author `care.trainingSessions`/`overfeeds`/
+   `sleepDisturbances` with `window: .stage` and `care.battleWinRatio` with `window: .lifetime`, or
+   those edges can never fire. A validator rule for this would be worth adding.
+
+6. **An unrecognised metric name fails its condition** rather than crashing or being ignored.
+   Ignoring it would open a branch on a criterion nothing can check.
+   `EvolutionGraphValidator.unknownConditionMetric` is still the place that CATCHES it.
+
+7. `window: .day` reads `stageBestDayMetrics` — the BEST day this stage, not today's. US-058 owns
+   that reasoning; nothing here changed it.
+
+WATCH OUT (fixture trap that cost this iteration a red run): an `isDefault` edge that also passes
+the four gates qualifies NORMALLY through the pure chooser — the fallback is not involved. To test
+the fallback you need a default edge that genuinely fails the gates (`Fixture.unqualifyingDefault`
+wants a different dominant type). `Fixture.junk` is the realistic authoring shape instead: the junk
+branch is conditionless with `minEnergy: 0`, so it qualifies whenever the conditioned branch does
+not and LOSES the `max(by: minEnergy)` tie-break whenever it does. The band test uses that and so
+does not depend on edge ORDER.
+
+REMAINS: nothing for this story. The shipped `evolutions.json` still authors ZERO conditions, so
+every edge today is decided by the four original gates exactly as before — this all lights up when
+US-061 authors criteria. Nothing calls `ConditionContext.readings` yet. Next: US-061.

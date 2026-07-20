@@ -20,11 +20,13 @@ enum EvolutionEngine {
         stageEnergy: EnergyTotals,
         dominant: EnergyType?,
         careMistakes: Int,
-        battleWins: Int
+        battleWins: Int,
+        conditions context: ConditionContext = .unknown
     ) -> String? {
         node.evolutions
             .filter { qualifies($0, stageEnergy: stageEnergy, dominant: dominant,
-                                careMistakes: careMistakes, battleWins: battleWins) }
+                                careMistakes: careMistakes, battleWins: battleWins,
+                                conditions: context) }
             // `max(by:)` returns the last of equal maxima; ties are unreachable in practice, since
             // two qualifying edges would need the same `requiredEnergy` (dominant is one type) and
             // the same `minEnergy`, which is ambiguous data US-009 would be right to flag.
@@ -52,14 +54,16 @@ enum EvolutionEngine {
         careMistakes: Int,
         battleWins: Int,
         stageEnteredAt: Date,
-        now: Date
+        now: Date,
+        conditions context: ConditionContext = .unknown
     ) -> String? {
         guard EvolutionTiming.hasClearedTimeGate(
             stage: node.stage, enteredAt: stageEnteredAt, now: now
         ) else { return nil }
 
         if let qualified = evolutionTarget(for: node, stageEnergy: stageEnergy, dominant: dominant,
-                                           careMistakes: careMistakes, battleWins: battleWins) {
+                                           careMistakes: careMistakes, battleWins: battleWins,
+                                           conditions: context) {
             return qualified
         }
         return defaultEdge(of: node)?.to
@@ -73,16 +77,26 @@ enum EvolutionEngine {
 
     /// Whether a single edge qualifies to be taken right now.
     ///
-    /// All four gates must hold: the dominant energy type matches `requiredEnergy`, the earned
-    /// energy of that type has reached `minEnergy`, care mistakes are within `maxCareMistakes`, and
-    /// battle wins meet `minBattleWins` when the edge sets one (an edge that does not is ungated on
-    /// battles).
+    /// All four original gates must hold: the dominant energy type matches `requiredEnergy`, the
+    /// earned energy of that type has reached `minEnergy`, care mistakes are within
+    /// `maxCareMistakes`, and battle wins meet `minBattleWins` when the edge sets one (an edge that
+    /// does not is ungated on battles).
+    ///
+    /// On top of those, EVERY one of the edge's US-056 `conditions` must hold (US-060). They are
+    /// conjunctive with each other and with the four above — an edge is a list of things that are
+    /// all true of a Digimon that earned it, never a list of ways to earn it. That is what makes a
+    /// BAND work: `atLeast 8` plus `atMost 31` on one metric is a closed interval, and 32 fails the
+    /// second half and drops the overtrained Digimon to the `isDefault` junk branch.
+    ///
+    /// An edge with no conditions is decided entirely by the four gates, exactly as before — which
+    /// is every edge in the shipped graph until US-061 authors some.
     static func qualifies(
         _ edge: EvolutionEdge,
         stageEnergy: EnergyTotals,
         dominant: EnergyType?,
         careMistakes: Int,
-        battleWins: Int
+        battleWins: Int,
+        conditions context: ConditionContext = .unknown
     ) -> Bool {
         // A nil `requiredEnergy` is only ever a Digitama's hatch edge (US-007/US-009). Letting it
         // "match" a nil dominant would evolve a fresh, zero-energy egg the instant it existed, so
@@ -96,6 +110,7 @@ enum EvolutionEngine {
         if let minBattleWins = edge.minBattleWins {
             guard battleWins >= minBattleWins else { return false }
         }
-        return true
+        // `allSatisfy` on an empty list is true, so a conditionless edge is untouched by this line.
+        return edge.conditions.allSatisfy { ConditionEvaluator.isSatisfied($0, in: context) }
     }
 }
