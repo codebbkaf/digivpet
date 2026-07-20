@@ -151,6 +151,21 @@ struct DexSection: Identifiable, Equatable {
 
     var discoveredCount: Int { rows.filter(\.isDiscovered).count }
     var totalCount: Int { rows.count }
+
+    /// The line whose tree draws `id`, or nil if nothing does.
+    ///
+    /// Nil is the ORDINARY answer, not an error: since US-063 the Dex is the 1,022-entry roster and
+    /// only ~88 of those are in an authored line, so the ~930 roster-only entries land here. So do
+    /// `dexOnly` nodes, which `DexModel.sections(of:discoveries:)` pulls into `Others` because no
+    /// edge may name one — drawing a tree for one would be a lone cell with no connector, which is
+    /// the empty tree US-067 asks not to offer.
+    ///
+    /// Matched on `rows` rather than on the graph's `line` key so the answer is the section that
+    /// would actually be DRAWN. A node grouped under a line the sections did not build — a
+    /// `dexOnly` one — must not resolve to a tree it was deliberately left out of.
+    static func line(containing id: String, in sections: [DexSection]) -> DexSection? {
+        sections.first { $0.isLine && $0.rows.contains { $0.id == id } }
+    }
 }
 
 /// Drives the Dex screen: the whole roster, marked up with what the player has actually met.

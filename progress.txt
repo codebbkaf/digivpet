@@ -960,3 +960,88 @@ WHAT REMAINS / FOR THE NEXT ITERATION
    `-healthAutoConfirm`. Bundle id `com.digivpet.DigiVPet`.
 
 Next: US-067 (keep the evolution tree reachable from the flat Dex).
+
+================================================================================
+2026-07-21 — US-067 — Keep the evolution tree reachable from the flat Dex
+================================================================================
+
+Deliberately a MERGE, per the story's own note. Nothing was deleted: EvolutionTreeView,
+EvolutionTreeLayout and their 21 tests are untouched, the flat grid is still the Dex root, and the
+tree is now one tap deeper instead of unreachable-except-by-launch-flag.
+
+WHAT WAS BUILT
+
+`DexSection.line(containing:in:)` — the whole lookup, four lines, pure, no actor. Given an id and
+the Dex's sections it returns the LINE section that draws that Digimon, or nil.
+
+It matches on the built sections' `rows`, NOT on the graph's `line` key, and that distinction is
+the load-bearing part. A `dexOnly` node carries a line key like anything else, but
+`DexModel.sections(of:discoveries:)` deliberately pulls it out into `Others` because no edge may
+name one. Matching on the key would have sent it to a tree it was excluded from — a lone cell with
+no connector, which is exactly the "empty tree" AC4 forbids. Matching on what was actually built
+means the exclusion is respected for free.
+
+`sections` is threaded DexModel -> DexView -> DexGridView -> DexDetailView, defaulting to empty.
+Empty means no affordance, so the two grids with no model to ask degrade to the same thing a
+roster-only Digimon gets rather than to a link onto nothing.
+
+TWO JUDGEMENT CALLS WORTH KNOWING ABOUT
+
+1. **The sheet needed its own NavigationStack.** A sheet is not on the presenting view's
+   navigation stack, so a `NavigationLink` inside one with no stack around it renders as a dead
+   label — it draws, it just does nothing. `.sheet` now wraps `DexDetailView` in a `NavigationStack`.
+   Pushing WITHIN the sheet also means closing the sheet closes the whole detour at once; the grid
+   is never left buried under a pushed tree.
+
+2. **The link is a Button + `navigationDestination(isPresented:)`, not a NavigationLink.** Same
+   reason `-dexDetailDemo` exists at all: `simctl` has no touch command, so a link only a tap can
+   follow is a screen that can never be screenshotted. One destination, one piece of state, and
+   `-dexTreeDemo` sets exactly the state the button sets — so the screenshot proves the REAL path,
+   not a second one built for the camera.
+
+Placement: last on the sheet, under the candidates and the hints. US-064 spent two screenshots
+getting the candidate row above a 41mm fold and US-066 added a hint list under it; the tree answers
+"what shape is all this", which is worth a scroll, whereas the candidates answer the question the
+sheet is opened to ask.
+
+Opening a cell FROM a tree passes no sections, so it offers no link back to the tree it was opened
+from. That is wanted, not a gap.
+
+VERIFIED THIS ITERATION (all observed, none assumed)
+
+  AC1  EvolutionTreeView/EvolutionTreeLayout untouched; EvolutionTreeLayoutTests 21/21 green.
+  AC2  DexView's body still returns DexGridView over model.rows. Unchanged.
+  AC3  Screenshot, Series 9 41mm, `-dexDetailDemo -dexTreeLinkDemo`: an "Agumon line" button with a
+       branch glyph, under the four "It wants" rows.
+  AC4  Screenshot, `-dexEmptyDetailDemo`: Aquilamon shows "No evolutions recorded." and NO link,
+       with empty screen below it. Plus `testARosterOnlyEntryBelongsToNoLine` and
+       `testADexOnlyEntryBelongsToNoLineEvenThoughItCarriesALineKey`.
+  AC5  Screenshot, `-dexLineDemo`: still opens the Agumon tree from the Dex root, unchanged.
+  AC6  EvolutionTreeLayoutTests + DexModelTests + IdleSpriteCacheTests run in ISOLATION: 36/36.
+  AC7  Full path screenshotted end to end. `-dexTreeDemo` pushes the Agumon tree, titled "Agumon",
+       with a back chevron returning to the detail sheet. Four columns and their connectors drawn,
+       Botamon/Koromon/Agumon as art (seeded discoveries) — and note the tree opened THIS way shows
+       the egg as art where `-dexLineDemo` shows it as "?", because the sheet's pool carries the
+       demo discoveries and the standalone flag's does not.
+  AC8  BUILD SUCCEEDED on Series 11 46mm and on Series 9 41mm.
+  AC9  823 passed / 0 failures (was 818). The 5 new ones are in DexModelTests.
+
+WHAT REMAINS / FOR THE NEXT ITERATION
+
+1. **US-066's warning is now worse, and it is my doing.** The 41mm sheet holds a hero, name,
+   subtitle, candidate grid, up to four hint rows AND a full-width button. Anything US-068+ adds to
+   `DexDetailView` must be re-screenshotted on Series 9 41mm — do not reason about the fold.
+
+2. **`testEveryDigimonOnAShippedTreeCanReachThatTree`** walks every line section and asserts each
+   row leads back to the tree that drew it. If a future story makes a Digimon appear in two
+   sections, that test fails rather than the UI silently picking the first — which is the point.
+
+3. Launch flags for screenshots: `-dexDemo -noNotificationPrompt -healthAnswered` are mandatory
+   together, plus ONE of `-dexDetailDemo` (Agumon) / `-dexEmptyDetailDemo` (Aquilamon). NEW this
+   iteration: `-dexTreeLinkDemo` scrolls the sheet down to the link, and `-dexTreeDemo` follows it.
+   `-dexTreeDemo` wins if both are passed. Do NOT use `-healthAutoConfirm`.
+   Bundle id `com.digivpet.DigiVPet`.
+   NOTE: Series 9 41mm is watchOS 10.4, so `-destination 'name=...'` fails to resolve — use
+   `-destination 'id=FB045EDB-DEB9-40AA-B8FB-819E9E742517'` with a separate `-derivedDataPath`.
+
+Next: US-068 (animate the sick Digimon).

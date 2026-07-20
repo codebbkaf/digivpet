@@ -269,8 +269,8 @@
         "Tests pass"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": "Deliberately a MERGE, not a retirement. An earlier draft offered deleting the tree; that discards working, tested UI to satisfy a navigation change. The flat grid answers 'what do I own', the tree answers 'what shape is this line' - both are worth keeping."
+      "passes": true,
+      "notes": "Kept the tree and merged it in, as the story asked. DexSection.line(containing:in:) matches on the BUILT sections rather than the graph's line key, so dexOnly nodes (pulled into Others) and the ~930 roster-only entries both resolve to nil and get no affordance. DexDetailView is now wrapped in its own NavigationStack inside the sheet and gains an 'Agumon line' button under the hints; a sheet is not on the presenting stack, so a bare NavigationLink there would have drawn as a dead label. Button + navigationDestination(isPresented:) rather than NavigationLink so -dexTreeDemo can follow it without a tap. Screenshots on Series 9 41mm: link renders under the hints; -dexTreeDemo pushes the Agumon tree titled 'Agumon' with a back chevron to the sheet; Aquilamon shows 'No evolutions recorded.' and NO link; -dexLineDemo still opens the tree from the Dex root. Build green on 46mm and 41mm. 823 tests pass (was 818)."
     },
     {
       "id": "US-068",

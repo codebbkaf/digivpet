@@ -386,6 +386,76 @@ final class DexModelTests: XCTestCase {
         XCTAssertTrue(others.nodes.isEmpty, "Others is a grid; it has no tree to lay out.")
     }
 
+    // MARK: - US-067 AC: the owning line's tree is reachable from a detail sheet
+
+    /// The link's whole job: an entry that IS on a tree resolves to the section that draws it.
+    func testALineMemberResolvesToTheSectionThatDrawsIt() throws {
+        let model = DexModel(makeStore: { try self.makeStore() })
+        model.load()
+
+        let section = try XCTUnwrap(DexSection.line(containing: "greymon", in: model.sections))
+
+        XCTAssertEqual(section.id, "agumon", "Greymon is on the Agumon line.")
+        XCTAssertTrue(section.isLine, "A grid section has no tree to push to.")
+        XCTAssertTrue(section.rows.contains { $0.id == "greymon" },
+                      "The section handed to the tree must contain the Digimon it was opened from.")
+        XCTAssertFalse(section.nodes.isEmpty,
+                       "EvolutionTreeView lays out from `nodes`; an empty one is a blank tree.")
+    }
+
+    /// The ~930 roster entries with no graph node at all — the common case since US-063 — get no
+    /// tree affordance rather than a link onto an empty one.
+    func testARosterOnlyEntryBelongsToNoLine() throws {
+        let model = DexModel(makeStore: { try self.makeStore() })
+        model.load()
+
+        let rosterOnly = try XCTUnwrap(
+            model.rows.first { EvolutionGraph.bundled.node(id: $0.id) == nil },
+            "US-063 bundled 1,022 roster entries against ~88 graph nodes; some must have no node.")
+
+        XCTAssertNil(DexSection.line(containing: rosterOnly.id, in: model.sections))
+    }
+
+    /// A dexOnly node carries a `line` key but is deliberately pulled into `Others`, which has no
+    /// nodes. Matching on the built sections rather than on that key is what keeps it out of a tree
+    /// it was excluded from — a lone cell with no connector.
+    func testADexOnlyEntryBelongsToNoLineEvenThoughItCarriesALineKey() {
+        let graph = EvolutionGraph(nodes: [
+            EvolutionNode(id: "agumon", displayName: "Agumon", stage: .child,
+                          line: "agumon", spriteFile: "Agumon"),
+            EvolutionNode(id: "aquilamon", displayName: "Aquilamon", stage: .adult,
+                          line: "agumon", spriteFile: "Aquilamon", dexOnly: true),
+        ])
+        let model = DexModel(graph: graph, makeStore: { try self.makeStore() })
+        model.load()
+
+        XCTAssertEqual(DexSection.line(containing: "agumon", in: model.sections)?.id, "agumon")
+        XCTAssertNil(DexSection.line(containing: "aquilamon", in: model.sections),
+                     "A dexOnly node is on no tree, so it must offer no way onto one.")
+    }
+
+    /// An id nothing in the Dex knows is nil rather than a crash or a wrong tree.
+    func testAnUnknownIdBelongsToNoLine() {
+        let model = DexModel(makeStore: { try self.makeStore() })
+        model.load()
+
+        XCTAssertNil(DexSection.line(containing: "not-a-digimon", in: model.sections))
+    }
+
+    /// Every entry the trees draw can be got back to from its own detail sheet — the AC read
+    /// literally, over the whole shipped graph rather than over one hand-picked example.
+    func testEveryDigimonOnAShippedTreeCanReachThatTree() {
+        let model = DexModel(makeStore: { try self.makeStore() })
+        model.load()
+
+        for section in model.sections where section.isLine {
+            for row in section.rows {
+                XCTAssertEqual(DexSection.line(containing: row.id, in: model.sections)?.id, section.id,
+                               "\(row.id) must lead back to the tree that draws it.")
+            }
+        }
+    }
+
     // MARK: - Degradation
 
     /// A Dex that cannot be read still shows the roster: it is a side screen, and losing it must

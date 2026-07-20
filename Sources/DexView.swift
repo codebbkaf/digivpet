@@ -12,8 +12,10 @@ import SwiftUI
 /// `IdleSpriteCache`, so scrolling past 1,022 entries decodes the dozen or so actually visible.
 /// Opening the Dex still decodes nothing at all.
 ///
-/// The trees have not gone away — `model.sections` still holds them, and US-067 is what puts a way
-/// back to them on this screen. Until then they are reachable only from `-dexLineDemo`.
+/// The trees have not gone away, and US-067 did not retire them: `model.sections` still holds them
+/// and `DexDetailView` now links through to the one that owns the Digimon you opened. The grid
+/// answers "what have I met", which a list of eight line names cannot; the tree answers "what shape
+/// is this line", which a flat grid cannot. The way in is the grid; the tree is one tap deeper.
 struct DexView: View {
     @StateObject private var model: DexModel
 
@@ -28,7 +30,8 @@ struct DexView: View {
     }
 
     var body: some View {
-        DexGridView(rows: model.rows, selectsDemoRow: true, context: model.conditionContext)
+        DexGridView(rows: model.rows, selectsDemoRow: true, context: model.conditionContext,
+                    sections: model.sections)
             .navigationTitle("\(model.discoveredCount)/\(model.totalCount)")
             #if DEBUG
             // Debug-only: `simctl` cannot tap a cell, so an opened line is unscreenshottable
@@ -81,6 +84,11 @@ struct DexGridView: View {
     /// its coldest — for the grids that are not the Dex root and have no model to ask.
     var context: ConditionContext = .unknown
 
+    /// The line trees the detail sheet can push through to. Empty for a grid with no model to ask —
+    /// which degrades to a sheet with no tree affordance, the same thing a roster-only Digimon gets,
+    /// rather than to a link onto an empty tree.
+    var sections: [DexSection] = []
+
     @State private var selected: DexRow?
 
     /// Three 32pt columns fit a 41mm watch, the narrowest screen the app supports.
@@ -124,7 +132,13 @@ struct DexGridView: View {
             #endif
         }
         .sheet(item: $selected) { row in
-            DexDetailView(row: row, pool: rowsById, context: context)
+            // A stack of its OWN rather than the Dex's, because a sheet is not on the presenting
+            // stack: a `NavigationLink` inside one with no stack around it draws as a dead label.
+            // The tree is pushed within the sheet, so closing the sheet closes the whole detour and
+            // the grid is never left buried under it.
+            NavigationStack {
+                DexDetailView(row: row, pool: rowsById, context: context, sections: sections)
+            }
         }
     }
 
@@ -207,6 +221,16 @@ struct DexDetailView: View {
     /// which is what a preview or a grid with no model gets.
     var context: ConditionContext = .unknown
 
+    /// The Dex's line sections, which `lineSection` picks this Digimon's tree out of.
+    ///
+    /// Empty by default, and empty is what the tree screen's own sheet passes — so opening a cell
+    /// FROM a tree offers no link back to the tree it was opened from. That is the wanted
+    /// behaviour, not a gap: the affordance exists to reach a tree from the flat grid.
+    var sections: [DexSection] = []
+
+    /// Whether the owning line's tree is pushed. Set by the link, and by `-dexTreeDemo`.
+    @State private var showsTree = false
+
     /// Cheap enough to recompute as `body` re-runs: at most three edges and a dictionary hit each.
     private var candidates: [DexCandidate] {
         DexRow.candidates(of: row.id, in: graph, resolvedAgainst: pool)
@@ -248,8 +272,16 @@ struct DexDetailView: View {
             // fold by design, `simctl` has no scroll command, and this is the only way to
             // screenshot it. Compiled out of release builds.
             .onAppear {
-                guard CommandLine.arguments.contains("-dexRevealDemo") else { return }
-                scroller.scrollTo(Self.hintsAnchor, anchor: .bottom)
+                // Follows the link without a tap, so grid -> detail -> tree can be screenshotted
+                // end to end. It sets the same state the button does, so what the screenshot proves
+                // is the real path and not a second one built for the camera.
+                if CommandLine.arguments.contains("-dexTreeDemo") {
+                    showsTree = true
+                } else if CommandLine.arguments.contains("-dexTreeLinkDemo") {
+                    scroller.scrollTo(Self.treeLinkAnchor, anchor: .bottom)
+                } else if CommandLine.arguments.contains("-dexRevealDemo") {
+                    scroller.scrollTo(Self.hintsAnchor, anchor: .bottom)
+                }
             }
             #endif
         }
@@ -272,10 +304,51 @@ struct DexDetailView: View {
                     .multilineTextAlignment(.center)
 
                 evolutions
+
+                lineTreeLink
             }
             .frame(maxWidth: .infinity)
         }
     }
+
+    /// The line whose tree this Digimon belongs on, or nil for the ~930 roster-only entries and the
+    /// `dexOnly` ones — both of which get no affordance at all rather than a link onto an empty
+    /// tree.
+    private var lineSection: DexSection? {
+        DexSection.line(containing: row.id, in: sections)
+    }
+
+    /// The way through to the tree: US-067's whole point, and the reason `EvolutionTreeView` was
+    /// kept when US-063 took the line list off the Dex root.
+    ///
+    /// Last on the sheet, under the candidates and the hints, because those answer "what next" —
+    /// the question this screen is opened to ask — and US-064 spent two screenshots getting the
+    /// candidate row above a 41mm fold. The tree answers the broader "what is the shape of all
+    /// this", which is worth a scroll.
+    /// A `Button` plus `navigationDestination(isPresented:)` rather than the `NavigationLink` this
+    /// obviously wants to be, for the reason `-dexDetailDemo` exists at all: `simctl` has no touch
+    /// command, so a link only a tap can follow is a screen that can never be screenshotted. One
+    /// destination and one piece of state, which the debug hook below sets exactly as a tap does.
+    @ViewBuilder
+    private var lineTreeLink: some View {
+        if let section = lineSection {
+            Button {
+                showsTree = true
+            } label: {
+                Label("\(section.title) line", systemImage: "arrow.triangle.branch")
+                    .font(.system(size: 11))
+            }
+            .padding(.top, 6)
+            .id(Self.treeLinkAnchor)
+            .navigationDestination(isPresented: $showsTree) {
+                EvolutionTreeView(nodes: section.nodes, rows: section.rows)
+                    .navigationTitle(section.title)
+            }
+        }
+    }
+
+    /// Scroll target for the tree link. Read by the debug hook in `body`.
+    private static let treeLinkAnchor = "tree-link"
 
     /// Stage and first sighting on one line, which is worth a whole 13pt line of a 215pt screen.
     /// "met" rather than "first met" so the pair still fits 41mm without wrapping.
