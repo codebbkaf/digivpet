@@ -1093,8 +1093,9 @@ final class MainScreenModel: ObservableObject {
         let from = graph.presentation(forId: state.currentDigimonId)
         state.currentDigimonId = next.id
         state.stage = next.stage
-        state.stageEnergy = .zero
-        state.stageEnteredDate = now()
+        // One call rather than the assignments spelled out here, so every stage-scoped total resets
+        // together — see `GameState.enterStage(at:)`, which owns the list.
+        state.enterStage(at: now())
         store?.recordDiscovery(id: next.id, now: now())
         // A transition the screen has not celebrated yet. Both forms are drawn from the graph, so a
         // missing node (a save whose id the roster dropped) simply skips the ceremony rather than

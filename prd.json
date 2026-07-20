@@ -79,8 +79,8 @@
         "Tests pass"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MetricLedger + MetricCreditor bank per-metric daily readings into GameState's stageMetricTotals / lifetimeMetricTotals / stageBestDayMetrics, on EnergyLedger's delta pattern. Only ADDITIVE metrics accumulate (averageQuantity ones are excluded by ConditionMetric.accumulatesOverTime). enterStage(at:) owns the stage reset. 18 new tests, 702/702 green."
     },
     {
       "id": "US-084",

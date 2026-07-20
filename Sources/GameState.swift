@@ -256,6 +256,16 @@ final class GameState {
     /// launch — so every launch onto a full screen would notify again. See
     /// `claimPoopNotification`.
     private var poopNotifiedStorage: Bool?
+    /// Backing stores for the three per-metric totals (US-058), the ones a `window:` condition is
+    /// compared against. Optional for the same migration reason as every other storage property
+    /// here, and a plain `[String: Double]` rather than a `MetricTotals` composite because that is
+    /// the shape SwiftData stores directly; `MetricTotals` is the value-type convenience on top.
+    ///
+    /// Three and not two, because `ConditionWindow` has three cases and `day` cannot be derived
+    /// from the other two: a stage total says nothing about which single day was the best one.
+    private var stageMetricTotalsStorage: [String: Double]?
+    private var lifetimeMetricTotalsStorage: [String: Double]?
+    private var stageBestDayMetricsStorage: [String: Double]?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -295,6 +305,9 @@ final class GameState {
         self.poopUpdatedAtStorage = now
         self.poopMistakesChargedStorage = 0
         self.poopNotifiedStorage = false
+        self.stageMetricTotalsStorage = [:]
+        self.lifetimeMetricTotalsStorage = [:]
+        self.stageBestDayMetricsStorage = [:]
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -432,6 +445,55 @@ extension GameState {
     var poopNotified: Bool {
         get { poopNotifiedStorage ?? false }
         set { poopNotifiedStorage = newValue }
+    }
+
+    /// Each metric's total since this stage began — what a `window: .stage` condition is compared
+    /// against. Cleared by `enterStage(at:)`, exactly as `stageEnergy` is.
+    ///
+    /// Computed for the same reason `energyLastEarned` is: the optionality persistence needs stops
+    /// at the model boundary, so a save written before metric totals existed reads as empty rather
+    /// than as a `nil` every caller has to unwrap.
+    var stageMetricTotals: MetricTotals {
+        get { MetricTotals(values: stageMetricTotalsStorage ?? [:]) }
+        set { stageMetricTotalsStorage = newValue.values }
+    }
+
+    /// Each metric's total over the Digimon's whole life — a `window: .lifetime` condition. Never
+    /// reset; `enterStage(at:)` deliberately leaves it standing.
+    var lifetimeMetricTotals: MetricTotals {
+        get { MetricTotals(values: lifetimeMetricTotalsStorage ?? [:]) }
+        set { lifetimeMetricTotalsStorage = newValue.values }
+    }
+
+    /// Each metric's BEST single local day this stage — what a `window: .day` condition is compared
+    /// against.
+    ///
+    /// The best day and not the current one, because a criterion like "walk 10,000 steps in a day"
+    /// is a thing you achieved, not a thing you must be achieving at the instant the evolution
+    /// check happens to run. Against today's number, one good Tuesday would stop counting at
+    /// Tuesday midnight and the user would be told to do it again — and, worse, whether it counted
+    /// would depend on what time of day the app was opened.
+    ///
+    /// Stage-scoped, and so cleared by `enterStage(at:)` alongside `stageMetricTotals`: a
+    /// `window: .day` condition sits on an evolution edge, and edges ask what you did to earn THIS
+    /// evolution. A best day carried across evolutions would let one Tuesday buy every branch that
+    /// asks for a good day, forever.
+    var stageBestDayMetrics: MetricTotals {
+        get { MetricTotals(values: stageBestDayMetricsStorage ?? [:]) }
+        set { stageBestDayMetricsStorage = newValue.values }
+    }
+
+    /// The reset a hatch and an evolution both perform: this stage's accumulated progress goes, the
+    /// lifetime totals stay, and the stage clock restarts at `now`.
+    ///
+    /// One method rather than four assignments at the call site, because "stage totals reset when
+    /// `stageEnteredDate` moves" is only true if nothing can move that date without clearing them —
+    /// and a later story adding a fifth stage-scoped total should have exactly one place to add it.
+    func enterStage(at now: Date) {
+        stageEnergy = .zero
+        stageMetricTotals = .zero
+        stageBestDayMetrics = .zero
+        stageEnteredDate = now
     }
 
     /// Counts one refused feed against the local day containing `now`.

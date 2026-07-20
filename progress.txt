@@ -199,3 +199,86 @@ DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
 
 Remains: nothing for this story. NOTHING evaluates conditions yet (still true after US-056);
 US-058 (per-stage metric totals) is next, then US-084, US-059, US-060.
+
+================================================================================
+2026-07-20 — US-058: Accumulate per-stage metric totals — PASSES
+
+WHAT LANDED
+
+- `Sources/MetricLedger.swift` (new):
+  - `MetricTotals` — a Codable `[String: Double]` keyed by `ConditionMetric.rawValue`, with a
+    `subscript(ConditionMetric)`. A dictionary and NOT four named fields like `EnergyTotals`,
+    because this vocabulary is open: 27 cases today and more coming, and a property per metric
+    would need a model migration every time one is added. An unknown key reads 0.
+  - `ConditionMetric.accumulatesOverTime` — the gate on what may be banked at all.
+  - `MetricLedger` (@Model) — `day` + `creditedToday`, EnergyLedger's shape exactly.
+  - `MetricCreditor.credit(_:to:ledger:now:calendar:)` — banks the delta, returns what it added.
+- `GameState`: three new optional `[String: Double]?` storages + computed `stageMetricTotals`,
+  `lifetimeMetricTotals`, `stageBestDayMetrics`, and `enterStage(at:)`.
+- `GameStore`: `MetricLedger` added to `schema`, plus `loadOrCreateMetricLedger`.
+- `MainScreenModel.advance` now calls `state.enterStage(at: now())` in place of the two inline
+  assignments it had.
+
+Build green. Full suite 702 tests / 0 failures (was 684 => +18, all mine). Every one of the 18
+was observed "passed" individually via -only-testing — grepped, not inferred.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
+
+1. **Discrete metrics are NOT accumulated, and this is the important one.** `accumulatesOverTime`
+   is false for every `averageQuantity` metric (vo2Max, restingHeartRate, HRV, respiratoryRate,
+   oxygenSaturation, physicalEffort, audioExposure). Banking a delta of those would build a
+   stage-long TOTAL resting heart rate — a five-figure number that satisfies any criterion ever
+   written, which is the exact trap US-057 built `averageQuantity` to avoid.
+   => US-060/061: a condition on one of those seven MUST be answered by reading its window
+   directly through `HealthMetricReader` (which averages it), never off these totals. There is no
+   banked number for them and there must not be. `testOnlyAdditiveMetricsAccumulate` walks the
+   whole vocabulary so a metric added later cannot land on the wrong side of the gate silently.
+   `care.*` is false too — those counters already live on `GameState`, and a second copy here
+   would be free to disagree with the first.
+   `health.sleep` IS true: it is not a `ReadableHealthMetric` (it needs SleepAnalysis'
+   cross-source de-dup, see US-057 note 2), but the number it yields is MINUTES, and minutes add
+   up like any other. Whoever reads the night may bank it here.
+
+2. **THREE totals, not two.** `ConditionWindow` has three cases and `.day` cannot be derived from
+   the other two — a stage total says nothing about which single day was the best. Hence
+   `stageBestDayMetrics`.
+
+3. **`window: .day` is the BEST day, not today** (the AC, literally). Against today's number a
+   good Tuesday would stop counting at Tuesday midnight, and whether a criterion was met would
+   depend on what time of day the app happened to be opened. The record tracks the DAY'S running
+   total, not the delta each read banked, so three reads of one 12,000-step day are a 12,000-step
+   day and not 12,000+9,000+4,000.
+
+4. **Best day is STAGE-scoped and resets on evolution.** Judgement call, defensible either way, so
+   here is the reasoning: a `window: .day` condition sits on an evolution EDGE, and edges ask what
+   you did to earn THIS evolution. Carried across, one good Tuesday would buy every branch that
+   ever asks for a good day, forever. If a later story genuinely needs a lifetime best day, ADD a
+   fourth total — do not repurpose this one.
+
+5. **`enterStage(at:)` owns the stage reset**, and is why "stage totals reset when
+   `stageEnteredDate` moves" is structurally true rather than true by everyone remembering. Move
+   that date anywhere else and you have a bug. A later stage-scoped total gets added in exactly
+   one place. NOTE: the debug demo seeders in `MainScreenModel` (lines ~328-525) still assign
+   `stageEnteredDate` directly; they are screenshot fixtures, not gameplay, and were left alone.
+
+6. **`enterStage` deliberately does NOT touch the ledger.** Evolving at noon must not re-bank the
+   morning's steps for the new form — `testEvolvingMidDayDoesNotRebankTheMorning` pins it. Same
+   reason `resetGame`/`rebirth` leave `EnergyLedger` standing.
+
+7. A SECOND ledger rather than fields on `EnergyLedger`: that one is a currency clamped by
+   `EnergyRates.dailyCapPerEnergyType`, these are raw uncapped measurements. Folding them together
+   would put one day's `min` in the way of the other's total.
+
+8. `noData`/`unavailable` bank nothing and, in particular, cannot overwrite a real best day with a
+   zero. Being told nothing is not being told zero — same rule as everywhere else in this codebase.
+
+9. Persisted as plain `[String: Double]?` on the model, with `MetricTotals` as the value-type
+   wrapper on top. Optional for the usual migration reason documented all over `GameState`. The
+   round-trip test opens a FRESH store; an in-place migration of an already-shipped store is not
+   directly tested, but the shape follows the pattern every other added property here used.
+
+REMAINS: nothing for this story. Crediting is NOT yet wired into `MainScreenModel.refresh` — the
+seam exists (`loadOrCreateMetricLedger` + `MetricCreditor.credit`) but nothing calls it in the app
+yet, because deciding WHICH metrics are worth reading on every refresh is US-061's call (reading
+all 26 every refresh would be wrong). Still NOTHING evaluates conditions. Next: US-084, then
+US-059, US-060, US-061.

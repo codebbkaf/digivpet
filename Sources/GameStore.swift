@@ -10,7 +10,7 @@ import SwiftData
 final class GameStore {
     /// Every model that gets persisted. Adding a `@Model` type means adding it here too, or it
     /// silently will not be saved.
-    static let schema = Schema([GameState.self, EnergyLedger.self, DexEntry.self])
+    static let schema = Schema([GameState.self, EnergyLedger.self, MetricLedger.self, DexEntry.self])
 
     let container: ModelContainer
 
@@ -132,6 +132,20 @@ final class GameStore {
             return saved
         }
         let fresh = EnergyLedger(day: calendar.startOfDay(for: now))
+        context.insert(fresh)
+        try context.save()
+        return fresh
+    }
+
+    /// The per-metric credit ledger, starting a fresh one at today if there is none yet.
+    ///
+    /// Untouched by `resetGame` for the same reason `loadOrCreateLedger` is: a rebirth must not
+    /// re-bank today's steps for the new Digimon. See `MetricLedger`.
+    func loadOrCreateMetricLedger(now: Date = Date(), calendar: Calendar = .current) throws -> MetricLedger {
+        if let saved = try context.fetch(FetchDescriptor<MetricLedger>()).first {
+            return saved
+        }
+        let fresh = MetricLedger(day: calendar.startOfDay(for: now))
         context.insert(fresh)
         try context.save()
         return fresh
