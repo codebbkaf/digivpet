@@ -32,3 +32,48 @@ item from the previous run and still needs real hardware. It is #if DEBUG. Delet
 it only once AOD has been measured on a watch. Nothing in this PRD depends on it.
 
 ---
+
+## 2026-07-20 — US-055 — Spike: which HealthKit types are readable on watchOS 26.4
+PASSES: true
+
+Did: ran Sources/HealthMetricProbe.swift (DEBUG-only, launch-arg driven, no user-facing
+feature) against the watchOS 26.4 Simulator in both modes, and wrote docs/health-metrics.md.
+
+Observed (not assumed):
+- Build green with all 27 identifiers referenced => all compile on watchOS 26.4.
+- -probeHealthMetrics: every one of the 27 + HKWorkoutType.workoutType() returned
+  getRequestStatusForAuthorization = shouldRequest (23) or unnecessary (4). NOT ONE
+  returned errorInvalidArgument(3). That code is how HealthKit says "this type does not
+  exist on this platform" — so nothing in the candidate list is unavailable on watchOS.
+- The 23 un-granted read as errorAuthorizationNotDetermined(5) = a GRANT failure, not a
+  TYPE failure. The 4 granted (steps/activeEnergy/exercise/sleep) read ok(samples=0).
+- -probeHealthAuth: requestAuthorization with all 27 at once displayed the sheet and did
+  NOT throw. HealthKit rejects the whole request if any member is invalid, so a clean
+  display is per-type proof of requestability.
+- Full suite still green: 647 tests, 0 failures.
+
+Remains / traps for later iterations:
+1. NO identifier is certified as HAVING DATA. Simulator health DB is empty (granted types
+   gave samples=0) and cannot be granted — `simctl privacy` has no `health` service on
+   Xcode 26.4.1. So "compiles but never has data" was assignable to nothing and
+   excludable for nothing. US-061: keep mainline evolutions on the 4 granted metrics +
+   watch-native movement types; the 7 at-risk iPhone-sourced types named in the doc must
+   degrade to "criterion never met", never gate a Digimon into unreachability.
+2. US-059: widen the HealthMetric enum in HealthAuthorization.swift, do NOT build a second
+   store. Re-requesting an expanded read set does not revoke the existing grant (the four
+   come back `unnecessary`). Info.plist already has NSHealthShareUsageDescription; no new
+   usage-description key is needed for extra READ types.
+3. The watchOS auth sheet opens on an intro screen behind a "Review" button and simctl
+   cannot tap it, so sheet ROWS are not screenshottable. Use the API's own status result
+   as evidence instead — it is stronger.
+
+!! REPO DAMAGE FOUND AND REPAIRED THIS ITERATION — READ IF ralph.sh RUNS AGAIN !!
+ralph.sh's "archive previous run if branch changed" block had fired and:
+  (a) overwritten archive/2026-07-20-vpet-enhancements/{prd.json,progress.txt} with copies
+      of the CURRENT run's files (it copies $PRD_FILE/$PROGRESS_FILE into a folder named
+      after the LAST branch), destroying 1,205 lines of archived history; and
+  (b) reset root progress.txt to a 3-line stub, wiping the carried-forward facts block.
+Both were still in git HEAD and were restored with `git checkout HEAD --`. The uncommitted
+probe work was kept. THE BUG IS STILL IN ralph.sh — if a future iteration finds progress.txt
+suddenly short or the archive folder contents matching the current run, restore from HEAD
+before doing anything else. Do not commit the stub.

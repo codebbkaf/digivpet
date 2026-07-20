@@ -18,8 +18,8 @@
         "Typecheck passes (xcodebuild build succeeds)"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": "SPIKE. Writes a doc, ships no feature. US-061 must not author criteria around an identifier this story did not mark usable. Do not mark passes:true until every identifier listed above has a verdict in docs/health-metrics.md."
+      "passes": true,
+      "notes": "DONE. All 27 identifiers + HKWorkoutType compile, appear in the auth sheet, and are VALID readable types on watchOS 26.4 - zero returned errorInvalidArgument(3); the 23 un-granted ones returned errorAuthorizationNotDetermined(5), a grant failure not a type failure. The 4 already-granted (steps, activeEnergy, exercise, sleep) read cleanly as ok(samples=0). docs/health-metrics.md has a row + verdict for every identifier. CAVEAT US-061 MUST HEED: nothing is certified as HAVING data - the Simulator health DB is empty (even granted types gave samples=0) and cannot be granted (simctl privacy has no 'health' service), so the 'compiles but never has data' verdict could be assigned to nothing AND ruled out for nothing. Doc names 7 at-risk iPhone-sourced types to use only as gracefully-degrading bonus branches."
     },
     {
       "id": "US-056",

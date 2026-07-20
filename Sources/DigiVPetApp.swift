@@ -31,18 +31,34 @@ struct DigiVPetApp: App {
 
     var body: some Scene {
         WindowGroup {
-            // The gate explains health access before the system prompt and shows the blocked
-            // state if the request fails. The main screen only ever runs behind it, so it never
-            // has to read health data that was never asked for.
-            HealthAuthorizationGate(model: Self.makeAuthorizationModel()) {
-                ContentView(model: GameSession.model)
-                    // BEHIND THE GATE, so the observers are registered only once the user has
-                    // answered the health prompt — registering one before that fails outright with
-                    // "Authorization not determined", and a failed observer is never retried.
-                    // Here rather than inside `ContentView` so the view stays free of the singleton
-                    // and can still be built with a model of its own in a test.
-                    .task { GameSession.coordinator.beginObservingHealthUpdates() }
+            #if DEBUG
+            // US-055's spike. Replaces the whole UI rather than sitting beside it, so the
+            // authorization gate cannot prompt underneath the probe and confuse its readings.
+            if let mode = HealthMetricProbe.mode() {
+                Text("Probing…")
+                    .task { await HealthMetricProbe.run(mode: mode) }
+            } else {
+                appBody
             }
+            #else
+            appBody
+            #endif
+        }
+    }
+
+    @ViewBuilder
+    private var appBody: some View {
+        // The gate explains health access before the system prompt and shows the blocked
+        // state if the request fails. The main screen only ever runs behind it, so it never
+        // has to read health data that was never asked for.
+        HealthAuthorizationGate(model: Self.makeAuthorizationModel()) {
+            ContentView(model: GameSession.model)
+                // BEHIND THE GATE, so the observers are registered only once the user has
+                // answered the health prompt — registering one before that fails outright with
+                // "Authorization not determined", and a failed observer is never retried.
+                // Here rather than inside `ContentView` so the view stays free of the singleton
+                // and can still be built with a model of its own in a test.
+                .task { GameSession.coordinator.beginObservingHealthUpdates() }
         }
     }
 
