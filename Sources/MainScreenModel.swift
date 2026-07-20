@@ -404,7 +404,7 @@ final class MainScreenModel: ObservableObject {
     /// HealthKit data, so a real game there can never accrue the health-data mistakes that would
     /// make it sick on its own — and waiting out three eight-hour starving spells is not a demo.
     ///
-    /// - `-sickDemo` — three care mistakes, settled through the real rule: the held angry frame.
+    /// - `-sickDemo` — three care mistakes, settled through the real rule: the slow hurt loop.
     ///
     /// The mistakes are set and `updateSickness` is what turns them into an illness, so the demo
     /// exercises the shipped rule rather than hand-setting the status it is supposed to produce.
@@ -412,7 +412,7 @@ final class MainScreenModel: ObservableObject {
         guard CommandLine.arguments.contains("-sickDemo"), let state else { return }
 
         // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
-        // angry frame, so an egg would screenshot as the placeholder however well this worked.
+        // hurt frames, so an egg would screenshot as the placeholder however well this worked.
         if let agumon = graph.node(id: "agumon") {
             state.currentDigimonId = agumon.id
             state.stage = agumon.stage
@@ -653,22 +653,18 @@ final class MainScreenModel: ObservableObject {
         publishComplicationSnapshot()
     }
 
-    /// The pose the Digimon returns to when nothing else is happening: the angry frame held still
-    /// while it is sick, the sleep loop (sleep1 <-> sleep2) while it is in its sleep window, the
-    /// walk loop otherwise.
+    /// The pose the Digimon returns to when nothing else is happening: the slow hurt loop while it
+    /// is sick, the sleep loop (sleep1 <-> sleep2) while it is in its sleep window, the walk loop
+    /// otherwise, and the hurt2 frame held still once it is dead.
     ///
     /// Everything that ends an action reverts to THIS rather than to `.idle`, which is what keeps a
     /// Digimon fed at 23:59 from going back to pacing about.
     ///
-    /// SICKNESS WINS OVER SLEEP, and it is the one state that stops the sprite moving at all — a
-    /// held `.still` has no second frame to alternate with, so US-028's "does not idle-animate"
-    /// falls out of the pose rather than needing a flag the view has to remember to honour.
+    /// The rule itself lives on `SpriteAnimation.resting(for:isAsleep:)` — a pure function of the
+    /// two facts it turns on, which is what lets it be tested without a store or a view. All this
+    /// adds is where those two facts come from. No game at all rests the same as a healthy one.
     var restingAnimation: SpriteAnimation {
-        switch state?.healthStatus {
-        case .dead: return .still(.hurt2)
-        case .sick: return .still(.angry)
-        default: return isAsleep ? .sleep : .idle
-        }
+        .resting(for: state?.healthStatus ?? .healthy, isAsleep: isAsleep)
     }
 
     /// Whether the Digimon should be walking about the screen right now (US-037).
@@ -677,7 +673,9 @@ final class MainScreenModel: ObservableObject {
     /// than as a list of the states that forbid it. That is not a shortcut — it is the same fact
     /// said once instead of twice. Sleeping, sickness and death are ALREADY exactly what makes
     /// `restingAnimation` return something other than `.idle`, so a state added to that switch
-    /// later suspends movement automatically instead of needing to be remembered here. Eating and
+    /// later suspends movement automatically instead of needing to be remembered here — US-068 gave
+    /// sickness a LOOP rather than a held frame and did not have to touch this line, which is the
+    /// arrangement paying for itself. Eating and
     /// every other momentary pose fall out of the same rule for free: a Digimon holding still to
     /// eat should not slide across the screen while it does.
     ///
@@ -692,7 +690,7 @@ final class MainScreenModel: ObservableObject {
     /// can return — miss one and a Digimon that entered that state keeps holding it after leaving,
     /// which is how a reborn egg would go on lying dead.
     private static let restingPoses: Set<SpriteAnimation> = [
-        .idle, .sleep, .still(.angry), .still(.hurt2)
+        .idle, .sleep, .sick, .still(.hurt2)
     ]
 
     /// Re-infers the sleep window from last night's sleep and puts the Digimon into or out of it.

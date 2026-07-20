@@ -287,8 +287,8 @@
         "Tests pass"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": "Use a demo launch flag to reach the sick state. DO NOT uninstall the app to reset the save - progress.txt records that this wipes the HealthKit grant and strands the app on an untappable system sheet."
+      "passes": true,
+      "notes": "Sick now plays the hurt loop (frames 9<->10) via a new SpriteAnimation.sick case at 1.5s/frame vs the battle hurt loop's 0.5s; DigimonSpriteView drives both its TimelineView schedule and its frame index off animation.frameDuration. The choice is the pure SpriteAnimation.resting(for:isAsleep:), unit-tested with no view or store. Wandering stays suppressed (isWandering keys off animation == .idle). Screenshotted with -sickDemo on Series 11 46mm: a slumped Agumon alternating two hurt frames, crisp, centred, not walking. NOTE: the Simulator's screen idles and throttles, so screenshot sampling CANNOT measure the 0.5s vs 1.5s cadence — that clause is proven by unit test, not by the screenshots. 831 tests pass (was 823)."
     },
     {
       "id": "US-069",

@@ -13,12 +13,33 @@ enum SpriteAnimation: Hashable {
     case eat
     case sleep
     case hurt
+    /// The SAME hurt frames as `.hurt`, held far longer each (US-068).
+    ///
+    /// A separate case rather than a parameter on `.hurt`, because the two mean different things and
+    /// only the cadence tells them apart on screen: `.hurt` is the flinch of being struck in a
+    /// battle, `.sick` is an ailing Digimon labouring on the spot. Sharing the art is deliberate —
+    /// the sheet has no illness frames, and hurt is what "unwell" looks like in this pack.
+    case sick
     /// One frame, held. Refuse, attack, happy and angry are poses, not loops.
     case still(SpriteFrame)
 
-    /// How long each frame is held, for every loop. The V-Pet cadence comes from all of them
-    /// sharing this one value.
+    /// How long each frame is held, for every loop but `.sick`. The V-Pet cadence comes from all of
+    /// them sharing this one value.
     static let frameDuration: TimeInterval = 0.5
+
+    /// How long a SICK Digimon holds each of its two frames: three times the normal beat.
+    ///
+    /// Slower than `frameDuration` on purpose and by a wide margin — a hurt loop at the battle's
+    /// pace reads as being hit over and over, which is a different story from being ill.
+    static let sickFrameDuration: TimeInterval = 1.5
+
+    /// How long each frame of THIS loop is held.
+    var frameDuration: TimeInterval {
+        switch self {
+        case .sick: return Self.sickFrameDuration
+        case .idle, .eat, .sleep, .hurt, .still: return Self.frameDuration
+        }
+    }
 
     /// The loop's frames on a 48x64 stage sheet.
     var stageFrames: [SpriteFrame] {
@@ -26,7 +47,7 @@ enum SpriteAnimation: Hashable {
         case .idle: return [.walk1, .walk2]
         case .eat: return [.eat1, .eat2]
         case .sleep: return [.sleep1, .sleep2]
-        case .hurt: return [.hurt1, .hurt2]
+        case .hurt, .sick: return [.hurt1, .hurt2]
         case .still(let frame): return [frame]
         }
     }
@@ -39,7 +60,7 @@ enum SpriteAnimation: Hashable {
     var eggFrames: [EggFrame] {
         switch self {
         case .idle: return [.idle, .wobble]
-        case .eat, .sleep, .hurt, .still: return []
+        case .eat, .sleep, .hurt, .sick, .still: return []
         }
     }
 
@@ -60,6 +81,22 @@ enum SpriteAnimation: Hashable {
         let tick = Int((date.timeIntervalSinceReferenceDate / duration).rounded(.down))
         // Dates before the reference date tick negative, where % alone would too.
         return ((tick % count) + count) % count
+    }
+
+    /// The loop a Digimon rests on given its health and whether it is in its sleep window.
+    ///
+    /// A pure function, taking the two facts it depends on rather than reading a model, so US-068's
+    /// "the animation choice is a pure function of healthStatus" can be asserted with no store, no
+    /// clock and no view. `MainScreenModel.restingAnimation` is a call to this and nothing else.
+    ///
+    /// SICKNESS WINS OVER SLEEP: an ill Digimon looks ill whatever the hour, because the illness is
+    /// the thing the user has to act on and the sleep loop would hide it until morning.
+    static func resting(for health: HealthStatus, isAsleep: Bool) -> SpriteAnimation {
+        switch health {
+        case .dead: return .still(.hurt2)
+        case .sick: return .sick
+        case .healthy: return isAsleep ? .sleep : .idle
+        }
     }
 }
 
@@ -98,8 +135,13 @@ struct DigimonSpriteView: View {
                 // to show the same frame.
                 image(frames[0])
             } else {
-                TimelineView(.periodic(from: .now, by: SpriteAnimation.frameDuration)) { context in
-                    image(frames[SpriteAnimation.frameIndex(at: context.date, count: frames.count)])
+                // The loop's OWN cadence, not the shared one: a sick Digimon labours through the
+                // same two frames at a third of the speed, and both the schedule and the index have
+                // to agree about that or the view would redraw three times to show one frame.
+                TimelineView(.periodic(from: .now, by: animation.frameDuration)) { context in
+                    image(frames[SpriteAnimation.frameIndex(at: context.date,
+                                                            count: frames.count,
+                                                            duration: animation.frameDuration)])
                 }
             }
         }

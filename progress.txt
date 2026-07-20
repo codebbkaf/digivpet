@@ -1045,3 +1045,80 @@ WHAT REMAINS / FOR THE NEXT ITERATION
    `-destination 'id=FB045EDB-DEB9-40AA-B8FB-819E9E742517'` with a separate `-derivedDataPath`.
 
 Next: US-068 (animate the sick Digimon).
+
+================================================================================
+2026-07-21 — US-068: Animate the sick Digimon
+================================================================================
+
+WHAT CHANGED
+
+`SpriteAnimation` gained a `.sick` case: the SAME two frames as `.hurt` (9 and 10), held three
+times as long — 1.5s per frame against the shared 0.5s beat. `restingAnimation` returns it where it
+used to return `.still(.angry)`, and `restingPoses` swapped that entry for `.sick`.
+
+`DigimonSpriteView` now drives BOTH its TimelineView schedule and its frame index off
+`animation.frameDuration` rather than the static `SpriteAnimation.frameDuration`. Both, not one:
+`frameIndex` already took a `duration` parameter and was defaulting it, so changing only the
+schedule would have redrawn three times to show the same frame while the index still stepped at the
+walk's speed.
+
+The choice moved to `SpriteAnimation.resting(for:isAsleep:)` — a pure function of health and the
+sleep window. `MainScreenModel.restingAnimation` is now a single call to it and nothing else.
+
+ONE JUDGEMENT CALL
+
+**`.sick` is a separate case, not a parameter on `.hurt`.** They share their art because the pack
+has no illness frames, and hurt is what "unwell" looks like in it. But they mean different things —
+a flinch from being struck, versus labouring on the spot — and the cadence is the ONLY thing on
+screen telling them apart. A separate case makes that difference a fact about the enum, so
+`restingPoses`, the complication and every `switch` see two states rather than one with a flag.
+
+The wandering rule needed NO change. `isWandering` is `animation == .idle`, so giving sickness a
+loop instead of a held frame suspended movement for free. US-037's comment predicted exactly this;
+I extended it to say so.
+
+VERIFIED THIS ITERATION (all observed, none assumed)
+
+  AC1  `testTheSickLoopIsTheHurtLoopsFrames` (frames 9<->10, identical to `.hurt`'s) and
+       `testTheSickLoopIsSlowerThanTheBattleHurtLoop` (1.5 > 0.5, asserted as a strict inequality
+       against `.hurt` rather than as two literals).
+  AC2  `testASickDigimonDoesNotWander` — `.sick` AND `isWandering == false`. This assertion is no
+       longer free: the sprite now animates in place, so `isWandering` is doing real work.
+  AC3  `testEveryOtherLoopKeepsTheSharedCadence` sweeps idle/eat/sleep/hurt/still and pins each at
+       0.5s. Screenshot of `-wanderDemo` on a FRESH 42mm sim: an upright walking Agumon, plainly a
+       different silhouette from the sick one.
+  AC4  `.interpolation(.none)` untouched on `DigimonSpriteView.image`.
+  AC5  `SpriteAnimation.resting(for:isAsleep:)` — 3 tests, no store, no clock, no view, including a
+       sweep over every `HealthStatus` x asleep asserting only healthy-and-awake walks.
+  AC6  `-sickDemo -noNotificationPrompt -healthAnswered`, Series 11 46mm: a slumped Agumon
+       alternating exactly TWO distinct frames (40 samples, 2 unique hashes), crisp pixels, centred,
+       not walking.
+  AC7  BUILD SUCCEEDED, Series 11 46mm.
+  AC8  831 passed / 0 failures (was 823). 8 new.
+
+WHAT REMAINS / FOR THE NEXT ITERATION
+
+1. **The Simulator CANNOT measure animation cadence — do not try.** I did, and nearly recorded a
+   false confirmation. Screenshot sampling showed the SICK loop flipping every ~1.56s, which looks
+   like proof until you sample the HEALTHY loop and get ~1.47s for art that runs at 0.5s. The
+   watchOS Simulator screen idles and throttles redraws, so it puts a ceiling around 1.5s on
+   whatever you are watching. I confirmed this was pre-existing by stashing my changes, rebuilding
+   the previous commit and re-measuring — the pre-change healthy walk changed ONCE in 8 seconds.
+   Screenshots can prove WHICH frames are drawn and THAT the sprite animates. Timing is for unit
+   tests only.
+
+2. **`-sickDemo` writes `careMistakeCount = 3` to the save, and the save persists across launches.**
+   A later `-wanderDemo` on the same simulator comes up STILL SICK — identical screenshot hashes,
+   which is how I caught it. Take the healthy control on a different simulator (Series 11 42mm is
+   clean as of this iteration). Do NOT uninstall to reset: progress.txt records that this wipes the
+   HealthKit grant and strands the app on an untappable system sheet.
+
+3. `TrainingTests.testTrainingWhileSickShowsAReasonAndDoesNotAnimate` was renamed to
+   `...DoesNotPlayTheAttackPose`. The old name became a lie the moment sickness got a loop — the
+   assertion it actually makes is that the blocked action shows no attack pose.
+
+4. US-069 (the pulsing bandage icon) goes on the same screen as this loop. The sick Digimon now
+   MOVES, so a badge placed over the sprite will collide with a silhouette that shifts — the two
+   hurt frames differ noticeably around the head and legs.
+
+Next: US-069 (pulsing medical-bandage icon).

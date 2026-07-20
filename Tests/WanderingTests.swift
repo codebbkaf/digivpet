@@ -129,7 +129,9 @@ final class WanderingTests: XCTestCase {
         model.state?.healthStatus = .sick
         await model.refresh()
 
-        XCTAssertEqual(model.animation, .still(.angry))
+        // US-068 AC2. The sick pose is a LOOP now rather than a held frame, so this is no longer
+        // free — the sprite animates in place, and `isWandering` is what stops it also travelling.
+        XCTAssertEqual(model.animation, .sick)
         XCTAssertFalse(model.isWandering)
     }
 

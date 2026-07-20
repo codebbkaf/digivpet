@@ -229,10 +229,10 @@ final class SicknessApplyTests: XCTestCase {
         XCTAssertEqual(model.state?.healthStatus, .sick)
     }
 
-    /// AC2's first two clauses: a sick Digimon holds the angry frame (index 8) and does not
-    /// idle-animate — a one-frame pose has no second frame to alternate with, which is what
-    /// "does not idle-animate" means at the sprite layer.
-    func testASickDigimonHoldsTheAngryFrameAndDoesNotAnimate() async throws {
+    /// US-028 AC2 asked for a sick Digimon not to IDLE-animate, and US-068 asked for it to play the
+    /// slow hurt loop instead. Both hold at once: it no longer walks, and what it does instead is
+    /// frames 9 <-> 10 at a third of the walk's speed.
+    func testASickDigimonPlaysTheSlowHurtLoopAndNotTheWalk() async throws {
         let url = storeURL("Angry")
         let now = SickClock.at("2026-03-10 12:00")
         try seed(url: url, now: now, mistakes: 3)
@@ -240,10 +240,11 @@ final class SicknessApplyTests: XCTestCase {
         let model = makeModel(url: url, now: now)
         await model.start()
 
-        XCTAssertEqual(model.animation, .still(.angry))
-        XCTAssertEqual(SpriteFrame.angry.rawValue, 8, "AC2 names the frame by index")
-        XCTAssertEqual(model.animation.stageFrames.count, 1, "a held pose, not a loop")
-        XCTAssertEqual(model.restingAnimation, .still(.angry))
+        XCTAssertEqual(model.animation, .sick)
+        XCTAssertEqual(model.restingAnimation, .sick)
+        XCTAssertEqual(model.animation.stageFrames.map(\.rawValue), [9, 10],
+                       "US-068 names the frames by index")
+        XCTAssertNotEqual(model.animation, .idle, "and it is emphatically not walking")
     }
 
     /// AC2's third clause: evolution is paused. The edge out of `hero` is a default with every gate
