@@ -1,0 +1,6430 @@
+{
+  "entries": [
+    {
+      "id": "agu2006_digitama",
+      "displayName": "Agu2006 Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Agu2006_Digitama"
+    },
+    {
+      "id": "agu_digitama",
+      "displayName": "Agu Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Agu_Digitama"
+    },
+    {
+      "id": "angora_digitama",
+      "displayName": "Angora Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Angora_Digitama"
+    },
+    {
+      "id": "baku_digitama",
+      "displayName": "Baku Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Baku_Digitama"
+    },
+    {
+      "id": "bear_digitama",
+      "displayName": "Bear Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Bear_Digitama"
+    },
+    {
+      "id": "beta_digitama",
+      "displayName": "Beta Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Beta_Digitama"
+    },
+    {
+      "id": "blackguil_digitama",
+      "displayName": "BlackGuil Digitama",
+      "stage": "Digitama",
+      "spriteFile": "BlackGuil_Digitama"
+    },
+    {
+      "id": "bluco_digitama",
+      "displayName": "Bluco Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Bluco_Digitama"
+    },
+    {
+      "id": "cand_digitama",
+      "displayName": "Cand Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Cand_Digitama"
+    },
+    {
+      "id": "commandra_digitama",
+      "displayName": "Commandra Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Commandra_Digitama"
+    },
+    {
+      "id": "elec_digitama",
+      "displayName": "Elec Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Elec_Digitama"
+    },
+    {
+      "id": "espi_digitama",
+      "displayName": "Espi Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Espi_Digitama"
+    },
+    {
+      "id": "flora_digitama",
+      "displayName": "Flora Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Flora_Digitama"
+    },
+    {
+      "id": "funbee_digitama",
+      "displayName": "Funbee Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Funbee_Digitama"
+    },
+    {
+      "id": "gabu_digitama",
+      "displayName": "Gabu Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Gabu_Digitama"
+    },
+    {
+      "id": "gabublack_digitama",
+      "displayName": "GabuBlack Digitama",
+      "stage": "Digitama",
+      "spriteFile": "GabuBlack_Digitama"
+    },
+    {
+      "id": "gao_digitama",
+      "displayName": "Gao Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Gao_Digitama"
+    },
+    {
+      "id": "gazi_digitama",
+      "displayName": "Gazi Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Gazi_Digitama"
+    },
+    {
+      "id": "ghost_digitama",
+      "displayName": "Ghost Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Ghost_Digitama"
+    },
+    {
+      "id": "goma_digitama",
+      "displayName": "Goma Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Goma_Digitama"
+    },
+    {
+      "id": "guil_digitama",
+      "displayName": "Guil Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Guil_Digitama"
+    },
+    {
+      "id": "heriss_digitama",
+      "displayName": "Heriss Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Heriss_Digitama"
+    },
+    {
+      "id": "hyoko_digitama",
+      "displayName": "Hyoko Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Hyoko_Digitama"
+    },
+    {
+      "id": "imp_digitama",
+      "displayName": "Imp Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Imp_Digitama"
+    },
+    {
+      "id": "kame_digitama",
+      "displayName": "Kame Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Kame_Digitama"
+    },
+    {
+      "id": "kera_digitama",
+      "displayName": "Kera Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Kera_Digitama"
+    },
+    {
+      "id": "koe_digitama",
+      "displayName": "Koe Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Koe_Digitama"
+    },
+    {
+      "id": "kuda2006_digitama",
+      "displayName": "Kuda2006 Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Kuda2006_Digitama"
+    },
+    {
+      "id": "kuda_digitama",
+      "displayName": "Kuda Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Kuda_Digitama"
+    },
+    {
+      "id": "kune_digitama",
+      "displayName": "Kune Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Kune_Digitama"
+    },
+    {
+      "id": "lala_digitama",
+      "displayName": "Lala Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Lala_Digitama"
+    },
+    {
+      "id": "lioll_digitama",
+      "displayName": "Lioll Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Lioll_Digitama"
+    },
+    {
+      "id": "lop_digitama",
+      "displayName": "Lop Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Lop_Digitama"
+    },
+    {
+      "id": "luce_digitama",
+      "displayName": "Luce Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Luce_Digitama"
+    },
+    {
+      "id": "ludo_digitama",
+      "displayName": "Ludo Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Ludo_Digitama"
+    },
+    {
+      "id": "meicoo_digitama",
+      "displayName": "Meicoo Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Meicoo_Digitama"
+    },
+    {
+      "id": "monodra_digitama",
+      "displayName": "Monodra Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Monodra_Digitama"
+    },
+    {
+      "id": "morpho_digitama",
+      "displayName": "Morpho Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Morpho_Digitama"
+    },
+    {
+      "id": "mush_digitama",
+      "displayName": "Mush Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Mush_Digitama"
+    },
+    {
+      "id": "pal_digitama",
+      "displayName": "Pal Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Pal_Digitama"
+    },
+    {
+      "id": "pata_digitama",
+      "displayName": "Pata Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Pata_Digitama"
+    },
+    {
+      "id": "pawnchessblack_digitama",
+      "displayName": "PawnChessBlack Digitama",
+      "stage": "Digitama",
+      "spriteFile": "PawnChessBlack_Digitama"
+    },
+    {
+      "id": "pawnchesswhite_digitama",
+      "displayName": "PawnChessWhite Digitama",
+      "stage": "Digitama",
+      "spriteFile": "PawnChessWhite_Digitama"
+    },
+    {
+      "id": "phasco_digitama",
+      "displayName": "Phasco Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Phasco_Digitama"
+    },
+    {
+      "id": "picodevi_digitama",
+      "displayName": "PicoDevi Digitama",
+      "stage": "Digitama",
+      "spriteFile": "PicoDevi_Digitama"
+    },
+    {
+      "id": "piyo_digitama",
+      "displayName": "Piyo Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Piyo_Digitama"
+    },
+    {
+      "id": "plot_digitama",
+      "displayName": "Plot Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Plot_Digitama"
+    },
+    {
+      "id": "pulse_digitama",
+      "displayName": "Pulse Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Pulse_Digitama"
+    },
+    {
+      "id": "rena_digitama",
+      "displayName": "Rena Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Rena_Digitama"
+    },
+    {
+      "id": "sunariza_digitama",
+      "displayName": "Sunariza Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Sunariza_Digitama"
+    },
+    {
+      "id": "swim_digitama",
+      "displayName": "Swim Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Swim_Digitama"
+    },
+    {
+      "id": "tento_digitama",
+      "displayName": "Tento Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Tento_Digitama"
+    },
+    {
+      "id": "terrier_digitama",
+      "displayName": "Terrier Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Terrier_Digitama"
+    },
+    {
+      "id": "v_digitama",
+      "displayName": "V Digitama",
+      "stage": "Digitama",
+      "spriteFile": "V_Digitama"
+    },
+    {
+      "id": "vorvo_digitama",
+      "displayName": "Vorvo Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Vorvo_Digitama"
+    },
+    {
+      "id": "worm_digitama",
+      "displayName": "Worm Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Worm_Digitama"
+    },
+    {
+      "id": "zuba_digitama",
+      "displayName": "Zuba Digitama",
+      "stage": "Digitama",
+      "spriteFile": "Zuba_Digitama"
+    },
+    {
+      "id": "algomon_babyi",
+      "displayName": "Algomon",
+      "stage": "Baby I",
+      "spriteFile": "Algomon_BabyI"
+    },
+    {
+      "id": "bombmon",
+      "displayName": "Bombmon",
+      "stage": "Baby I",
+      "spriteFile": "Bombmon"
+    },
+    {
+      "id": "bommon",
+      "displayName": "Bommon",
+      "stage": "Baby I",
+      "spriteFile": "Bommon"
+    },
+    {
+      "id": "botamon",
+      "displayName": "Botamon",
+      "stage": "Baby I",
+      "spriteFile": "Botamon"
+    },
+    {
+      "id": "bubbmon",
+      "displayName": "Bubbmon",
+      "stage": "Baby I",
+      "spriteFile": "Bubbmon"
+    },
+    {
+      "id": "chibickmon",
+      "displayName": "Chibickmon",
+      "stage": "Baby I",
+      "spriteFile": "Chibickmon"
+    },
+    {
+      "id": "chicomon",
+      "displayName": "Chicomon",
+      "stage": "Baby I",
+      "spriteFile": "Chicomon"
+    },
+    {
+      "id": "choromon",
+      "displayName": "Choromon",
+      "stage": "Baby I",
+      "spriteFile": "Choromon"
+    },
+    {
+      "id": "cocomon",
+      "displayName": "Cocomon",
+      "stage": "Baby I",
+      "spriteFile": "Cocomon"
+    },
+    {
+      "id": "cotsucomon",
+      "displayName": "Cotsucomon",
+      "stage": "Baby I",
+      "spriteFile": "Cotsucomon"
+    },
+    {
+      "id": "curimon",
+      "displayName": "Curimon",
+      "stage": "Baby I",
+      "spriteFile": "Curimon"
+    },
+    {
+      "id": "dodomon",
+      "displayName": "Dodomon",
+      "stage": "Baby I",
+      "spriteFile": "Dodomon"
+    },
+    {
+      "id": "dokimon",
+      "displayName": "Dokimon",
+      "stage": "Baby I",
+      "spriteFile": "Dokimon"
+    },
+    {
+      "id": "fufumon",
+      "displayName": "Fufumon",
+      "stage": "Baby I",
+      "spriteFile": "Fufumon"
+    },
+    {
+      "id": "fukamon",
+      "displayName": "Fukamon",
+      "stage": "Baby I",
+      "spriteFile": "Fukamon"
+    },
+    {
+      "id": "jyarimon",
+      "displayName": "Jyarimon",
+      "stage": "Baby I",
+      "spriteFile": "Jyarimon"
+    },
+    {
+      "id": "ketomon",
+      "displayName": "Ketomon",
+      "stage": "Baby I",
+      "spriteFile": "Ketomon"
+    },
+    {
+      "id": "kiimon",
+      "displayName": "Kiimon",
+      "stage": "Baby I",
+      "spriteFile": "Kiimon"
+    },
+    {
+      "id": "kuramon",
+      "displayName": "Kuramon",
+      "stage": "Baby I",
+      "spriteFile": "Kuramon"
+    },
+    {
+      "id": "leafmon",
+      "displayName": "Leafmon",
+      "stage": "Baby I",
+      "spriteFile": "Leafmon"
+    },
+    {
+      "id": "meicoo_baby",
+      "displayName": "Meicoo Baby",
+      "stage": "Baby I",
+      "spriteFile": "Meicoo_Baby",
+      "dexOnly": true
+    },
+    {
+      "id": "mokumon",
+      "displayName": "Mokumon",
+      "stage": "Baby I",
+      "spriteFile": "Mokumon"
+    },
+    {
+      "id": "nyokimon",
+      "displayName": "Nyokimon",
+      "stage": "Baby I",
+      "spriteFile": "Nyokimon"
+    },
+    {
+      "id": "pafumon",
+      "displayName": "Pafumon",
+      "stage": "Baby I",
+      "spriteFile": "Pafumon"
+    },
+    {
+      "id": "paomon",
+      "displayName": "Paomon",
+      "stage": "Baby I",
+      "spriteFile": "Paomon"
+    },
+    {
+      "id": "petitmon",
+      "displayName": "Petitmon",
+      "stage": "Baby I",
+      "spriteFile": "Petitmon"
+    },
+    {
+      "id": "pipimon",
+      "displayName": "Pipimon",
+      "stage": "Baby I",
+      "spriteFile": "Pipimon"
+    },
+    {
+      "id": "pitchmon",
+      "displayName": "Pitchmon",
+      "stage": "Baby I",
+      "spriteFile": "Pitchmon"
+    },
+    {
+      "id": "pomumon",
+      "displayName": "Pomumon",
+      "stage": "Baby I",
+      "spriteFile": "Pomumon",
+      "dexOnly": true
+    },
+    {
+      "id": "popomon",
+      "displayName": "Popomon",
+      "stage": "Baby I",
+      "spriteFile": "Popomon"
+    },
+    {
+      "id": "poyomon",
+      "displayName": "Poyomon",
+      "stage": "Baby I",
+      "spriteFile": "Poyomon",
+      "dexOnly": true
+    },
+    {
+      "id": "punimon",
+      "displayName": "Punimon",
+      "stage": "Baby I",
+      "spriteFile": "Punimon"
+    },
+    {
+      "id": "pupumon",
+      "displayName": "Pupumon",
+      "stage": "Baby I",
+      "spriteFile": "Pupumon"
+    },
+    {
+      "id": "pururumon",
+      "displayName": "Pururumon",
+      "stage": "Baby I",
+      "spriteFile": "Pururumon"
+    },
+    {
+      "id": "pusumon",
+      "displayName": "Pusumon",
+      "stage": "Baby I",
+      "spriteFile": "Pusumon"
+    },
+    {
+      "id": "puttimon",
+      "displayName": "Puttimon",
+      "stage": "Baby I",
+      "spriteFile": "Puttimon"
+    },
+    {
+      "id": "puyomon",
+      "displayName": "Puyomon",
+      "stage": "Baby I",
+      "spriteFile": "Puyomon"
+    },
+    {
+      "id": "pyonmon",
+      "displayName": "Pyonmon",
+      "stage": "Baby I",
+      "spriteFile": "Pyonmon"
+    },
+    {
+      "id": "relemon",
+      "displayName": "Relemon",
+      "stage": "Baby I",
+      "spriteFile": "Relemon"
+    },
+    {
+      "id": "sunamon",
+      "displayName": "Sunamon",
+      "stage": "Baby I",
+      "spriteFile": "Sunamon"
+    },
+    {
+      "id": "tomorimon",
+      "displayName": "Tomorimon",
+      "stage": "Baby I",
+      "spriteFile": "Tomorimon"
+    },
+    {
+      "id": "tsubumon",
+      "displayName": "Tsubumon",
+      "stage": "Baby I",
+      "spriteFile": "Tsubumon"
+    },
+    {
+      "id": "yukimibotamon",
+      "displayName": "YukimiBotamon",
+      "stage": "Baby I",
+      "spriteFile": "YukimiBotamon"
+    },
+    {
+      "id": "yuramon",
+      "displayName": "Yuramon",
+      "stage": "Baby I",
+      "spriteFile": "Yuramon"
+    },
+    {
+      "id": "zerimon",
+      "displayName": "Zerimon",
+      "stage": "Baby I",
+      "spriteFile": "Zerimon"
+    },
+    {
+      "id": "zurumon",
+      "displayName": "Zurumon",
+      "stage": "Baby I",
+      "spriteFile": "Zurumon"
+    },
+    {
+      "id": "algomon_babyii",
+      "displayName": "Algomon",
+      "stage": "Baby II",
+      "spriteFile": "Algomon_BabyII"
+    },
+    {
+      "id": "arkadimon_baby",
+      "displayName": "Arkadimon",
+      "stage": "Baby II",
+      "spriteFile": "Arkadimon_Baby"
+    },
+    {
+      "id": "babydmon",
+      "displayName": "Babydmon",
+      "stage": "Baby II",
+      "spriteFile": "Babydmon"
+    },
+    {
+      "id": "bibimon",
+      "displayName": "Bibimon",
+      "stage": "Baby II",
+      "spriteFile": "Bibimon"
+    },
+    {
+      "id": "budmon",
+      "displayName": "Budmon",
+      "stage": "Baby II",
+      "spriteFile": "Budmon"
+    },
+    {
+      "id": "caprimon",
+      "displayName": "Caprimon",
+      "stage": "Baby II",
+      "spriteFile": "Caprimon"
+    },
+    {
+      "id": "chapmon",
+      "displayName": "Chapmon",
+      "stage": "Baby II",
+      "spriteFile": "Chapmon",
+      "dexOnly": true
+    },
+    {
+      "id": "chibimon",
+      "displayName": "Chibimon",
+      "stage": "Baby II",
+      "spriteFile": "Chibimon"
+    },
+    {
+      "id": "chicchimon",
+      "displayName": "Chicchimon",
+      "stage": "Baby II",
+      "spriteFile": "Chicchimon"
+    },
+    {
+      "id": "chocomon",
+      "displayName": "Chocomon",
+      "stage": "Baby II",
+      "spriteFile": "Chocomon"
+    },
+    {
+      "id": "cupimon",
+      "displayName": "Cupimon",
+      "stage": "Baby II",
+      "spriteFile": "Cupimon"
+    },
+    {
+      "id": "dorimon",
+      "displayName": "Dorimon",
+      "stage": "Baby II",
+      "spriteFile": "Dorimon"
+    },
+    {
+      "id": "gigimon",
+      "displayName": "Gigimon",
+      "stage": "Baby II",
+      "spriteFile": "Gigimon"
+    },
+    {
+      "id": "goromon",
+      "displayName": "Goromon",
+      "stage": "Baby II",
+      "spriteFile": "Goromon"
+    },
+    {
+      "id": "gummymon",
+      "displayName": "Gummymon",
+      "stage": "Baby II",
+      "spriteFile": "Gummymon"
+    },
+    {
+      "id": "hiyarimon",
+      "displayName": "Hiyarimon",
+      "stage": "Baby II",
+      "spriteFile": "Hiyarimon"
+    },
+    {
+      "id": "hopmon",
+      "displayName": "Hopmon",
+      "stage": "Baby II",
+      "spriteFile": "Hopmon",
+      "dexOnly": true
+    },
+    {
+      "id": "kakkinmon",
+      "displayName": "Kakkinmon",
+      "stage": "Baby II",
+      "spriteFile": "Kakkinmon"
+    },
+    {
+      "id": "koromon",
+      "displayName": "Koromon",
+      "stage": "Baby II",
+      "spriteFile": "Koromon"
+    },
+    {
+      "id": "kozenimon",
+      "displayName": "Kozenimon",
+      "stage": "Baby II",
+      "spriteFile": "Kozenimon"
+    },
+    {
+      "id": "kyaromon",
+      "displayName": "Kyaromon",
+      "stage": "Baby II",
+      "spriteFile": "Kyaromon",
+      "dexOnly": true
+    },
+    {
+      "id": "kyokyomon",
+      "displayName": "Kyokyomon",
+      "stage": "Baby II",
+      "spriteFile": "Kyokyomon"
+    },
+    {
+      "id": "meicoobaby",
+      "displayName": "MeicooBaby",
+      "stage": "Baby II",
+      "spriteFile": "MeicooBaby"
+    },
+    {
+      "id": "minomon",
+      "displayName": "Minomon",
+      "stage": "Baby II",
+      "spriteFile": "Minomon"
+    },
+    {
+      "id": "mochimon",
+      "displayName": "Mochimon",
+      "stage": "Baby II",
+      "spriteFile": "Mochimon"
+    },
+    {
+      "id": "mococomon",
+      "displayName": "Mococomon",
+      "stage": "Baby II",
+      "spriteFile": "Mococomon"
+    },
+    {
+      "id": "monimon",
+      "displayName": "Monimon",
+      "stage": "Baby II",
+      "spriteFile": "Monimon"
+    },
+    {
+      "id": "moonmon",
+      "displayName": "Moonmon",
+      "stage": "Baby II",
+      "spriteFile": "Moonmon"
+    },
+    {
+      "id": "nyaromon",
+      "displayName": "Nyaromon",
+      "stage": "Baby II",
+      "spriteFile": "Nyaromon"
+    },
+    {
+      "id": "onibimon",
+      "displayName": "Onibimon",
+      "stage": "Baby II",
+      "spriteFile": "Onibimon"
+    },
+    {
+      "id": "pagumon",
+      "displayName": "Pagumon",
+      "stage": "Baby II",
+      "spriteFile": "Pagumon"
+    },
+    {
+      "id": "petimeramon",
+      "displayName": "PetiMeramon",
+      "stage": "Baby II",
+      "spriteFile": "PetiMeramon"
+    },
+    {
+      "id": "pickmon",
+      "displayName": "Pickmon",
+      "stage": "Baby II",
+      "spriteFile": "Pickmon"
+    },
+    {
+      "id": "pokomon",
+      "displayName": "Pokomon",
+      "stage": "Baby II",
+      "spriteFile": "Pokomon"
+    },
+    {
+      "id": "poromon",
+      "displayName": "Poromon",
+      "stage": "Baby II",
+      "spriteFile": "Poromon"
+    },
+    {
+      "id": "pukamon",
+      "displayName": "Pukamon",
+      "stage": "Baby II",
+      "spriteFile": "Pukamon"
+    },
+    {
+      "id": "puroromon",
+      "displayName": "Puroromon",
+      "stage": "Baby II",
+      "spriteFile": "Puroromon"
+    },
+    {
+      "id": "pusurimon",
+      "displayName": "Pusurimon",
+      "stage": "Baby II",
+      "spriteFile": "Pusurimon"
+    },
+    {
+      "id": "puwamon",
+      "displayName": "Puwamon",
+      "stage": "Baby II",
+      "spriteFile": "Puwamon",
+      "dexOnly": true
+    },
+    {
+      "id": "pyocomon",
+      "displayName": "Pyocomon",
+      "stage": "Baby II",
+      "spriteFile": "Pyocomon"
+    },
+    {
+      "id": "sunmon",
+      "displayName": "Sunmon",
+      "stage": "Baby II",
+      "spriteFile": "Sunmon"
+    },
+    {
+      "id": "tanemon",
+      "displayName": "Tanemon",
+      "stage": "Baby II",
+      "spriteFile": "Tanemon"
+    },
+    {
+      "id": "tokomon",
+      "displayName": "Tokomon",
+      "stage": "Baby II",
+      "spriteFile": "Tokomon"
+    },
+    {
+      "id": "tokomon_x",
+      "displayName": "Tokomon X",
+      "stage": "Baby II",
+      "spriteFile": "Tokomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "torikaraballmon",
+      "displayName": "TorikaraBallmon",
+      "stage": "Baby II",
+      "spriteFile": "TorikaraBallmon"
+    },
+    {
+      "id": "tsumemon",
+      "displayName": "Tsumemon",
+      "stage": "Baby II",
+      "spriteFile": "Tsumemon"
+    },
+    {
+      "id": "tsunomon",
+      "displayName": "Tsunomon",
+      "stage": "Baby II",
+      "spriteFile": "Tsunomon"
+    },
+    {
+      "id": "upamon",
+      "displayName": "Upamon",
+      "stage": "Baby II",
+      "spriteFile": "Upamon"
+    },
+    {
+      "id": "wanyamon",
+      "displayName": "Wanyamon",
+      "stage": "Baby II",
+      "spriteFile": "Wanyamon"
+    },
+    {
+      "id": "xiaomon",
+      "displayName": "Xiaomon",
+      "stage": "Baby II",
+      "spriteFile": "Xiaomon"
+    },
+    {
+      "id": "yaamon",
+      "displayName": "Yaamon",
+      "stage": "Baby II",
+      "spriteFile": "Yaamon"
+    },
+    {
+      "id": "yo!yo!mon",
+      "displayName": "Yo!Yo!mon",
+      "stage": "Baby II",
+      "spriteFile": "Yo!Yo!mon",
+      "dexOnly": true
+    },
+    {
+      "id": "agumon",
+      "displayName": "Agumon",
+      "stage": "Child",
+      "spriteFile": "Agumon"
+    },
+    {
+      "id": "agumon_2006",
+      "displayName": "Agumon 2006",
+      "stage": "Child",
+      "spriteFile": "Agumon_2006",
+      "variant": "2006"
+    },
+    {
+      "id": "agumon_black",
+      "displayName": "Agumon Black",
+      "stage": "Child",
+      "spriteFile": "Agumon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "agumon_black_x",
+      "displayName": "Agumon Black X",
+      "stage": "Child",
+      "spriteFile": "Agumon_Black_X",
+      "variant": "Black X"
+    },
+    {
+      "id": "agumon_bonds",
+      "displayName": "Agumon Bonds",
+      "stage": "Child",
+      "spriteFile": "Agumon_Bonds",
+      "dexOnly": true
+    },
+    {
+      "id": "agumon_x",
+      "displayName": "Agumon X",
+      "stage": "Child",
+      "spriteFile": "Agumon_X",
+      "variant": "X"
+    },
+    {
+      "id": "algomon_child",
+      "displayName": "Algomon",
+      "stage": "Child",
+      "spriteFile": "Algomon_Child"
+    },
+    {
+      "id": "alraumon",
+      "displayName": "Alraumon",
+      "stage": "Child",
+      "spriteFile": "Alraumon"
+    },
+    {
+      "id": "angoramon",
+      "displayName": "Angoramon",
+      "stage": "Child",
+      "spriteFile": "Angoramon"
+    },
+    {
+      "id": "arkadimon_child",
+      "displayName": "Arkadimon",
+      "stage": "Child",
+      "spriteFile": "Arkadimon_Child"
+    },
+    {
+      "id": "armadimon",
+      "displayName": "Armadimon",
+      "stage": "Child",
+      "spriteFile": "Armadimon"
+    },
+    {
+      "id": "bakumon",
+      "displayName": "Bakumon",
+      "stage": "Child",
+      "spriteFile": "Bakumon"
+    },
+    {
+      "id": "bearmon",
+      "displayName": "Bearmon",
+      "stage": "Child",
+      "spriteFile": "Bearmon"
+    },
+    {
+      "id": "betamon",
+      "displayName": "Betamon",
+      "stage": "Child",
+      "spriteFile": "Betamon",
+      "dexOnly": true
+    },
+    {
+      "id": "blackguilmon",
+      "displayName": "BlackGuilmon",
+      "stage": "Child",
+      "spriteFile": "BlackGuilmon"
+    },
+    {
+      "id": "blucomon",
+      "displayName": "Blucomon",
+      "stage": "Child",
+      "spriteFile": "Blucomon"
+    },
+    {
+      "id": "burgermon",
+      "displayName": "Burgermon",
+      "stage": "Child",
+      "spriteFile": "Burgermon",
+      "dexOnly": true
+    },
+    {
+      "id": "candmon",
+      "displayName": "Candmon",
+      "stage": "Child",
+      "spriteFile": "Candmon"
+    },
+    {
+      "id": "citramon",
+      "displayName": "Citramon",
+      "stage": "Child",
+      "spriteFile": "Citramon",
+      "dexOnly": true
+    },
+    {
+      "id": "clearagumon",
+      "displayName": "ClearAgumon",
+      "stage": "Child",
+      "spriteFile": "ClearAgumon"
+    },
+    {
+      "id": "commandramon",
+      "displayName": "Commandramon",
+      "stage": "Child",
+      "spriteFile": "Commandramon"
+    },
+    {
+      "id": "coronamon",
+      "displayName": "Coronamon",
+      "stage": "Child",
+      "spriteFile": "Coronamon"
+    },
+    {
+      "id": "cutemon",
+      "displayName": "Cutemon",
+      "stage": "Child",
+      "spriteFile": "Cutemon",
+      "dexOnly": true
+    },
+    {
+      "id": "dokunemon",
+      "displayName": "Dokunemon",
+      "stage": "Child",
+      "spriteFile": "Dokunemon"
+    },
+    {
+      "id": "dorumon",
+      "displayName": "DORUmon",
+      "stage": "Child",
+      "spriteFile": "DORUmon"
+    },
+    {
+      "id": "dracomon",
+      "displayName": "Dracomon",
+      "stage": "Child",
+      "spriteFile": "Dracomon"
+    },
+    {
+      "id": "dracomon_x",
+      "displayName": "Dracomon X",
+      "stage": "Child",
+      "spriteFile": "Dracomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "dracumon",
+      "displayName": "Dracumon",
+      "stage": "Child",
+      "spriteFile": "Dracumon"
+    },
+    {
+      "id": "ekakimon",
+      "displayName": "Ekakimon",
+      "stage": "Child",
+      "spriteFile": "Ekakimon"
+    },
+    {
+      "id": "elecmon",
+      "displayName": "Elecmon",
+      "stage": "Child",
+      "spriteFile": "Elecmon"
+    },
+    {
+      "id": "elecmon_violet",
+      "displayName": "Elecmon Violet",
+      "stage": "Child",
+      "spriteFile": "Elecmon_Violet"
+    },
+    {
+      "id": "falcomon",
+      "displayName": "Falcomon",
+      "stage": "Child",
+      "spriteFile": "Falcomon",
+      "dexOnly": true
+    },
+    {
+      "id": "falcomon_2006",
+      "displayName": "Falcomon 2006",
+      "stage": "Child",
+      "spriteFile": "Falcomon_2006",
+      "variant": "2006",
+      "dexOnly": true
+    },
+    {
+      "id": "floramon",
+      "displayName": "Floramon",
+      "stage": "Child",
+      "spriteFile": "Floramon"
+    },
+    {
+      "id": "fujamon",
+      "displayName": "Fujamon",
+      "stage": "Child",
+      "spriteFile": "Fujamon"
+    },
+    {
+      "id": "funbeemon",
+      "displayName": "Funbeemon",
+      "stage": "Child",
+      "spriteFile": "Funbeemon"
+    },
+    {
+      "id": "gabumon",
+      "displayName": "Gabumon",
+      "stage": "Child",
+      "spriteFile": "Gabumon"
+    },
+    {
+      "id": "gabumon_black",
+      "displayName": "Gabumon Black",
+      "stage": "Child",
+      "spriteFile": "Gabumon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "gabumon_x",
+      "displayName": "Gabumon X",
+      "stage": "Child",
+      "spriteFile": "Gabumon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gammamon",
+      "displayName": "Gammamon",
+      "stage": "Child",
+      "spriteFile": "Gammamon"
+    },
+    {
+      "id": "ganimon",
+      "displayName": "Ganimon",
+      "stage": "Child",
+      "spriteFile": "Ganimon"
+    },
+    {
+      "id": "gaomon",
+      "displayName": "Gaomon",
+      "stage": "Child",
+      "spriteFile": "Gaomon"
+    },
+    {
+      "id": "gaossmon",
+      "displayName": "Gaossmon",
+      "stage": "Child",
+      "spriteFile": "Gaossmon"
+    },
+    {
+      "id": "garbamon",
+      "displayName": "Garbamon",
+      "stage": "Child",
+      "spriteFile": "Garbamon",
+      "dexOnly": true
+    },
+    {
+      "id": "gasamon",
+      "displayName": "Gasamon",
+      "stage": "Child",
+      "spriteFile": "Gasamon"
+    },
+    {
+      "id": "gazimon",
+      "displayName": "Gazimon",
+      "stage": "Child",
+      "spriteFile": "Gazimon"
+    },
+    {
+      "id": "gazimon_x",
+      "displayName": "Gazimon X",
+      "stage": "Child",
+      "spriteFile": "Gazimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "ghostmon",
+      "displayName": "Ghostmon",
+      "stage": "Child",
+      "spriteFile": "Ghostmon"
+    },
+    {
+      "id": "gizamon",
+      "displayName": "Gizamon",
+      "stage": "Child",
+      "spriteFile": "Gizamon"
+    },
+    {
+      "id": "goblimon",
+      "displayName": "Goblimon",
+      "stage": "Child",
+      "spriteFile": "Goblimon",
+      "dexOnly": true
+    },
+    {
+      "id": "gomamon",
+      "displayName": "Gomamon",
+      "stage": "Child",
+      "spriteFile": "Gomamon"
+    },
+    {
+      "id": "gomamon_x",
+      "displayName": "Gomamon X",
+      "stage": "Child",
+      "spriteFile": "Gomamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gotsumon",
+      "displayName": "Gotsumon",
+      "stage": "Child",
+      "spriteFile": "Gotsumon"
+    },
+    {
+      "id": "guilmon",
+      "displayName": "Guilmon",
+      "stage": "Child",
+      "spriteFile": "Guilmon"
+    },
+    {
+      "id": "guilmon_x",
+      "displayName": "Guilmon X",
+      "stage": "Child",
+      "spriteFile": "Guilmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gumdramon",
+      "displayName": "Gumdramon",
+      "stage": "Child",
+      "spriteFile": "Gumdramon"
+    },
+    {
+      "id": "hackmon",
+      "displayName": "Hackmon",
+      "stage": "Child",
+      "spriteFile": "Hackmon"
+    },
+    {
+      "id": "hagurumon",
+      "displayName": "Hagurumon",
+      "stage": "Child",
+      "spriteFile": "Hagurumon"
+    },
+    {
+      "id": "hanimon",
+      "displayName": "Hanimon",
+      "stage": "Child",
+      "spriteFile": "Hanimon"
+    },
+    {
+      "id": "hawkmon",
+      "displayName": "Hawkmon",
+      "stage": "Child",
+      "spriteFile": "Hawkmon",
+      "dexOnly": true
+    },
+    {
+      "id": "herissmon",
+      "displayName": "Herissmon",
+      "stage": "Child",
+      "spriteFile": "Herissmon"
+    },
+    {
+      "id": "hyokomon",
+      "displayName": "Hyokomon",
+      "stage": "Child",
+      "spriteFile": "Hyokomon"
+    },
+    {
+      "id": "impmon",
+      "displayName": "Impmon",
+      "stage": "Child",
+      "spriteFile": "Impmon"
+    },
+    {
+      "id": "impmon_x",
+      "displayName": "Impmon X",
+      "stage": "Child",
+      "spriteFile": "Impmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "jazamon",
+      "displayName": "Jazamon",
+      "stage": "Child",
+      "spriteFile": "Jazamon"
+    },
+    {
+      "id": "jellymon",
+      "displayName": "Jellymon",
+      "stage": "Child",
+      "spriteFile": "Jellymon"
+    },
+    {
+      "id": "junkmon",
+      "displayName": "Junkmon",
+      "stage": "Child",
+      "spriteFile": "Junkmon"
+    },
+    {
+      "id": "kakamon",
+      "displayName": "Kakamon",
+      "stage": "Child",
+      "spriteFile": "Kakamon"
+    },
+    {
+      "id": "kamemon",
+      "displayName": "Kamemon",
+      "stage": "Child",
+      "spriteFile": "Kamemon",
+      "dexOnly": true
+    },
+    {
+      "id": "keramon",
+      "displayName": "Keramon",
+      "stage": "Child",
+      "spriteFile": "Keramon"
+    },
+    {
+      "id": "keramon_x",
+      "displayName": "Keramon X",
+      "stage": "Child",
+      "spriteFile": "Keramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "koemon",
+      "displayName": "Koemon",
+      "stage": "Child",
+      "spriteFile": "Koemon"
+    },
+    {
+      "id": "kokabuterimon",
+      "displayName": "Kokabuterimon",
+      "stage": "Child",
+      "spriteFile": "Kokabuterimon"
+    },
+    {
+      "id": "kokuwamon",
+      "displayName": "Kokuwamon",
+      "stage": "Child",
+      "spriteFile": "Kokuwamon"
+    },
+    {
+      "id": "kokuwamon_x",
+      "displayName": "Kokuwamon X",
+      "stage": "Child",
+      "spriteFile": "Kokuwamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "kudamon",
+      "displayName": "Kudamon",
+      "stage": "Child",
+      "spriteFile": "Kudamon",
+      "dexOnly": true
+    },
+    {
+      "id": "kudamon_2006",
+      "displayName": "Kudamon 2006",
+      "stage": "Child",
+      "spriteFile": "Kudamon_2006",
+      "variant": "2006",
+      "dexOnly": true
+    },
+    {
+      "id": "kunemon",
+      "displayName": "Kunemon",
+      "stage": "Child",
+      "spriteFile": "Kunemon"
+    },
+    {
+      "id": "labramon",
+      "displayName": "Labramon",
+      "stage": "Child",
+      "spriteFile": "Labramon"
+    },
+    {
+      "id": "lalamon",
+      "displayName": "Lalamon",
+      "stage": "Child",
+      "spriteFile": "Lalamon"
+    },
+    {
+      "id": "lopmon",
+      "displayName": "Lopmon",
+      "stage": "Child",
+      "spriteFile": "Lopmon"
+    },
+    {
+      "id": "lopmon_x",
+      "displayName": "Lopmon X",
+      "stage": "Child",
+      "spriteFile": "Lopmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "lucemon",
+      "displayName": "Lucemon",
+      "stage": "Child",
+      "spriteFile": "Lucemon"
+    },
+    {
+      "id": "ludomon",
+      "displayName": "Ludomon",
+      "stage": "Child",
+      "spriteFile": "Ludomon"
+    },
+    {
+      "id": "lunamon",
+      "displayName": "Lunamon",
+      "stage": "Child",
+      "spriteFile": "Lunamon"
+    },
+    {
+      "id": "meicoo_child",
+      "displayName": "Meicoo",
+      "stage": "Child",
+      "spriteFile": "Meicoo_Child",
+      "dexOnly": true
+    },
+    {
+      "id": "meicoochild",
+      "displayName": "MeicooChild",
+      "stage": "Child",
+      "spriteFile": "MeicooChild"
+    },
+    {
+      "id": "modokibetamon",
+      "displayName": "ModokiBetamon",
+      "stage": "Child",
+      "spriteFile": "ModokiBetamon",
+      "dexOnly": true
+    },
+    {
+      "id": "monitamon",
+      "displayName": "Monitamon",
+      "stage": "Child",
+      "spriteFile": "Monitamon",
+      "dexOnly": true
+    },
+    {
+      "id": "monodramon",
+      "displayName": "Monodramon",
+      "stage": "Child",
+      "spriteFile": "Monodramon"
+    },
+    {
+      "id": "morphomon",
+      "displayName": "Morphomon",
+      "stage": "Child",
+      "spriteFile": "Morphomon"
+    },
+    {
+      "id": "muchomon",
+      "displayName": "Muchomon",
+      "stage": "Child",
+      "spriteFile": "Muchomon"
+    },
+    {
+      "id": "mushmon",
+      "displayName": "Mushmon",
+      "stage": "Child",
+      "spriteFile": "Mushmon"
+    },
+    {
+      "id": "otamamon",
+      "displayName": "Otamamon",
+      "stage": "Child",
+      "spriteFile": "Otamamon"
+    },
+    {
+      "id": "otamamon_red",
+      "displayName": "Otamamon Red",
+      "stage": "Child",
+      "spriteFile": "Otamamon_Red"
+    },
+    {
+      "id": "otamamon_red_ver2",
+      "displayName": "Otamamon Red Ver2",
+      "stage": "Child",
+      "spriteFile": "Otamamon_Red_Ver2"
+    },
+    {
+      "id": "otamamon_x",
+      "displayName": "Otamamon X",
+      "stage": "Child",
+      "spriteFile": "Otamamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "palmon",
+      "displayName": "Palmon",
+      "stage": "Child",
+      "spriteFile": "Palmon"
+    },
+    {
+      "id": "palmon_x",
+      "displayName": "Palmon X",
+      "stage": "Child",
+      "spriteFile": "Palmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "patamon",
+      "displayName": "Patamon",
+      "stage": "Child",
+      "spriteFile": "Patamon"
+    },
+    {
+      "id": "pawnchessmon_black",
+      "displayName": "PawnChessmon Black",
+      "stage": "Child",
+      "spriteFile": "PawnChessmon_Black",
+      "variant": "Black",
+      "dexOnly": true
+    },
+    {
+      "id": "pawnchessmon_white",
+      "displayName": "PawnChessmon White",
+      "stage": "Child",
+      "spriteFile": "PawnChessmon_White",
+      "dexOnly": true
+    },
+    {
+      "id": "penmon",
+      "displayName": "Penmon",
+      "stage": "Child",
+      "spriteFile": "Penmon"
+    },
+    {
+      "id": "petitmamon",
+      "displayName": "PetitMamon",
+      "stage": "Child",
+      "spriteFile": "PetitMamon"
+    },
+    {
+      "id": "phascomon",
+      "displayName": "Phascomon",
+      "stage": "Child",
+      "spriteFile": "Phascomon"
+    },
+    {
+      "id": "picodevimon",
+      "displayName": "PicoDevimon",
+      "stage": "Child",
+      "spriteFile": "PicoDevimon"
+    },
+    {
+      "id": "pinamon",
+      "displayName": "Pinamon",
+      "stage": "Child",
+      "spriteFile": "Pinamon",
+      "dexOnly": true
+    },
+    {
+      "id": "piyomon",
+      "displayName": "Piyomon",
+      "stage": "Child",
+      "spriteFile": "Piyomon"
+    },
+    {
+      "id": "plotmon",
+      "displayName": "Plotmon",
+      "stage": "Child",
+      "spriteFile": "Plotmon"
+    },
+    {
+      "id": "plotmon_x",
+      "displayName": "Plotmon X",
+      "stage": "Child",
+      "spriteFile": "Plotmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "psychemon",
+      "displayName": "Psychemon",
+      "stage": "Child",
+      "spriteFile": "Psychemon"
+    },
+    {
+      "id": "pteromon",
+      "displayName": "Pteromon",
+      "stage": "Child",
+      "spriteFile": "Pteromon"
+    },
+    {
+      "id": "pucchiemon",
+      "displayName": "Pucchiemon",
+      "stage": "Child",
+      "spriteFile": "Pucchiemon",
+      "dexOnly": true
+    },
+    {
+      "id": "pucchiemon_green",
+      "displayName": "Pucchiemon Green",
+      "stage": "Child",
+      "spriteFile": "Pucchiemon_Green",
+      "dexOnly": true
+    },
+    {
+      "id": "pulsemon",
+      "displayName": "Pulsemon",
+      "stage": "Child",
+      "spriteFile": "Pulsemon"
+    },
+    {
+      "id": "renamon",
+      "displayName": "Renamon",
+      "stage": "Child",
+      "spriteFile": "Renamon"
+    },
+    {
+      "id": "renamon_x",
+      "displayName": "Renamon X",
+      "stage": "Child",
+      "spriteFile": "Renamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "ryudamon",
+      "displayName": "Ryudamon",
+      "stage": "Child",
+      "spriteFile": "Ryudamon"
+    },
+    {
+      "id": "sakumon",
+      "displayName": "Sakumon",
+      "stage": "Child",
+      "spriteFile": "Sakumon",
+      "dexOnly": true
+    },
+    {
+      "id": "sakuttomon",
+      "displayName": "Sakuttomon",
+      "stage": "Child",
+      "spriteFile": "Sakuttomon",
+      "dexOnly": true
+    },
+    {
+      "id": "sangomon",
+      "displayName": "Sangomon",
+      "stage": "Child",
+      "spriteFile": "Sangomon"
+    },
+    {
+      "id": "shakomon",
+      "displayName": "Shakomon",
+      "stage": "Child",
+      "spriteFile": "Shakomon"
+    },
+    {
+      "id": "shakomon_x",
+      "displayName": "Shakomon X",
+      "stage": "Child",
+      "spriteFile": "Shakomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "shamamon",
+      "displayName": "Shamamon",
+      "stage": "Child",
+      "spriteFile": "Shamamon",
+      "dexOnly": true
+    },
+    {
+      "id": "shoutmon",
+      "displayName": "Shoutmon",
+      "stage": "Child",
+      "spriteFile": "Shoutmon"
+    },
+    {
+      "id": "sistermon_blanc",
+      "displayName": "Sistermon Blanc",
+      "stage": "Child",
+      "spriteFile": "Sistermon_Blanc"
+    },
+    {
+      "id": "snowgoblimon",
+      "displayName": "SnowGoblimon",
+      "stage": "Child",
+      "spriteFile": "SnowGoblimon",
+      "dexOnly": true
+    },
+    {
+      "id": "solarmon",
+      "displayName": "Solarmon",
+      "stage": "Child",
+      "spriteFile": "Solarmon"
+    },
+    {
+      "id": "starmon_2010",
+      "displayName": "Starmon 2010",
+      "stage": "Child",
+      "spriteFile": "Starmon_2010",
+      "variant": "2010"
+    },
+    {
+      "id": "sunarizamon",
+      "displayName": "Sunarizamon",
+      "stage": "Child",
+      "spriteFile": "Sunarizamon"
+    },
+    {
+      "id": "swimmon",
+      "displayName": "Swimmon",
+      "stage": "Child",
+      "spriteFile": "Swimmon"
+    },
+    {
+      "id": "takinmon",
+      "displayName": "Takinmon",
+      "stage": "Child",
+      "spriteFile": "Takinmon"
+    },
+    {
+      "id": "tentomon",
+      "displayName": "Tentomon",
+      "stage": "Child",
+      "spriteFile": "Tentomon"
+    },
+    {
+      "id": "terriermon",
+      "displayName": "Terriermon",
+      "stage": "Child",
+      "spriteFile": "Terriermon"
+    },
+    {
+      "id": "terriermon_x",
+      "displayName": "Terriermon X",
+      "stage": "Child",
+      "spriteFile": "Terriermon_X",
+      "variant": "X"
+    },
+    {
+      "id": "tinkermon",
+      "displayName": "Tinkermon",
+      "stage": "Child",
+      "spriteFile": "Tinkermon"
+    },
+    {
+      "id": "toyagumon",
+      "displayName": "ToyAgumon",
+      "stage": "Child",
+      "spriteFile": "ToyAgumon"
+    },
+    {
+      "id": "toyagumon_black",
+      "displayName": "ToyAgumon Black",
+      "stage": "Child",
+      "spriteFile": "ToyAgumon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "tsukaimon",
+      "displayName": "Tsukaimon",
+      "stage": "Child",
+      "spriteFile": "Tsukaimon"
+    },
+    {
+      "id": "tyumon",
+      "displayName": "Tyumon",
+      "stage": "Child",
+      "spriteFile": "Tyumon",
+      "dexOnly": true
+    },
+    {
+      "id": "v-mon",
+      "displayName": "V-mon",
+      "stage": "Child",
+      "spriteFile": "V-mon"
+    },
+    {
+      "id": "vorvomon",
+      "displayName": "Vorvomon",
+      "stage": "Child",
+      "spriteFile": "Vorvomon"
+    },
+    {
+      "id": "wankomon",
+      "displayName": "Wankomon",
+      "stage": "Child",
+      "spriteFile": "Wankomon"
+    },
+    {
+      "id": "wormmon",
+      "displayName": "Wormmon",
+      "stage": "Child",
+      "spriteFile": "Wormmon"
+    },
+    {
+      "id": "yukiagumon",
+      "displayName": "YukiAgumon",
+      "stage": "Child",
+      "spriteFile": "YukiAgumon"
+    },
+    {
+      "id": "zenimon",
+      "displayName": "Zenimon",
+      "stage": "Child",
+      "spriteFile": "Zenimon"
+    },
+    {
+      "id": "zubamon",
+      "displayName": "Zubamon",
+      "stage": "Child",
+      "spriteFile": "Zubamon",
+      "dexOnly": true
+    },
+    {
+      "id": "airdramon",
+      "displayName": "Airdramon",
+      "stage": "Adult",
+      "spriteFile": "Airdramon"
+    },
+    {
+      "id": "akatorimon",
+      "displayName": "Akatorimon",
+      "stage": "Adult",
+      "spriteFile": "Akatorimon"
+    },
+    {
+      "id": "algomon_adult",
+      "displayName": "Algomon",
+      "stage": "Adult",
+      "spriteFile": "Algomon_Adult"
+    },
+    {
+      "id": "allomon_x",
+      "displayName": "Allomon X",
+      "stage": "Adult",
+      "spriteFile": "Allomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "angemon",
+      "displayName": "Angemon",
+      "stage": "Adult",
+      "spriteFile": "Angemon"
+    },
+    {
+      "id": "ankylomon",
+      "displayName": "Ankylomon",
+      "stage": "Adult",
+      "spriteFile": "Ankylomon",
+      "dexOnly": true
+    },
+    {
+      "id": "aquilamon",
+      "displayName": "Aquilamon",
+      "stage": "Adult",
+      "spriteFile": "Aquilamon",
+      "dexOnly": true
+    },
+    {
+      "id": "arkadimon_adult",
+      "displayName": "Arkadimon",
+      "stage": "Adult",
+      "spriteFile": "Arkadimon_Adult",
+      "dexOnly": true
+    },
+    {
+      "id": "arresterdramon",
+      "displayName": "Arresterdramon",
+      "stage": "Adult",
+      "spriteFile": "Arresterdramon"
+    },
+    {
+      "id": "atamadekachimon",
+      "displayName": "Atamadekachimon",
+      "stage": "Adult",
+      "spriteFile": "Atamadekachimon",
+      "dexOnly": true
+    },
+    {
+      "id": "baboongamon",
+      "displayName": "Baboongamon",
+      "stage": "Adult",
+      "spriteFile": "Baboongamon"
+    },
+    {
+      "id": "bakemon",
+      "displayName": "Bakemon",
+      "stage": "Adult",
+      "spriteFile": "Bakemon"
+    },
+    {
+      "id": "betelgammamon",
+      "displayName": "BetelGammamon",
+      "stage": "Adult",
+      "spriteFile": "BetelGammamon"
+    },
+    {
+      "id": "birdramon",
+      "displayName": "Birdramon",
+      "stage": "Adult",
+      "spriteFile": "Birdramon"
+    },
+    {
+      "id": "blackgalgomon",
+      "displayName": "BlackGalgomon",
+      "stage": "Adult",
+      "spriteFile": "BlackGalgomon"
+    },
+    {
+      "id": "blackgaogamon",
+      "displayName": "BlackGaogamon",
+      "stage": "Adult",
+      "spriteFile": "BlackGaogamon"
+    },
+    {
+      "id": "blackgrowmon",
+      "displayName": "BlackGrowmon",
+      "stage": "Adult",
+      "spriteFile": "BlackGrowmon"
+    },
+    {
+      "id": "blacktailmon",
+      "displayName": "BlackTailmon",
+      "stage": "Adult",
+      "spriteFile": "BlackTailmon"
+    },
+    {
+      "id": "boarmon",
+      "displayName": "Boarmon",
+      "stage": "Adult",
+      "spriteFile": "Boarmon",
+      "dexOnly": true
+    },
+    {
+      "id": "bullmon",
+      "displayName": "Bullmon",
+      "stage": "Adult",
+      "spriteFile": "Bullmon",
+      "dexOnly": true
+    },
+    {
+      "id": "burgermon_mama",
+      "displayName": "Burgermon Mama",
+      "stage": "Adult",
+      "spriteFile": "Burgermon_Mama"
+    },
+    {
+      "id": "burgermon_papa",
+      "displayName": "Burgermon Papa",
+      "stage": "Adult",
+      "spriteFile": "Burgermon_Papa"
+    },
+    {
+      "id": "centalmon",
+      "displayName": "Centalmon",
+      "stage": "Adult",
+      "spriteFile": "Centalmon"
+    },
+    {
+      "id": "centaurmon",
+      "displayName": "Centaurmon",
+      "stage": "Adult",
+      "spriteFile": "Centaurmon",
+      "dexOnly": true
+    },
+    {
+      "id": "chamblemon",
+      "displayName": "Chamblemon",
+      "stage": "Adult",
+      "spriteFile": "Chamblemon"
+    },
+    {
+      "id": "clockmon",
+      "displayName": "Clockmon",
+      "stage": "Adult",
+      "spriteFile": "Clockmon"
+    },
+    {
+      "id": "cockatrimon",
+      "displayName": "Cockatrimon",
+      "stage": "Adult",
+      "spriteFile": "Cockatrimon"
+    },
+    {
+      "id": "coelamon",
+      "displayName": "Coelamon",
+      "stage": "Adult",
+      "spriteFile": "Coelamon"
+    },
+    {
+      "id": "coredramon_blue",
+      "displayName": "Coredramon Blue",
+      "stage": "Adult",
+      "spriteFile": "Coredramon_Blue",
+      "variant": "Blue"
+    },
+    {
+      "id": "coredramon_green",
+      "displayName": "Coredramon Green",
+      "stage": "Adult",
+      "spriteFile": "Coredramon_Green"
+    },
+    {
+      "id": "cyclomon",
+      "displayName": "Cyclomon",
+      "stage": "Adult",
+      "spriteFile": "Cyclomon"
+    },
+    {
+      "id": "damemon",
+      "displayName": "Damemon",
+      "stage": "Adult",
+      "spriteFile": "Damemon"
+    },
+    {
+      "id": "darcmon",
+      "displayName": "dArcmon",
+      "stage": "Adult",
+      "spriteFile": "dArcmon",
+      "dexOnly": true
+    },
+    {
+      "id": "darklizamon",
+      "displayName": "DarkLizamon",
+      "stage": "Adult",
+      "spriteFile": "DarkLizamon"
+    },
+    {
+      "id": "darktyrannomon",
+      "displayName": "DarkTyrannomon",
+      "stage": "Adult",
+      "spriteFile": "DarkTyrannomon",
+      "dexOnly": true
+    },
+    {
+      "id": "darktyrannomon_x",
+      "displayName": "DarkTyrannomon X",
+      "stage": "Adult",
+      "spriteFile": "DarkTyrannomon_X",
+      "variant": "X",
+      "dexOnly": true
+    },
+    {
+      "id": "darktyranomon",
+      "displayName": "DarkTyranomon",
+      "stage": "Adult",
+      "spriteFile": "DarkTyranomon"
+    },
+    {
+      "id": "darktyranomon_x",
+      "displayName": "DarkTyranomon X",
+      "stage": "Adult",
+      "spriteFile": "DarkTyranomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "death-x-dorugamon",
+      "displayName": "Death-X-DORUgamon",
+      "stage": "Adult",
+      "spriteFile": "Death-X-DORUgamon"
+    },
+    {
+      "id": "deckerdramon",
+      "displayName": "Deckerdramon",
+      "stage": "Adult",
+      "spriteFile": "Deckerdramon"
+    },
+    {
+      "id": "deltamon",
+      "displayName": "Deltamon",
+      "stage": "Adult",
+      "spriteFile": "Deltamon"
+    },
+    {
+      "id": "devidramon",
+      "displayName": "Devidramon",
+      "stage": "Adult",
+      "spriteFile": "Devidramon"
+    },
+    {
+      "id": "devimon",
+      "displayName": "Devimon",
+      "stage": "Adult",
+      "spriteFile": "Devimon"
+    },
+    {
+      "id": "diginorimon",
+      "displayName": "Diginorimon",
+      "stage": "Adult",
+      "spriteFile": "Diginorimon"
+    },
+    {
+      "id": "dinohumon",
+      "displayName": "Dinohumon",
+      "stage": "Adult",
+      "spriteFile": "Dinohumon"
+    },
+    {
+      "id": "dobermon",
+      "displayName": "Dobermon",
+      "stage": "Adult",
+      "spriteFile": "Dobermon"
+    },
+    {
+      "id": "dogmon",
+      "displayName": "Dogmon",
+      "stage": "Adult",
+      "spriteFile": "Dogmon"
+    },
+    {
+      "id": "dokugumon",
+      "displayName": "Dokugumon",
+      "stage": "Adult",
+      "spriteFile": "Dokugumon"
+    },
+    {
+      "id": "dondokomon",
+      "displayName": "Dondokomon",
+      "stage": "Adult",
+      "spriteFile": "Dondokomon",
+      "dexOnly": true
+    },
+    {
+      "id": "dorugamon",
+      "displayName": "DORUgamon",
+      "stage": "Adult",
+      "spriteFile": "DORUgamon"
+    },
+    {
+      "id": "dorulumon",
+      "displayName": "Dorulumon",
+      "stage": "Adult",
+      "spriteFile": "Dorulumon"
+    },
+    {
+      "id": "drimogemon",
+      "displayName": "Drimogemon",
+      "stage": "Adult",
+      "spriteFile": "Drimogemon"
+    },
+    {
+      "id": "ebidramon",
+      "displayName": "Ebidramon",
+      "stage": "Adult",
+      "spriteFile": "Ebidramon"
+    },
+    {
+      "id": "evilmon",
+      "displayName": "Evilmon",
+      "stage": "Adult",
+      "spriteFile": "Evilmon",
+      "dexOnly": true
+    },
+    {
+      "id": "filmon",
+      "displayName": "Filmon",
+      "stage": "Adult",
+      "spriteFile": "Filmon"
+    },
+    {
+      "id": "firamon",
+      "displayName": "Firamon",
+      "stage": "Adult",
+      "spriteFile": "Firamon"
+    },
+    {
+      "id": "flarelizamon",
+      "displayName": "FlareLizamon",
+      "stage": "Adult",
+      "spriteFile": "FlareLizamon"
+    },
+    {
+      "id": "flymon",
+      "displayName": "Flymon",
+      "stage": "Adult",
+      "spriteFile": "Flymon",
+      "dexOnly": true
+    },
+    {
+      "id": "fugamon",
+      "displayName": "Fugamon",
+      "stage": "Adult",
+      "spriteFile": "Fugamon"
+    },
+    {
+      "id": "galemon",
+      "displayName": "Galemon",
+      "stage": "Adult",
+      "spriteFile": "Galemon"
+    },
+    {
+      "id": "galgomon",
+      "displayName": "Galgomon",
+      "stage": "Adult",
+      "spriteFile": "Galgomon"
+    },
+    {
+      "id": "ganimon_x",
+      "displayName": "Ganimon X",
+      "stage": "Adult",
+      "spriteFile": "Ganimon_X",
+      "variant": "X",
+      "dexOnly": true
+    },
+    {
+      "id": "gaogamon",
+      "displayName": "Gaogamon",
+      "stage": "Adult",
+      "spriteFile": "Gaogamon"
+    },
+    {
+      "id": "garurumon",
+      "displayName": "Garurumon",
+      "stage": "Adult",
+      "spriteFile": "Garurumon"
+    },
+    {
+      "id": "garurumon_black",
+      "displayName": "Garurumon Black",
+      "stage": "Adult",
+      "spriteFile": "Garurumon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "gawappamon",
+      "displayName": "Gawappamon",
+      "stage": "Adult",
+      "spriteFile": "Gawappamon"
+    },
+    {
+      "id": "gekomon",
+      "displayName": "Gekomon",
+      "stage": "Adult",
+      "spriteFile": "Gekomon"
+    },
+    {
+      "id": "geogreymon",
+      "displayName": "GeoGreymon",
+      "stage": "Adult",
+      "spriteFile": "GeoGreymon"
+    },
+    {
+      "id": "geremon",
+      "displayName": "Geremon",
+      "stage": "Adult",
+      "spriteFile": "Geremon"
+    },
+    {
+      "id": "gesomon",
+      "displayName": "Gesomon",
+      "stage": "Adult",
+      "spriteFile": "Gesomon"
+    },
+    {
+      "id": "ginkakumon",
+      "displayName": "Ginkakumon",
+      "stage": "Adult",
+      "spriteFile": "Ginkakumon"
+    },
+    {
+      "id": "ginryumon",
+      "displayName": "Ginryumon",
+      "stage": "Adult",
+      "spriteFile": "Ginryumon"
+    },
+    {
+      "id": "gokimon",
+      "displayName": "Gokimon",
+      "stage": "Adult",
+      "spriteFile": "Gokimon"
+    },
+    {
+      "id": "gold_v-dramon",
+      "displayName": "Gold V-dramon",
+      "stage": "Adult",
+      "spriteFile": "Gold_V-dramon",
+      "dexOnly": true
+    },
+    {
+      "id": "goldnumemon",
+      "displayName": "GoldNumemon",
+      "stage": "Adult",
+      "spriteFile": "GoldNumemon"
+    },
+    {
+      "id": "golemon",
+      "displayName": "Golemon",
+      "stage": "Adult",
+      "spriteFile": "Golemon",
+      "dexOnly": true
+    },
+    {
+      "id": "gorimon",
+      "displayName": "Gorimon",
+      "stage": "Adult",
+      "spriteFile": "Gorimon",
+      "dexOnly": true
+    },
+    {
+      "id": "greymon",
+      "displayName": "Greymon",
+      "stage": "Adult",
+      "spriteFile": "Greymon"
+    },
+    {
+      "id": "greymon_2010",
+      "displayName": "Greymon 2010",
+      "stage": "Adult",
+      "spriteFile": "Greymon_2010",
+      "variant": "2010"
+    },
+    {
+      "id": "greymon_blue",
+      "displayName": "Greymon Blue",
+      "stage": "Adult",
+      "spriteFile": "Greymon_Blue",
+      "variant": "Blue"
+    },
+    {
+      "id": "greymon_x",
+      "displayName": "Greymon X",
+      "stage": "Adult",
+      "spriteFile": "Greymon_X",
+      "variant": "X"
+    },
+    {
+      "id": "growmon",
+      "displayName": "Growmon",
+      "stage": "Adult",
+      "spriteFile": "Growmon"
+    },
+    {
+      "id": "growmon_orange",
+      "displayName": "Growmon Orange",
+      "stage": "Adult",
+      "spriteFile": "Growmon_Orange"
+    },
+    {
+      "id": "growmon_x",
+      "displayName": "Growmon X",
+      "stage": "Adult",
+      "spriteFile": "Growmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gryzmon",
+      "displayName": "Gryzmon",
+      "stage": "Adult",
+      "spriteFile": "Gryzmon"
+    },
+    {
+      "id": "guardromon",
+      "displayName": "Guardromon",
+      "stage": "Adult",
+      "spriteFile": "Guardromon"
+    },
+    {
+      "id": "guardromon_gold",
+      "displayName": "Guardromon Gold",
+      "stage": "Adult",
+      "spriteFile": "Guardromon_Gold"
+    },
+    {
+      "id": "gulusgammamon",
+      "displayName": "GulusGammamon",
+      "stage": "Adult",
+      "spriteFile": "GulusGammamon"
+    },
+    {
+      "id": "gururumon",
+      "displayName": "Gururumon",
+      "stage": "Adult",
+      "spriteFile": "Gururumon"
+    },
+    {
+      "id": "hakubamon",
+      "displayName": "Hakubamon",
+      "stage": "Adult",
+      "spriteFile": "Hakubamon"
+    },
+    {
+      "id": "hanumon",
+      "displayName": "Hanumon",
+      "stage": "Adult",
+      "spriteFile": "Hanumon"
+    },
+    {
+      "id": "hi-commandramon",
+      "displayName": "Hi-Commandramon",
+      "stage": "Adult",
+      "spriteFile": "Hi-Commandramon"
+    },
+    {
+      "id": "hookmon",
+      "displayName": "Hookmon",
+      "stage": "Adult",
+      "spriteFile": "Hookmon"
+    },
+    {
+      "id": "hudiemon",
+      "displayName": "Hudiemon",
+      "stage": "Adult",
+      "spriteFile": "Hudiemon",
+      "dexOnly": true
+    },
+    {
+      "id": "hyougamon",
+      "displayName": "Hyougamon",
+      "stage": "Adult",
+      "spriteFile": "Hyougamon"
+    },
+    {
+      "id": "icedevimon",
+      "displayName": "IceDevimon",
+      "stage": "Adult",
+      "spriteFile": "IceDevimon"
+    },
+    {
+      "id": "icemon",
+      "displayName": "Icemon",
+      "stage": "Adult",
+      "spriteFile": "Icemon"
+    },
+    {
+      "id": "igamon",
+      "displayName": "Igamon",
+      "stage": "Adult",
+      "spriteFile": "Igamon"
+    },
+    {
+      "id": "ikkakumon",
+      "displayName": "Ikkakumon",
+      "stage": "Adult",
+      "spriteFile": "Ikkakumon"
+    },
+    {
+      "id": "jazardmon",
+      "displayName": "Jazardmon",
+      "stage": "Adult",
+      "spriteFile": "Jazardmon"
+    },
+    {
+      "id": "junglemojyamon",
+      "displayName": "JungleMojyamon",
+      "stage": "Adult",
+      "spriteFile": "JungleMojyamon"
+    },
+    {
+      "id": "kabuterimon",
+      "displayName": "Kabuterimon",
+      "stage": "Adult",
+      "spriteFile": "Kabuterimon"
+    },
+    {
+      "id": "karatsukinumemon",
+      "displayName": "KaratsukiNumemon",
+      "stage": "Adult",
+      "spriteFile": "KaratsukiNumemon"
+    },
+    {
+      "id": "kausgammamon",
+      "displayName": "KausGammamon",
+      "stage": "Adult",
+      "spriteFile": "KausGammamon"
+    },
+    {
+      "id": "kinkakumon",
+      "displayName": "Kinkakumon",
+      "stage": "Adult",
+      "spriteFile": "Kinkakumon"
+    },
+    {
+      "id": "kiwimon",
+      "displayName": "Kiwimon",
+      "stage": "Adult",
+      "spriteFile": "Kiwimon"
+    },
+    {
+      "id": "kokeshimon",
+      "displayName": "Kokeshimon",
+      "stage": "Adult",
+      "spriteFile": "Kokeshimon"
+    },
+    {
+      "id": "kougamon",
+      "displayName": "Kougamon",
+      "stage": "Adult",
+      "spriteFile": "Kougamon"
+    },
+    {
+      "id": "kuwagamon",
+      "displayName": "Kuwagamon",
+      "stage": "Adult",
+      "spriteFile": "Kuwagamon"
+    },
+    {
+      "id": "kuwagamon_x",
+      "displayName": "Kuwagamon X",
+      "stage": "Adult",
+      "spriteFile": "Kuwagamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "kyubimon",
+      "displayName": "Kyubimon",
+      "stage": "Adult",
+      "spriteFile": "Kyubimon"
+    },
+    {
+      "id": "kyubimon_silver",
+      "displayName": "Kyubimon Silver",
+      "stage": "Adult",
+      "spriteFile": "Kyubimon_Silver"
+    },
+    {
+      "id": "lavorvomon",
+      "displayName": "Lavorvomon",
+      "stage": "Adult",
+      "spriteFile": "Lavorvomon"
+    },
+    {
+      "id": "lekismon",
+      "displayName": "Lekismon",
+      "stage": "Adult",
+      "spriteFile": "Lekismon"
+    },
+    {
+      "id": "leomon",
+      "displayName": "Leomon",
+      "stage": "Adult",
+      "spriteFile": "Leomon"
+    },
+    {
+      "id": "leomon_x",
+      "displayName": "Leomon X",
+      "stage": "Adult",
+      "spriteFile": "Leomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "lianpumon",
+      "displayName": "Lianpumon",
+      "stage": "Adult",
+      "spriteFile": "Lianpumon"
+    },
+    {
+      "id": "loogarmon",
+      "displayName": "Loogarmon",
+      "stage": "Adult",
+      "spriteFile": "Loogarmon"
+    },
+    {
+      "id": "machmon",
+      "displayName": "Machmon",
+      "stage": "Adult",
+      "spriteFile": "Machmon",
+      "dexOnly": true
+    },
+    {
+      "id": "madleomon",
+      "displayName": "MadLeomon",
+      "stage": "Adult",
+      "spriteFile": "MadLeomon"
+    },
+    {
+      "id": "manekimon",
+      "displayName": "Manekimon",
+      "stage": "Adult",
+      "spriteFile": "Manekimon"
+    },
+    {
+      "id": "mantaraymon_x",
+      "displayName": "Mantaraymon X",
+      "stage": "Adult",
+      "spriteFile": "Mantaraymon_X",
+      "variant": "X"
+    },
+    {
+      "id": "mechanorimon",
+      "displayName": "Mechanorimon",
+      "stage": "Adult",
+      "spriteFile": "Mechanorimon"
+    },
+    {
+      "id": "meicoomon",
+      "displayName": "Meicoomon",
+      "stage": "Adult",
+      "spriteFile": "Meicoomon"
+    },
+    {
+      "id": "meramon",
+      "displayName": "Meramon",
+      "stage": "Adult",
+      "spriteFile": "Meramon"
+    },
+    {
+      "id": "meramon_x",
+      "displayName": "Meramon X",
+      "stage": "Adult",
+      "spriteFile": "Meramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "mikemon",
+      "displayName": "Mikemon",
+      "stage": "Adult",
+      "spriteFile": "Mikemon"
+    },
+    {
+      "id": "mimicmon",
+      "displayName": "Mimicmon",
+      "stage": "Adult",
+      "spriteFile": "Mimicmon"
+    },
+    {
+      "id": "minotaurmon",
+      "displayName": "Minotaurmon",
+      "stage": "Adult",
+      "spriteFile": "Minotaurmon"
+    },
+    {
+      "id": "mojyamon",
+      "displayName": "Mojyamon",
+      "stage": "Adult",
+      "spriteFile": "Mojyamon"
+    },
+    {
+      "id": "monochromon",
+      "displayName": "Monochromon",
+      "stage": "Adult",
+      "spriteFile": "Monochromon"
+    },
+    {
+      "id": "monochromon_x",
+      "displayName": "Monochromon X",
+      "stage": "Adult",
+      "spriteFile": "Monochromon_X",
+      "variant": "X"
+    },
+    {
+      "id": "morishellmon",
+      "displayName": "MoriShellmon",
+      "stage": "Adult",
+      "spriteFile": "MoriShellmon"
+    },
+    {
+      "id": "musyamon",
+      "displayName": "Musyamon",
+      "stage": "Adult",
+      "spriteFile": "Musyamon"
+    },
+    {
+      "id": "nanimon",
+      "displayName": "Nanimon",
+      "stage": "Adult",
+      "spriteFile": "Nanimon",
+      "dexOnly": true
+    },
+    {
+      "id": "nefertimon_x",
+      "displayName": "Nefertimon X",
+      "stage": "Adult",
+      "spriteFile": "Nefertimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "nisedrimogemon",
+      "displayName": "NiseDrimogemon",
+      "stage": "Adult",
+      "spriteFile": "NiseDrimogemon"
+    },
+    {
+      "id": "numemon",
+      "displayName": "Numemon",
+      "stage": "Adult",
+      "spriteFile": "Numemon"
+    },
+    {
+      "id": "numemon_x",
+      "displayName": "Numemon X",
+      "stage": "Adult",
+      "spriteFile": "Numemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "octmon",
+      "displayName": "Octmon",
+      "stage": "Adult",
+      "spriteFile": "Octmon"
+    },
+    {
+      "id": "octomon",
+      "displayName": "Octomon",
+      "stage": "Adult",
+      "spriteFile": "Octomon",
+      "dexOnly": true
+    },
+    {
+      "id": "ogremon",
+      "displayName": "Ogremon",
+      "stage": "Adult",
+      "spriteFile": "Ogremon"
+    },
+    {
+      "id": "ogremon_x",
+      "displayName": "Ogremon X",
+      "stage": "Adult",
+      "spriteFile": "Ogremon_X",
+      "variant": "X"
+    },
+    {
+      "id": "omekamon",
+      "displayName": "Omekamon",
+      "stage": "Adult",
+      "spriteFile": "Omekamon"
+    },
+    {
+      "id": "paledramon",
+      "displayName": "Paledramon",
+      "stage": "Adult",
+      "spriteFile": "Paledramon"
+    },
+    {
+      "id": "parasaurmon",
+      "displayName": "Parasaurmon",
+      "stage": "Adult",
+      "spriteFile": "Parasaurmon"
+    },
+    {
+      "id": "peckmon",
+      "displayName": "Peckmon",
+      "stage": "Adult",
+      "spriteFile": "Peckmon"
+    },
+    {
+      "id": "pegasmon_x",
+      "displayName": "Pegasmon X",
+      "stage": "Adult",
+      "spriteFile": "Pegasmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "pidmon",
+      "displayName": "Pidmon",
+      "stage": "Adult",
+      "spriteFile": "Pidmon"
+    },
+    {
+      "id": "platinumscumon",
+      "displayName": "PlatinumScumon",
+      "stage": "Adult",
+      "spriteFile": "PlatinumScumon"
+    },
+    {
+      "id": "porcupamon",
+      "displayName": "Porcupamon",
+      "stage": "Adult",
+      "spriteFile": "Porcupamon"
+    },
+    {
+      "id": "pteranomon_x",
+      "displayName": "Pteranomon X",
+      "stage": "Adult",
+      "spriteFile": "Pteranomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "raptordramon",
+      "displayName": "Raptordramon",
+      "stage": "Adult",
+      "spriteFile": "Raptordramon"
+    },
+    {
+      "id": "raremon",
+      "displayName": "Raremon",
+      "stage": "Adult",
+      "spriteFile": "Raremon"
+    },
+    {
+      "id": "redv-dramon",
+      "displayName": "RedV-dramon",
+      "stage": "Adult",
+      "spriteFile": "RedV-dramon"
+    },
+    {
+      "id": "redvegimon",
+      "displayName": "RedVegimon",
+      "stage": "Adult",
+      "spriteFile": "RedVegimon"
+    },
+    {
+      "id": "reppamon",
+      "displayName": "Reppamon",
+      "stage": "Adult",
+      "spriteFile": "Reppamon"
+    },
+    {
+      "id": "revolmon",
+      "displayName": "Revolmon",
+      "stage": "Adult",
+      "spriteFile": "Revolmon"
+    },
+    {
+      "id": "rhinomon_x",
+      "displayName": "Rhinomon X",
+      "stage": "Adult",
+      "spriteFile": "Rhinomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "rukamon",
+      "displayName": "Rukamon",
+      "stage": "Adult",
+      "spriteFile": "Rukamon"
+    },
+    {
+      "id": "saberdramon",
+      "displayName": "Saberdramon",
+      "stage": "Adult",
+      "spriteFile": "Saberdramon"
+    },
+    {
+      "id": "sandyanmamon",
+      "displayName": "SandYanmamon",
+      "stage": "Adult",
+      "spriteFile": "SandYanmamon"
+    },
+    {
+      "id": "sangloupmon",
+      "displayName": "Sangloupmon",
+      "stage": "Adult",
+      "spriteFile": "Sangloupmon"
+    },
+    {
+      "id": "scumon",
+      "displayName": "Scumon",
+      "stage": "Adult",
+      "spriteFile": "Scumon"
+    },
+    {
+      "id": "seadramon",
+      "displayName": "Seadramon",
+      "stage": "Adult",
+      "spriteFile": "Seadramon"
+    },
+    {
+      "id": "seadramon_x",
+      "displayName": "Seadramon X",
+      "stage": "Adult",
+      "spriteFile": "Seadramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "sealsdramon",
+      "displayName": "Sealsdramon",
+      "stage": "Adult",
+      "spriteFile": "Sealsdramon",
+      "dexOnly": true
+    },
+    {
+      "id": "shellmon",
+      "displayName": "Shellmon",
+      "stage": "Adult",
+      "spriteFile": "Shellmon"
+    },
+    {
+      "id": "shimaunimon",
+      "displayName": "ShimaUnimon",
+      "stage": "Adult",
+      "spriteFile": "ShimaUnimon"
+    },
+    {
+      "id": "shoutmon_king",
+      "displayName": "Shoutmon King",
+      "stage": "Adult",
+      "spriteFile": "Shoutmon_King"
+    },
+    {
+      "id": "siesamon",
+      "displayName": "Siesamon",
+      "stage": "Adult",
+      "spriteFile": "Siesamon"
+    },
+    {
+      "id": "siesamon_x",
+      "displayName": "Siesamon X",
+      "stage": "Adult",
+      "spriteFile": "Siesamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "sorcerymon",
+      "displayName": "Sorcerymon",
+      "stage": "Adult",
+      "spriteFile": "Sorcerymon"
+    },
+    {
+      "id": "soulmon",
+      "displayName": "Soulmon",
+      "stage": "Adult",
+      "spriteFile": "Soulmon"
+    },
+    {
+      "id": "sparrowmon",
+      "displayName": "Sparrowmon",
+      "stage": "Adult",
+      "spriteFile": "Sparrowmon",
+      "dexOnly": true
+    },
+    {
+      "id": "starmon",
+      "displayName": "Starmon",
+      "stage": "Adult",
+      "spriteFile": "Starmon"
+    },
+    {
+      "id": "stingmon",
+      "displayName": "Stingmon",
+      "stage": "Adult",
+      "spriteFile": "Stingmon",
+      "dexOnly": true
+    },
+    {
+      "id": "stingmon_black",
+      "displayName": "Stingmon Black",
+      "stage": "Adult",
+      "spriteFile": "Stingmon_Black",
+      "variant": "Black",
+      "dexOnly": true
+    },
+    {
+      "id": "strikedramon",
+      "displayName": "Strikedramon",
+      "stage": "Adult",
+      "spriteFile": "Strikedramon",
+      "dexOnly": true
+    },
+    {
+      "id": "sunflowmon",
+      "displayName": "Sunflowmon",
+      "stage": "Adult",
+      "spriteFile": "Sunflowmon"
+    },
+    {
+      "id": "symbareangoramon",
+      "displayName": "SymbareAngoramon",
+      "stage": "Adult",
+      "spriteFile": "SymbareAngoramon"
+    },
+    {
+      "id": "tailmon",
+      "displayName": "Tailmon",
+      "stage": "Adult",
+      "spriteFile": "Tailmon"
+    },
+    {
+      "id": "tailmon_x",
+      "displayName": "Tailmon X",
+      "stage": "Adult",
+      "spriteFile": "Tailmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "tankmon",
+      "displayName": "Tankmon",
+      "stage": "Adult",
+      "spriteFile": "Tankmon"
+    },
+    {
+      "id": "targetmon",
+      "displayName": "Targetmon",
+      "stage": "Adult",
+      "spriteFile": "Targetmon"
+    },
+    {
+      "id": "tenkomon",
+      "displayName": "Tenkomon",
+      "stage": "Adult",
+      "spriteFile": "Tenkomon"
+    },
+    {
+      "id": "teslajellymon",
+      "displayName": "TeslaJellymon",
+      "stage": "Adult",
+      "spriteFile": "TeslaJellymon"
+    },
+    {
+      "id": "thunderballmon",
+      "displayName": "Thunderballmon",
+      "stage": "Adult",
+      "spriteFile": "Thunderballmon"
+    },
+    {
+      "id": "tialudomon",
+      "displayName": "TiaLudomon",
+      "stage": "Adult",
+      "spriteFile": "TiaLudomon"
+    },
+    {
+      "id": "tobiumon",
+      "displayName": "Tobiumon",
+      "stage": "Adult",
+      "spriteFile": "Tobiumon"
+    },
+    {
+      "id": "tobucatmon",
+      "displayName": "Tobucatmon",
+      "stage": "Adult",
+      "spriteFile": "Tobucatmon"
+    },
+    {
+      "id": "togemon",
+      "displayName": "Togemon",
+      "stage": "Adult",
+      "spriteFile": "Togemon"
+    },
+    {
+      "id": "togemon_x",
+      "displayName": "Togemon X",
+      "stage": "Adult",
+      "spriteFile": "Togemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "toropiamon",
+      "displayName": "Toropiamon",
+      "stage": "Adult",
+      "spriteFile": "Toropiamon",
+      "dexOnly": true
+    },
+    {
+      "id": "tortamon",
+      "displayName": "Tortamon",
+      "stage": "Adult",
+      "spriteFile": "Tortamon"
+    },
+    {
+      "id": "troopmon",
+      "displayName": "Troopmon",
+      "stage": "Adult",
+      "spriteFile": "Troopmon"
+    },
+    {
+      "id": "tsuchidarumon",
+      "displayName": "Tsuchidarumon",
+      "stage": "Adult",
+      "spriteFile": "Tsuchidarumon"
+    },
+    {
+      "id": "turuiemon",
+      "displayName": "Turuiemon",
+      "stage": "Adult",
+      "spriteFile": "Turuiemon"
+    },
+    {
+      "id": "tuskmon",
+      "displayName": "Tuskmon",
+      "stage": "Adult",
+      "spriteFile": "Tuskmon"
+    },
+    {
+      "id": "tylomon_x",
+      "displayName": "Tylomon X",
+      "stage": "Adult",
+      "spriteFile": "Tylomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "tyrannomon",
+      "displayName": "Tyrannomon",
+      "stage": "Adult",
+      "spriteFile": "Tyrannomon"
+    },
+    {
+      "id": "tyrannomon_x",
+      "displayName": "Tyrannomon X",
+      "stage": "Adult",
+      "spriteFile": "Tyrannomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "unimon",
+      "displayName": "Unimon",
+      "stage": "Adult",
+      "spriteFile": "Unimon"
+    },
+    {
+      "id": "v-dramon",
+      "displayName": "V-dramon",
+      "stage": "Adult",
+      "spriteFile": "V-dramon"
+    },
+    {
+      "id": "v-dramon_black",
+      "displayName": "V-dramon Black",
+      "stage": "Adult",
+      "spriteFile": "V-dramon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "vegimon",
+      "displayName": "Vegimon",
+      "stage": "Adult",
+      "spriteFile": "Vegimon"
+    },
+    {
+      "id": "waspmon",
+      "displayName": "Waspmon",
+      "stage": "Adult",
+      "spriteFile": "Waspmon"
+    },
+    {
+      "id": "wezengammamon",
+      "displayName": "WezenGammamon",
+      "stage": "Adult",
+      "spriteFile": "WezenGammamon"
+    },
+    {
+      "id": "witchmon",
+      "displayName": "Witchmon",
+      "stage": "Adult",
+      "spriteFile": "Witchmon"
+    },
+    {
+      "id": "wizarmon",
+      "displayName": "Wizarmon",
+      "stage": "Adult",
+      "spriteFile": "Wizarmon"
+    },
+    {
+      "id": "wizarmon_x",
+      "displayName": "Wizarmon X",
+      "stage": "Adult",
+      "spriteFile": "Wizarmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "woodmon",
+      "displayName": "Woodmon",
+      "stage": "Adult",
+      "spriteFile": "Woodmon"
+    },
+    {
+      "id": "xiquemon",
+      "displayName": "Xiquemon",
+      "stage": "Adult",
+      "spriteFile": "Xiquemon"
+    },
+    {
+      "id": "xv-mon",
+      "displayName": "XV-mon",
+      "stage": "Adult",
+      "spriteFile": "XV-mon"
+    },
+    {
+      "id": "xv-mon_black",
+      "displayName": "XV-mon Black",
+      "stage": "Adult",
+      "spriteFile": "XV-mon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "yanmamon",
+      "displayName": "Yanmamon",
+      "stage": "Adult",
+      "spriteFile": "Yanmamon"
+    },
+    {
+      "id": "youkomon",
+      "displayName": "Youkomon",
+      "stage": "Adult",
+      "spriteFile": "Youkomon"
+    },
+    {
+      "id": "yukidarumon",
+      "displayName": "Yukidarumon",
+      "stage": "Adult",
+      "spriteFile": "Yukidarumon"
+    },
+    {
+      "id": "zassoumon",
+      "displayName": "Zassoumon",
+      "stage": "Adult",
+      "spriteFile": "Zassoumon"
+    },
+    {
+      "id": "zubaeagermon",
+      "displayName": "Zubaeagermon",
+      "stage": "Adult",
+      "spriteFile": "Zubaeagermon",
+      "dexOnly": true
+    },
+    {
+      "id": "aerov-dramon",
+      "displayName": "AeroV-dramon",
+      "stage": "Perfect",
+      "spriteFile": "AeroV-dramon"
+    },
+    {
+      "id": "andiramon_data",
+      "displayName": "Andiramon Data",
+      "stage": "Perfect",
+      "spriteFile": "Andiramon_Data"
+    },
+    {
+      "id": "andiramon_virus",
+      "displayName": "Andiramon Virus",
+      "stage": "Perfect",
+      "spriteFile": "Andiramon_Virus",
+      "variant": "Virus"
+    },
+    {
+      "id": "andromon",
+      "displayName": "Andromon",
+      "stage": "Perfect",
+      "spriteFile": "Andromon"
+    },
+    {
+      "id": "angewomon",
+      "displayName": "Angewomon",
+      "stage": "Perfect",
+      "spriteFile": "Angewomon"
+    },
+    {
+      "id": "angewomon_x",
+      "displayName": "Angewomon X",
+      "stage": "Perfect",
+      "spriteFile": "Angewomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "anomalocarimon",
+      "displayName": "Anomalocarimon",
+      "stage": "Perfect",
+      "spriteFile": "Anomalocarimon"
+    },
+    {
+      "id": "anomalocarimon_x",
+      "displayName": "Anomalocarimon X",
+      "stage": "Perfect",
+      "spriteFile": "Anomalocarimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "archnemon",
+      "displayName": "Archnemon",
+      "stage": "Perfect",
+      "spriteFile": "Archnemon"
+    },
+    {
+      "id": "arkadimon_perfect",
+      "displayName": "Arkadimon",
+      "stage": "Perfect",
+      "spriteFile": "Arkadimon_Perfect",
+      "dexOnly": true
+    },
+    {
+      "id": "astamon",
+      "displayName": "Astamon",
+      "stage": "Perfect",
+      "spriteFile": "Astamon"
+    },
+    {
+      "id": "asuramon",
+      "displayName": "Asuramon",
+      "stage": "Perfect",
+      "spriteFile": "Asuramon"
+    },
+    {
+      "id": "atlurkabuterimon_blue",
+      "displayName": "AtlurKabuterimon Blue",
+      "stage": "Perfect",
+      "spriteFile": "AtlurKabuterimon_Blue",
+      "variant": "Blue"
+    },
+    {
+      "id": "atlurkabuterimon_red",
+      "displayName": "AtlurKabuterimon Red",
+      "stage": "Perfect",
+      "spriteFile": "AtlurKabuterimon_Red"
+    },
+    {
+      "id": "baalmon",
+      "displayName": "Baalmon",
+      "stage": "Perfect",
+      "spriteFile": "Baalmon"
+    },
+    {
+      "id": "bigmamemon",
+      "displayName": "BigMamemon",
+      "stage": "Perfect",
+      "spriteFile": "BigMamemon"
+    },
+    {
+      "id": "blackkingnumemon",
+      "displayName": "BlackKingNumemon",
+      "stage": "Perfect",
+      "spriteFile": "BlackKingNumemon"
+    },
+    {
+      "id": "blackmachgaogamon",
+      "displayName": "BlackMachGaogamon",
+      "stage": "Perfect",
+      "spriteFile": "BlackMachGaogamon"
+    },
+    {
+      "id": "blackmegalogrowmon",
+      "displayName": "BlackMegaloGrowmon",
+      "stage": "Perfect",
+      "spriteFile": "BlackMegaloGrowmon"
+    },
+    {
+      "id": "blackrapidmon",
+      "displayName": "BlackRapidmon",
+      "stage": "Perfect",
+      "spriteFile": "BlackRapidmon"
+    },
+    {
+      "id": "blossomon",
+      "displayName": "Blossomon",
+      "stage": "Perfect",
+      "spriteFile": "Blossomon"
+    },
+    {
+      "id": "bluemeramon",
+      "displayName": "BlueMeramon",
+      "stage": "Perfect",
+      "spriteFile": "BlueMeramon"
+    },
+    {
+      "id": "bombernanimon",
+      "displayName": "BomberNanimon",
+      "stage": "Perfect",
+      "spriteFile": "BomberNanimon",
+      "dexOnly": true
+    },
+    {
+      "id": "boutmon",
+      "displayName": "Boutmon",
+      "stage": "Perfect",
+      "spriteFile": "Boutmon"
+    },
+    {
+      "id": "brachimon",
+      "displayName": "Brachimon",
+      "stage": "Perfect",
+      "spriteFile": "Brachimon",
+      "dexOnly": true
+    },
+    {
+      "id": "bulkmon",
+      "displayName": "Bulkmon",
+      "stage": "Perfect",
+      "spriteFile": "Bulkmon",
+      "dexOnly": true
+    },
+    {
+      "id": "butterflymon",
+      "displayName": "Butterflymon",
+      "stage": "Perfect",
+      "spriteFile": "Butterflymon",
+      "dexOnly": true
+    },
+    {
+      "id": "cannonbeemon",
+      "displayName": "Cannonbeemon",
+      "stage": "Perfect",
+      "spriteFile": "Cannonbeemon"
+    },
+    {
+      "id": "canoweissmon",
+      "displayName": "Canoweissmon",
+      "stage": "Perfect",
+      "spriteFile": "Canoweissmon"
+    },
+    {
+      "id": "cargodramon",
+      "displayName": "Cargodramon",
+      "stage": "Perfect",
+      "spriteFile": "Cargodramon"
+    },
+    {
+      "id": "catchmamemon",
+      "displayName": "CatchMamemon",
+      "stage": "Perfect",
+      "spriteFile": "CatchMamemon"
+    },
+    {
+      "id": "caturamon",
+      "displayName": "Caturamon",
+      "stage": "Perfect",
+      "spriteFile": "Caturamon"
+    },
+    {
+      "id": "cerberumon_x",
+      "displayName": "Cerberumon X",
+      "stage": "Perfect",
+      "spriteFile": "Cerberumon_X",
+      "variant": "X"
+    },
+    {
+      "id": "chimairamon",
+      "displayName": "Chimairamon",
+      "stage": "Perfect",
+      "spriteFile": "Chimairamon"
+    },
+    {
+      "id": "chohakkaimon",
+      "displayName": "ChoHakkaimon",
+      "stage": "Perfect",
+      "spriteFile": "ChoHakkaimon"
+    },
+    {
+      "id": "chrysalimon",
+      "displayName": "Chrysalimon",
+      "stage": "Perfect",
+      "spriteFile": "Chrysalimon",
+      "dexOnly": true
+    },
+    {
+      "id": "crescemon",
+      "displayName": "Crescemon",
+      "stage": "Perfect",
+      "spriteFile": "Crescemon"
+    },
+    {
+      "id": "cryspaledramon",
+      "displayName": "CrysPaledramon",
+      "stage": "Perfect",
+      "spriteFile": "CrysPaledramon"
+    },
+    {
+      "id": "cyberdramon",
+      "displayName": "Cyberdramon",
+      "stage": "Perfect",
+      "spriteFile": "Cyberdramon"
+    },
+    {
+      "id": "cyberdramon_x",
+      "displayName": "Cyberdramon X",
+      "stage": "Perfect",
+      "spriteFile": "Cyberdramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "dagomon",
+      "displayName": "Dagomon",
+      "stage": "Perfect",
+      "spriteFile": "Dagomon"
+    },
+    {
+      "id": "darkknightmon",
+      "displayName": "DarkKnightmon",
+      "stage": "Perfect",
+      "spriteFile": "DarkKnightmon"
+    },
+    {
+      "id": "darksuperstarmon",
+      "displayName": "DarkSuperstarmon",
+      "stage": "Perfect",
+      "spriteFile": "DarkSuperstarmon"
+    },
+    {
+      "id": "darumamon",
+      "displayName": "Darumamon",
+      "stage": "Perfect",
+      "spriteFile": "Darumamon"
+    },
+    {
+      "id": "deathmeramon",
+      "displayName": "DeathMeramon",
+      "stage": "Perfect",
+      "spriteFile": "DeathMeramon"
+    },
+    {
+      "id": "delumon",
+      "displayName": "Delumon",
+      "stage": "Perfect",
+      "spriteFile": "Delumon"
+    },
+    {
+      "id": "diatrymon",
+      "displayName": "Diatrymon",
+      "stage": "Perfect",
+      "spriteFile": "Diatrymon",
+      "dexOnly": true
+    },
+    {
+      "id": "digitamamon",
+      "displayName": "Digitamamon",
+      "stage": "Perfect",
+      "spriteFile": "Digitamamon"
+    },
+    {
+      "id": "doruguremon",
+      "displayName": "DORUguremon",
+      "stage": "Perfect",
+      "spriteFile": "DORUguremon"
+    },
+    {
+      "id": "doumon",
+      "displayName": "Doumon",
+      "stage": "Perfect",
+      "spriteFile": "Doumon",
+      "dexOnly": true
+    },
+    {
+      "id": "duramon",
+      "displayName": "Duramon",
+      "stage": "Perfect",
+      "spriteFile": "Duramon"
+    },
+    {
+      "id": "entmon",
+      "displayName": "Entmon",
+      "stage": "Perfect",
+      "spriteFile": "Entmon"
+    },
+    {
+      "id": "etemon",
+      "displayName": "Etemon",
+      "stage": "Perfect",
+      "spriteFile": "Etemon"
+    },
+    {
+      "id": "ex-tyrannomon",
+      "displayName": "Ex-Tyrannomon",
+      "stage": "Perfect",
+      "spriteFile": "Ex-Tyrannomon",
+      "dexOnly": true
+    },
+    {
+      "id": "ex-tyranomon",
+      "displayName": "Ex-Tyranomon",
+      "stage": "Perfect",
+      "spriteFile": "Ex-Tyranomon"
+    },
+    {
+      "id": "fantomon",
+      "displayName": "Fantomon",
+      "stage": "Perfect",
+      "spriteFile": "Fantomon"
+    },
+    {
+      "id": "flaremon",
+      "displayName": "Flaremon",
+      "stage": "Perfect",
+      "spriteFile": "Flaremon"
+    },
+    {
+      "id": "garudamon",
+      "displayName": "Garudamon",
+      "stage": "Perfect",
+      "spriteFile": "Garudamon"
+    },
+    {
+      "id": "garudamon_x",
+      "displayName": "Garudamon X",
+      "stage": "Perfect",
+      "spriteFile": "Garudamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gerbemon",
+      "displayName": "Gerbemon",
+      "stage": "Perfect",
+      "spriteFile": "Gerbemon"
+    },
+    {
+      "id": "gigadramon",
+      "displayName": "Gigadramon",
+      "stage": "Perfect",
+      "spriteFile": "Gigadramon"
+    },
+    {
+      "id": "giromon",
+      "displayName": "Giromon",
+      "stage": "Perfect",
+      "spriteFile": "Giromon"
+    },
+    {
+      "id": "gogmamon",
+      "displayName": "Gogmamon",
+      "stage": "Perfect",
+      "spriteFile": "Gogmamon"
+    },
+    {
+      "id": "gokuwmon",
+      "displayName": "Gokuwmon",
+      "stage": "Perfect",
+      "spriteFile": "Gokuwmon"
+    },
+    {
+      "id": "grademon",
+      "displayName": "Grademon",
+      "stage": "Perfect",
+      "spriteFile": "Grademon"
+    },
+    {
+      "id": "grandgalemon",
+      "displayName": "GrandGalemon",
+      "stage": "Perfect",
+      "spriteFile": "GrandGalemon"
+    },
+    {
+      "id": "grappleomon",
+      "displayName": "Grappleomon",
+      "stage": "Perfect",
+      "spriteFile": "Grappleomon"
+    },
+    {
+      "id": "greatkingscumon",
+      "displayName": "GreatKingScumon",
+      "stage": "Perfect",
+      "spriteFile": "GreatKingScumon"
+    },
+    {
+      "id": "gusokumon",
+      "displayName": "Gusokumon",
+      "stage": "Perfect",
+      "spriteFile": "Gusokumon"
+    },
+    {
+      "id": "hangyomon",
+      "displayName": "Hangyomon",
+      "stage": "Perfect",
+      "spriteFile": "Hangyomon"
+    },
+    {
+      "id": "heavyleomon",
+      "displayName": "HeavyLeomon",
+      "stage": "Perfect",
+      "spriteFile": "HeavyLeomon",
+      "dexOnly": true
+    },
+    {
+      "id": "hippogriffomon",
+      "displayName": "Hippogriffomon",
+      "stage": "Perfect",
+      "spriteFile": "Hippogriffomon",
+      "dexOnly": true
+    },
+    {
+      "id": "hisyaryumon",
+      "displayName": "Hisyaryumon",
+      "stage": "Perfect",
+      "spriteFile": "Hisyaryumon"
+    },
+    {
+      "id": "holyangemon",
+      "displayName": "HolyAngemon",
+      "stage": "Perfect",
+      "spriteFile": "HolyAngemon"
+    },
+    {
+      "id": "huankunmon",
+      "displayName": "Huankunmon",
+      "stage": "Perfect",
+      "spriteFile": "Huankunmon"
+    },
+    {
+      "id": "indaramon",
+      "displayName": "Indaramon",
+      "stage": "Perfect",
+      "spriteFile": "Indaramon",
+      "dexOnly": true
+    },
+    {
+      "id": "infermon",
+      "displayName": "Infermon",
+      "stage": "Perfect",
+      "spriteFile": "Infermon",
+      "dexOnly": true
+    },
+    {
+      "id": "insekimon",
+      "displayName": "Insekimon",
+      "stage": "Perfect",
+      "spriteFile": "Insekimon"
+    },
+    {
+      "id": "jazarichmon",
+      "displayName": "Jazarichmon",
+      "stage": "Perfect",
+      "spriteFile": "Jazarichmon"
+    },
+    {
+      "id": "jewelbeemon",
+      "displayName": "Jewelbeemon",
+      "stage": "Perfect",
+      "spriteFile": "Jewelbeemon",
+      "dexOnly": true
+    },
+    {
+      "id": "jyagamon",
+      "displayName": "Jyagamon",
+      "stage": "Perfect",
+      "spriteFile": "Jyagamon"
+    },
+    {
+      "id": "jyureimon",
+      "displayName": "Jyureimon",
+      "stage": "Perfect",
+      "spriteFile": "Jyureimon"
+    },
+    {
+      "id": "karakurumon",
+      "displayName": "Karakurumon",
+      "stage": "Perfect",
+      "spriteFile": "Karakurumon"
+    },
+    {
+      "id": "karatenmon",
+      "displayName": "Karatenmon",
+      "stage": "Perfect",
+      "spriteFile": "Karatenmon"
+    },
+    {
+      "id": "knightmon",
+      "displayName": "Knightmon",
+      "stage": "Perfect",
+      "spriteFile": "Knightmon"
+    },
+    {
+      "id": "kumbhiramon",
+      "displayName": "Kumbhiramon",
+      "stage": "Perfect",
+      "spriteFile": "Kumbhiramon",
+      "dexOnly": true
+    },
+    {
+      "id": "ladydevimon",
+      "displayName": "LadyDevimon",
+      "stage": "Perfect",
+      "spriteFile": "LadyDevimon"
+    },
+    {
+      "id": "ladydevimon_x",
+      "displayName": "LadyDevimon X",
+      "stage": "Perfect",
+      "spriteFile": "LadyDevimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "lamortmon",
+      "displayName": "Lamortmon",
+      "stage": "Perfect",
+      "spriteFile": "Lamortmon"
+    },
+    {
+      "id": "lavogaritamon",
+      "displayName": "Lavogaritamon",
+      "stage": "Perfect",
+      "spriteFile": "Lavogaritamon"
+    },
+    {
+      "id": "lilamon",
+      "displayName": "Lilamon",
+      "stage": "Perfect",
+      "spriteFile": "Lilamon"
+    },
+    {
+      "id": "lilimon",
+      "displayName": "Lilimon",
+      "stage": "Perfect",
+      "spriteFile": "Lilimon"
+    },
+    {
+      "id": "lilimon_x",
+      "displayName": "Lilimon X",
+      "stage": "Perfect",
+      "spriteFile": "Lilimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "loaderleomon",
+      "displayName": "LoaderLeomon",
+      "stage": "Perfect",
+      "spriteFile": "LoaderLeomon",
+      "dexOnly": true
+    },
+    {
+      "id": "locomon",
+      "displayName": "Locomon",
+      "stage": "Perfect",
+      "spriteFile": "Locomon"
+    },
+    {
+      "id": "lucemon_falldown",
+      "displayName": "Lucemon Falldown",
+      "stage": "Perfect",
+      "spriteFile": "Lucemon_Falldown"
+    },
+    {
+      "id": "machgaogamon",
+      "displayName": "MachGaogamon",
+      "stage": "Perfect",
+      "spriteFile": "MachGaogamon"
+    },
+    {
+      "id": "majiramon",
+      "displayName": "Majiramon",
+      "stage": "Perfect",
+      "spriteFile": "Majiramon",
+      "dexOnly": true
+    },
+    {
+      "id": "makuramon",
+      "displayName": "Makuramon",
+      "stage": "Perfect",
+      "spriteFile": "Makuramon",
+      "dexOnly": true
+    },
+    {
+      "id": "mamemon",
+      "displayName": "Mamemon",
+      "stage": "Perfect",
+      "spriteFile": "Mamemon"
+    },
+    {
+      "id": "mamemon_x",
+      "displayName": "Mamemon X",
+      "stage": "Perfect",
+      "spriteFile": "Mamemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "mametyramon",
+      "displayName": "Mametyramon",
+      "stage": "Perfect",
+      "spriteFile": "Mametyramon"
+    },
+    {
+      "id": "mammon",
+      "displayName": "Mammon",
+      "stage": "Perfect",
+      "spriteFile": "Mammon"
+    },
+    {
+      "id": "mammon_x",
+      "displayName": "Mammon X",
+      "stage": "Perfect",
+      "spriteFile": "Mammon_X",
+      "variant": "X"
+    },
+    {
+      "id": "manticoremon",
+      "displayName": "Manticoremon",
+      "stage": "Perfect",
+      "spriteFile": "Manticoremon"
+    },
+    {
+      "id": "marinbullmon",
+      "displayName": "MarinBullmon",
+      "stage": "Perfect",
+      "spriteFile": "MarinBullmon"
+    },
+    {
+      "id": "marinchimairamon",
+      "displayName": "MarinChimairamon",
+      "stage": "Perfect",
+      "spriteFile": "MarinChimairamon"
+    },
+    {
+      "id": "marindevimon",
+      "displayName": "MarinDevimon",
+      "stage": "Perfect",
+      "spriteFile": "MarinDevimon"
+    },
+    {
+      "id": "marinedevimon",
+      "displayName": "MarineDevimon",
+      "stage": "Perfect",
+      "spriteFile": "MarineDevimon",
+      "dexOnly": true
+    },
+    {
+      "id": "matadrmon",
+      "displayName": "Matadrmon",
+      "stage": "Perfect",
+      "spriteFile": "Matadrmon",
+      "dexOnly": true
+    },
+    {
+      "id": "megadramon",
+      "displayName": "Megadramon",
+      "stage": "Perfect",
+      "spriteFile": "Megadramon"
+    },
+    {
+      "id": "megalogrowmon",
+      "displayName": "MegaloGrowmon",
+      "stage": "Perfect",
+      "spriteFile": "MegaloGrowmon"
+    },
+    {
+      "id": "megalogrowmon_orange",
+      "displayName": "MegaloGrowmon Orange",
+      "stage": "Perfect",
+      "spriteFile": "MegaloGrowmon_Orange"
+    },
+    {
+      "id": "megalogrowmon_x",
+      "displayName": "MegaloGrowmon X",
+      "stage": "Perfect",
+      "spriteFile": "MegaloGrowmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "megaseadramon",
+      "displayName": "MegaSeadramon",
+      "stage": "Perfect",
+      "spriteFile": "MegaSeadramon"
+    },
+    {
+      "id": "megaseadramon_x",
+      "displayName": "MegaSeadramon X",
+      "stage": "Perfect",
+      "spriteFile": "MegaSeadramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "meicrackmon",
+      "displayName": "Meicrackmon",
+      "stage": "Perfect",
+      "spriteFile": "Meicrackmon"
+    },
+    {
+      "id": "meicrackmon_vicious",
+      "displayName": "Meicrackmon Vicious",
+      "stage": "Perfect",
+      "spriteFile": "Meicrackmon_Vicious"
+    },
+    {
+      "id": "mephismon",
+      "displayName": "Mephismon",
+      "stage": "Perfect",
+      "spriteFile": "Mephismon"
+    },
+    {
+      "id": "mephismon_x",
+      "displayName": "Mephismon X",
+      "stage": "Perfect",
+      "spriteFile": "Mephismon_X",
+      "variant": "X"
+    },
+    {
+      "id": "mermaimon",
+      "displayName": "Mermaimon",
+      "stage": "Perfect",
+      "spriteFile": "Mermaimon"
+    },
+    {
+      "id": "metalgreymon",
+      "displayName": "MetalGreymon",
+      "stage": "Perfect",
+      "spriteFile": "MetalGreymon"
+    },
+    {
+      "id": "metalgreymon_virus",
+      "displayName": "MetalGreymon Virus",
+      "stage": "Perfect",
+      "spriteFile": "MetalGreymon_Virus",
+      "variant": "Virus"
+    },
+    {
+      "id": "metalgreymon_virus_x",
+      "displayName": "MetalGreymon Virus X",
+      "stage": "Perfect",
+      "spriteFile": "MetalGreymon_Virus_X",
+      "variant": "Virus X"
+    },
+    {
+      "id": "metalgreymon_x",
+      "displayName": "MetalGreymon X",
+      "stage": "Perfect",
+      "spriteFile": "MetalGreymon_X",
+      "variant": "X"
+    },
+    {
+      "id": "metalmamemon",
+      "displayName": "MetalMamemon",
+      "stage": "Perfect",
+      "spriteFile": "MetalMamemon"
+    },
+    {
+      "id": "metalmamemon_x",
+      "displayName": "MetalMamemon X",
+      "stage": "Perfect",
+      "spriteFile": "MetalMamemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "metalphantomon",
+      "displayName": "MetalPhantomon",
+      "stage": "Perfect",
+      "spriteFile": "MetalPhantomon"
+    },
+    {
+      "id": "metaltyrannomon",
+      "displayName": "MetalTyrannomon",
+      "stage": "Perfect",
+      "spriteFile": "MetalTyrannomon",
+      "dexOnly": true
+    },
+    {
+      "id": "metaltyrannomon_x",
+      "displayName": "MetalTyrannomon X",
+      "stage": "Perfect",
+      "spriteFile": "MetalTyrannomon_X",
+      "variant": "X",
+      "dexOnly": true
+    },
+    {
+      "id": "metaltyranomon",
+      "displayName": "MetalTyranomon",
+      "stage": "Perfect",
+      "spriteFile": "MetalTyranomon"
+    },
+    {
+      "id": "metaltyranomon_v2",
+      "displayName": "MetalTyranomon V2",
+      "stage": "Perfect",
+      "spriteFile": "MetalTyranomon_V2"
+    },
+    {
+      "id": "metaltyranomon_x",
+      "displayName": "MetalTyranomon X",
+      "stage": "Perfect",
+      "spriteFile": "MetalTyranomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "mihiramon",
+      "displayName": "Mihiramon",
+      "stage": "Perfect",
+      "spriteFile": "Mihiramon",
+      "dexOnly": true
+    },
+    {
+      "id": "monzaemon",
+      "displayName": "Monzaemon",
+      "stage": "Perfect",
+      "spriteFile": "Monzaemon"
+    },
+    {
+      "id": "monzaemon_x",
+      "displayName": "Monzaemon X",
+      "stage": "Perfect",
+      "spriteFile": "Monzaemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "mummymon",
+      "displayName": "Mummymon",
+      "stage": "Perfect",
+      "spriteFile": "Mummymon"
+    },
+    {
+      "id": "nanomon",
+      "displayName": "Nanomon",
+      "stage": "Perfect",
+      "spriteFile": "Nanomon"
+    },
+    {
+      "id": "neodevimon",
+      "displayName": "NeoDevimon",
+      "stage": "Perfect",
+      "spriteFile": "NeoDevimon"
+    },
+    {
+      "id": "nidhoggmon",
+      "displayName": "Nidhoggmon",
+      "stage": "Perfect",
+      "spriteFile": "Nidhoggmon",
+      "dexOnly": true
+    },
+    {
+      "id": "oboromon",
+      "displayName": "Oboromon",
+      "stage": "Perfect",
+      "spriteFile": "Oboromon"
+    },
+    {
+      "id": "okuwamon",
+      "displayName": "Okuwamon",
+      "stage": "Perfect",
+      "spriteFile": "Okuwamon"
+    },
+    {
+      "id": "okuwamon_x",
+      "displayName": "Okuwamon X",
+      "stage": "Perfect",
+      "spriteFile": "Okuwamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "omegashoutmon",
+      "displayName": "OmegaShoutmon",
+      "stage": "Perfect",
+      "spriteFile": "OmegaShoutmon"
+    },
+    {
+      "id": "omegashoutmon_x",
+      "displayName": "OmegaShoutmon X",
+      "stage": "Perfect",
+      "spriteFile": "OmegaShoutmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "orochimon",
+      "displayName": "Orochimon",
+      "stage": "Perfect",
+      "spriteFile": "Orochimon"
+    },
+    {
+      "id": "paildramon",
+      "displayName": "Paildramon",
+      "stage": "Perfect",
+      "spriteFile": "Paildramon"
+    },
+    {
+      "id": "pajiramon",
+      "displayName": "Pajiramon",
+      "stage": "Perfect",
+      "spriteFile": "Pajiramon",
+      "dexOnly": true
+    },
+    {
+      "id": "pandamon",
+      "displayName": "Pandamon",
+      "stage": "Perfect",
+      "spriteFile": "Pandamon"
+    },
+    {
+      "id": "panjyamon",
+      "displayName": "Panjyamon",
+      "stage": "Perfect",
+      "spriteFile": "Panjyamon"
+    },
+    {
+      "id": "panjyamon_x",
+      "displayName": "Panjyamon X",
+      "stage": "Perfect",
+      "spriteFile": "Panjyamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "parrotmon",
+      "displayName": "Parrotmon",
+      "stage": "Perfect",
+      "spriteFile": "Parrotmon",
+      "dexOnly": true
+    },
+    {
+      "id": "phantomon",
+      "displayName": "Phantomon",
+      "stage": "Perfect",
+      "spriteFile": "Phantomon"
+    },
+    {
+      "id": "piccolomon",
+      "displayName": "Piccolomon",
+      "stage": "Perfect",
+      "spriteFile": "Piccolomon"
+    },
+    {
+      "id": "pilevolcamon",
+      "displayName": "PileVolcamon",
+      "stage": "Perfect",
+      "spriteFile": "PileVolcamon",
+      "dexOnly": true
+    },
+    {
+      "id": "piranhamon",
+      "displayName": "Piranhamon",
+      "stage": "Perfect",
+      "spriteFile": "Piranhamon",
+      "dexOnly": true
+    },
+    {
+      "id": "piranimon",
+      "displayName": "Piranimon",
+      "stage": "Perfect",
+      "spriteFile": "Piranimon"
+    },
+    {
+      "id": "pumpmon",
+      "displayName": "Pumpmon",
+      "stage": "Perfect",
+      "spriteFile": "Pumpmon"
+    },
+    {
+      "id": "raijiludomon",
+      "displayName": "RaijiLudomon",
+      "stage": "Perfect",
+      "spriteFile": "RaijiLudomon"
+    },
+    {
+      "id": "rapidmon",
+      "displayName": "Rapidmon",
+      "stage": "Perfect",
+      "spriteFile": "Rapidmon"
+    },
+    {
+      "id": "rebellimon",
+      "displayName": "Rebellimon",
+      "stage": "Perfect",
+      "spriteFile": "Rebellimon"
+    },
+    {
+      "id": "regulusmon",
+      "displayName": "Regulusmon",
+      "stage": "Perfect",
+      "spriteFile": "Regulusmon"
+    },
+    {
+      "id": "rizegreymon",
+      "displayName": "RizeGreymon",
+      "stage": "Perfect",
+      "spriteFile": "RizeGreymon"
+    },
+    {
+      "id": "rizegreymon_x",
+      "displayName": "RizeGreymon X",
+      "stage": "Perfect",
+      "spriteFile": "RizeGreymon_X",
+      "variant": "X"
+    },
+    {
+      "id": "sagomon",
+      "displayName": "Sagomon",
+      "stage": "Perfect",
+      "spriteFile": "Sagomon"
+    },
+    {
+      "id": "sanzomon",
+      "displayName": "Sanzomon",
+      "stage": "Perfect",
+      "spriteFile": "Sanzomon"
+    },
+    {
+      "id": "saviorhackmon",
+      "displayName": "SaviorHackmon",
+      "stage": "Perfect",
+      "spriteFile": "SaviorHackmon"
+    },
+    {
+      "id": "scorpiomon",
+      "displayName": "Scorpiomon",
+      "stage": "Perfect",
+      "spriteFile": "Scorpiomon"
+    },
+    {
+      "id": "sekkamon",
+      "displayName": "Sekkamon",
+      "stage": "Perfect",
+      "spriteFile": "Sekkamon"
+    },
+    {
+      "id": "shakkoumon",
+      "displayName": "Shakkoumon",
+      "stage": "Perfect",
+      "spriteFile": "Shakkoumon",
+      "dexOnly": true
+    },
+    {
+      "id": "shawujinmon",
+      "displayName": "Shawujinmon",
+      "stage": "Perfect",
+      "spriteFile": "Shawujinmon"
+    },
+    {
+      "id": "shishimamon",
+      "displayName": "Shishimamon",
+      "stage": "Perfect",
+      "spriteFile": "Shishimamon"
+    },
+    {
+      "id": "shootmon",
+      "displayName": "Shootmon",
+      "stage": "Perfect",
+      "spriteFile": "Shootmon"
+    },
+    {
+      "id": "silphymon",
+      "displayName": "Silphymon",
+      "stage": "Perfect",
+      "spriteFile": "Silphymon",
+      "dexOnly": true
+    },
+    {
+      "id": "sirenmon",
+      "displayName": "Sirenmon",
+      "stage": "Perfect",
+      "spriteFile": "Sirenmon"
+    },
+    {
+      "id": "skullbaluchimon",
+      "displayName": "SkullBaluchimon",
+      "stage": "Perfect",
+      "spriteFile": "SkullBaluchimon"
+    },
+    {
+      "id": "skullgreymon",
+      "displayName": "SkullGreymon",
+      "stage": "Perfect",
+      "spriteFile": "SkullGreymon"
+    },
+    {
+      "id": "skullsatamon",
+      "displayName": "SkullSatamon",
+      "stage": "Perfect",
+      "spriteFile": "SkullSatamon",
+      "dexOnly": true
+    },
+    {
+      "id": "soloogarmon",
+      "displayName": "Soloogarmon",
+      "stage": "Perfect",
+      "spriteFile": "Soloogarmon"
+    },
+    {
+      "id": "stiffilmon",
+      "displayName": "Stiffilmon",
+      "stage": "Perfect",
+      "spriteFile": "Stiffilmon"
+    },
+    {
+      "id": "superstarmon",
+      "displayName": "Superstarmon",
+      "stage": "Perfect",
+      "spriteFile": "Superstarmon"
+    },
+    {
+      "id": "taomon",
+      "displayName": "Taomon",
+      "stage": "Perfect",
+      "spriteFile": "Taomon",
+      "dexOnly": true
+    },
+    {
+      "id": "taomon_silver",
+      "displayName": "Taomon Silver",
+      "stage": "Perfect",
+      "spriteFile": "Taomon_Silver",
+      "dexOnly": true
+    },
+    {
+      "id": "tekkamon",
+      "displayName": "Tekkamon",
+      "stage": "Perfect",
+      "spriteFile": "Tekkamon"
+    },
+    {
+      "id": "thetismon",
+      "displayName": "Thetismon",
+      "stage": "Perfect",
+      "spriteFile": "Thetismon"
+    },
+    {
+      "id": "tonosamagekomon",
+      "displayName": "TonosamaGekomon",
+      "stage": "Perfect",
+      "spriteFile": "TonosamaGekomon"
+    },
+    {
+      "id": "triceramon",
+      "displayName": "Triceramon",
+      "stage": "Perfect",
+      "spriteFile": "Triceramon"
+    },
+    {
+      "id": "triceramon_x",
+      "displayName": "Triceramon X",
+      "stage": "Perfect",
+      "spriteFile": "Triceramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "tyilinmon",
+      "displayName": "Tyilinmon",
+      "stage": "Perfect",
+      "spriteFile": "Tyilinmon",
+      "dexOnly": true
+    },
+    {
+      "id": "vademon",
+      "displayName": "Vademon",
+      "stage": "Perfect",
+      "spriteFile": "Vademon"
+    },
+    {
+      "id": "vajramon",
+      "displayName": "Vajramon",
+      "stage": "Perfect",
+      "spriteFile": "Vajramon",
+      "dexOnly": true
+    },
+    {
+      "id": "vamdemon",
+      "displayName": "Vamdemon",
+      "stage": "Perfect",
+      "spriteFile": "Vamdemon"
+    },
+    {
+      "id": "vamdemon_x",
+      "displayName": "Vamdemon X",
+      "stage": "Perfect",
+      "spriteFile": "Vamdemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "vermillimon",
+      "displayName": "Vermillimon",
+      "stage": "Perfect",
+      "spriteFile": "Vermillimon"
+    },
+    {
+      "id": "vikaralamon",
+      "displayName": "Vikaralamon",
+      "stage": "Perfect",
+      "spriteFile": "Vikaralamon",
+      "dexOnly": true
+    },
+    {
+      "id": "warumonzaemon",
+      "displayName": "WaruMonzaemon",
+      "stage": "Perfect",
+      "spriteFile": "WaruMonzaemon"
+    },
+    {
+      "id": "waruseadramon",
+      "displayName": "WaruSeadramon",
+      "stage": "Perfect",
+      "spriteFile": "WaruSeadramon"
+    },
+    {
+      "id": "weregarurumon",
+      "displayName": "WereGarurumon",
+      "stage": "Perfect",
+      "spriteFile": "WereGarurumon"
+    },
+    {
+      "id": "weregarurumon_black",
+      "displayName": "WereGarurumon Black",
+      "stage": "Perfect",
+      "spriteFile": "WereGarurumon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "weregarurumon_x",
+      "displayName": "WereGarurumon X",
+      "stage": "Perfect",
+      "spriteFile": "WereGarurumon_X",
+      "variant": "X"
+    },
+    {
+      "id": "whamon",
+      "displayName": "Whamon",
+      "stage": "Perfect",
+      "spriteFile": "Whamon"
+    },
+    {
+      "id": "wisemon",
+      "displayName": "Wisemon",
+      "stage": "Perfect",
+      "spriteFile": "Wisemon",
+      "dexOnly": true
+    },
+    {
+      "id": "xingtianmon",
+      "displayName": "Xingtianmon",
+      "stage": "Perfect",
+      "spriteFile": "Xingtianmon"
+    },
+    {
+      "id": "yatagaramon",
+      "displayName": "Yatagaramon",
+      "stage": "Perfect",
+      "spriteFile": "Yatagaramon"
+    },
+    {
+      "id": "yatagaramon_2006",
+      "displayName": "Yatagaramon 2006",
+      "stage": "Perfect",
+      "spriteFile": "Yatagaramon_2006",
+      "variant": "2006"
+    },
+    {
+      "id": "zudomon",
+      "displayName": "Zudomon",
+      "stage": "Perfect",
+      "spriteFile": "Zudomon"
+    },
+    {
+      "id": "aegisdramon",
+      "displayName": "Aegisdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Aegisdramon"
+    },
+    {
+      "id": "agumon_ynk",
+      "displayName": "Agumon YnK",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Agumon_YnK",
+      "variant": "YnK"
+    },
+    {
+      "id": "algomon_ultimate",
+      "displayName": "Algomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Algomon_Ultimate"
+    },
+    {
+      "id": "alphamon",
+      "displayName": "Alphamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Alphamon"
+    },
+    {
+      "id": "alphamon_ouryuken",
+      "displayName": "Alphamon Ouryuken",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Alphamon_Ouryuken"
+    },
+    {
+      "id": "amaterasumon",
+      "displayName": "Amaterasumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Amaterasumon"
+    },
+    {
+      "id": "amphimon",
+      "displayName": "Amphimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Amphimon"
+    },
+    {
+      "id": "ancientbeatmon",
+      "displayName": "AncientBeatmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientBeatmon"
+    },
+    {
+      "id": "ancientbeetmon",
+      "displayName": "AncientBeetmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientBeetmon",
+      "dexOnly": true
+    },
+    {
+      "id": "ancientgarurumon",
+      "displayName": "AncientGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientGarurumon",
+      "dexOnly": true
+    },
+    {
+      "id": "ancientgreymon",
+      "displayName": "AncientGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientGreymon",
+      "dexOnly": true
+    },
+    {
+      "id": "ancientirismon",
+      "displayName": "AncientIrismon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientIrismon",
+      "dexOnly": true
+    },
+    {
+      "id": "ancientmegatheriumon",
+      "displayName": "AncientMegatheriumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientMegatheriumon"
+    },
+    {
+      "id": "ancientmermaimon",
+      "displayName": "AncientMermaimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientMermaimon"
+    },
+    {
+      "id": "ancientsphinxmon",
+      "displayName": "AncientSphinxmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientSphinxmon"
+    },
+    {
+      "id": "ancienttroiamon",
+      "displayName": "AncientTroiamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientTroiamon",
+      "dexOnly": true
+    },
+    {
+      "id": "ancientvolcamon",
+      "displayName": "AncientVolcamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientVolcamon"
+    },
+    {
+      "id": "ancientwisemon",
+      "displayName": "AncientWisemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "AncientWisemon",
+      "dexOnly": true
+    },
+    {
+      "id": "anubimon",
+      "displayName": "Anubimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Anubimon"
+    },
+    {
+      "id": "apocalymon",
+      "displayName": "Apocalymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Apocalymon"
+    },
+    {
+      "id": "apollomon",
+      "displayName": "Apollomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Apollomon"
+    },
+    {
+      "id": "arcturusmon",
+      "displayName": "Arcturusmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Arcturusmon"
+    },
+    {
+      "id": "ariemon",
+      "displayName": "Ariemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ariemon"
+    },
+    {
+      "id": "arkadimon_superultimate",
+      "displayName": "Arkadimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Arkadimon_SuperUltimate",
+      "dexOnly": true
+    },
+    {
+      "id": "arkadimon_ultimate",
+      "displayName": "Arkadimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Arkadimon_Ultimate",
+      "dexOnly": true
+    },
+    {
+      "id": "armagemon",
+      "displayName": "Armagemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Armagemon"
+    },
+    {
+      "id": "armamon",
+      "displayName": "Armamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Armamon"
+    },
+    {
+      "id": "bagramon",
+      "displayName": "Bagramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Bagramon"
+    },
+    {
+      "id": "banchogolemon",
+      "displayName": "BanchoGolemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BanchoGolemon",
+      "dexOnly": true
+    },
+    {
+      "id": "bancholeomon",
+      "displayName": "BanchoLeomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BanchoLeomon"
+    },
+    {
+      "id": "bancholilimon",
+      "displayName": "BanchoLilimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BanchoLilimon"
+    },
+    {
+      "id": "banchomamemon",
+      "displayName": "BanchoMamemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BanchoMamemon"
+    },
+    {
+      "id": "banchostingmon",
+      "displayName": "BanchoStingmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BanchoStingmon",
+      "dexOnly": true
+    },
+    {
+      "id": "barbamon",
+      "displayName": "Barbamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Barbamon"
+    },
+    {
+      "id": "barbamon_x",
+      "displayName": "Barbamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Barbamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "beelstarmon_x",
+      "displayName": "BeelStarmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BeelStarmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "beelzebumon",
+      "displayName": "Beelzebumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Beelzebumon"
+    },
+    {
+      "id": "beelzebumon_blast",
+      "displayName": "Beelzebumon Blast",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Beelzebumon_Blast"
+    },
+    {
+      "id": "beelzebumon_x",
+      "displayName": "Beelzebumon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Beelzebumon_X",
+      "variant": "X"
+    },
+    {
+      "id": "belialvamdemon",
+      "displayName": "BelialVamdemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BelialVamdemon"
+    },
+    {
+      "id": "bellestarrmon_x",
+      "displayName": "BelleStarrmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BelleStarrmon_X",
+      "variant": "X",
+      "dexOnly": true
+    },
+    {
+      "id": "belphemon_rage",
+      "displayName": "Belphemon Rage",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Belphemon_Rage"
+    },
+    {
+      "id": "belphemon_sleep",
+      "displayName": "Belphemon Sleep",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Belphemon_Sleep",
+      "dexOnly": true
+    },
+    {
+      "id": "belphemon_x",
+      "displayName": "Belphemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Belphemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "blacksaintgalgomon",
+      "displayName": "BlackSaintGalgomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BlackSaintGalgomon"
+    },
+    {
+      "id": "blackseraphimon",
+      "displayName": "BlackSeraphimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BlackSeraphimon"
+    },
+    {
+      "id": "blackwargreymon",
+      "displayName": "BlackWarGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BlackWarGreymon"
+    },
+    {
+      "id": "blackwargreymon_x",
+      "displayName": "BlackWarGreymon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BlackWarGreymon_X",
+      "variant": "X"
+    },
+    {
+      "id": "blastmon",
+      "displayName": "Blastmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Blastmon"
+    },
+    {
+      "id": "blitzgreymon",
+      "displayName": "BlitzGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BlitzGreymon"
+    },
+    {
+      "id": "bloomlordmon",
+      "displayName": "BloomLordmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "BloomLordmon"
+    },
+    {
+      "id": "boltmon",
+      "displayName": "Boltmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Boltmon"
+    },
+    {
+      "id": "breakdramon",
+      "displayName": "Breakdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Breakdramon"
+    },
+    {
+      "id": "brigadramon",
+      "displayName": "Brigadramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Brigadramon"
+    },
+    {
+      "id": "bryweludramon",
+      "displayName": "Bryweludramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Bryweludramon"
+    },
+    {
+      "id": "callismon",
+      "displayName": "Callismon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Callismon"
+    },
+    {
+      "id": "cernumon",
+      "displayName": "Cernumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Cernumon"
+    },
+    {
+      "id": "chaosdramon",
+      "displayName": "Chaosdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Chaosdramon"
+    },
+    {
+      "id": "chaosdramon_v2",
+      "displayName": "Chaosdramon V2",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Chaosdramon_V2"
+    },
+    {
+      "id": "chaosdramon_x",
+      "displayName": "Chaosdramon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Chaosdramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "chaosdukemon",
+      "displayName": "ChaosDukemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ChaosDukemon"
+    },
+    {
+      "id": "chaosdukemon_core",
+      "displayName": "ChaosDukemon Core",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ChaosDukemon_Core"
+    },
+    {
+      "id": "chaosmon",
+      "displayName": "Chaosmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Chaosmon"
+    },
+    {
+      "id": "cherubimon_vice",
+      "displayName": "Cherubimon Vice",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Cherubimon_Vice"
+    },
+    {
+      "id": "cherubimon_vice_x",
+      "displayName": "Cherubimon Vice X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Cherubimon_Vice_X",
+      "variant": "X"
+    },
+    {
+      "id": "cherubimon_virtue",
+      "displayName": "Cherubimon Virtue",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Cherubimon_Virtue"
+    },
+    {
+      "id": "cherubimon_virtue_x",
+      "displayName": "Cherubimon Virtue X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Cherubimon_Virtue_X",
+      "variant": "X"
+    },
+    {
+      "id": "choasmon_valdurarm",
+      "displayName": "Choasmon ValdurArm",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Choasmon_ValdurArm",
+      "dexOnly": true
+    },
+    {
+      "id": "craniummon",
+      "displayName": "Craniummon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Craniummon"
+    },
+    {
+      "id": "craniummon_x",
+      "displayName": "Craniummon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Craniummon_X",
+      "variant": "X"
+    },
+    {
+      "id": "cresgarurumon",
+      "displayName": "CresGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "CresGarurumon"
+    },
+    {
+      "id": "cthyllamon",
+      "displayName": "Cthyllamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Cthyllamon"
+    },
+    {
+      "id": "darkdramon",
+      "displayName": "Darkdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Darkdramon"
+    },
+    {
+      "id": "darkknightmon_x",
+      "displayName": "DarkKnightmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "DarkKnightmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "darknessbagramon",
+      "displayName": "DarknessBagramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "DarknessBagramon"
+    },
+    {
+      "id": "deathmon",
+      "displayName": "Deathmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Deathmon"
+    },
+    {
+      "id": "deathmon_black",
+      "displayName": "Deathmon Black",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Deathmon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "demon",
+      "displayName": "Demon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Demon"
+    },
+    {
+      "id": "demon_x",
+      "displayName": "Demon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Demon_X",
+      "variant": "X"
+    },
+    {
+      "id": "devitamamon",
+      "displayName": "Devitamamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Devitamamon",
+      "dexOnly": true
+    },
+    {
+      "id": "diablomon",
+      "displayName": "Diablomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Diablomon"
+    },
+    {
+      "id": "diablomon_x",
+      "displayName": "Diablomon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Diablomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "dianamon",
+      "displayName": "Dianamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dianamon"
+    },
+    {
+      "id": "diarbbitmon",
+      "displayName": "Diarbbitmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Diarbbitmon"
+    },
+    {
+      "id": "dijiangmon",
+      "displayName": "Dijiangmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dijiangmon"
+    },
+    {
+      "id": "dinorexmon",
+      "displayName": "Dinorexmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dinorexmon"
+    },
+    {
+      "id": "dinotigermon",
+      "displayName": "Dinotigermon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dinotigermon"
+    },
+    {
+      "id": "dominimon",
+      "displayName": "Dominimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dominimon"
+    },
+    {
+      "id": "donedevimon",
+      "displayName": "DoneDevimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "DoneDevimon",
+      "dexOnly": true
+    },
+    {
+      "id": "dorugoramon",
+      "displayName": "DORUgoramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "DORUgoramon"
+    },
+    {
+      "id": "duftmon",
+      "displayName": "Duftmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Duftmon"
+    },
+    {
+      "id": "duftmon_leopard",
+      "displayName": "Duftmon Leopard",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Duftmon_Leopard",
+      "dexOnly": true
+    },
+    {
+      "id": "duftmon_x",
+      "displayName": "Duftmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Duftmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "dukemon",
+      "displayName": "Dukemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dukemon"
+    },
+    {
+      "id": "dukemon_crimson",
+      "displayName": "Dukemon Crimson",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dukemon_Crimson",
+      "dexOnly": true
+    },
+    {
+      "id": "dukemon_x",
+      "displayName": "Dukemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dukemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "durandamon",
+      "displayName": "Durandamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Durandamon",
+      "dexOnly": true
+    },
+    {
+      "id": "dynasmon",
+      "displayName": "Dynasmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dynasmon",
+      "dexOnly": true
+    },
+    {
+      "id": "dynasmon_x",
+      "displayName": "Dynasmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Dynasmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "ebemon",
+      "displayName": "Ebemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ebemon"
+    },
+    {
+      "id": "ebemon_x",
+      "displayName": "Ebemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ebemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "eldoradimon",
+      "displayName": "ElDoradimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ElDoradimon"
+    },
+    {
+      "id": "enmamon",
+      "displayName": "Enmamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Enmamon"
+    },
+    {
+      "id": "erlangmon",
+      "displayName": "Erlangmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Erlangmon"
+    },
+    {
+      "id": "examon",
+      "displayName": "Examon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Examon",
+      "dexOnly": true
+    },
+    {
+      "id": "examon_x",
+      "displayName": "Examon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Examon_X",
+      "variant": "X"
+    },
+    {
+      "id": "fenriloogamon",
+      "displayName": "Fenriloogamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Fenriloogamon"
+    },
+    {
+      "id": "gaioumon",
+      "displayName": "Gaioumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gaioumon"
+    },
+    {
+      "id": "gaioumon_ittonokata",
+      "displayName": "Gaioumon IttonoKata",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gaioumon_IttonoKata",
+      "dexOnly": true
+    },
+    {
+      "id": "gankoomon",
+      "displayName": "Gankoomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gankoomon"
+    },
+    {
+      "id": "gankoomon_x",
+      "displayName": "Gankoomon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gankoomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gigaseadramon",
+      "displayName": "GigaSeadramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "GigaSeadramon"
+    },
+    {
+      "id": "goddramon",
+      "displayName": "Goddramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Goddramon",
+      "dexOnly": true
+    },
+    {
+      "id": "goddramon_x",
+      "displayName": "Goddramon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Goddramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "gokumon",
+      "displayName": "Gokumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gokumon"
+    },
+    {
+      "id": "gracenovamon",
+      "displayName": "GraceNovamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "GraceNovamon"
+    },
+    {
+      "id": "granddracumon",
+      "displayName": "GrandDracumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "GrandDracumon"
+    },
+    {
+      "id": "grandiskuwagamon",
+      "displayName": "GrandisKuwagamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "GrandisKuwagamon"
+    },
+    {
+      "id": "grandlocomon",
+      "displayName": "GrandLocomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "GrandLocomon"
+    },
+    {
+      "id": "grankuwagamon",
+      "displayName": "GranKuwagamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "GranKuwagamon"
+    },
+    {
+      "id": "griffomon",
+      "displayName": "Griffomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Griffomon"
+    },
+    {
+      "id": "gulfmon",
+      "displayName": "Gulfmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gulfmon",
+      "dexOnly": true
+    },
+    {
+      "id": "gundramon",
+      "displayName": "Gundramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Gundramon"
+    },
+    {
+      "id": "heraklekabuterimon",
+      "displayName": "HerakleKabuterimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "HerakleKabuterimon"
+    },
+    {
+      "id": "hexeblaumon",
+      "displayName": "Hexeblaumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Hexeblaumon"
+    },
+    {
+      "id": "hi-andromon",
+      "displayName": "Hi-Andromon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Hi-Andromon"
+    },
+    {
+      "id": "hiandromon",
+      "displayName": "HiAndromon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "HiAndromon"
+    },
+    {
+      "id": "holydigitamamon",
+      "displayName": "HolyDigitamamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "HolyDigitamamon"
+    },
+    {
+      "id": "holydramon",
+      "displayName": "Holydramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Holydramon"
+    },
+    {
+      "id": "holydramon_x",
+      "displayName": "Holydramon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Holydramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "hououmon",
+      "displayName": "Hououmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Hououmon"
+    },
+    {
+      "id": "hououmon_x",
+      "displayName": "Hououmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Hououmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "huanglongmon",
+      "displayName": "Huanglongmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Huanglongmon",
+      "dexOnly": true
+    },
+    {
+      "id": "hydramon",
+      "displayName": "Hydramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Hydramon"
+    },
+    {
+      "id": "imperialdramon",
+      "displayName": "Imperialdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Imperialdramon",
+      "dexOnly": true
+    },
+    {
+      "id": "imperialdramon_black",
+      "displayName": "Imperialdramon Black",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Imperialdramon_Black",
+      "variant": "Black",
+      "dexOnly": true
+    },
+    {
+      "id": "imperialdramon_fighter",
+      "displayName": "Imperialdramon Fighter",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Imperialdramon_Fighter"
+    },
+    {
+      "id": "imperialdramon_fighter_black",
+      "displayName": "Imperialdramon Fighter Black",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Imperialdramon_Fighter_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "imperialdramon_paladin",
+      "displayName": "Imperialdramon Paladin",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Imperialdramon_Paladin"
+    },
+    {
+      "id": "jesmon",
+      "displayName": "Jesmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Jesmon"
+    },
+    {
+      "id": "jesmon_gx",
+      "displayName": "Jesmon GX",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Jesmon_GX"
+    },
+    {
+      "id": "jesmon_x",
+      "displayName": "Jesmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Jesmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "jougamon",
+      "displayName": "Jougamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Jougamon"
+    },
+    {
+      "id": "jumbogamemon",
+      "displayName": "JumboGamemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "JumboGamemon"
+    },
+    {
+      "id": "justimon",
+      "displayName": "Justimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Justimon",
+      "dexOnly": true
+    },
+    {
+      "id": "justimon_x",
+      "displayName": "Justimon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Justimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "kaguyamon",
+      "displayName": "Kaguyamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Kaguyamon"
+    },
+    {
+      "id": "kazuchimon",
+      "displayName": "Kazuchimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Kazuchimon"
+    },
+    {
+      "id": "kingetemon",
+      "displayName": "KingEtemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "KingEtemon"
+    },
+    {
+      "id": "komondomon",
+      "displayName": "Komondomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Komondomon",
+      "dexOnly": true
+    },
+    {
+      "id": "kuzuhamon",
+      "displayName": "Kuzuhamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Kuzuhamon"
+    },
+    {
+      "id": "kuzuhamon_miko",
+      "displayName": "Kuzuhamon Miko",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Kuzuhamon_Miko",
+      "dexOnly": true
+    },
+    {
+      "id": "leviamon",
+      "displayName": "Leviamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Leviamon"
+    },
+    {
+      "id": "leviamon_x",
+      "displayName": "Leviamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Leviamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "lilithmon",
+      "displayName": "Lilithmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Lilithmon"
+    },
+    {
+      "id": "lilithmon_x",
+      "displayName": "Lilithmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Lilithmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "lordknightmon",
+      "displayName": "LordKnightmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "LordKnightmon",
+      "dexOnly": true
+    },
+    {
+      "id": "lordknightmon_x",
+      "displayName": "LordKnightmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "LordKnightmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "lotusmon",
+      "displayName": "Lotusmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Lotusmon"
+    },
+    {
+      "id": "lovelyangemon",
+      "displayName": "LovelyAngemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "LovelyAngemon",
+      "dexOnly": true
+    },
+    {
+      "id": "lucemon_satan",
+      "displayName": "Lucemon Satan",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Lucemon_Satan"
+    },
+    {
+      "id": "lucemon_x",
+      "displayName": "Lucemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Lucemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "magnamon_x",
+      "displayName": "Magnamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Magnamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "marinangemon",
+      "displayName": "MarinAngemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MarinAngemon"
+    },
+    {
+      "id": "marineangemon",
+      "displayName": "MarineAngemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MarineAngemon",
+      "dexOnly": true
+    },
+    {
+      "id": "marinechimairamon",
+      "displayName": "MarineChimairamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MarineChimairamon",
+      "dexOnly": true
+    },
+    {
+      "id": "mastemon",
+      "displayName": "Mastemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Mastemon"
+    },
+    {
+      "id": "megidramon",
+      "displayName": "Megidramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Megidramon"
+    },
+    {
+      "id": "megidramon_x",
+      "displayName": "Megidramon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Megidramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "metaletemon",
+      "displayName": "MetalEtemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalEtemon"
+    },
+    {
+      "id": "metalgarurumon",
+      "displayName": "MetalGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalGarurumon"
+    },
+    {
+      "id": "metalgarurumon_black",
+      "displayName": "MetalGarurumon Black",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalGarurumon_Black",
+      "variant": "Black"
+    },
+    {
+      "id": "metalgarurumon_x",
+      "displayName": "MetalGarurumon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalGarurumon_X",
+      "variant": "X"
+    },
+    {
+      "id": "metallicdramon",
+      "displayName": "Metallicdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Metallicdramon"
+    },
+    {
+      "id": "metalpiranhamon",
+      "displayName": "MetalPiranhamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalPiranhamon",
+      "dexOnly": true
+    },
+    {
+      "id": "metalpiranimon",
+      "displayName": "MetalPiranimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalPiranimon"
+    },
+    {
+      "id": "metalseadramon",
+      "displayName": "MetalSeadramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MetalSeadramon"
+    },
+    {
+      "id": "millenniumon",
+      "displayName": "Millenniumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Millenniumon"
+    },
+    {
+      "id": "minervamon",
+      "displayName": "Minervamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Minervamon",
+      "dexOnly": true
+    },
+    {
+      "id": "minervamon_x",
+      "displayName": "Minervamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Minervamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "miragegaogamon",
+      "displayName": "MirageGaogamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MirageGaogamon",
+      "dexOnly": true
+    },
+    {
+      "id": "miragegaogamon_burst",
+      "displayName": "MirageGaogamon Burst",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MirageGaogamon_Burst",
+      "dexOnly": true
+    },
+    {
+      "id": "mitamamon",
+      "displayName": "Mitamamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Mitamamon"
+    },
+    {
+      "id": "moonmillenniumon",
+      "displayName": "MoonMillenniumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "MoonMillenniumon",
+      "dexOnly": true
+    },
+    {
+      "id": "mugendramon",
+      "displayName": "Mugendramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Mugendramon"
+    },
+    {
+      "id": "nezhamon",
+      "displayName": "Nezhamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Nezhamon"
+    },
+    {
+      "id": "noblepumpmon",
+      "displayName": "NoblePumpmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "NoblePumpmon"
+    },
+    {
+      "id": "ogudomon",
+      "displayName": "Ogudomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ogudomon"
+    },
+    {
+      "id": "ogudomon_x",
+      "displayName": "Ogudomon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ogudomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "omegamon",
+      "displayName": "Omegamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Omegamon"
+    },
+    {
+      "id": "omegamon_alter-s",
+      "displayName": "Omegamon Alter-S",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Omegamon_Alter-S"
+    },
+    {
+      "id": "omegamon_merciful",
+      "displayName": "Omegamon Merciful",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Omegamon_Merciful",
+      "dexOnly": true
+    },
+    {
+      "id": "omegamon_x",
+      "displayName": "Omegamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Omegamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "omegamon_zwart",
+      "displayName": "Omegamon Zwart",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Omegamon_Zwart"
+    },
+    {
+      "id": "ophanimon",
+      "displayName": "Ophanimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ophanimon"
+    },
+    {
+      "id": "ophanimon_core",
+      "displayName": "Ophanimon Core",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ophanimon_Core"
+    },
+    {
+      "id": "ophanimon_falldown_x",
+      "displayName": "Ophanimon Falldown X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ophanimon_Falldown_X",
+      "variant": "X"
+    },
+    {
+      "id": "ophanimon_x",
+      "displayName": "Ophanimon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ophanimon_X",
+      "variant": "X"
+    },
+    {
+      "id": "ordinemon",
+      "displayName": "Ordinemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ordinemon"
+    },
+    {
+      "id": "ouryumon",
+      "displayName": "Ouryumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ouryumon"
+    },
+    {
+      "id": "piemon",
+      "displayName": "Piemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Piemon"
+    },
+    {
+      "id": "pinochimon",
+      "displayName": "Pinochimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Pinochimon"
+    },
+    {
+      "id": "platinumnumemon",
+      "displayName": "PlatinumNumemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "PlatinumNumemon"
+    },
+    {
+      "id": "plesiomon",
+      "displayName": "Plesiomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Plesiomon"
+    },
+    {
+      "id": "plesiomon_x",
+      "displayName": "Plesiomon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Plesiomon_X",
+      "variant": "X"
+    },
+    {
+      "id": "princemamemon",
+      "displayName": "PrinceMamemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "PrinceMamemon"
+    },
+    {
+      "id": "princemamemon_x",
+      "displayName": "PrinceMamemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "PrinceMamemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "pukumon",
+      "displayName": "Pukumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Pukumon"
+    },
+    {
+      "id": "quantumon",
+      "displayName": "Quantumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Quantumon"
+    },
+    {
+      "id": "rafflesimon",
+      "displayName": "Rafflesimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rafflesimon"
+    },
+    {
+      "id": "ragnalordmon",
+      "displayName": "RagnaLordmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "RagnaLordmon"
+    },
+    {
+      "id": "ragnamon",
+      "displayName": "Ragnamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ragnamon"
+    },
+    {
+      "id": "raguelmon",
+      "displayName": "Raguelmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Raguelmon"
+    },
+    {
+      "id": "raidenmon",
+      "displayName": "Raidenmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Raidenmon"
+    },
+    {
+      "id": "rapidmon_x",
+      "displayName": "Rapidmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rapidmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "rasenmon",
+      "displayName": "Rasenmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rasenmon"
+    },
+    {
+      "id": "rasenmon_fury",
+      "displayName": "Rasenmon Fury",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rasenmon_Fury"
+    },
+    {
+      "id": "rasielmon",
+      "displayName": "Rasielmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rasielmon"
+    },
+    {
+      "id": "ravmon",
+      "displayName": "Ravmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ravmon"
+    },
+    {
+      "id": "ravmon_burst",
+      "displayName": "Ravmon Burst",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ravmon_Burst",
+      "dexOnly": true
+    },
+    {
+      "id": "regalecusmon",
+      "displayName": "Regalecusmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Regalecusmon"
+    },
+    {
+      "id": "rosemon",
+      "displayName": "Rosemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rosemon"
+    },
+    {
+      "id": "rosemon_burst",
+      "displayName": "Rosemon Burst",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rosemon_Burst"
+    },
+    {
+      "id": "rosemon_x",
+      "displayName": "Rosemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Rosemon_X",
+      "variant": "X"
+    },
+    {
+      "id": "rusttyrannomon",
+      "displayName": "RustTyrannomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "RustTyrannomon"
+    },
+    {
+      "id": "ryugumon",
+      "displayName": "Ryugumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Ryugumon"
+    },
+    {
+      "id": "saberleomon",
+      "displayName": "SaberLeomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "SaberLeomon"
+    },
+    {
+      "id": "saintgalgomon",
+      "displayName": "SaintGalgomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "SaintGalgomon"
+    },
+    {
+      "id": "sakuyamon",
+      "displayName": "Sakuyamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Sakuyamon"
+    },
+    {
+      "id": "sakuyamon_miko",
+      "displayName": "Sakuyamon Miko",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Sakuyamon_Miko",
+      "dexOnly": true
+    },
+    {
+      "id": "sakuyamon_x",
+      "displayName": "Sakuyamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Sakuyamon_X",
+      "variant": "X"
+    },
+    {
+      "id": "seitengokuwmon",
+      "displayName": "SeitenGokuwmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "SeitenGokuwmon"
+    },
+    {
+      "id": "seraphimon",
+      "displayName": "Seraphimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Seraphimon"
+    },
+    {
+      "id": "shagaramon",
+      "displayName": "Shagaramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Shagaramon"
+    },
+    {
+      "id": "shakamon",
+      "displayName": "Shakamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Shakamon"
+    },
+    {
+      "id": "shinegreymon",
+      "displayName": "ShineGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ShineGreymon",
+      "dexOnly": true
+    },
+    {
+      "id": "shinegreymon_burst",
+      "displayName": "ShineGreymon Burst",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ShineGreymon_Burst",
+      "dexOnly": true
+    },
+    {
+      "id": "shinegreymon_ruin",
+      "displayName": "ShineGreymon Ruin",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ShineGreymon_Ruin",
+      "dexOnly": true
+    },
+    {
+      "id": "shinmonzaemon",
+      "displayName": "ShinMonzaemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ShinMonzaemon"
+    },
+    {
+      "id": "siriusmon",
+      "displayName": "Siriusmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Siriusmon"
+    },
+    {
+      "id": "skullmammon",
+      "displayName": "SkullMammon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "SkullMammon"
+    },
+    {
+      "id": "skullmammon_x",
+      "displayName": "SkullMammon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "SkullMammon_X",
+      "variant": "X"
+    },
+    {
+      "id": "slashangemon",
+      "displayName": "SlashAngemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "SlashAngemon"
+    },
+    {
+      "id": "slayerdramon",
+      "displayName": "Slayerdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Slayerdramon",
+      "dexOnly": true
+    },
+    {
+      "id": "sleipmon_x",
+      "displayName": "Sleipmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Sleipmon_X",
+      "variant": "X"
+    },
+    {
+      "id": "susanoomon",
+      "displayName": "Susanoomon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Susanoomon"
+    },
+    {
+      "id": "takutoumon",
+      "displayName": "Takutoumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Takutoumon"
+    },
+    {
+      "id": "tengumon",
+      "displayName": "Tengumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Tengumon"
+    },
+    {
+      "id": "tigervespamon",
+      "displayName": "TigerVespamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "TigerVespamon"
+    },
+    {
+      "id": "titamon",
+      "displayName": "Titamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Titamon"
+    },
+    {
+      "id": "tlalocmon",
+      "displayName": "Tlalocmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Tlalocmon"
+    },
+    {
+      "id": "tyrantkabuterimon",
+      "displayName": "TyrantKabuterimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "TyrantKabuterimon",
+      "dexOnly": true
+    },
+    {
+      "id": "ulforcev-dramon",
+      "displayName": "UlforceV-dramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "UlforceV-dramon"
+    },
+    {
+      "id": "ulforcev-dramon_x",
+      "displayName": "UlforceV-dramon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "UlforceV-dramon_X",
+      "variant": "X"
+    },
+    {
+      "id": "ultimatebrachimon",
+      "displayName": "UltimateBrachimon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "UltimateBrachimon"
+    },
+    {
+      "id": "valdurmon",
+      "displayName": "Valdurmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Valdurmon"
+    },
+    {
+      "id": "venomvamdemon",
+      "displayName": "VenomVamdemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "VenomVamdemon"
+    },
+    {
+      "id": "victorygreymon",
+      "displayName": "VictoryGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "VictoryGreymon",
+      "dexOnly": true
+    },
+    {
+      "id": "vikemon",
+      "displayName": "Vikemon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Vikemon"
+    },
+    {
+      "id": "volcanicdramon",
+      "displayName": "Volcanicdramon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Volcanicdramon"
+    },
+    {
+      "id": "voltobautamon",
+      "displayName": "VoltoBautamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "VoltoBautamon"
+    },
+    {
+      "id": "wargreymon",
+      "displayName": "WarGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "WarGreymon"
+    },
+    {
+      "id": "wargreymon_x",
+      "displayName": "WarGreymon X",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "WarGreymon_X",
+      "variant": "X"
+    },
+    {
+      "id": "xiangpengmon",
+      "displayName": "Xiangpengmon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Xiangpengmon"
+    },
+    {
+      "id": "yukinamon",
+      "displayName": "Yukinamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Yukinamon"
+    },
+    {
+      "id": "zanbamon",
+      "displayName": "Zanbamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Zanbamon"
+    },
+    {
+      "id": "zdgarurumon",
+      "displayName": "ZdGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ZdGarurumon",
+      "dexOnly": true
+    },
+    {
+      "id": "zekegreymon",
+      "displayName": "ZekeGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "ZekeGreymon"
+    },
+    {
+      "id": "zephagamon",
+      "displayName": "Zephagamon",
+      "stage": "Ultimate-Super Ultimate",
+      "spriteFile": "Zephagamon"
+    },
+    {
+      "id": "beowolfmon",
+      "displayName": "Beowolfmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Beowolfmon"
+    },
+    {
+      "id": "bitmon",
+      "displayName": "Bitmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Bitmon"
+    },
+    {
+      "id": "coatlmon",
+      "displayName": "Coatlmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Coatlmon",
+      "dexOnly": true
+    },
+    {
+      "id": "daipenmon",
+      "displayName": "Daipenmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Daipenmon"
+    },
+    {
+      "id": "duskmon",
+      "displayName": "Duskmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Duskmon"
+    },
+    {
+      "id": "fladramon",
+      "displayName": "Fladramon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Fladramon",
+      "dexOnly": true
+    },
+    {
+      "id": "garmmon",
+      "displayName": "Garmmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Garmmon",
+      "dexOnly": true
+    },
+    {
+      "id": "goldv-dramon",
+      "displayName": "GoldV-dramon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "GoldV-dramon"
+    },
+    {
+      "id": "kaisergreymon",
+      "displayName": "KaiserGreymon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "KaiserGreymon"
+    },
+    {
+      "id": "kaiserleomon",
+      "displayName": "KaiserLeomon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "KaiserLeomon"
+    },
+    {
+      "id": "lighdramon",
+      "displayName": "Lighdramon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Lighdramon",
+      "dexOnly": true
+    },
+    {
+      "id": "lynxmon",
+      "displayName": "Lynxmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Lynxmon"
+    },
+    {
+      "id": "magnagarurumon",
+      "displayName": "MagnaGarurumon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "MagnaGarurumon",
+      "dexOnly": true
+    },
+    {
+      "id": "magnagarurumon_detached",
+      "displayName": "MagnaGarurumon Detached",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "MagnaGarurumon_Detached",
+      "dexOnly": true
+    },
+    {
+      "id": "magnamon",
+      "displayName": "Magnamon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Magnamon",
+      "dexOnly": true
+    },
+    {
+      "id": "manbomon",
+      "displayName": "Manbomon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Manbomon"
+    },
+    {
+      "id": "prairiemon",
+      "displayName": "Prairiemon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Prairiemon",
+      "dexOnly": true
+    },
+    {
+      "id": "raihimon",
+      "displayName": "Raihimon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Raihimon"
+    },
+    {
+      "id": "rapidmon_armor",
+      "displayName": "Rapidmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Rapidmon_Armor"
+    },
+    {
+      "id": "rhinomon",
+      "displayName": "Rhinomon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Rhinomon"
+    },
+    {
+      "id": "sagittarimon",
+      "displayName": "Sagittarimon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Sagittarimon",
+      "dexOnly": true
+    },
+    {
+      "id": "shadramon",
+      "displayName": "Shadramon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Shadramon"
+    },
+    {
+      "id": "sheepmon",
+      "displayName": "Sheepmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Sheepmon"
+    },
+    {
+      "id": "submarimon",
+      "displayName": "Submarimon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Submarimon"
+    },
+    {
+      "id": "velgrmon",
+      "displayName": "Velgrmon",
+      "stage": "Armor-Hybrid",
+      "spriteFile": "Velgrmon"
+    }
+  ]
+}

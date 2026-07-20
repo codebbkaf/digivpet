@@ -179,8 +179,8 @@
         "Tests pass"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": "Kept separate from evolutions.json on purpose: EvolutionNode.line is decode, not decodeIfPresent, so a missing line fails the WHOLE graph load, which fatalErrors at launch. Pouring ~950 line-less entries in would either break the load or force line optional and silently drop nodes from every tree."
+      "passes": true,
+      "notes": "Resources/roster.json ships all 1,022 on-disk Digimon as RosterEntry (id/displayName/stage/spriteFile/variant/dexOnly, no line, no evolutions); scripts/build_roster.py regenerates it and resolves the 152 null stages through the hand-authored scripts/dex_only_stages.json, erroring rather than defaulting; evolutions.json byte-identical; 780 tests pass."
     },
     {
       "id": "US-063",

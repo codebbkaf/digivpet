@@ -615,3 +615,55 @@ alone lights up all four authored health metrics, because steps / activeEnergy /
 already reads and already has a grant for. Reading the other 26 is a separate, larger job.
 
 Next: US-062 (bundle the full 1,022-entry roster).
+
+================================================================================
+2026-07-20  US-062  Bundle the full 1,022-entry roster                    PASSED
+================================================================================
+
+WHAT SHIPPED
+
+- `Resources/roster.json` — 1,022 entries, every sprite on disk, bundled (the whole `Resources`
+  folder is already a resource phase in project.yml; its comment now names both data files).
+- `Sources/Roster.swift` — `RosterEntry` (id / displayName / stage / spriteFile / variant /
+  dexOnly, and deliberately NO line, NO evolutions) + `Roster` with `entry(id:)`,
+  `entries(at:)`, `load(from:)` and a trapping `bundled`, mirroring `EvolutionGraph`.
+- `scripts/build_roster.py` — runs `import_roster.build()`, then strips to the six roster fields.
+- `scripts/dex_only_stages.json` — hand-authored id -> stage for the 152 idle-only Digimon.
+- `Tests/RosterTests.swift` — 11 tests. README documents the command; 780 tests pass, build green.
+
+FOUR THINGS THE NEXT ITERATION SHOULD KNOW
+
+1. **THE ROSTER IS 1,022; THE GRAPH IS 88; NEITHER IS A SUBSET SPELLING OF THE OTHER.**
+   `import_roster.build()` returns 1,025 nodes, not 1,022: it carries forward "orphans", graph
+   nodes with no sprite of their own that reuse another's art under a second id — `piyo_tanemon`
+   (draws Tanemon), `piyo_yuramon`, `extyranomon`. `build_roster.py` skips them against the set
+   of ids that exist on disk. A Dex tile each would show the same Digimon twice under two names.
+   `testGraphNodesAgreeWithTheirRosterEntry` pins that list at exactly those three.
+
+2. **NULL STAGES ARE RESOLVED BY TABLE, AND AN UNKNOWN ONE IS A HARD ERROR.** The 152 idle-only
+   Digimon have no stage anywhere on disk (that folder is flat — see the README's stage-gap
+   note). `scripts/dex_only_stages.json` maps each id to a stage from its published level, and
+   `build_roster.py` EXITS rather than write a file with a null. `RosterEntry.stage` is `decode`,
+   not `decodeIfPresent`, so the loader would reject one anyway — belt and braces, because a
+   defaulted stage misfiles a Digimon silently and permanently. 15 rows I could not confirm are
+   listed under `uncertain` in that file; being dexOnly, a wrong one only misfiles a Dex tile and
+   can never reach the evolution engine, which never names a dexOnly Digimon.
+
+3. **`Resources/evolutions.json` IS BYTE-IDENTICAL** (md5 3047d328b6e03ba94b51530e24e8b6fd before
+   and after). `build_roster.py` reads it — only for the 5 dexOnly stages a human already
+   assigned — and never writes it. Keep it that way: it is curated, the roster is generated.
+
+4. **`hiandromon` IS A REAL, DELIBERATE DIVERGENCE.** The art tree holds BOTH `Hi-Andromon.png`
+   and `HiAndromon.png`, so the roster has an entry per file (`hi-andromon`, `hiandromon`) while
+   the graph's `hiandromon` node points at the hyphenated sheet on purpose (its own `comment`
+   says so). The cross-check test pins this as the ONLY spriteFile divergence, so a second one
+   fails rather than quietly drawing different art in the Dex than in the evolution tree.
+
+STILL OUTSTANDING FROM US-061 (unchanged by this story)
+
+`MetricCreditor.credit` is still called from nowhere in `Sources/`, so `state.stageMetricTotals`
+stays `.zero` live and every `health.*` condition authored in US-061 evaluates to 0 and fails.
+See the US-061 entry above for the exact wiring that fixes it. Untouched here on purpose — this
+story is data and a loader, not engine wiring.
+
+Next: US-063 (replace the Dex line list with a flat item grid) — it consumes `Roster.bundled`.

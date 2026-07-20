@@ -29,6 +29,7 @@ xcodebuild test -project DigiVPet.xcodeproj -scheme DigiVPet \
 | `Sources/` | The app. |
 | `Tests/` | XCTest unit tests. The app is the `TEST_HOST`. |
 | `Resources/evolutions.json` | The shipped evolution graph — **hand-curated data**, see below. |
+| `Resources/roster.json` | All 1,022 Digimon, for the Dex — **generated**, see below. Never hand-edit. |
 | `16x16 Digimon Sprites/` | Sprite tree, bundled as a folder reference (not an asset catalog). |
 | `docs/evolutions-schema.md` | The graph file format, field by field. |
 | `scripts/` | Dev tools. Not shipped, not part of the build. |
@@ -121,13 +122,45 @@ collage. Only 5 name their own stage (`Arkadimon_Adult`, `Arkadimon_Perfect`,
 
 The remaining 152 are emitted as **`"stage": null`**, meaning *unknown* — not a guess.
 
-> **`stage: null` is a generator convention that `Sources/EvolutionGraph.swift` does NOT yet
-> accept**: `EvolutionNode.stage` is a non-optional `Stage`, so a null-stage node fails the
-> decode, and `EvolutionGraph.bundled` traps at launch on a graph it cannot read. Nothing is
-> broken today — the generated file is not bundled and the shipped graph has no such node — but
-> **assign a stage before promoting a `dexOnly` node into `Resources/evolutions.json`.** Re-runs
-> preserve what you assign. Making `stage` optional (`Stage?` = "unknown", legal only when
-> `dexOnly`) is the alternative, and is a schema change with its own validator rule.
+> **`stage: null` is a generator convention that no loader accepts.** `EvolutionNode.stage` and
+> `RosterEntry.stage` are both a non-optional `Stage`, so a null-stage entry fails the decode and
+> `bundled` traps at launch. That is deliberate: a defaulted stage would file a Digimon under the
+> wrong Dex heading silently and forever. **Assign a stage before promoting a `dexOnly` node into
+> `Resources/evolutions.json`**; re-runs preserve what you assign. For the roster, the 152 are
+> resolved by `scripts/dex_only_stages.json` — see below.
+
+### `scripts/build_roster.py` — the shipped `Resources/roster.json`
+
+The Dex shows every Digimon, including the ~950 no authored line reaches. That list is
+`Resources/roster.json`, and it is **generated** — regenerate it after any change to the sprite
+tree, and never edit it by hand:
+
+```bash
+python3 scripts/build_roster.py     # -> roster.generated.json AND Resources/roster.json
+```
+
+It runs `import_roster.py`'s derivation, then strips each node to the six fields a Dex tile
+needs: `id`, `displayName`, `stage`, `spriteFile`, `variant`, `dexOnly`. It reads
+`Resources/evolutions.json` but never writes it.
+
+**No `line` and no `evolutions`, on purpose.** The two files answer different questions —
+`evolutions.json` is *what can this become*, `roster.json` is *what exists* — and a Digimon in a
+line appears in both under the same `id`. Merging them does not work: `EvolutionNode.line` is
+`decode`, not `decodeIfPresent`, so one line-less node fails the whole graph load and traps at
+launch; and an empty `evolutions: []` would claim an entry is terminal when the truth is only
+that nobody has authored it yet.
+
+**Null stages are resolved, not defaulted.** The 152 idle-only Digimon above get their stage from
+`scripts/dex_only_stages.json` (id → stage, hand-authored from each Digimon's published level).
+An entry with a null stage and no row in that table is a hard **error** — the script refuses to
+write the file rather than pick a stage. So a newly added idle-only sprite fails the regeneration
+loudly instead of shipping filed under a guess. Fifteen rows whose published level could not be
+confirmed are listed under `uncertain` in that file; being `dexOnly`, a wrong one only misfiles a
+Dex tile and can never affect evolution.
+
+Three graph nodes reuse another node's art under a second id (`piyo_tanemon` draws Tanemon) and
+are skipped — they are an evolution-graph concern, and a Dex tile each would show the same
+Digimon twice. That is the difference between the graph's 88 nodes and the roster's 1,022.
 
 ### `scripts/check_sprites.py` — art availability, before seeding a line
 
