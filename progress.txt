@@ -801,3 +801,67 @@ THINGS THE NEXT ITERATION SHOULD KNOW
    ~930 of the 1,022 rows do not resolve, which is why the empty message exists at all.
 
 Next: US-065 (hint vocabulary for every condition metric).
+
+================================================================================
+2026-07-21 — US-065: Hint vocabulary for every condition metric
+================================================================================
+
+WHAT WAS BUILT
+
+Two new files, no changes to any existing one. `Sources/ConditionHints.swift`:
+
+  `ConditionMetric.defaultHint` — an exhaustive switch over all 32 metrics with NO `default:`
+  clause, so adding a metric to the enum is a compile error here. That is deliberate: the
+  alternative to a compile error is a new metric silently inheriting a neighbour's flavour text
+  and telling the player the wrong thing, which nothing would catch.
+
+  `ConditionHint.resolve(for:)` — pure, no clock/store/view. Authored hint wins; blank OR
+  whitespace-only counts as unauthored (the validator already treats those as the same, and if
+  resolution disagreed an edge could pass validation-by-a-space and draw an empty line); then the
+  metric default; then `ConditionHint.fallback`.
+
+`ConditionHint.fallback` ("It wants something it cannot name yet.") is unreachable through shipped
+data — the validator rejects both an unknown metric and a blank hint, and EvolutionGraphTests runs
+it over evolutions.json. It exists so a future unvalidated data source degrades to a vague true
+sentence rather than an empty row the player reads as a bug.
+
+THE REGISTER THE HINTS ARE WRITTEN IN — THIS IS LOAD-BEARING, DO NOT DRIFT FROM IT
+
+Every default is a sentence about what the CREATURE wants ("It turns toward the sun."), never an
+instruction to the player ("Get more daylight"). That is what keeps AC3 true by construction: a
+sentence about a creature's desire has nowhere natural to put a number, whereas an imperative is
+always one edit away from growing one. The five named in the story are pinned verbatim by
+`testTheNamedDefaultsReadAsAuthored` and are the reference for the other twenty-seven.
+
+VERIFIED THIS ITERATION (all observed, none assumed)
+
+  AC1  All 32 metrics have non-empty defaults, driven off `allCases` so a later addition fails the
+       test as well as the switch. Also asserted no two metrics SHARE a line — two branches
+       claiming to want the same thing is worse than no hint, it misdirects.
+  AC2  `testAuthoredHintOverridesTheMetricDefault`, plus trimming and the whitespace case.
+  AC3  `testNoHintContainsADigit` scans defaults, the fallback, AND every one of the 89 hints
+       authored in evolutions.json plus their resolved forms. It asserts the authored count is > 0
+       so it cannot pass vacuously if the graph ever loads empty. All 89 were already digit-free.
+  AC4  `testResolutionIsPure` — nothing SwiftUI is constructed anywhere in the file.
+  Build  `xcodebuild build`, Series 11 46mm — BUILD SUCCEEDED.
+  Tests  804 passed / 0 failures (was 793). The 11 new tests were ALSO run in isolation with
+         `-only-testing:DigiVPetTests/ConditionHintTests` to confirm they actually execute.
+
+WHAT REMAINS / FOR THE NEXT ITERATION
+
+1. **Nothing renders a hint yet.** This story is vocabulary only, on purpose. US-066 (render hints
+   with progress-based reveal) is what puts them on screen and it MUST call
+   `ConditionHint.resolve(for:)` rather than reading `condition.hint` directly, or the metric
+   defaults never appear and the blank/whitespace guard is bypassed.
+
+2. **US-064's warning still stands and now applies to US-066 head-on: the detail sheet's layout is
+   tuned to the 41mm fold and is fragile.** The hero sprite is at scale 3 and stage+date share one
+   10pt line purely to clear it. US-066's hints go into that same sheet. Re-screenshot on Series 9
+   (41mm) — do not reason about the fold.
+
+3. Launch flags for screenshots, unchanged: `-dexDemo -noNotificationPrompt -healthAnswered` are
+   mandatory together, plus `-dexDetailDemo` (Agumon) or `-dexEmptyDetailDemo` (Aquilamon). Do NOT
+   use `-healthAutoConfirm` — it raises the real undismissable HealthKit prompt. Bundle id is
+   `com.digivpet.DigiVPet`.
+
+Next: US-066 (render hints with progress-based reveal).

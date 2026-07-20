@@ -233,8 +233,8 @@
         "Tests pass"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered \u2014 US-066 wires it into the view."
     },
     {
       "id": "US-066",
