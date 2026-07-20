@@ -40,6 +40,36 @@ struct DexRow: Identifiable, Equatable {
     }
 }
 
+extension DexRow {
+    /// What this Digimon can become: one row per outgoing edge, in authored order.
+    ///
+    /// Resolved against a pool of already-built rows rather than straight from the graph, because a
+    /// candidate is drawn as a Dex cell and a cell needs a discovery date — which only a row
+    /// carries. A target the pool does not hold falls back to its node, drawn undiscovered: the
+    /// tree screen's pool is one line, and three shipped ids (`extyranomon`, `piyo_tanemon`,
+    /// `piyo_yuramon`) are in the graph but not the roster, so a miss is ordinary data.
+    ///
+    /// Empty when the id names no node at all, which since US-063 is the common case: the grid is
+    /// the 1,022-entry roster and only ~88 of those have a node. The detail view says so out loud
+    /// rather than showing an empty section.
+    ///
+    /// An edge whose target is in neither the pool nor the graph is dropped. That is a broken edge,
+    /// and reporting it is `EvolutionGraphValidator`'s job — the Dex's job is not to invent a cell
+    /// for a Digimon that does not exist.
+    static func evolutionCandidates(
+        of id: String,
+        in graph: EvolutionGraph,
+        resolvedAgainst pool: [String: DexRow]
+    ) -> [DexRow] {
+        guard let node = graph.node(id: id) else { return [] }
+        return node.evolutions.compactMap { edge in
+            if let known = pool[edge.to] { return known }
+            guard let target = graph.node(id: edge.to) else { return nil }
+            return DexRow(node: target, firstDiscovered: nil)
+        }
+    }
+}
+
 /// One entry in the Dex's list of lines: either an evolution line, drawn as a tree, or the flat
 /// "Others" catch-all.
 ///
@@ -230,7 +260,10 @@ final class DexModel: ObservableObject {
     /// of release builds — the same discipline as `MainScreenModel.seedCeremonyDemoIfRequested`.
     private func seedDexDemoIfRequested(_ store: GameStore) {
         guard CommandLine.arguments.contains("-dexDemo") else { return }
-        for id in ["botamon", "koromon", "agumon", "greymon"] {
+        // `aquilamon` is in the roster but in no evolution line, so it is what `-dexEmptyDetailDemo`
+        // opens to screenshot "No evolutions recorded." It sorts after Agumon, so seeding it does
+        // not steal `-dexDetailDemo`, which takes the alphabetically first discovered row.
+        for id in ["botamon", "koromon", "agumon", "greymon", "aquilamon"] {
             store.recordDiscovery(id: id)
         }
         try? store.save()

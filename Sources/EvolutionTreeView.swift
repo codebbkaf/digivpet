@@ -150,7 +150,9 @@ struct EvolutionTreeView: View {
             #endif
         }
         .sheet(item: $selected) { row in
-            DexDetailView(row: row)
+            // This line's rows are the pool, which covers every candidate: no shipped edge crosses
+            // a line, and one that ever did would resolve off the graph and draw as undiscovered.
+            DexDetailView(row: row, pool: rowsById)
         }
     }
 

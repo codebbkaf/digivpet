@@ -82,6 +82,16 @@ struct DexGridView: View {
     /// Three 32pt columns fit a 41mm watch, the narrowest screen the app supports.
     private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 3)
 
+    /// What the detail sheet resolves a row's evolution candidates against.
+    ///
+    /// Computed rather than built in an `init` because `rows` arrives empty and is replaced once
+    /// `model.load()` runs, so a dictionary built at init would still be the empty one. It is
+    /// evaluated only inside the `sheet` closure, so the cost is paid when a sheet opens, not on
+    /// every scroll — and 1,022 inserts is microseconds either way.
+    private var rowsById: [String: DexRow] {
+        Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
     var body: some View {
         ScrollViewReader { scroller in
             ScrollView {
@@ -110,7 +120,7 @@ struct DexGridView: View {
             #endif
         }
         .sheet(item: $selected) { row in
-            DexDetailView(row: row)
+            DexDetailView(row: row, pool: rowsById)
         }
     }
 
@@ -124,8 +134,15 @@ struct DexGridView: View {
     /// `simctl` has no touch command and Simulator UI scripting needs an accessibility grant this
     /// machine does not have, so a real tap cannot be synthesised. Compiled out of release builds.
     private func selectFirstDiscoveredIfRequested() {
-        guard selectsDemoRow, CommandLine.arguments.contains("-dexDetailDemo") else { return }
-        selected = rows.first { $0.isDiscovered }
+        guard selectsDemoRow else { return }
+        if CommandLine.arguments.contains("-dexDetailDemo") {
+            selected = rows.first { $0.isDiscovered }
+        } else if CommandLine.arguments.contains("-dexEmptyDetailDemo") {
+            // A roster entry in no evolution line, which is ~930 of the 1,022 — the only way to see
+            // the "No evolutions recorded." branch, since `-dexDetailDemo` lands on Agumon and
+            // Agumon branches three ways.
+            selected = rows.first { $0.id == "aquilamon" }
+        }
     }
 
     /// Debug-only: jumps to the last cell of the grid, 340-odd rows down. `simctl` has no scroll
@@ -167,33 +184,117 @@ private struct DexCell: View {
     }
 }
 
-/// What is known about one discovered Digimon.
+/// What is known about one discovered Digimon, and what it can still become.
 struct DexDetailView: View {
     let row: DexRow
 
+    /// Rows to resolve this entry's edge targets against, keyed by id — the surrounding grid's or
+    /// tree's rows. A candidate needs a discovery date to know whether to show its art, and only a
+    /// row carries one.
+    ///
+    /// Defaults to empty, which degrades to every candidate drawn as undiscovered rather than to no
+    /// section at all: the names are the part being withheld, and withholding one the player has
+    /// actually earned is a smaller wrong than losing the whole list.
+    var pool: [String: DexRow] = [:]
+
+    var graph: EvolutionGraph = .bundled
+
+    /// Cheap enough to recompute as `body` re-runs: at most three edges and a dictionary hit each.
+    private var candidates: [DexRow] {
+        DexRow.evolutionCandidates(of: row.id, in: graph, resolvedAgainst: pool)
+    }
+
+    /// Three columns, as on the Dex grid, so one to three candidates are a single line that fits a
+    /// 41mm screen and a fourth wraps onto a second line the sheet scrolls to reach.
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 4), count: 3)
+
+    /// Tightened in US-064 so a row of candidates clears the fold on a 41mm watch, which has about
+    /// 215pt of height and lost 55 of it to the sheet's own close-button chrome. The hero dropped
+    /// from 4x to 3x and the stage and date merged onto one 10pt line. Screenshots on 41mm settled
+    /// each of those, not arithmetic: the first two attempts put the section below the fold and
+    /// then clipped the tiles halfway.
     var body: some View {
         ScrollView {
-            VStack(spacing: 6) {
-                IdleSpriteView(stage: row.stage.rawValue, name: row.spriteFile, scale: 4)
+            VStack(spacing: 2) {
+                IdleSpriteView(stage: row.stage.rawValue, name: row.spriteFile, scale: 3)
 
                 Text(row.displayName)
                     .font(.headline)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.7)
 
-                Text(row.stage.displayName)
-                    .font(.caption2)
+                Text(subtitle)
+                    .font(.system(size: 10))
                     .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
 
-                if let firstDiscovered = row.firstDiscovered {
-                    Text("First met \(firstDiscovered.formatted(date: .abbreviated, time: .omitted))")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
-                }
+                evolutions
             }
             .frame(maxWidth: .infinity)
         }
+    }
+
+    /// Stage and first sighting on one line, which is worth a whole 13pt line of a 215pt screen.
+    /// "met" rather than "first met" so the pair still fits 41mm without wrapping.
+    private var subtitle: String {
+        guard let firstDiscovered = row.firstDiscovered else { return row.stage.displayName }
+        let date = firstDiscovered.formatted(date: .abbreviated, time: .omitted)
+        return "\(row.stage.displayName) · met \(date)"
+    }
+
+    @ViewBuilder
+    private var evolutions: some View {
+        Divider()
+
+        Text("Evolves into")
+            .font(.system(size: 10))
+            .foregroundStyle(.secondary)
+
+        if candidates.isEmpty {
+            // Said out loud rather than left as a bare heading. Most of the roster has no authored
+            // line, so an empty section here would be the common case and would read as a bug.
+            Text("No evolutions recorded.")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+                .multilineTextAlignment(.center)
+        } else {
+            LazyVGrid(columns: columns, spacing: 4) {
+                ForEach(candidates) { candidate in
+                    DexCandidateCell(row: candidate)
+                }
+            }
+        }
+    }
+}
+
+/// One Digimon this entry can evolve into: its art and name once met, a bare "?" until then.
+///
+/// The name is withheld, not just the sprite. A Dex that named the thing you have not found yet
+/// would be answering the question the Dex exists to make you go and answer.
+private struct DexCandidateCell: View {
+    let row: DexRow
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if row.isDiscovered {
+                IdleSpriteView(stage: row.stage.rawValue, name: row.spriteFile)
+
+                Text(row.displayName)
+                    .font(.system(size: 8))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.6)
+            } else {
+                Text("?")
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 32, height: 32)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 1)
+        .background(RoundedRectangle(cornerRadius: 6)
+            .fill(.white.opacity(row.isDiscovered ? 0.08 : 0.03)))
+        .opacity(row.isDiscovered ? 1 : 0.55)
     }
 }
 

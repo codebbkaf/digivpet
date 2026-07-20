@@ -401,3 +401,149 @@ final class DexModelTests: XCTestCase {
         XCTAssertEqual(model.discoveredCount, 0)
     }
 }
+
+/// US-064: what the detail sheet lists under "Evolves into".
+final class DexEvolutionCandidateTests: XCTestCase {
+    private static let met = Date(timeIntervalSince1970: 1_760_000_000)
+
+    private static func node(
+        _ id: String, stage: Stage = .child, to targets: [String] = []
+    ) -> EvolutionNode {
+        EvolutionNode(
+            id: id, displayName: id.capitalized, stage: stage, spriteFile: id,
+            evolutions: targets.map { EvolutionEdge(to: $0, minEnergy: 0, maxCareMistakes: 99) }
+        )
+    }
+
+    private static func pool(_ rows: [DexRow]) -> [String: DexRow] {
+        Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+    }
+
+    // MARK: - AC: every outgoing edge's target is listed
+
+    /// Authored order, not sorted: a branch should read the way the JSON lists it, so adding a
+    /// sibling cannot reshuffle the ones already there.
+    func testEveryOutgoingEdgeBecomesACandidateInAuthoredOrder() {
+        let graph = EvolutionGraph(nodes: [
+            Self.node("agumon", to: ["greymon", "meramon", "numemon"]),
+            Self.node("greymon", stage: .adult),
+            Self.node("meramon", stage: .adult),
+            Self.node("numemon", stage: .adult),
+        ])
+
+        let candidates = DexRow.evolutionCandidates(of: "agumon", in: graph, resolvedAgainst: [:])
+
+        XCTAssertEqual(candidates.map(\.id), ["greymon", "meramon", "numemon"])
+    }
+
+    /// The shipped graph, not a fixture: the real Agumon branch is the screen this story is for.
+    func testTheShippedAgumonBranchListsItsThreeTargets() {
+        let candidates = DexRow.evolutionCandidates(
+            of: "agumon", in: .bundled, resolvedAgainst: [:])
+
+        XCTAssertEqual(candidates.map(\.id), ["greymon", "meramon", "numemon"])
+    }
+
+    // MARK: - AC: discovered candidates show art and name; undiscovered are withheld
+
+    /// The whole point of resolving against a pool rather than building rows from graph nodes: a
+    /// node has no discovery date, and the date is what decides whether the cell shows the art.
+    func testADiscoveredCandidateKeepsItsRowAndItsDate() throws {
+        let graph = EvolutionGraph(nodes: [
+            Self.node("agumon", to: ["greymon", "meramon"]),
+            Self.node("greymon", stage: .adult),
+            Self.node("meramon", stage: .adult),
+        ])
+        let pool = Self.pool([
+            DexRow(id: "greymon", displayName: "Greymon", stage: .adult,
+                   spriteFile: "Greymon", firstDiscovered: Self.met),
+            DexRow(id: "meramon", displayName: "Meramon", stage: .adult,
+                   spriteFile: "Meramon", firstDiscovered: nil),
+        ])
+
+        let candidates = DexRow.evolutionCandidates(
+            of: "agumon", in: graph, resolvedAgainst: pool)
+
+        let greymon = try XCTUnwrap(candidates.first { $0.id == "greymon" })
+        XCTAssertTrue(greymon.isDiscovered)
+        XCTAssertEqual(greymon.firstDiscovered, Self.met)
+        XCTAssertEqual(greymon.spriteFile, "Greymon")
+
+        let meramon = try XCTUnwrap(candidates.first { $0.id == "meramon" })
+        XCTAssertFalse(meramon.isDiscovered, "Never met, so the cell withholds its name.")
+    }
+
+    /// The tree screen's pool is one line, and three shipped ids are in the graph but not the
+    /// roster. A miss must still produce a cell — an undiscovered one — not drop the candidate.
+    func testACandidateMissingFromThePoolFallsBackToItsNodeAsUndiscovered() throws {
+        let graph = EvolutionGraph(nodes: [
+            Self.node("agumon", to: ["greymon"]),
+            Self.node("greymon", stage: .adult),
+        ])
+
+        let candidates = DexRow.evolutionCandidates(of: "agumon", in: graph, resolvedAgainst: [:])
+
+        let greymon = try XCTUnwrap(candidates.first)
+        XCTAssertEqual(greymon.id, "greymon")
+        XCTAssertEqual(greymon.stage, .adult)
+        XCTAssertFalse(greymon.isDiscovered)
+    }
+
+    // MARK: - AC: no edges, or absent from the graph, is a message rather than an empty section
+
+    func testATerminalNodeHasNoCandidates() {
+        let graph = EvolutionGraph(nodes: [Self.node("greymon", stage: .adult)])
+
+        XCTAssertTrue(
+            DexRow.evolutionCandidates(of: "greymon", in: graph, resolvedAgainst: [:]).isEmpty)
+    }
+
+    /// Since US-063 this is the COMMON case: the grid is the 1,022-entry roster and only ~88 of
+    /// those have a node at all. It must be empty, not a crash and not a wrong list.
+    func testARosterEntryWithNoGraphNodeHasNoCandidates() {
+        XCTAssertTrue(
+            DexRow.evolutionCandidates(
+                of: "not-a-digimon", in: .bundled, resolvedAgainst: [:]).isEmpty)
+    }
+
+    /// A real roster entry, to prove the empty case is reached by ordinary data rather than only by
+    /// a made-up id. Most of the roster is exactly this.
+    func testMostOfTheShippedRosterHasNoCandidates() throws {
+        let withoutNodes = Roster.bundled.entries.filter {
+            EvolutionGraph.bundled.node(id: $0.id) == nil
+        }
+        XCTAssertGreaterThan(withoutNodes.count, 800,
+                             "The roster dwarfs the graph; that is why the empty case needs a message.")
+
+        let entry = try XCTUnwrap(withoutNodes.first)
+        XCTAssertTrue(
+            DexRow.evolutionCandidates(of: entry.id, in: .bundled, resolvedAgainst: [:]).isEmpty)
+    }
+
+    /// A broken edge is the validator's to report. The Dex must not invent a cell for a Digimon
+    /// that does not exist — that would be a "?" the player can never resolve.
+    func testAnEdgeToANonexistentTargetIsDroppedRatherThanShownAsUnknown() {
+        let graph = EvolutionGraph(nodes: [
+            Self.node("agumon", to: ["greymon", "ghostmon"]),
+            Self.node("greymon", stage: .adult),
+        ])
+
+        let candidates = DexRow.evolutionCandidates(of: "agumon", in: graph, resolvedAgainst: [:])
+
+        XCTAssertEqual(candidates.map(\.id), ["greymon"])
+    }
+
+    // MARK: - AC: one to three candidates fit 41mm without scrolling
+
+    /// The section is a three-column grid, so one to three candidates are a single line and a
+    /// fourth wraps onto a second. This pins the data half of that claim: no shipped Digimon has
+    /// more than three edges, so every real detail sheet is the one-line case. The layout half was
+    /// verified by screenshot on a 41mm simulator.
+    func testNoShippedDigimonHasMoreThanThreeCandidates() {
+        for node in EvolutionGraph.bundled.nodes {
+            let candidates = DexRow.evolutionCandidates(
+                of: node.id, in: .bundled, resolvedAgainst: [:])
+            XCTAssertLessThanOrEqual(candidates.count, 3, "\(node.id) would wrap to a second line.")
+        }
+    }
+}

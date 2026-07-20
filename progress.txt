@@ -734,3 +734,70 @@ it raises the REAL HealthKit prompt, which then blocks the screen with no way to
 that the 46mm simulator was erased during this iteration, so its old saved game is gone.
 
 Next: US-064 (detail view lists possible evolutions).
+
+================================================================================
+2026-07-21 — US-064 — Detail view lists possible evolutions
+================================================================================
+
+INHERITED WORK, NOT WRITTEN FROM SCRATCH. The working tree already held an uncommitted, essentially
+complete US-064 across the same four files US-063 touched. A previous iteration clearly did the
+implementation and was cut off before it could commit or update `prd.json`. This iteration read that
+diff, re-verified every acceptance criterion from zero rather than trusting it, and committed it.
+Nothing was rewritten — the code was right.
+
+WHAT THE FEATURE IS
+
+`DexRow.evolutionCandidates(of:in:resolvedAgainst:)` in `Sources/DexModel.swift` turns an id into
+one row per outgoing edge, in authored order. It resolves each edge target against a *pool* of
+already-built rows rather than reading the graph directly, because a candidate is drawn as a Dex
+cell and a cell needs a discovery date — which only a row carries, never a node. A target the pool
+misses falls back to its node drawn undiscovered; an edge to an id in neither is dropped, because
+inventing a cell for a nonexistent Digimon would be a "?" the player could never resolve.
+
+`DexDetailView` gained `pool:` and `graph:` parameters and an "Evolves into" section: a 3-column
+`LazyVGrid` of `DexCandidateCell`. Met -> sprite + name. Unmet -> a bare "?", NAME WITHHELD (naming
+the thing you have not found yet answers the question the Dex exists to make you answer). Both
+call sites pass a pool: the grid keyed off all 1,022 rows, the tree off its own line's rows.
+
+VERIFIED THIS ITERATION (all observed, none assumed)
+
+  Build             `xcodebuild build` on Series 11 46mm — BUILD SUCCEEDED.
+  Tests             793 passed / 0 failures, including the 9 new `DexEvolutionCandidateTests`,
+                    which were also run in isolation to confirm they actually execute.
+  41mm screenshot   Series 9 (41mm), bundle id `com.digivpet.DigiVPet`.
+                    -dexDetailDemo      -> Agumon, "Child · met Jul 20, 2026", then "Evolves into"
+                                           with Greymon (sprite + name) and two "?" — all three on
+                                           ONE line, fully above the fold, no scrolling. Blocky.
+                    -dexEmptyDetailDemo -> Aquilamon with "No evolutions recorded."
+
+WHAT WAS *NOT* VERIFIED, AND WHY
+
+AC4's second half, "more than three scrolls", was NOT observed. It CANNOT be with shipped data: no
+Digimon in the graph has more than three edges, which `testNoShippedDigimonHasMoreThanThreeCandidates`
+now pins as an invariant. The claim rests on the section being a 3-column grid inside the sheet's
+existing `ScrollView`, so a fourth candidate wraps. If a 4-way branch is ever authored, screenshot
+this again — the layout was tuned to fit exactly one line on 41mm.
+
+THINGS THE NEXT ITERATION SHOULD KNOW
+
+1. **THE DETAIL SHEET'S LAYOUT IS TUNED TO THE 41mm FOLD AND IS FRAGILE.** 41mm has ~215pt of
+   height and the sheet's close-button chrome eats ~55. To clear the fold the hero sprite went from
+   scale 4 to 3 and stage + date merged onto one 10pt line ("Child · met Jul 20, 2026", "met" not
+   "first met", so it fits without wrapping). Per the inherited comments the first two attempts put
+   the section below the fold and then clipped the tiles. Anything added to this sheet — US-065 and
+   US-066's hints go exactly here — must be re-screenshotted on 41mm, not reasoned about.
+
+2. **THE LAUNCH FLAG SET IS NOW FIVE.** `-dexDemo -noNotificationPrompt -healthAnswered` remain
+   mandatory together (see US-063's note; `-healthAutoConfirm` raises the REAL undismissable
+   HealthKit prompt — do not use it). `-dexDetailDemo` opens the first discovered row and
+   `-dexEmptyDetailDemo` opens Aquilamon. `-dexDemo` now seeds a 5th id, `aquilamon`, purely so the
+   empty branch is screenshottable; it sorts after Agumon so it does not steal `-dexDetailDemo`.
+
+3. **BUNDLE ID IS `com.digivpet.DigiVPet`, NOT `com.digivpet.app`.** That cost a failed launch
+   (FBSOpenApplicationServiceErrorDomain code=4) this iteration.
+
+4. US-063's warning still stands and is what shaped this story: a `DexRow` has no `.node`, so
+   anything wanting edges looks the id up in `EvolutionGraph.bundled` and MUST tolerate a miss —
+   ~930 of the 1,022 rows do not resolve, which is why the empty message exists at all.
+
+Next: US-065 (hint vocabulary for every condition metric).

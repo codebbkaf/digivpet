@@ -217,8 +217,8 @@
         "Tests pass"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "DexDetailView gained an 'Evolves into' three-column section fed by DexRow.evolutionCandidates(of:in:resolvedAgainst:), which resolves each outgoing edge against the surrounding rows so a met candidate keeps its discovery date and art while an unmet one is drawn as a bare '?' with the name withheld; no node or no edges shows 'No evolutions recorded.'. Screenshotted on Series 9 41mm: -dexDetailDemo shows Agumon -> Greymon (named) + two '?' on one line above the fold with no scrolling, and the new -dexEmptyDetailDemo shows Aquilamon with the empty message. Build green, 793 tests pass (9 new). CAVEAT: the '>3 candidates scrolls' half of AC4 was NOT observed - no shipped Digimon has more than 3 edges (pinned by testNoShippedDigimonHasMoreThanThreeCandidates), so real data cannot reach the wrap case; it rests on the section being a 3-column LazyVGrid inside the sheet's ScrollView."
     },
     {
       "id": "US-065",
