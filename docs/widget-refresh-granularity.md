@@ -185,6 +185,29 @@ already specifies — that is a correctness requirement, not a cadence one.
 cadence ships, assume the sprite may hold a single frame when the wrist is down,
 and do not make the design depend on motion being visible in AOD.
 
+## What US-049 actually shipped (2026-07-20)
+
+`ComplicationTimeline` in `Sources/ComplicationViews.swift`, built on the numbers above:
+
+- **5 s spacing**, as recommended — the finest interval honoured exactly on every sample.
+- **60 entries, a five-minute horizon**, then `.after` the last entry asks for a fresh batch. The
+  horizon and not the spacing is what costs, since a batch is one charge however many entries it
+  holds. Five minutes keeps the reload rate in the same order as the daily refresh budget without
+  ever asking WidgetKit to archive several hundred entries at once.
+- **When the budget runs out, the last entry simply keeps showing** — a still sprite, which is the
+  behaviour that shipped before US-049. Degrading to the old complication rather than a broken one is
+  the whole reason nothing about correctness rides on this batch; every real state change still
+  arrives through the app's own `reloadAllTimelines`.
+- **Held poses get one entry**, so sleeping, sick and dead never appear to walk.
+
+The AOD open item above is carried forward unchanged and is still the one thing here that needs real
+hardware. Nothing in the shipped design depends on the motion being visible with the wrist down.
+
+`RefreshGranularitySpike.swift` is **deliberately still here** despite the note above saying to delete
+it once US-049 landed. It is the instrument for the AOD measurement, which is still open, and it is
+`#if DEBUG` so it costs a release build nothing. Delete it when the AOD floor has been measured on a
+watch, not before.
+
 ## Ruled out, permanently
 
 **Sensor-driven (gyroscope/compass) widget frames.** Not attempted and not to be

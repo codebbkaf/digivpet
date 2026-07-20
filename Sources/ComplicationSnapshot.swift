@@ -6,8 +6,10 @@ import Foundation
 /// reason the dominant type arrives already chosen: `HealthStatus` lives in `GameState`, which is
 /// SwiftData, which the widget process must not link. The app decides, the widget draws.
 ///
-/// A pose, not a `SpriteAnimation`: a complication does not animate, so each case is exactly one
-/// frame held still — `sleep1`, not the sleep loop.
+/// A pose, not a `SpriteAnimation`: `SpriteAnimation` lives in `DigimonSpriteView.swift`, which the
+/// widget extension does not compile (it is a whole SwiftUI view built on the app's frame timer). The
+/// two-frame idle cycle below is therefore restated here rather than shared — `ComplicationTests`
+/// asserts the two definitions agree, so they cannot drift apart unnoticed.
 enum ComplicationPose: String, Codable, CaseIterable {
     case idle
     case sleeping
@@ -26,6 +28,36 @@ enum ComplicationPose: String, Codable, CaseIterable {
         case .sick: return .hurt1
         case .messy: return .angry
         case .dead: return .hurt2
+        }
+    }
+
+    /// Whether this pose is a loop the timeline should step through, or one frame held still.
+    ///
+    /// Only `idle` moves. Sleeping, sick and dead are the states US-049 explicitly requires to hold
+    /// — a Digimon that appears to walk while it is asleep or dead is worse than a still one, because
+    /// the motion actively contradicts what the pose is trying to say. `messy` holds too, for a duller
+    /// reason: its frame is `angry`, and the sheet has no second angry frame to alternate with.
+    var animates: Bool { self == .idle }
+
+    /// The frames this pose cycles through on a 48x64 stage sheet, in order.
+    ///
+    /// One element for every held pose, so a caller never has to branch on `animates` to draw.
+    var stageFrames: [SpriteFrame] {
+        switch self {
+        case .idle: return [.walk1, .walk2]
+        case .sleeping, .sick, .messy, .dead: return [frame]
+        }
+    }
+
+    /// The same cycle on a 48x16 Digitama sheet, which only has the idle wobble.
+    ///
+    /// Empty for every other pose, exactly as `SpriteAnimation.eggFrames` is: an egg's index 2 is the
+    /// hatch, so borrowing stage indices would draw the egg cracking open as part of standing still.
+    /// An empty result sends the caller to the idle art, which is what a sleeping egg already drew.
+    var eggFrames: [EggFrame] {
+        switch self {
+        case .idle: return [.idle, .wobble]
+        case .sleeping, .sick, .messy, .dead: return []
         }
     }
 

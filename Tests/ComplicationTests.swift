@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import WidgetKit
 import XCTest
 
 @testable import DigiVPet
@@ -528,4 +529,155 @@ final class DefaultStoreLocationTests: XCTestCase {
                        "the saved game moved into the app group container: \(url.path)")
         XCTAssertTrue(url.path.contains("Application Support"), url.path)
     }
+}
+
+/// US-049: the batch of entries that makes the sprite walk.
+///
+/// Everything here is pure timeline arithmetic against a fixed instant — no WidgetKit host, no
+/// waiting, no real clock. `ComplicationProvider.now` is injected for the same reason every other
+/// clock in this project is.
+final class ComplicationTimelineTests: XCTestCase {
+    /// A snapshot in a given pose, with the placeholder's harmless everything-else.
+    private func snapshot(pose: ComplicationPose) -> ComplicationSnapshot {
+        ComplicationSnapshot(
+            displayName: "Agumon",
+            spriteStage: "Child",
+            spriteFile: "Agumon",
+            dominantEnergySymbol: "力",
+            dominantEnergyName: "Strength",
+            dominantEnergyFraction: 0.5,
+            dominantEnergyEarned: 25,
+            pose: pose,
+            published: Fixture.morning
+        )
+    }
+
+    // MARK: - The animated batch
+
+    func testTheIdleBatchHasTheDocumentedEntryCountAndHorizon() {
+        let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
+
+        XCTAssertEqual(entries.count, ComplicationTimeline.motionEntryCount)
+        XCTAssertEqual(entries.count, 60)
+        XCTAssertEqual(entries.first?.date, Fixture.morning)
+        // 60 entries at 5 s means the last one lands at t+295, five seconds short of five minutes.
+        XCTAssertEqual(entries.last?.date, Fixture.morning.addingTimeInterval(295))
+    }
+
+    func testTheIdleBatchIsSpacedAtTheMeasuredFrameInterval() {
+        let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
+
+        // The cadence is the measured one from docs/widget-refresh-granularity.md, not an assumption.
+        XCTAssertEqual(ComplicationTimeline.frameInterval, 5)
+        for (earlier, later) in zip(entries, entries.dropFirst()) {
+            XCTAssertEqual(later.date.timeIntervalSince(earlier.date),
+                           ComplicationTimeline.frameInterval,
+                           accuracy: 0.0001)
+        }
+    }
+
+    func testTheIdleBatchAlternatesWalk1AndWalk2() {
+        let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
+        let frames = entries.map { entry in
+            ComplicationPose.idle.stageFrames[entry.step % ComplicationPose.idle.stageFrames.count]
+        }
+
+        XCTAssertEqual(Array(frames.prefix(6)), [.walk1, .walk2, .walk1, .walk2, .walk1, .walk2])
+        // And it never falls out of step across the whole horizon.
+        for (index, frame) in frames.enumerated() {
+            XCTAssertEqual(frame, index.isMultiple(of: 2) ? .walk1 : .walk2, "entry \(index)")
+        }
+    }
+
+    func testTheBatchReloadsOneFrameAfterItsLastEntry() {
+        let reload = ComplicationTimeline.reloadDate(for: snapshot(pose: .idle), from: Fixture.morning)
+
+        // t+300: the last entry (t+295) gets its full five seconds before the batch is replaced.
+        XCTAssertEqual(reload, Fixture.morning.addingTimeInterval(300))
+    }
+
+    // MARK: - Suppression in held poses
+
+    func testHeldPosesGetOneEntryAndNoAlternation() {
+        // Sleeping, sick and dead are the three US-049 names. `messy` holds too — its frame is
+        // `angry`, and the sheet has no second angry frame.
+        for pose in [ComplicationPose.sleeping, .sick, .dead, .messy] {
+            let entries = ComplicationTimeline.entries(for: snapshot(pose: pose), from: Fixture.morning)
+
+            XCTAssertEqual(entries.count, 1, "\(pose) should not walk")
+            XCTAssertEqual(entries.first?.step, 0, "\(pose)")
+            XCTAssertFalse(pose.animates, "\(pose)")
+            // One frame in the cycle means there is nothing for a step to advance to, whatever the
+            // entry index — this is what actually stops a dead Digimon appearing to walk.
+            XCTAssertEqual(pose.stageFrames, [pose.frame], "\(pose)")
+        }
+    }
+
+    func testOnlyIdleAnimates() {
+        // Total over the enum, so a pose added later cannot quietly default into walking.
+        for pose in ComplicationPose.allCases {
+            XCTAssertEqual(pose.animates, pose == .idle, "\(pose)")
+        }
+    }
+
+    // MARK: - The whole timeline
+
+    /// `ComplicationProvider.getTimeline` is a one-line hand-off to `ComplicationTimeline`, and
+    /// calling it needs a `TimelineProviderContext`, which has no public initialiser and cannot be
+    /// faked without undefined behaviour. So the assertion lands one level down, on the value the
+    /// provider hands back verbatim.
+    func testTheTimelineCarriesTheBatchAndItsReloadDate() {
+        let timeline = ComplicationTimeline.timeline(for: snapshot(pose: .idle), from: Fixture.morning)
+
+        XCTAssertEqual(timeline.entries.count, ComplicationTimeline.motionEntryCount)
+        XCTAssertEqual(timeline.entries.map(\.step), Array(0..<ComplicationTimeline.motionEntryCount))
+        // Every entry carries the SAME snapshot — only the step advances. The widget must never
+        // invent state the app has not published.
+        XCTAssertEqual(Set(timeline.entries.map(\.snapshot.pose)), [.idle])
+    }
+
+    func testTheTimelineHoldsOneEntryForASleepingDigimon() {
+        let timeline = ComplicationTimeline.timeline(for: snapshot(pose: .sleeping), from: Fixture.morning)
+
+        XCTAssertEqual(timeline.entries.count, 1)
+        XCTAssertEqual(timeline.entries.first?.snapshot.pose, .sleeping)
+        XCTAssertEqual(timeline.entries.first?.date, Fixture.morning)
+    }
+
+    /// A held pose still comes back in an hour, so a watch whose app has not woken does not sit on
+    /// one entry forever.
+    func testAHeldPoseReloadsOnTheHourlyFloor() {
+        let reload = ComplicationTimeline.reloadDate(for: snapshot(pose: .sleeping), from: Fixture.morning)
+        XCTAssertEqual(reload, Fixture.morning.addingTimeInterval(3600))
+    }
+
+    // MARK: - What the demo screen selects
+
+    func testTheEntryShowingAtAGivenMomentIsTheLastOneDue() {
+        let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
+
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning, in: entries)?.step, 0)
+        // Four seconds in, entry 1 is not due yet.
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(4), in: entries)?.step, 0)
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(5), in: entries)?.step, 1)
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(12), in: entries)?.step, 2)
+        // Past the horizon the last entry holds — which is exactly how running out of budget looks.
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(9999), in: entries)?.step, 59)
+        // Before the batch even starts, the first entry rather than nil.
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(-60), in: entries)?.step, 0)
+    }
+
+    // MARK: - Drift guard
+
+    /// `ComplicationPose` restates the idle cycle because the widget extension does not compile
+    /// `DigimonSpriteView.swift`. Restated definitions drift; this is what stops it silently.
+    func testTheComplicationIdleCycleMatchesTheAppsIdleAnimation() {
+        XCTAssertEqual(ComplicationPose.idle.stageFrames, SpriteAnimation.idle.stageFrames)
+        XCTAssertEqual(ComplicationPose.idle.eggFrames, SpriteAnimation.idle.eggFrames)
+        // And the held poses borrow the app's own single-frame form.
+        for pose in ComplicationPose.allCases where !pose.animates {
+            XCTAssertEqual(pose.stageFrames, SpriteAnimation.still(pose.frame).stageFrames, "\(pose)")
+        }
+    }
+
 }

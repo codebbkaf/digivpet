@@ -323,8 +323,8 @@
         "Verify in watchOS Simulator via -complicationDemo: two screenshots at different entry dates showing different frames"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Batched timeline: 60 entries at the measured 5s cadence (US-048), alternating walk1/walk2 via ComplicationEntry.step; held poses (sleeping/sick/dead/messy) get one entry so they cannot appear to walk. Reloads .after the 5-minute horizon; budget exhaustion degrades to the last entry held, i.e. the pre-US-049 still sprite. Sprite now sources every frame from the sheet (narrows FR-22 - see the comment on ComplicationSprite; eggs gained a real idle/wobble). 647 tests green. Simulator -complicationDemo screenshots at step 1 and step 4 differ in 639 of 10816 sprite-tile pixels; a -sickDemo run showed 'step 0 of 1', suppression on device. AOD repaint rate still unmeasured - hardware only."
     },
     {
       "id": "US-050",

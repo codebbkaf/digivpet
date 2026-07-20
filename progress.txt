@@ -1074,3 +1074,104 @@ Sources/Complication/RefreshGranularitySpike.swift once US-049 has landed.
 
 REMAINS. US-049 only, and it is now unblocked with a real cadence to design
 against.
+
+================================================================================
+2026-07-20 — US-049: Batched-timeline frame alternation in the complication
+================================================================================
+
+DONE. Build green, 647 tests / 0 failures (636 before; this story adds 11).
+This was the last open story — every story in prd.json now passes.
+
+WHAT SHIPPED. `ComplicationTimeline` in Sources/ComplicationViews.swift, built
+entirely on US-048's measured numbers rather than a guess:
+
+  cadence   5 s      the finest spacing honoured EXACTLY on every sample
+  batch     60       entries, a five-minute horizon
+  reload    .after   t+300, one frame past the last entry so it gets its full 5 s
+  held pose 1 entry  sleeping, sick, dead — and messy
+
+`ComplicationEntry` gained `step`; `ComplicationPose` gained `animates`,
+`stageFrames` and `eggFrames`. Only `.idle` animates. `messy` holds for a duller
+reason than the other three: its frame is `angry` and the sheet has no second
+angry frame to alternate with.
+
+HORIZON PLAN, which the AC asked to be documented. The spacing is free — US-048
+proved a batch is ONE budget charge however many entries it holds — so the only
+thing worth spending thought on is how often the batch is re-requested. Five
+minutes is the compromise: short enough that WidgetKit is never asked to archive
+several hundred entries, long enough that the reload rate stays in the same order
+as a widget's daily budget. **When the budget is spent WidgetKit just keeps
+showing the last entry — a still sprite, exactly the pre-US-049 behaviour.** So
+running out degrades to the old complication, not a broken one, and nothing about
+correctness rides on this batch. Every real state change still arrives via the
+app's own reloadAllTimelines.
+
+FR-22 NARROWED, deliberately, and this is the one judgement call worth flagging.
+FR-22 had the idle pose draw the one-file `Idle Frame Only` art instead of
+decoding a sheet. It cannot now that idle moves: I checked the bytes, and the
+idle art is a DIFFERENT drawing from sheet frame 0 (Agumon, Gabumon, Patamon —
+all three `idle == walk1` false). Alternating idle art with sheet walk2 would
+flicker between two art styles and read as a glitch rather than a step. A walk
+cycle has to come from one source, so every frame now comes from the sheet and
+the idle art is the fallback only. The cost FR-22 was dodging is paid once per
+Digimon (SpriteSheetCache caches), and FR-22's other reason — the Digitama — came
+out BETTER: an egg now takes idle/wobble from its own sheet and actually wobbles,
+where it used to hold IdleSpriteCache's frame-0 fallback forever.
+
+TRANSITION. `.id(step)` + `.transition(.opacity)` on the sprite. The `.id` is the
+load-bearing half — WidgetKit animates between entries only where view IDENTITY
+changed, and without it the two frames are the same Image node with new contents
+and it cuts hard. Cross-fade rather than slide or scale: 24pt of sprite in a 52pt
+circle, and anything that moves it lands it outside the circle.
+
+DRIFT GUARD. ComplicationPose restates the idle cycle because the extension does
+not compile DigimonSpriteView.swift (SpriteAnimation lives there, on a whole
+SwiftUI view). Restated definitions drift, so there is now a test asserting
+ComplicationPose.idle.stageFrames == SpriteAnimation.idle.stageFrames, same for
+eggFrames, and that every held pose equals SpriteAnimation.still(frame).
+
+TESTS (11 new, all in ComplicationTimelineTests): entry count and horizon,
+spacing at exactly frameInterval across all 60 gaps, the walk1/walk2 sequence
+across the whole batch, the reload date for both animated and held, one entry
+and step 0 for each of the four held poses, `animates` total over allCases so a
+pose added later cannot quietly default into walking, the whole Timeline value,
+demo entry selection incl. past-the-horizon and before-the-start, and the drift
+guard.
+
+NOT TESTED, and why: `ComplicationProvider.getTimeline` needs a
+`TimelineProviderContext`, which has no public initialiser. I tried faking one by
+loading a zeroed buffer with `unsafeBitCast` and threw it away — it is undefined
+behaviour and would crash the day the struct gains a refcounted field. getTimeline
+is a one-line hand-off, so the assertions land one level down on the value it
+returns verbatim. `provider.now` is still injected and the seam is real.
+
+SIMULATOR VERIFICATION, Series 11 (46mm), -wanderDemo -complicationDemo. The
+demo screen now steps through the REAL generated batch on the real frameInterval
+and prints the step index, so a screenshot both verifies the shipping timeline
+and says which entry it caught. Two shots five seconds apart read "step 1 of 60"
+and "step 4 of 60", and the circular sprite tile differs in 639 of 10816 pixels
+between them — a genuine frame change, not compression noise. An earlier run that
+had gone sick read "step 0 of 1": suppression observed on device, not just in a
+test.
+
+TRAP I WALKED INTO, do not repeat. I uninstalled the app to clear a sick save,
+and that WIPED THE HEALTHKIT GRANT — every launch then stuck on the system health
+sheet, which no simctl command can tap (same TCC wall US-048 documented). Cost
+about fifteen minutes across three devices. The grant lives in
+  ~/Library/Developer/CoreSimulator/Devices/<UDID>/data/Library/Health/healthdb.sqlite
+in table `authorization`: status 103 == granted, 100 == still pending. Shut the
+device down, `update authorization set status = 103 where source_id = <the
+DigiVPet row in sources>`, boot. That is what unblocked this. **Prefer a demo flag
+over an uninstall when you need to reset game state.**
+
+SPIKE DELIBERATELY KEPT. US-048's note said to delete
+Sources/Complication/RefreshGranularitySpike.swift once US-049 landed. I did not,
+and this is a considered override, not an oversight: it is the instrument for the
+AOD measurement, which is still the one open item and still needs real hardware.
+It is #if DEBUG so it costs a release build nothing. Delete it when AOD has been
+measured on a watch.
+
+REMAINS. Nothing in prd.json. The one carried-forward unknown is the AOD repaint
+rate — unmeasurable in a simulator, recorded as Unknown in
+docs/widget-refresh-granularity.md. Nothing in the shipped design depends on the
+motion being visible with the wrist down; the complication reads fine frozen.
