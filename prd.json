@@ -60,8 +60,8 @@
         "Tests pass"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "HealthMetricReader + ReadableHealthMetric (failable init: care.* and health.sleep are not constructible, so an unreadable metric cannot compile into a wrong answer). Aggregations: sumQuantity / averageQuantity (discrete types) / countEvents / countStoodHours / sumDurationMinutes. Reads behind HealthMetricSampleFetching; failure -> .unavailable, empty window -> .noData. 16 new tests, suite 684/0 failures, BUILD SUCCEEDED."
     },
     {
       "id": "US-058",

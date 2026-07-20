@@ -125,3 +125,77 @@ Traps for US-061 (the story that will actually author conditions):
    both new files were picked up by `xcodegen generate` alone.
 
 Remains: nothing for this story. US-057 is next.
+
+---
+
+## 2026-07-20 — US-057 — Read an arbitrary health metric over a window
+PASSES: true
+
+Did: new Sources/HealthMetricReader.swift (HealthMetricAggregation, ReadableHealthMetric,
+HealthReading.aggregate, HealthMetricSampleFetching, HealthKitMetricFetcher, HealthMetricReader)
+and new Tests/HealthMetricReaderTests.swift (16 tests). No project.yml edit needed — `sources:
+- path: Sources` / `- path: Tests` are whole-directory references; `xcodegen generate` picked
+both files up on its own (same as US-056).
+
+Observed (not assumed):
+- BUILD SUCCEEDED.
+- Full suite 684 tests / 0 failures (was 668 => +16, all mine). Every HealthMetricReaderTests
+  case logged "passed" individually — grepped, not inferred.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO:
+
+1. `ReadableHealthMetric` is a STRUCT with a FAILABLE init from ConditionMetric, not a second
+   enum. `init?` returns nil for all five care.* metrics AND for health.sleep. That nil is the
+   only gate: HealthMetricReader.read takes a ReadableHealthMetric, so you cannot ask it for a
+   care counter or for sleep at all. Do not "helpfully" add a String or ConditionMetric overload
+   that falls back to a number.
+
+2. **health.sleep is NOT readable through this reader, on purpose.** Sleep needs the cross-source
+   union de-duplication and longest-block rule in SleepAnalysis; counting sleepAnalysis samples as
+   events would return a count of SEGMENTS, which is a plausible number and wrong. US-060 must
+   route a health.sleep condition to LastNightSleepReader/SleepAnalysis. There is a
+   `read(_ metric: ConditionMetric, ...) -> HealthReading?` convenience that returns nil for it
+   precisely so the caller is forced to notice.
+
+3. Five aggregations, because one rule would be wrong for most of the vocabulary:
+   - sumQuantity(unit)      — steps, distances, flights, exercise/stand/daylight minutes,
+                              active/basal kcal, water litres.
+   - averageQuantity(unit)  — vo2Max, restingHeartRate, HRV SDNN, respiratoryRate,
+                              oxygenSaturation, physicalEffort, audioExposure. These are DISCRETE
+                              measurements of a standing state; a stage-long TOTAL resting heart
+                              rate is a five-figure number that satisfies any criterion ever
+                              written. US-061 must author these as averages.
+   - countEvents            — handwashing, toothbrushing, highHeartRate, lowCardioFitness,
+                              walkingSteadiness, and workouts (1 HKWorkout = 1 workout).
+   - countStoodHours        — appleStandHour ONLY. HealthKit writes an entry for every hour,
+                              stood or idle, so countEvents there would report a motionless day
+                              as 24. Filters on HKCategoryValueAppleStandHour.stood.
+   - sumDurationMinutes     — mindfulSession only. The metric is named health.mindfulMinutes;
+                              two 20-minute sessions are 40, not 2.
+
+4. Window rule is IDENTICAL to HealthReading.total: a sample belongs to the window its START falls
+   in, half-open [start, end). Kept the same deliberately so a sample counts once and in one
+   window whichever reader sees it. testSamplesOutsideTheWindowAreNotCounted pins both edges,
+   including that a sample starting exactly at the end instant is OUT.
+
+5. Empty/none-belonging window -> .noData; a window that DID contain samples always yields a real
+   .value, including an all-idle stand-hour window, which is .value(0). Fetch throw -> .unavailable,
+   never a throw out of read(), matching TodayHealthReader.read.
+
+6. The window is a PARAMETER, not computed inside. US-058 measures over a stage whose start moves,
+   and ConditionWindow also has .day and .lifetime — a reader that picked its own window could
+   answer only one of the three.
+
+7. testEveryQuantityMetricsUnitIsCompatibleWithItsType is the one test that cannot be replaced by
+   a fixture. HKQuantity.doubleValue(for:) raises an ObjC exception on a unit the type does not
+   support, and NO fixture test can catch that because fixtures carry a Double, never an
+   HKQuantity. It asserts HKQuantityType.is(compatibleWith:) for all 18 quantity entries.
+   If you add a metric to the table, that test is what stops a launch-time crash on real hardware.
+   Its mirror, testEveryCountedMetricIsACategoryOrWorkoutType, stops the opposite mistake.
+
+8. HealthSample is REUSED for category samples: `value` carries the raw HKCategorySample value
+   (only countStoodHours looks at it) and 1 for a workout. Deliberate — SleepSample stays separate
+   because sleep's number is its span, and that reasoning is unchanged.
+
+Remains: nothing for this story. NOTHING evaluates conditions yet (still true after US-056);
+US-058 (per-stage metric totals) is next, then US-084, US-059, US-060.
