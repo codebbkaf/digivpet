@@ -59,13 +59,51 @@
           "requiredEnergy": "strength",
           "minEnergy": 60,
           "maxCareMistakes": 3,
-          "isDefault": true
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Walk with it most days"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it often"
+            }
+          ]
         },
         {
           "to": "meramon",
           "requiredEnergy": "stamina",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Burn plenty of active calories"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not stuff it with food"
+            }
+          ]
+        },
+        {
+          "to": "numemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
         }
       ]
     },
@@ -81,6 +119,35 @@
           "requiredEnergy": "strength",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Train it steadily, not idly"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 31,
+              "hint": "Stop once it has had enough for this stage"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Spend many exercise minutes together"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -97,6 +164,66 @@
           "requiredEnergy": "stamina",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Let it sleep long and undisturbed"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not wake it in the night"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "numemon",
+      "displayName": "Numemon",
+      "stage": "Adult",
+      "line": "agumon",
+      "spriteFile": "Numemon",
+      "evolutions": [
+        {
+          "to": "metalgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 200000,
+              "hint": "Walk further than you ever have"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Fight battle after battle"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -118,11 +245,34 @@
       ]
     },
     {
+      "id": "blackkingnumemon",
+      "displayName": "BlackKingNumemon",
+      "stage": "Perfect",
+      "line": "agumon",
+      "spriteFile": "BlackKingNumemon",
+      "evolutions": [
+        {
+          "to": "platinumnumemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "wargreymon",
       "displayName": "WarGreymon",
       "stage": "Ultimate-Super Ultimate",
       "line": "agumon",
       "spriteFile": "WarGreymon"
+    },
+    {
+      "id": "platinumnumemon",
+      "displayName": "PlatinumNumemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "agumon",
+      "spriteFile": "PlatinumNumemon"
     },
     {
       "id": "gabu_digitama",
@@ -183,6 +333,28 @@
           "requiredEnergy": "vitality",
           "minEnergy": 60,
           "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50000,
+              "hint": "Keep it walking most days"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 3,
+              "hint": "Feed it carefully"
+            }
+          ]
+        },
+        {
+          "to": "geremon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -199,6 +371,66 @@
           "requiredEnergy": "vitality",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240,
+              "hint": "Exercise with it most days"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Train it well"
+            }
+          ]
+        },
+        {
+          "to": "gerbemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "geremon",
+      "displayName": "Geremon",
+      "stage": "Adult",
+      "line": "gabumon",
+      "spriteFile": "Geremon",
+      "evolutions": [
+        {
+          "to": "weregarurumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2500,
+              "hint": "Burn an enormous number of active calories"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "Train it without pause"
+            }
+          ]
+        },
+        {
+          "to": "gerbemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -220,11 +452,34 @@
       ]
     },
     {
+      "id": "gerbemon",
+      "displayName": "Gerbemon",
+      "stage": "Perfect",
+      "line": "gabumon",
+      "spriteFile": "Gerbemon",
+      "evolutions": [
+        {
+          "to": "metaletemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "metalgarurumon",
       "displayName": "MetalGarurumon",
       "stage": "Ultimate-Super Ultimate",
       "line": "gabumon",
       "spriteFile": "MetalGarurumon"
+    },
+    {
+      "id": "metaletemon",
+      "displayName": "MetalEtemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "gabumon",
+      "spriteFile": "MetalEtemon"
     },
     {
       "id": "pal_digitama",
@@ -285,6 +540,28 @@
           "requiredEnergy": "spirit",
           "minEnergy": 60,
           "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it rest well every night"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never disturb its sleep"
+            }
+          ]
+        },
+        {
+          "to": "karatsukinumemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -301,6 +578,66 @@
           "requiredEnergy": "spirit",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90000,
+              "hint": "Walk with it a great deal"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Never overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "jyagamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "karatsukinumemon",
+      "displayName": "KaratsukiNumemon",
+      "stage": "Adult",
+      "line": "palmon",
+      "spriteFile": "KaratsukiNumemon",
+      "evolutions": [
+        {
+          "to": "lilimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 600,
+              "hint": "Exercise relentlessly"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Guard its sleep"
+            }
+          ]
+        },
+        {
+          "to": "jyagamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -322,11 +659,34 @@
       ]
     },
     {
+      "id": "jyagamon",
+      "displayName": "Jyagamon",
+      "stage": "Perfect",
+      "line": "palmon",
+      "spriteFile": "Jyagamon",
+      "evolutions": [
+        {
+          "to": "shinmonzaemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "rosemon",
       "displayName": "Rosemon",
       "stage": "Ultimate-Super Ultimate",
       "line": "palmon",
       "spriteFile": "Rosemon"
+    },
+    {
+      "id": "shinmonzaemon",
+      "displayName": "ShinMonzaemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "palmon",
+      "spriteFile": "ShinMonzaemon"
     },
     {
       "id": "pata_digitama",
@@ -373,6 +733,12 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "tsukaimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
         }
       ]
     },
@@ -388,25 +754,105 @@
           "to": "unimon",
           "requiredEnergy": "spirit",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 55000,
+              "hint": "Take it walking often"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Train it regularly"
+            }
+          ]
         },
         {
           "to": "centalmon",
           "requiredEnergy": "strength",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1100,
+              "hint": "Burn active calories with it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Let it fight a few battles"
+            }
+          ]
         },
+        {
+          "to": "scumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tsukaimon",
+      "displayName": "Tsukaimon",
+      "stage": "Child",
+      "line": "patamon",
+      "spriteFile": "Tsukaimon",
+      "evolutions": [
         {
           "to": "ogremon",
           "requiredEnergy": "stamina",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 200,
+              "hint": "Exercise beside it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep its meals in check"
+            }
+          ]
         },
         {
           "to": "bakemon",
           "requiredEnergy": "vitality",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1400,
+              "hint": "Let it sleep deeply"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Leave its nights alone"
+            }
+          ]
         },
         {
           "to": "scumon",
@@ -429,6 +875,28 @@
           "requiredEnergy": "spirit",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 100000,
+              "hint": "Walk a very long way"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Train it hard"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -445,6 +913,28 @@
           "requiredEnergy": "strength",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Burn active calories every day"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Battle often"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -461,6 +951,28 @@
           "requiredEnergy": "stamina",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 320,
+              "hint": "Log many exercise minutes"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -477,6 +989,28 @@
           "requiredEnergy": "vitality",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Give it long, quiet nights"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Hardly ever wake it"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -489,10 +1023,32 @@
       "spriteFile": "Scumon",
       "evolutions": [
         {
+          "to": "andromon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 220000,
+              "hint": "Walk an extraordinary distance"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "Prove it in many battles"
+            }
+          ]
+        },
+        {
           "to": "etemon",
-          "requiredEnergy": "vitality",
-          "minEnergy": 100,
-          "maxCareMistakes": 2,
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -541,6 +1097,28 @@
           "requiredEnergy": "vitality",
           "minEnergy": 150,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "Fight a good many battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.8,
+              "hint": "Win nearly all of them"
+            }
+          ]
+        },
+        {
+          "to": "kingetemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -568,6 +1146,13 @@
       "spriteFile": "BanchoLeomon"
     },
     {
+      "id": "kingetemon",
+      "displayName": "KingEtemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "patamon",
+      "spriteFile": "KingEtemon"
+    },
+    {
       "id": "piyo_digitama",
       "displayName": "Piyo Digitama",
       "stage": "Digitama",
@@ -588,7 +1173,7 @@
       "stage": "Baby I",
       "line": "piyomon",
       "spriteFile": "Yuramon",
-      "comment": "NOT a duplicate of the `yuramon` node in the palmon line — it is the same Digimon in a second tree. The V4 tree roots both Piyomon and Palmon at Fresh: Yuramon -> In-Training: Tanemon, and both ids were already taken by the palmon line (US-008). US-045 gave this line its own ids rather than sharing the existing nodes, because `line` is single-valued and the Dex draws one tree per line: a shared node can sit in only one tree, which would leave piyo_digitama's edge pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. Same art, same displayName, distinct id — which is exactly what the id/spriteFile split in docs/evolutions-schema.md is for.",
+      "comment": "NOT a duplicate of the `yuramon` node in the palmon line \u2014 it is the same Digimon in a second tree. The V4 tree roots both Piyomon and Palmon at Fresh: Yuramon -> In-Training: Tanemon, and both ids were already taken by the palmon line (US-008). US-045 gave this line its own ids rather than sharing the existing nodes, because `line` is single-valued and the Dex draws one tree per line: a shared node can sit in only one tree, which would leave piyo_digitama's edge pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. Same art, same displayName, distinct id \u2014 which is exactly what the id/spriteFile split in docs/evolutions-schema.md is for.",
       "evolutions": [
         {
           "to": "piyo_tanemon",
@@ -605,7 +1190,7 @@
       "stage": "Baby II",
       "line": "piyomon",
       "spriteFile": "Tanemon",
-      "comment": "The palmon line's `tanemon` under a piyomon-scoped id — see the comment on piyo_yuramon for why this line does not share those nodes.",
+      "comment": "The palmon line's `tanemon` under a piyomon-scoped id \u2014 see the comment on piyo_yuramon for why this line does not share those nodes.",
       "evolutions": [
         {
           "to": "piyomon",
@@ -613,6 +1198,18 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "hyokomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "muchomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
         }
       ]
     },
@@ -628,28 +1225,146 @@
           "to": "leomon",
           "requiredEnergy": "strength",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 58000,
+              "hint": "Walk with it most days"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it often"
+            }
+          ]
         },
         {
           "to": "monochromon",
           "requiredEnergy": "vitality",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it sleep its fill"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Rarely wake it"
+            }
+          ]
         },
+        {
+          "to": "goldnumemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hyokomon",
+      "displayName": "Hyokomon",
+      "stage": "Child",
+      "line": "piyomon",
+      "spriteFile": "Hyokomon",
+      "evolutions": [
         {
           "to": "mojyamon",
           "requiredEnergy": "spirit",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 210,
+              "hint": "Exercise with it often"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not overfeed it"
+            }
+          ]
         },
         {
           "to": "coelamon",
           "requiredEnergy": "stamina",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1300,
+              "hint": "Burn active calories together"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 20,
+              "hint": "Do not drill it to exhaustion"
+            }
+          ]
         },
         {
+          "to": "goldnumemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "muchomon",
+      "displayName": "Muchomon",
+      "stage": "Child",
+      "line": "piyomon",
+      "spriteFile": "Muchomon",
+      "evolutions": [
+        {
           "to": "kuwagamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 70000,
+              "hint": "Walk it hard"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Give it some fights"
+            }
+          ]
+        },
+        {
+          "to": "goldnumemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
           "maxCareMistakes": 99,
@@ -669,6 +1384,28 @@
           "requiredEnergy": "strength",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2100,
+              "hint": "Burn a great many active calories"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Train it hard"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -685,6 +1422,28 @@
           "requiredEnergy": "vitality",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 110000,
+              "hint": "Walk a very long way with it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep its meals honest"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -701,6 +1460,28 @@
           "requiredEnergy": "spirit",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2100,
+              "hint": "Give it long nights"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never disturb it"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -717,6 +1498,28 @@
           "requiredEnergy": "stamina",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 340,
+              "hint": "Spend many exercise minutes with it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Train it seriously"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -727,16 +1530,92 @@
       "stage": "Adult",
       "line": "piyomon",
       "spriteFile": "Kuwagamon",
-      "comment": "DIVERGENCE FROM THE SOURCE TREE (US-045). The tree's only parent of Digitamamon is Nanimon, which is dexOnly and cannot be seeded, so Digitamamon and its Ultimate Gankoomon would be unreachable. Kuwagamon carries the second edge instead: it is already this line's isDefault Champion, so the neglect path stays one thread end to end — a Piyomon that earns nothing lands on Kuwagamon, and a Kuwagamon that earns nothing lands on Digitamamon. Its earned edge to Piccolomon is the tree as written.",
+      "comment": "DIVERGENCE FROM THE SOURCE TREE (US-045). The tree's only parent of Digitamamon is Nanimon, which is dexOnly and cannot be seeded, so Digitamamon and its Ultimate Gankoomon would be unreachable. Kuwagamon carries the second edge instead: it is already this line's isDefault Champion, so the neglect path stays one thread end to end \u2014 a Piyomon that earns nothing lands on Kuwagamon, and a Kuwagamon that earns nothing lands on Digitamamon. Its earned edge to Piccolomon is the tree as written.",
       "evolutions": [
         {
           "to": "piccolomon",
           "requiredEnergy": "strength",
           "minEnergy": 100,
-          "maxCareMistakes": 2
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 130000,
+              "hint": "Walk further than most ever will"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Train it relentlessly"
+            }
+          ]
         },
         {
           "to": "digitamamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 80,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Let it eat far more than it needs"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 90,
+              "hint": "Keep its exercise light"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "goldnumemon",
+      "displayName": "GoldNumemon",
+      "stage": "Adult",
+      "line": "piyomon",
+      "spriteFile": "GoldNumemon",
+      "evolutions": [
+        {
+          "to": "megadramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 210000,
+              "hint": "Walk an enormous distance"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 22,
+              "hint": "Battle again and again"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
           "maxCareMistakes": 99,
@@ -750,7 +1629,7 @@
       "stage": "Perfect",
       "line": "piyomon",
       "spriteFile": "Megadramon",
-      "comment": "The V4 tree's Ultra, Chaosmon, hangs off Darkdramon but is a Jogress with BanchoLeomon — a two-parent edge the schema cannot express (docs/sprite-availability.md). This line ends at its three Ultimates.",
+      "comment": "The V4 tree's Ultra, Chaosmon, hangs off Darkdramon but is a Jogress with BanchoLeomon \u2014 a two-parent edge the schema cannot express (docs/sprite-availability.md). This line ends at its three Ultimates.",
       "evolutions": [
         {
           "to": "darkdramon",
@@ -794,6 +1673,22 @@
       ]
     },
     {
+      "id": "greatkingscumon",
+      "displayName": "GreatKingScumon",
+      "stage": "Perfect",
+      "line": "piyomon",
+      "spriteFile": "GreatKingScumon",
+      "evolutions": [
+        {
+          "to": "boltmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "darkdramon",
       "displayName": "Darkdramon",
       "stage": "Ultimate-Super Ultimate",
@@ -813,6 +1708,13 @@
       "stage": "Ultimate-Super Ultimate",
       "line": "piyomon",
       "spriteFile": "Gankoomon"
+    },
+    {
+      "id": "boltmon",
+      "displayName": "Boltmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "piyomon",
+      "spriteFile": "Boltmon"
     },
     {
       "id": "gazi_digitama",
@@ -854,17 +1756,23 @@
       "comment": "The first Baby II in this file that BRANCHES. The V5 tree hangs two Rookies off Pagumon, and unlike V3's Kunemon and V4's Palmon, this line seeds both: Gizamon is the only tree parent of Deltamon, so dropping it would take Deltamon down too. Gizamon is also the one Rookie in V3/V4/V5 with no Digitama of its own (docs/sprite-availability.md), which is exactly why it hangs off Pagumon rather than rooting a line: reached through Gazimon's egg, it needs none.",
       "evolutions": [
         {
+          "to": "gazimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
           "to": "gizamon",
           "requiredEnergy": "stamina",
           "minEnergy": 30,
           "maxCareMistakes": 4
         },
         {
-          "to": "gazimon",
-          "requiredEnergy": "strength",
+          "to": "psychemon",
+          "requiredEnergy": "spirit",
           "minEnergy": 30,
-          "maxCareMistakes": 4,
-          "isDefault": true
+          "maxCareMistakes": 4
         }
       ]
     },
@@ -880,25 +1788,45 @@
           "to": "darktyranomon",
           "requiredEnergy": "strength",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 62000,
+              "hint": "Keep it moving daily"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7,
+              "hint": "Train it often"
+            }
+          ]
         },
         {
           "to": "cyclomon",
           "requiredEnergy": "vitality",
           "minEnergy": 60,
-          "maxCareMistakes": 3
-        },
-        {
-          "to": "devidramon",
-          "requiredEnergy": "spirit",
-          "minEnergy": 60,
-          "maxCareMistakes": 3
-        },
-        {
-          "to": "tuskmon",
-          "requiredEnergy": "stamina",
-          "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1600,
+              "hint": "Let it sleep soundly"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Seldom wake it"
+            }
+          ]
         },
         {
           "to": "raremon",
@@ -921,29 +1849,87 @@
           "to": "deltamon",
           "requiredEnergy": "strength",
           "minEnergy": 60,
-          "maxCareMistakes": 3
-        },
-        {
-          "to": "cyclomon",
-          "requiredEnergy": "vitality",
-          "minEnergy": 60,
-          "maxCareMistakes": 3
-        },
-        {
-          "to": "devidramon",
-          "requiredEnergy": "spirit",
-          "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1250,
+              "hint": "Burn active calories with it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not overfeed it"
+            }
+          ]
         },
         {
           "to": "tuskmon",
           "requiredEnergy": "stamina",
           "minEnergy": 60,
-          "maxCareMistakes": 3
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 230,
+              "hint": "Exercise alongside it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Let it fight"
+            }
+          ]
         },
         {
           "to": "raremon",
           "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "psychemon",
+      "displayName": "Psychemon",
+      "stage": "Child",
+      "line": "gazimon",
+      "spriteFile": "Psychemon",
+      "evolutions": [
+        {
+          "to": "devidramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1700,
+              "hint": "Give it quiet nights"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Train it seriously"
+            }
+          ]
+        },
+        {
+          "to": "raremon",
+          "requiredEnergy": "spirit",
           "minEnergy": 0,
           "maxCareMistakes": 99,
           "isDefault": true
@@ -962,6 +1948,28 @@
           "requiredEnergy": "strength",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 105000,
+              "hint": "Walk a great distance"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "Train it hard"
+            }
+          ]
+        },
+        {
+          "to": "vademon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -978,6 +1986,28 @@
           "requiredEnergy": "vitality",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Let it sleep long"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Hardly ever disturb it"
+            }
+          ]
+        },
+        {
+          "to": "vademon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -994,6 +2024,28 @@
           "requiredEnergy": "spirit",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 330,
+              "hint": "Exercise with it constantly"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep its appetite honest"
+            }
+          ]
+        },
+        {
+          "to": "vademon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -1010,6 +2062,28 @@
           "requiredEnergy": "stamina",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Burn a great many calories"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "vademon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -1026,6 +2100,28 @@
           "requiredEnergy": "strength",
           "minEnergy": 100,
           "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Battle often"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "Win more than you lose"
+            }
+          ]
+        },
+        {
+          "to": "vademon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -1040,8 +2136,30 @@
         {
           "to": "nanomon",
           "requiredEnergy": "strength",
-          "minEnergy": 100,
-          "maxCareMistakes": 2,
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 205000,
+              "hint": "Walk an immense distance"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Train it without pause"
+            }
+          ]
+        },
+        {
+          "to": "vademon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
           "isDefault": true
         }
       ]
@@ -1052,7 +2170,7 @@
       "stage": "Perfect",
       "line": "gazimon",
       "spriteFile": "MetalTyranomon",
-      "comment": "The V5 tree's Ultra, Chaosdramon, hangs off Mugendramon but is a Jogress with Darkdramon — a two-parent edge the schema cannot express (docs/sprite-availability.md), the same reason V4's Chaosmon is absent. This line ends at its three Ultimates.",
+      "comment": "The V5 tree's Ultra, Chaosdramon, hangs off Mugendramon but is a Jogress with Darkdramon \u2014 a two-parent edge the schema cannot express (docs/sprite-availability.md), the same reason V4's Chaosmon is absent. This line ends at its three Ultimates.",
       "evolutions": [
         {
           "to": "mugendramon",
@@ -1096,6 +2214,22 @@
       ]
     },
     {
+      "id": "vademon",
+      "displayName": "Vademon",
+      "stage": "Perfect",
+      "line": "gazimon",
+      "spriteFile": "Vademon",
+      "evolutions": [
+        {
+          "to": "ebemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "mugendramon",
       "displayName": "Mugendramon",
       "stage": "Ultimate-Super Ultimate",
@@ -1115,6 +2249,13 @@
       "stage": "Ultimate-Super Ultimate",
       "line": "gazimon",
       "spriteFile": "Raidenmon"
+    },
+    {
+      "id": "ebemon",
+      "displayName": "Ebemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "gazimon",
+      "spriteFile": "Ebemon"
     }
   ]
 }

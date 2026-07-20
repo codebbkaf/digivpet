@@ -75,12 +75,37 @@ final class EnergyGoalTests: XCTestCase {
     /// two branches, on two different types.
     func testEachTypeAimsAtTheThresholdOfTheEdgeGatedOnIt() {
         let progress = node([
-            edge(to: "greymon", .strength, min: 60, isDefault: true),
-            edge(to: "meramon", .stamina, min: 90)
+            edge(to: "greymon", .strength, min: 60),
+            edge(to: "meramon", .stamina, min: 90),
+            edge(to: "numemon", .strength, min: 0, isDefault: true)
         ]).energyProgress(for: .zero)
 
         XCTAssertEqual(progress.goal(.strength).target, 60)
         XCTAssertEqual(progress.goal(.stamina).target, 90)
+    }
+
+    /// The junk fallback US-061 hung off every branching Child and Adult is not a goal. It sits at
+    /// `minEnergy: 0` on a type an earned branch already claims, so counting it would win the
+    /// lowest-wins rule below and draw a bar that is full the moment the Digimon exists.
+    func testAJunkFallbackIsNotSomethingABarAimsAt() {
+        let progress = node([
+            edge(to: "greymon", .strength, min: 60),
+            edge(to: "numemon", .strength, min: 0, isDefault: true)
+        ]).energyProgress(for: .zero)
+
+        XCTAssertEqual(progress.goal(.strength).target, 60, "the bar aims past the fallback")
+        XCTAssertEqual(progress.fraction(.strength), 0, "a fresh Digimon's bar is empty, not full")
+    }
+
+    /// But where the fallback is the ONLY way forward — a Digitama's hatch, or the single edge out
+    /// of most Baby and Perfect nodes — it IS what the bars are working toward. Dropping it there
+    /// would leave a non-terminal Digimon with four dead bars.
+    func testTheFallbackIsAimedAtWhenItIsTheOnlyWayForward() {
+        let progress = node([
+            edge(to: "koromon", .strength, min: 20, isDefault: true)
+        ]).energyProgress(for: .zero)
+
+        XCTAssertEqual(progress.goal(.strength).target, 20)
     }
 
     /// A type no edge names has NO target, and that is a real answer: nothing out of Agumon is
@@ -100,8 +125,9 @@ final class EnergyGoalTests: XCTestCase {
     func testTheNearestThresholdWinsWhenSeveralEdgesShareAType() {
         let progress = node([
             edge(to: "far", .strength, min: 200),
-            edge(to: "near", .strength, min: 40, isDefault: true),
-            edge(to: "middle", .strength, min: 90)
+            edge(to: "near", .strength, min: 40),
+            edge(to: "middle", .strength, min: 90),
+            edge(to: "junk", .stamina, min: 0, isDefault: true)
         ]).energyProgress(for: .zero)
 
         XCTAssertEqual(progress.goal(.strength).target, 40)

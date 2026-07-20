@@ -160,8 +160,8 @@
         "Tests pass"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": "Reference mechanics: humulos.com/digimon/dmc/. The real device branches on care mistakes, training count (in bands), overfeeds, sleep disturbances and battle win ratio. This PRD adds HealthKit metrics ALONGSIDE those rather than replacing them. Large data-authoring story: if it does not fit one iteration, author the agumon and gabumon lines completely, note which lines remain, and leave passes:false."
+      "passes": true,
+      "notes": "Authored across all six lines: 88 nodes (was 69). Every non-terminal Child and Adult now has 2-3 edges whose isDefault is a junk evolution reachable by inaction, and each line's default path is a complete Digitama-to-Ultimate JUNK path. Nine metrics from both families; Greymon carries the DMC training band (atLeast 8 / atMost 31); Etemon -> BanchoLeomon is gated on care.battleCount atLeast 15 plus care.battleWinRatio atLeast 0.8. Tests: Tests/EvolutionCriteriaTests.swift (17 assertions covering AC1-AC11), full suite 768 tests / 0 failures, build green. KNOWN GAP, NOT AN AC: MetricCreditor is still not called from MainScreenModel.refresh, so stageMetricTotals is always zero in the running app and every health.* atLeast gate fails live. Care.* gates work. Until that is wired, the app routes most Digimon down the junk branches. This needs its own story."
     },
     {
       "id": "US-062",

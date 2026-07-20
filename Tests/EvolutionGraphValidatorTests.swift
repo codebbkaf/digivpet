@@ -312,8 +312,8 @@ final class EvolutionGraphValidatorTests: XCTestCase {
     func testTheValidatedGraphIsTheRealNonEmptyRoster() throws {
         let graph = try EvolutionGraph.load()
 
-        XCTAssertEqual(graph.nodes.count, 69,
-                       "the US-008 seed roster is 22 nodes, plus 15 for US-044's Patamon line, 15 for US-045's Piyomon line and 17 for US-046's Gazimon line")
+        XCTAssertEqual(graph.nodes.count, 88,
+                       "the US-008 seed roster is 22 nodes, plus 15 for US-044's Patamon line, 15 for US-045's Piyomon line, 17 for US-046's Gazimon line and 19 for US-061's junk branches and extra Children")
         XCTAssertNotNil(graph.node(id: "agumon"), "the real roster should contain Agumon")
     }
 }

@@ -288,16 +288,34 @@ final class EvolutionConditionTests: XCTestCase {
 
     // MARK: - The real file
 
-    /// Every shipped edge predates conditions and must decode unchanged with `conditions == []`.
-    func testEveryBundledEdgeDecodesWithNoConditions() throws {
-        let graph = EvolutionGraph.bundled
-        XCTAssertFalse(graph.nodes.isEmpty)
+    /// The shipped file really carries conditions, and every one of them decodes into a whole
+    /// `EvolutionCondition` — a known metric, a real threshold, a hint.
+    ///
+    /// This replaces US-056's `testEveryBundledEdgeDecodesWithNoConditions`, which pinned the file
+    /// as it stood BEFORE any criterion was authored. US-061 authored them, so that assertion is
+    /// now the opposite of the truth; the guard it was really providing — that `conditions` decodes
+    /// faithfully rather than silently defaulting to `[]` — is what is kept here.
+    func testEveryBundledConditionDecodesIntoAKnownMetric() throws {
+        let conditions = EvolutionGraph.bundled.nodes
+            .flatMap(\.evolutions)
+            .flatMap(\.conditions)
 
-        for node in graph.nodes {
-            for edge in node.evolutions {
-                XCTAssertEqual(
-                    edge.conditions, [], "\(node.id) -> \(edge.to) gained conditions unexpectedly")
-            }
+        XCTAssertFalse(conditions.isEmpty, "US-061 authors criteria; an empty file means they were lost")
+        for condition in conditions {
+            XCTAssertNotNil(condition.knownMetric, "'\(condition.metric)' is not in the vocabulary")
+            XCTAssertGreaterThanOrEqual(condition.value, 0, "\(condition.metric) has a negative threshold")
+            XCTAssertFalse(condition.hint.isEmpty, "\(condition.metric) has no hint")
         }
+    }
+
+    /// An edge with no `conditions` key still decodes as `[]` rather than failing. Most of the
+    /// shipped file is still conditionless — every junk fallback is, deliberately — so this is not
+    /// a hypothetical.
+    func testBundledEdgesWithoutConditionsStillDecodeAsEmpty() throws {
+        let bare = EvolutionGraph.bundled.nodes
+            .flatMap(\.evolutions)
+            .filter { $0.conditions.isEmpty }
+
+        XCTAssertFalse(bare.isEmpty, "the junk fallbacks are conditionless by design")
     }
 }

@@ -18,18 +18,22 @@ final class SeedRosterTests: XCTestCase {
     /// Written out as literals rather than derived from the file: a test that walks whatever the
     /// data says and asserts it matches the data would pass on any roster at all.
     ///
-    /// The Patamon line (US-044) is the odd one: its fallback runs through Scumon, the V3 tree's
-    /// junk evolution, because Patamon has five Champions and only four energy types to gate them
-    /// with. That is the path a neglected Patamon walks, and it still covers all seven rungs.
-    /// The Piyomon line (US-045) has the same shape, through Kuwagamon and Digitamamon, and the
-    /// Gazimon line (US-046) through Raremon, the V5 tree's junk Champion.
+    /// Since US-061 every line's default path is its JUNK path — that is the whole point of the
+    /// story: what a Digimon becomes when its owner does nothing is Numemon, not Greymon. US-044's
+    /// Patamon line already had this shape through Scumon; US-061 gave the other five one too, and
+    /// carried each of them all the way to a junk Ultimate so a neglected line still covers all
+    /// seven rungs. Neglect changes WHICH Digimon you get, never whether you get one.
+    ///
+    /// The earned lines the original acceptance criteria name — Agumon to WarGreymon and so on —
+    /// are pinned by `testTheThreeNamedLinesAreTheOnesShipped` instead, which follows the earned
+    /// edges rather than the fallbacks.
     private let seedLines: [[String]] = [
-        ["agu_digitama", "botamon", "koromon", "agumon", "greymon", "metalgreymon", "wargreymon"],
-        ["gabu_digitama", "punimon", "tsunomon", "gabumon", "garurumon", "weregarurumon", "metalgarurumon"],
-        ["pal_digitama", "yuramon", "tanemon", "palmon", "togemon", "lilimon", "rosemon"],
-        ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "bancholeomon"],
-        ["piyo_digitama", "piyo_yuramon", "piyo_tanemon", "piyomon", "kuwagamon", "digitamamon", "gankoomon"],
-        ["gazi_digitama", "zurumon", "pagumon", "gazimon", "raremon", "nanomon", "raidenmon"],
+        ["agu_digitama", "botamon", "koromon", "agumon", "numemon", "blackkingnumemon", "platinumnumemon"],
+        ["gabu_digitama", "punimon", "tsunomon", "gabumon", "geremon", "gerbemon", "metaletemon"],
+        ["pal_digitama", "yuramon", "tanemon", "palmon", "karatsukinumemon", "jyagamon", "shinmonzaemon"],
+        ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "kingetemon"],
+        ["piyo_digitama", "piyo_yuramon", "piyo_tanemon", "piyomon", "goldnumemon", "greatkingscumon", "boltmon"],
+        ["gazi_digitama", "zurumon", "pagumon", "gazimon", "raremon", "vademon", "ebemon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.
@@ -75,14 +79,52 @@ final class SeedRosterTests: XCTestCase {
         }
     }
 
-    /// The AC names these three lines by their Child-and-up forms; assert them literally.
+    /// Walks the EARNED edge at each rung — the outgoing edge that is not the junk fallback — and
+    /// fails if a rung offers more than one, so this cannot silently start describing a branch.
+    ///
+    /// A rung with no earned edge follows its fallback instead. That is not a loophole: above Adult
+    /// the lines do not branch, so a Perfect's single edge to its Ultimate is marked `isDefault`
+    /// and is the only way on. Only Child and Adult carry a junk fallback, and at those rungs there
+    /// is always an earned edge to prefer.
+    private func earnedPath(from id: String) throws -> [EvolutionNode] {
+        var path: [EvolutionNode] = []
+        var next: String? = id
+
+        while let current = next {
+            guard path.count <= ladder.count else {
+                XCTFail("earned path from \(id) does not terminate: \(path.map(\.id))")
+                return path
+            }
+            let node = try XCTUnwrap(graph.node(id: current), "no node with id \(current)")
+            path.append(node)
+
+            let earned = node.evolutions.filter { !$0.isDefault }
+            if earned.isEmpty {
+                next = node.evolutions.first(where: \.isDefault)?.to
+            } else {
+                XCTAssertEqual(earned.count, 1, "\(current) has \(earned.count) earned branches, not one")
+                next = earned.first?.to
+            }
+        }
+        return path
+    }
+
+    /// The AC names these three lines by their Child-and-up forms; assert them literally. They are
+    /// the EARNED paths now — US-061 moved the fallbacks onto the junk branches — which is exactly
+    /// the claim worth making: raise it well and you still get WarGreymon.
     func testTheThreeNamedLinesAreTheOnesShipped() throws {
-        XCTAssertEqual(try defaultPath(from: "agumon").map(\.displayName),
-                       ["Agumon", "Greymon", "MetalGreymon", "WarGreymon"])
-        XCTAssertEqual(try defaultPath(from: "gabumon").map(\.displayName),
+        XCTAssertEqual(try earnedPath(from: "gabumon").map(\.displayName),
                        ["Gabumon", "Garurumon", "WereGarurumon", "MetalGarurumon"])
-        XCTAssertEqual(try defaultPath(from: "palmon").map(\.displayName),
+        XCTAssertEqual(try earnedPath(from: "palmon").map(\.displayName),
                        ["Palmon", "Togemon", "Lilimon", "Rosemon"])
+
+        // Agumon branches two ways at Child, so it is walked from Greymon and its fork asserted
+        // separately rather than forced through `earnedPath`.
+        XCTAssertEqual(try earnedPath(from: "greymon").map(\.displayName),
+                       ["Greymon", "MetalGreymon", "WarGreymon"])
+        XCTAssertEqual(
+            try XCTUnwrap(graph.node(id: "agumon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
+            ["greymon", "meramon"])
 
         // The AC calls out Palmon's Baby forms by name.
         XCTAssertEqual(graph.node(id: "yuramon")?.stage, .babyI)
@@ -130,28 +172,35 @@ final class SeedRosterTests: XCTestCase {
         XCTAssertFalse(branching.isEmpty, "no node branches on dominant energy — nothing exercises US-019")
     }
 
-    /// The branch above, pinned: Agumon is where dominant energy first changes the outcome.
+    /// The branch above, pinned: Agumon is where dominant energy first changes the outcome. Since
+    /// US-061 it is a three-way — two earned branches plus the Numemon fallback — and the fallback
+    /// shares Greymon's strength gate, sitting below it on `minEnergy` so it only wins when Greymon
+    /// is shut out.
     func testAgumonBranchesOnStrengthOrStamina() throws {
         let agumon = try XCTUnwrap(graph.node(id: "agumon"))
-        XCTAssertEqual(agumon.evolutions.count, 2)
+        XCTAssertEqual(agumon.evolutions.count, 3)
 
+        let earned = agumon.evolutions.filter { !$0.isDefault }
         // Deliberately NOT Dictionary(uniqueKeysWithValues:) keyed on requiredEnergy: two edges
         // sharing an energy would TRAP there, killing the test host so the rest of the suite
         // never reports (see EvolutionGraph.bundled). Collapsed branches must fail, not crash.
-        XCTAssertEqual(Set(agumon.evolutions.compactMap(\.requiredEnergy)).count, 2,
-                       "Agumon's two edges must require DIFFERENT energies or the branch is fake")
+        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 2,
+                       "Agumon's two earned edges must require DIFFERENT energies or the branch is fake")
 
-        let toGreymon = agumon.evolutions.first { $0.requiredEnergy == .strength }
-        let toMeramon = agumon.evolutions.first { $0.requiredEnergy == .stamina }
-        XCTAssertEqual(toGreymon?.to, "greymon")
-        XCTAssertEqual(toMeramon?.to, "meramon")
+        let toGreymon = try XCTUnwrap(earned.first { $0.requiredEnergy == .strength })
+        let toMeramon = try XCTUnwrap(earned.first { $0.requiredEnergy == .stamina })
+        XCTAssertEqual(toGreymon.to, "greymon")
+        XCTAssertEqual(toMeramon.to, "meramon")
 
-        // Only one of the two may be the fallback, and it is the line the AC names.
-        XCTAssertEqual(toGreymon?.isDefault, true)
-        XCTAssertEqual(toMeramon?.isDefault, false)
+        let toNumemon = try XCTUnwrap(agumon.evolutions.first(where: \.isDefault))
+        XCTAssertEqual(toNumemon.to, "numemon")
+        XCTAssertEqual(toNumemon.requiredEnergy, toGreymon.requiredEnergy)
+        XCTAssertLessThan(toNumemon.minEnergy, toGreymon.minEnergy,
+                          "Numemon must sit below Greymon or it would win the strength branch outright")
 
-        // Meramon converges back into line 1, so the branch is a detour, not a dead end.
-        XCTAssertEqual(graph.parents(of: "metalgreymon").map(\.id).sorted(), ["greymon", "meramon"])
+        // Meramon and Numemon both converge back into MetalGreymon, so neither is a dead end.
+        XCTAssertEqual(graph.parents(of: "metalgreymon").map(\.id).sorted(),
+                       ["greymon", "meramon", "numemon"])
     }
 
     // MARK: - AC: every non-terminal node has exactly one isDefault edge
@@ -184,9 +233,12 @@ final class SeedRosterTests: XCTestCase {
 
     /// Every node the line may reach, checked against the set US-043 verified has animated art.
     /// A node from outside it is either a Digimon with no sheet or one invented out of thin air.
+    /// KingEtemon is US-061's addition, verified the same way the rest were: it is a real 48x64
+    /// sheet in `Ultimate-Super Ultimate/`, which `testEverySeedNodeHasAnAnimatedSheetWithTheRightFrameCount`
+    /// re-proves by slicing it.
     private let patamonLineVerifiedSet: Set<String> = [
         "Unimon", "Centalmon", "Ogremon", "Bakemon", "Shellmon", "Drimogemon", "Scumon",
-        "Andromon", "Giromon", "Etemon", "HiAndromon", "Gokumon", "BanchoLeomon",
+        "Andromon", "Giromon", "Etemon", "HiAndromon", "Gokumon", "BanchoLeomon", "KingEtemon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -231,62 +283,80 @@ final class SeedRosterTests: XCTestCase {
         XCTAssertTrue(comment.contains("Poyomon"), "the comment must name what it diverges from")
     }
 
-    /// Patamon's five Champions are the V3 tree's five, and every one of them leads to an Ultimate
-    /// rather than dead-ending partway up the ladder.
-    func testPatamonBranchesFiveWaysAndEveryBranchReachesUltimate() throws {
+    /// Patamon's five Champions are still the V3 tree's five and every one still leads to an
+    /// Ultimate — but US-061 split them across two Children, because a Child may offer at most two
+    /// earned branches plus its junk fallback. Tsukaimon, Patamon's dark counterpart, carries the
+    /// other two. Both Children fall back to Scumon.
+    func testThePatamonLinesFiveChampionsAreSplitAcrossTwoChildren() throws {
         let patamon = try XCTUnwrap(graph.node(id: "patamon"))
+        let tsukaimon = try XCTUnwrap(graph.node(id: "tsukaimon"))
 
-        XCTAssertEqual(patamon.evolutions.map(\.to).sorted(),
-                       ["bakemon", "centalmon", "ogremon", "scumon", "unimon"])
+        XCTAssertEqual(patamon.evolutions.map(\.to).sorted(), ["centalmon", "scumon", "unimon"])
+        XCTAssertEqual(tsukaimon.evolutions.map(\.to).sorted(), ["bakemon", "ogremon", "scumon"])
+        XCTAssertEqual(graph.parents(of: "tsukaimon").map(\.id), ["tokomon"],
+                       "the second Child hangs off the Baby II, so both are reachable from the egg")
 
-        for edge in patamon.evolutions {
+        for edge in patamon.evolutions + tsukaimon.evolutions {
             let path = try defaultPath(from: edge.to)
             XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
                            "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
         }
     }
 
-    /// The four earned branches each need a distinct dominant type, or two of them are unreachable.
-    /// Scumon is deliberately excluded: it shares Bakemon's vitality gate and wins only when
-    /// Bakemon's higher `minEnergy` or stricter `maxCareMistakes` shuts Bakemon out.
-    func testPatamonsEarnedBranchesUseFourDistinctEnergies() throws {
-        let patamon = try XCTUnwrap(graph.node(id: "patamon"))
-        let earned = patamon.evolutions.filter { !$0.isDefault }
+    /// Each Child's earned branches need distinct dominant types, or one of them is unreachable.
+    /// Scumon is deliberately excluded on both: it shares an earned branch's gate and wins only
+    /// when that branch's higher `minEnergy`, stricter `maxCareMistakes` or unmet criteria shut it
+    /// out.
+    func testThePatamonChildrensEarnedBranchesUseDistinctEnergies() throws {
+        for (child, shadowed) in [("patamon", "unimon"), ("tsukaimon", "bakemon")] {
+            let node = try XCTUnwrap(graph.node(id: child))
+            let earned = node.evolutions.filter { !$0.isDefault }
 
-        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 4,
-                       "two earned branches share a dominant type, so one can never be chosen")
+            XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, earned.count,
+                           "\(child): two earned branches share a dominant type")
 
-        let scumon = try XCTUnwrap(patamon.evolutions.first { $0.isDefault })
-        let bakemon = try XCTUnwrap(patamon.evolutions.first { $0.to == "bakemon" })
-        XCTAssertEqual(scumon.to, "scumon")
-        XCTAssertEqual(scumon.requiredEnergy, bakemon.requiredEnergy)
-        XCTAssertLessThan(scumon.minEnergy, bakemon.minEnergy,
-                          "Scumon must sit below Bakemon or it would win the vitality branch outright")
+            let scumon = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
+            let rival = try XCTUnwrap(node.evolutions.first { $0.to == shadowed })
+            XCTAssertEqual(scumon.to, "scumon")
+            XCTAssertEqual(scumon.requiredEnergy, rival.requiredEnergy)
+            XCTAssertLessThan(scumon.minEnergy, rival.minEnergy,
+                              "\(child): Scumon must sit below \(shadowed) or it wins that branch outright")
+        }
     }
 
     /// The junk branch is not just declared — prove the engine actually routes to it, and that a
-    /// well-raised vitality Patamon still gets Bakemon instead.
-    func testANeglectedVitalityPatamonGetsScumonAndAWellRaisedOneGetsBakemon() throws {
-        let patamon = try XCTUnwrap(graph.node(id: "patamon"))
+    /// well-raised vitality Tsukaimon still gets Bakemon instead. The criteria are supplied here,
+    /// because since US-061 meeting the energy gate is no longer enough on its own.
+    func testANeglectedVitalityTsukaimonGetsScumonAndAWellRaisedOneGetsBakemon() throws {
+        let tsukaimon = try XCTUnwrap(graph.node(id: "tsukaimon"))
         let plenty = EnergyTotals(strength: 0, vitality: 90, spirit: 0, stamina: 0)
+        let raisedWell = ConditionContext(
+            stageTotals: MetricTotals(values: ["health.sleep": 100_000]),
+            sleepDisturbancesThisStage: 0)
 
         XCTAssertEqual(
-            EvolutionEngine.evolutionTarget(for: patamon, stageEnergy: plenty, dominant: .vitality,
-                                            careMistakes: 0, battleWins: 0),
+            EvolutionEngine.evolutionTarget(for: tsukaimon, stageEnergy: plenty, dominant: .vitality,
+                                            careMistakes: 0, battleWins: 0, conditions: raisedWell),
             "bakemon")
         XCTAssertEqual(
-            EvolutionEngine.evolutionTarget(for: patamon, stageEnergy: plenty, dominant: .vitality,
-                                            careMistakes: 9, battleWins: 0),
+            EvolutionEngine.evolutionTarget(for: tsukaimon, stageEnergy: plenty, dominant: .vitality,
+                                            careMistakes: 9, battleWins: 0, conditions: raisedWell),
             "scumon", "past Bakemon's care-mistake limit, only the junk branch is left")
+        XCTAssertEqual(
+            EvolutionEngine.evolutionTarget(for: tsukaimon, stageEnergy: plenty, dominant: .vitality,
+                                            careMistakes: 0, battleWins: 0, conditions: .unknown),
+            "scumon", "energy alone no longer buys Bakemon — the criteria have to be met too")
     }
 
     // MARK: - US-045: the V4 Piyomon line
 
     /// Every node the line may reach, checked against the set US-045's AC names as verified
     /// available. A node from outside it is either a Digimon with no sheet or one invented.
+    /// GoldNumemon, GreatKingScumon and Boltmon are US-061's junk branch, verified the same way.
     private let piyomonLineVerifiedSet: Set<String> = [
         "Monochromon", "Leomon", "Kuwagamon", "Coelamon", "Mojyamon",
         "Megadramon", "Piccolomon", "Digitamamon", "Darkdramon", "BloomLordmon", "Gankoomon",
+        "GoldNumemon", "GreatKingScumon", "Boltmon",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -370,71 +440,101 @@ final class SeedRosterTests: XCTestCase {
     }
 
     /// Piyomon's five Champions, and every one of them leads to an Ultimate rather than
-    /// dead-ending partway up the ladder.
-    func testPiyomonBranchesFiveWaysAndEveryBranchReachesUltimate() throws {
-        let piyomon = try XCTUnwrap(graph.node(id: "piyomon"))
+    /// dead-ending partway up the ladder. US-061 split them across three Children — two earned
+    /// branches is a Child's maximum once its junk fallback takes the third slot — with Hyokomon
+    /// and Muchomon carrying the rest. All three fall back to GoldNumemon.
+    func testThePiyomonLinesFiveChampionsAreSplitAcrossThreeChildren() throws {
+        let children = ["piyomon", "hyokomon", "muchomon"]
+        var champions: Set<String> = []
 
-        XCTAssertEqual(piyomon.evolutions.map(\.to).sorted(),
+        for id in children {
+            let child = try XCTUnwrap(graph.node(id: id))
+            XCTAssertEqual(child.stage, .child)
+            XCTAssertEqual(EvolutionEngine.defaultEdge(of: child)?.to, "goldnumemon")
+
+            for edge in child.evolutions where !edge.isDefault { champions.insert(edge.to) }
+            for edge in child.evolutions {
+                let path = try defaultPath(from: edge.to)
+                XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
+                               "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
+            }
+        }
+
+        XCTAssertEqual(champions.sorted(),
                        ["coelamon", "kuwagamon", "leomon", "mojyamon", "monochromon"])
-
-        for edge in piyomon.evolutions {
-            let path = try defaultPath(from: edge.to)
-            XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
-                           "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
+        for id in ["hyokomon", "muchomon"] {
+            XCTAssertEqual(graph.parents(of: id).map(\.id), ["piyo_tanemon"],
+                           "\(id) must hang off the Baby II or it is unreachable")
         }
     }
 
-    /// The four earned branches each need a distinct dominant type, or two of them are unreachable.
-    /// Kuwagamon is deliberately excluded: it shares Leomon's strength gate and wins only when
-    /// Leomon's higher `minEnergy` or stricter `maxCareMistakes` shuts Leomon out.
-    func testPiyomonsEarnedBranchesUseFourDistinctEnergies() throws {
-        let piyomon = try XCTUnwrap(graph.node(id: "piyomon"))
-        let earned = piyomon.evolutions.filter { !$0.isDefault }
+    /// Each Child's earned branches need distinct dominant types, or one of them is unreachable.
+    /// GoldNumemon is deliberately excluded: it shares an earned branch's gate and wins only when
+    /// that branch is shut out.
+    func testThePiyomonChildrensEarnedBranchesUseDistinctEnergies() throws {
+        for (child, shadowed) in [("piyomon", "leomon"), ("hyokomon", "mojyamon"),
+                                  ("muchomon", "kuwagamon")] {
+            let node = try XCTUnwrap(graph.node(id: child))
+            let earned = node.evolutions.filter { !$0.isDefault }
 
-        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 4,
-                       "two earned branches share a dominant type, so one can never be chosen")
+            XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, earned.count,
+                           "\(child): two earned branches share a dominant type")
 
-        let kuwagamon = try XCTUnwrap(piyomon.evolutions.first { $0.isDefault })
-        let leomon = try XCTUnwrap(piyomon.evolutions.first { $0.to == "leomon" })
-        XCTAssertEqual(kuwagamon.to, "kuwagamon")
-        XCTAssertEqual(kuwagamon.requiredEnergy, leomon.requiredEnergy)
-        XCTAssertLessThan(kuwagamon.minEnergy, leomon.minEnergy,
-                          "Kuwagamon must sit below Leomon or it would win the strength branch outright")
+            let junk = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
+            let rival = try XCTUnwrap(node.evolutions.first { $0.to == shadowed })
+            XCTAssertEqual(junk.to, "goldnumemon")
+            XCTAssertEqual(junk.requiredEnergy, rival.requiredEnergy)
+            XCTAssertLessThan(junk.minEnergy, rival.minEnergy,
+                              "\(child): GoldNumemon must sit below \(shadowed) or it wins that branch outright")
+        }
     }
 
     /// The fallback branches are not just declared — prove the engine routes to them, at both the
     /// Child and the Adult rung, and that a well-raised Digimon still gets the earned target.
-    func testTheNeglectPathRunsPiyomonToKuwagamonToDigitamamon() throws {
+    ///
+    /// Digitamamon is the line's glutton branch since US-061: reachable only by overfeeding a
+    /// Kuwagamon and barely exercising it, which is why it is asked for with a context rather than
+    /// with energy alone.
+    func testTheNeglectPathRunsPiyomonToGoldNumemonAndGluttonyReachesDigitamamon() throws {
         let piyomon = try XCTUnwrap(graph.node(id: "piyomon"))
         let kuwagamon = try XCTUnwrap(graph.node(id: "kuwagamon"))
         let plenty = EnergyTotals(strength: 150, vitality: 0, spirit: 0, stamina: 0)
+        let walkedFar = ConditionContext(
+            stageTotals: MetricTotals(values: ["health.steps": 500_000, "health.exerciseMinutes": 5_000]),
+            trainingSessionsThisStage: 30, overfeedsThisStage: 0)
 
         XCTAssertEqual(
             EvolutionEngine.evolutionTarget(for: piyomon, stageEnergy: plenty, dominant: .strength,
-                                            careMistakes: 0, battleWins: 0),
+                                            careMistakes: 0, battleWins: 0, conditions: walkedFar),
             "leomon")
         XCTAssertEqual(
             EvolutionEngine.evolutionTarget(for: piyomon, stageEnergy: plenty, dominant: .strength,
-                                            careMistakes: 9, battleWins: 0),
-            "kuwagamon", "past Leomon's care-mistake limit, only the fallback branch is left")
+                                            careMistakes: 9, battleWins: 0, conditions: walkedFar),
+            "goldnumemon", "past Leomon's care-mistake limit, only the junk branch is left")
 
         XCTAssertEqual(
             EvolutionEngine.evolutionTarget(for: kuwagamon, stageEnergy: plenty, dominant: .strength,
-                                            careMistakes: 0, battleWins: 0),
+                                            careMistakes: 0, battleWins: 0, conditions: walkedFar),
             "piccolomon")
+
+        let overfed = ConditionContext(
+            stageTotals: MetricTotals(values: ["health.exerciseMinutes": 10]),
+            trainingSessionsThisStage: 0, overfeedsThisStage: 12)
         XCTAssertEqual(
             EvolutionEngine.evolutionTarget(for: kuwagamon, stageEnergy: plenty, dominant: .strength,
-                                            careMistakes: 9, battleWins: 0),
-            "digitamamon", "Digitamamon is reachable only off the neglect path, since Nanimon cannot be seeded")
+                                            careMistakes: 0, battleWins: 0, conditions: overfed),
+            "digitamamon", "gorging a barely-exercised Kuwagamon is what earns Digitamamon")
     }
 
     // MARK: - US-046: the V5 Gazimon line
 
     /// Every node the line may reach, checked against the set US-046's AC names as verified
     /// available. A node from outside it is either a Digimon with no sheet or one invented.
+    /// Vademon and Ebemon are US-061's junk branch, verified the same way.
     private let gazimonLineVerifiedSet: Set<String> = [
         "DarkTyranomon", "Cyclomon", "Devidramon", "Tuskmon", "Raremon", "Deltamon",
         "MetalTyranomon", "Ex-Tyranomon", "Nanomon", "Mugendramon", "Gaioumon", "Raidenmon",
+        "Vademon", "Ebemon",
     ]
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -494,14 +594,15 @@ final class SeedRosterTests: XCTestCase {
                        "this line has exactly one egg — Gizamon has no Giza_Digitama on disk")
     }
 
-    /// The first branching Baby II in the roster: both Rookies must be reachable, and each must
-    /// climb the whole ladder rather than dead-ending.
+    /// The first branching Baby II in the roster: every Rookie must be reachable, and each must
+    /// climb the whole ladder rather than dead-ending. US-061 added a third, Psychemon, so the
+    /// line's five Champions fit two earned branches to a Child.
     func testPagumonBranchesToBothRookiesAndEachReachesUltimate() throws {
         let pagumon = try XCTUnwrap(graph.node(id: "pagumon"))
 
-        XCTAssertEqual(pagumon.evolutions.map(\.to).sorted(), ["gazimon", "gizamon"])
-        XCTAssertEqual(Set(pagumon.evolutions.compactMap(\.requiredEnergy)).count, 2,
-                       "the two Rookie edges must require DIFFERENT energies or the branch is fake")
+        XCTAssertEqual(pagumon.evolutions.map(\.to).sorted(), ["gazimon", "gizamon", "psychemon"])
+        XCTAssertEqual(Set(pagumon.evolutions.compactMap(\.requiredEnergy)).count, 3,
+                       "the Rookie edges must require DIFFERENT energies or the branch is fake")
 
         for edge in pagumon.evolutions {
             let path = try defaultPath(from: edge.to)
@@ -510,65 +611,75 @@ final class SeedRosterTests: XCTestCase {
         }
     }
 
-    /// Both Rookies branch five ways, and every Champion leads to an Ultimate. Deltamon is
-    /// Gizamon's alone — it is the node that would have been lost had this line seeded only
-    /// Gazimon, as US-044 and US-045 did with their second Rookies.
-    func testBothRookiesBranchFiveWaysAndEveryBranchReachesUltimate() throws {
-        let gazimon = try XCTUnwrap(graph.node(id: "gazimon"))
-        let gizamon = try XCTUnwrap(graph.node(id: "gizamon"))
+    /// The line's five Champions across its three Rookies, and every one leads to an Ultimate.
+    /// Deltamon is Gizamon's alone — it is the node that would have been lost had this line seeded
+    /// only Gazimon, as US-044 and US-045 did with their second Rookies.
+    func testTheThreeRookiesCoverEveryChampionAndEveryBranchReachesUltimate() throws {
+        let rookies = ["gazimon", "gizamon", "psychemon"]
+        var champions: Set<String> = []
 
-        XCTAssertEqual(gazimon.evolutions.map(\.to).sorted(),
-                       ["cyclomon", "darktyranomon", "devidramon", "raremon", "tuskmon"])
-        XCTAssertEqual(gizamon.evolutions.map(\.to).sorted(),
-                       ["cyclomon", "deltamon", "devidramon", "raremon", "tuskmon"])
-        XCTAssertEqual(graph.parents(of: "deltamon").map(\.id), ["gizamon"],
-                       "Deltamon hangs off Gizamon alone, which is why Gizamon is seeded")
+        for id in rookies {
+            let rookie = try XCTUnwrap(graph.node(id: id))
+            XCTAssertEqual(EvolutionEngine.defaultEdge(of: rookie)?.to, "raremon")
 
-        for rookie in [gazimon, gizamon] {
+            for edge in rookie.evolutions where !edge.isDefault { champions.insert(edge.to) }
             for edge in rookie.evolutions {
                 let path = try defaultPath(from: edge.to)
                 XCTAssertEqual(path.map(\.stage), [.adult, .perfect, .ultimate],
                                "the branch through \(edge.to) does not reach Ultimate: \(path.map(\.id))")
             }
         }
+
+        XCTAssertEqual(champions.sorted(),
+                       ["cyclomon", "darktyranomon", "deltamon", "devidramon", "tuskmon"])
+        XCTAssertEqual(graph.parents(of: "deltamon").map(\.id), ["gizamon"],
+                       "Deltamon hangs off Gizamon alone, which is why Gizamon is seeded")
     }
 
-    /// The four earned branches on each Rookie need distinct dominant types, or two of them are
-    /// unreachable. Raremon is deliberately excluded on both: it shares the strength gate from
-    /// below and wins only when the earned strength branch is shut out.
-    func testBothRookiesEarnedBranchesUseFourDistinctEnergies() throws {
-        for (rookie, earnedStrength) in [("gazimon", "darktyranomon"), ("gizamon", "deltamon")] {
+    /// Each Rookie's earned branches need distinct dominant types, or one of them is unreachable.
+    /// Raremon is deliberately excluded: it shares one earned branch's gate from below and wins
+    /// only when that branch is shut out.
+    func testEveryRookiesEarnedBranchesUseDistinctEnergies() throws {
+        for (rookie, shadowed) in [("gazimon", "darktyranomon"), ("gizamon", "deltamon"),
+                                   ("psychemon", "devidramon")] {
             let node = try XCTUnwrap(graph.node(id: rookie))
             let earned = node.evolutions.filter { !$0.isDefault }
 
-            XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 4,
+            XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, earned.count,
                            "\(rookie): two earned branches share a dominant type, so one can never be chosen")
 
-            let raremon = try XCTUnwrap(node.evolutions.first { $0.isDefault })
-            let strength = try XCTUnwrap(node.evolutions.first { $0.to == earnedStrength })
+            let raremon = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
+            let rival = try XCTUnwrap(node.evolutions.first { $0.to == shadowed })
             XCTAssertEqual(raremon.to, "raremon")
-            XCTAssertEqual(raremon.requiredEnergy, strength.requiredEnergy)
-            XCTAssertLessThan(raremon.minEnergy, strength.minEnergy,
-                              "\(rookie): Raremon must sit below \(earnedStrength) or it wins the branch outright")
+            XCTAssertEqual(raremon.requiredEnergy, rival.requiredEnergy)
+            XCTAssertLessThan(raremon.minEnergy, rival.minEnergy,
+                              "\(rookie): Raremon must sit below \(shadowed) or it wins the branch outright")
         }
     }
 
-    /// The junk branch is not just declared — prove the engine routes to it from both Rookies, and
-    /// that a well-raised strength Digimon still gets its earned Champion instead.
+    /// The junk branch is not just declared — prove the engine routes to it from both strength
+    /// Rookies, and that a well-raised strength Digimon still gets its earned Champion instead.
     func testANeglectedStrengthRookieGetsRaremonFromEitherSide() throws {
         let plenty = EnergyTotals(strength: 150, vitality: 0, spirit: 0, stamina: 0)
+        let raisedWell = ConditionContext(
+            stageTotals: MetricTotals(values: ["health.steps": 500_000, "health.activeEnergy": 50_000]),
+            trainingSessionsThisStage: 30, overfeedsThisStage: 0)
 
         for (rookie, earned) in [("gazimon", "darktyranomon"), ("gizamon", "deltamon")] {
             let node = try XCTUnwrap(graph.node(id: rookie))
 
             XCTAssertEqual(
                 EvolutionEngine.evolutionTarget(for: node, stageEnergy: plenty, dominant: .strength,
-                                                careMistakes: 0, battleWins: 0),
+                                                careMistakes: 0, battleWins: 0, conditions: raisedWell),
                 earned)
             XCTAssertEqual(
                 EvolutionEngine.evolutionTarget(for: node, stageEnergy: plenty, dominant: .strength,
-                                                careMistakes: 9, battleWins: 0),
+                                                careMistakes: 9, battleWins: 0, conditions: raisedWell),
                 "raremon", "\(rookie): past \(earned)'s care-mistake limit, only the junk branch is left")
+            XCTAssertEqual(
+                EvolutionEngine.evolutionTarget(for: node, stageEnergy: plenty, dominant: .strength,
+                                                careMistakes: 0, battleWins: 0, conditions: .unknown),
+                "raremon", "\(rookie): energy alone no longer buys \(earned)")
         }
     }
 }

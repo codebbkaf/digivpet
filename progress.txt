@@ -511,3 +511,107 @@ does not depend on edge ORDER.
 REMAINS: nothing for this story. The shipped `evolutions.json` still authors ZERO conditions, so
 every edge today is decided by the four original gates exactly as before — this all lights up when
 US-061 authors criteria. Nothing calls `ConditionContext.readings` yet. Next: US-061.
+
+================================================================================
+2026-07-20 — US-061: Author branching criteria and junk evolutions — PASSES
+
+WHAT SHIPPED
+
+`Resources/evolutions.json` rewritten from 69 to 88 nodes by
+`scripts/author_conditions.py` (kept in the repo the way `scripts/cut_sprites.swift` is — the
+JSON is the artefact, the script is the record of how it was produced, and re-running it is
+idempotent). Every sprite referenced was verified with `ls` AND `sips` (all 48x64 animated
+sheets, none from `Idle Frame Only/`) before being written.
+
+19 new nodes: 4 Children (Tsukaimon, Hyokomon, Muchomon, Psychemon), 4 junk Adults (Numemon,
+Geremon, KaratsukiNumemon, GoldNumemon — Scumon and Raremon already existed), 5 junk Perfects
+(BlackKingNumemon, Gerbemon, Jyagamon, GreatKingScumon, Vademon — Etemon already existed) and
+6 junk Ultimates (PlatinumNumemon, MetalEtemon, ShinMonzaemon, KingEtemon, Boltmon, Ebemon).
+
+Nine metrics authored, from both families: health.steps, health.activeEnergy,
+health.exerciseMinutes, health.sleep, care.trainingSessions, care.overfeeds,
+care.sleepDisturbances, care.battleCount, care.battleWinRatio.
+
+VERIFIED: build green; full suite 768 tests / 0 failures. New file
+`Tests/EvolutionCriteriaTests.swift` asserts AC1-AC11 against the REAL graph.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO
+
+1. **A CHILD OR ADULT MAY OFFER AT MOST TWO EARNED BRANCHES**, because the third slot is its junk
+   fallback and AC1 caps the node at three edges. That is why Patamon's five Champions are now
+   split across Patamon and Tsukaimon, Piyomon's five across Piyomon/Hyokomon/Muchomon, and
+   Gazimon's five across Gazimon/Gizamon/Psychemon. The extra Children hang off the Baby II,
+   which is NOT bound by the two-to-three rule. Do not "tidy" a line by collapsing its Children
+   back together — the Champions would become unreachable.
+   `testEveryNonEggNodeIsReachableFromSomeDigitama` fails if any node is stranded.
+
+2. **EVERY LINE'S isDefault PATH IS NOW ITS JUNK PATH**, all seven rungs of it. `SeedRosterTests`
+   `seedLines` was rewritten to those paths and `testTheThreeNamedLinesAreTheOnesShipped` now
+   walks a new `earnedPath` helper instead. The junk Perfects were given a fallback to a junk
+   Ultimate deliberately: dead-ending a neglected Digimon at Perfect would have broken the
+   "every line is Digitama to Ultimate" shape US-008 pinned, and the consequence for neglect is
+   meant to be WHICH Digimon you get, not whether you get one.
+
+3. **THE JUNK EDGE IS CONDITIONLESS, `minEnergy: 0`, `maxCareMistakes: 99`.** Two reasons, and
+   both matter: US-020's fallback ignores an edge's gates entirely, so a condition there would be
+   data that never runs; and being ungated also lets the edge qualify NORMALLY whenever the good
+   branch does not, while losing the `max(by: minEnergy)` tie-break whenever it does. One edge,
+   both routes, same answer. `testEveryJunkFallbackIsReachableByInaction` pins it.
+
+4. **A CRITERION ON AN isDefault EDGE IS DEAD DATA** — same reason. AC5's battle-ratio gate is
+   therefore on Etemon's EARNED edge to BanchoLeomon, with KingEtemon as the fallback beside it.
+   Never move a condition onto a default edge.
+
+5. **`EnergyBarsView.aimableEdges` IS NEW AND LOAD-BEARING.** `target(for:)` takes the LOWEST
+   `minEnergy` among edges naming a type; a junk edge at 0 sharing an earned branch's type would
+   win that outright, so every branching Digimon's bar would read as full from birth with a
+   target of nothing. Earned edges are now preferred, falling back to the whole list when there
+   are none — which is not a corner case, since a Digitama's hatch and most Baby and Perfect
+   edges ARE their node's default and genuinely are what the bars aim at.
+
+6. **HINTS CONTAIN NO DIGITS**, asserted by `testNoConditionHintContainsADigit`. A threshold
+   printed into a hint goes stale the moment an edge is retuned, and a stale number is worse than
+   none. US-065/US-066 own the real hint vocabulary and the progress-based reveal.
+
+7. Only accumulating health metrics are authored, asserted by
+   `testEveryAuthoredHealthMetricAccumulatesOverTime`. US-060's note 4 explains why a standing
+   measurement (resting heart rate, VO2 max) would be an edge dead on arrival: nothing passes
+   `ConditionContext.readings` today.
+
+8. The `care.*` windows follow US-060 note 5 exactly: trainingSessions / overfeeds /
+   sleepDisturbances are `.stage`, battleCount and battleWinRatio are `.lifetime`. Any other
+   window on those returns `.unknown` and the edge can never fire.
+
+TESTS CHANGED, AND WHY (none were weakened)
+
+- `EvolutionConditionTests.testEveryBundledEdgeDecodesWithNoConditions` REPLACED. It pinned the
+  file as it stood before any criterion existed, so it was the exact opposite of this story. The
+  guard it really provided — that `conditions` decodes faithfully rather than defaulting to `[]`
+  — is kept as two tests.
+- `SeedRosterTests`: `seedLines`, the named-lines test, Agumon's branch test, and the Patamon /
+  Piyomon / Gazimon branch tests all restated for the new shape. The neglect-path tests now also
+  assert the NEW claim that energy alone no longer buys the earned branch.
+- `EnergyBarsTests`: two fixtures marked a good branch `isDefault`, which the new aiming rule
+  excludes. Restated, plus two new tests pinning both halves of `aimableEdges`.
+- Node counts updated in `EvolutionGraphValidatorTests` (69 -> 88), `EvolutionGraphTests`
+  (per-line counts) and `EvolutionTreeTests` (Agumon line 8 -> 11 nodes, 8 -> 14 connectors).
+
+REMAINS — READ THIS BEFORE THE NEXT STORY
+
+**`MetricCreditor.credit` IS STILL NOT CALLED FROM ANYWHERE IN `Sources/`.** Only tests call it.
+`MainScreenModel.refresh` credits `EnergyCreditor` and nothing else, so `state.stageMetricTotals`
+is permanently `.zero` in the running app, so every `health.* atLeast` condition authored above
+evaluates `.known(0)` and FAILS. Live, that means the four health-gated branches at each node
+lose and the app routes almost everything down the junk fallbacks. The `care.*` gates work
+correctly, since US-084 wired those counters.
+
+This was left alone on purpose: it is engine wiring, not data authoring, and US-061's acceptance
+criteria are all about the file. It needs its own story, roughly: load the `MetricLedger`
+alongside the `EnergyLedger` in `MainScreenModel` (both already exist, and `MetricLedger` is
+already in `GameStore.schema` with a `loadOrCreateMetricLedger`), map the four `HealthMetric`
+energy readings onto their `ConditionMetric` equivalents, and call `MetricCreditor.credit`. That
+alone lights up all four authored health metrics, because steps / activeEnergy / exerciseMinutes
+/ sleep are deliberately the only health metrics authored — they are the four the energy model
+already reads and already has a grant for. Reading the other 26 is a separate, larger job.
+
+Next: US-062 (bundle the full 1,022-entry roster).

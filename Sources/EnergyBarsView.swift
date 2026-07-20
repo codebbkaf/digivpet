@@ -60,17 +60,34 @@ extension EvolutionNode {
         )
     }
 
+    /// The edges a bar may aim at: the EARNED ones, falling back to the whole list when there are
+    /// none.
+    ///
+    /// US-061 gave every branching Child and Adult a junk fallback at `minEnergy: 0`, reachable by
+    /// doing nothing — and a junk edge usually shares an earned branch's type. Aiming at it would
+    /// make the lowest-wins rule below pick zero, so the bar would read as already full and the row
+    /// would show a target of nothing. A fallback is not a goal; it is what happens when you miss.
+    ///
+    /// The `earned.isEmpty` case is not a corner: a Digitama's hatch edge is its default, and so is
+    /// the single edge out of most Baby and Perfect nodes. Where the fallback is the ONLY way
+    /// forward it is genuinely what the bars are working toward, and dropping it would leave a
+    /// non-terminal Digimon with four dead bars.
+    private var aimableEdges: [EvolutionEdge] {
+        let earned = evolutions.filter { !$0.isDefault }
+        return earned.isEmpty ? evolutions : earned
+    }
+
     /// The nearest threshold gated on `type`, or nil if no edge out of here names it.
     ///
     /// Lowest wins: several edges may name one type at different thresholds, and what a bar is
     /// working toward is whichever unlocks first.
     private func target(for type: EnergyType) -> Int? {
-        evolutions.filter { $0.requiredEnergy == type }.map(\.minEnergy).min()
+        aimableEdges.filter { $0.requiredEnergy == type }.map(\.minEnergy).min()
     }
 
     /// The nearest threshold gated on total energy rather than on any one type.
     private var totalGate: Int? {
-        evolutions.filter { $0.requiredEnergy == nil }.map(\.minEnergy).min()
+        aimableEdges.filter { $0.requiredEnergy == nil }.map(\.minEnergy).min()
     }
 }
 

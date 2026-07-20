@@ -107,20 +107,25 @@ final class EvolutionTreeLayoutTests: XCTestCase {
 
     // MARK: - The shipped Agumon line, end to end
 
-    /// The bundled line is what the screenshot shows, so its shape is worth pinning: eight nodes,
-    /// seven columns, and the two-row branch at Adult that makes it a tree rather than a row.
+    /// The bundled line is what the screenshot shows, so its shape is worth pinning: eleven nodes,
+    /// seven columns, and the three-row branch at Adult that makes it a tree rather than a row.
+    ///
+    /// US-061 grew it from eight nodes by adding the junk branch — Numemon at Adult, reached by
+    /// inaction out of Agumon, then BlackKingNumemon and PlatinumNumemon, the Perfect and Ultimate
+    /// every Adult on the line falls to.
     func testTheBundledAgumonLineIsABranchingTree() {
         let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }
         let layout = EvolutionTreeLayout(nodes: nodes)
 
-        XCTAssertEqual(nodes.count, 8)
+        XCTAssertEqual(nodes.count, 11)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
-                       ["greymon", "meramon"])
-        XCTAssertEqual(layout.rowCount, 2)
-        // Eight edges: six on the spine (one per gap between the seven columns), plus the extra
-        // branch out of Agumon and the extra one converging into MetalGreymon.
-        XCTAssertEqual(layout.connectors.count, 8)
+                       ["greymon", "meramon", "numemon"])
+        XCTAssertEqual(layout.rowCount, 3)
+        // Fourteen edges: three on the spine up to Agumon, three branches out of it, two out of
+        // each of the three Adults, and one from each Perfect — MetalGreymon to WarGreymon and
+        // BlackKingNumemon to PlatinumNumemon, so the junk branch also covers all seven rungs.
+        XCTAssertEqual(layout.connectors.count, 14)
     }
 }
