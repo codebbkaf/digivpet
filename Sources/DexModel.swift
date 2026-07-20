@@ -3,13 +3,41 @@ import OSLog
 import SwiftUI
 
 /// One cell of the Dex grid: a Digimon from the roster, and when — or whether — it was met.
+///
+/// Carries the four fields a cell draws rather than the `RosterEntry` or `EvolutionNode` it came
+/// from, because since US-063 it comes from BOTH: the flat grid is built over the 1,022-entry
+/// roster, while the evolution trees are still built over the 88-node graph. The overlapping
+/// fields are identical in the two types, so a row that holds them can be made either way and the
+/// cell that draws it never has to know which.
 struct DexRow: Identifiable, Equatable {
-    let node: EvolutionNode
+    let id: String
+    let displayName: String
+    let stage: Stage
+    /// As `RosterEntry.spriteFile` / `EvolutionNode.spriteFile` — the basename `IdleSpriteCache`
+    /// resolves against the flat idle folder, falling back to the stage folder.
+    let spriteFile: String
     /// When this Digimon was first discovered, or nil if it never has been.
     let firstDiscovered: Date?
 
-    var id: String { node.id }
     var isDiscovered: Bool { firstDiscovered != nil }
+
+    init(id: String, displayName: String, stage: Stage, spriteFile: String, firstDiscovered: Date?) {
+        self.id = id
+        self.displayName = displayName
+        self.stage = stage
+        self.spriteFile = spriteFile
+        self.firstDiscovered = firstDiscovered
+    }
+
+    init(entry: RosterEntry, firstDiscovered: Date?) {
+        self.init(id: entry.id, displayName: entry.displayName, stage: entry.stage,
+                  spriteFile: entry.spriteFile, firstDiscovered: firstDiscovered)
+    }
+
+    init(node: EvolutionNode, firstDiscovered: Date?) {
+        self.init(id: node.id, displayName: node.displayName, stage: node.stage,
+                  spriteFile: node.spriteFile, firstDiscovered: firstDiscovered)
+    }
 }
 
 /// One entry in the Dex's list of lines: either an evolution line, drawn as a tree, or the flat
@@ -28,6 +56,22 @@ struct DexSection: Identifiable, Equatable {
     /// first then alphabetical for Others, which is a grid and has no structure to preserve.
     let rows: [DexRow]
 
+    /// The graph nodes `rows` was built from, in the same order — what `EvolutionTreeView` lays
+    /// its columns and connectors out from. Empty for `Others`, which is drawn as a grid and has
+    /// no edges to follow.
+    ///
+    /// Kept here rather than re-derived in the view because a section is the only thing that knows
+    /// WHICH nodes it grouped; since US-063 a `DexRow` no longer carries its node, because most
+    /// rows on the flat grid have no node to carry.
+    let nodes: [EvolutionNode]
+
+    init(id: String, title: String, rows: [DexRow], nodes: [EvolutionNode] = []) {
+        self.id = id
+        self.title = title
+        self.rows = rows
+        self.nodes = nodes
+    }
+
     /// Sentinel id for the flat section. Prefixed so it cannot collide with a real line key,
     /// which `EvolutionGraphValidator` requires to be a non-empty name.
     static let othersID = "__others"
@@ -41,12 +85,18 @@ struct DexSection: Identifiable, Equatable {
 
 /// Drives the Dex screen: the whole roster, marked up with what the player has actually met.
 ///
-/// The roster comes from the graph and the discoveries from the store, and this joins them. It
+/// The roster comes from `roster.json` and the discoveries from the store, and this joins them. It
 /// never opens the store itself for the same reason `MainScreenModel` doesn't take one directly:
 /// opening throws and touches the disk, neither of which belongs in a `View.init`.
 ///
-/// Note what this deliberately does NOT do: touch a single sprite. Rows carry the node, not its
-/// art, so building all 865 rows decodes nothing — `IdleSpriteCache` is reached only from the
+/// TWO SOURCES, ON PURPOSE (US-063). `rows` — the flat grid that IS the screen — comes from
+/// `Roster.bundled`, all 1,022 Digimon that have art on disk. `sections` comes from
+/// `EvolutionGraph.bundled`, the ~88 that an authored line actually reaches, because only those
+/// have edges to draw a tree from. The grid is the roster; the trees are the graph; the header
+/// counts the roster.
+///
+/// Note what this deliberately does NOT do: touch a single sprite. Rows carry a filename, not its
+/// art, so building all 1,022 rows decodes nothing — `IdleSpriteCache` is reached only from the
 /// cells a `LazyVGrid` actually puts on screen.
 @MainActor
 final class DexModel: ObservableObject {
@@ -56,25 +106,28 @@ final class DexModel: ObservableObject {
     /// buried among placeholders. Sorting is done once here rather than in `body`, which re-runs.
     @Published private(set) var rows: [DexRow] = []
 
-    /// The same rows, partitioned into what the screen actually lists: one section per evolution
-    /// line, in authored order, then `Others` if the roster has any `dexOnly` entries.
+    /// The graph, partitioned into trees: one section per evolution line, in authored order, then
+    /// `Others` if the graph has any `dexOnly` nodes.
     ///
-    /// Built here rather than in `body` for the reason `rows` is: `body` re-runs, and this groups
-    /// and sorts 865 entries.
+    /// NOT a partition of `rows` — see the type note. Built here rather than in `body` for the
+    /// reason `rows` is: `body` re-runs, and this groups and sorts.
     @Published private(set) var sections: [DexSection] = []
 
     /// True once `load()` has run, so the screen can tell "no Digimon yet" from "not read yet".
     @Published private(set) var isLoaded = false
 
+    private let roster: Roster
     private let graph: EvolutionGraph
     private let makeStore: @MainActor () throws -> GameStore
 
     private static let log = Logger(subsystem: "com.digivpet.DigiVPet", category: "dex")
 
     init(
+        roster: Roster = .bundled,
         graph: EvolutionGraph = .bundled,
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() }
     ) {
+        self.roster = roster
         self.graph = graph
         self.makeStore = makeStore
     }
@@ -101,18 +154,21 @@ final class DexModel: ObservableObject {
             Self.log.error("Could not read the Dex: \(String(describing: error))")
         }
 
-        rows = graph.nodes
-            .map { DexRow(node: $0, firstDiscovered: discoveries[$0.id]) }
-            .sorted { left, right in
-                if left.isDiscovered != right.isDiscovered { return left.isDiscovered }
-                return left.node.displayName.localizedCaseInsensitiveCompare(right.node.displayName)
-                    == .orderedAscending
-            }
+        rows = roster.entries
+            .map { DexRow(entry: $0, firstDiscovered: discoveries[$0.id]) }
+            .sorted(by: Self.discoveredFirstThenAlphabetical)
         sections = Self.sections(of: graph, discoveries: discoveries)
         isLoaded = true
     }
 
-    /// Groups the roster the way the screen lists it.
+    /// The flat grid's order: what the player has met, then everything else, alphabetical within
+    /// each half.
+    private static func discoveredFirstThenAlphabetical(_ left: DexRow, _ right: DexRow) -> Bool {
+        if left.isDiscovered != right.isDiscovered { return left.isDiscovered }
+        return left.displayName.localizedCaseInsensitiveCompare(right.displayName) == .orderedAscending
+    }
+
+    /// Groups the graph into the trees the Dex can open.
     ///
     /// Built from `graph.nodes` rather than from `rows` because the two want opposite orders: a
     /// tree's columns must follow authored order (so a branch reads as the JSON lists it and
@@ -122,15 +178,14 @@ final class DexModel: ObservableObject {
     ///
     /// `dexOnly` entries are pulled out of their line and into `Others`. They carry a line like
     /// anything else, but no edge may name one, so on a tree they would be unreachable nodes
-    /// floating beside the ladder with no connector — and listing them in both places would
-    /// double-count them against the header.
+    /// floating beside the ladder with no connector.
     private static func sections(of graph: EvolutionGraph, discoveries: [String: Date]) -> [DexSection] {
         func row(_ node: EvolutionNode) -> DexRow {
             DexRow(node: node, firstDiscovered: discoveries[node.id])
         }
 
         var lineOrder: [String] = []
-        var byLine: [String: [DexRow]] = [:]
+        var byLine: [String: [EvolutionNode]] = [:]
         var others: [DexRow] = []
 
         for node in graph.nodes {
@@ -139,11 +194,13 @@ final class DexModel: ObservableObject {
                 continue
             }
             if byLine[node.line] == nil { lineOrder.append(node.line) }
-            byLine[node.line, default: []].append(row(node))
+            byLine[node.line, default: []].append(node)
         }
 
         var sections = lineOrder.map { line in
-            DexSection(id: line, title: title(ofLine: line, in: graph), rows: byLine[line] ?? [])
+            let nodes = byLine[line] ?? []
+            return DexSection(id: line, title: title(ofLine: line, in: graph),
+                              rows: nodes.map(row), nodes: nodes)
         }
 
         // Omitted rather than shown empty when nothing is `dexOnly`, which is the roster today:
@@ -152,11 +209,7 @@ final class DexModel: ObservableObject {
             sections.append(DexSection(
                 id: DexSection.othersID,
                 title: "Others",
-                rows: others.sorted { left, right in
-                    if left.isDiscovered != right.isDiscovered { return left.isDiscovered }
-                    return left.node.displayName
-                        .localizedCaseInsensitiveCompare(right.node.displayName) == .orderedAscending
-                }
+                rows: others.sorted(by: discoveredFirstThenAlphabetical)
             ))
         }
         return sections

@@ -200,8 +200,8 @@
         "Tests pass"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Dex root is now a LazyVGrid over all 1,022 Roster.bundled entries (was a list of 8 evolution lines covering only the 88 graph nodes). DexRow carries id/displayName/stage/spriteFile instead of an EvolutionNode, so it can be built from a RosterEntry or a node; DexSection gained `nodes` for EvolutionTreeView(nodes:rows:) to lay out from. Verified on the Simulator: header reads 5/1,022, three columns fit 41mm with margins, -dexScrollDemo lands on the final 2-cell row (1022 = 340*3 + 2), -dexDetailDemo opens Agumon's detail, -dexLineDemo still opens the Agumon tree. 784 tests pass. NOT verified: a real swipe's frame rate - simctl has no scroll or tap command, so the scrollTo jump is a proxy for it."
     },
     {
       "id": "US-064",

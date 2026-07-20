@@ -85,8 +85,14 @@ struct EvolutionTreeLayout: Equatable {
 /// `Path`s over the same coordinate space the cells are placed in. A flexible grid would need each
 /// cell to report its frame back up through a preference before a single line could be drawn.
 struct EvolutionTreeView: View {
-    /// One line's rows, discovered and not. Rows rather than nodes because a tap opens
-    /// `DexDetailView`, which wants the discovery date the node does not carry.
+    /// One line's nodes, in authored order — the edges the columns and connectors are laid out
+    /// from.
+    let nodes: [EvolutionNode]
+
+    /// The same Digimon as `rows`, discovered and not. Both, because the two halves of a cell come
+    /// from different places: the node carries the edges, and only the row carries the discovery
+    /// date `DexDetailView` shows. Since US-063 a `DexRow` no longer carries its node, because the
+    /// flat grid's rows are roster entries and most of those have no node at all.
     let rows: [DexRow]
 
     @State private var selected: DexRow?
@@ -104,9 +110,10 @@ struct EvolutionTreeView: View {
     private static var columnStride: CGFloat { cellWidth + columnGap }
     private static var rowStride: CGFloat { cellHeight + rowGap }
 
-    init(rows: [DexRow]) {
+    init(nodes: [EvolutionNode], rows: [DexRow]) {
+        self.nodes = nodes
         self.rows = rows
-        self.layout = EvolutionTreeLayout(nodes: rows.map(\.node))
+        self.layout = EvolutionTreeLayout(nodes: nodes)
         self.rowsById = Dictionary(rows.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
     }
 
@@ -213,7 +220,7 @@ private struct EvolutionTreeCell: View {
     var body: some View {
         Group {
             if let row, row.isDiscovered {
-                IdleSpriteView(stage: row.node.stage.rawValue, name: row.node.spriteFile)
+                IdleSpriteView(stage: row.stage.rawValue, name: row.spriteFile)
             } else {
                 Text("?")
                     .font(.system(size: 16, weight: .bold, design: .rounded))
@@ -237,16 +244,20 @@ struct EvolutionTreeDemoView: View {
     private static let discovered: Set<String> = ["agu_digitama", "botamon", "koromon", "agumon", "greymon"]
 
     var body: some View {
-        EvolutionTreeView(rows: EvolutionGraph.bundled.nodes
-            .filter { $0.line == "agumon" }
-            .map { DexRow(node: $0, firstDiscovered: Self.discovered.contains($0.id) ? .now : nil) })
+        let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }
+        EvolutionTreeView(
+            nodes: nodes,
+            rows: nodes.map {
+                DexRow(node: $0, firstDiscovered: Self.discovered.contains($0.id) ? .now : nil)
+            })
             .navigationTitle("Agumon")
     }
 }
 #endif
 
 #Preview {
-    EvolutionTreeView(rows: EvolutionGraph.bundled.nodes
-        .filter { $0.line == "agumon" }
-        .map { DexRow(node: $0, firstDiscovered: $0.stage.ladderIndex ?? 0 < 4 ? .now : nil) })
+    let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }
+    EvolutionTreeView(
+        nodes: nodes,
+        rows: nodes.map { DexRow(node: $0, firstDiscovered: $0.stage.ladderIndex ?? 0 < 4 ? .now : nil) })
 }

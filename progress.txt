@@ -667,3 +667,70 @@ See the US-061 entry above for the exact wiring that fixes it. Untouched here on
 story is data and a loader, not engine wiring.
 
 Next: US-063 (replace the Dex line list with a flat item grid) — it consumes `Roster.bundled`.
+
+================================================================================
+2026-07-20  US-063  Replace the Dex line list with a flat item grid       PASSED
+================================================================================
+
+WHAT SHIPPED
+
+The Dex root is one `LazyVGrid` over all 1,022 `Roster.bundled` entries. It was a `List` of the 8
+evolution lines, which only ever reached the ~88 Digimon an authored line touches — the other ~930
+that have art on disk were unreachable from the app entirely.
+
+- `Sources/DexModel.swift` — `DexRow` now carries `id` / `displayName` / `stage` / `spriteFile`
+  directly instead of an `EvolutionNode`, with an init from a `RosterEntry` and one from a node.
+  `DexModel` gained a `roster:` parameter: `rows` comes from the roster, `sections` still from the
+  graph. `DexSection` gained `nodes`, the authored-order `EvolutionNode`s its tree lays out from.
+- `Sources/DexView.swift` — the root is `DexGridView(rows: model.rows)`; `DexSectionRow` is gone.
+  An unmet cell is now dimmed as a whole (`.opacity(0.55)`, tile fill 0.08 -> 0.03) rather than
+  just holding a tertiary "?".
+- `Sources/EvolutionTreeView.swift` — `init(nodes:rows:)`, since a row no longer carries its node.
+- `Tests/DexScreenTests.swift` — 4 new tests, 4 rewritten. 784 tests pass, build green.
+
+SIMULATOR VERIFICATION (Series 11 46mm / Series 11 42mm / Series 9 41mm)
+
+Launch: `-dexDemo -noNotificationPrompt -healthAnswered` plus the flag under test.
+
+  -dexScrollDemo (new)  jumps to the last cell. Landed on a final row of exactly 2 cells, which is
+                        1022 = 340*3 + 2 — the whole roster is in the grid and its far end builds.
+  -dexDetailDemo        opened Agumon's detail sheet (sprite, "Child", "First met Jul 20, 2026").
+  -dexLineDemo          still opens the Agumon tree, so `init(nodes:rows:)` did not break it.
+
+Header read `5/1,022` on all three sizes. Three columns fit 41mm with margin on both sides — no
+horizontal clipping. Sprites are blocky, not smoothed.
+
+WHAT WAS *NOT* VERIFIED, AND WHY
+
+"Scrolling stays responsive with no visible stutter" was NOT measured. `simctl` has no scroll
+command any more than it has a tap, so no swipe can be synthesised and no frame rate observed. What
+was observed is a proxy: a `scrollTo` 340 rows down rendered immediately, and
+`testASpriteIsDecodedPerShownCellAndNotWhenRowsAreBuilt` pins the structural guarantee that makes it
+cheap — building 1,022 rows decodes zero sprites, and a cell decodes exactly its own.
+
+THREE THINGS THE NEXT ITERATION SHOULD KNOW
+
+1. **A `DexRow` NO LONGER HAS A `.node`.** It cannot: most of the 1,022 rows are roster entries with
+   no graph node at all. Anything wanting edges must look the id up in `EvolutionGraph.bundled`
+   itself — which is exactly what US-064 (detail view lists possible evolutions) has to do, and it
+   must tolerate a miss, because ~930 rows will not resolve.
+
+2. **THE GRID IS THE ROSTER, THE TREES ARE THE GRAPH, AND THEY ARE DIFFERENT SIZES.** The old
+   `testTheSectionsPartitionTheRosterSoTheCountReconciles` is gone because its premise died with the
+   list: sections no longer add up to the header. Its replacement,
+   `testTheSectionsPartitionTheGraphExactlyOnce`, pins what still holds — every graph node in
+   exactly one section. `model.totalCount` is the roster's 1,022.
+
+3. **THE TREES ARE CURRENTLY REACHABLE ONLY FROM `-dexLineDemo`.** `model.sections` is still built
+   and `DexView.destination(for:)` still renders it, but nothing on screen navigates there now that
+   the line list is gone. That is US-067's job and it was left deliberately undone here.
+
+FOUR LAUNCH FLAGS YOU NEED TOGETHER TO SCREENSHOT ANYTHING (this cost real time)
+
+A fresh or erased simulator blocks the Dex behind two prompts that cannot be tapped:
+`-noNotificationPrompt` skips the notification alert, and `-healthAnswered` (a
+`StubHealthAuthorizer.Outcome`) skips the health gate. `-healthAutoConfirm` is NOT the one to use —
+it raises the REAL HealthKit prompt, which then blocks the screen with no way to dismiss it. Note
+that the 46mm simulator was erased during this iteration, so its old saved game is gone.
+
+Next: US-064 (detail view lists possible evolutions).

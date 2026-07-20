@@ -139,16 +139,58 @@ final class DexModelTests: XCTestCase {
 
     private static let met = Date(timeIntervalSince1970: 1_760_000_000)
 
-    // MARK: - AC: header shows discovered/total count
+    // MARK: - AC: the Dex root is a grid over ALL roster entries, and the header counts them
 
     func testAnUntouchedDexShowsTheWholeRosterAsUndiscovered() throws {
-        let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
+        let model = DexModel(makeStore: { try self.makeStore() })
 
         model.load()
 
-        XCTAssertEqual(model.totalCount, EvolutionGraph.bundled.nodes.count)
+        XCTAssertEqual(model.totalCount, Roster.bundled.entries.count)
         XCTAssertEqual(model.discoveredCount, 0)
         XCTAssertTrue(model.rows.allSatisfy { !$0.isDiscovered })
+    }
+
+    /// The point of US-063: the grid is the ROSTER, not the ~88 Digimon an authored line reaches.
+    /// A row per roster entry, and every roster entry with a row.
+    func testTheGridCoversEveryRosterEntryAndNothingElse() {
+        let model = DexModel(makeStore: { try self.makeStore() })
+
+        model.load()
+
+        XCTAssertEqual(Set(model.rows.map(\.id)), Set(Roster.bundled.entries.map(\.id)))
+        XCTAssertEqual(model.rows.count, Roster.bundled.entries.count)
+        XCTAssertGreaterThan(model.rows.count, EvolutionGraph.bundled.nodes.count,
+                             "The roster is far larger than the graph; that is what the grid adds.")
+    }
+
+    /// The Digimon that are only ever met — the dexOnly ones with no animated sheet and no edge —
+    /// were invisible while the Dex listed lines. They are most of the grid.
+    func testDexOnlyDigimonAreOnTheGrid() throws {
+        let model = DexModel(makeStore: { try self.makeStore() })
+
+        model.load()
+
+        let dexOnly = Roster.bundled.entries.filter(\.dexOnly)
+        XCTAssertFalse(dexOnly.isEmpty, "The shipped roster has idle-frame-only Digimon.")
+        for entry in dexOnly {
+            XCTAssertNotNil(model.rows.first { $0.id == entry.id },
+                            "\(entry.id) has art on disk, so it belongs on the grid.")
+        }
+    }
+
+    /// A cell draws from the row alone, so a row has to carry the sprite the roster names for it —
+    /// getting this wrong would draw the right name over another Digimon's art.
+    func testARowCarriesItsRosterEntrysNameStageAndSprite() throws {
+        let model = DexModel(makeStore: { try self.makeStore() })
+
+        model.load()
+
+        let entry = try XCTUnwrap(Roster.bundled.entry(id: "agumon"))
+        let row = try XCTUnwrap(model.rows.first { $0.id == "agumon" })
+        XCTAssertEqual(row.displayName, entry.displayName)
+        XCTAssertEqual(row.stage, entry.stage)
+        XCTAssertEqual(row.spriteFile, entry.spriteFile)
     }
 
     func testDiscoveredCountRisesWithEachDiscovery() throws {
@@ -212,12 +254,12 @@ final class DexModelTests: XCTestCase {
         let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
         model.load()
 
-        XCTAssertEqual(model.rows.count, EvolutionGraph.bundled.nodes.count)
-        XCTAssertEqual(spy.count, 0, "Building rows must not decode a single sprite.")
+        XCTAssertEqual(model.rows.count, Roster.bundled.entries.count)
+        XCTAssertEqual(spy.count, 0, "Building 1,022 rows must not decode a single sprite.")
 
         // What one visible cell costs, drawn the way `DexCell` draws it.
         let shown = try XCTUnwrap(model.rows.first)
-        _ = cache.image(stage: shown.node.stage.rawValue, name: shown.node.spriteFile)
+        _ = cache.image(stage: shown.stage.rawValue, name: shown.spriteFile)
         XCTAssertEqual(spy.count, 1, "A shown cell decodes its own sprite and no one else's.")
     }
 
@@ -234,7 +276,7 @@ final class DexModelTests: XCTestCase {
 
         XCTAssertEqual(model.rows.first?.id, "greymon")
 
-        let undiscovered = model.rows.filter { !$0.isDiscovered }.map(\.node.displayName)
+        let undiscovered = model.rows.filter { !$0.isDiscovered }.map(\.displayName)
         XCTAssertEqual(undiscovered, undiscovered.sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending })
     }
 
@@ -283,21 +325,37 @@ final class DexModelTests: XCTestCase {
         XCTAssertEqual(agumon.rows.map(\.id), authored)
     }
 
-    /// The header counts every row, so the sections have to add back up to it — otherwise a
-    /// Digimon in two sections, or none, would go unnoticed.
-    func testTheSectionsPartitionTheRosterSoTheCountReconciles() throws {
+    /// The sections partition the GRAPH, not the roster — since US-063 those are different sizes,
+    /// and the header counts the roster. What still has to hold is that every graph node lands in
+    /// exactly one section, so a Digimon cannot be drawn in two trees or fall out of all of them.
+    func testTheSectionsPartitionTheGraphExactlyOnce() throws {
         let store = try makeStore()
         store.recordDiscovery(id: "agumon", now: Self.met)
         store.recordDiscovery(id: "gabumon", now: Self.met)
         try store.save()
 
-        let model = DexModel(graph: .bundled, makeStore: { try self.makeStore() })
+        let model = DexModel(makeStore: { try self.makeStore() })
         model.load()
 
-        XCTAssertEqual(model.sections.reduce(0) { $0 + $1.totalCount }, model.totalCount)
-        XCTAssertEqual(model.sections.reduce(0) { $0 + $1.discoveredCount }, model.discoveredCount)
-        XCTAssertEqual(Set(model.sections.flatMap { $0.rows.map(\.id) }).count, model.totalCount,
+        let sectioned = model.sections.flatMap { $0.rows.map(\.id) }
+        XCTAssertEqual(Set(sectioned), Set(EvolutionGraph.bundled.nodes.map(\.id)))
+        XCTAssertEqual(sectioned.count, Set(sectioned).count,
                        "No Digimon may appear in two sections.")
+        XCTAssertLessThan(sectioned.count, model.totalCount,
+                          "The trees cover only the authored lines; the grid covers the roster.")
+    }
+
+    /// A section's `nodes` is what `EvolutionTreeView` lays its columns out from, and its `rows`
+    /// is what those cells draw — so the two must line up index for index or a tree would draw one
+    /// Digimon's sprite in another's position.
+    func testASectionsNodesAndRowsAreTheSameDigimonInTheSameOrder() throws {
+        let model = DexModel(makeStore: { try self.makeStore() })
+
+        model.load()
+
+        for section in model.sections where section.isLine {
+            XCTAssertEqual(section.nodes.map(\.id), section.rows.map(\.id), section.title)
+        }
     }
 
     // MARK: - AC: dexOnly entries stay reachable in a flat Others section
@@ -319,12 +377,13 @@ final class DexModelTests: XCTestCase {
         XCTAssertEqual(model.sections.map(\.id), ["agumon", DexSection.othersID])
         XCTAssertEqual(model.sections.first?.rows.map(\.id), ["agumon"],
                        "A dexOnly node must not be left in its line's tree.")
+        XCTAssertEqual(model.sections.first?.nodes.map(\.id), ["agumon"])
 
         let others = try XCTUnwrap(model.sections.last)
         XCTAssertFalse(others.isLine, "Others is a flat grid, not a tree.")
         XCTAssertEqual(others.title, "Others")
         XCTAssertEqual(others.rows.map(\.id), ["aquilamon"])
-        XCTAssertEqual(model.sections.reduce(0) { $0 + $1.totalCount }, model.totalCount)
+        XCTAssertTrue(others.nodes.isEmpty, "Others is a grid; it has no tree to lay out.")
     }
 
     // MARK: - Degradation
@@ -333,12 +392,12 @@ final class DexModelTests: XCTestCase {
     /// not be louder than losing the game.
     func testAnUnopenableStoreLeavesAnAllUndiscoveredDex() {
         struct Unopenable: Error {}
-        let model = DexModel(graph: .bundled, makeStore: { throw Unopenable() })
+        let model = DexModel(makeStore: { throw Unopenable() })
 
         model.load()
 
         XCTAssertTrue(model.isLoaded)
-        XCTAssertEqual(model.totalCount, EvolutionGraph.bundled.nodes.count)
+        XCTAssertEqual(model.totalCount, Roster.bundled.entries.count)
         XCTAssertEqual(model.discoveredCount, 0)
     }
 }
