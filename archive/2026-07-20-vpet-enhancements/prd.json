@@ -1,0 +1,349 @@
+{
+  "project": "Digimon Health V-Pet",
+  "branchName": "ralph/vpet-enhancements",
+  "description": "V-Pet Enhancements - horizontal movement, compact circular controls, evolution tree Dex, three new evolution lines, state-driven widget poses with batched-timeline motion, and a poop/clean care loop. Source PRD: tasks/prd-vpet-enhancements.md",
+  "userStories": [
+    {
+      "id": "US-036",
+      "title": "Add a movement model for horizontal wandering",
+      "description": "As a developer, I need a testable model that decides where the Digimon is and which way it faces, so movement is not tangled up in view code.",
+      "acceptanceCriteria": [
+        "New Sources/Movement.swift with a MovementModel exposing horizontal offset (points from centre) and facing direction (.left / .right)",
+        "Position advances via an injectable clock, never a real timer - tests advance time by hand and assert position",
+        "Movement is bounded: on reaching a bound it reverses and flips facing",
+        "Direction changes are deterministic given a seed, so a test can assert an exact path",
+        "Tests/MovementTests.swift covers: advancing time moves position, hitting a bound reverses, facing matches direction of travel",
+        "Add new files to project.yml and re-run xcodegen generate - never hand-edit .xcodeproj",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "MovementModel advances in fixed 0.25s steps from an injected Date (no timer), so many small advances equal one large one; seeded via the existing SeededGenerator, bounded with turn-on-reach (>= not >, else a bound that is a whole multiple of the step distance pins the sprite for an extra step). 13 tests in Tests/MovementTests.swift, incl. an exact-path literal for seed 1. project.yml needed no edit (Sources/ and Tests/ are directory-wide paths); xcodegen re-run anyway. Full suite 521 tests, 0 failures; build green."
+    },
+    {
+      "id": "US-037",
+      "title": "Render movement in the main screen",
+      "description": "As a user, I want my Digimon to walk around so it feels alive instead of frozen.",
+      "acceptanceCriteria": [
+        "DigimonSpriteView accepts a horizontal offset and a flipped flag",
+        "Flipping uses .scaleEffect(x: -1) and does NOT break .interpolation(.none) - pixel art must stay unsmoothed",
+        "ContentView drives the sprite from MovementModel",
+        "Movement is suspended while sleeping, eating, sick, dead, or a battle/ceremony overlay is up",
+        "Movement resumes when those states clear",
+        "The walk loop (walk1/walk2) continues to animate while moving",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Verify in watchOS Simulator (Apple Watch Series 11 46mm): capture a screenshot via simctl showing the sprite off-centre"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "DigimonSpriteView gained `offset` (an .offset, so the walk cannot re-lay-out the name/caption around it) and `flipped` (.scaleEffect(x: -1) applied AFTER .interpolation(.none) on the Image, so both headings sample identically). The pack's art faces LEFT, verified by eye on Agumon.png, so flipped == facing right. New Sources/WanderingSpriteView.swift holds the walk: a TimelineView ticking at exactly MovementModel.step drives a non-observable SpriteWanderer box in @State (no @Published, so no publishing-during-view-update), safe to call from body because advance(to:) is idempotent within a step. Suspension is MainScreenModel.isWandering = `animation == .idle && no overlay`, which is the same fact as the sleep/sick/dead list said once instead of twice - a state added to restingAnimation later suspends movement for free, and eating falls out of it. Added MovementModel.hold(at:) for the suspended stretches: skipping the advance alone would leave the clock behind and teleport the sprite the instant a 5s eat ended. Added DEBUG -wanderDemo (healthy Agumon), because every other demo flag seeds a state that SUSPENDS movement and the default save is a near-symmetric egg in which a flip cannot be seen. Build green; 529 tests, 0 failures (was 521, +8). Simulator 46mm: sprite screenshotted at the far right AND far left of centre, mirrored when heading right and native when heading left, pixels crisp both ways, walk frames alternating."
+    },
+    {
+      "id": "US-038",
+      "title": "Replace the action controls with circular icon buttons",
+      "description": "As a user, I want small round buttons so tapping an action does not hide my Digimon.",
+      "acceptanceCriteria": [
+        "FeedControls, TrainControls and BattleControls are replaced by a single row of circular icon-only buttons (fork.knife / dumbbell / bolt.fill) plus a bell for Notifications",
+        "Each button is circular, no larger than 32x32 points, and has an accessibility label naming the action",
+        "Battle button still disables at the daily limit and still surfaces MainScreenModel.battleLimitReason",
+        "Tapping a button triggers exactly the same model call as before (model.feed(), model.train(), model.battle())",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass",
+        "Verify in watchOS Simulator: capture a screenshot via simctl showing the circular button row"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "New Sources/ActionControls.swift: one HStack of four 32x32 circles (fork.knife/dumbbell/bolt.fill/bell), each with an accessibility label naming the action. The circle is an exact .frame on a shared ActionButtonFace rather than padding around a glyph, so all four match and none exceeds the cap regardless of symbol metrics; the face reads isEnabled from the environment instead of taking a flag, so the disabled Battle look cannot disagree with the .disabled modifier that causes it. buttonDiameter lives on ActionButtonFace, not ActionControls, because ActionControls is generic over its bell destination and ActionControls.buttonDiameter will not infer. The bell is a NavigationLink taking a @ViewBuilder destination, so this file need not know about NotificationSettingsView and tests can pass EmptyView. isBattleDisabled/limitCaption moved across from BattleControls UNCHANGED, so the daily limit and MainScreenModel.battleLimitReason are the same rule in a new place; BattleLimitTests now builds an ActionControls and asserts exactly what it asserted before. The three old *Controls structs became stat-only HungerReadout/StrengthReadout/BattleReadout in the same screen positions - US-039 owns collapsing them into a strip. The four -*ScrollDemo flags now all scroll to one anchor, since there is one row where there were three blocks. Build green; 531 tests, 0 failures (was 529, +2). Simulator 46mm: screenshotted the four-circle row, and separately -battleLimitDemo showing the bolt greyed with 'No battles left today.' under it."
+    },
+    {
+      "id": "US-039",
+      "title": "Fit the main screen without scrolling",
+      "description": "As a user, I want everything on one screen so I never scroll away from my Digimon to act.",
+      "acceptanceCriteria": [
+        "Stats become a compact single strip above the sprite: hunger pips, STR, PWR, W/L - no longer stacked blocks",
+        "Main screen renders without a ScrollView on the playing path, or the scroll view never actually scrolls at 42mm",
+        "Sprite remains visible at the same time as all four buttons on both Series 11 42mm and Series 11 46mm",
+        "The -feedScrollDemo / -trainScrollDemo / -battleScrollDemo / -settingsScrollDemo debug flags are removed or made no-ops, since there is nothing left to scroll to",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Verify in watchOS Simulator on BOTH 42mm and 46mm: screenshots show sprite plus all buttons together, nothing clipped"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "ScrollView and ScrollViewReader gone; the playing path is one VStack of fixed rows with the sprite as the single flexible one, sized by SpriteScale.fitting(_:) to the largest WHOLE scale that fits its measured slot (fractional scales resample 16x16 art onto a grid it does not line up with, which .interpolation(.none) shows as uneven pixel widths). MEASURED, not estimated: a 42mm screen offers only 136pt of content height and the old fixed rows ate 123 of it, leaving 13 - so the sprite overflowed its slot and Agumon's head landed on the energy bars. Two rows had to be reclaimed to fit a legible Digimon: the three stat blocks became one StatsStrip (pips/STR/PWR/W-L, three separate accessibility elements kept), and EnergyBarsView went from four stacked rows to a 2x2 grid (44pt -> 22pt) with smaller symbol/label fonts, since the row is as tall as its tallest TEXT and not its 4pt bar. The name row was also merged into the caption row as 'Name . Stage', costing the name only for the seconds an action message is up. Fixed rows now ~85pt, so 42mm lands on scale 3 (48pt) rather than the floor. SpriteScale.minimum is 2, not 3: the sprite is drawn with .offset and so OVERFLOWS rather than clips, and a too-high floor is what produced the overlap - it now degrades to a small Digimon before anything collides. The four -*ScrollDemo flags are deleted along with the scroll view and are now inert; MainScreenModel's -battleLimitDemo doc no longer tells the reader to pair one. Build green; 536 tests, 0 failures (was 531, +5 in Tests/MainScreenLayoutTests.swift). Simulator-verified on BOTH sizes with nothing clipped and no overlap: 42mm and 46mm healthy Agumon (sprite + all four circles together), plus the two tightest cases on 42mm - a Digitama, whose extra 'Hatch 0/50' row is the worst case for height, and -battleLimitDemo, whose greyed bolt and 'No battles left today.' caption sit under the row."
+    },
+    {
+      "id": "US-040",
+      "title": "Add line metadata to the evolution graph",
+      "description": "As a developer, I need each node to know which line it belongs to, so the Dex can group nodes into trees.",
+      "acceptanceCriteria": [
+        "evolutions.json schema gains a 'line' field (e.g. 'agumon', 'patamon') on every node",
+        "docs/evolutions-schema.md updated to match",
+        "Swift model decodes 'line'; decoding a node without 'line' fails loudly rather than defaulting",
+        "All 22 existing nodes are tagged with their line, with no behaviour change to evolution logic",
+        "EvolutionGraphValidator gains a check that every node has a non-empty 'line'",
+        "Existing evolution tests still pass",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "Added required 'line' to EvolutionNode (decode, not decodeIfPresent, so a node missing it fails the load); tagged all 22 nodes agumon/gabumon/palmon; added GraphValidationError.emptyLine; docs/evolutions-schema.md updated. 541 tests green."
+    },
+    {
+      "id": "US-041",
+      "title": "Build the evolution tree layout view",
+      "description": "As a user, I want to see a line drawn as a tree so I can tell how many branches it has.",
+      "acceptanceCriteria": [
+        "New Sources/EvolutionTreeView.swift renders one line as columns ordered by stage: Digitama, Baby I, Baby II, Child, Adult, Perfect, Ultimate",
+        "Nodes at the same stage stack vertically within their column",
+        "Edges between nodes are drawn as visible connecting lines",
+        "Discovered nodes show their idle sprite; undiscovered nodes still show '?' exactly as the current grid does",
+        "The tree scrolls horizontally when wider than the screen",
+        "Tapping a discovered node opens the existing DexDetailView; undiscovered nodes stay non-tappable",
+        "Add new files to project.yml and re-run xcodegen generate",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Verify in watchOS Simulator: screenshot shows a branching tree with visible connectors"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "New Sources/EvolutionTreeView.swift: EvolutionTreeLayout (pure grid arithmetic: ladder-ordered columns, siblings stacked, edges resolved to cell pairs) plus the SwiftUI view. 8 new tests; screenshotted at 46mm and 42mm with the Agumon branch and its connectors visible. Not yet on the Dex screen — that is US-042."
+    },
+    {
+      "id": "US-042",
+      "title": "Replace the Dex grid with the tree",
+      "description": "As a user, I want the record book to be the tree map, not a flat grid.",
+      "acceptanceCriteria": [
+        "DexView no longer renders LazyVGrid; it presents a list of lines, each opening its EvolutionTreeView",
+        "The discovered/total count in the navigation title is preserved",
+        "dexOnly Digimon (157 idle-frame-only entries) remain reachable in a separate flat 'Others' section so the count still reconciles",
+        "Lazy rendering is preserved - opening the Dex must not decode all 865 sprites",
+        "-dexDemo and -dexDetailDemo debug paths still work",
+        "Existing Dex tests pass",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Verify in watchOS Simulator: screenshots of the line list and of one opened tree"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "DexView is now a List of DexSections (one per line, then Others for dexOnly) each opening EvolutionTreeView; the flat LazyVGrid moved to DexGridView and serves only Others. Sections built in DexModel in authored order, not from the discovered-first rows. 5 new tests; 554 total, 0 failures. Screenshots of the line list (5/22, counts reconcile) and the opened Agumon tree. NOTE: shipped roster is 22 nodes / 0 dexOnly, so Others is test-only for now."
+    },
+    {
+      "id": "US-043",
+      "title": "Verify and record sprite availability for the new lines",
+      "description": "As a developer, I need a checked list of which nodes have animated sheets before seeding data, so no story references art that does not exist.",
+      "acceptanceCriteria": [
+        "A script under scripts/ reports, for a list of names, whether each has an animated sheet, is Idle Frame Only (dexOnly), or is missing entirely",
+        "Output committed to docs/ recording the result for Color V3 (Patamon), V4 (Piyomon) and V5 (Gazimon) lines",
+        "Confirms and documents these known exceptions, which must NOT be seeded as playable: Poyomon (idle-frame-only), Nanimon (idle-frame-only), Flymon (idle-frame-only), Kokatorimon (absent from the asset pack entirely)",
+        "Source of truth for the trees is Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md - do NOT re-parse the PDFs or fetch humulos.com, the extraction is already done",
+        "Typecheck passes (xcodebuild build succeeds)"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "scripts/check_sprites.py reports animated/dexOnly/missing per name, reading names from the trees md via --tree; docs/sprite-availability.md records V3/V4/V5. All four exceptions confirmed on disk: Poyomon, Nanimon, Flymon dexOnly; Kokatorimon absent entirely (find -iname '*kokatori*' = 0 hits). Also found: HiAndromon is filed Hi-Andromon.png, and Gizamon has no Digitama. Build green, 554 tests 0 failures."
+    },
+    {
+      "id": "US-044",
+      "title": "Seed the V3 Patamon line",
+      "description": "As a user, I want a fourth line to raise.",
+      "acceptanceCriteria": [
+        "Line seeded: Pata_Digitama -> Baby I substitute -> Tokomon -> Patamon -> Adult branches -> Perfect -> Ultimate",
+        "Because Poyomon is dexOnly, an animated Baby I substitute is used and the divergence from the source tree is recorded in a comment in evolutions.json and in notes",
+        "Adult/Perfect/Ultimate nodes drawn only from the verified-available set: Unimon, Centalmon, Ogremon, Bakemon, Shellmon, Drimogemon, Scumon, Andromon, Giromon, Etemon, HiAndromon, Gokumon, BanchoLeomon",
+        "Every spriteFile verified to exist on disk with ls before commit",
+        "Every node tagged with its 'line' per US-040",
+        "EvolutionGraphValidator passes on the extended graph",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Seeded 15 nodes as line 'patamon' (37 total): Pata_Digitama -> Puttimon -> Tokomon -> Patamon, branching five ways into Unimon/Centalmon/Ogremon/Bakemon/Scumon, converging into Andromon/Giromon/Etemon and HiAndromon/Gokumon/BanchoLeomon. Poyomon is dexOnly so Puttimon substitutes as Baby I; the divergence is a 'comment' key on that node (decoder ignores it) and a test re-reads the raw JSON to prove it is there. Five Champions vs four energy types: Scumon is the isDefault edge, under Bakemon's vitality gate on minEnergy. All 15 spriteFiles ls-verified 48x64 (48x16 egg); HiAndromon's art is Hi-Andromon.png. Build green, 560 tests 0 failures (was 554; +6 US-044 tests all confirmed by name)."
+    },
+    {
+      "id": "US-045",
+      "title": "Seed the V4 Piyomon line",
+      "description": "As a user, I want a fifth line to raise.",
+      "acceptanceCriteria": [
+        "Line seeded from Piyo_Digitama -> Yuramon -> Tanemon -> Piyomon -> Adult -> Perfect -> Ultimate",
+        "Kokatorimon and Nanimon branches omitted (missing / dexOnly per US-043), and the omission noted",
+        "Uses only verified-available nodes: Monochromon, Leomon, Kuwagamon, Coelamon, Mojyamon, Megadramon, Piccolomon, Digitamamon, Darkdramon, BloomLordmon, Gankoomon",
+        "Resolves the collision with the existing Palmon line, which already uses Yuramon and Tanemon - either share those nodes or give this line distinct Baby stages, and state which was chosen in notes",
+        "Every spriteFile verified to exist on disk with ls before commit",
+        "Every node tagged with its 'line' per US-040",
+        "EvolutionGraphValidator passes",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "Seeded 15 nodes as line `piyomon` (roster 37 -> 52). Yuramon/Tanemon collision resolved with LINE-SCOPED IDS (piyo_yuramon, piyo_tanemon) rather than sharing the palmon nodes: `line` is single-valued and the Dex draws one tree per line, so a shared node sits in one tree and EvolutionTreeLayout silently drops every connector crossing into the other. Same displayName, same spriteFile, distinct id. Kokatorimon (missing) and Nanimon (dexOnly) omitted, noted in a `comment` on the piyomon node; Coelamon and Mojyamon (V4's Palmon branch) fill the gap. Digitamamon rehomed onto Kuwagamon since Nanimon was its only tree parent, keeping the neglect path one thread: Piyomon -> Kuwagamon -> Digitamamon -> Gankoomon. All 15 spriteFiles ls-verified on disk with dimensions. Build green; 568 tests, 0 failures (was 560, +8 new, all confirmed by name)."
+    },
+    {
+      "id": "US-046",
+      "title": "Seed the V5 Gazimon line",
+      "description": "As a user, I want a sixth, branch-rich line to raise.",
+      "acceptanceCriteria": [
+        "Line seeded from Gazi_Digitama -> Zurumon -> Pagumon -> Gazimon -> Adult -> Perfect -> Ultimate",
+        "Flymon branch omitted (dexOnly per US-043), omission noted",
+        "Uses only verified-available nodes: Gizamon, DarkTyranomon, Cyclomon, Devidramon, Tuskmon, Raremon, Deltamon, MetalTyranomon, Ex-Tyranomon, Nanomon, Mugendramon, Gaioumon, Raidenmon",
+        "Every spriteFile verified to exist on disk with ls before commit",
+        "Every node tagged with its 'line' per US-040",
+        "Egg selection at rebirth can reach all six lines",
+        "EvolutionGraphValidator passes",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "Seeded 17 nodes as line `gazimon` (roster 52 -> 69). Gazi_Digitama -> Zurumon -> Pagumon, which BRANCHES to both V5 Rookies: Gazimon (strength, isDefault) and Gizamon (stamina) — the first branching Baby II in the file. Both were seeded because Deltamon hangs off Gizamon alone, and Gizamon's missing Digitama stops mattering once it is reached through Pagumon. Flymon omitted (dexOnly), noted on the `gizamon` node; Chaosdramon omitted (Jogress), noted on `metaltyranomon`. Raremon is the isDefault on both Rookies, sharing each one's strength gate from below. All 17 spriteFiles ls-verified on disk. Build green; 576 tests, 0 failures (+8)."
+    },
+    {
+      "id": "US-051",
+      "title": "Add the poop model",
+      "description": "As a developer, I need poop to accumulate on a clock so the rest of the feature has something to read.",
+      "acceptanceCriteria": [
+        "New Sources/Poop.swift with poop count and the timestamps behind it",
+        "Poop accumulates via an injectable clock - tests never wait real time",
+        "A ceiling on simultaneous poops is defined and enforced",
+        "Poop generation is tied to feeding and/or elapsed time, with the chosen rule documented in code comments and notes",
+        "Poop does NOT accumulate while the Digimon is asleep or dead",
+        "Count persists across launches via the existing SwiftData model",
+        "Tests/PoopTests.swift covers accumulation, the ceiling, the sleep pause, and persistence",
+        "Add new files to project.yml and re-run xcodegen generate",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "PoopClock (Sources/Poop.swift) accrues one poop per 3 elapsed AWAKE hours, ceiling 4, derived from GameState.poopUpdatedAt like HungerClock rather than ticked; elapsed time rather than feeding was chosen so a never-fed Digimon still makes a mess. advancePoop(isAsleep:now:) pauses on asleep-or-dead by restamping, so the paused stretch is skipped rather than banked. poopCountStorage/poopUpdatedAtStorage added to GameState as optionals for SwiftData migration. 16 new tests in Tests/PoopTests.swift; 592 tests, 0 failures. Not yet wired into MainScreenModel.refresh — US-052 does that when it draws the poop."
+    },
+    {
+      "id": "US-052",
+      "title": "Show poop and add the clean action",
+      "description": "As a user, I want to see the mess and clean it up.",
+      "acceptanceCriteria": [
+        "Poops render on screen beside the Digimon, one shape per poop, drawn in SwiftUI - there is NO poop sprite in the asset pack, so do not invent a spriteFile path",
+        "A circular Clean button joins the action row from US-038, matching its size and style",
+        "Tapping Clean sets poop count to zero and shows a confirmation message in the existing caption slot",
+        "The Clean button is disabled when there is no poop",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Verify in watchOS Simulator: screenshot with poop visible, and one after cleaning showing it gone"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "SwiftUI PoopPile (no sprite exists) sits bottom-trailing in the sprite slot; Clean joins the action row as a 5th circle (diameter 30, spacing 4 = 166pt, fits the 176pt 41mm screen), disabled at 0 poops; clean() zeroes the count, RESTAMPS poopUpdatedAt so the next refresh does not re-accrue, and shows \"All clean!\" in the existing caption slot. advancePoop is now wired into refresh(). Build green, 601 tests 0 failures (+9); 41mm and 42mm screenshots taken with and without poop via -poopDemo/-poopCleanDemo."
+    },
+    {
+      "id": "US-053",
+      "title": "Uncleaned poop charges care mistakes and causes sickness",
+      "description": "As a user, I want neglect to have consequences, so cleaning matters.",
+      "acceptanceCriteria": [
+        "Poop left uncleaned past a defined threshold charges a care mistake using the existing CareMistakes machinery",
+        "A care mistake is charged at most once per threshold crossing - no repeated charging on every refresh tick (follow the chargeStarvationMistakes precedent in CareMistakes.swift)",
+        "Reaching the poop ceiling can trigger sickness through the existing Sickness path (careMistakesUntilSick)",
+        "Cleaning stops further charging",
+        "Tests drive the injected clock across the threshold and assert exactly one mistake charged",
+        "Tests assert the sickness path fires at the ceiling",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "Uncleaned poop at the ceiling charges ONE care mistake per spell after 6h, via chargeUncleanedPoopMistakes reading the poopUpdatedAt freeze; cleaning clears the marker so a re-filled screen is charged again. Deliberately once-per-spell, not a rate: sleep pauses poop only when a refresh observes it, so a rate scored 2 mistakes open vs 6 closed for the same 48h and broke ClosedAppRecomputeTests. Build green, 609 tests 0 failures (+8)."
+    },
+    {
+      "id": "US-054",
+      "title": "Notify when poop needs cleaning",
+      "description": "As a user, I want to be told there is a mess so I can deal with it before my Digimon gets sick.",
+      "acceptanceCriteria": [
+        "A local notification fires when poop reaches the notify threshold, via the existing Notifications layer",
+        "A toggle for it is added to NotificationSettingsView, defaulting on, persisted like the existing toggles",
+        "With the toggle off, no poop notification is scheduled",
+        "Notifications are not repeated for the same uncleaned mess - one per threshold crossing",
+        "Cleaning cancels any pending poop notification",
+        "Tests cover: scheduled at threshold, suppressed when toggled off, cancelled on clean, not duplicated",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass",
+        "Verify in watchOS Simulator via -settingsDemo: screenshot shows the new toggle"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": "NotificationKind.poop notifies when the screen fills (PoopClock.maximumPoops), claimed once per mess via GameState.claimPoopNotification and saved so a relaunch does not repeat it; clean() re-arms the claim and cancels the delivered notice through a new PetNotificationDelivering.cancel. Mess toggle appears in NotificationSettingsView by allCases, defaults on. 619 tests pass (was 609); 46mm screenshot shows the Mess toggle via a new -settingsBottomDemo scroll hook."
+    },
+    {
+      "id": "US-047",
+      "title": "Complication sprite pose reflects live state",
+      "description": "As a user, I want a glance at my watch face to tell me what my Digimon is doing.",
+      "acceptanceCriteria": [
+        "ComplicationSnapshot carries a pose derived from state",
+        "Pose mapping is explicit and total: sleeping -> sleep frame, sick -> hurt frame, poop present -> angry frame, dead -> a distinct held frame, otherwise -> idle walk1",
+        "Complication views render the mapped frame with .interpolation(.none)",
+        "Snapshot is republished when the underlying state changes, so the pose is not stale",
+        "Tests cover the pose mapping for every state, including precedence when two apply at once (e.g. sick AND poop present)",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass",
+        "Verify in watchOS Simulator via -complicationDemo: screenshot shows a non-idle pose"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "ComplicationPose (idle/sleeping/sick/messy/dead -> walk1/sleep1/hurt1/angry/hurt2) carried on the snapshot; precedence dead > sick > asleep > messy > idle, matching restingAnimation and putting the mess last because US-054 already notifies it. Non-idle poses render from SpriteSheetCache, falling back to the idle art for eggs (whose sheet has no such frames). clean() and the DEBUG demo seeds republish so the pose is not stale. init(from:) defaults a missing pose so the pre-upgrade snapshot still decodes. 627 tests pass (+8); screenshots verified -sickDemo draws hurt1 and -poopDemo draws angry, both matching the cut reference frames."
+    },
+    {
+      "id": "US-048",
+      "title": "Spike - measure the real widget timeline refresh granularity",
+      "description": "As a developer, I need to know the actual floor on entry granularity before designing an animation cadence around a guess.",
+      "acceptanceCriteria": [
+        "A throwaway TimelineProvider returns entries at 1s, 5s, 30s, 60s and 5min spacing, each rendering a visibly distinct frame or number",
+        "Observed on a watchOS 10 target, recording which spacings actually repaint and which are coalesced",
+        "Behaviour in Always-On Display recorded separately - AOD throttles repaints and is expected to differ",
+        "Findings written to docs/widget-refresh-granularity.md: the measured floor, the AOD floor, and the date and OS version measured on",
+        "The spike code is removed or left clearly marked as non-shipping",
+        "THIS STORY SHIPS A MEASUREMENT, NOT A FEATURE. If the floor turns out coarser than ~2 minutes, say so plainly in the doc and note in notes that US-049 should be reconsidered rather than forced",
+        "Do NOT attempt sensor-driven (gyroscope/compass) widget animation - a widget is not a running process and cannot receive sensor callbacks. Already ruled out; see the design note in tasks/prd-vpet-enhancements.md",
+        "Typecheck passes (xcodebuild build succeeds)"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "MEASURED. Floor is ~1-2s jittery; 5s/30s/60s/5min honoured exactly (5.03, 30.06, 60.14, 300.28 observed). No coalescing: all 32 entries of one batched timeline repainted individually, and the whole 29-min ladder cost exactly 2 getTimeline calls - batching really is one budget charge. UNBLOCKED the previous iteration's dead end: the face.json slot needs \"type\": 56, which is NTKComplicationTypeWidget (native Apricot); without it NanoTimeKit files the slot as a Remote/iPhone complication that never resolves on a watch-only app. 56 was read out of +[NTKApricotComplicationController _acceptsComplicationType:family:forDevice:] (cmp x2, #0x38), not guessed; the old nativeContainerBundleIdentifier lead was a red herring (it is a CHSWidgetDescriptor runtime property, not a face-JSON key). Complication confirmed hosted via ClockFace SceneHosting + a live chronod WidgetRenderSession, and a face screenshot reading band 5s/offset 25 at exactly t+25. Readout was chronod timelineLiveView sequence numbers, not screenshots. AOD REMAINS UNMEASURED - simctl ui has no AOD toggle, the Features menu needs a GUI this box cannot drive, and a simulator is not a trustworthy model of display throttling anyway; it is hardware-only and is carried into US-049 as an open item. Recommendation flipped: US-049 is VIABLE, alternate walk1/walk2 on 5s entries (finest spacing honoured exactly on every sample). Build green, 636 tests pass (unchanged). Spike is DEBUG-only and marked non-shipping; delete it once US-049 lands."
+    },
+    {
+      "id": "US-049",
+      "title": "Batched-timeline frame alternation in the complication",
+      "description": "As a user, I want the sprite on my watch face to move a little, so it feels alive rather than frozen.",
+      "acceptanceCriteria": [
+        "BLOCKED ON US-048 - the entry cadence must be the measured floor from docs/widget-refresh-granularity.md, not an assumed value. If that doc does not exist, stop and leave passes false",
+        "The provider returns a batch of entries alternating walk1 / walk2 at that cadence, in a single timeline (batched entries are one budget charge, not one per entry)",
+        "The batch covers a defined horizon, with a documented plan for what happens when it runs out",
+        "Alternation is suppressed for states where a held pose is correct - sleeping, sick and dead must not appear to walk",
+        "SwiftUI entry transitions are applied so the frame change reads as motion rather than a jump",
+        "Tests assert the generated timeline: correct entry count, correct spacing, correct frame sequence, and suppression in held-pose states",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass",
+        "Verify in watchOS Simulator via -complicationDemo: two screenshots at different entry dates showing different frames"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": "Batched timeline: 60 entries at the measured 5s cadence (US-048), alternating walk1/walk2 via ComplicationEntry.step; held poses (sleeping/sick/dead/messy) get one entry so they cannot appear to walk. Reloads .after the 5-minute horizon; budget exhaustion degrades to the last entry held, i.e. the pre-US-049 still sprite. Sprite now sources every frame from the sheet (narrows FR-22 - see the comment on ComplicationSprite; eggs gained a real idle/wobble). 647 tests green. Simulator -complicationDemo screenshots at step 1 and step 4 differ in 639 of 10816 sprite-tile pixels; a -sickDemo run showed 'step 0 of 1', suppression on device. AOD repaint rate still unmeasured - hardware only."
+    },
+    {
+      "id": "US-050",
+      "title": "Interactive Clean button on the complication",
+      "description": "As a user, I want to clean up after my Digimon straight from the watch face, without opening the app.",
+      "acceptanceCriteria": [
+        "An AppIntent-backed Button in the complication performs the clean action (watchOS 10 supports interactive widgets; project.yml targets watchOS 10.0)",
+        "The button appears only when there is poop to clean",
+        "Tapping it zeroes the poop count through the SAME model path as the in-app Clean button from US-052 - no duplicated logic",
+        "The timeline reloads after the intent runs, so the pose and button state update",
+        "Pending poop notifications are cancelled, exactly as in-app cleaning does",
+        "Tests cover the intent invoking the shared clean path and the button's visibility rule",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass",
+        "Verify in watchOS Simulator via -complicationDemo: screenshot showing the Clean button present when poop exists"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": "AppIntent-backed Clean button on the rectangular complication. The extension CANNOT reach the store (it lives in the app's own container, not the app group), so the intent records a request in the group and MainScreenModel.refresh() applies it through the one real clean() - no second cleaning rule. Snapshot gained poopCount (the pose can't answer the button's question: a sick Digimon in 4 poops poses .sick). Tap also cancels the mess notice immediately via the same UserNotificationDeliverer, and optimistically rewrites the snapshot so the face redraws at once. 636 tests pass (was 627, +9). Screenshots at 46mm: trash button present with -poopDemo, absent with -poopCleanDemo. LIMIT ON AC4: reloadAllTimelines() is called but cannot be OBSERVED here - US-048 established a widget never gets a timeline without being on a face, and this box cannot place one. What is observed is that the snapshot the reload would read has already changed."
+    }
+  ]
+}
