@@ -54,6 +54,24 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
     /// it, and a later reader would eventually "fix" the engine to respect it and break hatching.
     case typeGatedHatch(from: String, to: String, energy: EnergyType)
 
+    /// A condition names a metric outside the `ConditionMetric` vocabulary — a typo, or a
+    /// HealthKit identifier nobody has probed. Caught here rather than at decode because a typed
+    /// property would make it a launch trap (see the note on `EvolutionCondition.metric`), and
+    /// because an unknown metric can never be satisfied: the edge is silently dead.
+    case unknownConditionMetric(from: String, to: String, metric: String)
+
+    /// A condition threshold below zero. No metric in either family can go negative, so this only
+    /// ever means a sign typo — and on an `atMost` condition it makes the edge permanently unusable.
+    case negativeConditionValue(from: String, to: String, metric: String, value: Double)
+
+    /// A condition with a blank hint. The player has no way to discover the criterion, so the
+    /// evolution reads to them as random.
+    case emptyConditionHint(from: String, to: String, metric: String)
+
+    /// `care.battleWinRatio` outside 0.0–1.0. It is a FRACTION of battles won, so `0.8` is 80%;
+    /// `80` is the mistake this catches, and it would make the edge unreachable forever.
+    case battleWinRatioOutOfRange(from: String, to: String, value: Double)
+
     var description: String {
         switch self {
         case let .unknownEdgeTarget(from, to):
@@ -78,6 +96,14 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
             return "\(from) -> \(to): no requiredEnergy, but only a Digitama's hatch edge may omit it"
         case let .typeGatedHatch(from, to, energy):
             return "\(from) -> \(to): a hatch must not be gated on \(energy.rawValue) — US-018 hatches on total energy"
+        case let .unknownConditionMetric(from, to, metric):
+            return "\(from) -> \(to): condition metric '\(metric)' is not in the vocabulary — the edge can never qualify"
+        case let .negativeConditionValue(from, to, metric, value):
+            return "\(from) -> \(to): condition '\(metric)' has a negative value (\(value))"
+        case let .emptyConditionHint(from, to, metric):
+            return "\(from) -> \(to): condition '\(metric)' has an empty hint — the player cannot discover it"
+        case let .battleWinRatioOutOfRange(from, to, value):
+            return "\(from) -> \(to): battleWinRatio \(value) is outside 0.0–1.0 — it is a fraction, not a percentage"
         }
     }
 }
@@ -159,6 +185,13 @@ extension EvolutionGraph {
             break
         }
 
+        // Before the target lookup: a condition is wrong on its own terms, so a dead `to` must not
+        // hide it — the author would fix the target and then meet the condition error on a
+        // second run.
+        for condition in edge.conditions {
+            errors.append(contentsOf: validate(condition: condition, on: edge, from: node))
+        }
+
         guard let target = self.node(id: edge.to) else {
             // Everything below reads the target, so there is nothing further to say about it.
             return errors + [.unknownEdgeTarget(from: node.id, to: edge.to)]
@@ -174,6 +207,39 @@ extension EvolutionGraph {
             errors.append(.invalidStageTransition(
                 from: node.id, to: edge.to, fromStage: node.stage, toStage: target.stage))
         }
+        return errors
+    }
+
+    private func validate(
+        condition: EvolutionCondition, on edge: EvolutionEdge, from node: EvolutionNode
+    ) -> [GraphValidationError] {
+        var errors: [GraphValidationError] = []
+
+        if condition.hint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append(.emptyConditionHint(
+                from: node.id, to: edge.to, metric: condition.metric))
+        }
+
+        guard let metric = condition.knownMetric else {
+            // The range rules below are per-metric, and an unknown metric has no unit to judge
+            // `value` against — reporting "negative steps" for a metric that is not steps would
+            // point the author at the wrong field.
+            return errors + [.unknownConditionMetric(
+                from: node.id, to: edge.to, metric: condition.metric)]
+        }
+
+        if metric == .careBattleWinRatio {
+            // Subsumes the negative check: -0.5 is out of range for the same reason 80 is, and
+            // one error naming the real rule beats two naming half of it each.
+            if !(0.0...1.0).contains(condition.value) {
+                errors.append(.battleWinRatioOutOfRange(
+                    from: node.id, to: edge.to, value: condition.value))
+            }
+        } else if condition.value < 0 {
+            errors.append(.negativeConditionValue(
+                from: node.id, to: edge.to, metric: condition.metric, value: condition.value))
+        }
+
         return errors
     }
 }

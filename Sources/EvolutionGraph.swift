@@ -30,13 +30,22 @@ struct EvolutionEdge: Codable, Equatable {
     /// never permanently stuck (US-020). Exactly one edge per non-terminal node sets this.
     let isDefault: Bool
 
+    /// Extra criteria, ALL of which must hold. Empty (the default, and every shipped edge today)
+    /// means the edge is gated only by the fields above.
+    ///
+    /// This is the growth point: `requiredEnergy` / `minEnergy` / `maxCareMistakes` /
+    /// `minBattleWins` are a fixed four, whereas a condition names its metric as data, so a new
+    /// criterion is a JSON edit rather than a new field on this struct. See `EvolutionCondition`.
+    let conditions: [EvolutionCondition]
+
     init(
         to: String,
         requiredEnergy: EnergyType? = nil,
         minEnergy: Int,
         maxCareMistakes: Int,
         minBattleWins: Int? = nil,
-        isDefault: Bool = false
+        isDefault: Bool = false,
+        conditions: [EvolutionCondition] = []
     ) {
         self.to = to
         self.requiredEnergy = requiredEnergy
@@ -44,10 +53,12 @@ struct EvolutionEdge: Codable, Equatable {
         self.maxCareMistakes = maxCareMistakes
         self.minBattleWins = minBattleWins
         self.isDefault = isDefault
+        self.conditions = conditions
     }
 
-    // Hand-written so an omitted `isDefault` decodes as false. Synthesized Codable has no
-    // concept of a default value: it would reject every edge that leaves the key out.
+    // Hand-written so an omitted `isDefault` or `conditions` decodes as false / []. Synthesized
+    // Codable has no concept of a default value: it would reject every edge that leaves the key
+    // out — which today is every edge in the shipped file.
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.init(
@@ -56,7 +67,9 @@ struct EvolutionEdge: Codable, Equatable {
             minEnergy: try container.decode(Int.self, forKey: .minEnergy),
             maxCareMistakes: try container.decode(Int.self, forKey: .maxCareMistakes),
             minBattleWins: try container.decodeIfPresent(Int.self, forKey: .minBattleWins),
-            isDefault: try container.decodeIfPresent(Bool.self, forKey: .isDefault) ?? false
+            isDefault: try container.decodeIfPresent(Bool.self, forKey: .isDefault) ?? false,
+            conditions: try container.decodeIfPresent(
+                [EvolutionCondition].self, forKey: .conditions) ?? []
         )
     }
 }

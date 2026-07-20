@@ -77,3 +77,51 @@ Both were still in git HEAD and were restored with `git checkout HEAD --`. The u
 probe work was kept. THE BUG IS STILL IN ralph.sh — if a future iteration finds progress.txt
 suddenly short or the archive folder contents matching the current run, restore from HEAD
 before doing anything else. Do not commit the stub.
+
+---
+
+## 2026-07-20 — US-056 — Add EvolutionCondition to the edge schema
+PASSES: true
+
+Did: new Sources/EvolutionCondition.swift (ConditionMetric, ConditionWindow, ConditionComparison,
+EvolutionCondition), `conditions: [EvolutionCondition]` on EvolutionEdge, four validator rules,
+new Tests/EvolutionConditionTests.swift (21 tests), Condition section in docs/evolutions-schema.md.
+
+Observed (not assumed):
+- BUILD SUCCEEDED. Full suite 668 tests / 0 failures (was 647 => +21, all mine).
+  EvolutionConditionTests, EvolutionGraphTests and EvolutionGraphValidatorTests all "passed".
+- git status confirms Resources/evolutions.json, Tests/EvolutionGraphTests.swift and
+  Tests/EvolutionGraphValidatorTests.swift are UNMODIFIED — the AC asked for that literally.
+- testEveryBundledEdgeDecodesWithNoConditions walks every edge in the real bundled graph and
+  asserts conditions == []. That is the "decodes unchanged" AC, checked against the real file.
+
+THE ONE DESIGN CALL THAT MATTERS FOR LATER ITERATIONS:
+`EvolutionCondition.metric` is a **String**, not a `ConditionMetric`. There is a
+`knownMetric: ConditionMetric?` computed accessor. This is deliberate and NOT laziness —
+the AC requires the VALIDATOR to reject an unknown metric, and a typed property would make an
+unknown metric a DECODE failure instead, which EvolutionGraph.bundled turns into a fatalError at
+launch that kills the whole suite naming neither the file nor the metric (see the header comment
+there). `window` and `comparison` ARE typed enums: closed sets, so strict decoding is right.
+Do not "tidy" metric into an enum — the test
+testUnknownMetricDecodesAndIsReportedAsUnknownRatherThanTrapping exists to stop that.
+
+Vocabulary shipped: 27 health.* (every identifier docs/health-metrics.md marks usable, incl.
+health.workouts) + 5 care.* (trainingSessions, overfeeds, sleepDisturbances, battleCount,
+battleWinRatio). care.careMistakes is deliberately ABSENT — maxCareMistakes already gates it.
+
+Traps for US-061 (the story that will actually author conditions):
+1. NOTHING evaluates conditions yet. This story is schema + validation only; EvolutionEngine does
+   not read `conditions` at all. An edge with conditions today behaves as if it had none.
+2. "usable" in the health.* list means the TYPE is readable, NOT that it has data. The seven
+   iPhone/feature-sourced ones (toothbrushing, handwashing, water, daylight, audioExposure,
+   lowCardioFitnessEvents, walkingSteadinessEvents) must only ever gate a BONUS branch — if one is
+   empty on real hardware, an edge that is a node's only exit makes that Digimon unreachable.
+3. care.battleWinRatio is a 0.0-1.0 FRACTION. The validator rejects 80 for 80%. That rule
+   subsumes the negative-value rule for this metric (one error, not two).
+4. An unknown metric SUPPRESSES the range rules on that condition — an unrecognised metric has no
+   unit to judge `value` against.
+5. Condition errors are collected BEFORE the edge-target lookup, so a dead `to` does not hide them.
+6. No project.yml edit was needed: `sources: - path: Sources` is a whole-directory reference, so
+   both new files were picked up by `xcodegen generate` alone.
+
+Remains: nothing for this story. US-057 is next.

@@ -41,8 +41,8 @@
         "Tests pass"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": "BEWARE: EvolutionGraph.bundled fatalErrors on a decode failure and the app is the TEST_HOST, so a JSON typo kills the whole suite with an error naming neither the file nor the graph. Grep the log for 'Could not load the evolution graph'."
+      "passes": true,
+      "notes": "EvolutionCondition + ConditionMetric (27 health.* from US-055's usable list, 5 care.*, no careMistakes) in Sources/EvolutionCondition.swift; edge gains conditions hand-decoded to []. metric is a STRING with knownMetric accessor, not a typed enum, so an unknown metric is a VALIDATOR error not a launch trap. 4 new validator rules + schema doc Condition section. 668 tests green (was 647); evolutions.json and both existing Evolution*Tests.swift untouched."
     },
     {
       "id": "US-057",

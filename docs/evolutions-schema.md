@@ -60,6 +60,108 @@ without breaking every decoder.
 | `maxCareMistakes` | int | yes | The edge is blocked once care mistakes exceed this — neglect closes off the good lines. |
 | `minBattleWins` | int | no | Battle wins required. Omitted = ungated, which is most edges. |
 | `isDefault` | bool | no, default `false` | Taken when the time gate has passed and nothing else qualifies, so a Digimon is never permanently stuck. Exactly one edge per non-terminal node sets this. |
+| `conditions` | condition[] | no, default `[]` | Extra criteria, **all** of which must hold. See "Conditions" below. Omitted on every edge in the file today. |
+
+## Conditions
+
+The four fields above are a fixed set: adding a fifth kind of gate used to mean adding a field to
+`EvolutionEdge` and a branch to the engine. A condition instead names its metric **as data**, so a
+new criterion is a JSON edit. `conditions` is the single gating vocabulary going forward.
+
+```json
+{
+  "metric": "care.trainingSessions",
+  "window": "stage",
+  "comparison": "atLeast",
+  "value": 8,
+  "hint": "Train at least 8 times"
+}
+```
+
+| Field | Type | Required | Meaning |
+|---|---|---|---|
+| `metric` | string | yes | What is measured. One of the vocabulary below — an unrecognised value is a **validator** error, not a decode error, so a typo names itself instead of trapping at launch. |
+| `window` | string | yes | `stage`, `day`, or `lifetime`. See below. |
+| `comparison` | string | yes | `atLeast` or `atMost`. |
+| `value` | number | yes | Threshold in the metric's own unit. Never negative. |
+| `hint` | string | yes | One line shown to the player, in their terms. Never blank — a criterion with no hint is undiscoverable, which reads as the evolution being random. |
+
+### Windows
+
+| Value | Span |
+|---|---|
+| `stage` | Since the Digimon entered its current stage. The default reading of a criterion: what you did to *earn* this evolution, not what you did two forms ago. |
+| `day` | Today only, from local midnight. For "10,000 steps in a single day", which a stage-long total would trivially satisfy. |
+| `lifetime` | The whole life of this Digimon, across every stage. |
+
+### Metric family: `health.*`
+
+HealthKit-backed. Every one is an identifier US-055 probed and marked **usable** on watchOS 26.4
+(`docs/health-metrics.md`); **nothing may be added here without probing it first.**
+
+`health.steps` · `health.distanceWalkingRunning` · `health.flightsClimbed` ·
+`health.exerciseMinutes` · `health.standTime` · `health.activeEnergy` · `health.basalEnergy` ·
+`health.vo2Max` · `health.restingHeartRate` · `health.heartRateVariability` ·
+`health.respiratoryRate` · `health.oxygenSaturation` · `health.distanceSwimming` ·
+`health.distanceCycling` · `health.water` · `health.daylight` · `health.physicalEffort` ·
+`health.audioExposure` · `health.handwashing` · `health.mindfulMinutes` · `health.standHours` ·
+`health.toothbrushing` · `health.sleep` · `health.highHeartRateEvents` ·
+`health.lowCardioFitnessEvents` · `health.walkingSteadinessEvents` · `health.workouts`
+
+"Usable" means the type exists and is readable. It does **not** mean it ever carries data — the
+Simulator's health database is empty, so no identifier is certified as having any. Seven are
+typically iPhone- or feature-sourced rather than watch-sourced (`health.toothbrushing`,
+`health.handwashing`, `health.water`, `health.daylight`, `health.audioExposure`,
+`health.lowCardioFitnessEvents`, `health.walkingSteadinessEvents`); gate a **bonus** branch on one
+of those, never the only way out of a node, or an empty metric on real hardware makes that Digimon
+unreachable.
+
+### Metric family: `care.*`
+
+Game counters the engine keeps itself. These exist because nothing in the edge schema could
+express them: the four fields above are the whole of the old vocabulary.
+
+| Metric | Unit |
+|---|---|
+| `care.trainingSessions` | count |
+| `care.overfeeds` | count |
+| `care.sleepDisturbances` | count |
+| `care.battleCount` | count |
+| `care.battleWinRatio` | **fraction, 0.0–1.0** — `0.8` is 80%. `80` is rejected by the validator; it would make the edge unreachable forever. |
+
+`care.careMistakes` is deliberately **not** a metric. The edge's `maxCareMistakes` field already
+gates on that counter, and two ways to say one thing invites a later iteration to delete one of
+them — and to delete the wrong one, because the shipped edges use the field.
+
+`minBattleWins` likewise stays and keeps working. `care.battleWinRatio` *adds* ratio gating, which
+a win count cannot express; an edge may use either or both.
+
+### The band idiom
+
+A **band** is two conditions on one metric — `atLeast X` plus `atMost Y`:
+
+```json
+"conditions": [
+  {"metric": "care.trainingSessions", "window": "stage", "comparison": "atLeast",
+   "value": 8, "hint": "Train at least 8 times"},
+  {"metric": "care.trainingSessions", "window": "stage", "comparison": "atMost",
+   "value": 31, "hint": "But do not train more than 31 times"}
+]
+```
+
+That reproduces the Digital Monster Color pattern where training 8–31 earns the good branch while
+0–7 **and** 32+ both fall through to the junk one: overtraining is punished exactly as much as
+undertraining. There is no `between` comparison — two conditions already say it, and a third
+spelling of the same idea is a third thing to validate.
+
+The same shape expresses DMC's "15+ battles at 80%+ wins": `care.battleCount atLeast 15` plus
+`care.battleWinRatio atLeast 0.8`. A win *count* alone would let 15 wins in 200 battles through.
+
+### What the validator rejects
+
+An unknown `metric`, a negative `value`, a blank `hint`, and a `care.battleWinRatio` outside
+0.0–1.0. An unknown metric suppresses the range rules on that condition — an unrecognised metric
+has no unit, so `value` cannot be judged against one.
 
 ## Branching and converging
 
