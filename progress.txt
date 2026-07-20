@@ -999,3 +999,78 @@ SCREENSHOT GOTCHAS, both already in this file but they cost time again:
 REMAINS. US-048 (needs a real watch, or the native-slot key in face.json —
 step 5 of the recipe in docs/widget-refresh-granularity.md) and US-049, which
 is gated on it. Those are the last two stories in the PRD.
+
+================================================================================
+2026-07-20  US-048  Spike - measure the real widget timeline refresh granularity
+================================================================================
+
+PASSED (with one honest gap: AOD, see below).
+
+The previous iteration built the instrument and got stuck one key short of a
+reading. That key is found, and the measurement is taken.
+
+THE BLOCKER, RESOLVED. A widget not on a watch face is never asked for a
+timeline. Installing one is normally touch, and this box has no synthetic touch
+(simctl has no tap/crown, osascript gets -1728, CGEvent is swallowed with
+AXIsProcessTrusted false). The face-store edit routes around it, but the last
+attempt produced a slot NanoTimeKit filed as `Remote` - an iPhone-side
+complication awaiting migration, which on a watch-only app never resolves.
+
+The missing key is `"type": 56` in the slot dict. 56 == NTKComplicationTypeWidget,
+the native "Apricot" kind. Not guessed - disassembled:
+
+  +[NTKApricotComplicationController _acceptsComplicationType:family:forDevice:]:
+      cmp  x2, #0x38      ; 0x38 == 56
+      cset w0, eq
+      ret
+
+That method accepts exactly one value, so there was nothing to guess at. The old
+`nativeContainerBundleIdentifier` lead in the doc was a red herring - it is a
+runtime property of CHSWidgetDescriptor, not a face-JSON key. Full working slot
+encoding is in docs/widget-refresh-granularity.md.
+
+Confirmed hosted three ways: ClockFace SceneHosting presentation entry for the
+top-left scene, a live chronod WidgetRenderSession with the `on no host` tag
+gone, and a face screenshot showing the spike reading band `5s` / offset `25` at
+09:09:56 against a timeline generated at 09:09:31 - t+25 to the second.
+
+THE MEASUREMENT. Read from chronod `timelineLiveView` "Evaluated inner view"
+sequence numbers, which tick once per entry actually shown. Far better than the
+screenshot plan: no timing error, no 29-minute wall-clock wait per reading.
+
+  1 s    1.00-2.01, jittery across three passes    honoured, drops some
+  5 s    5.02 5.03 5.03 5.04 5.04 5.04             exact
+  30 s   29.66 29.81 29.84 30.06 30.20 30.28       exact
+  60 s   59.68 59.75 60.14 60.19 60.49             exact
+  5 min  300.28                                    exact
+
+NO COALESCING ANYWHERE. All 32 entries of one batched timeline repainted
+individually, and the entire 29-minute ladder cost exactly 2 getTimeline calls.
+Batching is genuinely one budget charge however many entries it holds - which is
+the assumption US-049 was built on, now verified rather than hoped.
+
+TRAP THAT COST TIME TWICE, now in the doc: foregrounding the app flushes a
+pending WidgetCenter.reloadAllTimelines() on its next background transition,
+starting a FRESH ladder mid-measurement. A 2.31 s gap looked like coalescing and
+was actually a new timeline. Always check the `Request began for <Kind>` count
+before believing a delta.
+
+AOD NOT MEASURED - the one gap, and it is not closeable here. `simctl ui` offers
+only appearance/contrast/content-size, the Features menu needs the same missing
+GUI, and a simulator is not a trustworthy model of display throttling even if it
+could be toggled. Hardware-only. Recorded as Unknown in the doc rather than
+guessed, and carried into US-049 as an explicit open item: do not let the design
+depend on motion being visible when the wrist is down.
+
+VERDICT FLIPPED. The doc used to say US-049 should not be started. It now says
+build it: the floor is seconds, not minutes. Recommended cadence is walk1/walk2
+on 5 s entries - the finest spacing honoured exactly on every single sample. 1 s
+works but stutters, and a two-frame cycle that stutters reads worse than one that
+is steady.
+
+Build green. 636 tests, 0 failures (unchanged - this story ships a measurement,
+not code). Spike is still #if DEBUG and header-marked non-shipping; delete
+Sources/Complication/RefreshGranularitySpike.swift once US-049 has landed.
+
+REMAINS. US-049 only, and it is now unblocked with a real cadence to design
+against.

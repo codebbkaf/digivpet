@@ -1,174 +1,194 @@
 # Widget timeline refresh granularity — US-048 spike
 
-**Status: INCOMPLETE. No floor was measured. Do not treat any number below as a finding.**
+**Status: MEASURED (non-AOD). The AOD floor is still unknown and needs hardware.**
 
 Measured on: 2026-07-20
 Environment: Apple Watch Series 9 (45mm) Simulator, watchOS 10.4 (build 21T214), Xcode 26.4.1, macOS 15 (Darwin 25.4.0)
 Physical watch available: none
 
-This document exists because US-049 wants to alternate sprite frames using batched
-timeline entries, and the cadence has to come from an observation rather than a
-guess. **It did not get one.** What follows is what the attempt established, so the
-next attempt starts where this one stopped instead of at the beginning.
+US-049 wants to alternate sprite frames using batched timeline entries, and the
+cadence had to come from an observation rather than a guess. This is the
+observation.
 
 ---
 
 ## The measured floor
 
-**Unknown.** Not measured, not estimated, not inferred.
+**Roughly 1–2 seconds, jittery. Anything at 5 s or coarser is honoured exactly.**
+
+WidgetKit did **not** coalesce a single batched timeline of 32 entries. Every entry
+produced its own repaint, including the ten spaced one second apart. Measured
+repaint intervals, taken from `com.apple.chrono:timelineLiveView` "Evaluated inner
+view" events with the complication live in a watch face slot:
+
+| Authored spacing | Observed repaint intervals | Verdict |
+|---|---|---|
+| 1 s   | 1.00, 1.01, 1.01, 1.01, 1.01 (pass 1)<br>2.00, 2.01 (pass 2)<br>1.87, 1.81, 1.72, 1.10, 1.00, 1.03, 1.05, 2.00 (pass 3) | honoured, but jitters between ~1.0 s and ~2.0 s |
+| 5 s   | 5.02, 5.03, 5.03, 5.04, 5.04, 5.04 | exact |
+| 30 s  | 29.66, 29.81, 29.84, 30.06, 30.20, 30.28 | exact |
+| 60 s  | 59.68, 59.75, 60.14, 60.19, 60.49 | exact |
+| 5 min | 300.28 | exact |
+
+The 1 s band is the only one that is not reliably 1:1. It is not *coalesced to a
+floor* so much as *served late* — the renderer sometimes runs two entries together
+and sometimes hits 1.00 s dead on, with no stable pattern across three passes.
+Treat 1 s as "best effort, expect to lose some frames" and 2 s as the conservative
+number.
+
+**One timeline, one charge.** The whole 29-minute ladder above ran from a single
+`getTimeline` delivery — chronod logged exactly 2 `Request began for
+DigiVPetRefreshSpike` calls across the entire session, and all 32 entries were
+accepted verbatim (`entry count: 32`, date range matching the authored ladder
+end to end). Batching is genuinely one budget charge however many entries it holds.
 
 ## The AOD floor
 
-**Unknown**, and unmeasurable in the Simulator at all — see below.
+**Unknown, and not measurable in the Simulator.**
+
+AOD is toggled from the Simulator's *Features* menu, which needs a GUI this
+environment cannot drive (see "What is still blocked"). `xcrun simctl ui` exposes
+only `appearance`, `increase_contrast` and content size — there is no AOD option.
+More importantly, AOD render throttling is display-hardware behaviour that a
+simulator is not a trustworthy model of even if it could be toggled.
+
+**Measure the AOD floor on a real watch and nowhere else.** Expect it to be much
+coarser than the active-display numbers above; the render session does advertise
+`wantsLowLuminanceContent=true`, so the plumbing exists, but nothing here says at
+what rate it repaints when the wrist is down.
 
 ---
 
-## What blocked it
+## How the complication was put on a face without touch
 
-The spike needs the widget to be **live on a watch face**, because a widget that is
-not on a host is never asked for a timeline. chronod's own log says so in as many
-words — every reference to the spike widget for the whole session was tagged
-`on no host`, and the only calls that ever reached
-`DigiVPetComplicationExtension` were `placeholder` requests, never `getTimeline`.
+This is the part worth not rediscovering — the previous attempt got 90% of the way
+and stopped one key short.
 
-Putting a widget on a face is a touch interaction, and this environment has no way
-to perform one:
+A widget that is not on a watch face is **never asked for a timeline**; it only
+ever gets `placeholder` calls and every chronod log line reads `on no host`. So the
+spike could not be run until the complication was actually installed in a slot, and
+installing one is normally a touch interaction.
 
-- `simctl` has no touch, tap, swipe, or Digital Crown command. Its full subcommand
-  list was checked; the closest things are `io` (screenshot/video only) and `ui`
-  (appearance/content-size only).
-- Synthetic input from the host is refused. `osascript` gets `-1728` (not allowed
-  assistive access), and a direct `CGEvent(...).post(tap: .cghidEventTap)` is
-  swallowed — `AXIsProcessTrusted()` returns `false` and the cursor does not move.
-  This is a TCC grant only a human at the machine can give.
-
-**Always-On Display is blocked twice over**: it is toggled from the Simulator's
-*Features* menu, which is the same unavailable GUI, and AOD render throttling is a
-display-hardware behaviour that a simulator is not a trustworthy model of anyway.
-**The AOD floor should be measured on a real watch and nowhere else**, whatever
-happens with the non-AOD number.
-
----
-
-## What was established, and is worth keeping
-
-### The spike instrument exists and works
-
-`Sources/Complication/RefreshGranularitySpike.swift`, `#if DEBUG` only, registered
-in the widget bundle beside the shipping complication. It emits ONE batched
-timeline walking five spacings — 1s ×10, 5s ×6, 30s ×6, 60s ×5, 5min ×5, about 29
-minutes end to end, `.atEnd` so it repeats. Every entry draws its band, its index
-within the band, and `t+<seconds since the timeline was generated>`, which is what
-makes a screenshot self-dating: it says which entry is showing and when that entry
-was due.
-
-Confirmed working as far as it can be: the build is green on watchOS 10.4, chronod
-ingests both widget kinds, and it rendered placeholders successfully for
-`accessoryCorner`, `accessoryCircular`, `accessoryCircularExtraLarge` and
-`accessoryRectangular`.
-
-### A watch face complication CAN be installed by editing the sim's face store
-
-This is the part worth not rediscovering. There is no touch needed — the selected
-face is plain JSON on the host filesystem:
+It does not have to be. The selected face is plain JSON on the host filesystem:
 
 ```
 ~/Library/Developer/CoreSimulator/Devices/<UDID>/data/Library/NanoTimeKit/
   CollectionStores/GlobalStores/LibraryFaces/Faces/<FACE-UUID>/face.json
 ```
 
-Shut the device down, edit, boot. The slot schema was recovered from
-`NanoTimeKit`'s own validation errors, one key per attempt:
+Shut the device down, edit, boot. The working slot encoding is:
 
 ```json
 "complications": {
   "top left": {
     "app": "com.digivpet.DigiVPet",
-    "extension": "com.digivpet.DigiVPet.Widget",
-    "complication descriptor": {
-      "identifier": "widget-com.digivpet.DigiVPet.Widget-DigiVPetRefreshSpike",
-      "kind": "DigiVPetRefreshSpike",
-      "displayName": "SPIKE refresh",
-      "supportedFamilies": ["accessoryCorner", "accessoryCircular", "accessoryRectangular"]
+    "type": 56,
+    "descriptor": {
+      "extensionBundleIdentifier": "com.digivpet.DigiVPet.Widget",
+      "containerBundleIdentifier": "com.digivpet.DigiVPet",
+      "kind": "DigiVPetRefreshSpike"
     }
   }
 }
 ```
 
-The identifier format is `widget-<extensionBundleID>-<kind>`, confirmed against the
-descriptor manifest nanotimekitd logs at boot. The default Crosswind face's
-`top left` slot is a **corner** slot, so the widget must declare
-`.accessoryCorner` — the spike does, and the shipping complication deliberately
-does not.
-
-**Where it stops.** With the above, NanoTimeKit places the widget in the slot but
-classifies it as a **`Remote`** complication (an iPhone-side one awaiting
-migration) rather than the local **`Apricot`** kind that system widgets get:
-
-```
-NTKCrosswindFace [... top-left:Remote (com.digivpet.DigiVPet.Widget,
-                  widget-com.digivpet.DigiVPet.Widget-DigiVPetRefreshSpike) ...]
-```
-
-A `Remote` on a watch-only app never resolves, so the slot draws empty and the
-widget stays `on no host`. **This is the one remaining unknown**: which JSON key
-marks a slot as native/Apricot rather than Remote. The likely lead is chronod's
-`nativeContainerBundleIdentifier` / `nativeCBI` field, which it logs migrating
-(`com.digivpet.DigiVPet.Widget:DigiVPetRefreshSpike` → `com.digivpet.DigiVPet`)
-and which has no counterpart in the face JSON yet. Compare against a system
-widget's own slot encoding.
-
-Progression of the four attempts, in case the error strings help someone:
-1. descriptor as a bare string → `missing value for key 'extension'`
-2. added `extension` → parsed, slot empty (widget had no `accessoryCorner` yet)
-3. added `accessoryCorner` → `-[__NSCFString objectForKeyedSubscript:]` — the
-   descriptor must be a **dictionary**, not a string
-4. descriptor as a dict with `identifier`+`kind` → `Tombstone of Remote`;
-   adding `displayName`+`supportedFamilies` promoted it to `Remote`. Stopped here.
-
-### The readout, once it is on a host, should be logs not screenshots
-
-chronod archives each delivered timeline and logs it with an entry count and a date
-range, under subsystem `com.apple.chrono`, categories `timeline` and `archiving`:
+**`"type": 56` is the whole trick.** Without it NanoTimeKit classifies the slot as
+a `Remote` (iPhone-side) complication awaiting migration, which on a watch-only app
+never resolves — the slot draws empty and the widget stays `on no host` forever.
+56 is `NTKComplicationTypeWidget`, the native "Apricot" kind. It was not guessed;
+it was read straight out of the framework:
 
 ```bash
-xcrun simctl spawn <UDID> log stream --predicate 'subsystem == "com.apple.chrono"'
+xcrun otool -arch arm64 -tV \
+  ".../watchOS 10.4.simruntime/.../NanoTimeKit.framework/NanoTimeKit" \
+  | grep -A3 "+\[NTKApricotComplicationController _acceptsComplicationType:family:forDevice:\]:"
 ```
 
-The archives themselves are `.chrono-timeline` files under the extension's
-`Containers/Data/PluginKitPlugin/<UUID>/SystemData/com.apple.chrono/`. Comparing
-the entry dates chronod **accepted** against the dates the provider **requested**
-measures coalescing directly, with no screenshot timing error and no 29-minute
-wall-clock wait. Prefer this to the screenshot plan the spike view was designed
-for; keep the view anyway as the confirmation that a coalesced entry is also a
-*rendered* entry, which the logs alone do not prove.
+```
++[NTKApricotComplicationController _acceptsComplicationType:family:forDevice:]:
+    cmp  x2, #0x38     ; 0x38 == 56
+    cset w0, eq
+    ret
+```
+
+That method accepts exactly one type, so there is no ambiguity. The earlier lead in
+this doc — chronod's `nativeContainerBundleIdentifier` — was a red herring: it is a
+runtime property of `CHSWidgetDescriptor`, not a face-JSON key.
+
+The default Crosswind face's `top left` slot is a **corner** slot, so the widget
+must declare `.accessoryCorner`. The spike does; the shipping complication
+deliberately does not.
+
+Confirmation it worked, in ascending order of how convincing it is:
+
+1. `ClockFace [NanoTimeKit:Tritium] [SceneHosting] Presentation: [1]
+   <BLSHPresentationEntry ... scene::<FACE-UUID>-top-left-com.digivpet.DigiVPet.Widget-DigiVPetRefreshSpike>`
+2. `chronod [widgetRendererSession] <WidgetRenderSession-...-DigiVPetRefreshSpike...>`
+   — a live render session, and the `on no host` tag gone.
+3. A screenshot of the face showing the spike in the top-left corner reading band
+   `5s` / offset `25`, taken at 09:09:56 against a timeline generated at 09:09:31.
+   t+25 lands exactly on the screenshot second.
+
+## Reading the result: use the logs, not screenshots
+
+```bash
+xcrun simctl spawn <UDID> log stream --style compact \
+  --predicate 'subsystem == "com.apple.chrono"'
+```
+
+The repaint events are `com.apple.chrono:timelineLiveView` … `Evaluated inner view
+with result: LIVE - view sequence number: N, reasons: [timelineAdvancedOrNewArchive]`.
+The sequence number increments once per entry actually shown, so consecutive
+timestamps give the real repaint interval with no screenshot timing error and no
+29-minute wall-clock wait per reading. Every number in the table above came from
+this. Keep the spike view anyway — it is what proves a repainted entry is also a
+*rendered* one, which the logs alone do not show.
+
+**Gotcha that cost time twice.** Foregrounding the app flushes a pending
+`WidgetCenter.reloadAllTimelines()` when it next backgrounds, which starts a *fresh*
+ladder mid-measurement. A 2.31 s gap in the first run looked like coalescing and was
+actually the start of a new timeline. Check `Request began for <Kind>` counts before
+believing any delta; if the count went up, the ladder restarted.
+
+---
+
+## What is still blocked
+
+Synthetic touch. `simctl` has no touch/tap/swipe/crown command, `osascript` gets
+`-1728` (not allowed assistive access), and `CGEvent(...).post(tap:)` is swallowed
+with `AXIsProcessTrusted() == false`. This is a TCC grant only a human at the
+machine can give. It no longer blocks the measurement — the face-store edit routes
+around it — but it does block the Features menu, and therefore AOD.
 
 ---
 
 ## What this means for US-049
 
-**US-049 should not be started on the strength of this document.** It has no floor
-in it, so there is nothing to design a cadence around, and the whole point of
-sequencing this spike first was to stop US-049 committing to a guess.
+**US-049 is viable. Build it.** The earlier worry — that the floor might be coarser
+than about two minutes, making a "walk cycle" a stale complication with extra steps
+— is dead. The floor is seconds, not minutes.
 
-Two honest ways forward, in preference order:
+Recommended cadence: **alternate walk1/walk2 on 5-second entries.**
 
-1. **Measure it on a real Apple Watch.** Add the spike complication to a face by
-   hand — thirty seconds of tapping — and read the chronod log. This also gets the
-   AOD number, which the Simulator cannot give at any price.
-2. **Finish the face-store injection** above by finding the native/Apricot key.
-   That yields the non-AOD floor only; the AOD half of the story still needs
-   hardware.
+- 5 s is the finest spacing that was honoured *exactly* on every single sample,
+  across all three passes. 1 s technically works but drops frames unpredictably,
+  and a two-frame walk cycle that stutters looks worse than one that is steady.
+- 5 s is a comfortable read for a two-frame sprite loop — fast enough to be alive,
+  slow enough not to look frantic on a watch face.
+- Budget: the entire ladder was one charge. A batch of N entries at 5 s costs the
+  same as a batch of N entries at 5 min, so the horizon is the thing to spend
+  thought on, not the spacing.
 
-If the floor comes back coarser than about two minutes, US-049 is not worth
-forcing: a "walk cycle" whose two frames swap every two minutes is not animation,
-it is a stale complication with extra steps, and the honest move is to close
-US-049 as not-viable rather than ship it degraded.
+Do still suppress alternation for held-pose states (sleeping, sick, dead) as US-049
+already specifies — that is a correctness requirement, not a cadence one.
+
+**Carry this open item into US-049:** the AOD repaint rate is unmeasured. Whatever
+cadence ships, assume the sprite may hold a single frame when the wrist is down,
+and do not make the design depend on motion being visible in AOD.
 
 ## Ruled out, permanently
 
-**Sensor-driven (gyroscope/compass) widget frames.** Not attempted here and not to
-be attempted later. A widget is not a running process — WidgetKit calls the
-provider, renders entries to snapshots, and exits; nothing is alive to receive a
-sensor callback when the user is looking at the face. See the design note in
+**Sensor-driven (gyroscope/compass) widget frames.** Not attempted and not to be
+attempted later. A widget is not a running process — WidgetKit calls the provider,
+renders entries to snapshots, and exits; nothing is alive to receive a sensor
+callback when the user is looking at the face. See the design note in
 `tasks/prd-vpet-enhancements.md`.
