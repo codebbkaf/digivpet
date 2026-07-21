@@ -466,8 +466,8 @@
         "Tests pass"
       ],
       "priority": 25,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PowerMeterGame: hold to charge, release in the 0.625-0.875 band for perfect; past the top is the overload and pays nothing. fillRate/band bounds injectable, rule pure in grade(fill:lowerBound:upperBound:). 947 tests pass (+20). Screenshots via -powerMeterDemo / -powerMeterResultDemo / -powerMeterOverloadDemo."
     },
     {
       "id": "US-079",

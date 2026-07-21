@@ -22,6 +22,11 @@ struct ContentView: View {
     /// taps on the counter, `-buttonMasherResultDemo` shows the grade those taps earned.
     @State private var showsButtonMasherDemo = CommandLine.arguments.contains("-buttonMasherDemo")
         || CommandLine.arguments.contains("-buttonMasherResultDemo")
+    /// US-078's power meter, on the same footing again: `-powerMeterDemo` shows a meter mid-charge,
+    /// `-powerMeterResultDemo` shows the grade a release in the band earned.
+    @State private var showsPowerMeterDemo = CommandLine.arguments.contains("-powerMeterDemo")
+        || CommandLine.arguments.contains("-powerMeterResultDemo")
+        || CommandLine.arguments.contains("-powerMeterOverloadDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -92,6 +97,35 @@ struct ContentView: View {
         } else {
             game.demoTapCount = 12
             game.window = 20
+        }
+        return game
+    }
+
+    /// The power meter staged for a screenshot. `simctl` cannot hold the screen down, so both demos
+    /// start the round with the charge back-dated onto the real clock — the grade is still the one
+    /// `grade(fill:lowerBound:upperBound:)` gives that fill.
+    ///
+    /// `-powerMeterDemo` slows the fill to a crawl so the meter is caught climbing rather than
+    /// already burst, and starts it below the band so a later screenshot catches it inside one;
+    /// `-powerMeterResultDemo` leaves the shipped rate and stages exactly the band's bottom edge,
+    /// so the screenshot is the threshold being met rather than a number typed in;
+    /// `-powerMeterOverloadDemo` stages one step past the band's TOP edge, which is the game's own
+    /// rule — the cost of greed — and the one ending the other two flags cannot show.
+    private static var powerMeterDemoGame: PowerMeterGame {
+        var game = PowerMeterGame(onFinish: { _ in })
+        let band = PowerMeterGame.bandEdges(lowerBound: game.bandLowerBound,
+                                            upperBound: game.bandUpperBound)
+        if CommandLine.arguments.contains("-powerMeterResultDemo") {
+            game.demoFill = band.lower
+            game.demoReleasesImmediately = true
+            game.resultDuration = 600
+        } else if CommandLine.arguments.contains("-powerMeterOverloadDemo") {
+            game.demoFill = band.upper.nextUp
+            game.demoReleasesImmediately = true
+            game.resultDuration = 600
+        } else {
+            game.demoFill = 0.4
+            game.fillRate = 0.02
         }
         return game
     }
@@ -200,6 +234,8 @@ struct ContentView: View {
                 Self.timingBarDemoGame
             } else if showsButtonMasherDemo {
                 Self.buttonMasherDemoGame
+            } else if showsPowerMeterDemo {
+                Self.powerMeterDemoGame
             }
         }
         #endif

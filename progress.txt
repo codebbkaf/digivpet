@@ -1688,3 +1688,108 @@ NOTES FOR THE NEXT ITERATIONS (US-078..US-081, then US-082/083)
    between.
 
 Next: US-078 (training minigame — Power Meter).
+
+---
+
+## 2026-07-21 — US-078 — Training minigame: Power Meter
+PASSES: true
+
+Did: `Sources/PowerMeterGame.swift`, the third `TrainingMinigame`. Hold the screen and the meter
+charges; let go inside the target band for a perfect; hold past it and the meter bursts for nothing.
+Shape copied from `ButtonMasherGame` exactly as its notes advised — pure statics for the rule,
+stored-prop knobs with defaults for the timing, `.task(id:)` pairs that guarantee the round ends
+exactly once. No project.yml edit was needed (Sources/Tests are whole-folder); `xcodegen generate`
+picked both new files up, as US-077 predicted.
+
+THE RULE
+
+`fillRate` = 0.5 meter-fractions/second (whole meter in 2s). Band = [0.625, 0.875]. Below it the
+grade still climbs: `great` floor at 0.3125, `good` floor at 0.15625, both shares (1/2, 1/4) of the
+band's bottom edge. Above 0.875 the round pays NOTHING — not the grade below, nothing. That cliff is
+the game, and it is checked FIRST in `grade(fill:lowerBound:upperBound:)`.
+
+BOUNDARIES WERE FREE AGAIN, AND DELIBERATELY SO
+
+The shipped bounds are eighths and the shipped rate is a half, so every band edge AND every hold
+duration derived from one is exactly representable in binary. Boundary assertions are ON the number
+and the near-miss is `.nextDown` — the smallest step that exists there — rather than an epsilon
+someone picked. US-076 lost an afternoon to float edges; this is the third story in a row to avoid
+that by choosing the constants for it. Keep doing this.
+
+`defaultFillRate` / `defaultBandLowerBound` / `defaultBandUpperBound` are named statics that the
+stored properties default TO, and the pure tests assert against those names. A later tweak to the
+shipped band therefore moves the tests with it instead of leaving them pinning a band nobody plays.
+
+A BUG THE SCREENSHOT CAUGHT THAT THE TESTS COULD NOT
+
+First cut capped the round's fuse at `min(fuse, idleTimeout)`, reasoning that a meter with an
+injected rate of zero must still end. That is wrong for any meter slower than the timeout: the
+`-powerMeterDemo` run (rate 0.02, fuse 30s) settled itself at 12s on a "Perfect" nobody released,
+and I have the screenshot of it. Fixed to `fuse.isFinite ? max(0, fuse) : idleTimeout` — the timeout
+is the fallback for an INFINITE fuse only, never a cap on a finite one. Worth knowing for US-079..081:
+the pure tests were all green while this was broken, because a round's lifecycle lives in the view.
+Take the in-play screenshot and actually look at whether the round is still in play.
+
+VERIFIED (all observed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   947 passed / 0 failures (was 927; +20 mine across three new suites in PowerMeterTests).
+  AC1     `testReleasingAnywhereInTheBandIsAPerfect` (bottom edge, middle, top edge);
+          `testEachFloorIsInclusiveAndAHairBelowIsTheGradeBeneath` covers all three floors and their
+          `.nextDown` neighbours from one table.
+  AC2     `testOverfillingPastTheBandPaysNothingAtAll` — 0.875 is perfect, `0.875.nextUp` is a miss,
+          and so are 0.9 and a burst meter, with `strengthGain == 0` asserted alongside.
+          `testTheGradeClimbsWithTheChargeThenFallsOffACliff` sweeps 0...1 in 256ths and asserts the
+          gain never dips below the band's top and is zero everywhere above it.
+          `testHoldingForeverBurstsTheMeter` (2 / 5 / 60s held at the shipped rate).
+  AC3     `testTheRateAndBandAreInjectable` (defaults, then overridden);
+          `testTheSameHoldIsWorthDifferentThingsAtDifferentRates` — the same 1.5s hold is perfect at
+          0.5, great at 0.25, good at 0.125 and a burst at 2.0, which is the injected rate doing the
+          deciding; `testTheSameFillIsWorthDifferentThingsUnderDifferentBounds` does the same for the
+          bounds. `testAWholeRoundGradesInMilliseconds` drives all four grades at rate 1000.
+          `testAbsurdBoundsAreClampedIntoTheMeter` (escaped and reversed bands).
+  AC4     The whole rule is `static func grade(fill:lowerBound:upperBound:)` plus
+          `fill(afterHolding:fillRate:)`; `grade(releasingAfter:...)` is the exact path `letGo` takes,
+          so the tests exercise the real rule and not a re-derivation. Overload covered above.
+          `testHoldDurationIsTheInverseOfFill` pins the arithmetic the demo staging rides on.
+  AC5     Screenshots, Series 11 46mm:
+          /tmp/us078_charge_a.png and _b.png (-powerMeterDemo, ~4s and ~18s after launch) —
+            "Power Meter", "Let go in the band!", the yellow target band and red overload zone drawn
+            on the track, and the charge ORANGE below the band in _a then YELLOW inside it in _b.
+            Two shots, one round, the charge visibly further along: the meter observed filling.
+          /tmp/us078_result.png (-powerMeterResultDemo) — "Perfect" in yellow, "+3 STR", charge
+            stopped exactly on the band's bottom edge.
+          /tmp/us078_overload.png (-powerMeterOverloadDemo) — charge one representable step past the
+            band's TOP edge, drawn RED, "Miss", "+0 STR". Same finger, one step further, whole round
+            gone: AC2 on screen.
+          simctl can neither press nor release, so the hold itself is not screenshot evidence; the
+          gesture is two four-line handlers over a Date, and what a hold is worth is unit-tested.
+
+DEMO PLUMBING for AC5
+
+`PowerMeterGame.demoFill: CGFloat?` and `demoReleasesImmediately: Bool`, both `#if DEBUG`, nil/false
+in the app. `demoFill` is BACK-DATED onto the real clock — `holdStart = now - holdDuration(toReach:)`
+— so the staged charge is a hold that has genuinely been running that long, not a number painted on
+a bar. It stages HOW FAR the charge got, never what it is worth: the grade still comes out of the
+same pure `grade(fill:...)`, through the same `letGo` the finger goes through. The result and
+overload flags stage `bandEdges(...).lower` and `.upper.nextUp` by NAME rather than as literals, so
+those two screenshots are the threshold itself rather than a number that happens to sit near it.
+
+LAUNCH FLAGS (unchanged, carried forward for the fourth time)
+
+`-noNotificationPrompt -healthAnswered` are MANDATORY alongside any demo flag on this simulator.
+Do NOT use `-healthAutoConfirm`. Do NOT uninstall the app.
+
+NOTES FOR THE NEXT ITERATIONS (US-079..081, then US-082/083)
+
+1. Three games in and the template has not moved: a file plus a test file, no project.yml edit.
+2. US-079 is the first one that needs REAL input `simctl` cannot fake at all (crown rotation), and
+   its AC says "responds to real crown input in the Simulator". The crown IS driveable from the
+   Simulator UI by hand, but not from a script — budget for that, and if it cannot be observed, say
+   so in notes rather than claiming it.
+3. `TrainingResult.tint` is shared; `PowerMeterGame.chargeTint` is deliberately NOT — it is the live
+   warning during a hold, not the announcement of a finished round. Do not merge them.
+4. The Train button still calls `TrainAction.train(_:isAsleep:result: .good)`; nothing opens a
+   minigame yet. Still US-083's job. Three games now conform, so US-082 has a real choice to make.
+
+Next: US-079 (training minigame — Crown Sprint).
