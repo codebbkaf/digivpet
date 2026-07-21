@@ -38,6 +38,20 @@ enum LightState: String, Codable, CaseIterable {
         }
     }
 
+    /// The state one tap of the light button moves to: on -> semi -> off -> on (US-099).
+    ///
+    /// A cycle rather than a toggle, because there are three states and one button. The order is the
+    /// one the room goes through at bedtime — full light, night light, dark — so a user putting the
+    /// Digimon to bed taps twice in the direction they are already thinking, and a third tap is the
+    /// way back rather than a dead end.
+    var next: LightState {
+        switch self {
+        case .on: return .semi
+        case .semi: return .off
+        case .off: return .on
+        }
+    }
+
     /// How black the scrim over the screen is in this state, 0...1.
     ///
     /// `off` stops at 0.85 rather than 1.0 deliberately: a fully black screen is indistinguishable

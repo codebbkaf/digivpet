@@ -1108,3 +1108,117 @@ WHAT REMAINS
 - US-099 (light button + dimmed screen), US-100 (the notice), US-101 (the care
   mistake and the docs/ table). Nothing here renders, notifies or charges from
   `refresh()` yet — this story is state and rule only.
+
+================================================================================
+2026-07-21 — US-099: The light button and the dimmed screen
+================================================================================
+
+WHAT I BUILT
+- `LightState.next` (Sources/Light.swift) — on -> semi -> off -> on. A cycle, not
+  a toggle: three states, one button, in the order a room goes through at
+  bedtime.
+- `Sources/LightSwitchView.swift` (new):
+  - `LightButtonLayout` — diameter 24, icon 12, leading inset 2, dim fade 0.25s.
+    NOTHING here reserves height; the button is an overlay in the sprite's slot,
+    which is the whole of why it costs the Digimon nothing.
+  - `SpriteSlotBoundsKey: PreferenceKey` — carries the sprite row's bounds as an
+    `Anchor<CGRect>`.
+  - `LightLayer` — the scrim (`Color.black.opacity(state.dimOpacity)`,
+    `.ignoresSafeArea()`, `.allowsHitTesting(false)`) with the button drawn AFTER
+    it inside a `GeometryReader` that resolves the anchor.
+  - `LightButton` — the lamp: yellow glyph while lit, WHITE once out, on its own
+    disc, at full opacity. Labelled "Light", valued with `displayName`.
+- `MainScreenModel.lightState` and `cycleLight() -> LightState?` — goes through
+  `GameState.setLight(_:now:)` (so state and stamp cannot drift apart) and saves
+  immediately. No sleep guard, no sickness guard, no `noteWakingEarly()`, no
+  care mistake.
+- `ContentView` — the sprite row reports `.anchorPreference(.bounds)`, the VStack
+  carries `.overlayPreferenceValue { LightLayer(...) }`, and the toolbar's Dex
+  link takes `.opacity(1 - dimOpacity)`.
+- `seedLightDemoIfRequested()` — `-lightSemiDemo` / `-lightOffDemo`, set through
+  the real `setLight`. `simctl` cannot tap the lamp any more than it can tap
+  Feed, so the state is what moves; the scrim, symbol and button are shipped code
+  drawing it.
+
+TESTS — Tests/LightSwitchTests.swift (11 new) + 1 in MainScreenLayoutTests
+- the cycle: on->semi->off->on, three taps from ANY state come back round, and
+  the three states are what the cycle visits (not two of them).
+- the three symbol names the story names, all distinct; only `on` draws no scrim
+  and `off` never reaches 1.0.
+- model: the tap cycles, stamps `lightStateChangedAt`, and survives being read
+  back through a SECOND model on the same file (AC5).
+- nine taps -> `careMistakeCount` untouched and `lightAuditedNight` still nil.
+- with the light OFF: feed really feeds, clean really cleans, train opens its
+  round, battle opens its round. Control: a SLEEPING Digimon is still blocked in
+  the same darkness, so what that measured is the light having no say rather than
+  nothing having any say.
+- a tap with no saved game is nil, and an unopened game draws `.on`.
+- MainScreenLayoutTests pins the action row at 30pt and the 42mm slot band at
+  scale 3 (and the band below it at 2).
+
+VERIFICATION
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
+- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1231 tests, 0 failures (was
+  1219; the 12 new ones are the delta).
+- AC7, MEASURED in pixels on the 42mm (F4A12A1C), `-healthAnswered
+  -noNotificationPrompt -wanderDemo`, throwaway measurers in /tmp/us099 (NOT
+  committed — they hard-code this screen's bands).
+  - THE PRE-STORY BUILD WAS REBUILT FROM `git stash` AND SHOT ON A FRESH INSTALL,
+    because the two are only comparable on the same save: a save that has spent a
+    battle shows "4 left today" under the action row, and that one caption line
+    costs the sprite a whole scale step (3 -> 2). The first comparison I took was
+    against a stale save and was worthless.
+  - action row, pre-story vs post-story: box 5,302-367,383, 5628 lit px, and the
+    row profiles identical line for line. Not "about the same" — the same.
+  - sprite: 78px wide in both, and 6 screenshot px per sprite px in both = 3pt =
+    scale 3 at @2x. The lamp cost it nothing.
+  - the three states, each on a fresh install: on = `lightbulb.fill` yellow, semi
+    = `lightbulb.led.fill` yellow at half dim, off = `lightbulb.slash` white at
+    full dim.
+  - the scrim is EXACTLY `dimOpacity`, measured on the sprite's own peak: 244.7
+    lit -> 122.8 semi -> 36.4 off. 244.7 x 0.5 = 122.4 and 244.7 x 0.15 = 36.7.
+  - the button is above it and legible: its peak stays 255 in all three states
+    (255,214,0 yellow lit; 255,255,255 white out) while the content area's mean
+    luma falls 13.46 -> 7.19 -> 2.68.
+  - AC4, all four, all with `-lightOffDemo`: `-battleResultDemo` (Victory! screen
+    at full brightness), `-trainDemo` (Button Masher, full brightness),
+    `-evolutionCeremonyDemo` (caught in a burst — it auto-finishes, so a 5s
+    screenshot misses it — sprite peak 244.7, i.e. undimmed), `-deathDemo` (the
+    memorial, full brightness).
+
+WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
+1. AC3 says the scrim covers "the whole screen". It covers the whole GAME. The
+   navigation bar is not inside the overlay, so the Dex button is dimmed
+   separately by `.opacity(1 - dimOpacity)` on the toolbar item — same number,
+   different mechanism, and it stays tappable. The clock beside it is drawn by
+   watchOS above every app and is not ours to dim at all.
+2. "tappable" in AC3 is argued, not observed: `simctl` cannot tap. What is
+   observed is that the button is DRAWN above the scrim, and what is code is that
+   the scrim is `.allowsHitTesting(false)` — which is also what AC6's "never
+   blocks Feed, Train, Clean or Battle" rests on, and that half IS covered by a
+   test that takes all four actions in the dark.
+3. AC2's "a test on SpriteScale.fitting pins this" pins the two SCALE BANDS the
+   42mm was measured in rather than a slot height, because nothing in the app
+   exposes the slot to a test. The real evidence for AC2 is the pixel-identical
+   action row above.
+
+TRAPS FOR THE NEXT ITERATION
+- The light button is positioned by an `Anchor<CGRect>`, NOT by a number in a
+  named coordinate space. I tried the coordinate-space way first and the lamp
+  landed on top of the stats strip: the layer holding the scrim does not start
+  where the row it covers starts, because a child that ignores the safe area
+  stretches it. If US-100 or US-101 moves that layer, keep the anchor.
+- `-lightSemiDemo` / `-lightOffDemo` do not save by themselves, but the next
+  `refresh()` flushes the store, so the demo state PERSISTS into later launches.
+  Uninstall the app between screenshot runs or you will shoot a dark screen and
+  think the flag was ignored.
+- Anything US-100 adds to the main screen must go on the `NavigationStack`'s
+  overlays (with the battle and the memorial) if it must stay bright, or inside
+  the VStack if it should dim with the room. That choice is the whole of AC4.
+- `cycleLight()` deliberately does not touch `lightNotifiedNight`. If US-100
+  wants a nudge withdrawn when the user turns the light out — the way `clean()`
+  withdraws the mess notice — it has to add that here.
+
+WHAT REMAINS
+- US-100 (the notice to turn the light off) and US-101 (the care mistake and the
+  docs/ table). `refresh()` still neither notifies nor charges for the light.

@@ -337,6 +337,7 @@ final class MainScreenModel: ObservableObject {
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
         seedPoopDemoIfRequested()
+        seedLightDemoIfRequested()
         // Every seed above runs AFTER the refresh that published, so the snapshot on disk still
         // describes the pre-demo game — a `-sickDemo -complicationDemo` run would screenshot an idle
         // pose. Republishing here is the same rule as `clean()`'s, applied to the demos: the state
@@ -726,6 +727,24 @@ final class MainScreenModel: ObservableObject {
         }
     }
 
+    /// Debug-only: puts the room light into a state worth screenshotting. `simctl` cannot tap the
+    /// light button any more than it can tap Feed, so the state is what has to move — and only the
+    /// state: the scrim, the symbol and the button are the shipped ones drawing whatever this sets.
+    ///
+    /// - `-lightSemiDemo` — the night light: the half scrim.
+    /// - `-lightOffDemo` — lights out: the full scrim.
+    ///
+    /// Set through the real `setLight(_:now:)` rather than by assignment, so the demo cannot leave a
+    /// state and a stamp that disagree — which is exactly what US-101's rule would misread. Combine
+    /// with `-wanderDemo` for a Digimon rather than an egg under the scrim.
+    private func seedLightDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        let semi = arguments.contains("-lightSemiDemo")
+        guard semi || arguments.contains("-lightOffDemo"), let state else { return }
+
+        state.setLight(semi ? .semi : .off, now: now())
+    }
+
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
     /// taking screenshots; short enough that a burst does not have to run for a minute.
     private static let poopCleanDemoDelay: TimeInterval = 10
@@ -1107,6 +1126,41 @@ final class MainScreenModel: ObservableObject {
     /// How many poops are on screen, for the pile to draw and the Clean button to disable itself
     /// against. Zero when there is no game, which is also what leaves the button disabled.
     var poopCount: Int { state?.poopCount ?? 0 }
+
+    /// Which state the room light is in, for the button to draw itself as and the scrim to dim by
+    /// (US-099). `.on` with no saved game, which is the same reading `GameState` gives a save
+    /// written before the light existed — an undimmed screen is the safe answer either way.
+    var lightState: LightState { state?.lightState ?? .on }
+
+    /// Moves the light on the round: on -> semi -> off -> on.
+    ///
+    /// NOT an action in the sense the other five are. It costs no energy, is refused by nothing, is
+    /// blocked by nothing — not sleep, not sickness, not death — and it charges no care mistake:
+    /// what US-101 charges for is a light left ON over a sleeping Digimon, so the tap that puts it
+    /// out is the only way to avoid that and can hardly be a mistake in itself. There is deliberately
+    /// no `guard isAsleep` and no `noteWakingEarly()` here.
+    ///
+    /// Saved immediately, like every other tap that changes the game: the state and its timestamp are
+    /// what `LightsOutRule` reads on the next launch, and a light put out at bedtime that never
+    /// reached disk would be charged for as a night spent under it.
+    ///
+    /// Returns the state moved to so a test can assert on it directly; the screen reads `lightState`.
+    @discardableResult
+    func cycleLight() -> LightState? {
+        guard let state else { return nil }
+        // Through `setLight` rather than by assignment, because it is the one thing that keeps the
+        // state and the "since when" stamp in step — see `GameState.setLight(_:now:)`.
+        state.setLight(state.lightState.next, now: now())
+
+        do {
+            try store?.save()
+        } catch {
+            // Same call as `feed()` and `clean()`: the light on screen stands and is not snapped
+            // back, but a lost save does not pass in silence.
+            Self.log.error("Could not save after changing the light: \(String(describing: error))")
+        }
+        return state.lightState
+    }
 
     /// Whether the sick badge is owed (US-069).
     ///

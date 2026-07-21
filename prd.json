@@ -291,8 +291,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Lamp button cycles on->semi->off->on as an anchor-placed overlay in the sprite slot's top-leading corner, above a full-screen scrim at LightState.dimOpacity; measured on the 42mm: sprite region peak luma 244.7 lit -> 122.8 semi -> 36.4 off (exactly 1-dimOpacity), button peak stays 255 while the screen mean falls to 2.68, action row pixel-identical to the pre-story build (box 5,302-367,383, 5628 lit px) and the sprite still scale 3. Battle, training, ceremony and memorial all screenshot undimmed. 1231 tests green."
     },
     {
       "id": "US-100",

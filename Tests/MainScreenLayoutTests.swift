@@ -38,6 +38,31 @@ final class MainScreenLayoutTests: XCTestCase {
         XCTAssertEqual(SpriteScale.fitting(20), SpriteScale.minimum)
     }
 
+    /// US-099 AC2: the light button costs the screen nothing.
+    ///
+    /// It is an OVERLAY in the sprite's slot rather than a row of its own — unlike the sick badge,
+    /// which takes `SickBadgeLayout.reservedHeight` out of the height the sprite is sized against —
+    /// so the slot `SpriteScale.fitting` is asked about is the same slot it was asked about before
+    /// the light existed, and the action row is still the five 30pt circles it was.
+    ///
+    /// The numbers are pinned rather than the layout: what the light MUST NOT do is move the row's
+    /// diameter or push the 42mm slot out of the band it was in. That screen was measured drawing
+    /// the sprite at 6 screenshot pixels per sprite pixel — scale 3 at @2x — both before and after
+    /// this story, on a fresh save, and 78px wide in both (see progress.txt).
+    func testTheLightButtonChangesNeitherTheActionRowNorTheSpriteScale() {
+        XCTAssertEqual(ActionButtonFace.diameter, 30)
+
+        for slot in stride(from: 3 * 16.0, to: 4 * 16.0, by: 0.5) {
+            XCTAssertEqual(SpriteScale.fitting(CGFloat(slot)), 3, "slot \(slot)")
+        }
+
+        // The same screen drops a whole step once the action row's battle-allowance caption takes a
+        // line out of the slot — measured at scale 2 on a save showing "4 left today". Both bands
+        // matter, because which of them the screen is in depends on the save rather than on the
+        // layout, and the light must be free in either.
+        XCTAssertEqual(SpriteScale.fitting(3 * 16 - 0.1), 2)
+    }
+
     /// More room never draws a smaller Digimon.
     func testTheScaleNeverDecreasesAsHeightGrows() {
         var previous = SpriteScale.fitting(0)

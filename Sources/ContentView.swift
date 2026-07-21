@@ -279,6 +279,13 @@ struct ContentView: View {
                     } label: {
                         Label("Dex", systemImage: "book")
                     }
+                    // Dimmed with the room (US-099). The scrim is an overlay on the game itself, and
+                    // the navigation bar is not inside it — without this the one bright thing on a
+                    // lights-out screen would be the Dex button. Matched to the same `dimOpacity`
+                    // rather than hidden, so it stays where it was and stays tappable: turning the
+                    // light down is not meant to take the Dex away. The clock beside it is drawn by
+                    // watchOS above every app and is not ours to dim.
+                    .opacity(1 - model.lightState.dimOpacity)
                 }
             }
             #if DEBUG
@@ -482,6 +489,11 @@ struct ContentView: View {
                     }
                 }
                 .frame(maxHeight: .infinity)
+                // Where the light button goes (US-099). Reported rather than drawn here: the button
+                // has to be painted ABOVE the scrim that covers the whole screen, so it lives in the
+                // layer below and this is the only way it can still land in this row's corner. It
+                // costs the sprite nothing — a preference is measurement, not layout.
+                .anchorPreference(key: SpriteSlotBoundsKey.self, value: .bounds) { $0 }
 
                 // Name, stage and action message share ONE row since US-039, where the name had a
                 // headline row to itself above the sprite. That row cost 16 of the 136 points a
@@ -516,6 +528,16 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // The room light, over the whole screen and nothing beyond it (US-099): the scrim, and
+            // the button that changes it sitting above the scrim in the sprite slot's top-leading
+            // corner. Applied HERE and not to the `NavigationStack`, so the ceremony, the battle,
+            // the training round and the memorial — which are applied out there — are painted on
+            // top of it and are never dimmed, and so a pushed Dex is not dimmed either.
+            .overlayPreferenceValue(SpriteSlotBoundsKey.self) { spriteSlot in
+                LightLayer(state: model.lightState, spriteSlot: spriteSlot) {
+                    model.cycleLight()
+                }
+            }
         } else {
             // The graph has no node for the saved id — a roster edit that dropped a Digimon out
             // from under a live save. Nothing to draw, so say so rather than showing an empty box.
