@@ -35,11 +35,9 @@ final class BattlePowerTests: XCTestCase {
     func testOnlyStageStrengthAndLifetimeEnergyAffectPower() {
         let plain = GameState(currentDigimonId: "hero", stage: .child, now: start)
         plain.strengthStat = 4
-        plain.lifetimeEnergy = totals(20)
 
         let battered = GameState(currentDigimonId: "hero", stage: .child, now: start)
         battered.strengthStat = 4
-        battered.lifetimeEnergy = totals(20)
         // Everything the formula must ignore.
         battered.stageEnergy = totals(500)
         battered.hunger = HungerClock.maximumHunger
@@ -49,17 +47,17 @@ final class BattlePowerTests: XCTestCase {
         battered.battleLosses = 3
         battered.birthDate = start.addingTimeInterval(-90 * 24 * 3600)
 
-        XCTAssertEqual(battered.battlePower, plain.battlePower)
+        XCTAssertEqual(battered.battlePower(lifetimeEnergy: totals(20)),
+                       plain.battlePower(lifetimeEnergy: totals(20)))
     }
 
     /// The `GameState` convenience reads the same three fields the free function does.
     func testGameStateBattlePowerMatchesTheFreeFunction() {
         let state = GameState(currentDigimonId: "hero", stage: .perfect, now: start)
         state.strengthStat = 11
-        state.lifetimeEnergy = totals(40)
 
         XCTAssertEqual(
-            state.battlePower,
+            state.battlePower(lifetimeEnergy: totals(40)),
             BattlePower.power(stage: .perfect, strengthStat: 11, lifetimeEnergy: totals(40)))
     }
 
@@ -156,7 +154,7 @@ final class BattlePowerTests: XCTestCase {
     func testAFreshDigitamaHasTheLowestPowerAndItIsPositive() {
         let egg = GameState(currentDigimonId: "hero", stage: .digitama, now: start)
 
-        XCTAssertEqual(egg.battlePower, BattlePower.base)
-        XCTAssertGreaterThan(egg.battlePower, 0)
+        XCTAssertEqual(egg.battlePower(lifetimeEnergy: .zero), BattlePower.base)
+        XCTAssertGreaterThan(egg.battlePower(lifetimeEnergy: .zero), 0)
     }
 }

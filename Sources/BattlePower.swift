@@ -65,7 +65,11 @@ enum BattlePower {
 extension GameState {
     /// This Digimon's battle power. Sugar over `BattlePower.power` so the screen and the battle
     /// engine need not unpack three fields to ask one question.
-    var battlePower: Int {
+    ///
+    /// The lifetime total is passed IN rather than read off the state, because since US-123 it
+    /// belongs to the player and not to the Digimon — see `PlayerProfile`. A parameter and not a
+    /// stored mirror: a copy on the state is a copy that can go stale between two refreshes.
+    func battlePower(lifetimeEnergy: EnergyTotals) -> Int {
         BattlePower.power(stage: stage, strengthStat: strengthStat, lifetimeEnergy: lifetimeEnergy)
     }
 }

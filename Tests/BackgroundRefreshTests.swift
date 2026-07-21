@@ -181,7 +181,7 @@ private struct ElapsedTimeState: Equatable, CustomStringConvertible {
     var battlesFoughtToday: Int
 
     @MainActor
-    init(_ state: GameState, now: Date, calendar: Calendar) {
+    init(_ state: GameState, lifetimeEnergy: EnergyTotals, now: Date, calendar: Calendar) {
         digimonId = state.currentDigimonId
         stage = state.stage
         hunger = state.hunger
@@ -191,7 +191,9 @@ private struct ElapsedTimeState: Equatable, CustomStringConvertible {
         healthDataLastSeen = state.healthDataLastSeen
         healthStatus = state.healthStatus
         stageEnergy = state.stageEnergy
-        lifetimeEnergy = state.lifetimeEnergy
+        // Off the PROFILE since US-123, and passed in for that reason: it is the player's total,
+        // not this Digimon's, so the state cannot answer for it.
+        self.lifetimeEnergy = lifetimeEnergy
         battlesFoughtToday = state.battlesFought(now: now, calendar: calendar)
     }
 
@@ -459,8 +461,10 @@ final class ClosedAppRecomputeTests: XCTestCase {
         closedClock = Fixture.start.addingTimeInterval(Self.closure)
         await closedGame.model.refresh()
 
-        let open = ElapsedTimeState(openGame.state, now: openClock, calendar: Fixture.calendar)
-        let closed = ElapsedTimeState(closedGame.state, now: closedClock, calendar: Fixture.calendar)
+        let open = ElapsedTimeState(openGame.state, lifetimeEnergy: openGame.model.lifetimeEnergy,
+                                    now: openClock, calendar: Fixture.calendar)
+        let closed = ElapsedTimeState(closedGame.state, lifetimeEnergy: closedGame.model.lifetimeEnergy,
+                                      now: closedClock, calendar: Fixture.calendar)
         XCTAssertEqual(closed, open, "48h shut should land exactly where 48h open did")
 
         // Spelled out as well as compared, so a change that broke BOTH runs identically — the one
@@ -515,13 +519,13 @@ final class ClosedAppRecomputeTests: XCTestCase {
                                     fetcher: DailyStepFetcher(steps: 4_000),
                                     clock: { [weak self] in self?.closedClock ?? Fixture.start })
         await game.model.start()
-        let atLaunch = game.state.lifetimeEnergy.total
+        let atLaunch = game.model.lifetimeEnergy.total
         XCTAssertGreaterThan(atLaunch, 0)
 
         closedClock = Fixture.start.addingTimeInterval(Self.closure)
         await game.model.refresh()
 
-        XCTAssertGreaterThan(game.state.lifetimeEnergy.total, atLaunch,
+        XCTAssertGreaterThan(game.model.lifetimeEnergy.total, atLaunch,
                              "the day the app came back to is credited, not skipped")
     }
 

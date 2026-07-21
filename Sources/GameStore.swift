@@ -11,6 +11,10 @@ final class GameStore {
     /// Every model that gets persisted. Adding a `@Model` type means adding it here too, or it
     /// silently will not be saved.
     static let schema = Schema([GameState.self, EnergyLedger.self, MetricLedger.self, DexEntry.self,
+                                PlayerProfile.self,
+                                // Drained by `loadOrCreateProfile` and written by nothing. Listed
+                                // so a store from before US-123 can still be READ — see
+                                // `MapProgress`.
                                 MapProgress.self])
 
     let container: ModelContainer
@@ -71,31 +75,45 @@ final class GameStore {
     /// Rebirth after death is `rebirth(digitamaId:now:)` and not this: it wraps this to get the
     /// fresh egg, but carries `lifetimeEnergy` across, which is the whole point of it outliving a
     /// Digimon.
+    ///
+    /// Since US-123 the lifetime total lives on `PlayerProfile`, so wiping it is an explicit line
+    /// here rather than a consequence of deleting the `GameState`. Map progress is NOT wiped: it
+    /// outlives the Digimon that walked it, which is why it moved off the state in the first place.
     @discardableResult
     func resetGame(digitamaId: String, now: Date = Date()) throws -> GameState {
+        // Before the delete, or the migration inside it would have no Digimon left to read the
+        // legacy lifetime total off — a reset on a store that has never opened a profile would
+        // silently start the player's history over.
+        let profile = try loadOrCreateProfile()
         try context.delete(model: GameState.self)
         let fresh = GameState(currentDigimonId: digitamaId, now: now)
         context.insert(fresh)
-        // The egg you are handed is itself a discovered Digimon. Recorded here rather than at the
-        // call site so a new game and its first Dex entry are one transaction; the Dex survives the
-        // `delete` above because it is a separate entity.
+        profile.lifetimeEnergy = .zero
+        // The egg you are handed is itself a discovered Digimon, and one the player now owns.
+        // Recorded here rather than at the call site so a new game, its first Dex entry and the
+        // profile's note of the egg are one transaction; both survive the `delete` above because
+        // they are separate entities.
         recordDiscovery(id: digitamaId, now: now)
+        profile.record(ownedDigitama: digitamaId)
         try context.save()
         return fresh
     }
 
     /// Starts the next Digimon after this one has died, carrying over what outlives it.
     ///
-    /// The difference from `resetGame` is the whole point of US-029: `lifetimeEnergy` is read off the
-    /// dead Digimon BEFORE it is deleted and written onto the new egg, so a death costs the user its
-    /// Digimon and not its progress. The Dex needs no carrying — it is a separate entity, so the
-    /// `delete` inside `resetGame` never touches it — and neither does the `EnergyLedger`, which
-    /// must keep today's cap so the steps already spent on the dead Digimon cannot be earned twice.
+    /// The difference from `resetGame` is the whole point of US-029: the lifetime energy is read
+    /// BEFORE the wipe and put back after it, so a death costs the user its Digimon and not its
+    /// progress. Since US-123 it is read off `PlayerProfile` rather than off the corpse — which is
+    /// what makes the same rule work for US-124's box of several Digimon, where there is no single
+    /// corpse to read. The Dex needs no carrying — it is a separate entity, so the `delete` inside
+    /// `resetGame` never touches it — and neither does the `EnergyLedger`, which must keep today's
+    /// cap so the steps already spent on the dead Digimon cannot be earned twice.
     @discardableResult
     func rebirth(digitamaId: String, now: Date = Date()) throws -> GameState {
-        let carried = try context.fetch(FetchDescriptor<GameState>()).first?.lifetimeEnergy ?? .zero
+        let profile = try loadOrCreateProfile()
+        let carried = profile.lifetimeEnergy
         let fresh = try resetGame(digitamaId: digitamaId, now: now)
-        fresh.lifetimeEnergy = carried
+        profile.lifetimeEnergy = carried
         try context.save()
         return fresh
     }
@@ -159,16 +177,44 @@ final class GameStore {
         return fresh
     }
 
-    /// The player's map progress, starting an empty one if there is none yet.
+    /// The player's profile, MIGRATING an older save onto a fresh one if there is none yet.
     ///
-    /// Untouched by `resetGame` and `rebirth`, and that is the whole point of it being its own
-    /// record: the sixteen maps outlive the Digimon that walked them, so a death must not send the
-    /// player back to the start of the grassland. See `MapProgress`.
-    func loadOrCreateMapProgress() throws -> MapProgress {
-        if let saved = try context.fetch(FetchDescriptor<MapProgress>()).first {
+    /// The only way in, exactly like `loadOrCreate`, so there is one place that can decide a profile
+    /// exists and one place the migration can run. Untouched by `resetGame` except for the lifetime
+    /// total it explicitly wipes: the sixteen maps outlive the Digimon that walked them, so a death
+    /// must not send the player back to the start of the grassland.
+    ///
+    /// THE MIGRATION, which runs exactly once — on the first open after this build lands, because
+    /// after it there is a profile and the fetch above returns:
+    /// - `lifetimeEnergy` is copied off the saved `GameState`'s legacy column. A store written by
+    ///   the previous build has the player's whole earnings there and nowhere else.
+    /// - the map fields are copied off the `MapProgress` record US-118 wrote, which is then deleted:
+    ///   two records answering "where am I adventuring" is one too many, and the one that loses is
+    ///   the one nothing writes.
+    /// - `ownedDigitamaIds` is seeded from the Dex, which has recorded every egg the moment it was
+    ///   handed over since US-016 — so "ever owned" is a fact the old save already knows, not a
+    ///   guess. Filtered through the roster's stages rather than by the id's shape, because
+    ///   `_digitama` is a naming convention and not a schema.
+    ///
+    /// - Parameter roster: injected only so a test can seed the Dex filter; the shipped file is the
+    ///   default, as everywhere else.
+    func loadOrCreateProfile(roster: Roster = .bundled) throws -> PlayerProfile {
+        if let saved = try context.fetch(FetchDescriptor<PlayerProfile>()).first {
             return saved
         }
-        let fresh = MapProgress()
+        let fresh = PlayerProfile()
+        if let state = try context.fetch(FetchDescriptor<GameState>()).first {
+            fresh.lifetimeEnergy = state.legacyLifetimeEnergy
+        }
+        if let progress = try context.fetch(FetchDescriptor<MapProgress>()).first {
+            fresh.adopt(progress)
+        }
+        for stale in try context.fetch(FetchDescriptor<MapProgress>()) {
+            context.delete(stale)
+        }
+        for id in try dexIds() where roster.entry(id: id)?.stage == .digitama {
+            fresh.record(ownedDigitama: id)
+        }
         context.insert(fresh)
         try context.save()
         return fresh

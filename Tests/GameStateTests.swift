@@ -37,7 +37,6 @@ final class GameStateTests: XCTestCase {
             let store = try GameStore(url: storeURL)
             let state = GameState(currentDigimonId: "greymon", stage: .adult, now: t0)
             state.stageEnergy = EnergyTotals(strength: 11, vitality: 22, spirit: 33, stamina: 44)
-            state.lifetimeEnergy = EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88)
             state.stageEnteredDate = t1
             state.careMistakeCount = 2
             state.hunger = 3
@@ -46,6 +45,9 @@ final class GameStateTests: XCTestCase {
             state.battleWins = 5
             state.battleLosses = 6
             store.container.mainContext.insert(state)
+            // The lifetime total lives on the profile since US-123, and round-trips with the rest.
+            try store.loadOrCreateProfile().lifetimeEnergy =
+                EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88)
             try store.save()
         }
 
@@ -57,7 +59,8 @@ final class GameStateTests: XCTestCase {
         XCTAssertEqual(loaded.currentDigimonId, "greymon")
         XCTAssertEqual(loaded.stage, .adult)
         XCTAssertEqual(loaded.stageEnergy, EnergyTotals(strength: 11, vitality: 22, spirit: 33, stamina: 44))
-        XCTAssertEqual(loaded.lifetimeEnergy, EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88))
+        XCTAssertEqual(try reopened.loadOrCreateProfile().lifetimeEnergy,
+                       EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88))
         XCTAssertEqual(loaded.birthDate, t0)
         XCTAssertEqual(loaded.stageEnteredDate, t1)
         XCTAssertEqual(loaded.careMistakeCount, 2)
@@ -101,7 +104,8 @@ final class GameStateTests: XCTestCase {
         played.currentDigimonId = "greymon"
         played.stage = .adult
         played.stageEnergy = EnergyTotals(strength: 90, vitality: 90, spirit: 90, stamina: 90)
-        played.lifetimeEnergy = EnergyTotals(strength: 500, vitality: 500, spirit: 500, stamina: 500)
+        try store.loadOrCreateProfile().lifetimeEnergy =
+            EnergyTotals(strength: 500, vitality: 500, spirit: 500, stamina: 500)
         played.careMistakeCount = 3
         played.hunger = 4
         played.strengthStat = 40
@@ -117,7 +121,7 @@ final class GameStateTests: XCTestCase {
         XCTAssertEqual(fresh.stageEnergy, .zero)
         // A total wipe by design — this is the debug reset, not rebirth after death, which has
         // to keep lifetime energy.
-        XCTAssertEqual(fresh.lifetimeEnergy, .zero)
+        XCTAssertEqual(try store.loadOrCreateProfile().lifetimeEnergy, .zero)
         XCTAssertEqual(fresh.birthDate, t1)
         XCTAssertEqual(fresh.stageEnteredDate, t1)
         XCTAssertEqual(fresh.careMistakeCount, 0)

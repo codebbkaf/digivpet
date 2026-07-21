@@ -776,3 +776,88 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     read a line degrade gracefully through it. That is the bridge for any later story that needs a
     roster-only Digimon where a node is expected.
 ---
+
+## 2026-07-22 — US-123: PlayerProfile holds what outlives a Digimon, and the existing save migrates
+- `Sources/PlayerProfile.swift`: `@Model PlayerProfile` — `lifetimeEnergy`, `selectedMapId`, the
+  per-map `recorded`/`finishedAt` dictionaries, and `ownedDigitamaIds` — with `MapStepCreditor`
+  moved onto it. `GameStore` gains `loadOrCreateProfile(roster:)` and loses
+  `loadOrCreateMapProgress`. `MapProgress` survives as a DRAIN-ONLY legacy `@Model`, still in the
+  schema, read by the migration and by nothing else.
+- Files: Sources/PlayerProfile.swift (new), Sources/MapProgress.swift, Sources/GameStore.swift,
+  Sources/GameState.swift, Sources/EnergyLedger.swift, Sources/BattlePower.swift,
+  Sources/Death.swift, Sources/MainScreenModel.swift, Sources/ContentView.swift,
+  Sources/MapListView.swift, Sources/MapStripView.swift, Sources/MapDetailView.swift,
+  Sources/MapCatalog.swift, Tests/PlayerProfileTests.swift (new), Tests/Fixtures/pre-us123.store
+  (new, binary), and 16 existing test files updated for the moved property.
+- PASSED: build green. `Executed 1510 tests, with 0 failures` (1496 + 14 new), and all 14 also
+  observed passing on their own with `-only-testing`.
+
+- **THE MIGRATION IS TESTED AGAINST A FILE THE PREVIOUS BUILD WROTE, and that is the whole story.**
+  AC6 says a test that constructs the NEW shape does not satisfy it — so before a line of code was
+  changed, a throwaway `ZZPreUS123FixtureWriter` test was run ON THE US-122 COMMIT, writing a fully
+  populated store into the Simulator's tmp. That file is now `Tests/Fixtures/pre-us123.store`
+  (96KB), and it is genuinely the old shape: `sqlite3 … "select name from sqlite_master"` shows
+  `ZGAMESTATE` and `ZMAPPROGRESS` and no `ZPLAYERPROFILE`. Five tests open a COPY of it (SwiftData
+  migrates in place, so the bundle's copy must never be the one opened).
+  - AC5 observed in full: `greymon` comes back Adult with stageEnergy 11/22/33/44, both dates, 2
+    care mistakes, hunger 3, strength 17, `.sick` with its `sickSince`, a 5–6 battle record, 4
+    poops and the light off — and 55/66/77/88 on a profile that did not exist when the file was
+    written.
+  - The fifth runs the SAME file through `MainScreenModel.start()` — the app's own path, the real
+    graph and roster — and gets `.playing`, `greymon`, the same totals through `model.lifetimeEnergy`
+    and the migrated `02_river` selection driving US-115's background.
+- **AC3 HAS ONE DELIBERATE EXCEPTION AND IT IS WORTH A REVIEWER'S ATTENTION.** The Swift property is
+  gone from `GameState`'s API — `private`, exposed only as the read-only `legacyLifetimeEnergy` the
+  migration drains — but THE COLUMN STAYS. Deleting it deletes a live player's earnings with no
+  second chance to read them. Renaming is no safer: opening the fixture in `sqlite3` shows SwiftData
+  FLATTENS an `EnergyTotals` into one column per field named BY POSITION — `ZSTRENGTH1`,
+  `ZSTRENGTH2`, `ZSTRENGTH` — not by property name, so a rename is a schema change that has to be
+  exactly right for the one value nothing is allowed to lose. Four unread columns is the cheaper
+  side of that trade.
+- Every read in the game goes through the profile: `EnergyCreditor.credit` gained a `profile:`
+  parameter and tops it up beside `stageEnergy`; `GameState.battlePower` and `memorial(displayName:)`
+  now TAKE the total rather than reading it; `MainScreenModel.lifetimeEnergy` is the single place
+  the "no profile yet" answer (`.zero`) is decided.
+- Map progress MIGRATES rather than being dropped. `loadOrCreateProfile` adopts `MapProgress`'
+  three fields and DELETES the record — asserted, including that no row is left behind. Two records
+  answering "where am I adventuring" is one too many, and the one nothing writes is the one that
+  loses.
+- `ownedDigitamaIds` is seeded from the DEX, filtered through the roster's stages: the Dex has
+  recorded every egg the moment it was handed over since US-016, so "ever owned" is a fact the old
+  save already knows rather than a guess. The fixture's Dex holds `greymon` and `agu_digitama`;
+  only the egg comes across. `resetGame` and `rebirth` record the egg they hand over.
+- `resetGame` now wipes the profile's total EXPLICITLY (it used to fall out of deleting the state)
+  and `rebirth` reads-then-restores it, so both pre-story behaviours hold with the value on its new
+  home. A test pins that a rebirth keeps 111/222/333/444 AND the 900 steps already walked.
+
+- **Learnings for future iterations:**
+  - **To test a migration, write the fixture BEFORE you write the code.** One throwaway test on the
+    current commit, run once, and the store harvested out of
+    `~/Library/Developer/CoreSimulator/Devices/<UDID>/data/Containers/Data/Application/<uuid>/tmp/`
+    (print the path from the test; it appears in the `xcodebuild` log). It costs one test run and it
+    is the only artefact that can prove a migration at all. A `git worktree` build would work too,
+    but is not needed if you do it first.
+  - **`Tests/Fixtures/*` is bundled into the test target automatically** — xcodegen puts unknown
+    file types in the resources phase, so no `project.yml` change was needed. Read it with
+    `Bundle(for: Self.self).url(forResource:withExtension:)` and COPY IT OUT before opening: SwiftData
+    migrates in place, so the second test to run would otherwise find it already migrated.
+  - Only the `.store` needs committing. Its `-wal` came out 0 bytes (checkpointed on close) and the
+    `-shm` is rebuildable; the tests pass with the two sidecars deleted from the repo.
+  - **SwiftData flattens a composite attribute into one column per field, named by POSITION.**
+    `EnergyTotals` becomes `ZSTRENGTH/ZVITALITY/…`, `ZSTRENGTH1/…`, `ZSTRENGTH2/…` in declaration
+    order. Consequence: removing or reordering one composite is not a local change. `sqlite3
+    <store> "pragma table_info(ZGAMESTATE)"` is how to look before leaping.
+  - There was already a precedent for schema-migration tests in this repo and it is worth copying:
+    `EnergyCreditingTests.testAStoreWrittenBeforeTheLedgerExistedStillOpens` opens a container on an
+    explicit OLD `Schema([...])`, and `DominantEnergyTests.PreRecencySchema` declares a whole `@Model`
+    of the previous shape inside a private enum. Both work; neither can express a property the new
+    build has made private, which is why this story needed a file instead.
+  - When a widely-read property moves off a `@Model`, the test churn is in the SETUP, not the
+    assertions: 16 files set `state.lifetimeEnergy` to stage a scenario. Three of them
+    (`FeedingTests`, `TrainingTests`, `TrainingMinigameTests`) asserted "spending does not rewrite
+    the lifetime total" — a claim that is now structural, because those actions are handed the
+    `GameState` alone. They were kept, on a `PlayerProfile` the action cannot reach, as the test
+    that fails the day someone passes the profile in too.
+- REMAINS: US-124 onward (10/56 passing). Phase C continues with US-124's multi-state store, which
+  `PlayerProfile` was the precondition for.
+---

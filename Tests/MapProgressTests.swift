@@ -57,8 +57,8 @@ private final class FixtureSleepFetcher: SleepSampleFetching, @unchecked Sendabl
 // MARK: - The accrual rule (pure)
 
 final class MapStepCreditorTests: XCTestCase {
-    private func progress(selecting id: String?) -> MapProgress {
-        MapProgress(selectedMapId: id)
+    private func progress(selecting id: String?) -> PlayerProfile {
+        PlayerProfile(selectedMapId: id)
     }
 
     /// THE AC: steps go to the map that is selected.
@@ -295,7 +295,7 @@ final class MapAccrualTests: XCTestCase {
         await model.refresh()
         await model.refresh()
 
-        let progress = try XCTUnwrap(model.mapProgress)
+        let progress = try XCTUnwrap(model.profile)
         XCTAssertEqual(progress.recorded(forMap: "first"), 1_000)
     }
 
@@ -312,7 +312,7 @@ final class MapAccrualTests: XCTestCase {
         walked(1_600)
         await model.refresh()
 
-        XCTAssertEqual(try XCTUnwrap(model.mapProgress).recorded(forMap: "first"), 1_600)
+        XCTAssertEqual(try XCTUnwrap(model.profile).recorded(forMap: "first"), 1_600)
     }
 
     /// AC: only steps read WHILE a map is selected accrue to it. Steps walked before anywhere was
@@ -326,7 +326,7 @@ final class MapAccrualTests: XCTestCase {
         model.selectMap("first")
         await model.refresh()
 
-        XCTAssertEqual(try XCTUnwrap(model.mapProgress).recorded(forMap: "first"), 0)
+        XCTAssertEqual(try XCTUnwrap(model.profile).recorded(forMap: "first"), 0)
     }
 
     /// THE AC: switching maps mid-day leaves already-credited steps exactly where they were, and
@@ -343,7 +343,7 @@ final class MapAccrualTests: XCTestCase {
         walked(1_000)                // 400 more steps, walked in the second map
         await model.refresh()
 
-        let progress = try XCTUnwrap(model.mapProgress)
+        let progress = try XCTUnwrap(model.profile)
         XCTAssertEqual(progress.recorded(forMap: "first"), 600, "banked steps never move")
         XCTAssertEqual(progress.recorded(forMap: "second"), 400, "only the new ones follow")
     }
@@ -357,12 +357,12 @@ final class MapAccrualTests: XCTestCase {
 
         walked(1_200)
         await first.refresh()
-        let finishedAt = try XCTUnwrap(first.mapProgress?.finishedAt(forMap: "first"))
+        let finishedAt = try XCTUnwrap(first.profile?.finishedAt(forMap: "first"))
 
         let second = makeModel()
         await second.start()
 
-        let progress = try XCTUnwrap(second.mapProgress)
+        let progress = try XCTUnwrap(second.profile)
         XCTAssertEqual(progress.recorded(forMap: "first"), 1_200)
         XCTAssertEqual(progress.selectedMapId, "first", "and the player is still where they were")
         XCTAssertEqual(progress.finishedAt(forMap: "first"), finishedAt)
@@ -378,12 +378,12 @@ final class MapAccrualTests: XCTestCase {
 
         walked(1_000)
         await model.refresh()
-        let stamp = try XCTUnwrap(model.mapProgress?.finishedAt(forMap: "first"))
+        let stamp = try XCTUnwrap(model.profile?.finishedAt(forMap: "first"))
 
         walked(4_000)
         await model.refresh()
 
-        let progress = try XCTUnwrap(model.mapProgress)
+        let progress = try XCTUnwrap(model.profile)
         XCTAssertEqual(progress.finishedAt(forMap: "first"), stamp, "not re-stamped")
         XCTAssertEqual(progress.recorded(forMap: "first"), 4_000, "and not capped at 1,000")
     }
@@ -397,14 +397,14 @@ final class MapAccrualTests: XCTestCase {
 
         await model.refresh()
 
-        XCTAssertEqual(try XCTUnwrap(model.mapProgress).recordedByMap, [:])
+        XCTAssertEqual(try XCTUnwrap(model.profile).recordedByMap, [:])
         XCTAssertNil(model.selectedMapAsset, "and nothing is drawn behind the Digimon")
         XCTAssertEqual(model.state?.stageEnergy.strength, 10, "1,000 steps at 1 per 100")
     }
 
     /// The map outlives the Digimon: a death and a fresh egg must not send the player back to the
     /// start of the grassland. `resetGame` deletes the `GameState` and nothing else, which is why.
-    func testMapProgressSurvivesARebirth() async throws {
+    func testPlayerProfileSurvivesARebirth() async throws {
         let model = makeModel()
         await model.start()
         model.selectMap("first")
@@ -414,7 +414,7 @@ final class MapAccrualTests: XCTestCase {
 
         let store = try GameStore(url: storeURL)
         try store.rebirth(digitamaId: "agu_digitama", now: Fixture.evening)
-        let progress = try store.loadOrCreateMapProgress()
+        let progress = try store.loadOrCreateProfile()
 
         XCTAssertEqual(progress.recorded(forMap: "first"), 1_000)
         XCTAssertEqual(progress.selectedMapId, "first")

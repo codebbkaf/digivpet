@@ -119,9 +119,13 @@ final class DominantEnergyTests: XCTestCase {
     func testTheDominantTypeIgnoresLifetimeEnergy() {
         let state = newGame()
         state.stageEnergy = EnergyTotals(strength: 5, vitality: 1, spirit: 0, stamina: 0)
-        state.lifetimeEnergy = EnergyTotals(strength: 5, vitality: 900, spirit: 0, stamina: 0)
+        // On the PLAYER since US-123, which is a stronger form of the same claim: the branch is
+        // decided by a Digimon that cannot reach the lifetime total at all.
+        let profile = PlayerProfile(
+            lifetimeEnergy: EnergyTotals(strength: 5, vitality: 900, spirit: 0, stamina: 0))
 
         XCTAssertEqual(state.dominantEnergyType, .strength)
+        XCTAssertEqual(profile.lifetimeEnergy.vitality, 900, "and the total is really there")
     }
 
     // MARK: - Ties
@@ -218,7 +222,7 @@ final class DominantEnergyTests: XCTestCase {
 
         EnergyCreditor.credit(
             [.strength: .value(500), .vitality: .noData],
-            to: state, ledger: ledger, now: When.later, calendar: When.losAngeles
+            to: state, profile: PlayerProfile(), ledger: ledger, now: When.later, calendar: When.losAngeles
         )
 
         XCTAssertEqual(state.energyLastEarned.strength, When.later, "strength was credited, so it was earned now")
@@ -236,10 +240,10 @@ final class DominantEnergyTests: XCTestCase {
         // The same 500 steps, read twice in one day: the second read is the same steps already
         // paid for, not 500 more.
         EnergyCreditor.credit(
-            [.strength: .value(500)], to: state, ledger: ledger, now: When.early, calendar: When.losAngeles
+            [.strength: .value(500)], to: state, profile: PlayerProfile(), ledger: ledger, now: When.early, calendar: When.losAngeles
         )
         EnergyCreditor.credit(
-            [.strength: .value(500)], to: state, ledger: ledger, now: When.later, calendar: When.losAngeles
+            [.strength: .value(500)], to: state, profile: PlayerProfile(), ledger: ledger, now: When.later, calendar: When.losAngeles
         )
 
         XCTAssertEqual(state.stageEnergy.strength, 5, "the same steps must not be paid for twice")
@@ -255,11 +259,11 @@ final class DominantEnergyTests: XCTestCase {
         // 100 steps buys 1 Strength; then 20 kcal buys 1 Vitality on a later read, off the same
         // day's unchanged step count.
         EnergyCreditor.credit(
-            [.strength: .value(100)], to: state, ledger: ledger, now: When.early, calendar: When.losAngeles
+            [.strength: .value(100)], to: state, profile: PlayerProfile(), ledger: ledger, now: When.early, calendar: When.losAngeles
         )
         EnergyCreditor.credit(
             [.strength: .value(100), .vitality: .value(20)],
-            to: state, ledger: ledger, now: When.later, calendar: When.losAngeles
+            to: state, profile: PlayerProfile(), ledger: ledger, now: When.later, calendar: When.losAngeles
         )
 
         XCTAssertEqual(state.stageEnergy, EnergyTotals(strength: 1, vitality: 1, spirit: 0, stamina: 0))
@@ -342,7 +346,7 @@ final class DominantEnergyTests: XCTestCase {
         XCTAssertNotNil(loaded.dominantEnergyType)
         let ledger = try upgraded.loadOrCreateLedger(now: When.latest, calendar: When.losAngeles)
         EnergyCreditor.credit(
-            [.vitality: .value(20)], to: loaded, ledger: ledger, now: When.latest, calendar: When.losAngeles
+            [.vitality: .value(20)], to: loaded, profile: PlayerProfile(), ledger: ledger, now: When.latest, calendar: When.losAngeles
         )
         try upgraded.save()
         XCTAssertEqual(loaded.dominantEnergyType, .vitality, "a migrated store still credits and still leads")

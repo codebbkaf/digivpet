@@ -67,13 +67,18 @@ final class FeedActionTests: XCTestCase {
 
     /// `lifetimeEnergy` is the record of what was ever EARNED, so spending must not rewrite it —
     /// otherwise a well-fed Digimon would look like it had lived a less active life than it did.
+    ///
+    /// Since US-123 the total is on `PlayerProfile` and a feed is handed only the `GameState`, so
+    /// the guarantee is structural rather than a rule anybody has to keep. Pinned anyway: it is the
+    /// test that fails the day someone hands `FeedAction` the profile as well.
     func testFeedingDoesNotTakeBackLifetimeEnergy() {
         let state = makeState(hunger: 2, vitality: 20)
-        state.lifetimeEnergy[.vitality] = 90
+        let profile = PlayerProfile()
+        profile.lifetimeEnergy[.vitality] = 90
 
         FeedAction.feed(state, isAsleep: false, now: Clock.start, calendar: Clock.calendar)
 
-        XCTAssertEqual(state.lifetimeEnergy[.vitality], 90)
+        XCTAssertEqual(profile.lifetimeEnergy[.vitality], 90)
     }
 
     /// The restamp US-023 said feeding owes it. `HungerClock` freezes `hungerUpdatedAt` at the moment

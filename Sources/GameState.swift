@@ -178,8 +178,19 @@ final class GameState {
     var stage: Stage
     /// Energy earned since this stage began. Reset on evolution; decides the branch taken.
     var stageEnergy: EnergyTotals
-    /// Energy earned over the Digimon's whole life. Survives evolution and death.
-    var lifetimeEnergy: EnergyTotals
+    /// LEGACY (US-123): lifetime energy lives on `PlayerProfile` now, because it outlives the
+    /// Digimon and — from US-124 — belongs to a player who has several of them. Read it through
+    /// `PlayerProfile.lifetimeEnergy`; the only thing that may touch this is the migration, through
+    /// `legacyLifetimeEnergy`.
+    ///
+    /// **The column stays, under its original name, and that is deliberate.** Deleting the property
+    /// would delete the column with a live player's earnings still in it, and there is no second
+    /// chance to read them. Renaming it would be no better: SwiftData FLATTENS a composite like
+    /// `EnergyTotals` into one column per field, named by position (`ZSTRENGTH1`, `ZSTRENGTH2`, ...)
+    /// rather than by property — verified by opening a store written by the previous build — so a
+    /// rename is a schema change that has to be got exactly right for a value nothing is allowed to
+    /// lose. Keeping it costs four unread columns.
+    private var lifetimeEnergy: EnergyTotals
     /// Backing store for `energyLastEarned`, and the reason it is optional: this property was
     /// added to an already-shipped model, and an OPTIONAL attribute is the one shape SwiftData
     /// will migrate into an existing store without a default. A non-optional composite is not —
@@ -369,6 +380,16 @@ final class GameState {
 }
 
 extension GameState {
+    /// What a pre-US-123 store left on this Digimon, for `GameStore.loadOrCreateProfile` to copy
+    /// onto a brand new `PlayerProfile` — and for nothing else.
+    ///
+    /// Read-only, and named so that a reader who wants "the player's lifetime energy" cannot reach
+    /// it by accident and cannot be in any doubt when they read it deliberately. The value goes
+    /// stale the moment the profile takes over; the profile is the answer from then on.
+    var legacyLifetimeEnergy: EnergyTotals {
+        lifetimeEnergy
+    }
+
     /// When each type of `stageEnergy` last went up. Read only to break a `dominantEnergyType`
     /// tie, and written everywhere `stageEnergy` is — miss one and that increment silently stops
     /// counting as recent.

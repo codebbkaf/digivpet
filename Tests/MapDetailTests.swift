@@ -67,7 +67,7 @@ private enum Fixture {
             trainingSessionsThisStage: sessions)
     }
 
-    static func row(_ id: String, _ progress: MapProgress?) -> MapListRow {
+    static func row(_ id: String, _ progress: PlayerProfile?) -> MapListRow {
         MapListRow.rows(in: catalog, progress: progress).first { $0.id == id }!
     }
 
@@ -75,7 +75,7 @@ private enum Fixture {
     static func detail(
         discovered: Set<String> = [],
         context: ConditionContext = .unknown,
-        progress: MapProgress? = MapProgress()
+        progress: PlayerProfile? = PlayerProfile()
     ) -> MapDetail {
         MapDetail.make(for: row("first", progress), in: catalog, roster: roster,
                        discovered: discovered, context: context)!
@@ -132,7 +132,7 @@ final class MapDetailContentsTests: XCTestCase {
             AdventureMap(id: "only", displayName: "Only", assetName: "01_grassland",
                          tier: 1, totalSteps: 100, opponentPool: ["agumon", "nosuchmon"]),
         ])
-        let detail = MapDetail.make(for: MapListRow.rows(in: catalog, progress: MapProgress())[0],
+        let detail = MapDetail.make(for: MapListRow.rows(in: catalog, progress: PlayerProfile())[0],
                                     in: catalog, roster: Fixture.roster,
                                     discovered: [], context: .unknown)
 
@@ -146,7 +146,7 @@ final class MapDetailContentsTests: XCTestCase {
             AdventureMap(id: "only", displayName: "Only", assetName: "01_grassland",
                          tier: 1, totalSteps: 100, opponentPool: ["agumon", "agumon"]),
         ])
-        let detail = MapDetail.make(for: MapListRow.rows(in: catalog, progress: MapProgress())[0],
+        let detail = MapDetail.make(for: MapListRow.rows(in: catalog, progress: PlayerProfile())[0],
                                     in: catalog, roster: Fixture.roster,
                                     discovered: [], context: .unknown)
 
@@ -163,7 +163,7 @@ final class MapDetailContentsTests: XCTestCase {
     /// The header says where the player is up to, in the same spelling the list uses — the two
     /// screens name one figure and must not disagree about how it reads.
     func testProgressIsSpelledExactlyAsTheListSpellsIt() {
-        let progress = MapProgress(recorded: ["first": 450.9])
+        let progress = PlayerProfile(recorded: ["first": 450.9])
         let detail = Fixture.detail(progress: progress)
 
         XCTAssertEqual(detail.progressText, "450 / 1000")
@@ -223,7 +223,7 @@ final class MapDetailRevealTests: XCTestCase {
                          digitamaSlots: [DigitamaSlot(digitamaId: "nosuchmon",
                                                       conditions: [Fixture.steps])]),
         ])
-        let detail = MapDetail.make(for: MapListRow.rows(in: catalog, progress: MapProgress())[0],
+        let detail = MapDetail.make(for: MapListRow.rows(in: catalog, progress: PlayerProfile())[0],
                                     in: catalog, roster: Fixture.roster,
                                     discovered: ["nosuchmon"], context: .unknown)
 
@@ -332,7 +332,7 @@ final class MapDetailReadyTests: XCTestCase {
 final class MapDetailLockTests: XCTestCase {
     /// AC6: nil, not a stripped detail. There is nothing for the view to push.
     func testALockedMapHasNoDetail() {
-        let locked = Fixture.row("second", MapProgress())
+        let locked = Fixture.row("second", PlayerProfile())
 
         XCTAssertTrue(locked.isLocked)
         XCTAssertNil(MapDetail.make(for: locked, in: Fixture.catalog, roster: Fixture.roster,
@@ -342,7 +342,7 @@ final class MapDetailLockTests: XCTestCase {
     /// And it appears the moment the lock opens, on the same save — so the nil above is the lock
     /// and not the fixture's second map being undetailable.
     func testTheDetailAppearsTheMomentTheLockOpens() {
-        let progress = MapProgress(finishedAt: ["first": Fixture.noon])
+        let progress = PlayerProfile(finishedAt: ["first": Fixture.noon])
         let opened = Fixture.row("second", progress)
 
         XCTAssertFalse(opened.isLocked)
@@ -365,8 +365,8 @@ final class MapDetailLockTests: XCTestCase {
     /// The travel button says which of its two things it is, and the "here" case is a statement
     /// rather than a vanished control.
     func testTheDetailKnowsWhetherThePlayerIsAlreadyHere() {
-        XCTAssertTrue(Fixture.detail(progress: MapProgress(selectedMapId: "first")).isSelected)
-        XCTAssertFalse(Fixture.detail(progress: MapProgress()).isSelected)
+        XCTAssertTrue(Fixture.detail(progress: PlayerProfile(selectedMapId: "first")).isSelected)
+        XCTAssertFalse(Fixture.detail(progress: PlayerProfile()).isSelected)
         XCTAssertNotEqual(MapDetailMarks.travelLabel, MapDetailMarks.hereLabel)
     }
 }
@@ -379,7 +379,7 @@ final class MapDetailShippedDataTests: XCTestCase {
     /// validator makes, made again through the screen that has to draw them.
     func testEveryShippedMapDrawsItsWholePoolAndEverySlot() {
         // Every map finished, so none of them is locked and all sixteen are reachable.
-        let progress = MapProgress(finishedAt: Dictionary(
+        let progress = PlayerProfile(finishedAt: Dictionary(
             uniqueKeysWithValues: MapCatalog.bundled.maps.map { ($0.id, Fixture.noon) }))
 
         for row in MapListRow.rows(in: .bundled, progress: progress) {
@@ -398,7 +398,7 @@ final class MapDetailShippedDataTests: XCTestCase {
     /// Every shipped slot names a Digitama that really is at `Stage.digitama`, so a revealed one
     /// draws art out of the Digitama folder and not out of nowhere.
     func testEveryShippedSlotResolvesToADigitama() {
-        let progress = MapProgress(finishedAt: Dictionary(
+        let progress = PlayerProfile(finishedAt: Dictionary(
             uniqueKeysWithValues: MapCatalog.bundled.maps.map { ($0.id, Fixture.noon) }))
         let ids = MapCatalog.bundled.maps.flatMap { $0.digitamaSlots.map(\.digitamaId) }
         let rows = MapListRow.rows(in: .bundled, progress: progress)
@@ -415,7 +415,7 @@ final class MapDetailShippedDataTests: XCTestCase {
     /// On a fresh save the starting map's slots are all still "?" — the shipped detail opens
     /// withheld, which is what makes the reveal worth anything.
     func testTheStartingMapOpensEntirelyWithheld() throws {
-        let row = MapListRow.rows(in: .bundled, progress: MapProgress()).first { !$0.isLocked }
+        let row = MapListRow.rows(in: .bundled, progress: PlayerProfile()).first { !$0.isLocked }
         let detail = try XCTUnwrap(MapDetail.make(for: try XCTUnwrap(row),
                                                   discovered: [], context: .unknown))
 

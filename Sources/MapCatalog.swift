@@ -62,7 +62,7 @@ struct AdventureMap: Codable, Equatable, Identifiable {
     /// US-122 uses it to clamp the band its progress ratio selects.
     let tier: Int
 
-    /// How many steps cross this map. `MapProgress.recorded >= totalSteps` is what "finished"
+    /// How many steps cross this map. `PlayerProfile.recorded >= totalSteps` is what "finished"
     /// means (US-118) — and the counter keeps climbing past it, so this is a finish line rather
     /// than a cap.
     let totalSteps: Int

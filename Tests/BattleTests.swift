@@ -592,7 +592,8 @@ final class BattleRecordTests: XCTestCase {
         let untrained = makeState(strength: 0)
         let trained = makeState(strength: 10)
 
-        XCTAssertGreaterThan(trained.battlePower, untrained.battlePower)
+        XCTAssertGreaterThan(trained.battlePower(lifetimeEnergy: .zero),
+                             untrained.battlePower(lifetimeEnergy: .zero))
     }
 }
 

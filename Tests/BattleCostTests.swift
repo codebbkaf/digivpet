@@ -342,8 +342,11 @@ final class BattleCostApplyTests: XCTestCase {
         let (model, _) = try makeModel()
         await model.start()
         let state = try XCTUnwrap(model.state)
-        state.lifetimeEnergy.strength = 120
-        state.lifetimeEnergy.stamina = 30
+        // On the PROFILE since US-123, which is what makes "a battle cannot touch it" structural:
+        // `BattleCost` is handed a `GameState` and the state no longer has a lifetime total on it.
+        let profile = try XCTUnwrap(model.profile)
+        profile.lifetimeEnergy.strength = 120
+        profile.lifetimeEnergy.stamina = 30
         let stageBefore = state.stageEnergy
 
         XCTAssertNotNil(model.battle())
@@ -352,8 +355,8 @@ final class BattleCostApplyTests: XCTestCase {
         XCTAssertEqual(state.stageEnergy.stamina, stageBefore.stamina, "only one energy pays")
         XCTAssertEqual(state.stageEnergy.vitality, stageBefore.vitality)
         XCTAssertEqual(state.stageEnergy.spirit, stageBefore.spirit)
-        XCTAssertEqual(state.lifetimeEnergy.strength, 120, "lifetime is a record of earnings")
-        XCTAssertEqual(state.lifetimeEnergy.stamina, 30)
+        XCTAssertEqual(profile.lifetimeEnergy.strength, 120, "lifetime is a record of earnings")
+        XCTAssertEqual(profile.lifetimeEnergy.stamina, 30)
     }
 
     /// A battle is paid for when the round OPENS, not when its result is dismissed — otherwise

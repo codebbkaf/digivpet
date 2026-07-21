@@ -44,6 +44,7 @@ enum EnergyCreditor {
     static func credit(
         _ readings: [EnergyType: HealthReading],
         to state: GameState,
+        profile: PlayerProfile,
         ledger: EnergyLedger,
         now: Date,
         calendar: Calendar = .current
@@ -68,9 +69,11 @@ enum EnergyCreditor {
             credited[type] = delta
             ledger.creditedToday[type] += delta
             // Both totals accrue in the same place, so they cannot drift apart. They diverge only
-            // where they are meant to: evolution resets `stageEnergy` and leaves `lifetimeEnergy`.
+            // where they are meant to: evolution resets the Digimon's `stageEnergy` and leaves the
+            // player's `lifetimeEnergy` — which since US-123 is on the PROFILE, so it survives the
+            // Digimon that earned it without anything having to copy it across.
             state.stageEnergy[type] += delta
-            state.lifetimeEnergy[type] += delta
+            profile.lifetimeEnergy[type] += delta
             // Stamped with the read time, not the moment the activity happened — the readings are
             // whole-day totals and cannot say when within the day a step was taken. It only ever
             // orders one type against another, and every type this read credits is stamped alike.

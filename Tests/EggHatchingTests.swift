@@ -246,7 +246,7 @@ final class EggHatchingTests: XCTestCase {
 
         let state = try XCTUnwrap(model.state)
         XCTAssertEqual(state.stageEnergy, .zero, "the new stage starts fresh")
-        XCTAssertEqual(state.lifetimeEnergy.strength, 50, "but the life's energy is kept")
+        XCTAssertEqual(model.lifetimeEnergy.strength, 50, "but the life's energy is kept")
         XCTAssertEqual(state.stageEnteredDate, Fixture.morning)
         XCTAssertEqual(state.birthDate, Fixture.morning, "birth is the egg's, not the hatch's")
     }

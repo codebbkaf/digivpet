@@ -65,7 +65,7 @@ extension MapStrip {
     ///     has chosen nowhere, so the strip prompts rather than disappearing.
     ///   - Returns: nil only for an EMPTY catalog, which the US-117 validator makes impossible in
     ///     the shipped file but which a fixture can still build.
-    static func make(in catalog: MapCatalog = .bundled, progress: MapProgress?) -> MapStrip? {
+    static func make(in catalog: MapCatalog = .bundled, progress: PlayerProfile?) -> MapStrip? {
         let selected = progress?.selectedMapId.flatMap { catalog.map(id: $0) }
         // The FIRST map rather than the first UNLOCKED one: with nothing selected nothing has been
         // finished either, so map one is the only unlocked map there is — and if a save somehow
@@ -172,7 +172,7 @@ struct MapStripView<Destination: View>: View {
 #Preview {
     NavigationStack {
         VStack {
-            MapStripView(strip: MapStrip.make(progress: MapProgress(selectedMapId: "01_grassland"))!) {
+            MapStripView(strip: MapStrip.make(progress: PlayerProfile(selectedMapId: "01_grassland"))!) {
                 EmptyView()
             }
             MapStripView(strip: MapStrip.make(progress: nil)!) { EmptyView() }

@@ -475,7 +475,7 @@ struct ContentView: View {
                 if let state = model.state {
                     StatsStrip(hunger: state.hunger,
                                strengthStat: state.strengthStat,
-                               power: state.battlePower,
+                               power: state.battlePower(lifetimeEnergy: model.lifetimeEnergy),
                                wins: state.battleWins,
                                losses: state.battleLosses)
                 }

@@ -30,7 +30,7 @@ private enum Fixture {
 
     static let morning = Date(timeIntervalSince1970: 1_770_000_000)
 
-    static func strip(_ progress: MapProgress?) -> MapStrip {
+    static func strip(_ progress: PlayerProfile?) -> MapStrip {
         MapStrip.make(in: catalog, progress: progress)!
     }
 }
@@ -40,7 +40,7 @@ private enum Fixture {
 final class MapStripTests: XCTestCase {
     /// AC1: the leading control is labelled with the SELECTED map's name and its counter.
     func testTheStripNamesTheSelectedMapAndItsProgress() {
-        let progress = MapProgress(selectedMapId: "second")
+        let progress = PlayerProfile(selectedMapId: "second")
         progress.record(steps: 1_222, forMap: "second")
 
         let strip = Fixture.strip(progress)
@@ -53,7 +53,7 @@ final class MapStripTests: XCTestCase {
 
     /// AC6: with nothing selected the strip names the FIRST map, as a prompt to choose one.
     func testWithNoMapSelectedTheStripPromptsWithTheFirstMap() {
-        let strip = Fixture.strip(MapProgress())
+        let strip = Fixture.strip(PlayerProfile())
 
         XCTAssertEqual(strip.mapName, "First")
         XCTAssertEqual(strip.progressText, "0 / 25000")
@@ -64,7 +64,7 @@ final class MapStripTests: XCTestCase {
         XCTAssertNil(strip.mapId)
     }
 
-    /// Before `start()` finishes there is no `MapProgress` at all. The strip still draws, as a
+    /// Before `start()` finishes there is no `PlayerProfile` at all. The strip still draws, as a
     /// prompt, rather than disappearing for a frame and shoving the layout about when it arrives.
     func testWithNoSaveYetTheStripStillPrompts() {
         let strip = Fixture.strip(nil)
@@ -78,7 +78,7 @@ final class MapStripTests: XCTestCase {
     /// `selectMap(nil)` is the only way back to nowhere — still prompts, and still with map one,
     /// which is the map that is always open.
     func testProgressWithoutASelectionStillPrompts() {
-        let progress = MapProgress()
+        let progress = PlayerProfile()
         progress.record(steps: 900, forMap: "second")
 
         let strip = Fixture.strip(progress)
@@ -87,11 +87,11 @@ final class MapStripTests: XCTestCase {
         XCTAssertTrue(strip.isPrompt)
     }
 
-    /// The counter is FLOORED, never rounded: `MapProgress` carries a `Double` because a
+    /// The counter is FLOORED, never rounded: `PlayerProfile` carries a `Double` because a
     /// `HealthReading` does, and a strip reading `25000 / 25000` on a map that is not finished
     /// would be the screen contradicting itself. Same rule as `MapListRow.recordedSteps`.
     func testTheCounterIsFlooredRatherThanRounded() {
-        let progress = MapProgress(selectedMapId: "first")
+        let progress = PlayerProfile(selectedMapId: "first")
         progress.record(steps: 24_999.6, forMap: "first")
 
         XCTAssertEqual(Fixture.strip(progress).progressText, "24999 / 25000")
@@ -101,7 +101,7 @@ final class MapStripTests: XCTestCase {
     /// abbreviation and no grouping separator. Asserted against `MapListRow` itself rather than
     /// against a second copy of the literal, so the two cannot drift apart.
     func testTheStripSpellsProgressExactlyAsTheMapListDoes() {
-        let progress = MapProgress(selectedMapId: "second")
+        let progress = PlayerProfile(selectedMapId: "second")
         progress.record(steps: 1_222, forMap: "second")
 
         let row = MapListRow.rows(in: Fixture.catalog, progress: progress).first { $0.id == "second" }
@@ -114,7 +114,7 @@ final class MapStripTests: XCTestCase {
     /// US-119 wrote this test for the list; the strip is the second place the figure appears and so
     /// the second place it could drift.
     func testTheCounterCarriesNoGroupingSeparator() {
-        let progress = MapProgress(selectedMapId: "second")
+        let progress = PlayerProfile(selectedMapId: "second")
         progress.record(steps: 12_345, forMap: "second")
 
         let text = Fixture.strip(progress).progressText
@@ -128,8 +128,8 @@ final class MapStripTests: XCTestCase {
     /// The two states are tellable apart at a glance, without reading the counter — which says
     /// `0 / 25000` in both of them on a fresh save.
     func testTheTravellingAndPromptStatesUseDifferentGlyphs() {
-        let travelling = Fixture.strip(MapProgress(selectedMapId: "first"))
-        let prompting = Fixture.strip(MapProgress())
+        let travelling = Fixture.strip(PlayerProfile(selectedMapId: "first"))
+        let prompting = Fixture.strip(PlayerProfile())
 
         XCTAssertNotEqual(travelling.symbol, prompting.symbol)
         XCTAssertEqual(travelling.symbol, MapStripMarks.travellingSymbol)
@@ -140,8 +140,8 @@ final class MapStripTests: XCTestCase {
 
     /// And apart to VoiceOver, which cannot see a glyph at all.
     func testTheTwoStatesReadDifferentlyToVoiceOver() {
-        let travelling = Fixture.strip(MapProgress(selectedMapId: "first"))
-        let prompting = Fixture.strip(MapProgress())
+        let travelling = Fixture.strip(PlayerProfile(selectedMapId: "first"))
+        let prompting = Fixture.strip(PlayerProfile())
 
         XCTAssertEqual(travelling.accessibilityLabel, "Adventuring in First")
         XCTAssertEqual(prompting.accessibilityLabel, "Choose a map. First")
@@ -151,12 +151,12 @@ final class MapStripTests: XCTestCase {
     /// drawn blank. Impossible in the shipped file (US-117 would reject it) and reachable from a
     /// fixture, which is exactly when a `guard` earns its keep.
     func testAnEmptyCatalogHasNoStrip() {
-        XCTAssertNil(MapStrip.make(in: MapCatalog(maps: []), progress: MapProgress()))
+        XCTAssertNil(MapStrip.make(in: MapCatalog(maps: []), progress: PlayerProfile()))
     }
 
     /// The shipped catalog prompts with `01_grassland`, the one map that is open from the start.
     func testTheShippedCatalogPromptsWithTheStartingMap() {
-        let strip = MapStrip.make(in: .bundled, progress: MapProgress())
+        let strip = MapStrip.make(in: .bundled, progress: PlayerProfile())
 
         XCTAssertEqual(strip?.mapId, nil)
         XCTAssertEqual(strip?.mapName, MapCatalog.bundled.maps.first?.displayName)
@@ -277,7 +277,7 @@ final class MapStripSelectionTests: XCTestCase {
         await model.start()
         model.selectMap("first")
 
-        let progress = try XCTUnwrap(model.mapProgress)
+        let progress = try XCTUnwrap(model.profile)
         MapStepCreditor.credit(steps: 1_500, to: progress, catalog: Fixture.catalog,
                                now: Fixture.morning)
 

@@ -278,7 +278,7 @@ final class SicknessApplyTests: XCTestCase {
         let model = makeModel(url: url, now: now, steps: 3_000)
         await model.start()
 
-        XCTAssertEqual(model.state?.lifetimeEnergy.total, 30, "3,000 steps is exactly 30 energy")
+        XCTAssertEqual(model.lifetimeEnergy.total, 30, "3,000 steps is exactly 30 energy")
         XCTAssertEqual(model.state?.healthStatus, .healthy)
         XCTAssertEqual(model.state?.careMistakeCount, 0)
         XCTAssertEqual(model.animation, .idle, "cured, so back to pacing about")
@@ -294,7 +294,7 @@ final class SicknessApplyTests: XCTestCase {
         let model = makeModel(url: url, now: now, steps: 2_900)
         await model.start()
 
-        XCTAssertEqual(model.state?.lifetimeEnergy.total, 29)
+        XCTAssertEqual(model.lifetimeEnergy.total, 29)
         XCTAssertEqual(model.state?.healthStatus, .sick)
     }
 

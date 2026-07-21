@@ -87,13 +87,16 @@ final class TrainActionTests: XCTestCase {
     }
 
     /// `lifetimeEnergy` is the record of what was ever EARNED, so spending must not rewrite it.
+    /// Since US-123 the total is on `PlayerProfile`, which `TrainAction` is never handed — so
+    /// this pins the API shape as much as the arithmetic.
     func testTrainingDoesNotTakeBackLifetimeEnergy() {
         let state = makeState(strength: 20)
-        state.lifetimeEnergy[.strength] = 90
+        let profile = PlayerProfile()
+        profile.lifetimeEnergy[.strength] = 90
 
         TrainAction.train(state, isAsleep: false)
 
-        XCTAssertEqual(state.lifetimeEnergy[.strength], 90)
+        XCTAssertEqual(profile.lifetimeEnergy[.strength], 90)
     }
 
     /// Sessions accumulate — the stat is a running total, not a flag.

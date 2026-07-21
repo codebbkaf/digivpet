@@ -246,7 +246,7 @@ final class MainScreenModelTests: XCTestCase {
 
         let state = try XCTUnwrap(model.state)
         XCTAssertEqual(state.stageEnergy.strength, 10, "1,000 steps at 1 Strength per 100")
-        XCTAssertEqual(state.lifetimeEnergy.strength, 10)
+        XCTAssertEqual(model.lifetimeEnergy.strength, 10)
     }
 
     /// Re-opening the app must not pay for the same steps again — the AC says "refreshes", not

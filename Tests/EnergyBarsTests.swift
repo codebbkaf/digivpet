@@ -413,7 +413,7 @@ final class MainScreenEnergyBarsTests: XCTestCase {
         state.currentDigimonId = id
         state.stage = stage
         state.stageEnergy = energy
-        state.lifetimeEnergy = lifetime
+        try store.loadOrCreateProfile().lifetimeEnergy = lifetime
         try store.save()
     }
 

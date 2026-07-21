@@ -45,7 +45,7 @@ struct MapListRow: Identifiable, Equatable {
     /// the Digimon, so the row is a picture of where you would be.
     let assetName: String
 
-    /// Steps banked here, floored to a whole step. `MapProgress` carries a `Double` because a
+    /// Steps banked here, floored to a whole step. `PlayerProfile` carries a `Double` because a
     /// `HealthReading` does; nobody wants to read "1222.0" on a watch.
     let recordedSteps: Int
 
@@ -90,7 +90,7 @@ extension MapListRow {
     ///     whatever `maps.json` currently says a map is worth.
     ///   - progress: the save. Nil — which is only ever the moment before `start()` finishes —
     ///     reads as a player who has walked nowhere, so the list draws rather than disappearing.
-    static func rows(in catalog: MapCatalog = .bundled, progress: MapProgress?) -> [MapListRow] {
+    static func rows(in catalog: MapCatalog = .bundled, progress: PlayerProfile?) -> [MapListRow] {
         catalog.maps.map { map in
             let locked = !isUnlocked(map, in: catalog, progress: progress)
             return MapListRow(
@@ -120,7 +120,7 @@ extension MapListRow {
     /// one-step rule is the one the row's own "Finish <previous>" line promises, and a lock that
     /// contradicts the sentence beside it is worse than a lock that opens early.
     static func isUnlocked(_ map: AdventureMap, in catalog: MapCatalog,
-                           progress: MapProgress?) -> Bool {
+                           progress: PlayerProfile?) -> Bool {
         guard let required = map.unlockedBy else { return true }
         return progress?.isFinished(forMap: required) ?? false
     }
@@ -340,7 +340,7 @@ private struct MapListRowView: View {
 
 #Preview {
     NavigationStack {
-        MapListView(rows: MapListRow.rows(progress: MapProgress(selectedMapId: "01_grassland")),
+        MapListView(rows: MapListRow.rows(progress: PlayerProfile(selectedMapId: "01_grassland")),
                     select: { _ in })
     }
 }

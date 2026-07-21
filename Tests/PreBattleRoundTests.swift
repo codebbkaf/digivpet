@@ -216,7 +216,7 @@ final class PreBattleRoundTests: XCTestCase {
         XCTAssertEqual(bout.matchup?.player.trainingFactor, TrainingResult.miss.battleMultiplier,
                        "graded a miss, and the miss multiplier is what it fights with")
         XCTAssertEqual(bout.report.playerPower,
-                       BattleModifiers.effectivePower(basePower: state.battlePower,
+                       BattleModifiers.effectivePower(basePower: state.battlePower(lifetimeEnergy: model.lifetimeEnergy),
                                                       elementFactor: BattleModifiers.elementAdvantage,
                                                       attributeFactor: 1.0,
                                                       trainingFactor: TrainingResult.miss.battleMultiplier))
@@ -252,11 +252,11 @@ final class PreBattleRoundTests: XCTestCase {
             XCTAssertEqual(matchup.elementEffectiveness, .advantage)
             XCTAssertEqual(matchup.player.attributeFactor, 1.0, "vaccine and free settle nothing")
             XCTAssertEqual(matchup.player.trainingFactor, grade.battleMultiplier)
-            XCTAssertEqual(matchup.player.basePower, state.battlePower,
+            XCTAssertEqual(matchup.player.basePower, state.battlePower(lifetimeEnergy: model.lifetimeEnergy),
                            "the base is still what BattlePower says")
 
             XCTAssertEqual(matchup.player.effectivePower,
-                           BattleModifiers.effectivePower(basePower: state.battlePower,
+                           BattleModifiers.effectivePower(basePower: state.battlePower(lifetimeEnergy: model.lifetimeEnergy),
                                                           elementFactor: BattleModifiers.elementAdvantage,
                                                           attributeFactor: 1.0,
                                                           trainingFactor: grade.battleMultiplier))

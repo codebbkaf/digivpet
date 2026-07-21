@@ -77,7 +77,7 @@ final class MapOpponentBandTests: XCTestCase {
     }
 
     /// A map with no length has no ratio; it reads as the lowest band rather than dividing by zero.
-    /// Negative steps cannot happen — `MapProgress.record` refuses them — but the arithmetic must
+    /// Negative steps cannot happen — `PlayerProfile.record` refuses them — but the arithmetic must
     /// not depend on that.
     func testAMapWithNoLengthOrNegativeStepsIsTheLowestBand() {
         XCTAssertEqual(MapOpponentBand.index(recorded: 500, total: 0), 0)

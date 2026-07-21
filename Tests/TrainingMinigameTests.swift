@@ -251,7 +251,9 @@ final class GradedTrainingTests: XCTestCase {
     /// lifetime record, because `begin` already settled all three.
     func testGradingTouchesTheStatAndNothingElse() {
         let state = makeState(strength: 20, stamina: 7)
-        state.lifetimeEnergy[.strength] = 90
+        // On the profile since US-123; `finish` is handed the state alone.
+        let profile = PlayerProfile()
+        profile.lifetimeEnergy[.strength] = 90
         state.stageEnergy[.vitality] = 40
         state.stageEnergy[.spirit] = 30
 
@@ -262,7 +264,7 @@ final class GradedTrainingTests: XCTestCase {
         XCTAssertEqual(state.stageEnergy[.stamina], 7)
         XCTAssertEqual(state.stageEnergy[.vitality], 40)
         XCTAssertEqual(state.stageEnergy[.spirit], 30)
-        XCTAssertEqual(state.lifetimeEnergy[.strength], 90)
+        XCTAssertEqual(profile.lifetimeEnergy[.strength], 90)
         XCTAssertEqual(state.stageTrainingSessions, 0, "grading is not a session")
     }
 }

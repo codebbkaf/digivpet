@@ -30,9 +30,12 @@ private enum Fixture {
 
     /// A fresh Digimon and a ledger opened on the same day, which is the state every credit runs
     /// against on a first launch.
-    static func newGame(on day: String = "2026-07-17 08:00") -> (GameState, EnergyLedger) {
+    /// A game and the player who owns it. The profile comes back beside the state because since
+    /// US-123 the lifetime total lives on it, so a credit needs both.
+    static func newGame(on day: String = "2026-07-17 08:00") -> (GameState, PlayerProfile, EnergyLedger) {
         (
             GameState(currentDigimonId: "agu_digitama", now: date(day)),
+            PlayerProfile(),
             EnergyLedger(day: startOfDay(day))
         )
     }
@@ -113,12 +116,14 @@ final class EnergyCreditingTests: XCTestCase {
     private func credit(
         _ readings: [EnergyType: HealthReading],
         _ state: GameState,
+        _ profile: PlayerProfile,
         _ ledger: EnergyLedger,
         at instant: String = "2026-07-17 12:00"
     ) -> EnergyTotals {
         EnergyCreditor.credit(
             readings,
             to: state,
+            profile: profile,
             ledger: ledger,
             now: Fixture.date(instant),
             calendar: Fixture.losAngeles
@@ -129,25 +134,25 @@ final class EnergyCreditingTests: XCTestCase {
 
     /// THE AC: reading twice with no new health data credits zero the second time.
     func testReadingTwiceWithNoNewHealthDataCreditsZeroTheSecondTime() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
         let readings: [EnergyType: HealthReading] = [.strength: .value(1_000)]
 
-        let first = credit(readings, state, ledger, at: "2026-07-17 12:00")
-        let second = credit(readings, state, ledger, at: "2026-07-17 18:00")
+        let first = credit(readings, state, profile, ledger, at: "2026-07-17 12:00")
+        let second = credit(readings, state, profile, ledger, at: "2026-07-17 18:00")
 
         XCTAssertEqual(first.strength, 10, "1,000 steps is 10 Strength")
         XCTAssertEqual(second.strength, 0, "the same 1,000 steps must not be paid for twice")
         XCTAssertEqual(state.stageEnergy.strength, 10)
-        XCTAssertEqual(state.lifetimeEnergy.strength, 10)
+        XCTAssertEqual(profile.lifetimeEnergy.strength, 10)
     }
 
     /// The other half of delta crediting: new activity IS credited, but only the new part. A reader
     /// that skipped the second read entirely would also pass the test above.
     func testOnlyTheNewPartOfARisingDayIsCredited() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        let morning = credit([.strength: .value(1_000)], state, ledger, at: "2026-07-17 09:00")
-        let evening = credit([.strength: .value(1_500)], state, ledger, at: "2026-07-17 21:00")
+        let morning = credit([.strength: .value(1_000)], state, profile, ledger, at: "2026-07-17 09:00")
+        let evening = credit([.strength: .value(1_500)], state, profile, ledger, at: "2026-07-17 21:00")
 
         XCTAssertEqual(morning.strength, 10)
         XCTAssertEqual(evening.strength, 5, "500 new steps, not all 1,500 again")
@@ -156,10 +161,10 @@ final class EnergyCreditingTests: XCTestCase {
 
     /// Ten opens in an afternoon is normal use, and is where a double-credit would actually be felt.
     func testCreditingRepeatedlyIsWorthTheSameAsCreditingOnce() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
         for _ in 0..<10 {
-            credit([.strength: .value(2_500), .vitality: .value(300)], state, ledger)
+            credit([.strength: .value(2_500), .vitality: .value(300)], state, profile, ledger)
         }
 
         XCTAssertEqual(state.stageEnergy.strength, 25)
@@ -169,10 +174,10 @@ final class EnergyCreditingTests: XCTestCase {
     /// Health data can be deleted from the Health app, and a night still being written can shrink
     /// when a source revises it. Energy is never taken back.
     func testAShrinkingReadingNeverTakesEnergyBack() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        credit([.strength: .value(1_000)], state, ledger, at: "2026-07-17 09:00")
-        let after = credit([.strength: .value(200)], state, ledger, at: "2026-07-17 21:00")
+        credit([.strength: .value(1_000)], state, profile, ledger, at: "2026-07-17 09:00")
+        let after = credit([.strength: .value(200)], state, profile, ledger, at: "2026-07-17 21:00")
 
         XCTAssertEqual(after.strength, 0, "a smaller reading credits nothing — it does not refund")
         XCTAssertEqual(state.stageEnergy.strength, 10)
@@ -181,10 +186,10 @@ final class EnergyCreditingTests: XCTestCase {
     /// A metric going silent must not un-credit what it already paid for, or a denied permission
     /// mid-day would erase the morning's energy.
     func testAMetricFallingSilentDoesNotUndoWhatItPaidFor() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        credit([.strength: .value(1_000)], state, ledger, at: "2026-07-17 09:00")
-        credit([.strength: .noData], state, ledger, at: "2026-07-17 21:00")
+        credit([.strength: .value(1_000)], state, profile, ledger, at: "2026-07-17 09:00")
+        credit([.strength: .noData], state, profile, ledger, at: "2026-07-17 21:00")
 
         XCTAssertEqual(state.stageEnergy.strength, 10)
     }
@@ -193,22 +198,22 @@ final class EnergyCreditingTests: XCTestCase {
 
     /// THE AC: the 100/day cap holds when a huge sample arrives.
     func testTheDailyCapHoldsWhenAHugeSampleArrives() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        let credited = credit([.strength: .value(1_000_000)], state, ledger)
+        let credited = credit([.strength: .value(1_000_000)], state, profile, ledger)
 
         XCTAssertEqual(credited.strength, 100, "1,000,000 steps is 10,000 points, capped to 100")
         XCTAssertEqual(state.stageEnergy.strength, 100)
-        XCTAssertEqual(state.lifetimeEnergy.strength, 100, "the cap binds the lifetime total too")
+        XCTAssertEqual(profile.lifetimeEnergy.strength, 100, "the cap binds the lifetime total too")
     }
 
     /// The cap is a ceiling on the day, not a per-read allowance: a huge sample must not buy 100
     /// again on the next open.
     func testTheCapIsNotRefreshedByReadingAgainTheSameDay() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        credit([.strength: .value(1_000_000)], state, ledger, at: "2026-07-17 09:00")
-        let second = credit([.strength: .value(1_000_000)], state, ledger, at: "2026-07-17 21:00")
+        credit([.strength: .value(1_000_000)], state, profile, ledger, at: "2026-07-17 09:00")
+        let second = credit([.strength: .value(1_000_000)], state, profile, ledger, at: "2026-07-17 21:00")
 
         XCTAssertEqual(second.strength, 0)
         XCTAssertEqual(state.stageEnergy.strength, 100, "still 100, not 200")
@@ -216,14 +221,14 @@ final class EnergyCreditingTests: XCTestCase {
 
     /// Per type, not across all four — a marathon must not also max out Spirit.
     func testTheCapIsPerEnergyTypeNotSharedAcrossTheFour() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
         let credited = credit([
             .strength: .value(1_000_000),
             .vitality: .value(1_000_000),
             .spirit: .value(1_000_000),
             .stamina: .value(1_000_000),
-        ], state, ledger)
+        ], state, profile, ledger)
 
         XCTAssertEqual(credited, EnergyTotals(strength: 100, vitality: 100, spirit: 100, stamina: 100))
         XCTAssertEqual(state.stageEnergy.total, 400, "a day's ceiling is 400, not 100")
@@ -232,9 +237,9 @@ final class EnergyCreditingTests: XCTestCase {
     /// Capping one type must not cap the others: a huge step count leaves Vitality free to earn its
     /// own honest 15.
     func testACappedTypeDoesNotHoldBackTheOthers() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        let credited = credit([.strength: .value(1_000_000), .vitality: .value(300)], state, ledger)
+        let credited = credit([.strength: .value(1_000_000), .vitality: .value(300)], state, profile, ledger)
 
         XCTAssertEqual(credited.strength, 100)
         XCTAssertEqual(credited.vitality, 15)
@@ -242,10 +247,10 @@ final class EnergyCreditingTests: XCTestCase {
 
     /// The cap binds a day that walks up to it in pieces, not just one that arrives huge.
     func testADayThatReachesTheCapGraduallyStopsAtIt() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        credit([.strength: .value(8_000)], state, ledger, at: "2026-07-17 09:00")
-        let later = credit([.strength: .value(30_000)], state, ledger, at: "2026-07-17 21:00")
+        credit([.strength: .value(8_000)], state, profile, ledger, at: "2026-07-17 09:00")
+        let later = credit([.strength: .value(30_000)], state, profile, ledger, at: "2026-07-17 21:00")
 
         XCTAssertEqual(later.strength, 20, "80 already paid, so only the 20 up to the cap remain")
         XCTAssertEqual(state.stageEnergy.strength, 100)
@@ -256,10 +261,10 @@ final class EnergyCreditingTests: XCTestCase {
     /// A new day starts a fresh cap and a fresh baseline. Without the reset, today's 1,000 steps
     /// would look like a shrink from yesterday's 12,000 and buy nothing until they beat it.
     func testANewDayCreditsAgainstAFreshBaselineAndAFreshCap() {
-        let (state, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
+        let (state, profile, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
 
-        credit([.strength: .value(1_000_000)], state, ledger, at: "2026-07-17 21:00")
-        let tomorrow = credit([.strength: .value(1_000)], state, ledger, at: "2026-07-18 09:00")
+        credit([.strength: .value(1_000_000)], state, profile, ledger, at: "2026-07-17 21:00")
+        let tomorrow = credit([.strength: .value(1_000)], state, profile, ledger, at: "2026-07-18 09:00")
 
         XCTAssertEqual(tomorrow.strength, 10, "tomorrow's first 1,000 steps are tomorrow's to earn")
         XCTAssertEqual(state.stageEnergy.strength, 110)
@@ -270,10 +275,10 @@ final class EnergyCreditingTests: XCTestCase {
     /// The rollover happens at LOCAL midnight, not 24h after the last read. Crossing it is what
     /// resets the cap, so a late-evening read and an early-morning one are different days.
     func testTheDayRollsOverAtLocalMidnight() {
-        let (state, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
+        let (state, profile, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
 
-        credit([.strength: .value(5_000)], state, ledger, at: "2026-07-17 23:55")
-        let justAfter = credit([.strength: .value(100)], state, ledger, at: "2026-07-18 00:05")
+        credit([.strength: .value(5_000)], state, profile, ledger, at: "2026-07-17 23:55")
+        let justAfter = credit([.strength: .value(100)], state, profile, ledger, at: "2026-07-18 00:05")
 
         XCTAssertEqual(justAfter.strength, 1, "ten minutes later, but a different day")
         XCTAssertEqual(state.stageEnergy.strength, 51)
@@ -282,10 +287,10 @@ final class EnergyCreditingTests: XCTestCase {
     /// Two reads inside one day must NOT reset the cap, which is the mirror of the test above: a
     /// creditor that rolled the day over on every call would pass that one and double-credit here.
     func testTwoReadsInsideOneDayDoNotRollTheDayOver() {
-        let (state, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
+        let (state, profile, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
 
-        credit([.strength: .value(5_000)], state, ledger, at: "2026-07-17 09:00")
-        credit([.strength: .value(5_000)], state, ledger, at: "2026-07-17 23:00")
+        credit([.strength: .value(5_000)], state, profile, ledger, at: "2026-07-17 09:00")
+        credit([.strength: .value(5_000)], state, profile, ledger, at: "2026-07-17 23:00")
 
         XCTAssertEqual(state.stageEnergy.strength, 50, "the same 5,000 steps, one day, one payment")
     }
@@ -294,42 +299,42 @@ final class EnergyCreditingTests: XCTestCase {
 
     /// THE AC: energy accrues to both stageEnergy and lifetimeEnergy.
     func testEnergyAccruesToBothStageAndLifetimeTotals() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
         credit([
             .strength: .value(1_000),
             .vitality: .value(300),
             .spirit: .value(447),
             .stamina: .value(37),
-        ], state, ledger)
+        ], state, profile, ledger)
 
         let expected = EnergyTotals(strength: 10, vitality: 15, spirit: 29, stamina: 18)
         XCTAssertEqual(state.stageEnergy, expected)
-        XCTAssertEqual(state.lifetimeEnergy, expected)
+        XCTAssertEqual(profile.lifetimeEnergy, expected)
     }
 
     /// The two totals are separate accumulators, not one value read twice — which is the whole
     /// reason lifetime energy can outlive an evolution. Pins that crediting after a stage reset
     /// tops up the stage from zero while lifetime keeps counting.
     func testAfterAStageResetLifetimeKeepsCountingAndStageStartsOver() {
-        let (state, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
-        credit([.strength: .value(1_000)], state, ledger, at: "2026-07-17 09:00")
+        let (state, profile, ledger) = Fixture.newGame(on: "2026-07-17 08:00")
+        credit([.strength: .value(1_000)], state, profile, ledger, at: "2026-07-17 09:00")
 
         // What US-019's evolution will do to the state.
         state.stageEnergy = .zero
 
-        credit([.strength: .value(3_000)], state, ledger, at: "2026-07-17 21:00")
+        credit([.strength: .value(3_000)], state, profile, ledger, at: "2026-07-17 21:00")
 
         XCTAssertEqual(state.stageEnergy.strength, 20, "only the 2,000 new steps, into an empty stage")
-        XCTAssertEqual(state.lifetimeEnergy.strength, 30, "lifetime never reset")
+        XCTAssertEqual(profile.lifetimeEnergy.strength, 30, "lifetime never reset")
     }
 
     /// Each type lands in its own total. A crossed wire here would send sleep to Strength and still
     /// look like a working app, since the numbers would all be plausible.
     func testEachEnergyTypeLandsInItsOwnTotal() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        credit([.spirit: .value(450)], state, ledger)
+        credit([.spirit: .value(450)], state, profile, ledger)
 
         XCTAssertEqual(state.stageEnergy, EnergyTotals(strength: 0, vitality: 0, spirit: 30, stamina: 0))
     }
@@ -337,9 +342,9 @@ final class EnergyCreditingTests: XCTestCase {
     /// A metric that was never read is not a zero reading — it is simply absent, and must credit
     /// nothing rather than trap on a missing key.
     func testAMissingReadingCreditsNothing() {
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
-        let credited = credit([:], state, ledger)
+        let credited = credit([:], state, profile, ledger)
 
         XCTAssertEqual(credited, .zero)
         XCTAssertEqual(state.stageEnergy, .zero)
@@ -376,8 +381,10 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
 
         var store: GameStore! = try GameStore(url: storeURL)
         var state = try store.loadOrCreate(digitamaId: "agu_digitama", now: morning)
+        var profile = try store.loadOrCreateProfile()
         var ledger = try store.loadOrCreateLedger(now: morning, calendar: Fixture.losAngeles)
-        EnergyCreditor.credit(readings, to: state, ledger: ledger, now: morning, calendar: Fixture.losAngeles)
+        EnergyCreditor.credit(readings, to: state, profile: profile, ledger: ledger, now: morning,
+                              calendar: Fixture.losAngeles)
         try store.save()
         XCTAssertEqual(state.stageEnergy.strength, 40)
 
@@ -386,9 +393,11 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
 
         let reopened = try GameStore(url: storeURL)
         state = try reopened.loadOrCreate(digitamaId: "agu_digitama", now: evening)
+        profile = try reopened.loadOrCreateProfile()
         ledger = try reopened.loadOrCreateLedger(now: evening, calendar: Fixture.losAngeles)
         let credited = EnergyCreditor.credit(
-            readings, to: state, ledger: ledger, now: evening, calendar: Fixture.losAngeles
+            readings, to: state, profile: profile, ledger: ledger, now: evening,
+            calendar: Fixture.losAngeles
         )
 
         XCTAssertEqual(credited.strength, 0, "the same 4,000 steps, paid for before the relaunch")
@@ -404,9 +413,11 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
 
         var store: GameStore! = try GameStore(url: storeURL)
         var state = try store.loadOrCreate(digitamaId: "agu_digitama", now: morning)
+        var profile = try store.loadOrCreateProfile()
         var ledger = try store.loadOrCreateLedger(now: morning, calendar: Fixture.losAngeles)
         EnergyCreditor.credit(
-            [.strength: .value(4_000)], to: state, ledger: ledger, now: morning, calendar: Fixture.losAngeles
+            [.strength: .value(4_000)], to: state, profile: profile, ledger: ledger, now: morning,
+            calendar: Fixture.losAngeles
         )
         try store.save()
 
@@ -414,9 +425,11 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
 
         let reopened = try GameStore(url: storeURL)
         state = try reopened.loadOrCreate(digitamaId: "agu_digitama", now: evening)
+        profile = try reopened.loadOrCreateProfile()
         ledger = try reopened.loadOrCreateLedger(now: evening, calendar: Fixture.losAngeles)
         let credited = EnergyCreditor.credit(
-            [.strength: .value(9_000)], to: state, ledger: ledger, now: evening, calendar: Fixture.losAngeles
+            [.strength: .value(9_000)], to: state, profile: profile, ledger: ledger, now: evening,
+            calendar: Fixture.losAngeles
         )
 
         XCTAssertEqual(credited.strength, 50, "the 5,000 steps walked since the last read")
@@ -430,16 +443,19 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
         let now = Fixture.date("2026-07-17 09:00")
         let store = try GameStore(url: storeURL)
         let state = try store.loadOrCreate(digitamaId: "agu_digitama", now: now)
+        let profile = try store.loadOrCreateProfile()
         let ledger = try store.loadOrCreateLedger(now: now, calendar: Fixture.losAngeles)
         EnergyCreditor.credit(
-            [.strength: .value(1_000_000)], to: state, ledger: ledger, now: now, calendar: Fixture.losAngeles
+            [.strength: .value(1_000_000)], to: state, profile: profile, ledger: ledger, now: now,
+            calendar: Fixture.losAngeles
         )
         try store.save()
 
         let reborn = try store.resetGame(digitamaId: "gabu_digitama", now: now)
         let sameLedger = try store.loadOrCreateLedger(now: now, calendar: Fixture.losAngeles)
         let credited = EnergyCreditor.credit(
-            [.strength: .value(1_000_000)], to: reborn, ledger: sameLedger, now: now, calendar: Fixture.losAngeles
+            [.strength: .value(1_000_000)], to: reborn, profile: profile, ledger: sameLedger,
+            now: now, calendar: Fixture.losAngeles
         )
 
         XCTAssertEqual(reborn.stageEnergy.strength, 0, "today's steps were already spent")
@@ -471,6 +487,7 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
         // The upgrade: same file, new schema.
         let upgraded = try GameStore(url: storeURL)
         let state = try upgraded.loadOrCreate(digitamaId: "gabu_digitama", now: now)
+        let profile = try upgraded.loadOrCreateProfile()
         let ledger = try upgraded.loadOrCreateLedger(now: now, calendar: Fixture.losAngeles)
 
         XCTAssertEqual(state.currentDigimonId, "agu_digitama",
@@ -478,7 +495,8 @@ final class EnergyLedgerPersistenceTests: XCTestCase {
         XCTAssertEqual(ledger.creditedToday, .zero, "and the new store gets a fresh ledger")
 
         EnergyCreditor.credit(
-            [.strength: .value(1_000)], to: state, ledger: ledger, now: now, calendar: Fixture.losAngeles
+            [.strength: .value(1_000)], to: state, profile: profile, ledger: ledger, now: now,
+            calendar: Fixture.losAngeles
         )
         try upgraded.save()
         XCTAssertEqual(state.stageEnergy.strength, 10, "a migrated store still credits")
@@ -556,10 +574,10 @@ final class HealthEnergySourceTests: XCTestCase {
             sleepReader: LastNightSleepReader(fetcher: sleep, calendar: Fixture.losAngeles)
         )
         let now = Fixture.date("2026-07-17 12:00")
-        let (state, ledger) = Fixture.newGame()
+        let (state, profile, ledger) = Fixture.newGame()
 
         let readings = await source.readings(now: now)
-        EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now, calendar: Fixture.losAngeles)
+        EnergyCreditor.credit(readings, to: state, profile: profile, ledger: ledger, now: now, calendar: Fixture.losAngeles)
 
         XCTAssertEqual(state.stageEnergy.strength, 40, "4,000 steps at 1 per 100")
         XCTAssertEqual(state.stageEnergy.spirit, 32, "480 minutes at 1 per 15")

@@ -108,7 +108,10 @@ extension GameState {
     ///
     /// - Parameter displayName: the name the evolution graph gives its current id. Passed in because
     ///   `GameState` saves only the id, and the graph is what turns that into a name.
-    func memorial(displayName: String) -> Memorial? {
+    /// - Parameter lifetimeEnergy: the player's whole earnings, off `PlayerProfile` — since US-123
+    ///   the state does not hold them. It is still the right number for a memorial: the reborn
+    ///   Digimon inherits it, so what the stone reports is also what the next one starts with.
+    func memorial(displayName: String, lifetimeEnergy: EnergyTotals) -> Memorial? {
         guard healthStatus == .dead, let diedAt else { return nil }
         let lifespan = diedAt.timeIntervalSince(birthDate)
         return Memorial(

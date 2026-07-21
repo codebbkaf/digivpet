@@ -162,7 +162,7 @@ final class MainScreenModel: ObservableObject {
     /// The asset-catalog name of the map the Digimon is adventuring in (US-115), or nil for "no map
     /// selected" — which draws no background at all and leaves the screen exactly as US-114 left it.
     ///
-    /// Since US-118 this is the saved selection on `MapProgress`, resolved through the catalog:
+    /// Since US-118 this is the saved selection on `PlayerProfile`, resolved through the catalog:
     /// `selectMap(_:)` is what moves it, and the view above it did not change — which is the point
     /// of the seam being here rather than the view reaching for an asset name itself. Still nil on
     /// a save that has never chosen a map, which is every save until US-120 ships the picker.
@@ -248,8 +248,9 @@ final class MainScreenModel: ObservableObject {
     /// The de-duplication baseline for raw health readings. Held for US-118's step accrual: the map
     /// is credited the delta this ledger claims, never the day's total.
     private var metricLedger: MetricLedger?
-    /// The player's map progress. Nil only before `start()`.
-    private(set) var mapProgress: MapProgress?
+    /// The player: lifetime energy, map progress, and the Digitama ever owned (US-123). Nil only
+    /// before `start()`.
+    private(set) var profile: PlayerProfile?
     private var isRefreshing = false
     private var actionResetTask: Task<Void, Never>?
 
@@ -356,7 +357,7 @@ final class MainScreenModel: ObservableObject {
                 self.state = try store.loadOrCreate(digitamaId: digitamaId, now: now())
                 self.ledger = try store.loadOrCreateLedger(now: now(), calendar: calendar)
                 self.metricLedger = try store.loadOrCreateMetricLedger(now: now(), calendar: calendar)
-                self.mapProgress = try store.loadOrCreateMapProgress()
+                self.profile = try store.loadOrCreateProfile(roster: roster)
                 // The Dex read once at open rather than on every redraw of the map detail: it is a
                 // fetch of every entry, the screen that asks is drawn inside a `body`, and the set
                 // only ever grows — `advance` inserts into it as it records.
@@ -581,7 +582,7 @@ final class MainScreenModel: ObservableObject {
             state.stageEnteredDate = now()
         }
         state.birthDate = now().addingTimeInterval(-6 * Death.secondsPerDay)
-        state.lifetimeEnergy = EnergyTotals(strength: 120, vitality: 80, spirit: 40, stamina: 30)
+        profile?.lifetimeEnergy = EnergyTotals(strength: 120, vitality: 80, spirit: 40, stamina: 30)
         state.strengthStat = 7
         state.healthStatus = .sick
         state.sickSince = now().addingTimeInterval(-Death.secondsSickUntilDeath)
@@ -697,7 +698,7 @@ final class MainScreenModel: ObservableObject {
                 showing: losing ? .disadvantage : .advantage,
                 playerWins: !losing,
                 playerId: state.currentDigimonId,
-                playerPower: state.battlePower,
+                playerPower: state.battlePower(lifetimeEnergy: lifetimeEnergy),
                 in: graph,
                 roster: roster,
                 map: selectedMap,
@@ -877,10 +878,10 @@ final class MainScreenModel: ObservableObject {
     /// stamps are the ones the real rule sets rather than ones this flag invented.
     private func seedMapListDemoIfRequested() {
         let arguments = CommandLine.arguments
-        guard let mapProgress else { return }
+        guard let profile else { return }
 
         if arguments.contains("-mapProgressResetDemo") {
-            mapProgress.clearForDemo()
+            profile.clearForDemo()
             publishSelectedMap()
             try? store?.save()
             return
@@ -898,16 +899,16 @@ final class MainScreenModel: ObservableObject {
         // so a second launch adds a second map's worth on top of the first. The screenshot caught
         // exactly that — map 16 read `100000 / 50000` on the second run — and a doubled counter
         // still looks plausible, which is what makes it worth a line of code rather than a note.
-        mapProgress.clearForDemo()
+        profile.clearForDemo()
 
         // Walked one map at a time through the real creditor, because it is the creditor that
         // stamps a finish — crediting the whole lot against one selection would bank every step on
         // that one map and finish nothing else.
         for (index, map) in maps.maps.enumerated() {
             if partial && index > 2 { break }
-            mapProgress.selectedMapId = map.id
+            profile.selectedMapId = map.id
             let steps = partial && index == 2 ? Double(map.totalSteps) / 3 : Double(map.totalSteps)
-            MapStepCreditor.credit(steps: steps, to: mapProgress, catalog: maps, now: now())
+            MapStepCreditor.credit(steps: steps, to: profile, catalog: maps, now: now())
         }
         if widest {
             selectMap(maps.maps.last?.id)
@@ -963,7 +964,7 @@ final class MainScreenModel: ObservableObject {
     /// crediting a DELTA, so a second read with no new activity credits nothing rather than paying
     /// for the same steps twice.
     func refresh() async {
-        guard let state, let ledger, !isRefreshing else { return }
+        guard let state, let ledger, let profile, !isRefreshing else { return }
         // A read is several awaits long, and scenePhase can go active again inside one (the app
         // being raised twice in quick succession). Two overlapping reads would both see the same
         // pre-credit ledger and could credit the same steps twice.
@@ -994,8 +995,8 @@ final class MainScreenModel: ObservableObject {
 
         let dayReadings = await energySource.dayReadings(now: now())
         let readings = dayReadings.byEnergyType
-        let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
-                                             calendar: calendar)
+        let credited = EnergyCreditor.credit(readings, to: state, profile: profile,
+                                             ledger: ledger, now: now(), calendar: calendar)
         // Beside the energy credit and off the SAME read, because a map records the steps that
         // bought that energy — see `creditMapSteps`. Before the evolution and hatch checks below
         // only because everything is; nothing here depends on it.
@@ -1073,11 +1074,11 @@ final class MainScreenModel: ObservableObject {
     /// Nothing accrues from `noData` or `unavailable`. Being told nothing is not being told zero —
     /// the same rule as everywhere else here — and a zero would in any case credit nothing.
     private func creditMapSteps(_ stepsToday: HealthReading) {
-        guard let metricLedger, let mapProgress else { return }
+        guard let metricLedger, let profile else { return }
         guard case .value(let dayTotal) = stepsToday else { return }
         let delta = metricLedger.claim(.healthSteps, dayTotal: dayTotal, now: now(),
                                        calendar: calendar)
-        MapStepCreditor.credit(steps: delta, to: mapProgress, catalog: maps, now: now())
+        MapStepCreditor.credit(steps: delta, to: profile, catalog: maps, now: now())
     }
 
     /// Chooses the map the Digimon is adventuring in, from here on.
@@ -1089,8 +1090,8 @@ final class MainScreenModel: ObservableObject {
     /// Passing an id the catalog does not know, or nil, leaves the player nowhere — legal, and what
     /// a fresh save already is. US-120's list is the caller.
     func selectMap(_ id: String?) {
-        guard let mapProgress else { return }
-        mapProgress.selectedMapId = id
+        guard let profile else { return }
+        profile.selectedMapId = id
         publishSelectedMap()
         do {
             try store?.save()
@@ -1102,27 +1103,35 @@ final class MainScreenModel: ObservableObject {
         }
     }
 
+    /// The player's whole earnings, or zero before `start()` has opened the profile.
+    ///
+    /// One read for every caller that needs it — `battlePower`, the memorial, the battle seed
+    /// search — so there is a single place the "no profile yet" answer is decided. Zero is the
+    /// honest reading of it: a player whose profile has not been opened has earned nothing yet as
+    /// far as this screen can tell.
+    var lifetimeEnergy: EnergyTotals { profile?.lifetimeEnergy ?? .zero }
+
     /// The sixteen maps as `MapListView` draws them (US-119): catalog order, with the save's
     /// counters, finish stamps and selection folded in.
     ///
     /// Computed rather than published, because everything it reads is already observable — the
-    /// catalog is a constant and `MapProgress` is a `@Model`, so a view that builds this inside
+    /// catalog is a constant and `PlayerProfile` is a `@Model`, so a view that builds this inside
     /// `body` redraws when a step is credited to it.
     var mapRows: [MapListRow] {
-        MapListRow.rows(in: maps, progress: mapProgress)
+        MapListRow.rows(in: maps, progress: profile)
     }
 
     /// What the main screen's map strip says (US-120): the selected map's name and counter, or the
     /// first map's as a prompt when the player has chosen nowhere.
     ///
-    /// Computed off the same injected catalog and the same `MapProgress` as `mapRows`, and for the
+    /// Computed off the same injected catalog and the same `PlayerProfile` as `mapRows`, and for the
     /// same reason: both are already observable, so a step credited to the selected map moves the
     /// strip and the list together rather than through two published copies that can drift.
     ///
     /// Nil only for an empty catalog, which the shipped file cannot be — the strip simply is not
     /// drawn, rather than drawing a row with nothing in it.
     var mapStrip: MapStrip? {
-        MapStrip.make(in: maps, progress: mapProgress)
+        MapStrip.make(in: maps, progress: profile)
     }
 
     /// The map the next battle draws its opponents from (US-122), or nil for "nowhere chosen yet" —
@@ -1131,13 +1140,13 @@ final class MainScreenModel: ObservableObject {
     /// A selection naming a map the catalog no longer holds reads as nil too, for the same reason
     /// `MapStepCreditor` drops a delta with nowhere to go: a retired map id is not a place to fight.
     private var selectedMap: AdventureMap? {
-        mapProgress?.selectedMapId.flatMap { maps.map(id: $0) }
+        profile?.selectedMapId.flatMap { maps.map(id: $0) }
     }
 
     /// Steps banked in the selected map, which is the numerator of US-122's progress ratio.
     private var selectedMapRecorded: Double {
-        guard let mapProgress, let id = mapProgress.selectedMapId else { return 0 }
-        return mapProgress.recorded(forMap: id)
+        guard let profile, let id = profile.selectedMapId else { return 0 }
+        return profile.recorded(forMap: id)
     }
 
     /// What one map's detail screen draws (US-121), or nil if the map is locked — which is what
@@ -1223,7 +1232,7 @@ final class MainScreenModel: ObservableObject {
 
     /// Republishes the background asset from the saved selection. The one place the two are joined.
     private func publishSelectedMap() {
-        selectedMapAsset = mapProgress?.selectedMapId.flatMap { maps.map(id: $0)?.assetName }
+        selectedMapAsset = profile?.selectedMapId.flatMap { maps.map(id: $0)?.assetName }
     }
 
     /// The pose the Digimon returns to when nothing else is happening: the slow hurt loop while it
@@ -1660,7 +1669,7 @@ final class MainScreenModel: ObservableObject {
 
         let types = ElementCatalog.bundled
         let matchup = BattleModifiers.matchup(
-            playerPower: state.battlePower,
+            playerPower: state.battlePower(lifetimeEnergy: lifetimeEnergy),
             playerType: types.type(for: state.currentDigimonId, in: graph),
             opponentPower: round.opponent.power,
             // Off the node in hand rather than off a graph lookup: since US-122 an opponent may be a
@@ -2092,7 +2101,8 @@ final class MainScreenModel: ObservableObject {
         let name = graph.presentation(forId: state.currentDigimonId)?.displayName
         // A saved id the roster has since dropped still deserves a memorial, so the id itself is the
         // fallback name rather than the whole screen being skipped.
-        return state.memorial(displayName: name ?? state.currentDigimonId)
+        return state.memorial(displayName: name ?? state.currentDigimonId,
+                              lifetimeEnergy: lifetimeEnergy)
     }
 
     /// Dismisses the memorial and starts the next Digimon at a fresh, randomly chosen Digitama.

@@ -146,7 +146,9 @@ final class MemorialTests: XCTestCase {
     func testTheMemorialCarriesTheNameLifespanAndFinalStats() {
         let birth = DeathClock.at("2026-03-01 08:00")
         let state = GameState(currentDigimonId: "agumon", stage: .child, now: birth)
-        state.lifetimeEnergy = EnergyTotals(strength: 120, vitality: 80, spirit: 40, stamina: 30)
+        // Handed in rather than set on the state: since US-123 the lifetime total is the PLAYER's,
+        // and a memorial reports it because the next Digimon inherits it.
+        let lifetime = EnergyTotals(strength: 120, vitality: 80, spirit: 40, stamina: 30)
         state.strengthStat = 7
         state.battleWins = 3
         state.battleLosses = 1
@@ -155,7 +157,8 @@ final class MemorialTests: XCTestCase {
         // Six days and two hours after birth, so the day count is a floor and not a round.
         state.updateDeath(now: birth.addingTimeInterval(6 * 24 * DeathClock.hour + 2 * DeathClock.hour))
 
-        let memorial = try? XCTUnwrap(state.memorial(displayName: "Agumon"))
+        let memorial = try? XCTUnwrap(state.memorial(displayName: "Agumon",
+                                                     lifetimeEnergy: lifetime))
         XCTAssertEqual(memorial?.displayName, "Agumon")
         XCTAssertEqual(memorial?.lifespanDays, 6, "six days and two hours is six whole days")
         XCTAssertEqual(memorial?.lifetimeEnergy.total, 270)
@@ -169,10 +172,11 @@ final class MemorialTests: XCTestCase {
     func testALivingDigimonHasNoMemorial() {
         let state = GameState(currentDigimonId: "agumon", stage: .child,
                               now: DeathClock.at("2026-03-01 08:00"))
-        XCTAssertNil(state.memorial(displayName: "Agumon"))
+        XCTAssertNil(state.memorial(displayName: "Agumon", lifetimeEnergy: .zero))
 
         state.healthStatus = .sick
-        XCTAssertNil(state.memorial(displayName: "Agumon"), "sick is not dead")
+        XCTAssertNil(state.memorial(displayName: "Agumon", lifetimeEnergy: .zero),
+                     "sick is not dead")
     }
 
     /// The lifespan is pluralised, because a Digimon that dies young is exactly the case where a
@@ -265,7 +269,8 @@ final class RebirthTests: XCTestCase {
         state.stage = .babyI
         state.birthDate = now.addingTimeInterval(-6 * 24 * DeathClock.hour)
         state.stageEnteredDate = now.addingTimeInterval(-2 * 24 * DeathClock.hour)
-        state.lifetimeEnergy = EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444)
+        try store.loadOrCreateProfile().lifetimeEnergy =
+            EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444)
         state.strengthStat = 9
         state.healthStatus = .sick
         state.careMistakeCount = 3
@@ -357,9 +362,10 @@ final class RebirthTests: XCTestCase {
                                               now: now.addingTimeInterval(DeathClock.hour))
 
         XCTAssertEqual(reloaded.currentDigimonId, "egg", "the reborn egg, not the dead Digimon")
-        XCTAssertEqual(reloaded.lifetimeEnergy,
+        XCTAssertEqual(try store.loadOrCreateProfile().lifetimeEnergy,
                        EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444),
                        "AC4: the lifetime totals are never wiped")
+        XCTAssertNotNil(reloaded, "and the reborn egg is the one that came back")
 
         // AC7: the Dex is intact — both the egg the dead Digimon started at and the form it grew
         // into are still there, plus the egg the new life started at.

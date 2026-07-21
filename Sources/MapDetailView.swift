@@ -407,7 +407,7 @@ private struct OpponentRow: View {
     NavigationStack {
         MapDetailView(
             detail: MapDetail.make(
-                for: MapListRow.rows(progress: MapProgress(selectedMapId: "01_grassland"))[0],
+                for: MapListRow.rows(progress: PlayerProfile(selectedMapId: "01_grassland"))[0],
                 discovered: ["agu_digitama"],
                 context: .unknown)!,
             travel: {})

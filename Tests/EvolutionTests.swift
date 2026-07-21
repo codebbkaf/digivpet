@@ -270,7 +270,9 @@ final class EvolutionApplyTests: XCTestCase {
         totals[dominant] = stageAmount
         state.stageEnergy = totals
         // A distinct lifetime total so "lifetimeEnergy is preserved" cannot pass by coincidence.
-        state.lifetimeEnergy = EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444)
+        // On the PROFILE since US-123 — an evolution replaces nothing the player owns.
+        try store.loadOrCreateProfile().lifetimeEnergy =
+            EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444)
         state.careMistakeCount = careMistakes
         // US-027: the audit now charges a mistake per whole day that went by with no health data,
         // and this fixture's readers are empty ones. Without this the days between `lastStage` and
@@ -333,7 +335,7 @@ final class EvolutionApplyTests: XCTestCase {
         let state = try XCTUnwrap(model.state)
         XCTAssertEqual(state.currentDigimonId, "greymon")
         XCTAssertEqual(state.stageEnergy, .zero, "the new stage starts fresh")
-        XCTAssertEqual(state.lifetimeEnergy,
+        XCTAssertEqual(model.lifetimeEnergy,
                        EnergyTotals(strength: 111, vitality: 222, spirit: 333, stamina: 444),
                        "the whole life's energy is carried forward untouched")
         XCTAssertEqual(state.stageEnteredDate, Fixture.morning,

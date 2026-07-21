@@ -29,11 +29,11 @@ private enum Fixture {
 
     static let noon = Date(timeIntervalSince1970: 1_770_000_000)
 
-    static func rows(_ progress: MapProgress?) -> [MapListRow] {
+    static func rows(_ progress: PlayerProfile?) -> [MapListRow] {
         MapListRow.rows(in: catalog, progress: progress)
     }
 
-    static func row(_ id: String, _ progress: MapProgress?) -> MapListRow {
+    static func row(_ id: String, _ progress: PlayerProfile?) -> MapListRow {
         let row = rows(progress).first { $0.id == id }
         return row!
     }
@@ -45,7 +45,7 @@ final class MapListRowTests: XCTestCase {
     /// AC2: one row per map, in tier order — which is catalog order, and the order the file
     /// authors. Not sorted here and not sorted in the view: the catalog IS the order.
     func testThereIsOneRowPerMapInCatalogOrder() {
-        let rows = Fixture.rows(MapProgress())
+        let rows = Fixture.rows(PlayerProfile())
 
         XCTAssertEqual(rows.map(\.id), ["first", "second", "third"])
         XCTAssertEqual(rows.map(\.displayName), ["First", "Second", "Third"])
@@ -54,7 +54,7 @@ final class MapListRowTests: XCTestCase {
     /// The shipped catalog draws all sixteen, in the tier order US-116 authored. The one place this
     /// suite touches the real file, because "every map" is the criterion.
     func testTheShippedCatalogDrawsAllSixteenMaps() {
-        let rows = MapListRow.rows(in: .bundled, progress: MapProgress())
+        let rows = MapListRow.rows(in: .bundled, progress: PlayerProfile())
 
         XCTAssertEqual(rows.count, 16)
         XCTAssertEqual(rows.map(\.id), MapCatalog.bundled.maps.map(\.id))
@@ -67,14 +67,14 @@ final class MapListRowTests: XCTestCase {
     /// AC2: the row carries the map's art, which is what the thumbnail draws — the same imageset
     /// `MapBackgroundView` paints behind the Digimon, so the row is a picture of where you would be.
     func testEachRowCarriesTheMapsOwnArt() {
-        let rows = Fixture.rows(MapProgress())
+        let rows = Fixture.rows(PlayerProfile())
 
         XCTAssertEqual(rows.map(\.assetName), ["01_grassland", "02_river", "03_ocean"])
     }
 
     /// Steps recorded show up on the row they were walked on, and nowhere else.
     func testRecordedStepsComeFromTheSave() {
-        let progress = MapProgress(recorded: ["first": 450])
+        let progress = PlayerProfile(recorded: ["first": 450])
 
         XCTAssertEqual(Fixture.row("first", progress).recordedSteps, 450)
         XCTAssertEqual(Fixture.row("second", progress).recordedSteps, 0)
@@ -84,7 +84,7 @@ final class MapListRowTests: XCTestCase {
     /// rounded: a counter that read `3000 / 3000` on a map with 2,999.6 steps banked would show a
     /// finish that has not happened.
     func testAPartStepIsFlooredRatherThanRounded() {
-        let progress = MapProgress(recorded: ["first": 999.7])
+        let progress = PlayerProfile(recorded: ["first": 999.7])
 
         XCTAssertEqual(Fixture.row("first", progress).recordedSteps, 999)
     }
@@ -105,7 +105,7 @@ final class MapListRowTests: XCTestCase {
 final class MapListProgressTextTests: XCTestCase {
     /// THE AC, verbatim: `1222 / 25000` — space, slash, space, no abbreviation, no rounding.
     func testProgressIsRenderedExactlyAsTheStoryAsks() {
-        let progress = MapProgress(recorded: ["second": 1_222], finishedAt: ["first": Fixture.noon])
+        let progress = PlayerProfile(recorded: ["second": 1_222], finishedAt: ["first": Fixture.noon])
 
         XCTAssertEqual(Fixture.row("second", progress).progressText, "1222 / 25000")
     }
@@ -114,7 +114,7 @@ final class MapListProgressTextTests: XCTestCase {
     /// this as "1,222 / 25,000" in en_US and as "1.222 / 25.000" in de_DE — three different strings
     /// for one criterion that names one.
     func testTheFigureCarriesNoGroupingSeparator() {
-        let progress = MapProgress(recorded: ["third": 42_000],
+        let progress = PlayerProfile(recorded: ["third": 42_000],
                                    finishedAt: ["first": Fixture.noon, "second": Fixture.noon])
         let text = Fixture.row("third", progress).progressText
 
@@ -129,7 +129,7 @@ final class MapListProgressTextTests: XCTestCase {
     /// past six digits, the suite says so before the screen does.
     func testTheWidestShippedFigureIsFiveDigitsEachSide() throws {
         let last = try XCTUnwrap(MapCatalog.bundled.maps.last)
-        let progress = MapProgress(recorded: [last.id: Double(last.totalSteps)])
+        let progress = PlayerProfile(recorded: [last.id: Double(last.totalSteps)])
         let row = try XCTUnwrap(
             MapListRow.rows(in: .bundled, progress: progress).first { $0.id == last.id })
 
@@ -140,7 +140,7 @@ final class MapListProgressTextTests: XCTestCase {
     /// Not capped at the total, per US-118: the counter keeps climbing past a finish and the row
     /// says so rather than parking on `3000 / 3000` forever.
     func testTheCounterIsNotCappedAtTheTotal() {
-        let progress = MapProgress(recorded: ["first": 4_500])
+        let progress = PlayerProfile(recorded: ["first": 4_500])
 
         XCTAssertEqual(Fixture.row("first", progress).progressText, "4500 / 1000")
     }
@@ -169,7 +169,7 @@ final class MapListMarkTests: XCTestCase {
 
     /// The selected map is the one the save says steps are accruing to, and only that one.
     func testExactlyTheSelectedMapIsMarkedSelected() {
-        let progress = MapProgress(selectedMapId: "first")
+        let progress = PlayerProfile(selectedMapId: "first")
 
         XCTAssertEqual(Fixture.rows(progress).filter(\.isSelected).map(\.id), ["first"])
     }
@@ -177,25 +177,25 @@ final class MapListMarkTests: XCTestCase {
     /// A save that has chosen nowhere marks nothing — the state every save is in until US-120 ships
     /// the picker.
     func testWithNoSelectionNoRowIsMarked() {
-        XCTAssertTrue(Fixture.rows(MapProgress()).allSatisfy { !$0.isSelected })
+        XCTAssertTrue(Fixture.rows(PlayerProfile()).allSatisfy { !$0.isSelected })
     }
 
     /// Finished comes off the STAMP, not off `recorded >= total`. The difference bites the day a
     /// map is retuned longer in an update: the player really did cross the old finish line, and a
     /// derived flag would take it back off them.
     func testFinishedIsReadOffTheStampRatherThanRecomputed() {
-        let stamped = MapProgress(recorded: ["first": 10], finishedAt: ["first": Fixture.noon])
+        let stamped = PlayerProfile(recorded: ["first": 10], finishedAt: ["first": Fixture.noon])
         XCTAssertTrue(Fixture.row("first", stamped).isFinished,
                       "a stamped map stays finished even under a raised total")
 
-        let past = MapProgress(recorded: ["first": 9_999])
+        let past = PlayerProfile(recorded: ["first": 9_999])
         XCTAssertFalse(Fixture.row("first", past).isFinished,
                        "no stamp is no finish, however high the counter")
     }
 
     /// Both marks on one row: the map you finished and are still walking.
     func testAMapCanBeFinishedAndSelectedAtOnce() {
-        let progress = MapProgress(selectedMapId: "first", recorded: ["first": 1_000],
+        let progress = PlayerProfile(selectedMapId: "first", recorded: ["first": 1_000],
                                    finishedAt: ["first": Fixture.noon])
         let row = Fixture.row("first", progress)
 
@@ -209,14 +209,14 @@ final class MapListMarkTests: XCTestCase {
 final class MapListLockTests: XCTestCase {
     /// The first map is open from the start; the rest are shut until their predecessor is finished.
     func testOnlyTheStartingMapIsOpenOnAFreshSave() {
-        let rows = Fixture.rows(MapProgress())
+        let rows = Fixture.rows(PlayerProfile())
 
         XCTAssertEqual(rows.filter { !$0.isLocked }.map(\.id), ["first"])
     }
 
     /// Finishing a map opens exactly the next one, and no more.
     func testFinishingAMapOpensTheNextOneOnly() {
-        let progress = MapProgress(finishedAt: ["first": Fixture.noon])
+        let progress = PlayerProfile(finishedAt: ["first": Fixture.noon])
         let rows = Fixture.rows(progress)
 
         XCTAssertEqual(rows.filter { !$0.isLocked }.map(\.id), ["first", "second"])
@@ -224,7 +224,7 @@ final class MapListLockTests: XCTestCase {
 
     /// Walking most of the way is not finishing it. The gate is the stamp, as everywhere else.
     func testPartProgressDoesNotOpenTheNextMap() {
-        let progress = MapProgress(recorded: ["first": 999])
+        let progress = PlayerProfile(recorded: ["first": 999])
 
         XCTAssertTrue(Fixture.row("second", progress).isLocked)
     }
@@ -232,10 +232,10 @@ final class MapListLockTests: XCTestCase {
     /// THE AC: a locked row states its condition in one line, naming the map by its DISPLAY name —
     /// "Finish First", never "Finish first" and never an id like "02_river".
     func testALockedRowStatesItsUnlockConditionInOneLine() {
-        let rows = Fixture.rows(MapProgress())
+        let rows = Fixture.rows(PlayerProfile())
 
-        XCTAssertEqual(Fixture.row("second", MapProgress()).unlockLine, "Finish First")
-        XCTAssertEqual(Fixture.row("third", MapProgress()).unlockLine, "Finish Second")
+        XCTAssertEqual(Fixture.row("second", PlayerProfile()).unlockLine, "Finish First")
+        XCTAssertEqual(Fixture.row("third", PlayerProfile()).unlockLine, "Finish Second")
         // One line means one line: no newline can get into it.
         XCTAssertTrue(rows.compactMap(\.unlockLine).allSatisfy { !$0.contains("\n") })
     }
@@ -243,7 +243,7 @@ final class MapListLockTests: XCTestCase {
     /// Over the shipped chain, every locked row names a real map — the sentence is only useful if
     /// the player can find the place it names.
     func testEveryShippedLockNamesARealMapByItsDisplayName() {
-        let rows = MapListRow.rows(in: .bundled, progress: MapProgress())
+        let rows = MapListRow.rows(in: .bundled, progress: PlayerProfile())
         let names = Set(MapCatalog.bundled.maps.map(\.displayName))
 
         XCTAssertEqual(rows.filter(\.isLocked).count, 15, "fifteen of sixteen are shut at the start")
@@ -256,20 +256,20 @@ final class MapListLockTests: XCTestCase {
 
     /// An unlocked row has no unlock line at all — there is nothing left to do about it.
     func testAnUnlockedRowHasNoUnlockLine() {
-        XCTAssertNil(Fixture.row("first", MapProgress()).unlockLine)
+        XCTAssertNil(Fixture.row("first", PlayerProfile()).unlockLine)
     }
 
     /// THE AC: a locked map hides its Digitama and its opponent pool. A lock that still counted the
     /// eggs behind it would be a peephole.
     func testALockedRowHidesItsDigitamaAndOpponents() {
-        XCTAssertNil(Fixture.row("second", MapProgress()).contents)
-        XCTAssertNil(Fixture.row("third", MapProgress()).contents)
+        XCTAssertNil(Fixture.row("second", PlayerProfile()).contents)
+        XCTAssertNil(Fixture.row("third", PlayerProfile()).contents)
     }
 
     /// And an unlocked one shows them — otherwise "hides" would be true of every row and the
     /// assertion above would mean nothing.
     func testAnUnlockedRowShowsWhatLivesThere() {
-        let contents = Fixture.row("first", MapProgress()).contents
+        let contents = Fixture.row("first", PlayerProfile()).contents
 
         XCTAssertEqual(contents?.digitamaCount, 1)
         XCTAssertEqual(contents?.opponentCount, 3)
@@ -277,9 +277,9 @@ final class MapListLockTests: XCTestCase {
 
     /// The same map, before and after its lock opens: the contents appear when it does.
     func testContentsAppearTheMomentTheLockOpens() {
-        XCTAssertNil(Fixture.row("second", MapProgress()).contents)
+        XCTAssertNil(Fixture.row("second", PlayerProfile()).contents)
 
-        let opened = MapProgress(finishedAt: ["first": Fixture.noon])
+        let opened = PlayerProfile(finishedAt: ["first": Fixture.noon])
         XCTAssertEqual(Fixture.row("second", opened).contents?.digitamaCount, 2)
         XCTAssertEqual(Fixture.row("second", opened).contents?.opponentCount, 1)
     }
@@ -292,7 +292,7 @@ final class MapListSelectionTests: XCTestCase {
     /// selected before, rather than nil — "no change" and "no map" are different answers, and the
     /// second would silently move a walking player nowhere.
     func testTappingALockedMapLeavesTheSelectionExactlyAsItWas() {
-        let locked = Fixture.row("third", MapProgress())
+        let locked = Fixture.row("third", PlayerProfile())
 
         XCTAssertEqual(MapListSelector.selection(tapping: locked, current: "first"), "first")
         XCTAssertNil(MapListSelector.selection(tapping: locked, current: nil))
@@ -301,13 +301,13 @@ final class MapListSelectionTests: XCTestCase {
     /// A locked row is not selectable, which is what the view disables the button on — so the
     /// refusal is visible before it is felt.
     func testALockedRowIsNotSelectable() {
-        XCTAssertFalse(Fixture.row("second", MapProgress()).isSelectable)
-        XCTAssertTrue(Fixture.row("first", MapProgress()).isSelectable)
+        XCTAssertFalse(Fixture.row("second", PlayerProfile()).isSelectable)
+        XCTAssertTrue(Fixture.row("first", PlayerProfile()).isSelectable)
     }
 
     /// An unlocked map is what a tap moves the selection to.
     func testTappingAnUnlockedMapSelectsIt() {
-        let progress = MapProgress(selectedMapId: "first", finishedAt: ["first": Fixture.noon])
+        let progress = PlayerProfile(selectedMapId: "first", finishedAt: ["first": Fixture.noon])
         let unlocked = Fixture.row("second", progress)
 
         XCTAssertEqual(MapListSelector.selection(tapping: unlocked, current: "first"), "second")
@@ -316,7 +316,7 @@ final class MapListSelectionTests: XCTestCase {
     /// The whole rule, played out as the view plays it: taps down a list where only the first map
     /// is open leave the player on the first map, however many locked rows they poke.
     func testAWalkDownTheListOnlyEverLandsOnAnOpenMap() {
-        let progress = MapProgress()
+        let progress = PlayerProfile()
         var selection: String?
 
         for row in Fixture.rows(progress) {
