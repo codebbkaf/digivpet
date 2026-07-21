@@ -57,8 +57,13 @@ struct ContentView: View {
     /// hurt frames. `simctl` can neither tap nor time a screenshot to a 1.4s beat, so the pacing is
     /// what has to move. The shipped values are `BattleView`'s own defaults rather than literals, so
     /// the app can never be paced differently from what the tests assert.
+    ///
+    /// `-battleIntroDemo` is the mirror of `-battleResultDemo`: it holds the STARE-DOWN instead of
+    /// racing past it, which is the only beat US-094's element badges and effectiveness caption are
+    /// on screen for.
     private static var battleIntroDuration: TimeInterval {
         #if DEBUG
+        if CommandLine.arguments.contains("-battleIntroDemo") { return 600 }
         if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
         if CommandLine.arguments.contains("-battleTurnDemo") { return 0.01 }
         if CommandLine.arguments.contains("-battleSignatureDemo") { return 0.01 }

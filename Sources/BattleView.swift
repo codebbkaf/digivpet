@@ -165,6 +165,7 @@ struct BattleView: View {
                     projectile(inWidth: geometry.size.width)
                 }
                 .overlay(alignment: .top) { signatureBanner }
+                .overlay(alignment: .top) { matchupBanner }
 
                 Text(bout.opponent.displayName)
                     .font(.caption2)
@@ -226,6 +227,40 @@ struct BattleView: View {
         }
     }
 
+    /// The stare-down's matchup banner (US-094): each combatant's ELEMENT badge over its own head,
+    /// and what the arithmetic makes of the pairing.
+    ///
+    /// The INTRO beat only. Once the exchanges start, the top of the arena belongs to the signature
+    /// banner and the screen belongs to the fight — the matchup is context for the stare-down, and
+    /// leaving it up would put two banners in the same place on the knockout turn.
+    ///
+    /// The attribute badges are deliberately not here: two badges a side is four capsules across a
+    /// 42mm screen, and the element is the axis worth a quarter of the fight. The attribute still
+    /// gets its say on the result screen, where there is a line to spell it out on.
+    @ViewBuilder private var matchupBanner: some View {
+        if beat == .intro, let matchup = bout.matchup {
+            VStack(spacing: 1) {
+                HStack(spacing: 0) {
+                    TypeBadge.element(matchup.playerType.element)
+                    Spacer(minLength: 4)
+                    TypeBadge.element(matchup.opponentType.element)
+                }
+
+                if let caption = BattleBreakdown.effectivenessCaption(matchup.elementEffectiveness) {
+                    Text(caption)
+                        .font(.system(size: BattleBreakdownLayout.textSize, weight: .semibold))
+                        // The result screen's two colours, so "Super effective" at the stare-down and
+                        // "Victory!" at the end are plainly the same good news.
+                        .foregroundStyle(matchup.elementEffectiveness == .advantage
+                                         ? Color.orange : Color.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(BattleBreakdownLayout.minimumScale)
+                }
+            }
+            .padding(.horizontal, BattleArenaLayout.bezelInset)
+        }
+    }
+
     /// The ordinary projectile's glyph size, and the larger size the signature move is drawn at on the
     /// finishing blow. Static and separate so a test can assert the signature IS visibly larger (US-073
     /// AC2) rather than trusting the two literals not to drift together.
@@ -261,7 +296,7 @@ struct BattleView: View {
 
     /// The outcome: the winner's happy frame (7) on a win, the player's hurt frame on a loss.
     private var result: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: BattleBreakdownLayout.resultSpacing) {
             DigimonSpriteView(
                 stage: bout.player.spriteStage,
                 name: bout.player.spriteFile,
@@ -284,12 +319,39 @@ struct BattleView: View {
                 .minimumScaleFactor(0.7)
                 .lineLimit(2)
 
+            breakdown
+
             Button(action: onFinish) {
                 Label("Done", systemImage: "checkmark")
                     .font(.caption2)
             }
             .buttonStyle(.bordered)
             .padding(.top, 2)
+        }
+    }
+
+    /// Why the fight went the way it did (US-094): what the round and the two typings were worth to
+    /// the player, and the power that bought.
+    ///
+    /// Every number is read off `bout.matchup` — the arithmetic `BattleEngine` was actually handed —
+    /// so the breakdown and the outcome cannot disagree. Absent entirely for a bout built without a
+    /// matchup, which is every preview and every test that only cares about the frames.
+    @ViewBuilder private var breakdown: some View {
+        if let matchup = bout.matchup {
+            if let contributions = BattleBreakdown.text(for: matchup) {
+                Text(contributions)
+                    .font(.system(size: BattleBreakdownLayout.textSize))
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+                    .minimumScaleFactor(BattleBreakdownLayout.minimumScale)
+                    .lineLimit(BattleBreakdownLayout.lineLimit)
+            }
+
+            Text(BattleBreakdown.powerText(for: matchup))
+                .font(.system(size: BattleBreakdownLayout.powerSize, weight: .semibold))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(BattleBreakdownLayout.minimumScale)
         }
     }
 

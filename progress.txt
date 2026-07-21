@@ -624,3 +624,87 @@ WHAT REMAINS / FOR US-094
 - The pre-battle grade is not persisted anywhere. It lives only as long as the
   bout does, which is fine today: nothing after the result screen asks what the
   round was worth.
+
+================================================================================
+2026-07-21 — US-094: Show the matchup and what decided the fight
+================================================================================
+
+WHAT CHANGED
+- `Sources/BattleModifiers.swift`: `BattleMatchup` gained `playerType`,
+  `opponentType` and `training`. The factors were already kept (US-092 kept them
+  for exactly this); what was missing was what to CALL them. A screen that
+  looked the typings up again in `ElementCatalog` could answer differently from
+  the fight if the catalog changed between them.
+- `Sources/BattleBreakdown.swift` (new, pure, no SwiftUI): `percent(of:)`,
+  `contributions(for:)`, `text(for:)`, `powerText(for:)`,
+  `effectivenessCaption(_:)`, plus `BattleBreakdownLayout` for the 9pt / 0.7 /
+  2-line budget. Everything is read off the matchup — nothing consults
+  `DigimonElement.beats` or `battleMultiplier` a second time.
+- `Sources/TypeBadgeView.swift`: the badge is now a `TypeBadge` view with
+  `.element(_:)` / `.attribute(_:)` factories instead of a private method on
+  `TypeBadgeRow`, so the arena draws the Dex's badge rather than a copy.
+- `Sources/BattleView.swift`: `matchupBanner` over the arena on the INTRO beat
+  only (both element badges + caption), `breakdown` on the result screen, and
+  the result stack tightened from 6pt to `BattleBreakdownLayout.resultSpacing`
+  (4) to pay for the two new children.
+- `Sources/ContentView.swift`: `-battleIntroDemo` holds the stare-down for 600s.
+- `Sources/MainScreenModel.swift`: DEBUG `battleSeedOverride` +
+  `nextBattleGenerator()`, and `demoBattleSeed(showing:playerWins:...)`.
+
+WHY THE PERCENTAGES ARE DROPPED RATHER THAN SHOWN AT ZERO
+- AC4 is the whole reason `contributions` returns `[Contribution]` and not three
+  fields: a `good` round and an even axis contribute nothing, and "+0%" is noise
+  that makes the two rows that DO matter harder to find. `text(for:)` returns
+  nil when the list is empty and `powerText` drops the arrow when the power did
+  not move, so an untouched fight reads "PWR 41" and nothing else.
+
+THE ONE CASE THAT PROVES NOTHING IS RECOMPUTED — light vs dark
+- `DigimonElement.effectiveness(against:)` calls light vs dark `.advantage` on
+  BOTH sides, while the arithmetic nets exactly 1.0. A breakdown that re-derived
+  from the typings would print "Super effective" over a fight that got no bonus.
+  Reading `matchup.elementEffectiveness` (derived from the FACTOR) prints
+  nothing, which is the truth. `testAMutualRivalryIsShownAsTheWashItIs` pins it.
+
+THE DEMO SEED IS SEARCHED, NOT THE OPPONENT STAGED
+- `demoBattleSeed` replays exactly what `battle()` + `finishBattleRound(.good)`
+  will do with a given seed — `BattleMatchmaker.choose` draws first, then
+  `BattleEngine.resolve` draws from the same generator — and returns the lowest
+  seed whose fight shows the wanted effectiveness AND ends the wanted way. So
+  the real matchmaker and the real engine still decide everything; only WHICH
+  seed is staged. Costs no allowance and touches no state.
+- `-battleLossDemo` now fights as an untrained AGUMON, not Botamon. A Baby I is
+  matched against rungs 0-2 and NOTHING in that pool is typed water or earth —
+  the two elements that beat fire — so "a loss at a disadvantage" is not merely
+  rare there, it is impossible. Verified against evolutions.json + elements.json
+  before changing it. A Child at strengthStat 0 has the Adults in its pool.
+
+SCREENSHOTS — all on the 42mm (F4A12A1C), which is what AC5 names
+- `-battleResultDemo`: Victory, "Fire vs Ice +25%", "PWR 61 → 76", Done fully on
+  screen. The `good` grade contributes nothing and is absent, as AC4 wants.
+- `-battleResultDemo -battleLossDemo`: Defeat, "Fire vs Water -20% · Vaccine vs
+  Data -10%", "PWR 25 → 18", Done fully on screen.
+- `-battleIntroDemo`: FIRE and ICE badges over the two combatants and "Super
+  effective" between them.
+- The three-contribution worst case was checked by temporarily staging
+  `.perfect` instead of `.good`: "Perfect +30% · Fire vs Water -20% · Vaccine vs
+  Data -10%" fit ONE 42mm line at the 0.7 floor with Done still clear. The
+  `lineLimit` of 2 is headroom for the longer labels ("Electric vs Machine"),
+  not a fit already observed to need it. The staging was reverted.
+
+TRAPS THAT COST A RUN
+- The 42mm sim had the same WEDGED notification alert progress.txt recorded for
+  46mm; `-noNotificationPrompt` does not clear it because it is queued at the
+  system level. `xcrun simctl erase F4A12A1C-1C5E-4B83-8278-341634CDE4F5` then
+  boot fixed it. 42mm is now erased and clean.
+- UNINSTALL between demo launches. The battle allowance is 5/day and persists,
+  so the fourth or fifth launch screenshots "No battles left today."
+- On a FRESH install, `start()` publishes the created state before `refresh()`
+  finishes, so a screenshot at 5s can catch the untouched starting Digitama and
+  none of the demo. 12s was enough; a fresh install needs the longer wait.
+
+WHAT REMAINS
+- The attribute badges are deliberately NOT on the stare-down — four capsules
+  across 42mm is too many. The attribute only gets named on the result screen.
+- The result screen is now FULL at 42mm: sprite (scale 4), headline, flavour
+  line, breakdown row, PWR line, Done. US-095 onward must not add a seventh
+  child to it without taking something away.

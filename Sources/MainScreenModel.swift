@@ -180,7 +180,22 @@ final class MainScreenModel: ObservableObject {
     /// derivation is what puts the Digimon to sleep, so it stays asleep across any number of
     /// refreshes — and the demo exercises the shipped path rather than its output.
     private var sleepScheduleOverride: SleepSchedule?
+
+    /// Debug-only: the seed a demo battle is matched and fought from, winning over the injected
+    /// random one. See `seedBattleDemoIfRequested` — US-094's screenshots need a specific KIND of
+    /// matchup, and the matchmaker draws its opponent from the same generator the fight is rolled
+    /// from, so pinning the seed is how you ask for one without hand-setting the opponent.
+    private var battleSeedOverride: UInt64?
     #endif
+
+    /// The generator one battle is matched and resolved from — the injected one, unless a DEBUG demo
+    /// has pinned a seed.
+    private func nextBattleGenerator() -> SeededGenerator {
+        #if DEBUG
+        if let battleSeedOverride { return SeededGenerator(seed: battleSeedOverride) }
+        #endif
+        return makeBattleGenerator()
+    }
 
     /// The app group directory the complication's snapshot and its Clean requests cross through.
     ///
@@ -522,11 +537,16 @@ final class MainScreenModel: ObservableObject {
     /// - `-battleTurnDemo` — the same, with `ContentView` holding one exchange for a minute so the
     ///   screenshot catches the attack and hurt frames rather than a 0.7s beat.
     /// - `-battleResultDemo` — the same, with `ContentView` pacing the replay down to nothing so the
-    ///   screenshot lands on the result screen instead of mid-exchange.
+    ///   screenshot lands on the result screen instead of mid-exchange. Its seed is searched for a
+    ///   matchup with something to say (US-094): an element ADVANTAGE on the win, and — combined with
+    ///   `-battleLossDemo` — a DISADVANTAGE on the loss.
+    /// - `-battleIntroDemo` — the same seeding, with `ContentView` holding the STARE-DOWN instead of
+    ///   racing past it, so US-094's element badges and effectiveness caption can be screenshotted.
     /// - `-battleSignatureDemo` — the same, with `ContentView` holding the KNOCKOUT exchange (US-073)
     ///   so the screenshot catches the signature move and its banner rather than an ordinary shot.
-    /// - `-battleLossDemo` — an untrained Baby I against the stages above it: very likely the losing
-    ///   result. Genuinely fought rather than hand-set, so what is screenshotted is the real rule.
+    /// - `-battleLossDemo` — an untrained Child against the stages above it: very likely the losing
+    ///   result, and pinned to one by the seed search when it is combined with a matchup demo.
+    ///   Genuinely fought rather than hand-set, so what is screenshotted is the real rule.
     /// - `-battleLimitDemo` — the day's five battles actually FOUGHT and dismissed, leaving the
     ///   disabled button and its reason (US-032). No scroll flag needed since US-039 — the action
     ///   row is on screen on both watch sizes.
@@ -540,7 +560,10 @@ final class MainScreenModel: ObservableObject {
     private func seedBattleDemoIfRequested() {
         let arguments = CommandLine.arguments
         let losing = arguments.contains("-battleLossDemo")
-        let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo", "-battleSignatureDemo"]
+        let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo", "-battleSignatureDemo",
+                      "-battleIntroDemo"]
+        // The two US-094 demos, and the only ones that need a matchup with something to SAY.
+        let showingMatchup = ["-battleResultDemo", "-battleIntroDemo"]
         let limit = arguments.contains("-battleLimitDemo")
         let round = arguments.contains("-battleRoundDemo")
         guard staged.contains(where: arguments.contains) || losing || limit || round,
@@ -554,7 +577,14 @@ final class MainScreenModel: ObservableObject {
         // ENDS ON ITS OWN — it draws a delay, opens a reaction window, and grades a miss when nothing
         // taps it. Agumon's Button Masher sits on "Tap to start" forever, so `simctl`, which cannot
         // tap, would screenshot the same waiting round twice and never reach the arena.
-        if let node = graph.node(id: losing ? "botamon" : (round ? "piyomon" : "agumon")) {
+        //
+        // `-battleLossDemo` fights as an UNTRAINED Agumon rather than as Botamon, which is what it
+        // used before US-094. A Baby I is matched against rungs 0-2, and NOTHING in that pool is
+        // typed water or earth — the two elements that beat Botamon's fire — so a loss at a
+        // DISADVANTAGE, which is half of what US-094 has to photograph, cannot exist there at all.
+        // A Child at `strengthStat` 0 has the Adults above it in its pool, loses to them just as
+        // reliably, and can lose to one it is badly matched against.
+        if let node = graph.node(id: round ? "piyomon" : "agumon") {
             state.currentDigimonId = node.id
             state.stage = node.stage
             // Restamped, or US-020's gate is already open on a save from an earlier launch and the
@@ -579,6 +609,23 @@ final class MainScreenModel: ObservableObject {
             return
         }
 
+        // US-094's screenshots have to show a matchup that actually did something: an advantage on a
+        // win, a disadvantage on the loss. So the SEED is searched for one — the real matchmaker and
+        // the real engine decide what it produces, exactly as they do on a random seed, and all that
+        // is staged is which of the seeds it is. Left random if the scan finds nothing, in which case
+        // the screenshot shows whatever it drew.
+        if showingMatchup.contains(where: arguments.contains) {
+            battleSeedOverride = Self.demoBattleSeed(
+                showing: losing ? .disadvantage : .advantage,
+                playerWins: !losing,
+                playerId: state.currentDigimonId,
+                playerPower: state.battlePower,
+                in: graph)
+            if battleSeedOverride == nil {
+                Self.log.error("No demo battle seed gives the matchup the screenshot wants")
+            }
+        }
+
         battle()
         // Every ARENA demo stages the grade, exactly as `-trainResultDemo` does and for the same
         // reason: `simctl` cannot play a round, and the arena is what these flags are for. `good` is
@@ -586,6 +633,46 @@ final class MainScreenModel: ObservableObject {
         // pre-battle round existed. `-battleRoundDemo` alone leaves the round up and lets the game
         // grade itself.
         if !round { finishBattleRound(.good) }
+    }
+
+    /// Debug-only: the lowest seed whose battle shows `wanted` on the element axis and ends the way
+    /// `playerWins` says, or nil if none of the first `limit` does.
+    ///
+    /// PURE — it replays exactly what `battle()` and `finishBattleRound(.good)` are about to do with
+    /// the same seed: `BattleMatchmaker.choose` draws first, then `BattleEngine.resolve` draws from
+    /// what is left of the same generator. That shared sequence is why the answer holds: nothing here
+    /// is a prediction of the fight, it IS the fight, run once with no allowance spent and no state
+    /// touched. Grade `.good` because that is what the arena demos stage.
+    private static func demoBattleSeed(
+        showing wanted: Effectiveness,
+        playerWins: Bool,
+        playerId: String,
+        playerPower: Int,
+        in graph: EvolutionGraph,
+        limit: UInt64 = 4096
+    ) -> UInt64? {
+        let types = ElementCatalog.bundled
+        let playerType = types.type(for: playerId, in: graph)
+
+        for seed in 0..<limit {
+            var generator = SeededGenerator(seed: seed)
+            // Nil means the roster offers nobody at all, which no later seed can fix.
+            guard let opponent = BattleMatchmaker.choose(in: graph, playerId: playerId,
+                                                        using: &generator) else { return nil }
+            let matchup = BattleModifiers.matchup(
+                playerPower: playerPower,
+                playerType: playerType,
+                opponentPower: opponent.power,
+                opponentType: types.type(for: opponent.node.id, in: graph),
+                training: .good)
+            guard matchup.elementEffectiveness == wanted else { continue }
+
+            let report = BattleEngine.resolve(playerPower: matchup.playerPower,
+                                              opponentPower: matchup.opponentPower,
+                                              using: &generator)
+            if report.playerWon == playerWins { return seed }
+        }
+        return nil
     }
 
     /// Debug-only: fills the screen with poop so US-052's pile and its Clean button can be
@@ -1048,7 +1135,7 @@ final class MainScreenModel: ObservableObject {
         // Drawn here and CARRIED, rather than made again when the round is graded — see
         // `PendingBattleRound`. Both refusals below this line are decided before the allowance is
         // spent, which is the point of matchmaking early.
-        var generator = makeBattleGenerator()
+        var generator = nextBattleGenerator()
         guard let opponent = BattleMatchmaker.choose(in: graph,
                                                     playerId: state.currentDigimonId,
                                                     using: &generator) else {

@@ -192,8 +192,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleMatchup now carries both typings and the grade; pure BattleBreakdown formats the stare-down caption and the result screen's signed-percentage row + 'PWR 41 → 73' off it, never recomputing. Verified by 42mm screenshots of -battleResultDemo (win, Fire vs Ice +25%, PWR 61 → 76), -battleResultDemo -battleLossDemo (loss, Fire vs Water -20% · Vaccine vs Data -10%, PWR 25 → 18) and the new -battleIntroDemo (FIRE/ICE badges + 'Super effective'). Build and tests green."
     },
     {
       "id": "US-095",

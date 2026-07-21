@@ -70,21 +70,31 @@ struct TypeBadgeRow: View {
 
     var body: some View {
         HStack(spacing: TypeBadgeLayout.spacing) {
-            badge(symbol: type.element.symbolName, text: type.element.badgeText,
-                  tint: type.element.color, label: "Element: \(type.element.displayName)")
-
-            badge(symbol: type.attribute.symbolName, text: type.attribute.badgeText,
-                  tint: type.attribute.color, label: "Attribute: \(type.attribute.displayName)")
+            TypeBadge.element(type.element)
+            TypeBadge.attribute(type.attribute)
         }
         .frame(height: TypeBadgeLayout.height)
     }
+}
 
-    /// One badge: symbol, short name, and a capsule of its own colour at low opacity.
-    ///
-    /// The fill is faint rather than solid because `DigimonElement.light` is white and `.neutral`
-    /// is `.secondary` — a solid capsule would need a second, contrasting foreground colour per
-    /// element, which is a second table to keep in step with the first.
-    private func badge(symbol: String, text: String, tint: Color, label: String) -> some View {
+/// One badge: symbol, short name, and a capsule of its own colour at low opacity.
+///
+/// The fill is faint rather than solid because `DigimonElement.light` is white and `.neutral`
+/// is `.secondary` — a solid capsule would need a second, contrasting foreground colour per
+/// element, which is a second table to keep in step with the first.
+///
+/// A type of its own rather than a method on `TypeBadgeRow` since US-094, which shows the two
+/// combatants' ELEMENT badges alone at the stare-down: the arena draws the same badge the Dex does,
+/// instead of a second one that could drift from it.
+struct TypeBadge: View {
+    let symbol: String
+    let text: String
+    let tint: Color
+    /// What VoiceOver reads instead of "flame FIRE" — the axis is spoken, since a badge on its own
+    /// does not say which of the two it is.
+    let label: String
+
+    var body: some View {
         HStack(spacing: 2) {
             Image(systemName: symbol)
                 .font(.system(size: TypeBadgeLayout.symbolSize))
@@ -99,6 +109,18 @@ struct TypeBadgeRow: View {
         .background(Capsule().fill(tint.opacity(0.18)))
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
+    }
+
+    /// The element half of a typing.
+    static func element(_ element: DigimonElement) -> TypeBadge {
+        TypeBadge(symbol: element.symbolName, text: element.badgeText, tint: element.color,
+                  label: "Element: \(element.displayName)")
+    }
+
+    /// The attribute half.
+    static func attribute(_ attribute: DigimonAttribute) -> TypeBadge {
+        TypeBadge(symbol: attribute.symbolName, text: attribute.badgeText, tint: attribute.color,
+                  label: "Attribute: \(attribute.displayName)")
     }
 }
 

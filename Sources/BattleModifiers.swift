@@ -30,6 +30,15 @@ struct BattleSideModifiers: Equatable {
 struct BattleMatchup: Equatable {
     let player: BattleSideModifiers
     let opponent: BattleSideModifiers
+    /// The two typings the factors above were computed from, carried so a screen that wants to NAME
+    /// the pairing — "Fire vs Plant", and the two element badges at the stare-down (US-094) — reads
+    /// them off the resolved matchup rather than looking them up in `ElementCatalog` a second time.
+    /// A second lookup could answer differently if the fight was resolved before the catalog changed.
+    let playerType: DigimonType
+    let opponentType: DigimonType
+    /// The grade the pre-battle round earned (D-3), for the same reason: `trainingFactor` is the
+    /// number, and this is what the number is CALLED on the result screen.
+    let training: TrainingResult
     /// Derived from `player.elementFactor`, NOT from `DigimonElement.effectiveness(against:)`.
     /// Those two disagree exactly where it matters: light vs dark reports `.advantage` on the
     /// vocabulary type (both sides are strong) while the arithmetic nets 1.0, and it is the
@@ -152,6 +161,9 @@ enum BattleModifiers {
         return BattleMatchup(
             player: player,
             opponent: opponent,
+            playerType: playerType,
+            opponentType: opponentType,
+            training: training,
             elementEffectiveness: effectiveness(of: playerElement),
             attributeEffectiveness: effectiveness(of: playerAttribute))
     }
