@@ -841,7 +841,10 @@ final class MainScreenModel: ObservableObject {
     /// - `-mapListPartialDemo` — the mixed state a real player is in: the first two maps finished,
     ///   the third part-walked and selected, the rest locked. Both marks, a lock and an unlock line
     ///   on one screen.
-    /// - `-mapProgressResetDemo` — the inverse, and it exists because the two above WRITE TO THE
+    /// - `-mapStripWidestDemo` — US-120's strip at its widest: every map finished and the LAST one
+    ///   selected, so the row on the MAIN screen reads `Cyberpunk 50000 / 50000`. Does not push the
+    ///   list.
+    /// - `-mapProgressResetDemo` — the inverse, and it exists because the three above WRITE TO THE
     ///   SAVE. A demo flag with no way back poisons every screenshot taken on that container
     ///   afterwards, silently; see `seedMapDemoIfRequested`, which learned it the expensive way.
     ///
@@ -859,7 +862,12 @@ final class MainScreenModel: ObservableObject {
         }
 
         let partial = arguments.contains("-mapListPartialDemo")
-        guard arguments.contains("-mapListDemo") || partial else { return }
+        // US-120's widest strip: every map finished and the LAST one selected, so the main screen
+        // reads `Cyberpunk 50000 / 50000` — the longest name this row can carry beside the widest
+        // figure it can carry. It does NOT push the list, because what it is for is the row the list
+        // is reached FROM. Same seed, same idempotency, same `-mapProgressResetDemo` inverse.
+        let widest = arguments.contains("-mapStripWidestDemo")
+        guard arguments.contains("-mapListDemo") || partial || widest else { return }
 
         // Cleared first, or the flag is not IDEMPOTENT: the selection and the counters are saved,
         // so a second launch adds a second map's worth on top of the first. The screenshot caught
@@ -876,7 +884,11 @@ final class MainScreenModel: ObservableObject {
             let steps = partial && index == 2 ? Double(map.totalSteps) / 3 : Double(map.totalSteps)
             MapStepCreditor.credit(steps: steps, to: mapProgress, catalog: maps, now: now())
         }
-        selectMap(partial ? maps.maps.dropFirst(2).first?.id : maps.maps.first?.id)
+        if widest {
+            selectMap(maps.maps.last?.id)
+        } else {
+            selectMap(partial ? maps.maps.dropFirst(2).first?.id : maps.maps.first?.id)
+        }
     }
 
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
@@ -1073,6 +1085,19 @@ final class MainScreenModel: ObservableObject {
     /// `body` redraws when a step is credited to it.
     var mapRows: [MapListRow] {
         MapListRow.rows(in: maps, progress: mapProgress)
+    }
+
+    /// What the main screen's map strip says (US-120): the selected map's name and counter, or the
+    /// first map's as a prompt when the player has chosen nowhere.
+    ///
+    /// Computed off the same injected catalog and the same `MapProgress` as `mapRows`, and for the
+    /// same reason: both are already observable, so a step credited to the selected map moves the
+    /// strip and the list together rather than through two published copies that can drift.
+    ///
+    /// Nil only for an empty catalog, which the shipped file cannot be — the strip simply is not
+    /// drawn, rather than drawing a row with nothing in it.
+    var mapStrip: MapStrip? {
+        MapStrip.make(in: maps, progress: mapProgress)
     }
 
     /// Republishes the background asset from the saved selection. The one place the two are joined.

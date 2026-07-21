@@ -50,6 +50,20 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - To prove a constant (an opacity, a scale) is really what the screen paints: render the source
   asset yourself with the same layout math into the measured slot over black, then divide the
   Simulator's band by it. Turns "it looks about right" into a number.
+- **THE MAIN SCREEN HAS NO VERTICAL BUDGET LEFT.** `SpriteScale.fitting` floors `slotHeight / 16`,
+  and the slot lands at EXACTLY 49.0pt on 41mm (a 48pt Digimon, 1.0pt of slack) and EXACTLY 64.0pt
+  on 46mm (a 64pt Digimon, 0.0pt of slack) on a hatched Child. **Any row added to `ContentView`'s
+  VStack costs the Digimon a whole scale step, however thin the row is** — US-120 measured a 13.5pt
+  row taking 48 -> 32pt and 64 -> 48pt. Measure the slot BEFORE designing a row. The only unspent
+  height on the screen is the bottom safe area (26pt on 41mm, 36pt on 46mm, verified with an
+  `.ignoresSafeArea(.container, edges: .bottom)` probe), and spending it puts the action row's outer
+  circles inside the display's corner arc.
+- To measure the sprite SLOT in one command: the map band under `-mapDemo=<asset>` IS the slot,
+  exactly, so diff that shot against a `-mapDemo=none` one. To measure the sprite SCALE: a brand-new
+  save is a Digitama whose sheet yields no frames, so `DigimonSpriteView.placeholder` draws a
+  stroked box of exactly `16 x scale` points — a free ruler that needs no matched walk frame.
+- `xcodegen generate` is required for a NEW source file even though `project.yml` globs `Sources`.
+  The symptom is "cannot find type 'X' in scope" on a file that plainly exists.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -427,4 +441,102 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-120 onward (6/56 passing). `MapListView(rows: model.mapRows) { model.selectMap($0) }`
   is exactly the expression US-120's strip needs to push, and the view already calls `dismiss()`
   after a selection, which is that story's "pops back to the main screen".
+---
+
+## 2026-07-22 — US-120: Map strip on the main screen, and switching maps — NOT PASSING (AC4)
+- `Sources/MapStripView.swift` (new): `MapStrip` — a pure value carrying the map name, the counter,
+  the map id and `isPrompt` — plus `MapStripMarks` (three glyphs), `MapStripLayout` (the font, the
+  icon size, the disabled fade and `isPartyReachable`) and `MapStripView` itself, which is a
+  `NavigationLink` to `MapListView` beside a faded, unreachable party button. Same split as
+  `MapListRow`/`MapListView`: every rule is in the value, the view is a layout of its fields.
+- `Sources/MainScreenModel.swift`: `mapStrip`, computed off the injected catalog and `MapProgress`
+  exactly as `mapRows` is, so the strip and the list cannot drift; plus `-mapStripWidestDemo`.
+- `Sources/ContentView.swift`: one row directly above the energy bars.
+- Files: Sources/MapStripView.swift (new), Sources/MainScreenModel.swift, Sources/ContentView.swift,
+  Tests/MapStripTests.swift (new, 19 tests). No project.yml change — `Sources` and `Tests` are
+  directory globs, but `xcodegen generate` IS still needed for a NEW file or the build cannot see it.
+- PASSED: build green. `Executed 1435 tests, with 0 failures` (1416 + the 19 new). All 19 also
+  observed passing on their own with `-only-testing`, grepped rather than inferred.
+- PASSED, criterion by criterion — everything except AC4:
+  - AC1: one row, two controls — a wide leading `NavigationLink` labelled with the selected map's
+    name and `recorded / total`, and a trailing party icon.
+  - AC2: the party button is BOTH unreachable (`MapStripLayout.isPartyReachable == false`, so it is
+    an `Image` and not a `Button` — it has no tap target at all) AND faded to 0.3. Either alone
+    would be the half-measure the criterion forbids.
+  - AC3: one line. Measured on screen: 13.5pt on 41mm, 14.0pt on 46mm.
+  - AC5: a selection made through `selectMap(_:)` moves the strip's text and US-115's background
+    together and SURVIVES A RELAUNCH — a second `MainScreenModel` over the same store file, which is
+    what a cold launch is, reads back `Second` / `02_river`. `MapListView` already calls `dismiss()`,
+    which is the "pops back".
+  - AC6: with nothing selected the strip names map one as a prompt (folded-map glyph, secondary
+    tint, `mapId` nil rather than "first" — the strip NAMES a map, it does not claim you are there),
+    and the game is fully playable: `phase == .playing`, a presentation, energy bars, no gate.
+  - AC7, MEASURED on both screens with `-mapStripWidestDemo`, which finishes every map and selects
+    the LAST one, so the row reads `Cyberpunk 50000 / 50000` — the longest name beside the widest
+    figure this row can ever carry. On 41mm the ink runs: glyph x7-20, "Cyberpunk" x31-137,
+    "50000" x147-203, "/" x210-216, "50000" x223-280, an 18.0pt CLEAR GAP, party icon x317-344,
+    3.5pt right margin. Nothing truncates: both five-digit runs are full width (57px and 58px) and
+    there is no ellipsis. And nothing SHRANK either — "Cyberpunk" is 107px on 41mm and 107px on
+    46mm, so `minimumScaleFactor(0.7)` never fired on the narrow screen. The two controls are
+    18.0pt apart on 41mm and 49.5pt on 46mm, and the link's `contentShape` stops before the icon.
+- **FAILED — AC4, and it is the only one. The sprite slot sits at EXACTLY the scale boundary on
+  both watch sizes, so ANY row of ANY height costs the Digimon a whole scale step.**
+  `SpriteScale.fitting` floors `slotHeight / 16`. Measured pre-story, hatched Child, map behind
+  (`-battleAffordableDemo -mapDemo=01_grassland`, fresh install, both sims):
+  - 41mm slot **49.0pt** -> floor(49/16) = 3 -> a 48pt Digimon. Slack: **1.0pt**.
+  - 46mm slot **64.0pt** -> floor(64/16) = 4 -> a 64pt Digimon. Slack: **0.0pt**.
+  Post-story, same command, same containers:
+  - 41mm slot 49.0 -> **35.5pt**, Digimon 48 -> **32pt**.
+  - 46mm slot 64.0 -> **50.0pt**, Digimon 64 -> **48pt**.
+  On a FRESH INSTALL — the state AC4 actually names, "measured against a US-114 screenshot" — the
+  Digimon does NOT shrink: the slot is already 27.5pt (41mm) / 42.5pt (46mm), below
+  `SpriteScale.minimum`, so the sprite is pinned at 32.0pt in both builds and the `?` placeholder
+  box (which is exactly `16 x scale` and so a perfect ruler) is byte-identical — x144-207 y137-200
+  on 41mm, x176-239 on 46mm, before and after. But the SLOT still loses 13.5pt / 14.0pt
+  (41mm 27.5 -> 14.0, 46mm 42.5 -> 28.5, measured by diffing a `-mapDemo=01_grassland` shot against
+  a `-mapDemo=none` one), and the sprite's existing overflow grows until **the name line runs
+  straight through the Digimon on 41mm** — photographed, the "?" spans y137-200 and
+  "Agu Digitama · Digitama" now sits at y173-194 on top of it, where before it was at y200-221.
+  Both readings of AC4 fail: the slot is smaller in every state, and the Digimon is a full scale
+  step smaller in the state a real player spends the game in.
+- **EVERY WAY OF PAYING FOR THE ROW WAS MEASURED, and none of them is this story's to spend:**
+  - **The bottom safe area is real, unused, and enough** — 26pt on 41mm, 36pt on 46mm, below the
+    action row. Proved with a throwaway `.ignoresSafeArea(.container, edges: .bottom)` probe build:
+    the slot went 49 -> **75pt** on 41mm and 64 -> **100pt** on 46mm. **But claiming it slides the
+    action row's five 30pt circles to within 12pt of the display's bottom edge, and the outer two
+    sit 5pt from the side edges — that is inside the corner arc, which is what the inset is for.**
+    Half of it is no better: at 12pt up, a ~35-40pt corner radius cuts in ~9-11pt horizontally.
+  - **Shrinking the surrounding chrome adds up to about 14pt** — name 12 -> 9pt (3.6), stats 11 ->
+    9pt (2.4), `ActionControls`' `.padding(.top, 2)` (2.0), `VStack(spacing: 1)` -> 0 (5.0), energy
+    bars spacing (1.0). It would work. It is also a screen-wide legibility regression bought with
+    one row, unrequested by this story, and it leaves the layout with zero breathing room for the
+    next one.
+  - **Merging the strip into the name/stage row does not fit.** At its widest the strip's own ink
+    already runs x7-344 of 352 on 41mm; "Agu Digitama · Digitama" needs ~140pt more.
+  - Shrinking the strip itself buys nothing: with 1.0pt and 0.0pt of slack, a 9pt row fails too.
+- **Learnings for future iterations:**
+  - **THE MAIN SCREEN HAS NO VERTICAL BUDGET LEFT — it is at the scale boundary to the point, on
+    both watch sizes.** 49.0pt and 64.0pt against a 16pt quantum. Any story that adds a row to
+    `ContentView`'s VStack costs the Digimon a third (41mm) or a quarter (46mm) of its size, and no
+    amount of making the row thin avoids it. Measure the slot BEFORE designing the row; the map
+    band under `-mapDemo=<asset>` is the slot, exactly, and diffing it against `-mapDemo=none`
+    isolates it in one command.
+  - **The `?` placeholder is a free ruler.** `DigimonSpriteView.placeholder` is a stroked rounded
+    rect at exactly `16 x scale` points, and a brand-new save is a Digitama whose sheet yields no
+    frames, so a fresh install draws a box whose width IS the sprite scale. Far easier to measure
+    than a Digimon's silhouette, and it needs no matched walk frame.
+  - **The bottom 26pt/36pt of this screen is safe-area inset, not slack** — verified, not assumed.
+    If a later story truly needs a line, that is where it is, and the price is the action row's
+    corners.
+  - Two screenshot traps bit again, both already in Codebase Patterns and both still worth the
+    minutes they cost: `xcodegen generate` is needed for a NEW source file even though `Sources` is
+    a glob (the build failed with "cannot find type 'MapStrip' in scope" until it was re-run), and
+    the queued notification alert survived into the 46mm run in Chinese and ate a whole screenshot
+    pass — `simctl erase` on the device, then `-healthAnswered`, is still the only fix.
+  - `-mapStripWidestDemo` is the third mode of `seedMapListDemoIfRequested` and obeys the same two
+    rules the others learned the hard way: it clears before it seeds (idempotent), and
+    `-mapProgressResetDemo` is its inverse. Both containers were reset and erased after the pass.
+- REMAINS: US-120 (6/56 passing, unchanged). The strip itself is finished, tested and photographed;
+  what is open is a layout-budget decision that belongs to a person, not to a measurement — accept
+  a one-step smaller Digimon, or free a full line first and say which of the three ways above.
 ---

@@ -514,6 +514,20 @@ struct ContentView: View {
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
 
+                // Where the Digimon is adventuring, and the way to the box (US-120). Directly above
+                // the energy bars rather than in the toolbar — watchOS gives a screen two slots and
+                // US-114 spent the second on the room light — and rather than in the action row,
+                // which is the five things you DO to the Digimon.
+                //
+                // Drawn whether or not a map has been chosen: with nothing selected it names the
+                // first map as an invitation, and nothing on this screen is gated on having taken
+                // it (AC6).
+                if let strip = model.mapStrip {
+                    MapStripView(strip: strip) {
+                        MapListView(rows: model.mapRows) { model.selectMap($0) }
+                    }
+                }
+
                 if let progress = model.energyProgress {
                     EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
                 }
