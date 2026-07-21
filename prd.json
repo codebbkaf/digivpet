@@ -323,8 +323,8 @@
         "Tests pass"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Resources/moves.json maps id -> {projectileSymbol, tint, signatureName, signatureSymbol}; Sources/MoveCatalog.swift decodes it with three tiers (moves by id, lineDefaults by line, stageDefaults by Stage.rawValue). move(forId:line:stage:) is the PURE core: id -> line -> stage -> Move.placeholder floor, so all 1,022 roster Digimon resolve and battle never renders empty; move(for:in:roster:) resolves line/stage from the graph then the roster. MoveTint is a closed enum, so an unknown colour is a decode failure not a blank draw. moves.json rides the existing Resources folder reference (comment names it); xcodegen re-run. Tests/MoveCatalogTests.swift (11): both fallback tiers via the real graph/roster AND the pure core with a fixture, every roster id != placeholder, every symbol renders via UIImage(systemName:) with a bogus-name control, >=8 distinct symbols, stageDefaults cover every Stage, every graph line has a lineDefault, unknown tint throws. Build green; full suite 855/0 (was 844). NOTE: US-074 authors the explicit move for all 69 curated nodes and the in-line uniqueness rule; this ships a starter set (6 line roots) plus both fallback tiers. SwiftUI Color mapping for MoveTint deliberately deferred to US-072 (the renderer) to avoid untested UI here."
     },
     {
       "id": "US-071",

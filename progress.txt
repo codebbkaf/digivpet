@@ -1166,3 +1166,59 @@ WHAT REMAINS / FOR THE NEXT ITERATION
    HealthKit grant and strands the app on an untappable system sheet.
 
 Next: US-070 (Move catalog).
+
+================================================================================
+2026-07-21  US-070  Move catalog                                          PASSED
+================================================================================
+
+WHAT SHIPPED
+
+- Sources/MoveCatalog.swift (new): `Move` (projectileSymbol / tint / signatureName /
+  signatureSymbol, all Codable), `MoveTint` (closed enum of SwiftUI colour names), and
+  `MoveCatalog` (three dicts: moves by id, lineDefaults by line key, stageDefaults by
+  Stage.rawValue) with a trapping `.bundled`, mirroring EvolutionGraph/Roster.
+- Resources/moves.json (new, hand-authored): 6 line-root moves, 6 lineDefaults (one per shipped
+  line), 8 stageDefaults (one per Stage.allCases). Rides the existing `- path: Resources` folder
+  reference — no project.yml resource entry needed, only its comment now names the file, same as
+  roster.json did. xcodegen re-run.
+- Tests/MoveCatalogTests.swift (new, 11 tests).
+
+VERIFIED (observed, not assumed): BUILD SUCCEEDED. Full suite 855 tests / 0 failures (was 844,
++11 all mine). MoveCatalogTests run in isolation, all 11 "passed" individually.
+
+DESIGN CALLS LATER ITERATIONS MUST NOT UNDO
+
+1. **TWO fallback tiers, and the return is NON-OPTIONAL.** `move(forId:line:stage:)` is the pure
+   core: id -> lineDefaults[line] -> stageDefaults[stage] -> `Move.placeholder`. The placeholder
+   is a hardcoded floor (circle.fill/white) so a caller can NEVER be handed "no move" and battle
+   can never render an empty projectile — the AC's whole point. It is unreachable with the shipped
+   file (stageDefaults covers every Stage, pinned by `testStageDefaultsCoverEveryStage`), but the
+   floor stays so a malformed file degrades instead of crashing a battle.
+   `testEveryRosterDigimonResolvesToARealMove` walks all 1,022 and asserts none hits the floor.
+
+2. **`line` is nil for a roster-only Digimon, on purpose.** ~930 of the 1,022 roster entries have
+   NO graph node and so no line (Roster deliberately carries no `line` — see US-062). Those skip
+   the line tier and land on the stage floor. `move(for:in:roster:)` reads the line from the graph
+   node when there is one and the stage from the node-or-roster; the pure core takes `line: String?`
+   so this is testable without a graph. `testFallsBackByStageForARosterOnlyDigimon` uses poyomon.
+
+3. **`MoveTint` is a CLOSED enum, not a String.** An unknown colour is a DECODE failure caught at
+   load (traps like a bad roster stage), not a silent blank draw at battle time. Do not "relax" it
+   to a String for convenience. `testAnUnknownTintFailsToDecode` pins it.
+
+4. **Symbol validity is a TEST's job — decode cannot catch it.** A bogus SF Symbol name decodes
+   fine and renders as a blank square. `testEverySymbolInTheCatalogRenders` asserts
+   `UIImage(systemName:) != nil` for every projectile + signature symbol across all three dicts,
+   and `testAnUnknownSymbolFailsToRender` is the control proving that check actually fails on junk.
+   (UIImage is available on watchOS; the test target imports UIKit.)
+
+5. **This is US-070's SCOPE — the catalog mechanism + a STARTER set + both fallback tiers.** It does
+   NOT author all 69 curated moves or enforce the per-line uniqueness rule; that is US-074, which
+   fills in the `moves` dict. `testEveryGraphLineHasALineDefault` guarantees every current line has
+   a fallback so US-074 can add id entries incrementally without any Digimon going unresolved.
+
+6. **No SwiftUI Color accessor on MoveTint yet — deferred to US-072 (the renderer).** MoveCatalog is
+   pure Foundation. US-072/US-073 draw the projectile/signature and will map MoveTint -> Color there,
+   where it can be exercised by the view. Adding it here would ship untested UI code.
+
+REMAINS: nothing for this story. Next: US-071 (face-to-face battle arena).

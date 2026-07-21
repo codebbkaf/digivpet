@@ -1,0 +1,29 @@
+{
+  "_comment": "Per-Digimon attack identity (US-070). moves = by id (top tier); lineDefaults = per evolution line; stageDefaults = per Stage.rawValue, the guaranteed floor covering every stage so all 1,022 roster Digimon resolve. US-074 authors an explicit moves entry for every curated node; this file ships a starter set plus both fallback tiers. Every *Symbol is an SF Symbol name; tint is a MoveTint case.",
+  "moves": {
+    "agumon": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Pepper Breath", "signatureSymbol": "flame.fill" },
+    "gabumon": { "projectileSymbol": "flame.fill", "tint": "blue", "signatureName": "Blue Blaster", "signatureSymbol": "flame.fill" },
+    "palmon": { "projectileSymbol": "leaf.fill", "tint": "green", "signatureName": "Poison Ivy", "signatureSymbol": "leaf.fill" },
+    "patamon": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Boom Bubble", "signatureSymbol": "wind" },
+    "piyomon": { "projectileSymbol": "flame.fill", "tint": "pink", "signatureName": "Magical Fire", "signatureSymbol": "sparkles" },
+    "gazimon": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Electric Stun Blast", "signatureSymbol": "bolt.fill" }
+  },
+  "lineDefaults": {
+    "agumon": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Fire Blast", "signatureSymbol": "flame.fill" },
+    "gabumon": { "projectileSymbol": "snowflake", "tint": "blue", "signatureName": "Ice Fang", "signatureSymbol": "snowflake" },
+    "palmon": { "projectileSymbol": "leaf.fill", "tint": "green", "signatureName": "Root Lash", "signatureSymbol": "leaf.fill" },
+    "patamon": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Gust", "signatureSymbol": "wind" },
+    "piyomon": { "projectileSymbol": "flame.fill", "tint": "pink", "signatureName": "Wing Flare", "signatureSymbol": "flame.fill" },
+    "gazimon": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Shock", "signatureSymbol": "bolt.fill" }
+  },
+  "stageDefaults": {
+    "Digitama": { "projectileSymbol": "sparkles", "tint": "white", "signatureName": "Wobble", "signatureSymbol": "sparkles" },
+    "Baby I": { "projectileSymbol": "circle.fill", "tint": "gray", "signatureName": "Bubble", "signatureSymbol": "circle.fill" },
+    "Baby II": { "projectileSymbol": "drop.fill", "tint": "cyan", "signatureName": "Tiny Splash", "signatureSymbol": "drop.fill" },
+    "Child": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Spark", "signatureSymbol": "flame.fill" },
+    "Adult": { "projectileSymbol": "bolt.fill", "tint": "yellow", "signatureName": "Strike", "signatureSymbol": "bolt.fill" },
+    "Perfect": { "projectileSymbol": "sparkles", "tint": "purple", "signatureName": "Surge", "signatureSymbol": "sparkles" },
+    "Ultimate-Super Ultimate": { "projectileSymbol": "star.fill", "tint": "red", "signatureName": "Cataclysm", "signatureSymbol": "star.fill" },
+    "Armor-Hybrid": { "projectileSymbol": "hand.raised.fill", "tint": "mint", "signatureName": "Guard Break", "signatureSymbol": "hand.raised.fill" }
+  }
+}
