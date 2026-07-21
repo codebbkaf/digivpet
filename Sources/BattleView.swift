@@ -26,6 +26,40 @@ struct BattleBout: Equatable {
     }
 }
 
+/// Where the two combatants stand and how far a shot has to travel to reach the other one.
+///
+/// Kept out of the view because "is there room to watch something cross the gap" is arithmetic
+/// against a screen width, and a screenshot can only ever answer it for the one watch it was taken
+/// on. Everything here is derived from the width the arena was actually given, so the same numbers
+/// hold on a 42mm and a 46mm without a second set of literals to keep in step.
+enum BattleArenaLayout {
+    /// The scale the combatants are drawn at, and what one sprite therefore measures on a side.
+    static let spriteScale: CGFloat = 3
+    static var spriteSide: CGFloat { CGFloat(SpriteSheet.frameSize) * spriteScale }
+
+    /// How far each sprite stops short of the bezel. Small on purpose — the point of the story is to
+    /// push them apart — but not zero, so a sprite does not appear to be leaning on the rounded edge.
+    static let bezelInset: CGFloat = 4
+
+    /// The two screen widths this has to hold on: 41/42mm and 46mm, in points. Named so the test can
+    /// assert the arithmetic on both rather than on whichever watch the screenshot came from.
+    static let narrowestScreenWidth: CGFloat = 176
+    static let widestScreenWidth: CGFloat = 208
+
+    /// The clear space between the two sprites' INNER edges — the room a projectile has to cross,
+    /// and the thing US-090 is really about. Floored at zero for a screen too narrow to hold both.
+    static func gap(inWidth width: CGFloat) -> CGFloat {
+        max(0, width - 2 * bezelInset - 2 * spriteSide)
+    }
+
+    /// How far the projectile travels: centre of the attacker to centre of the defender, which is
+    /// the gap plus one sprite. Derived rather than a literal, so the flight still starts at the
+    /// attacker and ends at the defender on a screen the literal was never measured against.
+    static func projectileSpan(inWidth width: CGFloat) -> CGFloat {
+        max(0, width - 2 * bezelInset - spriteSide)
+    }
+}
+
 /// The full-screen battle: two Digimon trading blows, then the result.
 ///
 /// Shown as an overlay above the main screen for the same reason `EvolutionCeremonyView` and
@@ -81,34 +115,48 @@ struct BattleView: View {
         .task { await run() }
     }
 
-    /// The two combatants facing off: the player on the left facing right, the opponent on the right
-    /// facing left, so the arena reads as a fight rather than as two Digimon both looking the same way.
+    /// The two combatants facing off at OPPOSITE ends of the screen: the player against the leading
+    /// edge facing right, the opponent against the trailing edge facing left, so the arena reads as a
+    /// fight rather than as two Digimon both looking the same way — and so there is room to watch a
+    /// shot cross the gap instead of it appearing and landing in the same instant.
+    ///
+    /// A `GeometryReader` rather than a fixed span: the arena is measured, and both the standing
+    /// positions and the projectile's flight come off that one measurement, so they cannot disagree
+    /// about where the two sprites are on a screen size nobody photographed.
     private var arena: some View {
-        VStack(spacing: 6) {
-            ZStack {
-                HStack(spacing: 8) {
-                    DigimonSpriteView(stage: bout.player.spriteStage, name: bout.player.spriteFile,
-                                      animation: animation(for: .player), scale: 3,
-                                      flipped: Self.faces(.player))
-                    DigimonSpriteView(stage: bout.opponent.spriteStage, name: bout.opponent.spriteFile,
-                                      animation: animation(for: .opponent), scale: 3,
-                                      flipped: Self.faces(.opponent))
+        GeometryReader { geometry in
+            VStack(spacing: 6) {
+                ZStack {
+                    HStack(spacing: 0) {
+                        DigimonSpriteView(stage: bout.player.spriteStage, name: bout.player.spriteFile,
+                                          animation: animation(for: .player),
+                                          scale: BattleArenaLayout.spriteScale,
+                                          flipped: Self.faces(.player))
+                        Spacer(minLength: 0)
+                        DigimonSpriteView(stage: bout.opponent.spriteStage, name: bout.opponent.spriteFile,
+                                          animation: animation(for: .opponent),
+                                          scale: BattleArenaLayout.spriteScale,
+                                          flipped: Self.faces(.opponent))
+                    }
+                    .padding(.horizontal, BattleArenaLayout.bezelInset)
+
+                    projectile(inWidth: geometry.size.width)
                 }
-                projectile
+                .overlay(alignment: .top) { signatureBanner }
+
+                Text(bout.opponent.displayName)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .minimumScaleFactor(0.7)
+                    .lineLimit(1)
+
+                // The hit points left on each side, so the exchanges read as progress rather than as two
+                // sprites twitching at each other.
+                Text("\(hitPoints(.player)) — \(hitPoints(.opponent))")
+                    .font(.system(size: 13, weight: .semibold))
+                    .monospacedDigit()
             }
-            .overlay(alignment: .top) { signatureBanner }
-
-            Text(bout.opponent.displayName)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .minimumScaleFactor(0.7)
-                .lineLimit(1)
-
-            // The hit points left on each side, so the exchanges read as progress rather than as two
-            // sprites twitching at each other.
-            Text("\(hitPoints(.player)) — \(hitPoints(.opponent))")
-                .font(.system(size: 13, weight: .semibold))
-                .monospacedDigit()
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
     }
 
@@ -123,7 +171,7 @@ struct BattleView: View {
     ///
     /// `.interpolation(.none)` is not needed here — an SF Symbol is a vector, not the pixel art the
     /// sprites are, so scaling it stays crisp on its own.
-    @ViewBuilder private var projectile: some View {
+    @ViewBuilder private func projectile(inWidth arenaWidth: CGFloat) -> some View {
         if case .turn(let index) = beat, index < bout.report.turns.count {
             let move = bout.move(for: bout.report.turns[index].attacker)
             let knockout = Self.isKnockoutTurn(index, of: bout.report.turns)
@@ -133,7 +181,7 @@ struct BattleView: View {
                 .offset(x: Self.projectileOffset(
                     rightward: Self.faces(bout.report.turns[index].attacker),
                     progress: projectileProgress,
-                    span: Self.projectileSpan))
+                    span: BattleArenaLayout.projectileSpan(inWidth: arenaWidth)))
         }
     }
 
@@ -169,11 +217,6 @@ struct BattleView: View {
     static func isKnockoutTurn(_ index: Int, of turns: [BattleTurn]) -> Bool {
         turns.indices.contains(index) && turns[index].isKnockout
     }
-
-    /// How far the projectile travels, point to point — roughly the gap between the two sprites'
-    /// centres (each 16pt of art at scale 3, plus the HStack's 8pt spacing), so it reads as leaving
-    /// the attacker and reaching the defender.
-    static let projectileSpan: CGFloat = 56
 
     /// How far along its flight the current projectile is, 0 at the attacker and 1 at the defender.
     /// Reset to 0 and re-animated on every exchange in `run()`.

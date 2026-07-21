@@ -336,7 +336,7 @@ final class BattleFrameTests: XCTestCase {
     /// The player's shot leaves the player (on the left) and reaches the opponent (on the right): a
     /// rightward flight runs from `-span/2` at the attacker to `+span/2` at the defender.
     func testAPlayerProjectileFliesLeftToRight() {
-        let span = BattleView.projectileSpan
+        let span = BattleArenaLayout.projectileSpan(inWidth: BattleArenaLayout.narrowestScreenWidth)
         XCTAssertEqual(BattleView.projectileOffset(rightward: true, progress: 0, span: span),
                        -span / 2, accuracy: 0.001, "starts at the player on the left")
         XCTAssertEqual(BattleView.projectileOffset(rightward: true, progress: 0.5, span: span),
@@ -348,7 +348,7 @@ final class BattleFrameTests: XCTestCase {
     /// The opponent's shot is the mirror image: it leaves the opponent on the right and reaches the
     /// player on the left, so it flies out of the opponent's front rather than backward out of its back.
     func testAnOpponentProjectileFliesRightToLeft() {
-        let span = BattleView.projectileSpan
+        let span = BattleArenaLayout.projectileSpan(inWidth: BattleArenaLayout.narrowestScreenWidth)
         XCTAssertEqual(BattleView.projectileOffset(rightward: false, progress: 0, span: span),
                        span / 2, accuracy: 0.001, "starts at the opponent on the right")
         XCTAssertEqual(BattleView.projectileOffset(rightward: false, progress: 1, span: span),
@@ -358,7 +358,7 @@ final class BattleFrameTests: XCTestCase {
     /// The two directions are genuine mirror images at every point of the flight — the same progress
     /// puts the two shots on opposite sides of centre, never the same place.
     func testTheTwoDirectionsAreMirrored() {
-        let span = BattleView.projectileSpan
+        let span = BattleArenaLayout.projectileSpan(inWidth: BattleArenaLayout.narrowestScreenWidth)
         for step in 0...10 {
             let progress = CGFloat(step) / 10
             let right = BattleView.projectileOffset(rightward: true, progress: progress, span: span)

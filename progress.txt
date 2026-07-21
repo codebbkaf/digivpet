@@ -349,3 +349,71 @@ NOTES FOR LATER STORIES
   photographed again. Builds and tests on 46mm are fine — only screenshots.
 - `MoveTint.color` still lives in `BattleView.swift` as an exhaustive switch. The
   Dex now depends on it too, so adding a tint breaks two screens, not one.
+
+================================================================================
+2026-07-21 — US-090: Push the combatants to opposite sides of the arena
+================================================================================
+
+WHAT CHANGED
+- `Sources/BattleView.swift`:
+  - New `BattleArenaLayout` enum above `BattleView`, holding the whole geometry
+    as arithmetic on a width: `spriteScale` (3), `spriteSide` (16pt frame * 3 =
+    48), `bezelInset` (4), `narrowestScreenWidth` (176), `widestScreenWidth`
+    (208), `gap(inWidth:)` = width - 2*inset - 2*sprite, and
+    `projectileSpan(inWidth:)` = width - 2*inset - sprite (centre to centre =
+    the gap plus one sprite). Both floored at 0.
+  - `arena` is now a `GeometryReader` whose `VStack` is framed to the full
+    size, so the standing positions AND the flight come off ONE measurement and
+    cannot disagree. Inside it, `HStack(spacing: 0) { player; Spacer(minLength:
+    0); opponent }.padding(.horizontal, 4)` — was `HStack(spacing: 8)` centred.
+  - `projectile` became `projectile(inWidth:)`; the `static let projectileSpan
+    = 56` literal is DELETED. `projectileOffset(rightward:progress:span:)` is
+    untouched — the span it is handed is what changed.
+  - `faces(_:)` untouched (AC2): player mirrored, opponent not.
+- `Tests/BattleArenaTests.swift` — 10 new tests.
+- `Tests/BattleTests.swift` — the three US-072 flight tests took the 56pt
+  literal as their span; they now take
+  `BattleArenaLayout.projectileSpan(inWidth: .narrowestScreenWidth)`. Their
+  assertions are unchanged: those tests are about the offset function's shape,
+  not about how long the flight is.
+
+VERIFICATION
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
+- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1112 tests, 0 failures (was
+  1102; the 10 new ones are the delta).
+- Screenshots on `-healthAnswered -noNotificationPrompt -battleTurnDemo`, then
+  MEASURED in pixels (first/last lit column of the sprite band) rather than
+  eyeballed:
+  - 42mm (374x496px @2x = 187pt wide): player art 9-47.5pt, opponent art
+    157-198.5pt. The opponent's 48pt box starts at 187-4-48 = 135pt and its art
+    begins 1pt in, so the arena is being given the FULL screen width — watchOS
+    applies no horizontal safe-area inset here. Orange `flame.fill` clearly
+    airborne between them. "Ogremon" and "10 — 9" sit below, unoverlapped.
+  - 46mm (416x496px @2x = 208pt wide): player art 9-47.5pt, flame 56.5-68.5pt,
+    opponent art 157-198.5pt against a box starting at 208-4-48 = 156pt. Same
+    result, wider gap.
+- Real gap between the sprite BOXES: 83pt on 42mm, 104pt on 46mm, 72pt on a
+  176pt screen. All clear AC3's 60pt.
+
+READ THIS — THE AC's "42mm (176pt)" IS WRONG BY 11pt
+- The 42mm Series 11 is 187pt wide (374px @2x, measured above). 176pt is the
+  41mm Series 9, which is the genuinely narrowest supported screen and is what
+  `EnergyBarLayout.narrowestScreenWidth` already means by that number. The test
+  asserts the gap at 176 AND 208, so the 42mm is covered with 11pt to spare —
+  but do not "fix" 176 to 187 later thinking it is a typo. 176 is the floor.
+- `widestScreenWidth = 208` was CONFIRMED against the 46mm screenshot, not
+  assumed. The 49mm Ultra is wider still (~205-210); nothing here breaks on it,
+  since more width only becomes more gap.
+
+NOTES FOR LATER STORIES
+- US-091 (eased flight) should slow `projectileProgress`, not shorten the span:
+  the span is now ~132pt on 42mm and ~152pt on 46mm, up from the old flat 56pt,
+  so the SAME `turnDuration` already moves the glyph more than twice as far per
+  second. A linear ramp over that distance is what US-091 is being asked to fix.
+- AC5 (name/HP not overlapped) is checked ONLY on the screenshots and says so in
+  a comment at the foot of `BattleArenaTests`. The sprites move within their own
+  `VStack` row, so no arithmetic in that file could be made to fail by an
+  overlap; a test claiming to cover it would pass for the wrong reason.
+- The 46mm sim's wedged notification alert (flagged by US-089) is GONE — it took
+  `xcrun simctl erase BA425DD4-8856-4933-8198-0E4B89960E48` followed by a
+  re-boot and re-install. Screenshots on 46mm work again.

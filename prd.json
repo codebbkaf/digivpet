@@ -115,8 +115,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleArenaLayout (gap/projectileSpan off the measured arena width) + arena in a GeometryReader: HStack { player; Spacer(minLength: 0); opponent } inset 4pt, faces(_:) unchanged. 72pt gap at 176pt, 104pt at 208pt; the 56pt span literal is gone. Build + 1112 tests green; 42mm and 46mm screenshots show both sprites at the bezels with the projectile between them. NOTE: the real 42mm is 187pt wide, not the 176pt the AC names (176 is the 41mm); the test asserts 176 and 208, so 42mm is covered with room to spare."
     },
     {
       "id": "US-091",
