@@ -249,8 +249,8 @@
         "Typecheck passes"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "New pure `DexHintList` decides the sheet's condition list from (selection, candidates); `DexDetailView` holds the tapped `DexCandidate.ID` in @State and every candidate cell is a Button (undiscovered included), marked with a white inner ring — a third channel beside brightness and the green earned outline. Unconditional branch says `nothingRequired`. 12 new tests in DexBranchHintTests; 1316 tests 0 failures; 41mm screenshots of flat, selected, deselected (byte-identical to flat) and the unconditional branch."
     },
     {
       "id": "US-112",

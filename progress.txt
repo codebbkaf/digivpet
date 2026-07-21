@@ -345,3 +345,47 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   once the pose expired, upright and WANDERING (two shots, sprite at different x and mirrored) while
   still inside the same forced sleep window. That last pair is AC23 and AC6 together.
 - REMAINS: US-111, US-112, US-113. Nothing blocked.
+
+## 2026-07-22 — US-111: Tapping an evolution candidate shows that branch's conditions
+- The whole selection behaviour is a new pure value, `Sources/DexHintList.swift`:
+  `DexHintList.list(selecting:from:) -> DexHintList?` over `(DexCandidate.ID?, [DexCandidate])`.
+  `DexView` no longer computes conditions at all — its old `conditions` property (the flattening
+  AND its dedup key) moved wholesale into `DexHintList.flat`, so AC13's "flat merges, a branch does
+  not" is one function's contract rather than two code paths that could drift.
+- A `Line` enum (`.condition` / `.plain`) is what let AC8 and AC15 both be real. The view switches
+  on it: `.condition` still goes to the UNCHANGED `ConditionHintRow`, `.plain` draws one secondary
+  10pt line. That is also what makes `list.text(in:)` honest — it is the same `ConditionReveal.line`
+  the row draws, so the "name appears nowhere" test reads what the sheet says instead of a
+  reconstruction of it. `ConditionReveal.swift` is not in the diff at all.
+- nil from `list(selecting:)` still means DRAW NO SECTION, which is only ever the flat case. A
+  SELECTED branch never returns nil — that is AC8: an unconditional edge answers with
+  `nothingRequired` ("Nothing in particular. This is where it drifts on its own."), worded in
+  ConditionHint's register and pinned by a no-digit test like every other hint. A stale selection
+  falls back to flat rather than to nothing.
+- AC6's third channel is a WHITE ring inset 2pt inside the tile, and the placement of the modifier
+  is the load-bearing part: it is applied AFTER `.opacity(...)`, not exempted inside it the way the
+  earned checkmark is. So selecting an unmet "?" brightens nothing — the cell stays at 0.55 and only
+  the ring is at full strength. Inset 2 so it never lands on the green earned outline; a cell can be
+  earned and selected at once and both stay readable (screenshot `nothing.png` has one of each).
+- AC1: the candidate `Button` has NO `.disabled(!row.isDiscovered)`, unlike `DexGridView`'s cells.
+  Deliberate and commented — a "?" has no detail sheet to open but it does have conditions, and
+  asking what the "?" wants is the entire story.
+- AC9 is true BY CONSTRUCTION and is the one criterion with no test: the selection is `@State` on
+  `DexDetailView`, which `.sheet(item:)` destroys on dismiss and rebuilds on reopen. Nothing stores
+  it on the model or the row. Verified by inspection, not by assertion — said plainly here rather
+  than covered by a test that would only be re-asserting SwiftUI's own lifecycle.
+- The DexView comment arguing for the flat list was rewritten, not deleted (AC12): it now says flat
+  is the DEFAULT and why, and that US-111 made per-branch something the player ASKS for — "asking
+  about one is a different thing from being handed all of them".
+- Three new debug flags, all calling the real `toggle(_:)`: `-dexBranchDemo` (first conditioned
+  branch), `-dexBranchNoneDemo` (first unconditional one) and `-dexBranchToggleDemo`, which calls
+  `toggle` TWICE on the same candidate — so the deselected screenshot comes from a second tap, not
+  from never having selected. The hint-scroll hook now fires for all of them.
+- PASSED: build green; 1316 tests, 0 failures (was 1304), 12 new in `Tests/DexBranchHintTests.swift`.
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, args `-healthAnswered -noNotificationPrompt
+  -dexDemo -dexDetailDemo -dexRevealDemo` plus the branch flag; screenshots at /tmp/us111/ (not
+  committed). flat -> "It wants" with all four criteria across the three branches; selected ->
+  "To become this" with Greymon's two only and a white ring on its cell; deselected -> BYTE-IDENTICAL
+  to flat (same md5, 0db00362...), which is AC4 as strongly as a screenshot can put it; nothing ->
+  Numemon's "?" ringed, still a "?", with the plain line under "To become this".
+- REMAINS: US-112, US-113. Nothing blocked.
