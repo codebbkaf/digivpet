@@ -5,3 +5,20 @@ Source PRDs: tasks/prd-live-animation-and-battle-impact.md
              tasks/prd-battle-cost-sleep-and-screen-polish.md
 Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-polish/
 ---
+
+## 2026-07-21 — US-102: Two-frame loops for the poses that were held still
+- Added ONE case to SpriteAnimation (Sources/DigimonSpriteView.swift): `case pose(SpriteFrame)`.
+  - stageFrames: `[frame, .walk1]` — pose frame first.
+  - frameDuration: the shared 0.5s V-Pet beat.
+  - eggFrames: `[]`, so a Digitama falls through to the placeholder exactly as `.still` does.
+  - `pose(.walk1)` -> `[.walk1, .walk1]`, no guard needed.
+- `.still(_)` untouched: still one held frame, still used for the dead Digimon
+  (MainScreenModel.swift:916) and the battle result screen (BattleView.swift:303).
+- Purely additive: DigimonSpriteView is the only switch over SpriteAnimation; no call sites moved
+  to `.pose` yet — that is US-103 (main screen) and US-105 (battle).
+- Tests: 8 new in Tests/SpriteAnimationTests.swift — pose/walk1 pairing for refuse/happy/angry/
+  attack, `.still` unchanged, pose(.walk1), shared beat, two distinct crops off a synthetic
+  48x64 checker sheet (identity + drawn pixels), 0/1/0/1 over four 0.5s samples, egg yields
+  nothing, Hashable in a Set and distinct from `.still` of the same frame.
+- PASSED: build green; full suite 1264 tests, 0 failures; SpriteAnimationTests 24/24.
+- REMAINS: US-103 onward. Nothing blocked.

@@ -20,8 +20,18 @@ enum SpriteAnimation: Hashable {
     /// battle, `.sick` is an ailing Digimon labouring on the spot. Sharing the art is deliberate —
     /// the sheet has no illness frames, and hurt is what "unwell" looks like in this pack.
     case sick
-    /// One frame, held. Refuse, attack, happy and angry are poses, not loops.
+    /// One frame, held. For the poses that are genuinely motionless: the dead Digimon and the
+    /// battle result screen. A corpse must not twitch.
     case still(SpriteFrame)
+    /// A pose paired with `walk1` into a two-frame loop, so it MOVES (US-102).
+    ///
+    /// The sheet has exactly one drawing each for refuse (6), happy (7), angry (8) and attack (11),
+    /// which is why they first shipped as `.still(_)`. Pairing each with walk1 is what the physical
+    /// V-Pet does and needs no new art.
+    ///
+    /// One parameterised case rather than four named ones, deliberately: a per-pose case list would
+    /// need a new case and a new switch arm for every frame someone later wants to animate.
+    case pose(SpriteFrame)
 
     /// How long each frame is held, for every loop but `.sick`. The V-Pet cadence comes from all of
     /// them sharing this one value.
@@ -37,7 +47,7 @@ enum SpriteAnimation: Hashable {
     var frameDuration: TimeInterval {
         switch self {
         case .sick: return Self.sickFrameDuration
-        case .idle, .eat, .sleep, .hurt, .still: return Self.frameDuration
+        case .idle, .eat, .sleep, .hurt, .still, .pose: return Self.frameDuration
         }
     }
 
@@ -49,18 +59,24 @@ enum SpriteAnimation: Hashable {
         case .sleep: return [.sleep1, .sleep2]
         case .hurt, .sick: return [.hurt1, .hurt2]
         case .still(let frame): return [frame]
+        // Pose FIRST: the loop has to start on the drawing the caller asked for, or a refusal
+        // would read as a step taken before the head shake.
+        //
+        // `pose(.walk1)` yields [walk1, walk1] and needs no guard — two identical frames animate
+        // as a still, which is exactly what asking to "animate walk1 against walk1" should mean.
+        case .pose(let frame): return [frame, .walk1]
         }
     }
 
     /// The loop's frames on a 48x16 Digitama sheet, which only has an idle wobble — an egg
-    /// cannot eat, sleep or be hurt, so those loops have no art and yield a placeholder.
+    /// cannot eat, sleep, be hurt or look happy, so those loops have no art and yield a placeholder.
     ///
     /// Deliberately never falls back to `stageFrames`: an egg's index 2 is the hatch, so
     /// reusing walk1/walk2 indices would draw the egg cracking open as part of its idle.
     var eggFrames: [EggFrame] {
         switch self {
         case .idle: return [.idle, .wobble]
-        case .eat, .sleep, .hurt, .sick, .still: return []
+        case .eat, .sleep, .hurt, .sick, .still, .pose: return []
         }
     }
 

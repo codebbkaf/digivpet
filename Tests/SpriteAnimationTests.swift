@@ -139,6 +139,89 @@ final class SpriteAnimationTests: XCTestCase {
         XCTAssertTrue(SpriteAnimation.sick.frames(from: egg).isEmpty)
     }
 
+    // MARK: - US-102: poses are two-frame loops
+
+    /// The whole story in one assertion: a pose is its own frame paired with walk1, in that order.
+    /// Pose first, because a refusal that stepped before it shook its head would read backwards.
+    func testAPoseIsItsFramePairedWithWalk1() {
+        for frame: SpriteFrame in [.refuse, .happy, .angry, .attack] {
+            XCTAssertEqual(SpriteAnimation.pose(frame).stageFrames, [frame, .walk1],
+                           "\(frame) must loop against walk1")
+        }
+    }
+
+    /// `.still(_)` stays a held single frame — it is still what the dead Digimon and the battle
+    /// result screen use, and a corpse must not twitch.
+    func testStillIsUnchangedAndStillOneFrame() {
+        for frame: SpriteFrame in [.refuse, .happy, .angry, .attack, .hurt2] {
+            XCTAssertEqual(SpriteAnimation.still(frame).stageFrames, [frame])
+        }
+    }
+
+    /// Asking to animate walk1 against walk1 is harmless rather than a special case needing a
+    /// guard: two identical frames animate as a still.
+    func testPosingWalk1AgainstItselfNeedsNoGuard() {
+        XCTAssertEqual(SpriteAnimation.pose(.walk1).stageFrames, [.walk1, .walk1])
+    }
+
+    func testAPoseKeepsTheSharedVPetBeat() {
+        for frame: SpriteFrame in [.refuse, .happy, .angry, .attack] {
+            XCTAssertEqual(SpriteAnimation.pose(frame).frameDuration, SpriteAnimation.frameDuration)
+        }
+    }
+
+    /// AC: on a synthetic 48x64 stage sheet each pose resolves to two DISTINCT crops, the first
+    /// being the pose's own frame. Synthetic rather than Agumon's so every cell is a known,
+    /// different colour — identical art would make "distinct" impossible to tell from a stuck rect.
+    func testEachPoseResolvesToTwoDistinctFramesOfAStageSheet() throws {
+        let sheet = try XCTUnwrap(SpriteSheet(sheet: try checkerStageSheet()))
+
+        for frame: SpriteFrame in [.refuse, .happy, .angry, .attack] {
+            let frames = SpriteAnimation.pose(frame).frames(from: sheet)
+
+            XCTAssertEqual(frames.count, 2, "\(frame)")
+            XCTAssertTrue(frames[0] === sheet[frame], "\(frame) must be drawn first")
+            XCTAssertTrue(frames[1] === sheet[.walk1], "\(frame) must be followed by walk1")
+            XCTAssertNotEqual(try pixels(of: frames[0]), try pixels(of: frames[1]),
+                              "\(frame) and walk1 must be different art")
+        }
+    }
+
+    /// A two-frame pose loop alternates on the shared beat, exactly as the eat and sleep loops do.
+    func testAPoseLoopAlternatesOnEveryHalfSecond() {
+        let count = SpriteAnimation.pose(.happy).stageFrames.count
+        let indices = [0.0, 0.5, 1.0, 1.5].map { second in
+            SpriteAnimation.frameIndex(at: Date(timeIntervalSinceReferenceDate: second),
+                                       count: count,
+                                       duration: SpriteAnimation.pose(.happy).frameDuration)
+        }
+
+        XCTAssertEqual(indices, [0, 1, 0, 1])
+    }
+
+    /// An egg cannot look happy or attack, so a pose falls through to the placeholder exactly as
+    /// `.still` already does — never to indices 6-11, which on a 48x16 sheet do not exist.
+    func testAnEggHasNoArtForAPose() throws {
+        let egg = try XCTUnwrap(SpriteSheetCache.shared.sheet(stage: "Digitama", name: "Agu_Digitama"))
+
+        for frame: SpriteFrame in [.refuse, .happy, .angry, .attack, .walk1] {
+            XCTAssertTrue(SpriteAnimation.pose(frame).eggFrames.isEmpty, "\(frame)")
+            XCTAssertTrue(SpriteAnimation.pose(frame).frames(from: egg).isEmpty, "\(frame)")
+        }
+    }
+
+    /// `restingPoses` is a `Set<SpriteAnimation>`, so the new case must not have cost the enum its
+    /// `Hashable` conformance — and a pose must not collide with the `.still` of the same frame.
+    func testPosesRemainHashableAndDistinctFromStills() {
+        let poses: Set<SpriteAnimation> = [.idle, .sleep, .sick, .still(.hurt2),
+                                           .pose(.happy), .pose(.attack)]
+
+        XCTAssertTrue(poses.contains(.pose(.happy)))
+        XCTAssertFalse(poses.contains(.pose(.refuse)))
+        XCTAssertFalse(poses.contains(.still(.happy)))
+        XCTAssertNotEqual(SpriteAnimation.pose(.happy), SpriteAnimation.still(.happy))
+    }
+
     // MARK: - US-068 AC5: the resting pose is a pure function of health
 
     /// No store, no clock, no view: the four answers, from the two inputs, in one place.
@@ -166,5 +249,44 @@ final class SpriteAnimationTests: XCTestCase {
                                "\(health), asleep: \(isAsleep)")
             }
         }
+    }
+
+    // MARK: - Helpers
+
+    /// A 48x64 stage sheet whose twelve 16x16 cells are each a different shade, so a crop can be
+    /// told from its neighbour by pixels alone.
+    private func checkerStageSheet() throws -> CGImage {
+        let context = try XCTUnwrap(CGContext(
+            data: nil,
+            width: 48,
+            height: 64,
+            bitsPerComponent: 8,
+            bytesPerRow: 48 * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        for frame in SpriteFrame.allCases {
+            let shade = CGFloat(frame.rawValue) / CGFloat(SpriteFrame.allCases.count)
+            context.setFillColor(CGColor(red: shade, green: 1 - shade, blue: 0.5, alpha: 1))
+            context.fill(frame.sourceRect)
+        }
+        return try XCTUnwrap(context.makeImage())
+    }
+
+    /// Cropped frames share the sheet's backing buffer, so their raw data provider is the whole
+    /// sheet — they have to be drawn to be compared.
+    private func pixels(of image: CGImage) throws -> Data {
+        let context = try XCTUnwrap(CGContext(
+            data: nil,
+            width: image.width,
+            height: image.height,
+            bitsPerComponent: 8,
+            bytesPerRow: image.width * 4,
+            space: CGColorSpaceCreateDeviceRGB(),
+            bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+        ))
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        let data = try XCTUnwrap(context.data)
+        return Data(bytes: data, count: image.width * image.height * 4)
     }
 }

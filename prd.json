@@ -22,8 +22,8 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added `case pose(SpriteFrame)` to SpriteAnimation: stageFrames [frame, .walk1], shared 0.5s beat, empty eggFrames; .still unchanged. 8 new SpriteAnimationTests (synthetic 48x64 sheet, 0/1/0/1 cadence, Hashable). Build green, 1264 tests pass."
     },
     {
       "id": "US-103",
