@@ -517,8 +517,8 @@
         "Tests pass"
       ],
       "priority": 28,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SequenceRecallGame: pattern drawn from SeededGenerator via sequence(using:length:); correctCount(of:against:) stops at the first wrong entry; grade(correct:length:) pays perfect only for the whole pattern (great 3/4, good 1/2, rounded up). Length and playback speed (stepDuration/stepGap) injectable. 32 new tests, 1015 total, 0 failures; build green. Screenshots on Series 11 46mm: /tmp/us081_playback.png (pad lit, 'Watch…'), /tmp/us081_input.png ('Your turn — 0/4'), /tmp/us081_perfect.png (Perfect, 4 dots, +3 STR), /tmp/us081_miss.png (wrong entry after 1 step: Miss, 1 dot, +0 STR)."
     },
     {
       "id": "US-082",

@@ -41,6 +41,14 @@ struct ContentView: View {
     @State private var showsReflexStrikeDemo = CommandLine.arguments.contains("-reflexStrikeDemo")
         || CommandLine.arguments.contains("-reflexStrikeResultDemo")
         || CommandLine.arguments.contains("-reflexStrikeFalseStartDemo")
+    /// US-081's sequence recall, on the same footing again: `-sequenceRecallDemo` holds the first
+    /// pad of the pattern lit so playback can be screenshotted, `-sequenceRecallInputDemo` races
+    /// through playback so the round is caught listening, and the two result demos stage how much
+    /// was remembered.
+    @State private var showsSequenceRecallDemo = CommandLine.arguments.contains("-sequenceRecallDemo")
+        || CommandLine.arguments.contains("-sequenceRecallInputDemo")
+        || CommandLine.arguments.contains("-sequenceRecallResultDemo")
+        || CommandLine.arguments.contains("-sequenceRecallMissDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -191,6 +199,36 @@ struct ContentView: View {
         }
         return game
     }
+
+    /// The sequence recall staged for a screenshot. `simctl` cannot tap, so the two decided rounds
+    /// stage how much of the pattern was remembered and let the real rules say what it was worth.
+    ///
+    /// `-sequenceRecallDemo` stretches one step of playback out past any screenshot, so the recital
+    /// is caught with a pad lit — the pattern is the real one, drawn and played back with nothing
+    /// staged.
+    /// `-sequenceRecallInputDemo` races through playback instead and holds the round listening, which
+    /// is the other half of AC1: shown, then waiting to be reproduced.
+    /// `-sequenceRecallResultDemo` stages the WHOLE pattern remembered, which is AC2's premise rather
+    /// than a count that happens to clear a threshold.
+    /// `-sequenceRecallMissDemo` stages one step remembered of four, so the round ends the way a real
+    /// one does — on a wrong entry, through `correctCount(of:against:)`.
+    private static var sequenceRecallDemoGame: SequenceRecallGame {
+        var game = SequenceRecallGame(onFinish: { _ in })
+        if CommandLine.arguments.contains("-sequenceRecallResultDemo") {
+            game.demoCorrectCount = game.sequenceLength
+            game.resultDuration = 600
+        } else if CommandLine.arguments.contains("-sequenceRecallMissDemo") {
+            game.demoCorrectCount = 1
+            game.resultDuration = 600
+        } else if CommandLine.arguments.contains("-sequenceRecallInputDemo") {
+            game.stepDuration = 0.05
+            game.stepGap = 0.05
+            game.inputTimeout = 600
+        } else {
+            game.stepDuration = 600
+        }
+        return game
+    }
     #endif
 
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
@@ -302,6 +340,8 @@ struct ContentView: View {
                 Self.crownSprintDemoGame
             } else if showsReflexStrikeDemo {
                 Self.reflexStrikeDemoGame
+            } else if showsSequenceRecallDemo {
+                Self.sequenceRecallDemoGame
             }
         }
         #endif

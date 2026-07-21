@@ -2005,3 +2005,105 @@ NOTES FOR THE NEXT ITERATIONS (US-081, then US-082/083)
    minigame yet. Still US-083's job. Five games conform now.
 
 Next: US-081 (training minigame — Sequence Recall).
+
+================================================================================
+2026-07-21 — US-081: Training minigame — Sequence Recall
+================================================================================
+
+WHAT I DID
+
+New `Sources/SequenceRecallGame.swift` and `Tests/SequenceRecallTests.swift`, plus four demo flags in
+`ContentView`. No `project.yml` change — Sources and Tests are globbed by path, so the sixth game is
+still just two files. The template has not moved in six games.
+
+THE GAME
+
+Four pads in a 2x2 grid, each with its own colour AND its own SF Symbol — a pattern told apart by hue
+alone is unplayable for a colourblind user, so the symbol is what makes the four distinguishable and
+the colour is what makes them quick. Playback lights each step in turn, then the round listens.
+
+Three pure functions carry the whole thing, none of which needs a view:
+  `sequence(using:length:)`      — draws the pattern from `SeededGenerator`, repeats ALLOWED (a
+                                   pattern that could never repeat a pad leaks what is coming; the
+                                   `stepGap` is what keeps a repeat readable as two flashes).
+  `correctCount(of:against:)`    — how many steps matched, stopping at the FIRST that did not. This
+                                   IS "the first wrong entry ends the round", as one function. The
+                                   view appends the tapped pad and reads this, so what ends a round
+                                   is the same code the tests assert on. Nothing after a mistake
+                                   counts, even when it happens to match — otherwise a wrong entry
+                                   is a free retry and the game rewards guessing along.
+  `grade(correct:length:)`       — a SHARE of the pattern per grade (good 1/2, great 3/4), rounded
+                                   up, floored at one step, for the same reason `ButtonMasherGame`
+                                   uses a rate: `sequenceLength` is injectable, and fixed counts
+                                   would make a longer pattern silently easier. `perfect` is the
+                                   exception — exactly `length`, never less, because "a fully
+                                   correct sequence yields perfect" is the premise and not a knob.
+
+Injectable: `sequenceLength`, `stepDuration`, `stepGap` (the playback speed), `inputTimeout`,
+`resultDuration`, `makeGenerator`. A test drives a round in milliseconds and never waits one.
+
+VERIFICATION — every AC, and how
+
+  Build   `xcodebuild build` on Series 11 46mm: ** BUILD SUCCEEDED **
+  Tests   `xcodebuild test`: Executed 1015 tests, 0 failures. 32 of them are new (983 before).
+  AC1     Shown then reproduced: the two playback/input screenshots below are one real round each,
+          drawn and played back with nothing staged. The correct count deciding the grade is
+          `SequenceRecallGradeTests`, on the number at every threshold of the shipped four-step
+          pattern and one step short of each.
+  AC2     `testOnlyAFullyCorrectPatternIsPerfect` asserts BOTH halves across lengths 1...20 — all of
+          it is perfect, one short never is. The wrong-entry half is
+          `SequenceRecallCorrectCountTests`, in particular
+          `testStepsAfterAMistakeDoNotCountEvenIfTheyMatch`, which is the one a naive implementation
+          fails.
+  AC3     `testTheSameSeedDrawsTheSamePattern`, plus `testAWholeRunOfRoundsRepeatsFromTheSameSeed`
+          which also asserts the five draws are not all identical — a constant wearing a generator's
+          clothes passes the first and fails this. 200 seeds land on pads that exist.
+          `testTheShippedGameDoesNotAskForTheSamePatternTwice` is the reverse guard against a pinned
+          seed being copy-pasted out of a test into the shipped default. Length and playback speed
+          injectable: `testTheLengthIsInjectable`, `testTheRoundTimingsAreInjectable`.
+  AC4     `grade(correct:length:)` is static, exercised directly, including empty patterns, negative
+          counts and impossible ones.
+  AC5     Screenshots, Series 11 46mm, all four observed and read:
+          /tmp/us081_playback.png — `-sequenceRecallDemo`: the blue pad lit mid-recital, "Watch…",
+            four empty dots. A REAL pattern, drawn through `sequence(using:length:)` and played back;
+            only the step's duration is stretched so a screenshot can catch it.
+          /tmp/us081_input.png — `-sequenceRecallInputDemo`: every pad dark, "Your turn — 0/4". Same
+            real round with playback raced through instead. Together these two are AC1's "shown, then
+            reproduced" observed happening rather than inferred.
+          /tmp/us081_perfect.png — `-sequenceRecallResultDemo`: "Perfect" in yellow, four yellow
+            dots, the last-entered pad lit, "+3 STR". Staged as the WHOLE pattern remembered, which
+            is AC2's premise itself and not a count that happens to clear a threshold.
+          /tmp/us081_miss.png — `-sequenceRecallMissDemo`: "Miss", ONE dot filled, the wrong pad
+            still lit under the verdict, "+0 STR". Staged as one step of four remembered and then
+            finished with a deliberately wrong pad, so the round ends the way a real one does —
+            through `correctCount(of:against:)` — rather than by asserting a grade.
+
+WHAT IS NOT CLAIMED
+
+Nobody tapped this. `simctl` cannot tap, so no pad has ever been pressed by a finger: the two decided
+rounds stage an attempt and let the real rules judge it. What that leaves untested is `tap(pad:)`'s
+own bookkeeping — appending to `entries` and reading the result — which is four lines over a function
+that is itself tested. Same gap the other five games have, and the same fix if it ever matters: a
+watchOS UI-test target, which is a story of its own.
+
+The shares (1/2 and 3/4) are a first guess, not a measured one. Four steps is short on purpose; if
+playtesting says a perfect is too cheap, lengthen `sequenceLength` before touching the shares — the
+shares are proportional, so the game means the same thing at any length.
+
+LAUNCH FLAGS
+
+`-noNotificationPrompt -healthAnswered` are STILL mandatory alongside any demo flag. Do NOT use
+`-healthAutoConfirm`. Do NOT uninstall the app. Bundle id is `com.digivpet.DigiVPet`.
+
+NOTES FOR THE NEXT ITERATIONS (US-082, then US-083)
+
+1. Six games conform to `TrainingMinigame` now: TimingBar, ButtonMasher, PowerMeter, CrownSprint,
+   ReflexStrike, SequenceRecall. `Self.title` is static on every one, so US-082 can name a game
+   without building it — that is what the `static var title` on the protocol was for.
+2. US-082 assigns a game per Digimon. Every game's difficulty knobs are plain stored properties with
+   defaults, so an assignment can hand a Digimon a harder round without a new type: a longer
+   `sequenceLength`, a shorter `ButtonMasherGame.window`, a crueller `ReflexStrikeGame.delayRange`.
+3. The Train button STILL calls `TrainAction.train(_:isAsleep:result: .good)`; nothing opens a
+   minigame yet. That is US-083, and it is the last story in the file.
+
+Next: US-082 (assign a minigame per Digimon).
