@@ -195,6 +195,26 @@ struct EvolutionGraph: Codable, Equatable {
     func nodes(at stage: Stage) -> [EvolutionNode] {
         nodes.filter { $0.stage == stage }
     }
+
+    /// The Digitama at the bottom of `id`'s line, found by walking parent edges down until a
+    /// `.digitama`-stage node is reached — the egg any Digimon in a wired line hatched from (US-127).
+    ///
+    /// Used once, to backfill `GameState.originDigitamaId` on a save written before origins were
+    /// tracked, whose `currentDigimonId` may be an evolved form. Returns nil when the id is not in
+    /// the graph (one of the 780 orphan Digimon), or when the line reaches a root that is not a
+    /// Digitama — in both cases the caller has no better answer than the id itself. Takes the FIRST
+    /// parent at each converging step: the bottom of a line, where Digitama sit, does not fork in the
+    /// shipped graph, so the first parent is the only parent there.
+    func digitamaRoot(of id: String) -> String? {
+        var current = id
+        var visited: Set<String> = []
+        while let node = node(id: current), visited.insert(current).inserted {
+            if node.stage == .digitama { return current }
+            guard let parent = parents(of: current).first else { return nil }
+            current = parent.id
+        }
+        return nil
+    }
 }
 
 extension EvolutionGraph {

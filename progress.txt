@@ -1067,3 +1067,54 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     engine is the first thing that will**, and it wants a real `GameStore` method rather than this.
 - REMAINS: US-127 onward (13/56 passing).
 ---
+
+## 2026-07-22 — US-127: One of each Digitama, ever — until it dies
+- New `GameState.originDigitamaId` (optional-backed storage, the house pattern) — the egg a Digimon
+  hatched from, carried UNCHANGED through evolution because `advance` writes `currentDigimonId`/
+  `stage` and never touches it. `init` gained an `originDigitamaId:` param defaulting to
+  `currentDigimonId` (every path today is born AS a Digitama and is its own origin); US-132's Jogress
+  result is the first caller to pass something else.
+- HELD is DERIVED, not stored. `GameStore.heldDigitamaIds()` = `Set` of `originDigitamaId` over the
+  LIVING box records; `heldDigitamaIds(in:)` is the pure rule. An unhatched egg IS a `GameState` at
+  `.digitama` whose origin is itself, so it needs no special case; a death releases its id for FREE
+  because the dead record is filtered out — nothing has to remember to remove it.
+- `EvolutionGraph.digitamaRoot(of:)` walks parent edges down a line to its Digitama, for the
+  migration: `greymon` -> `agumon` -> `koromon` -> `botamon` -> `agu_digitama`.
+- The origin backfill runs at the TOP of `loadOrCreateProfile`, BEFORE the early return, saving only
+  when it wrote something. `MainScreenModel.heldDigitamaIds` is the seam US-128 filters map drops on.
+- Files: Sources/{GameState,GameStore,EvolutionGraph,MainScreenModel}.swift,
+  Tests/HeldDigitamaTests.swift (new, 9 tests). No existing test file edited.
+- PASSED: build green. `Executed 1586 tests, with 0 failures` (1577 + 9).
+- **DELIBERATE DEVIATION FROM AC1, and it is the one thing to review.** AC1 says "PlayerProfile
+  tracks the HELD Digitama ids". Held is a fact about which `GameState`s currently exist and are
+  alive, so it lives with the box (`GameStore`), not on `PlayerProfile` — the same reasoning US-124
+  used to put "exactly one active" in the store rather than on the record. Storing it separately
+  would have five write sites (hatch, evolve, death, reset, jogress) and four chances to drift, and a
+  drift here is the exact duplicate-egg bug this story exists to stop. Deriving off `originDigitamaId`
+  has zero sync points and is always correct. `PlayerProfile.ownedDigitamaIds` (ever owned) is
+  untouched and still exists — held and ever-owned are different questions.
+- **AC2 tested against the REAL pre-US-123 fixture**, whose Digimon is a `greymon` with no origin
+  column: after `loadOrCreateProfile` the state reads `agu_digitama`, `hasStoredOrigin` is true (a
+  real write, not the `?? currentDigimonId` fallback), the value survives a reopen, and the held set
+  is `{agu_digitama}`. The backfill is at the top of `loadOrCreateProfile` so it fires for a player
+  who ALREADY has a profile too (US-124's lesson) — idempotent.
+- AC6 both cases pass, plus the REAL hatch through `MainScreenModel` proves the shipped `advance`
+  keeps the origin.
+- **Learnings for future iterations:**
+  - **"Held" is a query, not a stored field.** Any "the player currently has X" fact that is fully
+    determined by the box (`allStates()`) is cheaper and safer to DERIVE than to store and sync —
+    `originDigitamaId` on the record makes the box self-describing. Reach for a stored mirror only
+    when the fact cannot be recovered from what is already persisted.
+  - **A one-time backfill of a NEW `@Model` field must run OUTSIDE the "create the profile" branch.**
+    The lifetime/map migrations sit inside `loadOrCreateProfile`'s create path, which a US-123-build
+    player never re-enters. An origin (or any per-`GameState`) backfill has to run before that early
+    return, gated on the field being unset, so it reaches an already-migrated store. Idempotent +
+    save-only-if-changed makes running it every launch free.
+  - **`GameState.init`'s argument ORDER is `isActive:` then `originDigitamaId:`.** A call that puts
+    `originDigitamaId:` first fails to compile with "argument 'isActive' must precede...". US-132's
+    Jogress result will pass both.
+  - **`EvolutionGraph.digitamaRoot` only works for the 88 wired nodes.** An orphan id (one of the 780)
+    returns nil and the backfill keeps the current id as the origin — fine for a `.digitama` record,
+    a best-effort for anything the graph cannot trace. Phase E wiring makes more lines traceable.
+- REMAINS: US-128 onward (14/56 passing).
+---

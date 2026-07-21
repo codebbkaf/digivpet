@@ -109,6 +109,28 @@ final class GameStore {
         try allStates().first(where: \.isActive)
     }
 
+    /// Every Digitama id the player currently HOLDS (US-127): an unhatched egg in the box, or any
+    /// LIVING Digimon that hatched from one. A map must never drop an egg on this set (US-128), and a
+    /// Jogress removes both its parents' ids from it (US-132).
+    ///
+    /// DERIVED from the box rather than stored on `PlayerProfile`, and that is the design decision
+    /// worth reviewing. "Held" is a fact about which `GameState` records currently exist and are
+    /// alive — an unhatched egg IS a `GameState` at `.digitama`, whose `originDigitamaId` is itself —
+    /// so `originDigitamaId` on each record makes the box self-describing and there is nothing to
+    /// keep in sync at a hatch, an evolution, a death, a reset or a Jogress. This is the same reason
+    /// US-124 put the "exactly one active" invariant in the store rather than on the record: a
+    /// separately stored set would have five write sites and four chances to drift, and a drift here
+    /// is the exact duplicate-egg bug this story exists to stop. A death releases an id for free,
+    /// because a dead record is filtered out here (AC5) — nothing has to remember to remove it.
+    func heldDigitamaIds() throws -> Set<String> {
+        Self.heldDigitamaIds(in: try allStates())
+    }
+
+    /// The held-set rule as pure arithmetic over the box, so it is testable without a store.
+    static func heldDigitamaIds(in states: [GameState]) -> Set<String> {
+        Set(states.lazy.filter { !$0.isDead }.map(\.originDigitamaId))
+    }
+
     /// Puts `state` out and freezes whichever Digimon was out before, in ONE saved transaction.
     ///
     /// Both flips happen against the context before a single `save()`, so the store on disk goes
@@ -294,7 +316,15 @@ final class GameStore {
     ///
     /// - Parameter roster: injected only so a test can seed the Dex filter; the shipped file is the
     ///   default, as everywhere else.
-    func loadOrCreateProfile(roster: Roster = .bundled) throws -> PlayerProfile {
+    /// - Parameter graph: injected only so a test can control the origin backfill; the shipped graph
+    ///   is the default.
+    func loadOrCreateProfile(roster: Roster = .bundled, graph: EvolutionGraph = .bundled) throws -> PlayerProfile {
+        // US-127: backfill `originDigitamaId` on any record a pre-US-127 store left unset, BEFORE the
+        // early return below. It cannot live inside the create branch the way the lifetime and map
+        // migrations do: a player who has already run the US-123 build has a profile and so never
+        // re-enters that branch, yet their `GameState` still has no origin. Idempotent — it touches
+        // only records with no stored origin — so running it on every open is free after the first.
+        try backfillOriginDigitamaIds(graph: graph)
         if let saved = try context.fetch(FetchDescriptor<PlayerProfile>()).first {
             return saved
         }
@@ -324,6 +354,22 @@ final class GameStore {
         context.insert(fresh)
         try context.save()
         return fresh
+    }
+
+    /// Stamps `originDigitamaId` (US-127) on every saved Digimon a pre-US-127 store left without one.
+    ///
+    /// The origin of an evolved save is recovered by tracing `currentDigimonId` down its line to the
+    /// Digitama it hatched from (`EvolutionGraph.digitamaRoot`) — the fixture's `greymon` traces to
+    /// `agu_digitama`. A record whose id the graph does not know (an orphan line) keeps its current
+    /// id as the origin, which is the honest best answer and correct for a record still at `.digitama`.
+    /// Saves only when it actually wrote something, so a store already stamped touches disk not at all.
+    private func backfillOriginDigitamaIds(graph: EvolutionGraph) throws {
+        var changed = false
+        for state in try allStates() where !state.hasStoredOrigin {
+            state.originDigitamaId = graph.digitamaRoot(of: state.currentDigimonId) ?? state.currentDigimonId
+            changed = true
+        }
+        if changed { try context.save() }
     }
 
     /// Flushes pending changes to disk. Mutating a `GameState` or an `EnergyLedger` marks it

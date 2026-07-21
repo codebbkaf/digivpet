@@ -347,6 +347,17 @@ final class GameState {
     /// `birthDate - frozenDuration` is the wall-clock instant the Digimon was really born.
     private var frozenSinceStorage: Date?
     private var frozenDurationStorage: Double?
+    /// Backing store for `originDigitamaId` (US-127): the id of the Digitama this Digimon hatched
+    /// from, carried UNCHANGED through every evolution so the "one of each egg" rule survives a
+    /// Digimon evolving six times — `advance` moves `currentDigimonId` but never touches this.
+    ///
+    /// Optional for the same migration reason as every other storage property here — an optional
+    /// attribute is the one shape SwiftData migrates into an already-shipped store without a default.
+    /// A `nil` means "written before origins were tracked" and is BACKFILLED once, by
+    /// `GameStore.loadOrCreateProfile` tracing `currentDigimonId` up the graph to its Digitama root;
+    /// the computed accessor's `?? currentDigimonId` fallback is only the reading between opening
+    /// such a store and that backfill running, and is correct for a record still at `.digitama`.
+    private var originDigitamaStorage: String?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -361,7 +372,12 @@ final class GameState {
     ///   path that exists today — a first launch, a reset, a rebirth — creates the Digimon the
     ///   player is about to raise. US-126's box, which adds a Digimon the player is NOT switching
     ///   to, is the caller that passes false.
-    init(currentDigimonId: String, stage: Stage = .digitama, isActive: Bool = true, now: Date) {
+    /// - Parameter originDigitamaId: the egg this Digimon hatched from (US-127). Defaults to
+    ///   `currentDigimonId`, because every path that exists today is born AS a Digitama and is its
+    ///   own origin. The caller that passes something else is US-132's Jogress, whose result is born
+    ///   at a later stage and inherits one of its parents' origins.
+    init(currentDigimonId: String, stage: Stage = .digitama, isActive: Bool = true,
+         originDigitamaId: String? = nil, now: Date) {
         self.currentDigimonId = currentDigimonId
         self.stage = stage
         self.stageEnergy = .zero
@@ -410,6 +426,7 @@ final class GameState {
         // finally taken out it would be handed every hour it had spent waiting.
         self.frozenSinceStorage = isActive ? nil : now
         self.frozenDurationStorage = 0
+        self.originDigitamaStorage = originDigitamaId ?? currentDigimonId
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -606,6 +623,26 @@ extension GameState {
         get { frozenDurationStorage ?? 0 }
         set { frozenDurationStorage = newValue }
     }
+
+    /// The Digitama this Digimon hatched from (US-127), unchanged across every evolution.
+    ///
+    /// This is what makes "one of each egg, ever, until it dies" survive six digivolutions: the
+    /// held set (see `GameStore.heldDigitamaIds`) is read off this and not off `currentDigimonId`,
+    /// which has long since moved on. See `originDigitamaStorage` for why `nil` reads as the current
+    /// id — it is a transient reading before the one-time backfill, right for a `.digitama` record.
+    var originDigitamaId: String {
+        get { originDigitamaStorage ?? currentDigimonId }
+        set { originDigitamaStorage = newValue }
+    }
+
+    /// Whether `originDigitamaId` has ever been written, as opposed to falling back to the current
+    /// id. `GameStore` uses this to backfill exactly the records a pre-US-127 store left `nil`,
+    /// touching no record that already knows its origin.
+    var hasStoredOrigin: Bool { originDigitamaStorage != nil }
+
+    /// Whether this Digimon has died. A dead Digimon releases its origin Digitama (US-127), so the
+    /// held set is derived from the LIVING records only.
+    var isDead: Bool { healthStatus == .dead }
 
     /// Each metric's total since this stage began — what a `window: .stage` condition is compared
     /// against. Cleared by `enterStage(at:)`, exactly as `stageEnergy` is.

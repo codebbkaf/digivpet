@@ -357,7 +357,7 @@ final class MainScreenModel: ObservableObject {
                 self.state = try store.loadOrCreate(digitamaId: digitamaId, now: now())
                 self.ledger = try store.loadOrCreateLedger(now: now(), calendar: calendar)
                 self.metricLedger = try store.loadOrCreateMetricLedger(now: now(), calendar: calendar)
-                self.profile = try store.loadOrCreateProfile(roster: roster)
+                self.profile = try store.loadOrCreateProfile(roster: roster, graph: graph)
                 // The Dex read once at open rather than on every redraw of the map detail: it is a
                 // fetch of every entry, the screen that asks is drawn inside a `body`, and the set
                 // only ever grows — `advance` inserts into it as it records.
@@ -1147,6 +1147,12 @@ final class MainScreenModel: ObservableObject {
     /// honest reading of it: a player whose profile has not been opened has earned nothing yet as
     /// far as this screen can tell.
     var lifetimeEnergy: EnergyTotals { profile?.lifetimeEnergy ?? .zero }
+
+    /// Every Digitama the player currently HOLDS (US-127) — an unhatched egg in the box, or any
+    /// living Digimon that hatched from one. The seam US-128's drop engine filters a map's slots
+    /// against so a held egg is never dropped a second time. Empty before `start()` has opened the
+    /// store, which is the honest reading: nothing is held until the box exists.
+    var heldDigitamaIds: Set<String> { (try? store?.heldDigitamaIds()) ?? [] }
 
     /// The sixteen maps as `MapListView` draws them (US-119): catalog order, with the save's
     /// counters, finish stamps and selection folded in.
