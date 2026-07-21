@@ -225,3 +225,56 @@ REMAINS
 US-088 (element/attribute badges on the Dex detail view) is next. It should read
 `ElementCatalog.bundled.type(for:in:)` and `DigimonElement.badgeText` /
 `symbolName` / the colours already in `ElementColors.swift`.
+
+================================================================================
+2026-07-21 — US-088: Element and attribute badges on the Dex detail view
+================================================================================
+
+WHAT I DID
+- `Sources/TypeBadgeView.swift` (new):
+  - `TypeBadgeLayout` — the height budget as arithmetic rather than literals
+    buried in a `body`, the `SickBadgeLayout` pattern. `budget = 16` (the AC's
+    number), `height = 14` (the row's fixed frame), `stackSpacing = 2` (what the
+    sheet's `VStack` pays for one more child), plus the 9pt caption / 8pt symbol.
+  - `DexTypeBadges.type(for:in:catalog:)` — nil for an UNDISCOVERED row, the
+    catalog's typing otherwise. Split out of the view so "shown exactly when
+    discovered" is a fact a test can assert without a view graph.
+  - `TypeBadgeRow` — the two badges side by side: symbol + short name in the
+    type's colour on a faint capsule of the same colour. Faint rather than solid
+    because `.light` is white and `.neutral` is `.secondary`; a solid fill would
+    need a second contrasting-foreground table to keep in step with the first.
+- `Sources/DexView.swift` — `DexDetailView` gains `catalog: ElementCatalog =
+  .bundled` beside the existing `graph`, and a `typeBadges` view placed under the
+  stage/date subtitle. New DEBUG flag `-dexUnmetDetailDemo` opens the sheet of a
+  never-met entry, which NO tap can reach (the grid disables unmet cells) — the
+  only way to photograph "shows neither".
+- `Tests/DexTypeBadgeTests.swift` — 8 tests.
+
+VERIFICATION
+- `xcodebuild build` — ** BUILD SUCCEEDED **. `xcodebuild test` — ** TEST
+  SUCCEEDED **, 1094 tests, 0 failures (was 1086; the 8 new tests are the delta).
+- Screenshots, all on `-healthAnswered -noNotificationPrompt -dexDemo`:
+  - 42mm `-dexDetailDemo`: Agumon, FIRE (red flame) + VAC (green), candidate row
+    (Greymon and two "?") fully on screen under it.
+  - 46mm `-dexDetailDemo`: Agu Digitama, FIRE + FREE — the inert attribute drawn
+    as a badge rather than an empty slot.
+  - 42mm and 46mm `-dexUnmetDetailDemo`: Aegisdramon, NO badge row at all.
+  - 41mm (Series 9, watchOS 10.4) before/after the change, same launch args: the
+    tiles are fully visible in both; the row costs the "It wants" heading that
+    was peeking below them, not the tiles. US-064's fold survives.
+- Presence-is-discovery is asserted over ALL 1,022 roster entries in both
+  directions, not on two hand-picked ids.
+- Neutral/free: the test finds the first roster entry that resolves to
+  `.unauthored` rather than hard-coding one, and asserts NEUT + FREE.
+- Not a navigation: `TypeBadgeRow` is a plain `HStack` — no `Button`, no
+  `NavigationLink`, no `navigationDestination`. Nothing to tap.
+
+NOTES FOR LATER STORIES
+- The badge row sits under the SUBTITLE, not between the name and it: name,
+  stage/date, then typing reads as one identity block. US-089's move row should
+  go directly below the badges, before the `Divider()` that opens "Evolves into".
+- 41mm has ~0 slack left under the tiles. US-089 adds another row to this sheet;
+  budget it the same way and re-take the 41mm shot, because the next thing to go
+  is the tile row itself.
+- `-dexUnmetDetailDemo` is the general way to photograph withheld-until-met
+  content on this sheet; US-089 needs exactly the same shot.

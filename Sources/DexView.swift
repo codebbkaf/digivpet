@@ -160,6 +160,11 @@ struct DexGridView: View {
             // the "No evolutions recorded." branch, since `-dexDetailDemo` lands on Agumon and
             // Agumon branches three ways.
             selected = rows.first { $0.id == "aquilamon" }
+        } else if CommandLine.arguments.contains("-dexUnmetDetailDemo") {
+            // The sheet of an entry that has NEVER been met, which no tap can reach — the grid
+            // disables undiscovered cells. US-088 withholds the type badges here, and "shows
+            // neither" is a claim only a screenshot of this state can settle.
+            selected = rows.first { !$0.isDiscovered }
         }
     }
 
@@ -216,6 +221,12 @@ struct DexDetailView: View {
     var pool: [String: DexRow] = [:]
 
     var graph: EvolutionGraph = .bundled
+
+    /// Where the badge row's element and attribute come from (US-088). Injectable alongside
+    /// `graph` because the two are asked together — `ElementCatalog.type(for:in:)` resolves a
+    /// Digimon's line off the graph, so a test that swaps one and not the other is testing a
+    /// catalog against a roster it was not authored for.
+    var catalog: ElementCatalog = .bundled
 
     /// The totals the hints are resolved against. `.unknown` shows every hint at its coldest,
     /// which is what a preview or a grid with no model gets.
@@ -303,6 +314,8 @@ struct DexDetailView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
 
+                typeBadges
+
                 evolutions
 
                 lineTreeLink
@@ -349,6 +362,19 @@ struct DexDetailView: View {
 
     /// Scroll target for the tree link. Read by the debug hook in `body`.
     private static let treeLinkAnchor = "tree-link"
+
+    /// What this Digimon is, on both type axes (US-088) — under the name and its stage, so the
+    /// identity block reads name, when you met it, what it is, and only then what it can become.
+    ///
+    /// Absent entirely for an unmet entry rather than dimmed: see `DexTypeBadges.type(for:)`. It
+    /// costs `TypeBadgeLayout.budget` of the sheet's height, which is what keeps the candidate
+    /// tiles US-064 fought for above the 41mm fold.
+    @ViewBuilder
+    private var typeBadges: some View {
+        if let type = DexTypeBadges.type(for: row, in: graph, catalog: catalog) {
+            TypeBadgeRow(type: type)
+        }
+    }
 
     /// Stage and first sighting on one line, which is worth a whole 13pt line of a 215pt screen.
     /// "met" rather than "first met" so the pair still fits 41mm without wrapping.

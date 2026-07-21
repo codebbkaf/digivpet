@@ -79,8 +79,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "TypeBadgeRow + DexTypeBadges (Sources/TypeBadgeView.swift) draw the element and attribute badges under the name in DexDetailView, from ElementCatalog.bundled; nil for an unmet row so no badges are drawn, neutral/free draws NEUT+FREE. 14pt row + 2pt stack spacing = the 16pt budget, asserted. Not a Button, so no navigation. 8 new tests (1094 total, 0 failures), build green; screenshots on 42mm/46mm (met shows both, unmet shows neither) and a 41mm before/after showing the candidate tiles still above the fold. New debug flag -dexUnmetDetailDemo."
     },
     {
       "id": "US-089",
