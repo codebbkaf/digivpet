@@ -904,3 +904,105 @@ WHAT REMAINS
   rather than going through `WanderingSpriteView`, so a lunge there has nowhere
   to land yet.
 - `.recoil` is still unused by anything.
+
+================================================================================
+2026-07-21 — US-097 — The Digimon celebrates a clean screen and lunges on a
+landed blow.  DONE (passes: true)
+================================================================================
+
+WHAT SHIPPED
+- `MainScreenModel.clean()` now calls `show(.still(.happy), motion: .hop, ...)`.
+  One line: US-095 already had the track, US-096 already had `show`'s motion
+  parameter and its repeat.
+- `MainScreenModel.finishTraining(_:)` now passes `motion: gain > 0 ? .lunge :
+  .recoil` alongside the pose it already published. `gain > 0` is exactly
+  `result != .miss` (TrainingResult.miss is the only 0), so the paid/missed
+  split is the one that was already there.
+- `PoopGround` (new, in PoopView.swift) wraps `PoopPile` in a ZStack with
+  `.transition(.scale(scale: 0.6).combined(with: .opacity))` and
+  `.animation(.easeOut(duration: 0.35), value: count)`. `ContentView`'s overlay
+  now always hosts `PoopGround(count:)` instead of an `if poopCount > 0`.
+  - Its OWN view on purpose: a transition only plays if the transaction that
+    removes the view carries an animation, and the only way to give it one
+    without putting `.animation` on the whole GeometryReader is to scope it to a
+    container. Left at the call site the implicit animation would be inherited
+    by the sprite above it, and a walk drawn by a `TimelineView` must not have
+    its steps interpolated.
+  - The two numbers are `PoopPile.vanishScale` / `.vanishDuration`, named so a
+    unit test can hold the shipped exit to them — a transition inside a view
+    graph is unreachable from XCTest.
+- `-poopCleanDemo` now DEFERS its `clean()` by 10s
+  (`MainScreenModel.poopCleanDemoDelay`). Necessary, not cosmetic: the fade is a
+  0.35s EVENT, so a clean run during `start()` is over long before simctl takes
+  its first shot. The hop needed no such help — `show` repeats it for the whole
+  60s demo hold.
+
+TESTS — Tests/CleanTrainMotionTests.swift, 11 new
+- clean -> happy + .hop; the hop is two peaks, up only, x == 0, home at both
+  ends; motion cleared with the pose and the walk resumes.
+- clean with nothing to clean -> false, .idle, no motion, no message.
+- paid round -> attack + .lunge; the lunge is level, never backward, and home at
+  the end. miss -> angry + .recoil; sampled against each other, forward is
+  negative x and backward positive.
+- both training outcomes hold the walk (`isWandering == false`).
+- the pile's exit constants, and that `poopCount` reaching zero is what
+  `PoopGround` animates on (the complication's CleanIntent zeroes the same
+  count from another process).
+
+VERIFICATION
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
+- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1191 tests, 0 failures (was
+  1180; the 11 new ones are the delta).
+- AC7, MEASURED in pixels on the 42mm (F4A12A1C), launched with
+  `-healthAnswered -noNotificationPrompt`, burst-screenshotted at simctl's
+  ~0.11s floor. Throwaway Swift measurer at /tmp/us097/measure.swift, NOT
+  committed (it hard-codes this screen's band geometry and would rot into a
+  lie). Bands: sprite = saturated pixels in y 140..222, x < 270 (both ends
+  matter — y >= 132 catches the stats strip, y >= 223 catches the orange
+  caption, and either contaminates the box); pile = r>g>b brown in y 170..235,
+  x >= 250.
+  - MID-FADE, `-poopCleanDemo`, the clean firing at t=10.9s:
+      t=10.786  px=496  box 284,208-357,219  peakR=183   (full)
+      t=10.900  px=456  box 286,208-355,219  peakR=179
+      t=11.015  px=246  box 293,210-348,217  peakR=116
+      t=11.130  px=18   box 300,212-341,214  peakR=41
+      t=11.244  px=0                          peakR=0    (gone)
+    Width 74 -> 70 -> 56 -> 42 and brightness 183 -> 0 over ~0.35s: BOTH the
+    shrink and the fade, not one or the other.
+  - MID-HOP, same run, after t=10.9: lit-pixel count PINNED at 1280 (one held
+    happy frame, so no art loop is confounding this) and x PINNED at 61..108
+    (no sideways component), while top and bottom move TOGETHER through
+    141/196, 142/197, 144/199, 146/201, 149/204, 152/207. That is a rigid
+    12-screenshot-px translation = 6pt = 3 sprite px x scale 2 = exactly
+    `hopHeight`, and it never passes 208 — the ground line the walk sat on for
+    the ten seconds before the clean, where the bottom was pinned at 208 while
+    the count alternated 1152/1184 (walk1/walk2).
+  - MID-LUNGE, `-trainResultDemo`: count PINNED at 1312 (one held attack frame)
+    and y PINNED at 153/208, while the left edge swings 179 -> 163 -> 179, a
+    16px range = 8pt = 4 sprite px x scale 2 = exactly `lungeReach`. One
+    direction only (it never crosses to the right of home), which is what
+    separates a thrust from a shake. Caption read "Great +2 STR - -5 Strength".
+
+WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
+- AC1 says "two hops over actionDuration". The SHIPPED hop is US-095's pinned
+  track: two arcs over a fixed 0.8s, REPEATED by `show` for as long as the pose
+  is held. Identical divergence to the one US-096 recorded for the chew, and for
+  the same reason — `ActionMotionTests` pins the 0.8s, and re-cutting the track
+  as a function of `actionDuration` would rewrite a story that already passed.
+  The substance (two hops, celebration lasting the whole hold) is met and was
+  measured. `ActionMotion.duration(of:)` is the one place to parameterise it.
+
+TRAPS FOR THE NEXT ITERATION
+- `-trainDemo` does NOT play itself out into a `.miss` the way an earlier
+  progress note claims. Button Masher sits on "Tap to start" until it is tapped,
+  and simctl cannot tap it, so that flag screenshots the game's idle state
+  forever. There is no demo flag that reaches a miss on screen; the recoil is
+  covered by the unit tests instead.
+- The 46mm sim (BA425DD4) is still the one with the wedged system alert from
+  US-091 for screenshots; builds and tests on it are fine. Use 42mm for images.
+- The 42mm sim needs BOTH `-healthAnswered` and `-noNotificationPrompt`.
+
+WHAT REMAINS
+- US-098..US-101 are the light: `GameState` light state and the lights-out rule,
+  the light button and the dimmed screen, the alert to turn it off, and the care
+  mistake for a night spent under it. Nothing in this story touches them.

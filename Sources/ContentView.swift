@@ -464,12 +464,12 @@ struct ContentView: View {
                     // the sprite is drawn with `.offset` and walks the full width, so anything
                     // sharing its centre would be walked over. The bottom-trailing corner is the
                     // one place a pile of four is always beside whatever the Digimon is doing.
-                    // Nothing is drawn at zero, so a clean screen costs no layout at all.
+                    // Nothing is drawn at zero, so a clean screen costs no layout at all — and the
+                    // pile does not simply blink out of existence when the count reaches zero, it
+                    // shrinks and fades away over 0.35s. See `PoopGround`.
                     .overlay(alignment: .bottomTrailing) {
-                        if model.poopCount > 0 {
-                            PoopPile(count: model.poopCount)
-                                .padding(.trailing, 6)
-                        }
+                        PoopGround(count: model.poopCount)
+                            .padding(.trailing, 6)
                     }
                     // In the band the sprite was just sized out of, so it sits above the Digimon
                     // rather than on it, and well clear of the action row at the bottom of the

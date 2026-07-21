@@ -687,7 +687,8 @@ final class MainScreenModel: ObservableObject {
     /// screenshotted. Waiting out twelve real hours is not a demo, and `simctl` cannot tap Clean.
     ///
     /// - `-poopDemo` — a full four poops beside the Digimon, and an enabled Clean button.
-    /// - `-poopCleanDemo` — the same, then cleaned: an empty ground and the confirmation caption.
+    /// - `-poopCleanDemo` — the same, then cleaned ten seconds after launch: the pile shrinking and
+    ///   fading away, the hop, and the confirmation caption.
     ///
     /// The count is ACCRUED by winding the timestamp back twelve hours and running the real
     /// `advancePoop`, not hand-set, so what is screenshotted is the shipped rule's output. The
@@ -713,9 +714,21 @@ final class MainScreenModel: ObservableObject {
             // Held for a minute, because the caption clears itself in two and that is not long
             // enough to boot, install, launch and screenshot inside.
             actionDuration = 60
-            clean()
+            // DEFERRED rather than cleaned here, and this is the one demo that has to be: the pile
+            // leaves by a 0.35s shrink-and-fade (US-097), which is an event rather than a state, so
+            // a clean run at launch is finished long before `simctl` has taken its first shot. The
+            // delay puts the transition in the middle of a screenshot burst instead of before it.
+            // The hop needs no such help — `show` repeats it for the whole minute the pose is held.
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .seconds(Self.poopCleanDemoDelay))
+                self?.clean()
+            }
         }
     }
+
+    /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
+    /// taking screenshots; short enough that a burst does not have to run for a minute.
+    private static let poopCleanDemoDelay: TimeInterval = 10
 
     /// Debug-only: puts a two-hour sleep window around the current moment and derives from it, so
     /// the Digimon is asleep NOW and stays asleep across the refresh every foregrounding runs.
@@ -1018,7 +1031,13 @@ final class MainScreenModel: ObservableObject {
         // the round happened and it was not enough, which is a different thing to show than a
         // successful blow. The caption names the currency, because the Digimon picked that itself
         // when the round opened and the bar dropping would otherwise be unexplained.
+        //
+        // The motion is what makes the two outcomes tell themselves apart at a glance: a paid round
+        // LUNGES, forward in the direction the sprite faces and home again, and a miss RECOILS
+        // backward. Both poses are single held frames, so without the motion a miss and a landed
+        // blow are two stills that differ only in which sixteen-pixel drawing is up.
         show(gain > 0 ? .still(.attack) : .still(.angry),
+             motion: gain > 0 ? .lunge : .recoil,
              message: "\(result.displayName) +\(gain) STR · -\(round.cost) \(round.spent.displayName)")
 
         do {
@@ -1054,7 +1073,9 @@ final class MainScreenModel: ObservableObject {
     /// visibly undo itself. The clock starts again from the moment the user cleaned.
     ///
     /// The happy frame, held: it is a pose in the sheet rather than a loop, and it is the one
-    /// action in the row whose whole reward is the Digimon being pleased about it.
+    /// action in the row whose whole reward is the Digimon being pleased about it. The hop is the
+    /// other half of that reward — a held still frame is what every BLOCKED action looks like, so
+    /// without the motion the happiest moment in the game reads the same as a refusal.
     @discardableResult
     func clean() -> Bool {
         guard let state, state.poopCount > 0 else { return false }
@@ -1066,7 +1087,7 @@ final class MainScreenModel: ObservableObject {
         // below. A screen left to fill again is a new mess and earns a new notice.
         state.poopNotified = false
         notifications.cancel(.poop)
-        show(.still(.happy), message: "All clean!")
+        show(.still(.happy), motion: .hop, message: "All clean!")
 
         do {
             try store?.save()

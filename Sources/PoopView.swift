@@ -38,6 +38,12 @@ struct PoopShape: View {
 struct PoopPile: View {
     let count: Int
 
+    /// How far the pile shrinks as it leaves, and how long it takes. Named constants rather than
+    /// literals in `body` because they are what a test can hold the shipped exit to — a transition
+    /// inside a view graph is otherwise unreachable from outside it.
+    static let vanishScale: CGFloat = 0.6
+    static let vanishDuration: TimeInterval = 0.35
+
     var body: some View {
         HStack(alignment: .bottom, spacing: 3) {
             ForEach(0..<max(count, 0), id: \.self) { _ in
@@ -47,6 +53,38 @@ struct PoopPile: View {
         .accessibilityElement(children: .ignore)
         .accessibilityLabel("Poop")
         .accessibilityValue("\(count)")
+    }
+}
+
+/// The ground the mess sits on: `PoopPile` when there is one, and the shrink-and-fade it leaves by
+/// when there is not (US-097).
+///
+/// Its own view rather than an `if` at the call site, because a transition only plays if the
+/// transaction that removes the view carries an animation — and the only way to give it one without
+/// putting `.animation` on the whole screen is to scope it to a container of its own. Left where it
+/// is, the implicit animation would be inherited by the sprite above it, and a walk drawn by a
+/// `TimelineView` does not want its steps interpolated.
+///
+/// DRIVEN BY THE COUNT, not by a "cleaning" flag: the pile leaves because `poopCount` reached zero,
+/// whatever took it there — the Clean button, the complication's `CleanIntent`, a fresh save. A
+/// second source of truth could animate a pile that was still on screen, or fail to animate one that
+/// had gone.
+struct PoopGround: View {
+    let count: Int
+
+    var body: some View {
+        // A ZStack rather than a bare `if`, so there is one stable container for the transition to
+        // insert into and remove from. It is empty and zero-sized at a count of zero, so a clean
+        // screen still costs no layout.
+        ZStack {
+            if count > 0 {
+                PoopPile(count: count)
+                    // Scale AND fade: shrinking alone reads as the pile receding into the distance,
+                    // and fading alone as the screen dimming. Together they read as swept away.
+                    .transition(.scale(scale: PoopPile.vanishScale).combined(with: .opacity))
+            }
+        }
+        .animation(.easeOut(duration: PoopPile.vanishDuration), value: count)
     }
 }
 

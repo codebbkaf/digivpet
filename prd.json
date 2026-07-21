@@ -249,8 +249,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "clean() plays .still(.happy) + .hop and finishTraining plays .still(.attack) + .lunge for a paid round, .still(.angry) + .recoil for a miss; PoopGround gives the pile a 0.35s scale-to-0.6 + fade exit driven by poopCount reaching zero. 11 tests in CleanTrainMotionTests; 1191 total, 0 failures. Screenshot-verified on the 42mm sim: -poopCleanDemo (clean deferred 10s so the fade lands mid-burst) shows the pile's box shrinking 74->56->42px while its peak brightness falls 183->116->41->gone over ~0.35s, and the held happy frame translating 12 screenshot px (= 3 sprite px x scale 2 = hopHeight) straight up with x pinned; -trainResultDemo shows the held attack frame swinging 16 px (= lungeReach x 2) forward and home with y pinned. NOTE: the hop is US-095's two-arc 0.8s track REPEATED for the hold rather than two arcs stretched over actionDuration, same divergence US-096 recorded for the chew."
     },
     {
       "id": "US-098",
