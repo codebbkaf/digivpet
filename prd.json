@@ -533,8 +533,8 @@
         "Tests pass"
       ],
       "priority": 29,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MinigameKind + MinigameAssignment: six shipped lines take the six games one each (agumon/Button Masher, gabumon/Power Meter, palmon/Timing Bar, patamon/Crown Sprint, piyomon/Reflex Strike, gazimon/Sequence Recall), with a pure non-optional stage fallback for the ~930 roster-only Digimon; 11 tests, build and suite green."
     },
     {
       "id": "US-083",

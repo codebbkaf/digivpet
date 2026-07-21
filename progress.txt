@@ -2107,3 +2107,101 @@ NOTES FOR THE NEXT ITERATIONS (US-082, then US-083)
    minigame yet. That is US-083, and it is the last story in the file.
 
 Next: US-082 (assign a minigame per Digimon).
+
+================================================================================
+2026-07-21 — US-082: Assign a minigame per Digimon                 passes: TRUE
+================================================================================
+
+WHAT WAS BUILT
+
+`Sources/MinigameAssignment.swift`, two types, no UI and no data file.
+
+`MinigameKind` — a `String`-backed, `CaseIterable`, `Codable` name for each of the six games. It
+exists because the games are six unrelated `View` types: they cannot go in a dictionary, cannot be
+compared, cannot be saved. The enum is the value that can. `title` DELEGATES to the game type's own
+`static title` rather than restating the string, so a name shown on an assignment and a different
+name shown inside the round is impossible. `view(onFinish:)` is a `@ViewBuilder` — the one place a
+name turns back into a game. Nothing calls it yet; that is US-083.
+
+`MinigameAssignment` — pure, total, `static`, no clock and no randomness. Two tiers, deliberately
+shaped like `MoveCatalog.move(forId:line:stage:)`:
+  1. `byLine` — the six shipped lines, one game each.
+  2. `fallback(for: Stage?)` — the floor, an exhaustive switch, never nil.
+`game(line:stage:)` is the pure core; `game(for:in:roster:)` resolves line and stage from the graph
+and falls through to the roster's stage for a Digimon with no graph node, exactly as `MoveCatalog`
+does.
+
+WHY BY LINE AND NOT BY ID
+
+The story's title says "per Digimon", but AC1 says per LINE, and per line is also the better game:
+the assignment is constant from Digitama to Ultimate, so evolving never takes away the training the
+player has learned. What earns a new game is raising a NEW LINE. Per-id would have made every
+evolution a relearn.
+
+Assignment is CODE, not JSON — unlike moves. A game is a Swift type, so a new pairing cannot be a
+data edit anyway; a table in the same file that names the types beats a JSON key that has to match a
+`case` and fails silently when it does not.
+
+THE PAIRINGS (flavour, not mechanism — reshuffle freely after playtesting)
+
+  agumon  → Button Masher     gabumon → Power Meter      palmon → Timing Bar
+  patamon → Crown Sprint      piyomon → Reflex Strike    gazimon → Sequence Recall
+
+Fallback, by rung, escalating, and covering all six so no game is unreachable that way either:
+  Digitama/Baby I → Button Masher   Baby II → Timing Bar    Child → Power Meter
+  Adult → Crown Sprint              Perfect → Reflex Strike Ultimate → Sequence Recall
+  Armor-Hybrid → Crown Sprint       nil (no graph node, no roster entry) → Button Masher
+Written as a switch, not `ladderIndex % 6`, because Armor-Hybrid HAS no ladder index and arithmetic
+would have to invent one.
+
+VERIFICATION — 11 tests in `Tests/MinigameAssignmentTests.swift`, all observed passing
+
+  AC1  `testEachShippedLineGetsADifferentGame` reads the six line keys OUT OF THE SHIPPED GRAPH
+       (`Set(graph.nodes.map(\.line))`) rather than out of the table, then asserts six distinct
+       games covering all six cases. `testTheTableNamesExactlyTheShippedLines` is the other half:
+       a line renamed in `evolutions.json` would otherwise drop that whole line to the stage floor
+       and still build green.
+  AC2  `testEveryDigimonInTheRosterResolvesToAGame` walks all 1,022 roster entries. The return is
+       non-optional, so "never to 'no game'" needed a stronger assertion than a nil check:
+       `testEveryStageFallsBackToAGame` asserts the eight stages reach ALL SIX games — a fallback
+       that answered Button Masher for everything would pass a nil check and fails this.
+       `testARosterOnlyDigimonFallsBackByItsStage` (poyomon, Baby I, no graph node) and
+       `testAnUnknownLineAndAnUnknownIdStillGetAGame` (in neither file at all) cover the two ways
+       to be outside the lines.
+  AC3  `testTheSameDigimonAlwaysGetsTheSameGame` — 200 repeat lookups for five ids, the guard
+       against someone reaching for `randomElement()`.
+       `testAssignmentDoesNotDependOnWhichGraphInstanceAsks` re-decodes graph and roster and
+       assigns all 1,022 again, so the answer is a property of the Digimon rather than of the
+       shared `.bundled` singletons.
+       `testEveryDigimonInALineGetsThatLinesGameAtEveryStage` is the "evolving does not change your
+       game" assertion, over every one of the 88 authored nodes.
+  AC4  Everything above goes through the pure statics; `testTheLineTierWinsOverTheStageFloor` pins
+       the tier ORDER with a case where the two tiers disagree (agumon is Button Masher, but a
+       Child falls back to Power Meter).
+  AC5  `xcodebuild build` — ** BUILD SUCCEEDED **
+  AC6  `xcodebuild test` — ** TEST SUCCEEDED **, whole suite, then the new suite alone:
+       Executed 11 tests, with 0 failures.
+
+WHAT IS NOT CLAIMED
+
+No screenshot, and none is owed: nothing on screen changed this iteration. `MinigameKind.view(_:)`
+has never been rendered — it is six one-line branches over six initialisers that are each already
+exercised — and US-083 is what puts one on screen.
+
+The pairings are unplaytested. So are the fallback rungs. Both are one-line edits in
+`MinigameAssignment`, and every test above reads the table rather than hard-coding a pairing, so
+reshuffling them breaks nothing.
+
+NOTES FOR US-083 (the last story)
+
+1. Ask with `MinigameAssignment.game(for: state.currentDigimonId, in: .bundled, roster: .bundled)`,
+   then `kind.view(onFinish:)` in a `.fullScreenCover`.
+2. The Train button STILL calls `TrainAction.train(_:isAsleep:result: .good)` directly — that
+   hard-coded `.good` is the thing US-083 replaces with the grade the round hands back.
+3. `TrainAction.begin` already charges the energy and counts the session when the round OPENS, so
+   US-083 must call `begin` before presenting and `train`/apply after, never both at the end —
+   otherwise dismissing a losing round is a free retry.
+4. Difficulty is not varied per Digimon. Every game's knobs are plain stored properties with
+   defaults, so that stays available without a new type; `view(onFinish:)` just uses the defaults.
+
+Next: US-083 (Train opens the assigned minigame) — the last story in prd.json.
