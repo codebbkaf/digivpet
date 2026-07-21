@@ -18,6 +18,10 @@ struct ContentView: View {
     /// the marker to decide one.
     @State private var showsTimingBarDemo = CommandLine.arguments.contains("-timingBarDemo")
         || CommandLine.arguments.contains("-timingBarResultDemo")
+    /// US-077's button masher, on the same footing: `-buttonMasherDemo` shows a round in play with
+    /// taps on the counter, `-buttonMasherResultDemo` shows the grade those taps earned.
+    @State private var showsButtonMasherDemo = CommandLine.arguments.contains("-buttonMasherDemo")
+        || CommandLine.arguments.contains("-buttonMasherResultDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -69,6 +73,25 @@ struct ContentView: View {
             game.resultDuration = 600
         } else {
             game.sweepDuration = 30
+        }
+        return game
+    }
+
+    /// The button masher staged for a screenshot. `simctl` cannot mash, so both demos start the
+    /// round already holding a count and let the REAL window run over it — the grade is still the
+    /// one `grade(taps:window:)` gives that count.
+    ///
+    /// `-buttonMasherDemo` stretches the window so the round stays in play, counter and draining
+    /// timer visible; `-buttonMasherResultDemo` leaves the shipped 5s window and stages the 30 taps
+    /// that clear the perfect threshold, then holds the result long enough to catch it.
+    private static var buttonMasherDemoGame: ButtonMasherGame {
+        var game = ButtonMasherGame(onFinish: { _ in })
+        if CommandLine.arguments.contains("-buttonMasherResultDemo") {
+            game.demoTapCount = ButtonMasherGame.requiredTaps(for: .perfect, window: game.window)
+            game.resultDuration = 600
+        } else {
+            game.demoTapCount = 12
+            game.window = 20
         }
         return game
     }
@@ -175,6 +198,8 @@ struct ContentView: View {
         .overlay {
             if showsTimingBarDemo {
                 Self.timingBarDemoGame
+            } else if showsButtonMasherDemo {
+                Self.buttonMasherDemoGame
             }
         }
         #endif

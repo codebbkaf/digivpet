@@ -261,7 +261,7 @@ final class TimingBarGameTests: XCTestCase {
 
     /// Every grade is announced in its own colour, so the end of a round reads at a glance.
     func testEachGradeIsAnnouncedInItsOwnColour() {
-        XCTAssertEqual(Set(TrainingResult.allCases.map { TimingBarGame.tint(for: $0) }).count, 4)
+        XCTAssertEqual(Set(TrainingResult.allCases.map(\.tint)).count, 4)
     }
 
     private func makeGame<Game: TrainingMinigame>(

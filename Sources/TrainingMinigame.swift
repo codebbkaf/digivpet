@@ -36,6 +36,21 @@ enum TrainingResult: String, CaseIterable, Equatable {
         case .perfect: return "Perfect"
         }
     }
+
+    /// What colour a finished round is announced in. Lives here rather than on a game so all six
+    /// end the same way — a `Perfect` must not be a different yellow depending on which minigame
+    /// paid it.
+    ///
+    /// A miss is grey rather than red: it cost energy already, and shouting at the user for it is
+    /// what makes training something to avoid.
+    var tint: Color {
+        switch self {
+        case .miss: return .secondary
+        case .good: return .green
+        case .great: return .mint
+        case .perfect: return .yellow
+        }
+    }
 }
 
 /// The one shape every training minigame conforms to (US-075).

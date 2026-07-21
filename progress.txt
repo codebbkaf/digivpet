@@ -1585,3 +1585,106 @@ NOTES FOR THE NEXT ITERATIONS (US-077..US-081, then US-082/083)
    presentation it should use.
 
 Next: US-077 (training minigame — Button Masher).
+
+================================================================================
+2026-07-21 — US-077: Training minigame — Button Masher
+================================================================================
+
+WHAT I BUILT
+
+`Sources/ButtonMasherGame.swift` — the second `TrainingMinigame`. Tap as fast as you can; the count
+is read against a window and paid out as one of the same four grades. Shape copied from
+`TimingBarGame` exactly as its notes advised: pure statics for the rule, stored-prop knobs with
+defaults for the timing, tasks that guarantee the round ends exactly once.
+
+THE ONE DESIGN DECISION WORTH READING: THRESHOLDS ARE A RATE, NOT A COUNT
+
+`tapsPerSecond(for:)` = good 3, great 4.5, perfect 6. `requiredTaps(for:window:)` multiplies by the
+window, rounds UP, and floors at 1 for every grade above `.miss`.
+
+Flat counts would have been simpler and wrong. `window` is injectable (AC2), and with fixed
+thresholds a halved window silently turns every round into a miss — worse, a test driving a round in
+milliseconds could not grade anything at all, so the injectability AC would have bought nothing. As
+a rate the game means the same thing at any window: three taps a second is a good round whether it
+runs two seconds or ten. At the shipped 5s window the thresholds are 15 / 23 / 30.
+
+The floor at 1 exists because `ceil(6 * 0.001) == 1` only by luck; a literal reading of the
+arithmetic at window 0 asks for zero taps, and a perfect handed to someone who never touched the
+screen is the one outcome the grading must never produce.
+
+BOUNDARIES WERE FREE HERE, UNLIKE US-076
+
+US-076 spent an afternoon on floating-point band edges and warned the next iteration about it. That
+warning does not apply: taps are Int, so "just short of the threshold" is exactly `required - 1` and
+every boundary is asserted ON the number with no epsilon anywhere. One table
+(`[.good: .miss, .great: .good, .perfect: .great]`) covers all three thresholds and both sides.
+
+THE WINDOW STARTS ON THE FIRST TAP, NOT ON APPEAR
+
+None of the round is then spent realising it has begun; the tap that starts the clock is tap one.
+Costs one extra state (`startDate: Date?`) and buys the whole round-lifecycle for free:
+`.task(id: startDate)` runs `idleTimeout` while nil and the window itself once set, because setting
+`startDate` cancels and re-fires the same task. A round nobody plays still ends, as `.miss`.
+
+SHARED: `TrainingResult.tint` (a small refactor of US-076)
+
+`TimingBarGame.tint(for:)` moved to `TrainingResult.tint` in `TrainingMinigame.swift`. Six games are
+coming and a `Perfect` must not be a different yellow depending on which one paid it. The one
+existing assertion (`TimingBarTests.testEachGradeIsAnnouncedInItsOwnColour`) was re-pointed at
+`\.tint`, not weakened — it still asserts four distinct colours. Re-screenshotted the timing bar
+afterwards (`/tmp/us077_timingbar_regression.png`): still "Perfect" in yellow, unchanged.
+
+VERIFIED (all observed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   927 passed / 0 failures (was 913; +14 mine across three new suites in ButtonMasherTests).
+  AC1     `testTheGradeOnlyEverImprovesAsYouTapMore` sweeps 0...40 taps and asserts the run
+          sequence is exactly [miss, good, great, perfect] — no skipped band, no reversal.
+          `testThereIsNoCeilingAboveAPerfect` (30/45/100/1000).
+  AC2     `testTheSameCountIsWorthDifferentThingsInDifferentWindows` — 20 taps is perfect at 2s,
+          good at 5s, a miss at 10s, which is the injectable window doing the deciding.
+          `testTheThresholdsScaleWithTheWindow` over 1/2/4/8s; `testTheWindowAndPacingAreInjectable`
+          (defaults, then overridden). No test waits: a window is arithmetic on a count.
+  AC3     Screenshot below — the count is a 44pt rounded numeral, the largest thing on screen.
+  AC4     `testTheThresholdsAreThreeFourAndAHalfAndSixTapsASecond` pins 15/23/30 by value, so the
+          boundary test reads a fixed pace rather than agreeing with the code;
+          `testEachThresholdIsInclusiveAndOneTapShortIsTheGradeBelow` asserts all three thresholds
+          and their one-short neighbours; `testAFractionalRequirementIsRoundedUp` (4.5/s over 3s is
+          14, and 13 taps stays good); `testADegenerateWindowStillAsksForAtLeastOneTap` (0.01/0/-5).
+  AC5     Screenshots, Series 11 46mm:
+          /tmp/us077_play_a.png and _b.png (-buttonMasherDemo, 4s and 13s after launch) — "Button
+            Masher", the live count "12", "Keep tapping!", and the orange timer bar at ~80% then
+            ~35%, which is the window observed draining rather than a static bar.
+          /tmp/us077_result.png (-buttonMasherResultDemo) — "Perfect" and "30" both in yellow,
+            "+3 STR" beneath, timer bar empty.
+          simctl has no tap, so the mashing itself is not screenshot evidence; `tap()` is four lines
+          over a counter, and what the counter is worth is unit-tested above.
+
+DEMO PLUMBING for AC5
+
+`ButtonMasherGame.demoTapCount: Int?`, `#if DEBUG`, nil in the app. Set, the round starts already
+holding that count with the clock already running — it stages HOW MANY taps the round ends on, not
+what they are worth. Both demos then run the REAL window over that count and grade it through the
+same pure `grade(taps:window:)`. `-buttonMasherResultDemo` uses the shipped 5s window and stages
+exactly `requiredTaps(for: .perfect, window:)`, so the screenshot is the threshold being met rather
+than a number typed in; `-buttonMasherDemo` stretches the window to 20s so the round stays in play.
+
+LAUNCH FLAGS (unchanged, and I re-lost time to this — read the facts at the top of this file)
+
+`-noNotificationPrompt -healthAnswered` are MANDATORY with any demo flag on this simulator, which is
+sitting on the health onboarding screen otherwise. My first three screenshots were of "Feed Your
+Digimon". Do NOT use `-healthAutoConfirm`.
+
+NOTES FOR THE NEXT ITERATIONS (US-078..US-081, then US-082/083)
+
+1. Two games in, the template is settled and US-078 should be a file plus a test file, nothing else.
+   `Sources` and `Tests` are whole-folder in project.yml, so a new game needs NO project.yml edit —
+   just `xcodegen generate` to pick the files up.
+2. If a game's rule depends on a duration, express the difficulty as a RATE over that duration, not
+   as an absolute. That is what keeps the injectable-timing AC meaningful instead of decorative.
+3. Prefer integer-valued rules where the game allows it — the boundary AC then costs nothing.
+4. The Train button still calls `TrainAction.train(_:isAsleep:result: .good)`; nothing opens a
+   minigame yet. Still US-083's job. Two games now conform, so US-082 has something to choose
+   between.
+
+Next: US-078 (training minigame — Power Meter).

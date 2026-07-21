@@ -65,7 +65,7 @@ struct TimingBarGame: TrainingMinigame {
             VStack(spacing: 10) {
                 Text(stop?.grade.displayName ?? Self.title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(stop.map { Self.tint(for: $0.grade) } ?? Color.primary)
+                    .foregroundStyle(stop?.grade.tint ?? Color.primary)
 
                 bar
 
@@ -229,17 +229,6 @@ struct TimingBarGame: TrainingMinigame {
 
     static let barHeight: CGFloat = 14
     static let markerWidth: CGFloat = 3
-
-    /// What colour a finished round is announced in. A miss is grey rather than red: it cost energy
-    /// already, and shouting at the user for it is what makes training something to avoid.
-    static func tint(for grade: TrainingResult) -> Color {
-        switch grade {
-        case .miss: return .secondary
-        case .good: return .green
-        case .great: return .mint
-        case .perfect: return .yellow
-        }
-    }
 }
 
 #Preview {

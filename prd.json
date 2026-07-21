@@ -449,8 +449,8 @@
         "Tests pass"
       ],
       "priority": 24,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ButtonMasherGame in Sources/ButtonMasherGame.swift: taps counted live inside a window timed from the FIRST tap, graded by two pure statics — requiredTaps(for:window:) and grade(taps:window:). Thresholds are a RATE (3 / 4.5 / 6 taps per second, rounded up, floored at one) rather than flat counts, so the injectable window means the same thing at any length and a millisecond test window is still gradeable; at the shipped 5s window that is 15 / 23 / 30. Counts are integers, so every threshold is exact and each boundary is asserted ON the number with one-tap-short below it. window/resultDuration/idleTimeout are stored props with defaults; an untapped round ends itself .miss. TrainingResult.tint moved off TimingBarGame so all six games announce a grade the same colour. 927 tests pass, +14 mine. Screenshots: -buttonMasherDemo -> 'Button Masher', live count 12, orange timer bar draining 80%->35% across two shots; -buttonMasherResultDemo -> 'Perfect' + '30' in yellow + '+3 STR'."
     },
     {
       "id": "US-078",
