@@ -20,6 +20,13 @@ struct BattleBout: Equatable {
     var playerMove: Move = .placeholder
     var opponentMove: Move = .placeholder
 
+    /// What scaled the two powers this fight was resolved from (US-093): the typing matchup and the
+    /// pre-battle training grade, factors and all. Carried rather than recomputed because it is the
+    /// arithmetic the battle was ACTUALLY fought with — see `BattleModifiers`, whose factors are kept
+    /// for exactly this. Nil for a bout built without a matchup, which is every test and preview that
+    /// only cares about the frames.
+    var matchup: BattleMatchup?
+
     /// The attacking side's move, so the projectile is tinted and shaped by whoever is swinging.
     func move(for side: BattleSide) -> Move {
         side == .player ? playerMove : opponentMove

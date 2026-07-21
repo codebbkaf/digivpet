@@ -552,3 +552,75 @@ WHAT REMAINS
   `TrainingResult` in, and US-094 is what shows the breakdown. `BattleEngine.resolve`
   is deliberately UNCHANGED (git confirms Battle.swift was not touched this
   iteration); it already takes two Ints and does not care where they came from.
+
+================================================================================
+2026-07-21 — US-093: Train before you fight
+================================================================================
+STATUS: PASSES. Build green, 1145 tests / 0 failures (was 1135 — 9 new tests in
+`Tests/PreBattleRoundTests.swift`, plus one added assertion in WanderingTests).
+AC8's two screenshots taken from ONE `simctl` launch of `-battleRoundDemo`.
+
+THE SHAPE OF IT — Battle is now two halves, exactly like Train since US-083
+- `MainScreenModel.battle()` no longer fights anything. It runs every guard,
+  picks the opponent, spends and SAVES the day's allowance, and publishes
+  `pendingBattleRound`. It returns `MinigameKind?` now, not `BattleBout?` —
+  nil still means "refused", so every existing `XCTAssertNil/NotNil(battle())`
+  kept its meaning.
+- `finishBattleRound(_ result: TrainingResult) -> BattleBout?` is the other
+  half and the one call the minigame's `onFinish` lands in. It builds
+  `BattleModifiers.matchup(...)` from the two typings and the grade, resolves
+  `BattleEngine` FROM THE EFFECTIVE POWERS, and publishes `pendingBattle`.
+- `abandonBattleRound()` is `abandonTraining()`'s twin; `ContentView` calls
+  both on `.background`.
+
+THE ONE DESIGN DECISION WORTH KNOWING — the generator is CARRIED
+- `PendingBattleRound` holds `{ game, player, opponent, generator }`, and
+  `SeededGenerator` gained `Equatable` so it can ride in a `@Published` value.
+- Matchmaking happens in `battle()`, BEFORE the allowance is spent, so "Nobody
+  to fight." can never cost a battle. The half-used generator is then carried
+  into `finishBattleRound`, so the draw sequence across the two halves is
+  byte-identical to what the single-call `battle()` used to do. That is what
+  kept every pinned-seed test (BattleTests' `seed: 3` loss fixture especially)
+  valid without retuning a single seed.
+- Had the generator been re-made at grading time, one seed would have produced
+  a different fight than before and the outcome-pinned tests would have had to
+  be re-derived — which would have hidden any real regression among them.
+
+WHAT THE ROUND COSTS: NOTHING BUT THE ALLOWANCE
+- `TrainAction` is never called from `battle()`. No energy, no `strengthStat`,
+  no `stageTrainingSessions` — asserted separately, in memory AND read back off
+  disk from a reopened store.
+- The allowance is spent when the GAME OPENS, not when the grade arrives, and
+  flushed immediately. `testTheAllowanceIsSpentAndSavedWhenTheMinigameOpens`
+  reopens the store mid-round and finds the battle already charged.
+
+TRAP THAT COST A TEST RUN — hold the reopened `GameStore` in a `let`
+- `try GameStore(url: url).loadOrCreate(...)` traps with "This model instance
+  was destroyed by calling ModelContext.reset" the moment the returned
+  `GameState` is read: the store is a temporary, and it takes its `ModelContext`
+  with it when the statement ends. `let reopened = try GameStore(url: url)`
+  first. BattleTests got away with it because it holds its store in a `let`.
+
+DEMOS — `-battleRoundDemo` fights as PIYOMON, and that is load-bearing
+- Its assigned game is the Reflex Strike, the one of the six that ENDS ON ITS
+  OWN: it draws a delay, opens a reaction window, and grades a miss when nothing
+  taps it. Agumon's Button Masher sits on "Tap to start" forever, and `simctl`
+  cannot tap — the first attempt screenshotted the same waiting round twice.
+  With Piyomon, one launch gives the minigame at ~2s and the arena at ~11s with
+  NOTHING staged: the real assignment, the real timeout, the real `.miss`.
+- Every ARENA demo (`-battleDemo`, `-battleResultDemo`, `-battleTurnDemo`,
+  `-battleSignatureDemo`, `-battleLossDemo`, `-battleLimitDemo`) now stages
+  `finishBattleRound(.good)` after its `battle()`, the way `-trainResultDemo`
+  stages its grade. `good` is the neutral multiplier, so what they screenshot is
+  the fight they screenshotted before this story.
+- Screenshots need `-healthAnswered` on a fresh install or the authorization
+  gate is what lands in the PNG.
+
+WHAT REMAINS / FOR US-094
+- `BattleBout` gained `matchup: BattleMatchup?` (defaulted nil, so no existing
+  construction changed). It is SET but NOT SHOWN — US-094 is what renders the
+  breakdown, and it must read the factors off this rather than re-deriving them.
+  See US-092's note on why `elementEffectiveness` is read off the FACTOR.
+- The pre-battle grade is not persisted anywhere. It lives only as long as the
+  bout does, which is fine today: nothing after the result screen asks what the
+  round was worth.

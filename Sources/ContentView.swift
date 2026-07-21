@@ -342,6 +342,17 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingTraining)
+        // The pre-battle round (US-093) sits exactly where the training round does, because it is the
+        // same thing on screen: the Digimon's assigned minigame, full screen, over everything else.
+        // What differs is only what the grade buys — `finishBattleRound` spends it on the fight rather
+        // than on `strengthStat`, and the arena comes up in its place.
+        .overlay {
+            if let round = model.pendingBattleRound {
+                round.game.view { result in model.finishBattleRound(result) }
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingBattleRound)
         // Applied AFTER the ceremony's overlay, so it layers above it: a Digimon that died has
         // nothing left to celebrate. This is also what stops the Feed and Train buttons underneath
         // from being tapped while the memorial is up.
@@ -382,7 +393,13 @@ struct ContentView: View {
             // AC4). `.background` rather than `.inactive` on purpose: watchOS passes through
             // `.inactive` for a notification banner or a wrist tilt, and abandoning a round the user
             // is still holding their arm up for would be a bug rather than a rule.
-            if phase == .background { model.abandonTraining() }
+            if phase == .background {
+                model.abandonTraining()
+                // The pre-battle round is abandoned on the same beat but is NOT cancelled with it: the
+                // allowance is already gone, so the fight goes ahead at the miss multiplier (US-093
+                // AC4) and is waiting on the arena when the app comes back.
+                model.abandonBattleRound()
+            }
             // The whole refresh: health data is only read when the app is in front, since
             // watchOS gives a backgrounded app no reason to expect it will run at all.
             // `start()` covers the first appearance; this covers every return to it.

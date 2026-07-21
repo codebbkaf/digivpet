@@ -686,7 +686,9 @@ final class BattleApplyTests: XCTestCase {
         await model.start()
         XCTAssertNil(model.pendingBattle, "nothing before the button is tapped")
 
-        let bout = try XCTUnwrap(model.battle(), "the battle should have started")
+        XCTAssertNotNil(model.battle(), "the pre-battle round should have opened")
+        XCTAssertNil(model.pendingBattle, "and nothing is fought until it is graded")
+        let bout = try XCTUnwrap(model.finishBattleRound(.good), "grading it fights the fight")
 
         XCTAssertEqual(bout.player.displayName, "Hero")
         XCTAssertEqual(bout.opponent.displayName, "Foe", "the only eligible opponent in the roster")
@@ -703,14 +705,17 @@ final class BattleApplyTests: XCTestCase {
         let (second, _) = try makeModel(storeName: "B", strength: 8, seed: 4242)
         await second.start()
 
-        XCTAssertEqual(first.battle(), second.battle())
+        first.battle()
+        second.battle()
+        XCTAssertEqual(first.finishBattleRound(.good), second.finishBattleRound(.good))
     }
 
     /// The result is filed once, when the user dismisses it, and the screen comes down with it.
     func testFinishingABattleRecordsItOnceAndClearsTheScreen() async throws {
         let (model, store) = try makeModel(strength: 8, seed: 1)
         await model.start()
-        let bout = try XCTUnwrap(model.battle())
+        model.battle()
+        let bout = try XCTUnwrap(model.finishBattleRound(.good))
 
         model.finishBattle()
 
@@ -739,7 +744,8 @@ final class BattleApplyTests: XCTestCase {
         let (model, _) = try makeModel(strength: 0, seed: 3)
         await model.start()
 
-        let bout = try XCTUnwrap(model.battle())
+        model.battle()
+        let bout = try XCTUnwrap(model.finishBattleRound(.good))
         XCTAssertFalse(bout.report.playerWon, "this fixture is meant to be a loss")
 
         model.finishBattle()
@@ -765,6 +771,7 @@ final class BattleApplyTests: XCTestCase {
         model.isAsleep = true
 
         XCTAssertNil(model.battle(), "no battle while it sleeps")
+        XCTAssertNil(model.pendingBattleRound, "and a blocked battle opens no minigame")
         XCTAssertNil(model.pendingBattle)
         XCTAssertEqual(model.actionMessage, "Asleep — let it rest.")
         XCTAssertEqual(model.state?.careMistakeCount, 1, "prodding it awake is the usual mistake")
@@ -778,6 +785,7 @@ final class BattleApplyTests: XCTestCase {
         model.state?.healthStatus = .dead
 
         XCTAssertNil(model.battle())
+        XCTAssertNil(model.pendingBattleRound, "and a blocked battle opens no minigame")
         XCTAssertNil(model.pendingBattle)
         XCTAssertEqual(model.state?.battleWins, 0)
         XCTAssertEqual(model.state?.battleLosses, 0)

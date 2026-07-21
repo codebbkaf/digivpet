@@ -84,6 +84,31 @@ final class MainScreenModel: ObservableObject {
     /// lands here — see `BattleBout` — so the screen replays a decided outcome rather than rolling.
     @Published private(set) var pendingBattle: BattleBout?
 
+    /// The PRE-BATTLE round currently being played on screen, or nil when none is (US-093).
+    ///
+    /// A third state beside `pendingTraining` and `pendingBattle`, and deliberately not either of them:
+    /// it is not a training — no energy, no `strengthStat`, no session counted — and it is not yet a
+    /// battle, because the fight has not been rolled. What it holds is everything `battle()` settled
+    /// before the game appeared, waiting on the one thing only the round can say.
+    @Published private(set) var pendingBattleRound: PendingBattleRound?
+
+    /// A pre-battle round in progress: the game on screen, and the half-built fight behind it.
+    ///
+    /// The opponent and the generator are picked in `battle()` and carried here rather than drawn again
+    /// once the round is graded, for two reasons. "Nobody to fight" is then decided BEFORE the day's
+    /// allowance is spent, so an empty roster cannot cost a battle; and the fight is rolled from the
+    /// same sequence that picked the opponent, so one seed still produces one whole bout exactly as it
+    /// did when `battle()` did both in a breath.
+    ///
+    /// Not persisted, like `PendingTraining`: a round interrupted by a force-quit is simply over, and
+    /// the allowance that already reached disk is what makes walking out of it cost something.
+    struct PendingBattleRound: Equatable {
+        let game: MinigameKind
+        let player: DigimonPresentation
+        let opponent: BattleOpponent
+        let generator: SeededGenerator
+    }
+
     /// The training round currently being played on screen, or nil when none is (US-083).
     ///
     /// The exact inverse of `pendingBattle`: a battle is decided before its view appears and replayed,
@@ -505,6 +530,10 @@ final class MainScreenModel: ObservableObject {
     /// - `-battleLimitDemo` — the day's five battles actually FOUGHT and dismissed, leaving the
     ///   disabled button and its reason (US-032). No scroll flag needed since US-039 — the action
     ///   row is on screen on both watch sizes.
+    /// - `-battleRoundDemo` — US-093's pre-battle round, left to play itself out: nothing taps it, so
+    ///   the game's own window expires and its shipped `onFinish` grades the `.miss` that opens the
+    ///   arena. One launch, screenshotted twice — the minigame in the first seconds, the arena after —
+    ///   which is the whole of AC1 through AC5 with nothing staged. Fought as Piyomon; see below.
     ///
     /// The outcome is left to the real matchmaker and the real engine — only the player's stats and
     /// the seed are staged, so this exercises the shipped path rather than its output.
@@ -513,11 +542,19 @@ final class MainScreenModel: ObservableObject {
         let losing = arguments.contains("-battleLossDemo")
         let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo", "-battleSignatureDemo"]
         let limit = arguments.contains("-battleLimitDemo")
-        guard staged.contains(where: arguments.contains) || losing || limit, let state else { return }
+        let round = arguments.contains("-battleRoundDemo")
+        guard staged.contains(where: arguments.contains) || losing || limit || round,
+              let state else { return }
 
         // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
         // attack or hurt frames, so an egg would screenshot as placeholders however well this worked.
-        if let node = graph.node(id: losing ? "botamon" : "agumon") {
+        //
+        // `-battleRoundDemo` fights as PIYOMON rather than Agumon, and the choice is the whole reason
+        // the flag works: its assigned game is the Reflex Strike, which is the one of the six that
+        // ENDS ON ITS OWN — it draws a delay, opens a reaction window, and grades a miss when nothing
+        // taps it. Agumon's Button Masher sits on "Tap to start" forever, so `simctl`, which cannot
+        // tap, would screenshot the same waiting round twice and never reach the arena.
+        if let node = graph.node(id: losing ? "botamon" : (round ? "piyomon" : "agumon")) {
             state.currentDigimonId = node.id
             state.stage = node.stage
             // Restamped, or US-020's gate is already open on a save from an earlier launch and the
@@ -536,12 +573,19 @@ final class MainScreenModel: ObservableObject {
             // leaves no pending bout, so the main screen — not the battle screen — is what draws.
             for _ in 0..<BattleLimits.perDay {
                 battle()
+                finishBattleRound(.good)
                 finishBattle()
             }
             return
         }
 
         battle()
+        // Every ARENA demo stages the grade, exactly as `-trainResultDemo` does and for the same
+        // reason: `simctl` cannot play a round, and the arena is what these flags are for. `good` is
+        // the neutral grade, so the fight they screenshot is the one they screenshotted before the
+        // pre-battle round existed. `-battleRoundDemo` alone leaves the round up and lets the game
+        // grade itself.
+        if !round { finishBattleRound(.good) }
     }
 
     /// Debug-only: fills the screen with poop so US-052's pile and its Clean button can be
@@ -727,7 +771,7 @@ final class MainScreenModel: ObservableObject {
     /// stood.
     var isWandering: Bool {
         animation == .idle && pendingEvolution == nil && pendingBattle == nil
-            && pendingTraining == nil && memorial == nil
+            && pendingTraining == nil && pendingBattleRound == nil && memorial == nil
     }
 
     /// Every pose `settleRestingPose` is allowed to swap out. Exactly the poses `restingAnimation`
@@ -825,7 +869,11 @@ final class MainScreenModel: ObservableObject {
         // time. The overlay makes a second tap unreachable by covering the button; this guard is what
         // makes "unreachable" a rule rather than a property of the layout. nil, as with no saved
         // game: nothing happened, and there is no reason to show over a game already on screen.
-        guard pendingTraining == nil else { return nil }
+        //
+        // A PRE-BATTLE round counts too (US-093): one Digimon cannot be in two minigames at once, and
+        // a Train tap that got through one would charge energy for a round whose grade the battle is
+        // waiting on. `battle()` carries the mirror of this guard.
+        guard pendingTraining == nil, pendingBattleRound == nil else { return nil }
         let start = TrainAction.begin(state, isAsleep: isAsleep)
 
         switch start {
@@ -947,24 +995,38 @@ final class MainScreenModel: ObservableObject {
     /// off `state` in the view so the badge and the pose can never disagree about what "sick" means.
     var isSick: Bool { state?.healthStatus == .sick }
 
-    /// Picks an opponent near the player's stage, fights the battle out, and hands the replay to the
-    /// screen via `pendingBattle`.
+    /// ENTERS a battle: picks an opponent near the player's stage, spends the day's allowance, and puts
+    /// this Digimon's assigned minigame on screen as the PRE-BATTLE round (US-093).
     ///
-    /// The whole battle is RESOLVED HERE, before a single frame is drawn: `BattleEngine` is pure and
-    /// takes its randomness from `makeBattleGenerator()`, so the outcome is fixed by the seed and the
-    /// view is a replay. Nothing is written to the saved game yet — the record is filed by
-    /// `finishBattle()`, once the user has actually seen the result.
+    /// This is only the first half of a battle now. Nothing is rolled here — how hard the player hits
+    /// depends on how the round goes, and that is `finishBattleRound(_:)`'s to say. What is settled here
+    /// is everything that must not depend on it: eligibility, who is being fought, and the allowance.
+    ///
+    /// The round is a fight, not a workout. It costs NO energy, buys no `strengthStat` and counts no
+    /// training session — `TrainAction` is never called from here. The only thing it is worth is the
+    /// multiplier it hands `BattleModifiers`.
+    ///
+    /// **The allowance is spent HERE and saved immediately**, exactly as `TrainAction.begin` charges its
+    /// energy and for the same reason: the battle is committed to the moment the game appears, so a
+    /// force-quit mid-round must not hand it back.
     ///
     /// Blocked while asleep or dead, and blocked the same way feeding and training are: a message,
     /// no animation, and the waking-early mistake charged if it was the sleep window that stopped it.
     /// Prodding a sleeping Digimon into a fight is the same neglect as prodding it to eat. Blocked
     /// too once the day's `BattleLimits.perDay` battles are gone (US-032) — that guard sits AFTER the
     /// sleep one, so a Digimon prodded awake at its limit is still charged the waking-early mistake.
+    /// A BLOCKED BATTLE OPENS NO GAME, for the reason a blocked `train()` opens none: the round is the
+    /// thing being paid for.
     ///
-    /// Returns the bout so a test can assert on it directly; the screen reacts to `pendingBattle`.
+    /// Returns the game that opened, so a test can assert the battle went ahead without a view; the
+    /// screen reacts to `pendingBattleRound`.
     @discardableResult
-    func battle() -> BattleBout? {
+    func battle() -> MinigameKind? {
         guard let state else { return nil }
+        // The mirror of `train()`'s guard, and the same silence: one Digimon cannot be in two
+        // minigames at once, and a second Battle tap would spend a second allowance on a fight the
+        // first tap has already picked an opponent for.
+        guard pendingBattleRound == nil, pendingTraining == nil else { return nil }
         guard state.healthStatus != .dead else {
             show(nil, message: "It cannot battle.")
             return nil
@@ -983,6 +1045,9 @@ final class MainScreenModel: ObservableObject {
             return nil
         }
 
+        // Drawn here and CARRIED, rather than made again when the round is graded — see
+        // `PendingBattleRound`. Both refusals below this line are decided before the allowance is
+        // spent, which is the point of matchmaking early.
         var generator = makeBattleGenerator()
         guard let opponent = BattleMatchmaker.choose(in: graph,
                                                     playerId: state.currentDigimonId,
@@ -991,28 +1056,7 @@ final class MainScreenModel: ObservableObject {
             return nil
         }
 
-        let report = BattleEngine.resolve(playerPower: state.battlePower,
-                                          opponentPower: opponent.power,
-                                          using: &generator)
-        // Each side's attack identity (US-070), resolved here where both ids and their graph nodes are
-        // in hand: both combatants ARE graph nodes, so the pure two-tier core answers without a roster.
-        let catalog = MoveCatalog.bundled
-        let playerNode = graph.node(id: state.currentDigimonId)
-        let bout = BattleBout(
-            player: player,
-            opponent: DigimonPresentation(displayName: opponent.node.displayName,
-                                          stage: opponent.node.stage,
-                                          spriteFile: opponent.node.spriteFile),
-            report: report,
-            playerMove: catalog.move(forId: state.currentDigimonId,
-                                     line: playerNode?.line, stage: playerNode?.stage),
-            opponentMove: catalog.move(forId: opponent.node.id,
-                                       line: opponent.node.line, stage: opponent.node.stage)
-        )
-        // Spent here and not in `finishBattle()`: the fight has happened by this line, so walking
-        // away from the result screen must not hand the allowance back. Saved immediately for the
-        // same reason — an allowance that only reaches disk when the result is dismissed would be
-        // returned by force-quitting mid-battle.
+        let game = MinigameAssignment.game(for: state.currentDigimonId, in: graph, roster: roster)
         state.consumeBattleAllowance(now: now(), calendar: calendar)
         do {
             try store?.save()
@@ -1020,9 +1064,83 @@ final class MainScreenModel: ObservableObject {
             Self.log.error("Could not save the battle allowance: \(String(describing: error))")
         }
 
+        // No pose and no caption: the Digimon is about to be covered by the game, and the attack
+        // frame belongs to the arena rather than to the walk up to it.
+        pendingBattleRound = PendingBattleRound(game: game, player: player, opponent: opponent,
+                                                generator: generator)
+        Self.log.info("Pre-battle \(game.rawValue) vs \(opponent.node.id)")
+        return game
+    }
+
+    /// Fights the battle the graded round just decided the player's edge in, and hands the replay to
+    /// the screen via `pendingBattle`.
+    ///
+    /// The other half of `battle()`, and the call the pre-battle minigame's `onFinish` lands in.
+    /// Charges nothing — the allowance went when the game appeared — so a `.miss` here is a battle that
+    /// cost its allowance and bought a WEAKER fight rather than no fight, which is the whole reason the
+    /// two halves are separate.
+    ///
+    /// The grade reaches the fight through `BattleModifiers.matchup`, which is also where the two
+    /// typings are applied, and the report is resolved from the EFFECTIVE powers it returns. The
+    /// matchup rides along on the bout so nothing downstream has to re-derive the arithmetic the
+    /// battle was actually fought with. As before, the whole thing is resolved before a single frame is
+    /// drawn, so the view stays a replay of a decided outcome.
+    ///
+    /// A no-op without a round in progress, so a game that called back twice cannot start two battles.
+    @discardableResult
+    func finishBattleRound(_ result: TrainingResult) -> BattleBout? {
+        guard let round = pendingBattleRound, let state else { return nil }
+        pendingBattleRound = nil
+
+        let types = ElementCatalog.bundled
+        let matchup = BattleModifiers.matchup(
+            playerPower: state.battlePower,
+            playerType: types.type(for: state.currentDigimonId, in: graph),
+            opponentPower: round.opponent.power,
+            opponentType: types.type(for: round.opponent.node.id, in: graph),
+            training: result
+        )
+
+        var generator = round.generator
+        let report = BattleEngine.resolve(playerPower: matchup.playerPower,
+                                          opponentPower: matchup.opponentPower,
+                                          using: &generator)
+        // Each side's attack identity (US-070), resolved here where both ids and their graph nodes are
+        // in hand: both combatants ARE graph nodes, so the pure two-tier core answers without a roster.
+        let catalog = MoveCatalog.bundled
+        let playerNode = graph.node(id: state.currentDigimonId)
+        let bout = BattleBout(
+            player: round.player,
+            opponent: DigimonPresentation(displayName: round.opponent.node.displayName,
+                                          stage: round.opponent.node.stage,
+                                          spriteFile: round.opponent.node.spriteFile),
+            report: report,
+            playerMove: catalog.move(forId: state.currentDigimonId,
+                                     line: playerNode?.line, stage: playerNode?.stage),
+            opponentMove: catalog.move(forId: round.opponent.node.id,
+                                       line: round.opponent.node.line, stage: round.opponent.node.stage),
+            matchup: matchup
+        )
+
         pendingBattle = bout
-        Self.log.info("Battle vs \(opponent.node.id): \(report.playerWon ? "won" : "lost")")
+        Self.log.info("""
+            Battle vs \(round.opponent.node.id) after a \(result.displayName) round: \
+            \(report.playerWon ? "won" : "lost")
+            """)
         return bout
+    }
+
+    /// Ends a pre-battle round the user walked out of — graded a `.miss`, and the battle fought anyway.
+    ///
+    /// Called when the app leaves the foreground mid-game, the same moment `abandonTraining()` is. It is
+    /// NOT a cancel: the allowance went when the round opened, so backgrounding buys the fight at the
+    /// miss multiplier rather than calling it off, and the bout is waiting on `pendingBattle` when the
+    /// app comes back. Walking out of a round that was going badly is not a way to keep the battle.
+    ///
+    /// A no-op with no round in progress, which is every ordinary backgrounding.
+    func abandonBattleRound() {
+        guard pendingBattleRound != nil else { return }
+        finishBattleRound(.miss)
     }
 
     /// Why the Battle button is disabled once the day's battles are gone.

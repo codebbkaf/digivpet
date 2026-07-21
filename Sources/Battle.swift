@@ -9,7 +9,11 @@ import Foundation
 ///
 /// A `struct` passed `inout` rather than a class, so a caller cannot accidentally share one draw
 /// sequence between two battles and wonder why the second is not reproducible.
-struct SeededGenerator: RandomNumberGenerator {
+/// `Equatable` so a half-played battle can be carried in a published value: US-093 picks the
+/// opponent when the pre-battle round opens and rolls the fight when it is graded, which means the
+/// draw sequence has to survive between the two — one seed, one whole bout, as before the round
+/// existed.
+struct SeededGenerator: RandomNumberGenerator, Equatable {
     private var state: UInt64
 
     init(seed: UInt64) {

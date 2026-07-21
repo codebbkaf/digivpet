@@ -279,6 +279,9 @@ final class BattleLimitApplyTests: XCTestCase {
 
         for attempt in 1...BattleLimits.perDay {
             XCTAssertNotNil(model.battle(), "battle \(attempt) of \(BattleLimits.perDay) is allowed")
+            // US-093: the tap opens the pre-battle round, and grading it is what fights the fight.
+            // `good` throughout, so the cap is measured against a neutral multiplier.
+            model.finishBattleRound(.good)
             model.finishBattle()
         }
 
@@ -301,6 +304,7 @@ final class BattleLimitApplyTests: XCTestCase {
 
         for _ in 0..<BattleLimits.perDay {
             model.battle()
+            model.finishBattleRound(.good)
             model.finishBattle()
         }
         XCTAssertNil(model.battle(), "spent for today")
@@ -310,6 +314,7 @@ final class BattleLimitApplyTests: XCTestCase {
 
         XCTAssertEqual(model.battlesRemainingToday, BattleLimits.perDay, "a new day, a new allowance")
         XCTAssertNotNil(model.battle(), "and the battle that was refused now goes ahead")
+        model.finishBattleRound(.good)
         model.finishBattle()
 
         let state = try XCTUnwrap(model.state)
@@ -318,13 +323,14 @@ final class BattleLimitApplyTests: XCTestCase {
     }
 
     /// The allowance is spent when the fight STARTS, not when its result is dismissed — otherwise
-    /// walking away from the result screen would hand it back and the cap would be farmable.
+    /// walking away from the result screen would hand it back and the cap would be farmable. Since
+    /// US-093 "starts" is earlier still: the tap that opens the pre-battle round is what spends it.
     func testTheAllowanceIsSpentEvenIfTheResultIsNeverDismissed() async throws {
         let (model, _) = try makeModel()
         await model.start()
 
         XCTAssertNotNil(model.battle())
-        // No `finishBattle()`: the user is still staring at the result.
+        // Neither `finishBattleRound` nor `finishBattle()`: the user is still mid-round.
         XCTAssertEqual(model.battlesRemainingToday, BattleLimits.perDay - 1)
 
         let state = try XCTUnwrap(model.state)
@@ -340,6 +346,7 @@ final class BattleLimitApplyTests: XCTestCase {
 
         for _ in 0..<3 {
             model.battle()
+            model.finishBattleRound(.good)
             model.finishBattle()
         }
         let fought = try XCTUnwrap(model.state)
@@ -397,6 +404,7 @@ final class BattleLimitApplyTests: XCTestCase {
 
         for _ in 0..<BattleLimits.perDay {
             model.battle()
+            model.finishBattleRound(.good)
             model.finishBattle()
         }
         let before = try XCTUnwrap(model.state).careMistakeCount

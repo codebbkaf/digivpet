@@ -155,6 +155,10 @@ final class WanderingTests: XCTestCase {
         model.state?.stageEnergy[.strength] = 40
 
         XCTAssertNotNil(model.battle(), "the bout must actually start, or this proves nothing")
+        XCTAssertFalse(model.isWandering, "nothing to walk for behind the pre-battle round either")
+
+        model.finishBattleRound(.good)
+        XCTAssertNotNil(model.pendingBattle)
         XCTAssertFalse(model.isWandering, "nothing to walk for behind a full-screen battle")
 
         model.finishBattle()

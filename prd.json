@@ -174,8 +174,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Battle split in two like Train: battle() picks the opponent, spends and SAVES the allowance and opens MinigameAssignment's game as pendingBattleRound; finishBattleRound(grade) resolves the fight from BattleModifiers.matchup's effective powers. Round costs no energy/STR/session; backgrounding grades .miss and the fight still happens; blocked battles open no game; Train and Battle rounds lock each other out. 1145 tests green; -battleRoundDemo screenshotted the Reflex Strike then the arena in one launch."
     },
     {
       "id": "US-094",

@@ -478,6 +478,8 @@ final class ClosedAppRecomputeTests: XCTestCase {
 
         for _ in 0..<BattleLimits.perDay {
             game.model.battle()
+            // US-093: the tap opens the pre-battle round; grading it is what fights the fight.
+            game.model.finishBattleRound(.good)
             game.model.finishBattle()
         }
         XCTAssertEqual(game.model.battlesRemainingToday, 0)
