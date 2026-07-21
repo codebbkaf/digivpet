@@ -12,6 +12,20 @@ enum TrainOutcome: Equatable {
     case blocked(reason: String)
 }
 
+/// What happened when a training round was ENTERED — the half of `TrainOutcome` that is known
+/// before a minigame has been played (US-075).
+///
+/// Split out because the two halves answer at different times: eligibility and the charge are
+/// settled the instant Train is tapped, and the gain is not known until the round ends. A single
+/// call could not express that, and folding the charge into the ending would make dismissing a bad
+/// round a free retry.
+enum TrainingStart: Equatable {
+    /// The round is paid for and may begin: `cost` was taken from `spent`.
+    case started(spent: EnergyType, cost: Int)
+    /// The round never started, for a reason worth showing the user. Nothing was charged.
+    case blocked(reason: String)
+}
+
 /// Training: spends the physical energies to buy `strengthStat`, which is what steers a Digimon
 /// toward the stronger evolution branches and (US-030) what it fights with.
 ///
@@ -26,9 +40,10 @@ enum TrainAction {
     /// game-balance number chosen here.
     static let energyCostPerTraining = 5
 
-    /// How much `strengthStat` one session buys. One, so the stat reads as "sessions trained" and
-    /// there is no exchange rate to remember.
-    static let strengthGainPerTraining = 1
+    /// How much `strengthStat` an UNGRADED session buys — a plain Train tap with no minigame behind
+    /// it yet. It is `good`'s gain, so the graded scale (US-075) extends the old payout upward
+    /// rather than repricing it: nothing a player earned before is worth less now.
+    static let strengthGainPerTraining = TrainingResult.good.strengthGain
 
     /// The two energies training can be paid with, richest first at the point of spending.
     ///
@@ -37,20 +52,29 @@ enum TrainAction {
     /// sleep to get stronger is not a trade the game makes.
     static let payableWith: [EnergyType] = [.strength, .stamina]
 
-    /// Spends Strength or Stamina to raise `state.strengthStat`.
+    /// Enters a training round: checks eligibility, charges the energy, and counts the session.
     ///
-    /// Whichever of the two the Digimon holds more of pays, so a walker and a gym-goer can both
-    /// train without having to know which currency the game wanted. Ties go to Strength, by
-    /// `payableWith` order.
+    /// Whichever of the two payable energies the Digimon holds more of pays, so a walker and a
+    /// gym-goer can both train without having to know which currency the game wanted. Ties go to
+    /// Strength, by `payableWith` order.
     ///
     /// Checks run asleep -> sick -> funds, so a sleeping Digimon that is also broke is reported as
     /// asleep: the state the user can do something about tonight, rather than the one they cannot.
+    ///
+    /// **The charge is taken HERE and never given back.** A minigame that ends in a `miss`, or is
+    /// dismissed halfway, has still spent the energy — otherwise walking out of a round the user was
+    /// losing would be free, and the button would be a slot machine rather than a cost.
+    ///
+    /// **The session is counted HERE too, for the same reason and one more**: evolution branches on
+    /// how OFTEN the user trained, never on how well (see `GameState.stageTrainingSessions`), so the
+    /// count cannot wait on a grade that may never arrive. Exactly one per started round, and none
+    /// at all when blocked.
     ///
     /// - Parameter isAsleep: whether the Digimon is in its sleep window. Passed in rather than read
     ///   off `state` for the same reason `FeedAction.feed` takes it — sleep is DERIVED from the
     ///   user's sleep history (US-026), not saved-game state.
     @discardableResult
-    static func train(_ state: GameState, isAsleep: Bool) -> TrainOutcome {
+    static func begin(_ state: GameState, isAsleep: Bool) -> TrainingStart {
         guard !isAsleep else {
             return .blocked(reason: "Asleep — let it rest.")
         }
@@ -66,11 +90,35 @@ enum TrainAction {
         // ever EARNED, and the ledger keys on what was credited rather than on what is held, so a
         // spend can never be re-credited by the next health read.
         state.stageEnergy[payer] -= energyCostPerTraining
-        state.strengthStat += strengthGainPerTraining
-        // Filed here rather than alongside the gain, because the two answer to different rules: the
-        // gain is what the session EARNED and US-075 is about to grade it, while the count is that
-        // the session HAPPENED, which no grade can change. See `GameState.stageTrainingSessions`.
         state.recordTrainingSession()
-        return .trained(spent: payer, cost: energyCostPerTraining, gain: strengthGainPerTraining)
+        return .started(spent: payer, cost: energyCostPerTraining)
+    }
+
+    /// Pays out a round that has been graded, and answers with the `strengthStat` it bought.
+    ///
+    /// Charges nothing and checks nothing: `begin` already took the money and already decided the
+    /// Digimon was fit to train. A round graded after the Digimon fell asleep or fell ill still pays
+    /// — it was fought under the conditions that were checked when it started, and refusing to pay
+    /// at the end would punish the user for the clock.
+    @discardableResult
+    static func finish(_ state: GameState, result: TrainingResult) -> Int {
+        state.strengthStat += result.strengthGain
+        return result.strengthGain
+    }
+
+    /// One whole round, entered and graded in a single call.
+    ///
+    /// What the Train button does until US-083 puts a real minigame between the two halves, and what
+    /// every test of the payout rule uses. `result` defaults to `good`, which is exactly the one
+    /// point a session paid before grading existed.
+    @discardableResult
+    static func train(_ state: GameState, isAsleep: Bool,
+                      result: TrainingResult = .good) -> TrainOutcome {
+        switch begin(state, isAsleep: isAsleep) {
+        case .blocked(let reason):
+            return .blocked(reason: reason)
+        case .started(let spent, let cost):
+            return .trained(spent: spent, cost: cost, gain: finish(state, result: result))
+        }
     }
 }

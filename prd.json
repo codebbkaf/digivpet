@@ -415,8 +415,8 @@
         "Tests pass"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "TrainingResult (miss/good/great/perfect -> 0/1/2/3) and the TrainingMinigame protocol in Sources/TrainingMinigame.swift; TrainAction split into begin (charges once, counts the session, never refunds) / finish (grades only) with train() composing both at a default of .good. 891 tests pass, +21 mine; all 16 pre-existing TrainingTests assertions pass unmodified."
     },
     {
       "id": "US-076",

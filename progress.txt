@@ -1430,3 +1430,73 @@ TEST I HAD TO CHANGE (not a skip)
   the test can still fail for the right reason. Tier 2 is also still covered by the pure-core test.
 
 Next: US-075 (minigame foundation and graded gain).
+
+================================================================================
+2026-07-21 — US-075: Minigame foundation and graded gain — PASSES
+================================================================================
+
+WHAT I DID
+
+- New `Sources/TrainingMinigame.swift` holds the two things every later game shares:
+  - `TrainingResult` — `miss | good | great | perfect`, with `strengthGain` 0/1/2/3 and a
+    `displayName` for the end card. `good` is 1 DELIBERATELY: it is what an ungraded session paid
+    before, so the scale extends the old payout upward instead of repricing it, and nothing a
+    player already earned is worth less now.
+  - `protocol TrainingMinigame: View` — `static var title` plus `init(onFinish: (TrainingResult)
+    -> Void)`, and nothing else. A game knows nothing about energy, saving, or eligibility; it is
+    only a way of producing one of four values. Timing knobs are stored properties with defaults
+    set at the call site, the way `BattleView.turnDuration` already is, so US-076's "injectable so
+    tests never wait real time" has somewhere to live without a second initialiser.
+
+- `TrainAction` split in two along the line the AC draws:
+  - `begin(_:isAsleep:) -> TrainingStart` runs the SAME three guards in the same order, charges the
+    5 energy, and calls `recordTrainingSession()`. Both happen at ENTRY, before a grade exists.
+  - `finish(_:result:) -> Int` adds `result.strengthGain` and touches nothing else.
+  - `train(_:isAsleep:result: = .good)` composes the two. The default is why every existing test
+    compiles and passes untouched, and it is what the Train button still does until US-083 puts a
+    real game between the halves.
+  - `strengthGainPerTraining` is now `TrainingResult.good.strengthGain` rather than a second `1`
+    living beside the table.
+
+WHY THE SPLIT, NOT A `result` PARAMETER ALONE
+
+  AC3 and AC4 are only structurally true if the charge and the count land at entry. Folding both
+  into the ending would make dismissing a round that is going badly a free retry, and would make
+  the session count wait on a grade that an abandoned round never delivers. US-083 grades a
+  dismissal as a miss; `testAnAbandonedRoundStaysChargedAndStaysCounted` pins that even doing
+  NOTHING after `begin` leaves the charge and the count standing.
+
+VERIFIED (all observed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   891 passed / 0 failures (was 870; +21 mine across three new suites).
+  AC1     `testTheGradesAreExactlyMissGoodGreatPerfect`; the protocol is exercised GENERICALLY by
+          `testAnyConformingGameCanBeBuiltAndGradedThroughTheProtocolAlone` via a
+          `makeGame<Game: TrainingMinigame>` that builds a conformer knowing only the protocol —
+          that call would not compile against a game needing its own initialiser, which is the
+          real check behind "adding a seventh is adding a file".
+  AC2     `testEachGradeBuysItsOwnNumberOfPoints` (0/1/2/3 literally), plus
+          `testAWholeRoundPaysTheGradeAndAlwaysCostsTheSame` driving all four grades end to end,
+          and `testGainsRiseStrictlyWithTheGrade` for the ordering property.
+  AC3     `testEnteringChargesTheEnergyBeforeAnythingIsPlayed` (charged, stat still 0),
+          `testAMissIsNotRefunded`, `testGradingDoesNotChargeASecondTime`.
+  AC4     `testEveryGradeIncrementsTheSessionCountExactlyOnce` loops all four;
+          `testAMissStillCountsAsASessionTrained` spells out the case a "reward the player"
+          instinct gets wrong; `testSessionsAndPointsAccumulateIndependently` shows 4 sessions
+          against 0+1+2+3 points.
+  AC5     `testTheBlockReasonsAreUnchangedWordForWord` asserts all four strings VERBATIM (asleep /
+          sick / dead / broke) rather than merely non-empty, and
+          `testABlockedRoundChargesNothingAndCountsNothing` proves a block is not a session — a
+          blocked tap that still counted would let a sleeping Digimon evolve on taps alone.
+  AC6     All 16 pre-existing assertions in Tests/TrainingTests.swift pass with the file UNCHANGED
+          (12 TrainActionTests + 4 TrainApplyTests, run under -only-testing and observed
+          individually). `CareCounterTests.testTrainingIncrementsTheSessionCounter` also still
+          passes, so US-084's counter still sees exactly what it saw.
+  AC7     Grading is a pure `switch` on an enum with no I/O and no clock; all six
+          `TrainingResultTests` are pure, and every boundary is covered because there are only
+          four inputs.
+  AC8     Both new files sit under the existing `- path: Sources` / `- path: Tests` entries, which
+          are directory paths, so no project.yml EDIT was needed. Re-ran `xcodegen generate` and
+          confirmed the generated pbxproj now references TrainingMinigame (8 hits).
+
+Next: US-076 (training minigame — Timing Bar).
