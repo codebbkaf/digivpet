@@ -83,6 +83,16 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   before/after worth anything — check that it does before trusting the "after".
 - `xcodegen generate` is required for a NEW source file even though `project.yml` globs `Sources`.
   The symptom is "cannot find type 'X' in scope" on a file that plainly exists.
+- **`Roster` and `EvolutionGraph` are DIFFERENT sets: 1025 entries vs 88 authored nodes.** Data
+  authored against the roster (map opponent pools, Digitama slots) CANNOT be resolved through the
+  graph — it silently comes back empty and the caller falls through to whatever its fallback is.
+  US-122 shipped a whole story doing nothing for one build because of this. Until Phase E wires the
+  780 orphans, anything meaning "any Digimon" goes through `Roster`. `EvolutionNode` is
+  constructible from a `RosterEntry` with an empty `line`, and both `MoveCatalog` and
+  `ElementCatalog` degrade gracefully through an empty line — that is the bridge (`MapOpponentBand.nodes`).
+- **A test that asserts "something came back" cannot catch a silent fallback.** Assert that what
+  came back is FROM the set you asked about. In US-122 that one line was the difference between a
+  false pass and finding the bug.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -696,4 +706,73 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     NEWEST by mtime. Installing the wrong one silently photographs the previous story.
 - REMAINS: US-122 onward (8/56 passing). Phase B is finished with US-122, which consumes the same
   `opponentPool` this screen now draws.
+---
+
+## 2026-07-22 — US-122: Opponents come from the map and scale with progress
+- `Sources/MapOpponents.swift`: `MapOpponentBand` — the pure band arithmetic, with no generator in
+  it at all — plus `BattleMatchmaker.choose(in:roster:playerId:map:recorded:using:)`. The strength
+  roll moved out of the old `choose` into `BattleMatchmaker.rolled`, so the map path and the
+  roster path cannot drift apart.
+- Files: Sources/MapOpponents.swift (new), Sources/Battle.swift, Sources/MainScreenModel.swift,
+  Tests/MapOpponentTests.swift (new). **No existing test file was touched** — AC8's "existing
+  battle tests pass unchanged" holds literally, not just in effect.
+- PASSED: build green. `Executed 1496 tests, with 0 failures` (1466 + 30 new). All 30 new tests
+  also observed passing on their own, and the 8 pre-existing `BattleMatchmakerTests` with them.
+
+- **THE FIRST BUILD FOUND A REAL COLLISION, and it is the thing to carry forward:**
+  **a map's `opponentPool` is authored and validated against the ROSTER, but `BattleMatchmaker`
+  resolves against the `EvolutionGraph` — and those are not the same set.** The roster has 1025
+  entries; `evolutions.json` authors 88 nodes. Resolving a pool through the graph dropped nearly
+  every opponent every map names, the pool came back empty, and the code fell through to the
+  roster-wide pick — US-122 doing nothing at all while its own fixture tests passed.
+  - Caught ONLY because the shipped-catalog sweep asserts the drawn id is *in the map's pool*
+    rather than merely "an opponent came back". `11_city_night` (ten Ultimates) drew `ogremon`.
+  - Fix: `MapOpponentBand.nodes` resolves graph-node-first, and promotes a `RosterEntry` to an
+    `EvolutionNode` otherwise. An opponent needs a name, a stage and a sheet; it does not need
+    outgoing edges. The graph's node still wins where both exist, because it carries the `line`.
+  - A promoted node carries an EMPTY `line`, which is honest: a roster-only Digimon is in no Dex
+    tree. `MoveCatalog` and `ElementCatalog` both miss `lineDefaults` on it and fall through to
+    their stage / keyword tiers, which is what "no line known" should produce.
+  - Two element lookups in `MainScreenModel` moved from `types.type(for:in: graph)` to
+    `types.type(forId:line:)` off the node already in hand — identical for an on-graph opponent,
+    strictly better for an off-graph one (which the graph form would answer `.unauthored`).
+
+- THE BAND RULE, as implemented and as measured:
+  - `index(recorded:total:)` is AC2's literal quartile, pinned from BOTH sides at all three
+    boundaries so an accidental `<=` fails the suite. `total <= 0` reads as the lowest band rather
+    than dividing by zero.
+  - The tier clamp is a rung table — t1 `2...3` (Baby II–Child) up to t5 `6...6` (Ultimate alone) —
+    and it does real work: `13_factory_town` carries one Adult among its Perfects and Ultimates,
+    which is dropped rather than fought at the start of a tier 4 map.
+  - Within the clamped pool the four bands INTERPOLATE over the rungs the pool actually spans, so
+    index 0 *is* the pool's lowest band and index 3 *is* its highest whatever it holds. A 4-rung
+    pool gives a stage per band; the 2-rung shape every shipped map has splits at halfway.
+  - AC4's nearest-populated fallback is tested three ways: nearer below, nearer above, and a tie —
+    which breaks DOWNWARD, and that tie-break is exactly what keeps AC3's "never above it" true in
+    the case where the top band itself is empty.
+- AC6 IS ASSERTED AGAINST THE OLD CALL, not against a remembered list: with `map` nil the new
+  signature returns the same node and the same rolled power at 50 seeds, and leaves the generator
+  in the same place — so the battle that draws from it afterwards resolves identically too. That
+  second half matters because `MainScreenModel` carries ONE generator through matchmaking and the
+  fight.
+- SHIPPED DATA verified twice over, by two implementations:
+  - the test sweeps all 16 maps at 6 ratios x 5 seeds — always from the map's own pool, never above
+    its tier, the band never falls as progress rises, `01_grassland` starts on Baby II and
+    `12_cyberpunk` on Ultimate;
+  - and a throwaway Python reimplementation of the rule read straight off `maps.json` +
+    `roster.json` produces the same table map-for-map: every map steps up at halfway, tier 5 is one
+    band throughout, `13_factory_town` q0 is Perfect and not its stray Adult.
+- Also carried the map into the DEBUG `demoBattleSeed` search. It exists to replay exactly what
+  `battle()` is about to draw, and since this story that depends on where the player is adventuring.
+
+- **Learnings for future iterations:**
+  - **`Roster` (1025) and `EvolutionGraph` (88) are DIFFERENT sets, and which one a feature resolves
+    against is a design decision, not a detail.** Data authored against the roster — map pools,
+    Digitama slots — cannot be looked up through the graph. Until Phase E wires the 780 orphans,
+    anything that says "a Digimon" and means "any of them" must go through the roster.
+  - A "did something come back?" assertion cannot catch a silent fallback. Assert what came back is
+    from the set you asked about. That one line is the whole reason this story is not a false pass.
+  - `EvolutionNode` is constructible from a `RosterEntry` with an empty `line`; both catalogs that
+    read a line degrade gracefully through it. That is the bridge for any later story that needs a
+    roster-only Digimon where a node is expected.
 ---

@@ -698,7 +698,10 @@ final class MainScreenModel: ObservableObject {
                 playerWins: !losing,
                 playerId: state.currentDigimonId,
                 playerPower: state.battlePower,
-                in: graph)
+                in: graph,
+                roster: roster,
+                map: selectedMap,
+                recorded: selectedMapRecorded)
             if battleSeedOverride == nil {
                 Self.log.error("No demo battle seed gives the matchup the screenshot wants")
             }
@@ -727,6 +730,9 @@ final class MainScreenModel: ObservableObject {
         playerId: String,
         playerPower: Int,
         in graph: EvolutionGraph,
+        roster: Roster,
+        map: AdventureMap?,
+        recorded: Double,
         limit: UInt64 = 4096
     ) -> UInt64? {
         let types = ElementCatalog.bundled
@@ -735,13 +741,18 @@ final class MainScreenModel: ObservableObject {
         for seed in 0..<limit {
             var generator = SeededGenerator(seed: seed)
             // Nil means the roster offers nobody at all, which no later seed can fix.
-            guard let opponent = BattleMatchmaker.choose(in: graph, playerId: playerId,
+            // The map is carried in for the same reason the seed is searched at all: this must
+            // replay exactly what `battle()` is about to draw, and since US-122 that depends on
+            // where the player is adventuring.
+            guard let opponent = BattleMatchmaker.choose(in: graph, roster: roster,
+                                                        playerId: playerId,
+                                                        map: map, recorded: recorded,
                                                         using: &generator) else { return nil }
             let matchup = BattleModifiers.matchup(
                 playerPower: playerPower,
                 playerType: playerType,
                 opponentPower: opponent.power,
-                opponentType: types.type(for: opponent.node.id, in: graph),
+                opponentType: types.type(forId: opponent.node.id, line: opponent.node.line),
                 training: .good)
             guard matchup.elementEffectiveness == wanted else { continue }
 
@@ -1112,6 +1123,21 @@ final class MainScreenModel: ObservableObject {
     /// drawn, rather than drawing a row with nothing in it.
     var mapStrip: MapStrip? {
         MapStrip.make(in: maps, progress: mapProgress)
+    }
+
+    /// The map the next battle draws its opponents from (US-122), or nil for "nowhere chosen yet" —
+    /// which is the roster-wide pick this game had before maps existed.
+    ///
+    /// A selection naming a map the catalog no longer holds reads as nil too, for the same reason
+    /// `MapStepCreditor` drops a delta with nowhere to go: a retired map id is not a place to fight.
+    private var selectedMap: AdventureMap? {
+        mapProgress?.selectedMapId.flatMap { maps.map(id: $0) }
+    }
+
+    /// Steps banked in the selected map, which is the numerator of US-122's progress ratio.
+    private var selectedMapRecorded: Double {
+        guard let mapProgress, let id = mapProgress.selectedMapId else { return 0 }
+        return mapProgress.recorded(forMap: id)
     }
 
     /// What one map's detail screen draws (US-121), or nil if the map is locked — which is what
@@ -1584,7 +1610,10 @@ final class MainScreenModel: ObservableObject {
         // spent, which is the point of matchmaking early.
         var generator = nextBattleGenerator()
         guard let opponent = BattleMatchmaker.choose(in: graph,
+                                                    roster: roster,
                                                     playerId: state.currentDigimonId,
+                                                    map: selectedMap,
+                                                    recorded: selectedMapRecorded,
                                                     using: &generator) else {
             show(nil, message: "Nobody to fight.")
             return nil
@@ -1634,7 +1663,10 @@ final class MainScreenModel: ObservableObject {
             playerPower: state.battlePower,
             playerType: types.type(for: state.currentDigimonId, in: graph),
             opponentPower: round.opponent.power,
-            opponentType: types.type(for: round.opponent.node.id, in: graph),
+            // Off the node in hand rather than off a graph lookup: since US-122 an opponent may be a
+            // roster-only Digimon with no graph node, and asking the graph about one would answer
+            // `.unauthored` where the node itself still carries what is known.
+            opponentType: types.type(forId: round.opponent.node.id, line: round.opponent.node.line),
             training: result
         )
 
@@ -1642,8 +1674,10 @@ final class MainScreenModel: ObservableObject {
         let report = BattleEngine.resolve(playerPower: matchup.playerPower,
                                           opponentPower: matchup.opponentPower,
                                           using: &generator)
-        // Each side's attack identity (US-070), resolved here where both ids and their graph nodes are
-        // in hand: both combatants ARE graph nodes, so the pure two-tier core answers without a roster.
+        // Each side's attack identity (US-070), resolved here where both ids and their nodes are in
+        // hand, so the pure core answers without a second roster lookup. The opponent's node may be
+        // a roster-only one promoted by `MapOpponentBand` since US-122 — it carries an empty line,
+        // which misses `lineDefaults` and lands on the stage tier, exactly as intended.
         let catalog = MoveCatalog.bundled
         let playerNode = graph.node(id: state.currentDigimonId)
         let bout = BattleBout(

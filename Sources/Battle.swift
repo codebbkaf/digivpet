@@ -210,7 +210,18 @@ enum BattleMatchmaker {
             pool = graph.nodes.filter { !$0.dexOnly && $0.id != playerId }
         }
         guard let node = pool.randomElement(using: &generator) else { return nil }
+        return rolled(node, using: &generator)
+    }
 
+    /// Rolls this node's strength and turns it into an opponent.
+    ///
+    /// Split out of `choose` so US-122's map-banded pick shares it rather than spelling the roll a
+    /// second time: the two paths differ in WHO they draw, and a second copy of the strength rule
+    /// would let a map fight be quietly easier than a roster fight.
+    static func rolled<G: RandomNumberGenerator>(
+        _ node: EvolutionNode,
+        using generator: inout G
+    ) -> BattleOpponent {
         let opponentRung = BattlePower.battleRung(node.stage)
         let strength = Int.random(in: 0...(opponentRung + 2), using: &generator)
         return BattleOpponent(
