@@ -93,6 +93,24 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - **A test that asserts "something came back" cannot catch a silent fallback.** Assert that what
   came back is FROM the set you asked about. In US-122 that one line was the difference between a
   false pass and finding the bug.
+- **Anything under `Tests/Fixtures/` is globbed into the test target — including files a TOOL leaves
+  behind.** Even a read-only `sqlite3 ... "select ..."` on the committed `.store` creates `-wal` and
+  `-shm` sidecars, and the next `xcodegen generate` bakes them in; the build then fails with
+  `The file "pre-us123.store-shm" couldn't be opened`. Delete the sidecars AND re-run `xcodegen`.
+- **`sqlite3` on a store is the way to check what a `@Model` change actually WROTE**, and it is what
+  separates "the value read back" from "the value was persisted": a computed accessor with a `nil`
+  default returns the same answer either way. `pragma table_info(ZGAMESTATE)` for the columns,
+  `select` for the rows. Copy the fixture out first (see above).
+- **An optional-backed storage property is the house pattern for adding a field to an
+  already-shipped `@Model`**, and the reason belongs on the STORAGE property: SwiftData will not
+  migrate a non-optional attribute into an existing store without a default — it opens, then the
+  next save fails with "is a required value". Choose the `nil` reading in the direction that is SAFE
+  for an old save, not merely convenient (US-124: `isActive` reads `nil` as ACTIVE, because the only
+  record that can carry one is the single Digimon of a pre-box store).
+- **A one-shot migration guarded by "does X exist yet" does not run for a player who already ran the
+  build that created X.** US-124's `isActive` stamp lives inside `loadOrCreateProfile`, which
+  returns early once there is a profile — so it needs the `nil`-default backstop as well. When
+  adding a migration, ask which SHIPPED build the player is coming from, not just which schema.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -860,4 +878,70 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     that fails the day someone passes the profile in too.
 - REMAINS: US-124 onward (10/56 passing). Phase C continues with US-124's multi-state store, which
   `PlayerProfile` was the precondition for.
+---
+
+
+## 2026-07-22 — US-124: The store can hold many Digimon, one of them active
+- `GameState` gains `private var isActiveStorage: Bool?` behind a computed `isActive`, and
+  `init(currentDigimonId:stage:isActive:now:)` with `isActive` defaulting to true — so every path
+  that exists today (first launch, reset, rebirth) is untouched and US-126 is the first caller that
+  will pass false.
+- `GameStore` gains `allStates()` (oldest first), `activeState()`, `activate(_:)` and
+  `GameStoreError.stateNotInStore`; `savedState()` is now `activeState()`; `loadOrCreate` fetches
+  the ACTIVE record; the US-123 profile migration stamps `isActive = true` on a lone record.
+- Files: Sources/GameState.swift, Sources/GameStore.swift, Tests/GameBoxTests.swift (new, 23 tests).
+  Not one existing test file was edited.
+- PASSED: build green. `Executed 1533 tests, with 0 failures` (1510 + 23), and the 23 also observed
+  passing on their own with `-only-testing:DigiVPetTests/GameBoxTests`.
+- THE INVARIANT LIVES IN THE STORE, NOT ON THE RECORD. "Exactly one active" is a fact about the
+  whole store, so a `GameState.isActive` that callers set would be a footgun: flipping one on leaves
+  two active unless another is flipped off in the SAME transaction, and only the store can promise
+  that. `activate(_:)` writes EVERY record it fetched — not just the two it is moving between — and
+  then calls `save()` once. A store hand-corrupted into two active and then activated onto a third
+  comes back with exactly one; that is a test, not a hope.
+- AC5's "after a failed activate" is a REAL failure and not a contrived throw: `activate` is handed
+  a live, inserted `GameState` belonging to a DIFFERENT `GameStore` — what a party screen caching a
+  row across stores would do. It is refused on `persistentModelID` BEFORE anything is mutated, so
+  there is nothing to roll back; asserted both in memory and through a reopen. A `save()` that
+  throws after the flips restores every flag, which is the half no test can reach and which is
+  therefore stated in the code.
+- AC3 PROVED AGAINST A REAL PRE-BOX FILE AND THEN CHECKED IN SQLITE3. `Tests/Fixtures/pre-us123.store`
+  (committed by US-123) predates this story too: `pragma table_info(ZGAMESTATE)` on the committed
+  file has **no `ZISACTIVESTORAGE` column at all**. Opened through the new `GameStore` and migrated,
+  the row reads `greymon|1`; a box written by this build reads `agu_digitama|1, gabu_digitama|0`. So
+  the stamp is a real write and not the default reading itself back.
+- TWO MECHANISMS ON PURPOSE, because one is not enough:
+  - The migration stamp only fires on a store with no profile yet. **A player who ran the US-123
+    build already HAS one**, so `loadOrCreateProfile` returns early and never reaches the stamp.
+  - So `nil` ALSO reads as ACTIVE. That is the safe direction rather than a convenience: the only
+    record that can carry a `nil` is the single Digimon of a pre-box store, and reading it as frozen
+    would hand that player a fresh egg and leave their Digimon in a store nothing looks at. A test
+    opens the fixture and calls `savedState()` WITHOUT migrating, to pin exactly that.
+  - The stamp is guarded on `states.count == 1`: it is a migration, not a repair. On a store that
+    already has a box, the record fetched first is not necessarily the one that was out.
+- AC6/AC7: `resetGame` still deletes the WHOLE box — a total wipe means all of them — and its fresh
+  egg is born active. `rebirth` still carries `lifetimeEnergy` and still ends with one out.
+  `loadOrCreate` returns the active record out of a box where it is NOT the first, which is the case
+  that would have deleted two Digimon if it had fallen through to `resetGame`.
+- ADDED DEFENCE, not asked for: a box with records but NOTHING active adopts the oldest instead of
+  falling through to `resetGame`. Nothing in this code can produce that state — which is the point:
+  the cost of being wrong about that is deleting Digimon the player still owns.
+- **Learnings for future iterations:**
+  - **Never `sqlite3` a file under `Tests/Fixtures/` and leave it.** Even a read-only `select` makes
+    `-wal`/`-shm` sidecars, `project.yml` globs that directory, and the next `xcodegen generate`
+    bakes them into the test target — the build then fails with `The file "pre-us123.store-shm"
+    couldn't be opened`. Delete the sidecars AND re-run `xcodegen` before building. Cost one full
+    test cycle this iteration.
+  - `FetchDescriptor<GameState>(sortBy: [SortDescriptor(\.birthDate)])` works and is worth using
+    over an unordered fetch: the box's order is now player-visible in US-126, and an order that
+    depends on what SwiftData hands back reshuffles between launches.
+  - An optional-backed `Bool?` whose `nil` default is chosen for MIGRATION reasons wants that
+    reasoning written on the storage property, not on the accessor — the next reader's question is
+    "why isn't this just `Bool`", and the answer is that SwiftData will not migrate a non-optional
+    attribute into an already-shipped store without a default (the store opens, then the next save
+    fails with "is a required value").
+  - US-125 freezes on `frozenSince`/`frozenDuration`. `isActive == false` is what it will key off,
+    and `allStates()` is how it reaches the frozen ones. US-126's party list is `allStates()` plus
+    `activate(_:)`, both of which now exist and are tested.
+- REMAINS: US-125 onward (11/56 passing).
 ---

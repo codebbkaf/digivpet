@@ -320,6 +320,19 @@ final class GameState {
     private var lightStateChangedAtStorage: Date?
     private var lightAuditedNightStorage: Date?
     private var lightNotifiedNightStorage: Date?
+    /// Backing store for `isActive` (US-124): whether this is the Digimon the player currently has
+    /// out. Optional for the same migration reason as every other storage property here — an
+    /// optional attribute is the one shape SwiftData migrates into an already-shipped store without
+    /// a default.
+    ///
+    /// `nil` reads as ACTIVE, and that is the safe direction rather than a convenience: a store
+    /// written before the box existed holds exactly ONE Digimon, so the only record that can carry
+    /// a `nil` here is the one the player is raising. Reading it as frozen would hand them a fresh
+    /// egg and leave their Digimon invisible in a store nothing looks at. The migration in
+    /// `GameStore.loadOrCreateProfile` stamps it `true` on disk as well, so the default is a
+    /// backstop and not the mechanism — it still matters, because a player who ran the US-123 build
+    /// already has a profile and so never re-enters that migration.
+    private var isActiveStorage: Bool?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -329,7 +342,12 @@ final class GameState {
     ///
     /// Every other field is `var`, so a test or a migration can set them individually rather
     /// than needing a twelve-argument initializer.
-    init(currentDigimonId: String, stage: Stage = .digitama, now: Date) {
+    ///
+    /// - Parameter isActive: whether this Digimon is the one out. Defaults to true, because every
+    ///   path that exists today — a first launch, a reset, a rebirth — creates the Digimon the
+    ///   player is about to raise. US-126's box, which adds a Digimon the player is NOT switching
+    ///   to, is the caller that passes false.
+    init(currentDigimonId: String, stage: Stage = .digitama, isActive: Bool = true, now: Date) {
         self.currentDigimonId = currentDigimonId
         self.stage = stage
         self.stageEnergy = .zero
@@ -372,6 +390,7 @@ final class GameState {
         self.lightStateChangedAtStorage = now
         self.lightAuditedNightStorage = nil
         self.lightNotifiedNightStorage = nil
+        self.isActiveStorage = isActive
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -534,6 +553,21 @@ extension GameState {
     var poopNotified: Bool {
         get { poopNotifiedStorage ?? false }
         set { poopNotifiedStorage = newValue }
+    }
+
+    /// Whether this is the Digimon the player has out (US-124). Exactly one saved `GameState` is
+    /// active at a time; every other one is frozen in the box.
+    ///
+    /// Read it, but do not WRITE it directly outside `GameStore`: the invariant is a property of
+    /// the whole store rather than of one record, so flipping one on leaves two active unless the
+    /// other is flipped off in the same transaction. `GameStore.activate(_:)` is the only thing
+    /// that can promise that, and it is why this is not simply a stored property callers set.
+    ///
+    /// Computed for the same reason `energyLastEarned` is: the optionality persistence needs stops
+    /// at the model boundary. See `isActiveStorage` for why `nil` reads as active.
+    var isActive: Bool {
+        get { isActiveStorage ?? true }
+        set { isActiveStorage = newValue }
     }
 
     /// Each metric's total since this stage began — what a `window: .stage` condition is compared
