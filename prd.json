@@ -483,8 +483,8 @@
         "Tests pass"
       ],
       "priority": 26,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "CrownSprintGame: .digitalCrownRotation on a continuous 0-1000 binding, crownDelta(from:to:range:) turns each movement into unsigned distance (wrap taken the short way round), rotation accumulates against rotationTarget (120) inside window (5s); reaching the target ends the sprint as a perfect. Target and window injectable, rules pure in grade(rotation:target:) / progress / crownDelta. remainingFraction moved to a TrainingMinigame extension and shared with the masher. 964 tests pass (+17). Screenshots via -crownSprintDemo (gauge filling 22%% grey -> 5x%% mint across two shots) and -crownSprintResultDemo (Perfect, 100%%, +3 STR). CAVEAT: physical crown rotation is not scriptable - simctl has no crown subcommand - so what was observed is the binding-to-gauge path end to end, not a finger on the hardware. Needs one manual spin to confirm."
     },
     {
       "id": "US-080",

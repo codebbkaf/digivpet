@@ -209,12 +209,9 @@ struct ButtonMasherGame: TrainingMinigame {
         return .miss
     }
 
-    /// How much of the window is left `elapsed` seconds in: 1 at the first tap, 0 when time is up.
-    /// Clamped at both ends, and empty for a non-positive window rather than dividing by zero.
-    static func remainingFraction(at elapsed: TimeInterval, window: TimeInterval) -> CGFloat {
-        guard window > 0 else { return 0 }
-        return CGFloat(min(max(1 - elapsed / window, 0), 1))
-    }
+    // `remainingFraction(at:window:)` — how much of the window is left — moved to `TrainingMinigame`
+    // in US-079, when the crown sprint needed the same draining bar over the same kind of window.
+    // Still reachable as `ButtonMasherGame.remainingFraction(at:window:)`.
 
     // MARK: - Drawing constants
 

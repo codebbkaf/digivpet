@@ -76,3 +76,17 @@ protocol TrainingMinigame: View {
     ///   a round that never ends is a round the user already paid for and cannot leave.
     init(onFinish: @escaping (TrainingResult) -> Void)
 }
+
+extension TrainingMinigame {
+    /// How much of a fixed round window is left `elapsed` seconds in: 1 at the start, 0 when time is
+    /// up. Clamped at both ends, and empty for a non-positive window rather than dividing by zero.
+    ///
+    /// Shared rather than per-game (US-079) because it means exactly one thing wherever it appears —
+    /// a draining timer bar over a window that was fixed when the round began. Contrast
+    /// `PowerMeterGame.chargeTint`, which only LOOKS shareable: that one is a live warning about a
+    /// hold, not a fact about the clock.
+    static func remainingFraction(at elapsed: TimeInterval, window: TimeInterval) -> CGFloat {
+        guard window > 0 else { return 0 }
+        return CGFloat(min(max(1 - elapsed / window, 0), 1))
+    }
+}

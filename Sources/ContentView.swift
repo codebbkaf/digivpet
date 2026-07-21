@@ -27,6 +27,12 @@ struct ContentView: View {
     @State private var showsPowerMeterDemo = CommandLine.arguments.contains("-powerMeterDemo")
         || CommandLine.arguments.contains("-powerMeterResultDemo")
         || CommandLine.arguments.contains("-powerMeterOverloadDemo")
+    /// US-079's crown sprint, on the same footing once more: `-crownSprintDemo` turns the crown
+    /// binding on a timer so the gauge is caught filling, `-crownSprintResultDemo` shows the grade a
+    /// finished sprint earned. `simctl` cannot turn a crown at all, so the demo drives the binding
+    /// through the game's own handler rather than the hardware.
+    @State private var showsCrownSprintDemo = CommandLine.arguments.contains("-crownSprintDemo")
+        || CommandLine.arguments.contains("-crownSprintResultDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -126,6 +132,27 @@ struct ContentView: View {
         } else {
             game.demoFill = 0.4
             game.fillRate = 0.02
+        }
+        return game
+    }
+
+    /// The crown sprint staged for a screenshot. `simctl` has no crown at all, so `-crownSprintDemo`
+    /// spins the binding itself, slowly, over a window long enough to outlast two screenshots — the
+    /// rotation still accumulates through `spun(from:to:)` and the gauge still fills off the same
+    /// pure `progress(rotation:target:)`.
+    ///
+    /// `-crownSprintResultDemo` stages exactly the shipped target, which is the `perfect` threshold
+    /// itself rather than a number that happens to clear it, and holds the result long enough to
+    /// catch it.
+    private static var crownSprintDemoGame: CrownSprintGame {
+        var game = CrownSprintGame(onFinish: { _ in })
+        if CommandLine.arguments.contains("-crownSprintResultDemo") {
+            game.demoRotation = game.rotationTarget
+            game.demoGradesImmediately = true
+            game.resultDuration = 600
+        } else {
+            game.demoSpinStep = 0.5
+            game.window = 600
         }
         return game
     }
@@ -236,6 +263,8 @@ struct ContentView: View {
                 Self.buttonMasherDemoGame
             } else if showsPowerMeterDemo {
                 Self.powerMeterDemoGame
+            } else if showsCrownSprintDemo {
+                Self.crownSprintDemoGame
             }
         }
         #endif

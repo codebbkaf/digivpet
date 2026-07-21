@@ -1793,3 +1793,116 @@ NOTES FOR THE NEXT ITERATIONS (US-079..081, then US-082/083)
    minigame yet. Still US-083's job. Three games now conform, so US-082 has a real choice to make.
 
 Next: US-079 (training minigame — Crown Sprint).
+
+================================================================================
+2026-07-21 — US-079 — Training minigame: Crown Sprint
+================================================================================
+
+WHAT I DID
+
+`Sources/CrownSprintGame.swift` (new) — the fourth minigame and the first played with something
+other than a finger. Spin the Digital Crown; every unit it travels accumulates toward
+`rotationTarget` before `window` closes.
+
+  `.digitalCrownRotation($crown, from: 0, through: 1000, by: 1, sensitivity: .high,
+   isContinuous: true, isHapticFeedbackEnabled: true)` on a `.focusable()` / `.focused($focused)`
+  screen that takes focus `onAppear` — the crown sends nothing to an unfocused view, and the first
+  turn must count rather than be spent waking the view up.
+
+  The binding wanders and WRAPS, so it is never graded directly. `onChange(of: crown)` hands each
+  movement to `spun(from:to:)`, which turns it into a distance via
+  `crownDelta(from:to:range:)` and adds it to `rotation`.
+
+THE ONE THING THAT WOULD HAVE BEEN A SILENT BUG
+
+`isContinuous: true` means the binding jumps 999 -> 1 as a normal part of spinning. Counted raw
+that single wrap is 998 units against a target of 120 — one wrap would win the round outright, and
+it would have looked like the game was simply too easy rather than broken. `crownDelta` always
+takes the shorter way round (998 -> 2), and `testAWrapCountsAsTheShortWayRoundAndNotTheWholeRange`
+pins it, grade included.
+
+Delta is UNSIGNED on purpose: the crown has no forward, and counting one direction only would turn
+a speed test into a dexterity test.
+
+REUSE (small, deliberate)
+
+`remainingFraction(at:window:)` moved out of `ButtonMasherGame` into an extension on
+`TrainingMinigame`. Same rule, same meaning — how much of a fixed window is left — and the sprint
+runs the same draining bar. `ButtonMasherGame.remainingFraction(...)` still resolves through the
+protocol extension, so `ButtonMasherTests` is untouched and still green. NOTE the contrast with
+`PowerMeterGame.chargeTint`, which the US-078 notes warned not to merge and which stays put: that
+one is a live warning about a hold, not a fact about the clock.
+
+TINT: unlike the power meter, the gauge's live tint IS `TrainingResult.tint` of the grade the round
+would earn right now. There is no zone to overshoot into here, so live colour and final colour mean
+the same thing and there is no second tint rule to keep in step.
+
+ACCEPTANCE CRITERIA — what I actually observed
+
+  Build   ** BUILD SUCCEEDED **, Series 11 46mm.
+  Tests   964 passed / 0 failures (was 947; +17 across four new suites in CrownSprintTests).
+  AC1     `testEachFloorIsInclusiveAndAHairBelowIsTheGradeBeneath` (30/60/120 and their `nextDown`
+          neighbours from one table); `testASprintIsTheSumOfItsMovements` walks an 8-point path
+          including two wraps and asserts the accumulated 310 and its grade;
+          `testTheGradeNeverFallsAsTheCrownTurnsFurther` sweeps 0...2x target in 256ths.
+  AC2     PARTIAL — see the caveat below. The modifier is `.digitalCrownRotation`, and the gauge was
+          observed responding to that binding changing, live, on the simulator.
+  AC3     `testTheTargetAndWindowAreInjectable` (defaults then overrides);
+          `testTheSameRotationIsWorthDifferentThingsAgainstDifferentTargets` — one 60-unit sprint is
+          perfect / great / good / miss at targets 60 / 120 / 240 / 1000, which is the injection
+          doing the deciding; `testTheTimerDrainsAcrossWhateverWindowIsInjected` for the window.
+  AC4     The whole rule is `grade(rotation:target:)` over `crownDelta` and `progress`, all static
+          and all exercised directly. `testADegenerateTargetIsAMissWhateverTheRotation` covers the
+          0 >= 0 hole that would otherwise pay a perfect for touching nothing.
+  AC5     Screenshots, Series 11 46mm:
+          /tmp/us079_spin_a.png and _b.png (-crownSprintDemo, ~9s and ~21s after launch) —
+            "Crown Sprint", "Spin!", the timer bar, and the gauge at 22% drawn GREY (still short of
+            the good floor) in _a, then past 5x% drawn MINT in _b. Two shots, one round, the arc
+            visibly further along and the tint having crossed the `great` floor: rotation observed
+            accumulating and the gauge observed responding.
+          /tmp/us079_result.png (-crownSprintResultDemo) — "Perfect" in yellow, a full yellow gauge
+            reading 100%, "+3 STR", timer bar spent. Staged at `game.rotationTarget` BY NAME, so it
+            is the perfect threshold itself and not a number that happens to clear it.
+
+THE CAVEAT ON AC2 — read this rather than trusting the pass
+
+"Responds to real crown input" is the one thing I could not observe, and I am not claiming it.
+`xcrun simctl` has no crown subcommand (checked the full subcommand list), and Simulator.app is not
+running as a UI process here, so there is no AppleScript/System Events path to a scroll either —
+`tell process "Simulator"` errors -1728. XCUIDevice.rotateDigitalCrown(delta:) exists but needs a
+watchOS UI-test target this project does not have, which is a story of its own, not a line in this
+one.
+
+What IS observed is the chain from the binding to the gauge: `-crownSprintDemo` advances `crown` —
+the very `Binding` handed to `.digitalCrownRotation` — on a timer, and every step goes through the
+same `onChange` -> `spun(from:to:)` -> `rotation` -> gauge that a finger drives. The only untested
+link is watchOS delivering physical rotation into that binding, which is system code. Someone with
+the Simulator open should spin it once by hand (option-drag / scroll over the crown) and confirm the
+feel; `defaultRotationTarget` (120) is an unmeasured first guess at "a brisk few seconds", which is
+precisely why AC3 made it injectable.
+
+DEMO PLUMBING for AC5
+
+`CrownSprintGame.demoRotation`, `demoGradesImmediately`, `demoSpinStep`, `demoSpinInterval`, all
+`#if DEBUG` and all nil/false in the app. `demoSpinStep` moves the BINDING, never `rotation` — the
+accumulation, the wrap handling and the tint are all still the real code deciding.
+
+LAUNCH FLAGS
+
+`-noNotificationPrompt -healthAnswered` are STILL mandatory alongside any demo flag. Do NOT use
+`-healthAutoConfirm`. Do NOT uninstall the app.
+The bundle id is `com.digivpet.DigiVPet` — NOT `com.digivpet.watchkitapp`, which is what I guessed
+first and which fails with "The request to open ... failed." Worth two minutes to the next
+iteration.
+
+NOTES FOR THE NEXT ITERATIONS (US-080/081, then US-082/083)
+
+1. Four games in, the template still has not moved: a file plus a test file, no project.yml edit.
+2. US-080 (Reflex Strike) and US-081 (Sequence Recall) are both tap-driven, so both are back inside
+   what `simctl` can almost screenshot — no crown problem to budget for.
+3. `remainingFraction` now lives on `TrainingMinigame`. If a fifth game wants a draining window bar
+   it is already there; do not paste a fourth copy.
+4. The Train button still calls `TrainAction.train(_:isAsleep:result: .good)`; nothing opens a
+   minigame yet. Still US-083's job. Four games conform now.
+
+Next: US-080 (training minigame — Reflex Strike).
