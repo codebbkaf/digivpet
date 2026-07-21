@@ -274,8 +274,8 @@
         "Typecheck passes"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Scrim confined to the sprite slot via LightLayer.scrimRect(spriteSlot:) (nil -> paints nothing); Dex toolbar opacity removed; the poop pile moved into the same above-scrim layer off the same anchor so it stays bright. Measured on 41mm: stats/name/bars/action row means IDENTICAL at on/semi/off (10.30 / 24.87 / 11.48 / 23.93), only the sprite dims (peak 255 -> 128 -> 38 = exactly dimOpacity); pile box unchanged at x262-335 y202-213, 480px, peak 172 in all three states. Build green, 1321 tests, 0 failures."
     },
     {
       "id": "US-113",

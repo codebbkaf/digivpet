@@ -389,3 +389,60 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   to flat (same md5, 0db00362...), which is AC4 as strongly as a screenshot can put it; nothing ->
   Numemon's "?" ringed, still a "?", with the plain line under "To become this".
 - REMAINS: US-112, US-113. Nothing blocked.
+
+## 2026-07-22 — US-112: The light dims the Digimon's room, not the whole screen
+- The scrim's extent is now one function: `LightLayer.scrimRect(spriteSlot:) -> CGRect?`, the slot
+  itself and nil for "paint nothing". It is the ONLY part of the layering arithmetic can reach, so
+  it is a named static with one call site in `body` rather than an expression inline — the test
+  reads what the view draws, not a copy of it. The nil is the load-bearing half (AC9): the tempting
+  fallback for an unmeasured slot is the layer's own bounds, which is the whole screen blacked out
+  for one pass. The button keeps its old `?? .zero` fallback and still draws that pass.
+- `LightLayer` lost its outer ZStack: BOTH halves now live inside the one `GeometryReader` that
+  resolves the anchor, scrim first and button second, so the ordering its doc comment calls "the
+  feature" is unchanged and both are placed off the same rect. `.ignoresSafeArea()` went with the
+  full-screen scrim; a rect inside the layout has nothing to escape.
+- AC2's "the poop pile is at FULL brightness" is the one criterion that could NOT be met by
+  confining the scrim, because the pile lives INSIDE the sprite slot — bottom-trailing of the row
+  the anchor reports. Anything drawn in that row is under the scrim, and `zIndex` does not cross
+  containers. So the pile moved into the same above-scrim layer as the lamp, placed off the SAME
+  anchor (`.frame(slot.size, alignment: .bottomTrailing).offset(slot.origin)`, which is exactly what
+  the old `.overlay(alignment: .bottomTrailing)` did). `.allowsHitTesting(false)` on it is not
+  optional: the frame it is placed in is the whole slot, and the lamp's own taps land in the corner
+  of that frame. The alternative — dimming the pile — was rejected on the story's own logic: a pile
+  the user cannot see is a pile they will not clean, and the Clean button beside it stays lit.
+- The sick badge was left where it is and so still dims with the room. It is not in AC2's list, and
+  it says something about the Digimon rather than about a chore, so it belongs to the room.
+- The Dex toolbar item lost `.opacity(1 - dimOpacity)` and its comment (AC3), replaced by a comment
+  saying why US-099 needed it and why the scrim's new extent does not.
+- No corner radius and no gradient at the scrim's boundary (the PRD left this to a screenshot): the
+  slot spans the full width, so its only edges are two horizontal lines over a black background and
+  they are invisible in all three states. A radius would have to land on the screen edges.
+- PASSED: build green; 1321 tests, 0 failures (was 1316), 5 new in `Tests/LightScrimExtentTests.swift`.
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, `-healthAnswered -noNotificationPrompt
+  -poopDemo` plus the light flag, fresh install per state; screenshots and the throwaway measurers
+  at /tmp/us112/ (not committed). Measured, pre-story build vs post-story build:
+  - mean luma per band, on / semi / off. BEFORE: stats 10.30 / 5.19 / 1.53, name 24.87 / 12.48 /
+    3.71, bars 11.48 / 5.81 / 1.75, action row 23.93 / 12.04 / 3.52. AFTER: 10.30 / 10.30 / 10.30,
+    24.87 / 24.87 / 24.87, 11.48 / 11.48 / 11.48, 23.93 / 23.93 / 23.93 — identical, not "about the
+    same". The Dex band is 11.03 at all three (before: 11.54 / 8.87 / 6.86).
+  - only the room dims: the sprite's own peak is 255 / 128 / 38, and 255 x 0.5 = 127.5, 255 x 0.15 =
+    38.25. So `dimOpacity` is untouched (AC7) and what moved is the extent.
+  - the pile: box x262-335 y202-213, 480 px, peak red 172 — the SAME in the pre-story `on` shot and
+    in all three post-story states. It did not move by a pixel and it is not dimmed.
+  - the lamp at `off`: peak (255,255,255) on its disc over the scrim, at `on` (255,214,10). Above
+    the scrim and legible (AC4). Its disc's left and bottom edges are pixel-identical to the
+    pre-story shot (AC5) — and the offset expression it is placed by is unchanged.
+  - AC10 re-checked with `-lightOffDemo -battleResultDemo`: the Victory screen is at full brightness
+    and NO pile leaks over it, which is the one new way the overlays could have been spoiled.
+- ARGUED, NOT OBSERVED, for the same reason US-099 had to argue them: `simctl` cannot tap, so AC4's
+  "tappable", AC6's hit-testing and AC8's fade are code plus the existing suite —
+  `testTheLightBlocksNoneOfTheFourActions` still takes all four actions in the dark, the scrim is
+  still `allowsHitTesting(false)`, and it is still an opacity on a view that is never removed with
+  `.animation(value: state)` over it.
+- TRAP FOR THE NEXT ITERATION, pre-existing and NOT caused by this story: `-poopCleanDemo`'s
+  deferred clean did not fire on this 41mm sim. Fourteen shots from t=9s to ~t=20s show the pile
+  still there and no "All clean!" caption — and the SAME is true of a binary built from the
+  pre-story commit (`git stash`, /tmp/dd41before), so it is the demo flag, not the pile's new home.
+  The sprite walks between shots, so the app is not suspended. Anyone screenshotting US-097's
+  shrink-and-fade needs to fix that flag first.
+- REMAINS: US-113. Nothing blocked.

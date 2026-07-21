@@ -279,13 +279,10 @@ struct ContentView: View {
                     } label: {
                         Label("Dex", systemImage: "book")
                     }
-                    // Dimmed with the room (US-099). The scrim is an overlay on the game itself, and
-                    // the navigation bar is not inside it — without this the one bright thing on a
-                    // lights-out screen would be the Dex button. Matched to the same `dimOpacity`
-                    // rather than hidden, so it stays where it was and stays tappable: turning the
-                    // light down is not meant to take the Dex away. The clock beside it is drawn by
-                    // watchOS above every app and is not ours to dim.
-                    .opacity(1 - model.lightState.dimOpacity)
+                    // Never dimmed (US-112). US-099 matched it to `dimOpacity` because the scrim
+                    // then covered the whole game and a bright Dex button would have been the one
+                    // lit thing on a dark screen; now the scrim covers the sprite's slot alone,
+                    // and the Dex is chrome outside the room like the action row.
                 }
             }
             #if DEBUG
@@ -467,17 +464,6 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity,
                            maxHeight: .infinity,
                            alignment: model.isSick ? .bottom : .center)
-                    // On the ground at the near edge, beside the Digimon rather than under it:
-                    // the sprite is drawn with `.offset` and walks the full width, so anything
-                    // sharing its centre would be walked over. The bottom-trailing corner is the
-                    // one place a pile of four is always beside whatever the Digimon is doing.
-                    // Nothing is drawn at zero, so a clean screen costs no layout at all — and the
-                    // pile does not simply blink out of existence when the count reaches zero, it
-                    // shrinks and fades away over 0.35s. See `PoopGround`.
-                    .overlay(alignment: .bottomTrailing) {
-                        PoopGround(count: model.poopCount)
-                            .padding(.trailing, 6)
-                    }
                     // In the band the sprite was just sized out of, so it sits above the Digimon
                     // rather than on it, and well clear of the action row at the bottom of the
                     // screen. Centred, because the sprite walks the full width and there is no
@@ -528,14 +514,42 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // The room light, over the whole screen and nothing beyond it (US-099): the scrim, and
-            // the button that changes it sitting above the scrim in the sprite slot's top-leading
-            // corner. Applied HERE and not to the `NavigationStack`, so the ceremony, the battle,
-            // the training round and the memorial — which are applied out there — are painted on
-            // top of it and are never dimmed, and so a pushed Dex is not dimmed either.
+            // The room light (US-099), over the sprite's slot and nothing beyond it since US-112:
+            // the scrim, and the button that changes it sitting above the scrim in that slot's
+            // top-leading corner. Applied HERE and not to the `NavigationStack`, so the ceremony,
+            // the battle, the training round and the memorial — which are applied out there — are
+            // painted on top of it and are never dimmed, and so a pushed Dex is not dimmed either.
             .overlayPreferenceValue(SpriteSlotBoundsKey.self) { spriteSlot in
-                LightLayer(state: model.lightState, spriteSlot: spriteSlot) {
-                    model.cycleLight()
+                ZStack(alignment: .topLeading) {
+                    LightLayer(state: model.lightState, spriteSlot: spriteSlot) {
+                        model.cycleLight()
+                    }
+
+                    // The mess, on the ground at the near edge of the sprite's slot: beside the
+                    // Digimon rather than under it, because the sprite is drawn with `.offset` and
+                    // walks the full width, so anything sharing its centre would be walked over.
+                    // The bottom-trailing corner is the one place a pile of four is always beside
+                    // whatever the Digimon is doing. Nothing is drawn at zero, so a clean screen
+                    // costs no layout at all — and the pile does not blink out of existence when
+                    // the count reaches zero, it shrinks and fades away over 0.35s. See
+                    // `PoopGround`.
+                    //
+                    // Drawn in THIS layer rather than as an overlay inside the sprite's row, which
+                    // is where it lived until US-112: the scrim is painted over that row now, and
+                    // a pile the user cannot see is a pile they will not clean. Placed off the same
+                    // anchor as the lamp, so the two corners of the room stay lit together. Not
+                    // hit-testable, or the frame it is placed in — the whole slot, so the pile can
+                    // sit in its corner of it — would swallow the lamp's own taps.
+                    GeometryReader { proxy in
+                        let slot = spriteSlot.map { proxy[$0] } ?? .zero
+
+                        PoopGround(count: model.poopCount)
+                            .padding(.trailing, 6)
+                            .frame(width: slot.width, height: slot.height,
+                                   alignment: .bottomTrailing)
+                            .offset(x: slot.minX, y: slot.minY)
+                    }
+                    .allowsHitTesting(false)
                 }
             }
         } else {
