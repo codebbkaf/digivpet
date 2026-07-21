@@ -279,12 +279,18 @@ final class TrainApplyTests: XCTestCase {
 
     /// Frame index 11 by name AND by number, because the number is what the sheet layout pins down —
     /// `.attack` naming a different index would draw the wrong art and still read fine here.
+    ///
+    /// Since US-083 the pose belongs to the round LANDING rather than to the button, so this plays a
+    /// whole round: `train()` enters it and `finishTraining` grades it, which is exactly the pair the
+    /// screen makes around the minigame.
     func testTrainingHoldsTheAttackFrameWithAHapticAndThenReturnsToIdle() async throws {
         let model = try await startedModel(named: "attack", strength: 20)
 
-        XCTAssertEqual(model.train(), .trained(spent: .strength,
-                                               cost: TrainAction.energyCostPerTraining,
-                                               gain: TrainAction.strengthGainPerTraining))
+        XCTAssertEqual(model.train(), .started(spent: .strength,
+                                               cost: TrainAction.energyCostPerTraining))
+        model.finishTraining(.good)
+
+        XCTAssertEqual(model.state?.strengthStat, TrainAction.strengthGainPerTraining)
         XCTAssertEqual(model.animation, .still(.attack))
         XCTAssertEqual(model.animation.stageFrames, [.attack])
         XCTAssertEqual(SpriteFrame.attack.rawValue, 11)
@@ -300,6 +306,7 @@ final class TrainApplyTests: XCTestCase {
     func testATrainedStatAndItsCostArePersisted() async throws {
         let model = try await startedModel(named: "persist", strength: 20)
         model.train()
+        model.finishTraining(.good)
 
         let reopened = try GameStore(url: storeURL("persist"))
         let saved = try reopened.loadOrCreate(digitamaId: "hero", now: Clock.start)

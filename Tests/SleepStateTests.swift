@@ -320,6 +320,8 @@ final class SleepStateTests: XCTestCase {
         XCTAssertEqual(model.state?.strengthStat, 0)
         XCTAssertEqual(model.state?.stageEnergy[.strength], 30)
         XCTAssertEqual(model.animation, .sleep)
+        // US-083: no minigame either. A block that still opened a game would be a free training.
+        XCTAssertNil(model.pendingTraining)
     }
 
     /// The same game one window later feeds normally — so the block above is the WINDOW's doing

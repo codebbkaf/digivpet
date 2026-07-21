@@ -2205,3 +2205,107 @@ NOTES FOR US-083 (the last story)
    defaults, so that stays available without a new type; `view(onFinish:)` just uses the defaults.
 
 Next: US-083 (Train opens the assigned minigame) — the last story in prd.json.
+
+================================================================================
+2026-07-21 — US-083: Train opens the assigned minigame  [PASSES: true]
+================================================================================
+
+THE LAST STORY. Every story in prd.json now passes.
+
+WHAT CHANGED
+
+The Train button was still `TrainAction.train(_:isAsleep:result: .good)` — one call that charged
+and paid in the same breath, with a hard-coded grade. It is now the two halves the split in US-075
+was built for, with a minigame between them.
+
+  Sources/MainScreenModel.swift
+    - `pendingTraining: PendingTraining?` (@Published) — the round on screen. Carries the
+      `MinigameKind`, and the `spent`/`cost` `begin` charged so the caption at the END can name a
+      currency the bar was taken from SECONDS EARLIER. Exact inverse of `pendingBattle`: a battle is
+      decided before its view and replayed, a training is PAID before its view and decided by it.
+    - `train()` now returns `TrainingStart?`, not `TrainOutcome?`. Calls `begin`, and on `.started`
+      sets `pendingTraining` and SAVES. No pose, no haptic, no `strengthStat` — the round has not
+      been played. On `.blocked`, unchanged: message, `noteWakingEarly()`, and NO game.
+    - `finishTraining(_ result:)` — the call every game's `onFinish` lands in. `TrainAction.finish`,
+      haptic, pose, caption. No-ops without a round in play, so a game that called back twice is
+      paid once.
+    - `abandonTraining()` — grades `.miss`, refunds nothing.
+    - `train()` guards `pendingTraining == nil`: a round in play is not re-entered and NOT
+      RE-CHARGED. The overlay makes a second tap unreachable; this makes it a rule rather than a
+      property of the layout, and it is the assertable half of AC1.
+    - `roster` injected alongside `graph`, for `MinigameAssignment.game(for:in:roster:)`.
+    - `isWandering` gained `pendingTraining == nil`, joining the other three overlays.
+
+  Sources/ContentView.swift
+    - The overlay, between the battle's and the memorial's: `round.kind.view { model.finishTraining($0) }`.
+    - `scenePhase == .background` -> `abandonTraining()`. `.background` and NOT `.inactive`: watchOS
+      passes through `.inactive` for a notification banner or a wrist tilt, and killing a round the
+      user is still holding their arm up for would be a bug rather than a rule.
+
+WHERE THE MONEY GOES, AND WHY IT NEVER COMES BACK
+
+  begin()        charge + session count, SAVED TO DISK IMMEDIATELY (as `battle()` saves its
+                 allowance, for the same reason)
+  minigame       grades itself, exactly once, per the `TrainingMinigame` contract
+  finishTraining pays `result.strengthGain` and nothing else
+
+Three ways to leave a round early, all of which cost the same as playing it out:
+  dismissing     -- there is no dismiss affordance; the overlay is the whole screen
+  backgrounding  -- `abandonTraining()`, `.miss`
+  force-quitting -- the charge is already on disk; `pendingTraining` is in memory and simply gone
+
+VERIFICATION — 16 tests in `Tests/TrainingRoundTests.swift`, all observed passing, plus the
+Simulator run below. Existing suites updated where the button's shape changed (TrainingTests'
+apply suite now plays a whole round; SleepStateTests gained a `pendingTraining` nil check).
+
+  AC1  `testTrainingOpensTheGameTheDigimonIsAssigned` — the fixture is a Child in the SHIPPED
+       `agumon` line, and asserts BOTH that the kind matches `MinigameAssignment.game(line:stage:)`
+       (so reshuffling US-082's table moves the test rather than breaking it) and that it is NOT
+       `fallback(for: .child)` — a lookup wired to the stage floor by mistake would pass the first
+       assertion on a line whose game happened to match, and fails the second.
+       `testAGameOnScreenSuspendsTheWalk` and `testASecondTrainTapDuringARoundChangesNothing`.
+       Hit testing needs a hosted view, so "not tappable through it" is verified BY SCREENSHOT
+       (below) plus the second-tap guard, which is the part that would actually cost the user.
+  AC2  `testEachGradePaysItsOwnGain` walks all four grades and asserts against
+       `result.strengthGain` rather than restating 0/1/2/3 — it asserts the grade the GAME reported
+       is what got paid, not that 3 equals 3. `testTheCaptionNamesTheGradeTheGainAndWhatItCost`,
+       `testAMissIsShownAsOneRatherThanAsALandedBlow` (angry frame, not attack),
+       `testARoundIsPaidOnceEvenIfTheGameReportsTwice`,
+       `testTheSessionIsCountedOnceWhenTheRoundOpens`.
+  AC3  One test per blocked case — asleep, sick, and NOT ENOUGH ENERGY, which is the one a free
+       game would be most tempting for. Each asserts `pendingTraining` nil, the reason on screen,
+       the energy untouched AND `stageTrainingSessions == 0`.
+       `testGradingWithNoRoundInPlayPaysNothing` is the other side of the same door.
+  AC4  `testAbandoningARoundGradesItAMissAndRefundsNothing`,
+       `testAbandoningWithNoRoundInPlayDoesNothing` (every ordinary backgrounding),
+       `testTheChargeIsOnDiskBeforeTheRoundIsGraded` — reopens the store mid-round, which IS the
+       next launch after a force-quit: energy down 5, session counted, `strengthStat` still 0.
+  AC5  Simulator, Apple Watch Series 11 (46mm), watchOS 26.4. Screenshots in /tmp/us083.
+       `-trainDemo` is a WHOLE UNSTAGED TRAINING: Train opened Button Masher (which is what
+       US-082's table gives Agumon's line), nothing tapped it, its own 12s idle timeout fired, it
+       graded its own `.miss` through the shipped `onFinish`, and the main screen came back reading
+       "Miss +0 STR - 5 Strength" with STR 0 and the Strength bar at 25/60 — down 5 from the seeded
+       30, i.e. the energy stayed spent for a round that bought nothing. The game screenshot shows
+       the sprite, the bars, the stats strip and all five action buttons FULLY COVERED.
+       `-trainResultDemo` (stages the grade only — simctl cannot mash a button — by handing `.great`
+       to the same `finishTraining` the game calls): "Great +2 STR - 5 Strength", STR 2, PWR 31.
+       `-trainAsleepDemo`: "Asleep — let it rest.", no game, Strength still 30/60.
+       `-trainSickDemo`: "Too sick to train.", no game, Strength still 30/60.
+       Both demo flags now force the sleep window away from `now` unless the demo is about sleep —
+       without it an evening run screenshots the sleep block for every one of these.
+  AC6  `xcodebuild build` — ** BUILD SUCCEEDED **
+  AC7  `xcodebuild test` — ** TEST SUCCEEDED **, whole suite; then TrainingRoundTests alone,
+       Executed 16 tests, with 0 failures.
+
+WHAT IS NOT CLAIMED
+
+The insufficient-energy block is unit-tested but not screenshotted: reaching it needs a Digimon
+with under 5 Strength AND a tappable Train button, and simctl cannot tap.
+
+Backgrounding is unit-tested at `abandonTraining()`, not driven through a real scenePhase
+transition — simctl cannot background a watchOS app and bring it back.
+
+The pairings and the difficulty knobs are still unplaytested, as US-082 noted. Nothing here reads a
+knob: `kind.view(onFinish:)` uses every game's defaults.
+
+ALL 30 STORIES PASS.

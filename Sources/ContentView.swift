@@ -13,7 +13,7 @@ struct ContentView: View {
     @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
     @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     @State private var showsTreeDemo = CommandLine.arguments.contains("-dexTreeDemo")
-    /// US-076's timing bar, which the Train button does not open until US-083. `-timingBarDemo`
+    /// US-076's timing bar, in isolation from whichever game Train actually opens. `-timingBarDemo`
     /// shows it sweeping; `-timingBarResultDemo` shows a decided round, since `simctl` cannot tap
     /// the marker to decide one.
     @State private var showsTimingBarDemo = CommandLine.arguments.contains("-timingBarDemo")
@@ -313,6 +313,19 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingBattle)
+        // The training round sits with the battle, above the ceremony, and for the same reasons: it
+        // is a moment rather than a place, and the Feed and Train buttons underneath must not be
+        // tappable through it — a second Train tap during a round would charge for a second one.
+        // Which game appears is US-082's assignment; `finishTraining` is what pays the grade out and
+        // takes it down. `TrainingMinigame` guarantees exactly one call, so the round cannot be paid
+        // twice or hang forever unpaid.
+        .overlay {
+            if let round = model.pendingTraining {
+                round.kind.view { result in model.finishTraining(result) }
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingTraining)
         // Applied AFTER the ceremony's overlay, so it layers above it: a Digimon that died has
         // nothing left to celebrate. This is also what stops the Feed and Train buttons underneath
         // from being tapped while the memorial is up.
@@ -326,9 +339,11 @@ struct ContentView: View {
         }
         .animation(.easeInOut, value: model.memorial)
         #if DEBUG
-        // Debug-only: shown as an overlay rather than pushed, because that is how US-083 will open
-        // it — a round is a moment, not a place, and the buttons underneath must not be tappable
-        // through it. Compiled out of release builds.
+        // Debug-only: each game in ISOLATION, staged for a screenshot of its own rules. The Train
+        // button opens the assigned one for real since US-083 (the overlay above), but only one game
+        // at a time and only the one the Digimon was assigned — these six flags are how the other
+        // five stay screenshottable. Same overlay treatment, so what they show is what a real round
+        // shows. Compiled out of release builds.
         .overlay {
             if showsTimingBarDemo {
                 Self.timingBarDemoGame
@@ -347,6 +362,11 @@ struct ContentView: View {
         #endif
         .task { await model.start() }
         .onChange(of: scenePhase) { _, phase in
+            // A round left mid-play is graded a miss, and the energy it cost stays spent (US-083
+            // AC4). `.background` rather than `.inactive` on purpose: watchOS passes through
+            // `.inactive` for a notification banner or a wrist tilt, and abandoning a round the user
+            // is still holding their arm up for would be a bug rather than a rule.
+            if phase == .background { model.abandonTraining() }
             // The whole refresh: health data is only read when the app is in front, since
             // watchOS gives a backgrounded app no reason to expect it will run at all.
             // `start()` covers the first appearance; this covers every return to it.

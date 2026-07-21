@@ -550,8 +550,8 @@
         "Tests pass"
       ],
       "priority": 30,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Train now calls TrainAction.begin (charge + session count, saved immediately), opens the assigned MinigameKind as an overlay via MainScreenModel.pendingTraining, and pays the grade the game reports through finishTraining(_:). Backgrounding calls abandonTraining(), which grades .miss and refunds nothing. 16 tests in Tests/TrainingRoundTests.swift; build and whole suite green. Simulator verified end to end: -trainDemo opened Button Masher (Agumon's line), was left unplayed, self-graded a real .miss and paid out 'Miss +0 STR - 5 Strength' with STR 0 and Strength 25/60; -trainResultDemo showed 'Great +2 STR - 5 Strength' with STR 2; -trainAsleepDemo and -trainSickDemo showed their reasons with no game and Strength untouched at 30/60."
     }
   ]
 }

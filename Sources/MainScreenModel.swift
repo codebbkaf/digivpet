@@ -84,6 +84,23 @@ final class MainScreenModel: ObservableObject {
     /// lands here — see `BattleBout` — so the screen replays a decided outcome rather than rolling.
     @Published private(set) var pendingBattle: BattleBout?
 
+    /// The training round currently being played on screen, or nil when none is (US-083).
+    ///
+    /// The exact inverse of `pendingBattle`: a battle is decided before its view appears and replayed,
+    /// while a training round is PAID FOR before its view appears and decided by it. What is carried
+    /// here is only what the payout still needs — which game to put on screen, and what entering it
+    /// already cost, so the caption at the end can name the currency the bar was taken from.
+    @Published private(set) var pendingTraining: PendingTraining?
+
+    /// A training round in progress: the game being played, and what `TrainAction.begin` charged for
+    /// it. Not persisted — a round interrupted by a force-quit is simply over, and the charge that
+    /// already reached disk is what makes walking out of it cost something. See `train()`.
+    struct PendingTraining: Equatable {
+        let kind: MinigameKind
+        let spent: EnergyType
+        let cost: Int
+    }
+
     /// What the Digimon is doing on screen. `.idle` except for the moment after an action — feeding
     /// swaps in the eat loop, a refusal the refuse pose — and back again after `actionDuration`.
     @Published private(set) var animation: SpriteAnimation = .idle
@@ -106,6 +123,12 @@ final class MainScreenModel: ObservableObject {
 
     private let makeStore: @MainActor () throws -> GameStore
     private let graph: EvolutionGraph
+    /// Consulted for one thing only: the stage of a Digimon the graph has no node for, when picking
+    /// its minigame (US-082). Unreachable from here in practice — a saved id with no node draws
+    /// `SavedGameUnavailableView` and never shows a Train button — but the full lookup is what
+    /// `MinigameAssignment` offers and half of it is not worth the saving. Injected alongside `graph`
+    /// so a test on a fixture graph can hand over a matching fixture roster.
+    private let roster: Roster
     private let energySource: HealthEnergySource
     private let calendar: Calendar
     private let now: () -> Date
@@ -179,6 +202,7 @@ final class MainScreenModel: ObservableObject {
     init(
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
         graph: EvolutionGraph = .bundled,
+        roster: Roster = .bundled,
         energySource: HealthEnergySource = HealthEnergySource(),
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init,
@@ -194,6 +218,7 @@ final class MainScreenModel: ObservableObject {
     ) {
         self.makeStore = makeStore
         self.graph = graph
+        self.roster = roster
         self.energySource = energySource
         self.calendar = calendar
         self.now = now
@@ -335,16 +360,26 @@ final class MainScreenModel: ObservableObject {
     }
 
     /// Debug-only: the training equivalent of `seedFeedDemoIfRequested`, for the same reason — the
-    /// Simulator has no HealthKit data, so a real game there never has the Strength to spend.
+    /// Simulator has no HealthKit data, so a real game there never has the Strength to spend, and
+    /// `simctl` cannot tap the Train button in any case.
     ///
-    /// - `-trainDemo` — funded and healthy, then trained: the attack pose and the raised stat.
-    /// - `-trainAsleepDemo` — funded but asleep, then trained: the blocked reason.
-    /// - `-trainSickDemo` — funded but sick, then trained: the other blocked reason.
+    /// - `-trainDemo` — funded and healthy, then trained: since US-083 that OPENS the assigned
+    ///   minigame (Button Masher, for Agumon's line) over the main screen. Left to play itself out:
+    ///   nothing taps it, so the game's own window expires and it grades its own `.miss` through the
+    ///   shipped `onFinish`. A screenshot in the first seconds catches the round, one after ~7s
+    ///   catches the payout caption — a whole training, unstaged, end to end.
+    /// - `-trainResultDemo` — the same round, with a `.great` handed to `finishTraining` in place of
+    ///   the grade a mashed round would have produced. It STAGES THE GRADE and nothing else: the
+    ///   payout, the pose and the caption are the shipped ones, since this is the very call the
+    ///   game's `onFinish` makes. `simctl` cannot mash a button, so the grade is what has to move.
+    /// - `-trainAsleepDemo` — funded but asleep, then trained: the blocked reason, and NO game.
+    /// - `-trainSickDemo` — funded but sick, then trained: the other blocked reason, and no game.
     private func seedTrainDemoIfRequested() {
         let arguments = CommandLine.arguments
         let sleeping = arguments.contains("-trainAsleepDemo")
         let sick = arguments.contains("-trainSickDemo")
-        guard arguments.contains("-trainDemo") || sleeping || sick, let state else { return }
+        let grading = arguments.contains("-trainResultDemo")
+        guard arguments.contains("-trainDemo") || sleeping || sick || grading, let state else { return }
 
         // Off the starting egg for the same reason feeding's demo is: a Digitama sheet has no
         // attack frame, so an egg would screenshot as the placeholder however well training worked.
@@ -357,9 +392,14 @@ final class MainScreenModel: ObservableObject {
         }
         state.stageEnergy[.strength] = 30
         state.healthStatus = sick ? .sick : .healthy
-        if sleeping { forceAsleepForDemo() }
+        // Forced awake unless the demo is ABOUT sleep, for the reason `seedBattleDemoIfRequested`
+        // documents: `begin` checks sleep first and the fallback window is 22:00-07:00, so an evening
+        // screenshot run would land on "Asleep — let it rest." for every one of these flags — the
+        // game, the sick block, all of it.
+        if sleeping { forceAsleepForDemo() } else { forceAwakeForDemo() }
         actionDuration = 60
         train()
+        if grading { finishTraining(.great) }
     }
 
     /// Debug-only: forces the Digimon into its sleep window so the sleep loop can be screenshotted.
@@ -681,11 +721,13 @@ final class MainScreenModel: ObservableObject {
     /// every other momentary pose fall out of the same rule for free: a Digimon holding still to
     /// eat should not slide across the screen while it does.
     ///
-    /// The three overlays are checked because a battle, a ceremony or a memorial has the screen,
-    /// and a sprite pacing on unseen underneath it is work spent drawing nothing. Each clears on
-    /// its own, at which point this returns true again and the walk resumes from where it stood.
+    /// The four overlays are checked because a battle, a ceremony, a training round or a memorial has
+    /// the screen, and a sprite pacing on unseen underneath it is work spent drawing nothing. Each
+    /// clears on its own, at which point this returns true again and the walk resumes from where it
+    /// stood.
     var isWandering: Bool {
-        animation == .idle && pendingEvolution == nil && pendingBattle == nil && memorial == nil
+        animation == .idle && pendingEvolution == nil && pendingBattle == nil
+            && pendingTraining == nil && memorial == nil
     }
 
     /// Every pose `settleRestingPose` is allowed to swap out. Exactly the poses `restingAnimation`
@@ -762,27 +804,43 @@ final class MainScreenModel: ObservableObject {
         return outcome
     }
 
-    /// Trains the Digimon: spends Strength or Stamina, raises `strengthStat`, and holds the attack
-    /// pose with a firm tap.
+    /// ENTERS a training round: spends Strength or Stamina, counts the session, and puts this
+    /// Digimon's assigned minigame on screen (US-083).
     ///
-    /// Returns the outcome so a test can assert on it directly; the screen reacts to `animation` and
-    /// `actionMessage` instead. Saved even when blocked is cheap and keeps this identical to
-    /// `feed()` — there is simply nothing to write in that case.
+    /// This is only the first half of a training now. `strengthStat` is NOT raised here — the round
+    /// has not been played yet, and what it is worth is `finishTraining(_:)`'s to say. What is settled
+    /// here is everything that must not depend on how the round goes: eligibility, the charge, and the
+    /// session count evolution reads.
+    ///
+    /// **Saved immediately, exactly as `battle()` saves its allowance and for the same reason.** The
+    /// energy is gone the moment the game appears, so force-quitting mid-round must not hand it back —
+    /// a charge that only reached disk when the grade did would make every losing round free.
+    ///
+    /// Returns the start so a test can assert on it directly; the screen reacts to `pendingTraining`,
+    /// `animation` and `actionMessage` instead.
     @discardableResult
-    func train() -> TrainOutcome? {
+    func train() -> TrainingStart? {
         guard let state else { return nil }
-        let outcome = TrainAction.train(state, isAsleep: isAsleep)
+        // A round already in play is not restarted, and — the point — is not charged for a second
+        // time. The overlay makes a second tap unreachable by covering the button; this guard is what
+        // makes "unreachable" a rule rather than a property of the layout. nil, as with no saved
+        // game: nothing happened, and there is no reason to show over a game already on screen.
+        guard pendingTraining == nil else { return nil }
+        let start = TrainAction.begin(state, isAsleep: isAsleep)
 
-        switch outcome {
-        case .trained(let spent, let cost, _):
-            playTrainHaptic()
-            // The attack frame, held: it is a pose in the sheet, not a loop, so there is no second
-            // frame to alternate with. The caption says which currency paid, because the Digimon
-            // picks that itself and the bar dropping would otherwise be unexplained.
-            show(.still(.attack), message: "Trained! -\(cost) \(spent.displayName)")
+        switch start {
+        case .started(let spent, let cost):
+            // No pose and no haptic yet: the Digimon is about to be covered by the game, and the
+            // attack frame belongs to the round LANDING rather than to it starting.
+            pendingTraining = PendingTraining(
+                kind: MinigameAssignment.game(for: state.currentDigimonId, in: graph, roster: roster),
+                spent: spent,
+                cost: cost
+            )
         case .blocked(let reason):
             // No animation, as with a blocked feed: nothing happened to the Digimon, so it keeps
-            // idling and only the reason appears.
+            // idling and only the reason appears. NO GAME EITHER — the round was never paid for, and
+            // opening one would be a free training.
             show(nil, message: reason)
             noteWakingEarly()
         }
@@ -792,7 +850,48 @@ final class MainScreenModel: ObservableObject {
         } catch {
             Self.log.error("Could not save after training: \(String(describing: error))")
         }
-        return outcome
+        return start
+    }
+
+    /// Pays out the round the minigame just graded, takes the game down, and says what it earned.
+    ///
+    /// The other half of `train()`, and the one call every minigame's `onFinish` lands in. Charges
+    /// nothing — `TrainAction.begin` already did — so a `.miss` here is a round that cost energy and
+    /// bought no stat, which is the whole reason the two halves are separate.
+    ///
+    /// A no-op without a round in progress, so a game that called back twice cannot be paid twice.
+    func finishTraining(_ result: TrainingResult) {
+        guard let round = pendingTraining, let state else { return }
+        pendingTraining = nil
+        let gain = TrainAction.finish(state, result: result)
+
+        playTrainHaptic()
+        // The attack frame for a round that bought something, held: it is a pose in the sheet, not a
+        // loop, so there is no second frame to alternate with. A miss gets the angry frame instead —
+        // the round happened and it was not enough, which is a different thing to show than a
+        // successful blow. The caption names the currency, because the Digimon picked that itself
+        // when the round opened and the bar dropping would otherwise be unexplained.
+        show(gain > 0 ? .still(.attack) : .still(.angry),
+             message: "\(result.displayName) +\(gain) STR · -\(round.cost) \(round.spent.displayName)")
+
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save after training: \(String(describing: error))")
+        }
+    }
+
+    /// Ends a round the user walked out of — graded a `.miss`, and with nothing refunded.
+    ///
+    /// Called when the app leaves the foreground mid-game (US-083 AC4). Leaving is not an escape
+    /// hatch: the energy went at `train()` and the session was already counted, so a round abandoned
+    /// because it was going badly costs exactly what one played to the end costs. It simply buys no
+    /// stat.
+    ///
+    /// A no-op with no round in progress, which is every ordinary backgrounding.
+    func abandonTraining() {
+        guard pendingTraining != nil else { return }
+        finishTraining(.miss)
     }
 
     /// Clears the mess: sets `poopCount` to zero and says so in the caption slot.

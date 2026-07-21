@@ -108,9 +108,11 @@ enum TrainAction {
 
     /// One whole round, entered and graded in a single call.
     ///
-    /// What the Train button does until US-083 puts a real minigame between the two halves, and what
-    /// every test of the payout rule uses. `result` defaults to `good`, which is exactly the one
-    /// point a session paid before grading existed.
+    /// NOT what the Train button does since US-083 — the button calls `begin`, puts a minigame on
+    /// screen, and calls `finish` with the grade that game hands back, which is the only arrangement
+    /// where walking out of a losing round still costs the energy. This is the convenience the payout
+    /// rule is TESTED through: both halves, no view, no grade to wait for. `result` defaults to
+    /// `good`, which is exactly the one point a session paid before grading existed.
     @discardableResult
     static func train(_ state: GameState, isAsleep: Bool,
                       result: TrainingResult = .good) -> TrainOutcome {
