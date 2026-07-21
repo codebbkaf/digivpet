@@ -432,8 +432,8 @@
         "Tests pass"
       ],
       "priority": 23,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "TimingBarGame in Sources/TimingBarGame.swift: a marker triangle-sweeps the bar, a tap freezes it, and two pure statics decide everything — position(at:sweepDuration:) and grade(at:zoneWidth:), with bands at 1/4 and 1/2 of the zone half-width (powers of two, so every edge is exactly representable and boundaries are asserted ON the line). Centre sub-zone = perfect, outside the zone = miss, untapped for roundTimeout = miss. sweepDuration/zoneWidth/resultDuration/roundTimeout are stored props with defaults, set at the call site like BattleView.turnDuration. 913 tests pass, +22 mine. Screenshots: -timingBarResultDemo -> 'Perfect' + '+3 STR', yellow centre band inside the green zone, marker dead centre; -timingBarDemo -> live sweep, marker moved left-of-zone to zone-lip across two shots. simctl cannot tap, so the tap gesture itself is covered by unit tests on grade(stoppingAt:sweepDuration:zoneWidth:), the exact call tap() makes."
     },
     {
       "id": "US-077",

@@ -1500,3 +1500,88 @@ VERIFIED (all observed)
           confirmed the generated pbxproj now references TrainingMinigame (8 hits).
 
 Next: US-076 (training minigame — Timing Bar).
+
+================================================================================
+2026-07-21 — US-076: Training minigame — Timing Bar — PASSES
+================================================================================
+
+WHAT I DID
+
+- New `Sources/TimingBarGame.swift`, the first `TrainingMinigame`. A marker sweeps the bar, a tap
+  freezes it, and where it froze is the grade. The whole rule is two pure statics and the view is
+  only what draws them and takes the tap:
+    `position(at: elapsed, sweepDuration:)` — a triangle wave, 0 at the left end and 1 at the right,
+      bouncing rather than wrapping so the marker reverses at the ends instead of teleporting.
+      Non-positive sweep parks it dead centre; negative elapsed is the start of the round.
+    `grade(at: position, zoneWidth:)` — distance from centre against `bandEdges`.
+    `grade(stoppingAt:sweepDuration:zoneWidth:)` — the composition, and the exact call `tap()` makes.
+- `bandEdges(zoneWidth:)` is the ONE source of truth for both the drawing and the grading, so what
+  the user aims at cannot drift out of step with what the tap is worth. It clamps zoneWidth to 0...1.
+- Injectable knobs, all stored props with defaults set at the call site in the manner of
+  `BattleView.turnDuration`: `sweepDuration` (1.8s round trip), `zoneWidth` (0.25 of the bar),
+  `resultDuration` (1.0s), `roundTimeout` (12s).
+- A round ALWAYS ends exactly once: the tap's grade, or `.miss` if `roundTimeout` elapses untapped.
+  The timeout freezes the marker where it actually was but grades a miss whatever that was — landing
+  in the zone by standing still must not pay. `.task(id: stop)` is what hands the grade back.
+- The whole screen is the tap target, not the 3pt marker: it is the TIMING that is meant to be hard,
+  not the aim. A second tap on the result cannot re-grade it (`guard stop == nil`).
+
+WHY THE BANDS ARE QUARTERS AND HALVES, NOT THIRDS
+
+  perfectShare = 0.25 and greatShare = 0.5 of the zone's HALF-width. Powers of two on purpose. With
+  thirds, `zoneWidth/2/3` is not exactly representable, `0.5 + edge - 0.5` rounds by an ulp, and a
+  test at the boundary flips on floating-point noise — so "unit-tested at each zone boundary" (AC4)
+  would have degraded to "tested a whisker either side of each boundary". With these shares every
+  edge is dyadic for any sensible width, and the boundary is asserted ON the line. Edges are
+  INCLUSIVE of the better grade: landing exactly on the line is landing in.
+
+DEMO PLUMBING for AC5 (simctl still cannot tap — see the carried-forward facts at the top)
+
+- `TimingBarGame.demoStopPosition: CGFloat?`, `#if DEBUG`, nil in the app. Set, the round starts
+  already stopped there. It stages WHERE the round ends, not how it is graded — the grade still
+  comes from the same pure `grade(at:zoneWidth:)` a tap goes through.
+- ContentView: `-timingBarResultDemo` sets demoStopPosition 0.5 and resultDuration 600 (a decided
+  round, held); plain `-timingBarDemo` sets sweepDuration 30 so the marker is caught mid-bar rather
+  than as a blur. Shown as an OVERLAY, not pushed, because that is how US-083 will open it.
+
+VERIFIED (all observed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   913 passed / 0 failures (was 891; +22 mine across three new suites in TimingBarTests).
+  AC1     `testWhenYouTapIsTheWholeGame` — same round, same zone, four tap times, grades
+          perfect/miss/miss/perfect. `testTheMarkerBouncesBetweenTheEndsOfTheBar` pins 0 -> 1 -> 0.
+  AC2     `testTheCentreOfTheBarIsPerfect`; `testAnythingOutsideTheZoneIsAMiss` over 8 positions on
+          both sides; `testGradesDegradeSymmetricallyOutwardFromTheCentre` sweeps the whole bar at
+          0.001 and asserts the run sequence is exactly [miss, good, great, perfect, great, good,
+          miss] — no skipped band, no asymmetry.
+  AC3     `testSweepSpeedAndZoneWidthAreInjectable` (defaults, then overridden);
+          `testSweepSpeedIsWhatDecidesWhereAGivenInstantLands` (same instant, two speeds, perfect vs
+          miss); `testANarrowerZoneIsStrictlyHarder` (one stop, four widths, perfect->great->good->
+          miss). No test waits: the sweep is arithmetic on an elapsed time.
+  AC4     Three boundary tests, each asserting ON the edge and 0.001 past it, on BOTH sides of centre
+          (an `abs`-less implementation passes on one side only): perfect edge 0.0625 ->
+          perfect/great, great edge 0.125 -> great/good, zone lip 0.25 -> good/miss. Plus
+          `testTheBandsAreAQuarterAndAHalfOfTheZone` pinning those three numbers by value, so the
+          boundary tests read a fixed geometry rather than agreeing with the code.
+          `testAnAbsurdZoneWidthIsClamped` and `testANonPositiveSweepParksTheMarkerInTheMiddle`
+          cover the degenerate ends.
+  AC5     Screenshots, Series 11 46mm:
+          /tmp/us076_result.png (-timingBarResultDemo) — "Perfect" in yellow, a YELLOW centre band
+            inside the GREEN zone inside the grey track, white marker dead centre, "+3 STR" beneath.
+          /tmp/us076_sweep_a.png and _b.png (-timingBarDemo, 4s and 9s after launch) — "Timing Bar",
+            "Tap to stop", and the marker at two DIFFERENT places (left of the zone, then at the
+            zone's right lip), which is the sweep observed moving rather than a static bar.
+          simctl has no tap, so the gesture itself is not screenshot evidence; `tap()` is three
+          lines over `grade(stoppingAt:)`, which is unit-tested above.
+
+NOTES FOR THE NEXT ITERATIONS (US-077..US-081, then US-082/083)
+
+1. `TimingBarGame` is the template: pure statics for the rule, stored-prop knobs with defaults for
+   the timing, `.task` for the timeout that guarantees exactly one grade. Copy that shape.
+2. Pick band boundaries that are exactly representable (halves/quarters), not thirds, or the
+   "tested at each boundary" AC costs you an afternoon of ulp chasing.
+3. The Train button still calls `TrainAction.train(_:isAsleep:result: .good)` — nothing opens a
+   minigame yet. That is US-083's job, and the overlay in ContentView's `#if DEBUG` block shows the
+   presentation it should use.
+
+Next: US-077 (training minigame — Button Masher).

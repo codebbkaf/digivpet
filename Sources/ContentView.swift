@@ -13,6 +13,11 @@ struct ContentView: View {
     @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
     @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     @State private var showsTreeDemo = CommandLine.arguments.contains("-dexTreeDemo")
+    /// US-076's timing bar, which the Train button does not open until US-083. `-timingBarDemo`
+    /// shows it sweeping; `-timingBarResultDemo` shows a decided round, since `simctl` cannot tap
+    /// the marker to decide one.
+    @State private var showsTimingBarDemo = CommandLine.arguments.contains("-timingBarDemo")
+        || CommandLine.arguments.contains("-timingBarResultDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -50,6 +55,24 @@ struct ContentView: View {
         #endif
         return nil
     }
+
+    #if DEBUG
+    /// The timing bar staged for a screenshot. `-timingBarResultDemo` starts it already stopped dead
+    /// centre — a `Perfect` — and holds the result long enough for `simctl` to catch it; plain
+    /// `-timingBarDemo` slows the sweep to a crawl so the marker is caught somewhere along the bar
+    /// rather than as a blur. `simctl` can neither tap nor time a screenshot to a 1.8s sweep, so, as
+    /// with the battle demos, the pacing is what has to move.
+    private static var timingBarDemoGame: TimingBarGame {
+        var game = TimingBarGame(onFinish: { _ in })
+        if CommandLine.arguments.contains("-timingBarResultDemo") {
+            game.demoStopPosition = 0.5
+            game.resultDuration = 600
+        } else {
+            game.sweepDuration = 30
+        }
+        return game
+    }
+    #endif
 
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
     /// and a default argument would be evaluated in this `init`'s non-isolated context. Same
@@ -145,6 +168,16 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.memorial)
+        #if DEBUG
+        // Debug-only: shown as an overlay rather than pushed, because that is how US-083 will open
+        // it — a round is a moment, not a place, and the buttons underneath must not be tappable
+        // through it. Compiled out of release builds.
+        .overlay {
+            if showsTimingBarDemo {
+                Self.timingBarDemoGame
+            }
+        }
+        #endif
         .task { await model.start() }
         .onChange(of: scenePhase) { _, phase in
             // The whole refresh: health data is only read when the app is in front, since
