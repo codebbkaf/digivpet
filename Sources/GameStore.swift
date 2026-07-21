@@ -77,7 +77,7 @@ final class GameStore {
         // DELETE Digimon the player still owns. Adopting the oldest is the one answer that loses
         // nothing.
         if let stranded = try allStates().first {
-            try activate(stranded)
+            try activate(stranded, now: now)
             return stranded
         }
         return try resetGame(digitamaId: digitamaId, now: now)
@@ -122,19 +122,38 @@ final class GameStore {
     ///
     /// Activating the Digimon already out is a no-op that still saves. Cheap, and it means a party
     /// screen does not have to special-case the row the player is already on.
-    func activate(_ state: GameState) throws {
+    ///
+    /// SINCE US-125 THIS IS ALSO WHERE THE FREEZE CLOCK MOVES, and it belongs in the same
+    /// transaction for exactly the reason the flags do: `frozenSince` and `isActive` are two halves
+    /// of one fact, and a store that saved one without the other would either measure a spell that
+    /// never happened or lose one that did. `now` is a parameter for the same reason it is one
+    /// everywhere else — a test must be able to freeze a Digimon for thirty days without waiting.
+    ///
+    /// - Parameter now: the instant of the switch. The thaw shifts the newly active Digimon's whole
+    ///   timeline forward by the span between its freeze and this.
+    func activate(_ state: GameState, now: Date = Date()) throws {
         let states = try allStates()
         guard states.contains(where: { $0.persistentModelID == state.persistentModelID }) else {
             throw GameStoreError.stateNotInStore
         }
         let wasActive = Set(states.filter(\.isActive).map(\.persistentModelID))
 
+        // Paired with the record it was taken from, so a failed save can be undone precisely — the
+        // ones that did nothing (already frozen, already out) are absent rather than undone as
+        // no-ops.
+        var changes: [(GameState, FreezeChange)] = []
         for record in states {
-            record.isActive = record.persistentModelID == state.persistentModelID
+            let isTarget = record.persistentModelID == state.persistentModelID
+            record.isActive = isTarget
+            let change = isTarget ? record.thaw(at: now) : record.freeze(at: now)
+            if let change { changes.append((record, change)) }
         }
         do {
             try context.save()
         } catch {
+            for (record, change) in changes {
+                record.undo(change)
+            }
             for record in states {
                 record.isActive = wasActive.contains(record.persistentModelID)
             }

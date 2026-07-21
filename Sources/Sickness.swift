@@ -31,6 +31,11 @@ extension GameState {
     ///   `EnergyLedger`. Passed in rather than read off `self`, because `GameState` deliberately
     ///   does not hold the ledger: the day belongs to the watch, not to whoever is living on it.
     func updateSickness(energyEarnedToday: Int) {
+        // A Digimon in the box neither falls ill nor is cured (US-125). It holds no clock of its
+        // own, but the counter it reads is one the audit fills — so leaving this ungated would let a
+        // Digimon frozen on two mistakes come out sick because the player walked far enough with a
+        // DIFFERENT one to make the day's energy count.
+        guard isActive else { return }
         switch healthStatus {
         case .sick where energyEarnedToday >= Sickness.energyInADayToCure:
             // The care record is wiped with the cure, per AC3. That is the ONLY thing in the game

@@ -86,7 +86,12 @@ extension GameState {
     ///   than read off `self` for the same reason `FeedAction.feed` takes it — sleep is DERIVED from
     ///   the user's sleep history (US-026) and is not saved-game state. Death, which is, is read
     ///   here: a dead Digimon produces nothing.
+    ///
+    /// A Digimon in the box makes no mess either (US-125) — see `advanceHunger` for the two halves
+    /// of that. Refused rather than folded into `isPaused` below, because pausing would still let
+    /// `poopUpdatedAt` be restamped on a record nothing is supposed to be touching.
     func advancePoop(isAsleep: Bool, now: Date) {
+        guard isActive else { return }
         let advanced = PoopClock.advance(
             poopCount: poopCount,
             lastUpdated: poopUpdatedAt,
@@ -119,6 +124,10 @@ extension GameState {
     ///
     /// Call AFTER `advancePoop`, which is what may have just filled the screen.
     func claimPoopNotification() -> Bool {
+        // Nothing is owed about a Digimon in the box (US-125), and nothing may be claimed on its
+        // behalf either — a marker stamped while it is away would swallow the notice its next real
+        // mess deserves.
+        guard isActive else { return false }
         guard poopCount >= PoopClock.maximumPoops else {
             // Below the ceiling: nothing is owed, and the next fill starts clean.
             poopNotified = false

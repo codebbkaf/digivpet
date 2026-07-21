@@ -945,3 +945,65 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     `activate(_:)`, both of which now exist and are tested.
 - REMAINS: US-125 onward (11/56 passing).
 ---
+
+## 2026-07-22 — US-125: Frozen Digimon do not hunger, age, or evolve
+- New `Sources/Freeze.swift`: `freeze(at:)` / `thaw(at:)` / `undo(_:)` on `GameState`, plus
+  `frozenSince` and a cumulative `frozenDuration` (both new optional-backed storage on the `@Model`).
+  `GameStore.activate(_:now:)` gained the `now:` and now moves the freeze clock in the SAME
+  transaction the `isActive` flips already ran in — the two are halves of one fact, and a store that
+  saved one without the other would either measure a spell that never happened or lose one that did.
+- Guards added to `advanceHunger`, `advancePoop`, `claimPoopNotification`, `auditCareMistakes`,
+  `recordRefusal`, `recordWakingEarly`, `updateSickness`, `updateDeath`, `claimDeathWarning`, and
+  `MainScreenModel.hatchIfReady` / `evolveIfReady`.
+- Files: Sources/{Freeze,GameState,GameStore,HungerClock,Poop,CareMistakes,Sickness,Death,
+  MainScreenModel}.swift, Tests/FreezeTests.swift (new, 27 tests).
+- PASSED: build green. `Executed 1560 tests, with 0 failures` (1533 + 27).
+- **TWO MECHANISMS, AND THE STORY NEEDS BOTH.** Guards stop the STORED counters (hunger, poop, care
+  mistakes) moving. They cannot touch the readings DERIVED fresh from a saved date — age is
+  `now - birthDate` however long ago that was, and nothing runs to guard. So `thaw` translates the
+  whole timeline forward by the frozen span instead. Rejected alternative: leave the dates and
+  subtract `frozenDuration` at every read — that means finding and correcting every subtraction in
+  the game, forever, and one missed reader is a Digimon that quietly starved in the box.
+- **BOTH HALVES WERE MEASURED BY BREAKING THEM.** Deleting every `isActive` guard fails all 7
+  `FreezeAccrualTests`. Deleting `shiftTimeline` fails 4 `FreezeOffsetTests` with 14 assertion
+  failures. Each accrual test asserts the frozen Digimon against the SAME rule run on an active one
+  in the same test, so a rule that does nothing at all cannot pass silently.
+- AC3/AC4 run the REAL rules after the thaw rather than reading values back — `advanceHunger`,
+  `advancePoop`, `auditCareMistakes` — over 3 days and again over 30. Age and time-in-stage come out
+  equal to 0.001s; hunger, poop and the mistake count are untouched.
+- **DELIBERATE EXCLUSION from the shift, documented on `Freeze`:** the local-day and night KEYS
+  (`refusalDay`, `battleDay`, `refusalMistakeDay`, `wakeMistakeDay`, `lightAuditedNight`,
+  `lightNotifiedNight`). They are not spans, they are "was this already charged TODAY". A stale key
+  reads as "not yet charged", which is right for the fresh day the Digimon comes out into; a key
+  dragged forward into today would forgive the first real mistake of the day the player is living in.
+- AC5/AC6/AC7 were already structurally true — `MainScreenModel` is built on `loadOrCreate`, which
+  returns the ACTIVE record — and are now pinned. **The three store-level tests still pass with every
+  guard deleted, and the test file says so rather than claiming credit it has not earned**: what they
+  prove is that the refresh never REACHES the frozen record, which is what AC5 actually asks and
+  which a later story handing the model the whole box would break.
+- **Learnings for future iterations:**
+  - **Hand the model the SAME `GameStore` instance the test seeded with**
+    (`makeStore: { store }`), never a second one on the same file. Two containers give the test its
+    own copy of every record, so a refresh that DID move the Digimon in the box leaves the test's
+    copy — and the test — looking exactly like success. The alternative is reopening and re-fetching
+    after every assertion point.
+  - A `GameStore` that goes out of scope resets its context, and every `GameState` fetched from it
+    then traps with "This model instance was destroyed by calling ModelContext.reset". Hold the
+    store in a test property for the whole test, not in a `let` inside the seeding helper.
+  - **Pick fixture dates away from DST.** Every span in a freeze test is a whole number of 86,400s
+    days; a freeze straddling a US transition shifts the timeline by three days minus an hour and
+    drifts the LOCAL-DAY assertions for reasons that have nothing to do with freezing. Mid-May is
+    clear in both directions; the March dates the notification suite uses are not.
+  - **A "nothing was notified" test must not advance the clock far.** The first draft of AC7
+    advanced five days and failed: with an empty health fetcher the ACTIVE Digimon racks up four
+    silent-day mistakes and a full screen of poop on its own, and its own notices land in the spy.
+    Seed the frozen one so that everything it is owed is owed with NOTHING elapsed, and move the
+    clock an hour.
+  - `MainScreenModel` init takes `@MainActor` collaborators, so a default argument that constructs
+    one (`spy: SpyDeliverer = SpyDeliverer()`) will not compile — the default is evaluated in the
+    caller's context. Take `nil` and build it in the body, which is what the init itself does.
+  - US-126's party screen is now unblocked on both sides: `GameStore.activate(_:now:)` does the
+    whole switch (flags + freeze clock + timeline) in one transaction, so the screen only has to
+    call it and hand it the clock.
+- REMAINS: US-126 onward (12/56 passing).
+---

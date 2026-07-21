@@ -333,6 +333,20 @@ final class GameState {
     /// backstop and not the mechanism — it still matters, because a player who ran the US-123 build
     /// already has a profile and so never re-enters that migration.
     private var isActiveStorage: Bool?
+    /// Backing stores for the freeze clock (US-125): when this Digimon was put away, and how long it
+    /// has spent in the box across every spell it has ever had there. Optional for the same migration
+    /// reason as every other storage property here.
+    ///
+    /// `frozenSinceStorage` is non-nil exactly while `isActive` is false — `GameStore.activate` is
+    /// what keeps the two in step, because it is the only thing that may move either.
+    ///
+    /// `frozenDurationStorage` is a `Double` and not a `TimeInterval` only because that is the
+    /// spelling SwiftData stores; they are the same type. It is a RECORD rather than a mechanism —
+    /// `thaw(at:)` translates the timeline forward as it accrues here, so nothing has to consult it
+    /// to read a frozen Digimon correctly. What it buys is the one question the translation destroys:
+    /// `birthDate - frozenDuration` is the wall-clock instant the Digimon was really born.
+    private var frozenSinceStorage: Date?
+    private var frozenDurationStorage: Double?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -391,6 +405,11 @@ final class GameState {
         self.lightAuditedNightStorage = nil
         self.lightNotifiedNightStorage = nil
         self.isActiveStorage = isActive
+        // Born frozen means frozen since birth (US-125). Without this stamp a Digimon added to the
+        // box by US-126 would have no instant to measure its first spell from, so the day it was
+        // finally taken out it would be handed every hour it had spent waiting.
+        self.frozenSinceStorage = isActive ? nil : now
+        self.frozenDurationStorage = 0
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -570,6 +589,24 @@ extension GameState {
         set { isActiveStorage = newValue }
     }
 
+    /// When this Digimon was put away, or nil while it is the one out (US-125). See `Freeze.swift`
+    /// for what it is measured for, and `GameStore.activate(_:now:)` — the only thing that may move
+    /// it — for why it is not written anywhere else.
+    var frozenSince: Date? {
+        get { frozenSinceStorage }
+        set { frozenSinceStorage = newValue }
+    }
+
+    /// How long this Digimon has spent in the box, summed over every spell there.
+    ///
+    /// Computed for the same reason `energyLastEarned` is: the optionality persistence needs stops
+    /// at the model boundary, so a save written before the box existed reads as "never frozen"
+    /// rather than as a `nil` every caller has to unwrap.
+    var frozenDuration: TimeInterval {
+        get { frozenDurationStorage ?? 0 }
+        set { frozenDurationStorage = newValue }
+    }
+
     /// Each metric's total since this stage began — what a `window: .stage` condition is compared
     /// against. Cleared by `enterStage(at:)`, exactly as `stageEnergy` is.
     ///
@@ -722,6 +759,9 @@ extension GameState {
     /// The third refusal of a day is also a care mistake (US-027) — charged here rather than in the
     /// audit, because the refusal count is already per-day and there is nothing elapsed to derive.
     func recordRefusal(now: Date, calendar: Calendar = .current) {
+        // A Digimon in the box cannot be offered food, so it cannot refuse any (US-125). Refused
+        // here for the reason `recordWakingEarly` gives.
+        guard isActive else { return }
         let today = calendar.startOfDay(for: now)
         if refusalDay != today {
             refusalDay = today

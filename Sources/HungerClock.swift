@@ -71,7 +71,12 @@ enum HungerClock {
 extension GameState {
     /// Brings `hunger` up to date with `now`. Idempotent within an interval, so the main screen can
     /// call it on every refresh.
+    ///
+    /// A Digimon in the box does not get hungry (US-125). The guard is the first half of `Freeze`'s
+    /// two-part promise; the other half is the shift `thaw(at:)` applies to `hungerUpdatedAt`, which
+    /// is what stops the elapsed time being handed over in one lump the moment it comes out.
     func advanceHunger(now: Date) {
+        guard isActive else { return }
         let advanced = HungerClock.advance(hunger: hunger, lastUpdated: hungerUpdatedAt, now: now)
         hunger = advanced.hunger
         hungerUpdatedAt = advanced.updatedAt

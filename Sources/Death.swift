@@ -57,6 +57,11 @@ extension GameState {
     /// The clock starts at the refresh that first observed the illness, which is the earliest moment
     /// the game can honestly say it knew.
     func updateDeath(now: Date) {
+        // A Digimon in the box does not age toward death (US-125). Both halves of `Freeze` are
+        // needed here and this is the visible one: `sickSince` is shifted on the way out, so an
+        // illness resumes exactly as far along as it was rather than having run its 72 hours in the
+        // dark.
+        guard isActive else { return }
         switch healthStatus {
         case .sick:
             guard let since = sickSince else {
@@ -96,6 +101,9 @@ extension GameState {
     ///
     /// - Returns: true exactly once per illness, on the first refresh at or after 48 hours in.
     func claimDeathWarning(now: Date) -> Bool {
+        // No warning is owed about a Digimon in the box, and none may be claimed on its behalf —
+        // see `claimPoopNotification` for why the claim matters as much as the notice (US-125).
+        guard isActive else { return false }
         guard healthStatus == .sick, deathWarningSentAt == nil, let since = sickSince else {
             return false
         }

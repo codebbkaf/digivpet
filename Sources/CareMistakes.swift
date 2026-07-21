@@ -94,6 +94,11 @@ extension GameState {
     ///   re-read, because the caller has just taken the readings.
     func auditCareMistakes(now: Date, health: CareMistakes.HealthDataVerdict,
                            calendar: Calendar = .current) {
+        // A Digimon in the box is not being neglected, it is being kept (US-125). All three rules
+        // below are elapsed-time rules, so this guard and the shift `thaw(at:)` applies to
+        // `healthDataLastSeen`, `hungerUpdatedAt` and `poopUpdatedAt` are what together mean a
+        // month away costs nothing.
+        guard isActive else { return }
         switch health {
         case .seen:
             // Charged BEFORE the stamp, or opening the app on the third silent day would move the
@@ -209,6 +214,9 @@ extension GameState {
     /// a disturbance that happened rather than for a refusal. Once a day is still the right cap:
     /// prodding it six times is one bad night's care, not six.
     func recordWakingEarly(now: Date, calendar: Calendar = .current) {
+        // Nobody can prod a Digimon that is in the box (US-125). Refused here as well as at the
+        // screen, so "a frozen Digimon accrues no care mistakes" holds however it is called.
+        guard isActive else { return }
         // Counted BEFORE the once-a-day guard, and so on every disturbance. The mistake is capped
         // at one a night; `stageSleepDisturbances` (US-084) is the count of how often it happened,
         // which is a different question and the one `care.sleepDisturbances` gates on.

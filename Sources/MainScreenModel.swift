@@ -1858,6 +1858,10 @@ final class MainScreenModel: ObservableObject {
         // to have spoiled (US-028). Death is different: a dead egg does not hatch, and without this
         // it would, because the energy that opened the threshold is still sitting there.
         guard state.healthStatus != .dead else { return }
+        // Nor does a Digimon in the box (US-125). The model only ever holds the ACTIVE record, so
+        // nothing here can reach a frozen one today; the guard is what keeps that true the day
+        // something else calls this.
+        guard state.isActive else { return }
         guard let node = graph.node(id: state.currentDigimonId),
               let target = EggHatcher.hatchTarget(for: node, stageEnergy: state.stageEnergy),
               let baby = graph.node(id: target) else { return }
@@ -1879,6 +1883,11 @@ final class MainScreenModel: ObservableObject {
         // it. Hatching is deliberately NOT gated — an egg has no care record of its own to have
         // spoiled, and stalling one would leave a new game with nothing to look at.
         guard state.healthStatus == .healthy else { return }
+        // A Digimon in the box is never EVALUATED for evolution (US-125), which is stronger than
+        // "does not evolve": its stage gate is a clock and `stageEnteredDate` is shifted on the way
+        // out, so a month in the box buys no progress toward the next stage. See `hatchIfReady` for
+        // why the guard is here even though nothing can reach it with a frozen record.
+        guard state.isActive else { return }
         guard let node = graph.node(id: state.currentDigimonId),
               let target = EvolutionEngine.scheduledEvolutionTarget(
                 for: node,
