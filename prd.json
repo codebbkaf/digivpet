@@ -221,8 +221,8 @@
         "Typecheck passes"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Feed/train/battle now call wakeIfAsleep() first: it charges recordWakingEarly, stamps the persisted GameState.awakeUntil = now + SleepSchedule.wakeGracePeriod (5 min, a named balance constant) and clears isAsleep, then the pure action runs with isAsleep: false. updateSleepState() re-derives through SleepSchedule.isAsleep(at:wokenUntil:), so no refresh undoes the wake; the marker is an absolute instant so it cannot leak into the next night. Death guard sits inside wakeIfAsleep, so a corpse is neither woken nor charged; the sick and no-energy blocks are unchanged and still charge the disturbance. New WakeOnActionTests (14 tests, injected clock, no real waits) plus updates to SleepState/CareMistake/Feeding/FeedMotion/Training/TrainingRound/Battle/PreBattleRound/LightSwitch tests. 1304 tests green, build green, verified on the 41mm Simulator with -sleepDemo (sleep loop) then -feedAsleepDemo (eats, KCAL 30->25, hunger 3->2, then walks and wanders inside the same window)."
     },
     {
       "id": "US-111",

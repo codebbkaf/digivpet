@@ -291,3 +291,57 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
     `com.digivpet.DigiVPet`, NOT `com.digivpet.app` — that guess costs a FBSOpenApplicationServiceErrorDomain
     code=4 that looks like a crash and is not one.
 - REMAINS: US-110 onward. Nothing blocked.
+
+## 2026-07-22 — US-110: Feeding, training or battling wakes a sleeping Digimon
+- The shape of the fix is ONE new private method, `MainScreenModel.wakeIfAsleep()`, called at the top
+  of `feed()`, `train()` and `battle()` where `noteWakingEarly()` used to be called at the bottom of
+  their blocked arms. `grep -rn noteWakingEarly Sources/ Tests/` now returns nothing. It does three
+  things and all three are load-bearing: `recordWakingEarly` (untouched — every disturbance counts in
+  `stageSleepDisturbances`, at most one a day in `careMistakeCount`), stamps `state.awakeUntil`, and
+  clears the model's `isAsleep` there and then, because the actions read it in the same call stack and
+  the next re-derivation is a whole refresh away.
+- AC8 is the one that would have shipped this broken. `updateSleepState()` used to ask
+  `sleepSchedule.contains(now())`, which every foreground would have used to undo a wake the user had
+  just been charged a care mistake for. It now asks `SleepSchedule.isAsleep(at:wokenUntil:)` — a new
+  pure method beside `contains`, so the override lives in ONE place. The two DEBUG demo forcers were
+  moved onto it too, or `-sleepDemo` would have been the third copy.
+- The marker is `GameState.awakeUntil: Date?`, an optional storage property + computed accessor like
+  every other one there (the SwiftData migration shape). AC9 needs no sweeper: it is an ABSOLUTE
+  instant, so once past it reads expired forever and last night's 02:05 cannot make tonight's 02:00
+  awake. There is one exception — `forceAsleepForDemo` clears it, because the Simulator's store
+  survives between launches and a `-sleepDemo` run within five minutes of the last one would have
+  opened on a Digimon still awake from that run's Feed tap.
+- `wakeGracePeriod` is `SleepSchedule.wakeGracePeriod = 5 * 60`, commented as a chosen balance number.
+- AC10 is satisfied INSIDE `wakeIfAsleep` (`guard ..., state.healthStatus != .dead`) rather than at
+  each of the three call sites, so it is one rule rather than three copies. Bonus: the old code
+  charged the waking-early mistake for a DEAD Digimon, which was a mistake for a disturbance that
+  could not have happened. It no longer does.
+- Decision worth recording: a woken Digimon that turns out to be SICK or BROKE is still blocked, and
+  is still charged the disturbance. It really was disturbed — it is awake and walking about either
+  way — and this is the same reasoning US-108 already applied to a battle with no energy.
+- `FeedAction.feed` and `TrainAction.begin` are byte-for-byte unchanged. Only their `isAsleep` doc
+  comments moved, to say the buttons never pass `true` any more and that the sleep arms are the
+  contract for a caller that has NOT woken the Digimon — explicitly "do not delete as dead code",
+  because the next iteration will otherwise read them as unreachable and be right about the app while
+  being wrong about the type.
+- Tests: new `Tests/WakeOnActionTests.swift`, 14 tests on a captured `var now` the model's closure
+  reads, so the grace period is SAMPLED at chosen instants. The only `Task.sleep` in the file waits
+  out the action-pose timer (a real timer, not the injected clock) and says so. A `quieten(_:at:)`
+  helper restamps the four unrelated care rules — silent day, starvation, uncleaned mess, lights left
+  on — with a comment naming each, because these tests jump whole nights and a count polluted by any
+  of them says nothing about disturbances.
+- Nine existing tests asserted the old blocked behaviour and were rewritten, not deleted:
+  SleepStateTests (plus a new "an undisturbed Digimon stays asleep in the same window" control, so
+  the wake test cannot pass on a fixture that was never asleep), CareMistakeTests, FeedingTests (plus
+  a grace-period test: a second tap inside it is not a second disturbance and does not extend it),
+  FeedMotionTests, TrainingTests, TrainingRoundTests, BattleTests, PreBattleRoundTests. LightSwitch's
+  "an action that is blocked is still blocked in the dark" control had to switch from a SLEEPING
+  Digimon to a DEAD one — sleeping stopped being an example of anything blocked.
+- PASSED: build green; 1304 tests, 0 failures (was 1287).
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, `-healthAnswered -noNotificationPrompt`,
+  screenshots at /tmp/us110/ (not committed). `-sleepDemo` -> Agumon lying in the sleep loop, centred
+  and not moving. `-feedAsleepDemo` (same forced window, the only difference is the tap) -> upright in
+  the eat pose, KCAL 30 -> 25 and the hunger pips 3 -> 2, so the meal was really eaten; and 60s later,
+  once the pose expired, upright and WANDERING (two shots, sprite at different x and mirrored) while
+  still inside the same forced sleep window. That last pair is AC23 and AC6 together.
+- REMAINS: US-111, US-112, US-113. Nothing blocked.

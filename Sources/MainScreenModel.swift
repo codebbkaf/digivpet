@@ -142,12 +142,17 @@ final class MainScreenModel: ObservableObject {
     /// or eating without bobbing.
     @Published private(set) var actionMotion: ActionMotion?
 
-    /// Whether the Digimon is in its sleep window, which blocks feeding and training.
+    /// Whether the Digimon is asleep right now.
     ///
-    /// DERIVED, not saved: `refresh()` recomputes it from `sleepSchedule` and the clock, so it is
-    /// deliberately NOT on `GameState` — sleep comes from health data, not from the saved game. It
-    /// stays settable so the Simulator demos can force it, since the Simulator has neither sleep
-    /// history nor a way to wait until 22:00.
+    /// DERIVED, not saved: `refresh()` recomputes it from `sleepSchedule`, `state.awakeUntil` and
+    /// the clock, so it is deliberately NOT on `GameState` — sleep comes from health data, not from
+    /// the saved game. It stays settable so the Simulator demos can force it, since the Simulator
+    /// has neither sleep history nor a way to wait until 22:00.
+    ///
+    /// Since US-110 it is no longer "in the sleep window": prodding a sleeping Digimon WAKES it for
+    /// `SleepSchedule.wakeGracePeriod`, and this reads false for those five minutes even though the
+    /// window still holds. What it gates is unchanged — the sleep loop, wandering, and the sleep
+    /// arms of `FeedAction` and `TrainAction` — but a woken Digimon walks about and can be fed.
     @Published var isAsleep = false
 
     /// The nightly window the Digimon sleeps in: inferred from the user's last night of sleep, or
@@ -381,7 +386,9 @@ final class MainScreenModel: ObservableObject {
     ///
     /// - `-feedDemo` — hungry and funded, then fed: the eat loop and the spent Vitality.
     /// - `-feedRefuseDemo` — funded but not hungry, then fed: the refuse frame.
-    /// - `-feedAsleepDemo` — hungry and funded but asleep, then fed: the blocked reason.
+    /// - `-feedAsleepDemo` — hungry and funded but asleep, then fed: since US-110 this is the WAKE,
+    ///   not a block. The Digimon is prodded out of the sleep loop, eats, and is left in the walk
+    ///   loop once the pose runs out — which is the after half of the pair `-sleepDemo` opens.
     ///
     /// The pose is held for a minute in demo mode because `simctl` cannot tap Feed itself — the app
     /// has to arrive already showing the outcome, and two seconds is not long enough to boot,
@@ -455,6 +462,9 @@ final class MainScreenModel: ObservableObject {
     /// The Simulator has no sleep history to infer a window from, and no way to wait until 22:00.
     ///
     /// - `-sleepDemo` — asleep: the sleep1 <-> sleep2 loop instead of the walk loop.
+    ///
+    /// Since US-110 this is also the BEFORE half of the wake screenshot; `-feedAsleepDemo` is the
+    /// after, and the two differ only in the tap, so a pair taken from them is a real comparison.
     private func seedSleepDemoIfRequested() {
         guard CommandLine.arguments.contains("-sleepDemo"), let state else { return }
 
@@ -778,7 +788,12 @@ final class MainScreenModel: ObservableObject {
         sleepScheduleOverride = SleepSchedule(bedtimeMinute: (minute + 1440 - 60) % 1440,
                                               wakeMinute: (minute + 60) % 1440)
         sleepSchedule = sleepScheduleOverride ?? .fallback
-        isAsleep = sleepSchedule.contains(now(), calendar: calendar)
+        // Cleared, because the demo store survives between launches: a `-sleepDemo` run within five
+        // minutes of the last one would otherwise open on a Digimon still awake from that run's
+        // Feed tap, which is the opposite of what this demo is for.
+        state?.awakeUntil = nil
+        isAsleep = sleepSchedule.isAsleep(at: now(), wokenUntil: state?.awakeUntil,
+                                          calendar: calendar)
     }
 
     /// Debug-only: the inverse of `forceAsleepForDemo` — a sleep window on the far side of the clock
@@ -794,7 +809,8 @@ final class MainScreenModel: ObservableObject {
         sleepScheduleOverride = SleepSchedule(bedtimeMinute: (minute + 600) % 1440,
                                               wakeMinute: (minute + 720) % 1440)
         sleepSchedule = sleepScheduleOverride ?? .fallback
-        isAsleep = sleepSchedule.contains(now(), calendar: calendar)
+        isAsleep = sleepSchedule.isAsleep(at: now(), wokenUntil: state?.awakeUntil,
+                                          calendar: calendar)
     }
     #endif
 
@@ -949,7 +965,12 @@ final class MainScreenModel: ObservableObject {
         #else
         sleepSchedule = inferred
         #endif
-        isAsleep = sleepSchedule.contains(now(), calendar: calendar)
+        // Through `isAsleep(at:wokenUntil:)` and NEVER through `contains` alone. This is the line a
+        // wake lives or dies on: `refresh()` runs on every foregrounding and on every background
+        // wake, so asking the window by itself here would put a Digimon the user was charged a care
+        // mistake for waking straight back to sleep, seconds later and without a tap.
+        isAsleep = sleepSchedule.isAsleep(at: now(), wokenUntil: state?.awakeUntil,
+                                          calendar: calendar)
 
         settleRestingPose()
     }
@@ -976,6 +997,10 @@ final class MainScreenModel: ObservableObject {
     @discardableResult
     func feed() -> FeedOutcome? {
         guard let state else { return nil }
+        // FIRST, so the meal is really eaten rather than the user paying a care mistake for a block
+        // (US-110). `FeedAction` is handed the woken answer, so its own sleep arm never fires from
+        // here — see `wakeIfAsleep`, which is also where the dead case is kept out.
+        wakeIfAsleep()
         let outcome = FeedAction.feed(state, isAsleep: isAsleep, now: now(), calendar: calendar)
 
         switch outcome {
@@ -993,7 +1018,6 @@ final class MainScreenModel: ObservableObject {
             // No animation and NO MOTION: nothing happened to the Digimon, so it keeps idling and
             // only the reason appears. Either would read as the action having half-worked.
             show(nil, message: reason)
-            noteWakingEarly()
         }
 
         do {
@@ -1032,6 +1056,10 @@ final class MainScreenModel: ObservableObject {
         // a Train tap that got through one would charge energy for a round whose grade the battle is
         // waiting on. `battle()` carries the mirror of this guard.
         guard pendingTraining == nil, pendingBattleRound == nil else { return nil }
+        // Before the rule is asked, so the round really opens (US-110). A woken Digimon that turns
+        // out to be sick or broke is still blocked by `TrainAction` — and still charged the
+        // disturbance, because it really was disturbed: it is awake and walking about either way.
+        wakeIfAsleep()
         let start = TrainAction.begin(state, isAsleep: isAsleep)
 
         switch start {
@@ -1048,7 +1076,6 @@ final class MainScreenModel: ObservableObject {
             // idling and only the reason appears. NO GAME EITHER — the round was never paid for, and
             // opening one would be a free training.
             show(nil, message: reason)
-            noteWakingEarly()
         }
 
         do {
@@ -1164,7 +1191,8 @@ final class MainScreenModel: ObservableObject {
     /// blocked by nothing — not sleep, not sickness, not death — and it charges no care mistake:
     /// what US-101 charges for is a light left ON over a sleeping Digimon, so the tap that puts it
     /// out is the only way to avoid that and can hardly be a mistake in itself. There is deliberately
-    /// no `guard isAsleep` and no `noteWakingEarly()` here.
+    /// no `guard isAsleep` and no `wakeIfAsleep()` here — the light is the one control that reaches
+    /// a sleeping Digimon without waking it.
     ///
     /// Saved immediately, like every other tap that changes the game: the state and its timestamp are
     /// what `LightsOutRule` reads on the next launch, and a light put out at bedtime that never
@@ -1219,13 +1247,14 @@ final class MainScreenModel: ObservableObject {
     /// charges its energy and through the same `EnergyPurchase` rule: the battle is committed to the
     /// moment the game appears, so a force-quit mid-round has still paid for it.
     ///
-    /// Blocked while asleep or dead, and blocked the same way feeding and training are: a message,
-    /// no animation, and the waking-early mistake charged if it was the sleep window that stopped it.
+    /// Blocked while dead. NOT blocked while asleep since US-110 — a sleeping Digimon is WOKEN and
+    /// then fights, which is the same treatment feeding and training give it, and the waking-early
+    /// mistake is charged for the disturbance that really happened rather than for a refusal.
     /// Prodding a sleeping Digimon into a fight is the same neglect as prodding it to eat. Blocked
-    /// too when neither payable energy can cover the cost (US-108) — that guard sits AFTER the sleep
-    /// one, so a Digimon prodded awake with no energy is still charged the waking-early mistake, and
-    /// BEFORE matchmaking, so a Digimon that cannot afford a fight is told so rather than told there
-    /// is nobody to fight. A BLOCKED BATTLE OPENS NO GAME AND SPENDS NOTHING, for the reason a blocked
+    /// when neither payable energy can cover the cost (US-108) — that guard sits AFTER the wake, so a
+    /// Digimon prodded awake with no energy is still charged the waking-early mistake, and BEFORE
+    /// matchmaking, so a Digimon that cannot afford a fight is told so rather than told there is
+    /// nobody to fight. A BLOCKED BATTLE OPENS NO GAME AND SPENDS NOTHING, for the reason a blocked
     /// `train()` opens none: the round is the thing being paid for.
     ///
     /// Returns the game that opened, so a test can assert the battle went ahead without a view; the
@@ -1241,11 +1270,11 @@ final class MainScreenModel: ObservableObject {
             show(nil, message: "It cannot battle.")
             return nil
         }
-        guard !isAsleep else {
-            show(nil, message: "Asleep — let it rest.")
-            noteWakingEarly()
-            return nil
-        }
+        // After the death guard and before everything else, so a sleeping Digimon is prodded into
+        // the fight rather than told to rest (US-110). A woken Digimon with no energy still hears
+        // about the energy below, and has still been charged the disturbance — being dragged out of
+        // bed for a fight that then does not happen is exactly the neglect the mistake is for.
+        wakeIfAsleep()
         // Asked BEFORE matchmaking and answered by the same `EnergyPurchase` rule that charges below,
         // so a Digimon that cannot afford a fight hears why instead of hearing about opponents.
         guard EnergyPurchase.payer(for: BattleCost.energy,
@@ -1390,15 +1419,35 @@ final class MainScreenModel: ObservableObject {
         }
     }
 
-    /// Charges the waking-early care mistake if the action that was just blocked was blocked by the
-    /// sleep window.
+    /// Wakes a sleeping Digimon so the action the user just asked for can actually happen, and
+    /// charges the waking-early care mistake for the disturbance.
     ///
-    /// `isAsleep` is what identifies it, not the reason string: both `FeedAction` and `TrainAction`
-    /// check sleep FIRST, so a block while asleep is always the sleep block — and matching on prose
-    /// would silently stop charging the day someone reworded the message.
-    private func noteWakingEarly() {
-        guard isAsleep, let state else { return }
+    /// Called at the TOP of `feed()`, `train()` and `battle()`, before the pure rule is consulted —
+    /// which is what US-110 changed. Until then these three charged the mistake and then blocked the
+    /// action, so the user paid for a disturbance that never happened. Now the disturbance is real:
+    /// the Digimon is awake, walking about and edible for the next `wakeGracePeriod`.
+    ///
+    /// Three things happen together and none of them is optional:
+    /// - `recordWakingEarly` counts it — every time in `stageSleepDisturbances`, at most once a day
+    ///   in `careMistakeCount`. Neither rule is this method's, and neither changed.
+    /// - `awakeUntil` is stamped on the SAVED game, so a force-quit mid-grace does not undo it.
+    /// - `isAsleep` is turned off here and now, because the actions read it in this same call stack
+    ///   and the next re-derivation is a whole refresh away.
+    ///
+    /// A no-op when the Digimon is already awake — a second action inside the grace period is not a
+    /// second disturbance, so it costs nothing and extends nothing.
+    ///
+    /// A no-op when the Digimon is DEAD, which is why every caller can rely on this rather than
+    /// repeating a death guard: waking a corpse is not a thing, and the mistake would be charged for
+    /// a disturbance that cannot have happened. The actions' own death blocks are untouched.
+    private func wakeIfAsleep() {
+        guard isAsleep, let state, state.healthStatus != .dead else { return }
         state.recordWakingEarly(now: now(), calendar: calendar)
+        state.awakeUntil = now() + SleepSchedule.wakeGracePeriod
+        isAsleep = false
+        // The sleep loop is on screen right now and the Digimon is no longer in it. Left to the next
+        // refresh, a woken Digimon would keep the sleep frames until the app was backgrounded.
+        settleRestingPose()
     }
 
     /// Shows an action's pose and caption, then returns to the resting pose after `actionDuration`.

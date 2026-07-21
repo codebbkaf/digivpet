@@ -768,18 +768,19 @@ final class BattleApplyTests: XCTestCase {
         XCTAssertEqual(state.careMistakeCount, 0)
     }
 
-    /// A sleeping Digimon is not dragged into a fight — the same block feeding and training apply,
-    /// with the same reason shown and the same waking-early mistake charged.
-    func testASleepingDigimonCannotBeBattled() async throws {
+    /// A sleeping Digimon IS dragged into a fight since US-110 — the same treatment feeding and
+    /// training now give it. The mistake was always charged; what changed is that the user gets the
+    /// battle they paid it for instead of a refusal.
+    func testASleepingDigimonIsWokenAndBattles() async throws {
         let (model, _) = try makeModel(strength: 8, seed: 1)
         await model.start()
         model.isAsleep = true
 
-        XCTAssertNil(model.battle(), "no battle while it sleeps")
-        XCTAssertNil(model.pendingBattleRound, "and a blocked battle opens no minigame")
-        XCTAssertNil(model.pendingBattle)
-        XCTAssertEqual(model.actionMessage, "Asleep — let it rest.")
+        XCTAssertNotNil(model.battle(), "prodded out of bed and into the arena")
+        XCTAssertFalse(model.isAsleep)
+        XCTAssertNotNil(model.pendingBattleRound, "the pre-battle round really opened")
         XCTAssertEqual(model.state?.careMistakeCount, 1, "prodding it awake is the usual mistake")
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1)
     }
 
     /// A dead Digimon cannot battle. The memorial covers the button, but the guard is what makes that

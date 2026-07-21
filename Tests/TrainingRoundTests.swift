@@ -236,19 +236,21 @@ final class TrainingRoundTests: XCTestCase {
 
     // MARK: - AC3: blocked cases show their message and never open a game
 
-    func testTrainingWhileAsleepIsBlockedAndOpensNoGame() async throws {
+    /// US-083's asleep case, reversed by US-110: a sleeping Digimon is WOKEN and the game opens, so
+    /// what this pins now is that the woken round is a whole real round — charged, counted and on
+    /// screen — rather than a half-started one.
+    func testTrainingWhileAsleepWakesTheDigimonAndOpensTheGame() async throws {
         let model = try await startedModel(named: "asleep", strength: 20)
         model.isAsleep = true
 
-        guard case .blocked(let reason) = try XCTUnwrap(model.train()) else {
-            return XCTFail("expected a block")
+        guard case .started = try XCTUnwrap(model.train()) else {
+            return XCTFail("expected the round to open")
         }
-        XCTAssertFalse(reason.isEmpty)
-        XCTAssertNil(model.pendingTraining)
-        XCTAssertEqual(model.actionMessage, reason, "the reason is what the screen shows")
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20, "nothing was charged")
-        XCTAssertEqual(model.state?.stageTrainingSessions, 0, "no session either")
-        XCTAssertEqual(trainHaptics, 0)
+        XCTAssertFalse(model.isAsleep)
+        XCTAssertNotNil(model.pendingTraining)
+        XCTAssertEqual(model.state?.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(model.state?.stageTrainingSessions, 1, "and the session is counted")
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1, "the disturbance is charged too")
     }
 
     func testTrainingWhileSickIsBlockedAndOpensNoGame() async throws {

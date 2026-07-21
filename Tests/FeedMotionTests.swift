@@ -132,14 +132,19 @@ final class FeedMotionTests: XCTestCase {
 
     // MARK: - AC3: a blocked feed does not move at all
 
-    func testAFeedBlockedBySleepPlaysNoMotion() async throws {
+    /// Sleep stopped being a block at US-110 — a prodded Digimon wakes and eats — so what this pins
+    /// now is the other half of AC3's rule: the woken feed is a WHOLE feed, chew and all. A wake
+    /// that produced the eat loop without the motion would be exactly the "half-worked" reading the
+    /// blocked cases are written to rule out. `testAFeedBlockedByDeathPlaysNoMotion` below is the
+    /// blocked control this used to be.
+    func testAFeedThatWakesTheDigimonStillChews() async throws {
         let model = try await startedModel(named: "asleep", hunger: 3, vitality: 20)
         model.isAsleep = true
 
-        guard case .blocked = model.feed() else { return XCTFail("expected a block") }
-        XCTAssertEqual(model.animation, .sleep, "still resting — nothing happened to it")
-        XCTAssertNil(model.actionMotion, "motion would read as the feed having half-worked")
-        XCTAssertNotNil(model.actionMessage, "only the reason appears")
+        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.animation, .eat, "awake and eating, not resting")
+        XCTAssertEqual(model.actionMotion?.kind, .chew)
+        XCTAssertNil(model.actionMessage, "a meal eaten needs no caption")
     }
 
     func testAFeedBlockedByDeathPlaysNoMotion() async throws {

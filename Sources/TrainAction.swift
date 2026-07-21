@@ -77,9 +77,14 @@ enum TrainAction {
     /// count cannot wait on a grade that may never arrive. Exactly one per started round, and none
     /// at all when blocked.
     ///
-    /// - Parameter isAsleep: whether the Digimon is in its sleep window. Passed in rather than read
-    ///   off `state` for the same reason `FeedAction.feed` takes it — sleep is DERIVED from the
-    ///   user's sleep history (US-026), not saved-game state.
+    /// - Parameter isAsleep: whether the Digimon is asleep. Passed in rather than read off `state`
+    ///   for the same reason `FeedAction.feed` takes it — sleep is DERIVED from the user's sleep
+    ///   history (US-026), not saved-game state.
+    ///
+    ///   **The Train button never passes `true` here.** Since US-110, `MainScreenModel.train()` wakes
+    ///   a sleeping Digimon first and then calls this with the woken answer, so the sleep arm above
+    ///   is the contract for a caller that has not woken it rather than a state the user can reach.
+    ///   It is not dead code — see `FeedAction.feed`, which keeps its own for the same reason.
     @discardableResult
     static func begin(_ state: GameState, isAsleep: Bool) -> TrainingStart {
         guard !isAsleep else {

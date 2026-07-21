@@ -278,17 +278,10 @@ final class PreBattleRoundTests: XCTestCase {
 
     // MARK: - AC6: a blocked battle opens no minigame
 
+    /// Asleep is deliberately NOT in this list any more: US-110 made a sleeping Digimon one that is
+    /// woken and fought with, not one that is refused. The two states left here are the two that
+    /// still refuse — see `testASleepingDigimonIsWokenIntoTheRound` for what replaced the third.
     func testABlockedBattleShowsItsReasonAndOpensNoMinigame() async throws {
-        // Asleep.
-        let (sleeper, _, _) = try makeModel(storeName: "Asleep")
-        await sleeper.start()
-        sleeper.isAsleep = true
-        XCTAssertNil(sleeper.battle())
-        XCTAssertEqual(sleeper.actionMessage, "Asleep — let it rest.")
-        XCTAssertNil(sleeper.pendingBattleRound, "no round")
-        XCTAssertNil(sleeper.pendingBattle, "and no fight")
-        XCTAssertEqual(sleeper.state?.stageEnergy[.strength], 100, "and nothing spent")
-
         // Dead.
         let (dead, _, _) = try makeModel(storeName: "Dead")
         await dead.start()
@@ -309,6 +302,22 @@ final class PreBattleRoundTests: XCTestCase {
         XCTAssertEqual(spent.actionMessage, BattleCost.insufficientEnergyReason)
         XCTAssertNil(spent.pendingBattleRound, "the broke tap opens no game to play for nothing")
         XCTAssertNil(spent.pendingBattle)
+    }
+
+    /// US-110's half of the case above: the sleeping Digimon opens the round like any other, and the
+    /// energy is really spent — a wake that opened a FREE round would be the same bug the other way
+    /// round.
+    func testASleepingDigimonIsWokenIntoTheRound() async throws {
+        let (sleeper, _, _) = try makeModel(storeName: "Asleep")
+        await sleeper.start()
+        sleeper.isAsleep = true
+
+        XCTAssertEqual(sleeper.battle(), assignedGame)
+        XCTAssertFalse(sleeper.isAsleep)
+        XCTAssertNotNil(sleeper.pendingBattleRound, "the round opened")
+        XCTAssertEqual(sleeper.state?.stageEnergy[.strength], 100 - BattleCost.energy,
+                       "and was paid for")
+        XCTAssertEqual(sleeper.state?.stageSleepDisturbances, 1)
     }
 
     // MARK: - AC7: one round at a time

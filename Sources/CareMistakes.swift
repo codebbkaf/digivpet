@@ -204,9 +204,10 @@ extension GameState {
 
     /// Charges the mistake for disturbing a sleeping Digimon, at most once per local day.
     ///
-    /// Called when an action is attempted inside the sleep window. The action itself is blocked, so
-    /// the Digimon is not really woken — but the PRD counts the attempt, and once a day is the right
-    /// cap: prodding it six times is one bad night's care, not six.
+    /// Called when an action is taken inside the sleep window. Since US-110 the Digimon really IS
+    /// woken by it — the feed, the training round and the battle all go ahead — so this charges for
+    /// a disturbance that happened rather than for a refusal. Once a day is still the right cap:
+    /// prodding it six times is one bad night's care, not six.
     func recordWakingEarly(now: Date, calendar: Calendar = .current) {
         // Counted BEFORE the once-a-day guard, and so on every disturbance. The mistake is capped
         // at one a night; `stageSleepDisturbances` (US-084) is the count of how often it happened,

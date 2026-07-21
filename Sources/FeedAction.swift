@@ -32,9 +32,16 @@ enum FeedAction {
     /// Order matters and is deliberate: asleep is checked before hunger, so a sleeping Digimon that
     /// is also full is reported as asleep rather than being counted as a refusal it never made.
     ///
-    /// - Parameter isAsleep: whether the Digimon is currently in its sleep window. Passed in rather
-    ///   than read off `state`, because sleep is DERIVED from the user's sleep history (US-026) and
-    ///   is not saved-game state — this keeps the rule honest until US-026 computes it for real.
+    /// - Parameter isAsleep: whether the Digimon is currently asleep. Passed in rather than read off
+    ///   `state`, because sleep is DERIVED from the user's sleep history (US-026) and is not
+    ///   saved-game state.
+    ///
+    ///   **The Feed button never passes `true` here.** Since US-110, `MainScreenModel.feed()` wakes a
+    ///   sleeping Digimon first and then calls this with the woken answer, so the sleep arm above is
+    ///   not what the user meets — it is the contract for a caller that has NOT woken it, and the
+    ///   reason this stays a pure function of what it is told rather than a rule with a policy in it.
+    ///   Do not delete it as dead code: it is what makes "you may not feed a sleeping Digimon"
+    ///   true of `FeedAction` itself rather than true only of one call site.
     @discardableResult
     static func feed(
         _ state: GameState,

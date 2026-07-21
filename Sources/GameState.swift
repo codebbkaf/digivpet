@@ -225,6 +225,15 @@ final class GameState {
     private var starvationMistakesChargedStorage: Int?
     private var refusalMistakeDayStorage: Date?
     private var wakeMistakeDayStorage: Date?
+    /// Backing store for `awakeUntil` (US-110): when the grace period a prodded Digimon was woken
+    /// for runs out, or nil while it has not been woken. Optional for the same migration reason as
+    /// every other storage property here, and also because "never woken" is a real state no default
+    /// could express.
+    ///
+    /// SAVED rather than held on the model, which is the whole reason it lives here: a user who
+    /// force-quits ten seconds into the five minutes they were charged a care mistake for must not
+    /// come back to a Digimon that is asleep again.
+    private var awakeUntilStorage: Date?
     /// Backing store for the two death markers (US-029): when the current illness began, and when it
     /// finally killed the Digimon. Optional for the same migration reason as every other storage
     /// property here — an optional attribute is the one shape SwiftData migrates into an
@@ -325,6 +334,7 @@ final class GameState {
         self.starvationMistakesChargedStorage = 0
         self.refusalMistakeDayStorage = nil
         self.wakeMistakeDayStorage = nil
+        self.awakeUntilStorage = nil
         self.sickSinceStorage = nil
         self.diedAtStorage = nil
         self.deathWarningSentStorage = nil
@@ -425,6 +435,21 @@ extension GameState {
     var wakeMistakeDay: Date? {
         get { wakeMistakeDayStorage }
         set { wakeMistakeDayStorage = newValue }
+    }
+
+    /// When the wake a disturbed Digimon is currently enjoying runs out, or nil if it has never been
+    /// woken (US-110).
+    ///
+    /// Set to `now + SleepSchedule.wakeGracePeriod` by the model when a sleeping Digimon is prodded
+    /// into feeding, training or battling, and read back by `SleepSchedule.isAsleep(at:wokenUntil:)`
+    /// — which is the ONE place it overrides the window, so the every-refresh re-derivation cannot
+    /// undo the wake.
+    ///
+    /// Never cleared on a schedule, and it does not need to be: it is an absolute instant, so once
+    /// it is past it reads as expired forever and cannot leak into the next night.
+    var awakeUntil: Date? {
+        get { awakeUntilStorage }
+        set { awakeUntilStorage = newValue }
     }
 
     /// When the CURRENT illness began, or nil while the Digimon is well. `Death.updateDeath` owns
