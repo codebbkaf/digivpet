@@ -329,7 +329,7 @@ final class ConditionEvaluationTests: XCTestCase {
         TrainAction.train(state, isAsleep: false)
         state.recordRefusal(now: Fixture.morning, calendar: Fixture.losAngeles)
         state.recordWakingEarly(now: Fixture.morning, calendar: Fixture.losAngeles)
-        state.consumeBattleAllowance(now: Fixture.morning, calendar: Fixture.losAngeles)
+        state.recordBattleStarted(now: Fixture.morning, calendar: Fixture.losAngeles)
         state.battleWins = 1
 
         let context = ConditionContext(state: state, now: Fixture.morning,

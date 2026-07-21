@@ -47,7 +47,7 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": "The three action call sites now show .pose(.refuse) / .pose(.attack) / .pose(.angry) / .pose(.happy) with their motions and captions unchanged; the dead pose is still .still(.hurt2) and ActionMotion is untouched. Contradicting comments rewritten. Build green, 1267 tests / 0 failures. Screenshot burst on the 42mm sim (-poopCleanDemo, 16 shots at 0.13s) shows the sprite tile alternating between two lit-pixel counts (3518 / 3734) in ~0.5s runs \u2014 two shots 0.575s apart differ."
+      "notes": "The three action call sites now show .pose(.refuse) / .pose(.attack) / .pose(.angry) / .pose(.happy) with their motions and captions unchanged; the dead pose is still .still(.hurt2) and ActionMotion is untouched. Contradicting comments rewritten. Build green, 1267 tests / 0 failures. Screenshot burst on the 42mm sim (-poopCleanDemo, 16 shots at 0.13s) shows the sprite tile alternating between two lit-pixel counts (3518 / 3734) in ~0.5s runs — two shots 0.575s apart differ."
     },
     {
       "id": "US-104",
@@ -71,7 +71,7 @@
       ],
       "priority": 3,
       "passes": true,
-      "notes": "The reset is now a withTransaction(disablesAnimations) snap of projectileProgress AND a new `hasLanded` @State, the projectile is drawn only while `!hasLanded`, and run() sleeps `flight` (flightDuration clamped to the turn) before setting it. Pure BattleView.isProjectileVisible(atElapsed:flightDuration:) is the drawing rule as arithmetic. TWO further fixes the Simulator forced: run() is now @MainActor (its three writes only coalesce into one SwiftUI update on the main thread) and the projectile carries .id(index) \u2014 without them the animated `beat` change interpolated ONE reused glyph from the old turn's tint and offset to the new one's, photographed mid-gap at the turn boundary. 7 new BattleProjectileTests; build green, 1274 tests / 0 failures. On the 42mm sim (-battleTurnDemo, flight 12s, turn 60s): glyph in the gap at 0.52x flight, nothing anywhere at 1.22x; 30 in-flight frames advance monotonically and never come back; two turn boundaries burst at 0.17s (136 frames) show an empty gap through the crossfade."
+      "notes": "The reset is now a withTransaction(disablesAnimations) snap of projectileProgress AND a new `hasLanded` @State, the projectile is drawn only while `!hasLanded`, and run() sleeps `flight` (flightDuration clamped to the turn) before setting it. Pure BattleView.isProjectileVisible(atElapsed:flightDuration:) is the drawing rule as arithmetic. TWO further fixes the Simulator forced: run() is now @MainActor (its three writes only coalesce into one SwiftUI update on the main thread) and the projectile carries .id(index) — without them the animated `beat` change interpolated ONE reused glyph from the old turn's tint and offset to the new one's, photographed mid-gap at the turn boundary. 7 new BattleProjectileTests; build green, 1274 tests / 0 failures. On the 42mm sim (-battleTurnDemo, flight 12s, turn 60s): glyph in the gap at 0.52x flight, nothing anywhere at 1.22x; 30 in-flight frames advance monotonically and never come back; two turn boundaries burst at 0.17s (136 frames) show an empty gap through the crossfade."
     },
     {
       "id": "US-105",
@@ -165,8 +165,8 @@
         "Typecheck passes"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleLimits/battlesRemaining/battlesRemainingToday/battleLimitReason deleted; new Sources/EnergyPurchase.swift holds the ONE 'charge the richest payable energy' rule (payer() reads, charge() spends) and both TrainAction.begin and MainScreenModel.battle() call it - grep for max(by:) over stageEnergy finds only that file. BattleCost replaces BattleLimits with energy/payableWith/insufficientEnergyReason all aliased to TrainAction's, and its comment records that the anti-farming brake changed form (100 points of real walking for 20 battles) rather than disappearing. Guard order in battle() is dead -> asleep -> funds -> matchmaking; the funds GUARD is before matchmaking, the CHARGE is at the commit point where consumeBattleAllowance used to be (renamed recordBattleStarted, kept because ConditionEvaluator reads battlesFought). recordBattle untouched. -battleLimitDemo became -battleBrokeDemo, which zeroes Strength and Stamina; the arena demos now fund 5 points or they would screenshot the refusal. ActionControls.battlesLeft had to become canAffordBattle to compile - US-109 still owns the caption wording, the tint and the 41mm screenshots. Build green; 1287 tests, 0 failures (was 1281). Simulator 42mm: -battleBrokeDemo shows the greyed bolt with 'Not enough Strength or Stamina. Move to earn more.', and -battleTurnDemo still reaches the arena."
     },
     {
       "id": "US-109",

@@ -408,7 +408,7 @@ struct ContentView: View {
             if phase == .background {
                 model.abandonTraining()
                 // The pre-battle round is abandoned on the same beat but is NOT cancelled with it: the
-                // allowance is already gone, so the fight goes ahead at the miss multiplier (US-093
+                // energy is already gone, so the fight goes ahead at the miss multiplier (US-093
                 // AC4) and is waiting on the arena when the app comes back.
                 model.abandonBattleRound()
             }
@@ -516,7 +516,7 @@ struct ContentView: View {
                     // preference is something you visit once, but it is still a destination
                     // like the others, and a fourth circle costs less room than the labelled
                     // link below the fold that it replaces.
-                    ActionControls(battlesLeft: model.battlesRemainingToday,
+                    ActionControls(canAffordBattle: model.canAffordBattle,
                                    poopCount: model.poopCount,
                                    feed: { model.feed() },
                                    train: { model.train() },

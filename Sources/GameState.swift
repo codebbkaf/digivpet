@@ -659,27 +659,23 @@ extension GameState {
     ///
     /// Reads the rollover rather than writing it: a stale `battleDay` means the count belongs to a
     /// day that is over, and a day that is over always has zero battles fought in it. That is what
-    /// makes the cap reset at local midnight without anything having to run at midnight — the app
+    /// makes the count reset at local midnight without anything having to run at midnight — the app
     /// may have been closed straight through it.
+    ///
+    /// It no longer gates anything — US-108 replaced the daily cap with `BattleCost` — but it is read
+    /// by `ConditionEvaluator` for the `.day`-window battle conditions an evolution edge can ask for,
+    /// which is why the count and its rollover are still kept.
     func battlesFought(now: Date, calendar: Calendar = .current) -> Int {
         battleDay == calendar.startOfDay(for: now) ? battleCount : 0
     }
 
-    /// How many battles are still allowed in the local day containing `now`.
-    ///
-    /// Clamped at zero so a save whose cap was lowered in an update reads as "none left" rather than
-    /// as a negative the UI would have to defend against.
-    func battlesRemaining(now: Date, calendar: Calendar = .current) -> Int {
-        max(0, BattleLimits.perDay - battlesFought(now: now, calendar: calendar))
-    }
-
-    /// Spends one of the day's battles. Rolls the count over when the day changes, for the same
+    /// Counts a battle that has STARTED. Rolls the count over when the day changes, for the same
     /// reason `recordRefusal` does.
     ///
-    /// Separate from `recordBattle`, which files the RESULT: this is spent when the fight starts, so
-    /// dismissing the result screen — or force-quitting before it — cannot hand back an allowance
-    /// and let the cap be farmed.
-    func consumeBattleAllowance(now: Date, calendar: Calendar = .current) {
+    /// Separate from `recordBattle`, which files the RESULT: this is counted when the fight starts,
+    /// so dismissing the result screen — or force-quitting before it — cannot un-count a battle that
+    /// really was fought, exactly as the energy it cost is never handed back.
+    func recordBattleStarted(now: Date, calendar: Calendar = .current) {
         let today = calendar.startOfDay(for: now)
         if battleDay != today {
             battleDay = today

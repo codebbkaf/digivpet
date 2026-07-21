@@ -658,6 +658,10 @@ final class BattleApplyTests: XCTestCase {
         let state = try store.loadOrCreate(digitamaId: "hero", now: Self.now)
         state.stage = .child
         state.strengthStat = strength
+        // US-108: a battle is paid for in Strength or Stamina, and the empty readers credit neither.
+        // Funded well past the cost, since what these tests are about is the fight rather than the
+        // affording of it.
+        state.stageEnergy[.strength] = 100
         // US-027: the empty readers would otherwise have the audit charge a mistake for every day
         // since the epoch, which would sicken the Digimon before a single battle.
         state.healthDataLastSeen = Self.now

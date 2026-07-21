@@ -203,3 +203,53 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   /tmp/us107/, not committed.
 - REMAINS: US-108 onward. Nothing blocked. AOD is still unmeasured and still needs real hardware —
   this story made the cadence faster without learning anything about the wrist-down case.
+
+## 2026-07-22 — US-108: A battle costs energy, and the daily cap is gone
+- The cap is GONE: `BattleLimits`, `GameState.battlesRemaining`, `MainScreenModel.battlesRemainingToday`
+  and `battleLimitReason` are all deleted. `battlesFought(now:calendar:)` and its midnight rollover are
+  KEPT and their doc comment now says why — `ConditionEvaluator` reads them for `.day`-window battle
+  conditions, which are the only thing that still asks. `consumeBattleAllowance` kept but renamed
+  `recordBattleStarted`: the word "allowance" described a rule that no longer exists.
+- ONE payment rule, new file `Sources/EnergyPurchase.swift`, lifted out of `TrainAction.begin`:
+  `payer(for:from:in:)` reads and `charge(_:from:in:)` spends, richest of `payableWith` wins, ties to
+  the first listed (Swift's `max(by:)` keeps the FIRST of equal maxima — asserted, not assumed, by the
+  7/7 tie test). `TrainAction.begin` and `MainScreenModel.battle()` both call it and nothing else does:
+  `grep -rn "max(by:" Sources/` finds `EnergyPurchase` and `EvolutionEngine`'s unrelated edge pick, and
+  `grep -rn "stageEnergy\[.*\] -=" Sources/` finds `EnergyPurchase` and `FeedAction`'s fixed Vitality
+  charge, which is a different rule and out of scope.
+- `BattleCost` replaces `BattleLimits` in Battle.swift. `energy`, `payableWith` and
+  `insufficientEnergyReason` are all ALIASES of `TrainAction`'s, so "identical to TrainAction" is
+  enforced by the compiler rather than by a comment; a test asserts all three anyway. The comment the
+  PRD asked for is there: the anti-farming protection changed FORM (20 battles = 100 points = ~40,000
+  steps of real walking), it did not disappear.
+- Guard order in `battle()` is dead -> asleep -> funds -> matchmaking. The funds GUARD is before
+  matchmaking so a broke Digimon is told it is broke; the CHARGE is at the commit point where
+  `consumeBattleAllowance` used to sit, after matchmaking succeeded, so "nobody to fight" still costs
+  nothing. Never refunded — `abandonBattleRound` and a force-quit both leave the 5 points spent.
+  `recordBattle` was not touched: losing still costs nothing.
+- `-battleLimitDemo` -> `-battleBrokeDemo`, which zeroes Strength and Stamina. The OTHER battle demos
+  needed funding they never needed before (`stageEnergy.strength = max(..., BattleCost.energy)`) or
+  every arena screenshot would now catch the refusal instead — the Simulator earns no steps.
+- `ActionControls.battlesLeft` had to become `canAffordBattle` for the tree to compile, and
+  `limitCaption` with it. That is US-109's story: it still owns the final caption wording, the tint
+  rule and the 41mm screenshots. What is here is the mechanical swap plus two tests.
+- Tests: `BattleLimitTests.swift` renamed `BattleCostTests.swift` and rewritten against the energy
+  rule — six battles in one day, 4/4 blocked spending nothing, 7/6 and 6/7 and 7/7 payers, exactly 5
+  off `stageEnergy` with `lifetimeEnergy` untouched, the spend surviving a reopen, losing six in a row
+  costing no care mistake. Four other files needed their fixtures FUNDED, because a battle that used
+  to be free is not: BattleTests, PreBattleRoundTests, BackgroundRefreshTests, and
+  ConditionEvaluationTests (rename only). PreBattleRound's "the round costs no energy" test now asserts
+  the honest thing — the tap costs `BattleCost.energy` and the ROUND adds nothing on top.
+- PASSED: build green; 1287 tests, 0 failures (was 1281).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-healthAnswered -noNotificationPrompt -battleBrokeDemo`:
+  STEP 0/60 and EXER 0/60, the Battle bolt greyed, and "Not enough Strength or Stamina. Move to earn
+  more." in orange under the row, fitting one line on the narrow screen. `-battleTurnDemo` on the same
+  device still reaches the arena, which is what proves the demo funding works and the shipped path is
+  not blocked by its own new cost.
+  - Trap re-learned: `-noNotificationPrompt` is REQUIRED or the system's notification alert covers the
+    screen and cannot be dismissed — simctl has no tap on watchOS, and `simctl privacy` has no
+    notifications service. The 41mm and 45mm watchOS 10.4 sims are now wedged behind that alert for
+    this bundle id; 42mm F4A12A1C is the one to use.
+- REMAINS: US-109 onward. Nothing blocked. US-109 inherits a `canAffordBattle` that already disables
+  the button and already shows an energy caption — what it has to decide is the WORDING at 41mm (the
+  full sentence fits, but only just) and it has to keep `ActionControlsTests` in step.

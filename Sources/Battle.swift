@@ -220,14 +220,27 @@ enum BattleMatchmaker {
     }
 }
 
-/// How often a Digimon may be sent to fight (PRD FR-33).
+/// What a battle costs, and — since US-108 — the only thing that limits how many can be fought.
 ///
-/// A cap rather than a cooldown: five battles is a session, and the point is that a win/loss record
-/// cannot be farmed into an evolution edge's `minBattleWins` in an afternoon of tapping.
-enum BattleLimits {
-    /// Battles allowed per local day. Resets at local midnight — see
-    /// `GameState.battlesFought(now:calendar:)`, which derives "today's" count rather than ticking it.
-    static let perDay = 5
+/// **This replaces US-032's five-a-day cap, and it replaces what the cap was FOR.** The cap existed
+/// so that a win/loss record could not be farmed into an evolution edge's `minBattleWins` in an
+/// afternoon of tapping. That protection has not been dropped; it has changed form. Energy is
+/// credited from real HealthKit steps and exercise minutes (`EnergyRates`), so twenty battles now
+/// costs 100 points of Strength or Stamina — 40,000 steps, or four hours of exercise — where twenty
+/// taps used to cost nothing but time. The new brake is arguably the stronger one, and unlike a
+/// counter it is something the user can act on by moving rather than wait out.
+enum BattleCost {
+    /// Points spent per battle. `TrainAction`'s number rather than a second one of its own: a fight
+    /// asks the same of the Digimon as a workout, and neither should be the obvious one to spam.
+    static let energy = TrainAction.energyCostPerTraining
+
+    /// The energies a battle can be paid with — training's physical pair, for the same reasons
+    /// `TrainAction.payableWith` gives, and richest first at the point of spending.
+    static let payableWith = TrainAction.payableWith
+
+    /// Why a battle is refused when neither payable energy can cover it — training's wording, because
+    /// it is training's rule.
+    static let insufficientEnergyReason = TrainAction.insufficientEnergyReason
 }
 
 extension GameState {

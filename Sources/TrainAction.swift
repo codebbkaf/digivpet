@@ -52,6 +52,13 @@ enum TrainAction {
     /// sleep to get stronger is not a trade the game makes.
     static let payableWith: [EnergyType] = [.strength, .stamina]
 
+    /// Why a session is refused when neither payable energy can cover it. Names the remedy rather
+    /// than only the refusal — the energy comes from walking, so there is something to do about it.
+    ///
+    /// Shared with battling (`BattleCost.insufficientEnergyReason`), which charges the same cost from
+    /// the same pair: two wordings for one rule would read as two different rules.
+    static let insufficientEnergyReason = "Not enough Strength or Stamina. Move to earn more."
+
     /// Enters a training round: checks eligibility, charges the energy, and counts the session.
     ///
     /// Whichever of the two payable energies the Digimon holds more of pays, so a walker and a
@@ -81,15 +88,12 @@ enum TrainAction {
         guard state.healthStatus == .healthy else {
             return .blocked(reason: state.healthStatus == .dead ? "It cannot train." : "Too sick to train.")
         }
-        guard let payer = payableWith.max(by: { state.stageEnergy[$0] < state.stageEnergy[$1] }),
-              state.stageEnergy[payer] >= energyCostPerTraining else {
-            return .blocked(reason: "Not enough Strength or Stamina. Move to earn more.")
+        // The charge itself lives in `EnergyPurchase`, which US-108 extracted so that battling could
+        // spend the same way rather than growing a second copy of it: richest payer, `stageEnergy`
+        // only, and never given back.
+        guard let payer = EnergyPurchase.charge(energyCostPerTraining, from: payableWith, in: state) else {
+            return .blocked(reason: insufficientEnergyReason)
         }
-
-        // Spent from `stageEnergy` alone, exactly as feeding is: `lifetimeEnergy` records what was
-        // ever EARNED, and the ledger keys on what was credited rather than on what is held, so a
-        // spend can never be re-credited by the next health read.
-        state.stageEnergy[payer] -= energyCostPerTraining
         state.recordTrainingSession()
         return .started(spent: payer, cost: energyCostPerTraining)
     }

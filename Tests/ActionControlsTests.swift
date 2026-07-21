@@ -18,7 +18,7 @@ final class ActionControlsTests: XCTestCase {
     /// Digimon and watched it train.
     func testEachActionInvokesItsOwnClosure() {
         var called: [String] = []
-        let controls = ActionControls(battlesLeft: BattleLimits.perDay,
+        let controls = ActionControls(canAffordBattle: true,
                                       poopCount: 1,
                                       feed: { called.append("feed") },
                                       train: { called.append("train") },
@@ -38,7 +38,7 @@ final class ActionControlsTests: XCTestCase {
     /// screen cannot get out of step.
     func testCleanIsDisabledOnlyWhenThereIsNoPoop() {
         for count in 0...PoopClock.maximumPoops {
-            let controls = ActionControls(battlesLeft: BattleLimits.perDay,
+            let controls = ActionControls(canAffordBattle: true,
                                           poopCount: count,
                                           feed: {}, train: {}, clean: {}, battle: {}) { EmptyView() }
             XCTAssertEqual(controls.isCleanDisabled, count == 0, "wrong at \(count) poops")
