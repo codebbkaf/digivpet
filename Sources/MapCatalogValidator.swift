@@ -48,6 +48,14 @@ enum MapValidationError: Error, Equatable, CustomStringConvertible {
     /// evolution edge, and the reason `DigitamaSlot` reuses `EvolutionCondition` at all.
     case emptyConditionHint(map: String, digitamaId: String, metric: String)
 
+    /// A slot every one of whose conditions is a metric that is usually empty on real hardware
+    /// (handwashing, toothbrushing, dietary water, daylight, audio exposure and the two rare
+    /// events — see `ConditionMetric.isSparseOnHardware`). US-128's rule, and the same one
+    /// `EvolutionCondition` already states for edges: such a metric may be a bonus gate but never
+    /// the ONLY one. It bites harder for a slot than for an edge, because a slot is the sole route
+    /// to its egg — gated solely on an empty metric, that egg is unreachable on a watch-only device.
+    case soleSparseCondition(map: String, digitamaId: String)
+
     var description: String {
         switch self {
         case let .missingAsset(map, assetName):
@@ -66,6 +74,8 @@ enum MapValidationError: Error, Equatable, CustomStringConvertible {
             return "unlock cycle: \(maps.joined(separator: " -> ")) — none of them is reachable"
         case let .emptyConditionHint(map, digitamaId, metric):
             return "\(map)/\(digitamaId): condition '\(metric)' has an empty hint — the player cannot discover it"
+        case let .soleSparseCondition(map, digitamaId):
+            return "\(map)/\(digitamaId): every condition is a metric that is usually empty on real hardware — the egg would be unreachable"
         }
     }
 }
@@ -141,6 +151,16 @@ extension MapCatalog {
         var errors: [MapValidationError] = slot.conditions
             .filter { $0.hint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .map { .emptyConditionHint(map: map.id, digitamaId: slot.digitamaId, metric: $0.metric) }
+
+        // Also independent of the roster: a slot gated SOLELY on empty-on-hardware metrics is an
+        // egg no watch-only player can earn, whatever the id resolves to. Fires only when there IS
+        // at least one condition and every one of them is a known sparse metric — a slot pairing a
+        // sparse metric with a real one (shipped `06_industrial/pulse_digitama`: steps + handwashing)
+        // is fine, and an empty-condition slot is a free drop rather than an unreachable one.
+        if !slot.conditions.isEmpty,
+           slot.conditions.allSatisfy({ $0.knownMetric?.isSparseOnHardware == true }) {
+            errors.append(.soleSparseCondition(map: map.id, digitamaId: slot.digitamaId))
+        }
 
         guard let entry = roster.entry(id: slot.digitamaId) else {
             return errors + [.unknownDigitama(map: map.id, digitamaId: slot.digitamaId)]

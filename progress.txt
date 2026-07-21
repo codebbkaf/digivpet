@@ -1118,3 +1118,95 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     a best-effort for anything the graph cannot trace. Phase E wiring makes more lines traceable.
 - REMAINS: US-128 onward (14/56 passing).
 ---
+
+
+## 2026-07-22 — US-128: Digitama drop engine
+- `Sources/DigitamaDrop.swift` (new): `DigitamaDropEngine` — a PURE rule. `eligibleSlots(in:context:
+  held:)` filters the selected map's slots to those whose conditions ALL hold (`ConditionReveal.allMet`
+  — the very predicate the map detail's "Ready to find" mark and `EvolutionEngine` read, so an egg the
+  detail PROMISED is exactly the egg that can drop) and whose id is not HELD (US-127). `award(in:
+  context:held:using:)` picks ONE with an injected `inout` generator; nil for an empty set or a nil
+  map. Also `DigitamaDropAnnouncement` — the roster-built value the banner draws.
+- `Sources/DigitamaDropBanner.swift` (new): a light overlay (not a full ceremony), drawn with
+  `IdleSpriteView` so it carries `.interpolation(.none)`. Tap to acknowledge.
+- `Sources/GameStore.swift`: `grantDigitama(_:now:)` — inserts the egg FROZEN + inactive (so US-124's
+  one-active invariant holds and US-125 leaves it untouched until it is taken out), records it in the
+  Dex and notes it ever-owned on the profile, all in ONE save. Its `originDigitamaId` defaults to
+  itself, so `heldDigitamaIds()` counts it the instant it lands.
+- `Sources/MainScreenModel.swift`: `pendingDigitamaDrop` (published), `makeDropGenerator` (injected,
+  seeded separately from the battle RNG), `checkForDigitamaDrop()`, `acknowledgeDigitamaDrop()`. The
+  check is called at exactly three sites and NEVER on a timer: `finishTraining` (after the session is
+  counted), `finishBattle` (after `recordBattle`), and `refresh` (after `creditMapSteps`, after the
+  stage settles).
+- `Sources/ContentView.swift`: a `pendingDigitamaDrop` overlay below the evolution ceremony.
+- `Sources/EvolutionCondition.swift`: `ConditionMetric.isSparseOnHardware` — the seven feature-sourced
+  metrics the type comment already NAMES (handwashing, toothbrushing, water, daylight, audio exposure,
+  low-cardio-fitness and walking-steadiness events). It only STATED the "never sole" rule before; this
+  is what lets a validator ENFORCE it.
+- `Sources/MapCatalogValidator.swift`: `MapValidationError.soleSparseCondition`, fired when a slot has
+  conditions and every known one is sparse. Collected before the roster lookup, like the blank-hint
+  rule, so a bad id does not hide it.
+- Files: Sources/DigitamaDrop.swift (new), Sources/DigitamaDropBanner.swift (new),
+  Sources/GameStore.swift, Sources/MainScreenModel.swift, Sources/ContentView.swift,
+  Sources/EvolutionCondition.swift, Sources/MapCatalogValidator.swift,
+  Tests/DigitamaDropTests.swift (new, 19 tests). `xcodegen generate` for the two new files.
+- PASSED: build green. `Executed 1605 tests, with 0 failures` (1586 + 19 new). The 19 new were also
+  observed passing on their own with `-only-testing`, grepped rather than inferred.
+- PASSED, criterion by criterion:
+  - AC1/AC2 were already true (US-116/117): `DigitamaSlot` carries `digitamaId` + `[EvolutionCondition]`
+    over the `ConditionMetric` vocabulary; `emptyConditionHint` is enforced. Verified the shipped slots
+    use `health.handwashing`/`.mindfulMinutes` and the `care.*` counters.
+  - AC3: three call sites, each proven END TO END through the real model — `finishTraining` drops a
+    `care.trainingSessions` slot the round just met; `finishBattle` drops a `care.battleCount` lifetime
+    slot the fight just recorded; `refresh` drops after a step tick once the condition is met (and
+    drops NOTHING while it is unmet).
+  - AC4/AC5: engine tests (unmet, one, three-deterministic, all-held, held-beside-unheld, no-map,
+    empty pool) plus a model test that a second met refresh does NOT re-drop the held egg.
+  - AC6: `grantDigitama` records the Dex (a model test asserts `dexIds().contains`) and the banner
+    announces (`pendingDigitamaDrop?.id`/`.displayName`).
+  - AC7: `soleSparseCondition` fires on a hand-built bad fixture (one sparse, and two sparse together),
+    stays silent when a sparse metric is PAIRED with a real one (the shipped pulse pattern) or when a
+    slot has no conditions; the shipped catalog reports ZERO of them (pinned twice); and the sparse set
+    is pinned to the seven.
+- **Learnings for future iterations:**
+  - **A US-116 DATA TRAP THIS ENGINE SURFACES, and a real one: 12 of the 57 shipped Digitama slots can
+    never drop.** They gate on `care.battleCount` or `care.battleWinRatio` with a **stage** window, and
+    `ConditionContext.careValue` returns `.unknown` for both of those over `.stage` — US-084 note 4 is
+    explicit that there are NO stage-scoped battle counters and that `care.battleWinRatio` must not be
+    repurposed into one. So `ConditionReveal.allMet` is false forever and the egg is unreachable. The
+    slots: 01_grassland/pal, 14_farmland/worm, 02_river/beta, 09_lake/bluco, 07_mountains/lioll,
+    05_wasteland/gazi, 13_factory_town/pawnchesswhite + /pawnchessblack, 15_dungeon/ghost,
+    11_city_night/guil, 12_cyberpunk/v (+ 12_cyberpunk/agu2006 on `care.trainingSessions` LIFETIME,
+    also `.unknown`). **Left alone ON PURPOSE**, exactly as US-118 left the `MetricCreditor` wiring: the
+    drop engine is correct — an unanswerable condition is never met, the same way an evolution edge
+    gated on one never opens — and fixing it is a DATA story (move those windows to `lifetime`/`day`, or
+    add stage-scoped win/loss fields per US-084 note 4) that re-tunes difficulty and re-runs the whole
+    US-116/117 pass. A validator rule to catch "a metric/window `ConditionContext` can never answer"
+    would be the clean guard, but it would fail the shipped-clean sweep with 12 findings and so belongs
+    with the data fix, not here.
+  - **The `MetricCreditor` gap (US-118) still bites drops too.** `health.*` window totals
+    (`stageMetricTotals`, `stageBestDayMetrics`) are permanently zero in the shipped app until that
+    wiring story lands, so every `health.*` drop condition is also currently unmeetable by a real
+    player. Net: the ONLY slots a real player can currently earn are the ones gated purely on
+    `care.trainingSessions`/`care.overfeeds`/`care.sleepDisturbances` (all `stage`) — which ARE tracked
+    on `GameState` and answered. The engine needs no change when either wiring lands; the same slots
+    simply start coming due.
+  - **A dropped egg must be FROZEN at grant, not just inactive.** An unfrozen inactive record's timeline
+    keeps running (readings are derived from stored `Date`s — see `Freeze.swift`), so an egg left in the
+    box for a week would be a week old when finally activated. `grantDigitama` calls `freeze(at: now)`,
+    so US-125's thaw shifts it forward to a FRESH egg whenever it is taken out. The `-partyDemo` seed
+    does NOT freeze its inactive records, but that is a screenshot shortcut; the real grant path does.
+  - **Reuse `ConditionReveal.allMet`, do not re-implement "all met".** The map detail's ready mark, the
+    evolution engine and now the drop engine all read the one predicate, so a slot the detail told the
+    player was "Ready to find" is provably the slot that drops. A second reading would be a second
+    chance for the promise and the drop to disagree.
+  - **A model test that reads the box back should hold the SAME `GameStore` instance the model uses**
+    (`makeStore: { [store] in store }`, the BattleTests pattern), not open a second `GameStore` on the
+    same file — two containers on one SQLite file is a needless lock/consistency risk. Seed the store,
+    pass the instance, read the instance.
+  - **A drop check that follows an action must sit AFTER the action's own save** (or grant its own, as
+    `grantDigitama` does), so the thing the player did is on disk whether or not an egg then drops.
+- REMAINS: US-129 onward (15/56 passing). Phase C's drop engine is done; US-129's failsafe and Phase D's
+  Jogress are next. `MainScreenModel.heldDigitamaIds` and `GameStore.grantDigitama` are the seams
+  US-129/US-132 will reuse.
+---

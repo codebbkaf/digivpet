@@ -80,6 +80,12 @@ final class MainScreenModel: ObservableObject {
     /// The most recent stage transition awaiting its on-screen ceremony, or nil once shown.
     @Published private(set) var pendingEvolution: EvolutionEvent?
 
+    /// The most recent Digitama dropped by the selected map (US-128), awaiting its on-screen
+    /// announcement, or nil once acknowledged. The drop is already in the box and the Dex by the time
+    /// this is set — this is only how the player is told, the same shape `pendingEvolution` uses for
+    /// the ceremony.
+    @Published private(set) var pendingDigitamaDrop: DigitamaDropAnnouncement?
+
     /// The battle currently being played out on screen, or nil when none is. Already RESOLVED when it
     /// lands here — see `BattleBout` — so the screen replays a decided outcome rather than rolling.
     @Published private(set) var pendingBattle: BattleBout?
@@ -199,6 +205,11 @@ final class MainScreenModel: ObservableObject {
     private let playFeedHaptic: @MainActor () -> Void
     private let playTrainHaptic: @MainActor () -> Void
     private let makeBattleGenerator: () -> SeededGenerator
+    /// The seeded RNG one Digitama drop is chosen from (US-128). Separate from the battle generator
+    /// so a test can pin which of several eligible eggs drops without also fixing the battle roll,
+    /// and freshly seeded per check in the app so a map with several ready eggs does not always hand
+    /// back the first one.
+    private let makeDropGenerator: () -> SeededGenerator
     private let notifications: NotificationDispatcher
     /// The three notification toggles, handed to `NotificationSettingsView`. Owned here rather than
     /// created by the settings screen so the screen and the dispatcher read the same object — a
@@ -298,6 +309,9 @@ final class MainScreenModel: ObservableObject {
         makeBattleGenerator: @escaping () -> SeededGenerator = {
             SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
         },
+        makeDropGenerator: @escaping () -> SeededGenerator = {
+            SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
+        },
         notificationSettings: NotificationSettings? = nil,
         notificationDeliverer: PetNotificationDelivering? = nil
     ) {
@@ -313,6 +327,7 @@ final class MainScreenModel: ObservableObject {
         self.playTrainHaptic = playTrainHaptic
         self.actionDuration = actionDuration
         self.makeBattleGenerator = makeBattleGenerator
+        self.makeDropGenerator = makeDropGenerator
         let settings = notificationSettings ?? NotificationSettings()
         self.notificationSettings = settings
         self.notifications = NotificationDispatcher(
@@ -1080,6 +1095,10 @@ final class MainScreenModel: ObservableObject {
         // the same refresh is a natural no-op — never a double move.
         hatchIfReady(state)
         evolveIfReady(state)
+        // After the step accrual above and after the stage has settled (a hatch or evolution resets
+        // the stage counters a drop condition may read), the last of US-128's three drop checks: the
+        // one that fires for a day's walking. It saves for itself, before this refresh's own flush.
+        checkForDigitamaDrop()
         do {
             try store?.save()
         } catch {
@@ -1533,6 +1552,10 @@ final class MainScreenModel: ObservableObject {
         pendingTraining = nil
         let gain = TrainAction.finish(state, result: result)
 
+        // A training session was just counted (`TrainAction.begin` recorded it), so a slot gated on
+        // `care.trainingSessions` may have newly come due — US-128's after-a-train drop check.
+        checkForDigitamaDrop()
+
         playTrainHaptic()
         // The attack frame for a round that bought something. A miss gets the angry frame instead —
         // the round happened and it was not enough, which is a different thing to show than a
@@ -1860,6 +1883,10 @@ final class MainScreenModel: ObservableObject {
             // but a lost save does not pass in silence.
             Self.log.error("Could not save after battling: \(String(describing: error))")
         }
+        // The battle counters just moved, so a slot gated on `care.battleCount` or
+        // `care.battleWinRatio` may have newly come due — US-128's after-a-battle drop check. After
+        // the save above so the recorded result is on disk whether or not an egg then drops.
+        checkForDigitamaDrop()
     }
 
     /// Wakes a sleeping Digimon so the action the user just asked for can actually happen, and
@@ -2205,6 +2232,54 @@ final class MainScreenModel: ObservableObject {
     /// Clears the pending evolution once its ceremony has finished, so it plays exactly once.
     func acknowledgeEvolution() {
         pendingEvolution = nil
+    }
+
+    /// Checks the selected map for an egg the player has just earned, and awards at most one (US-128).
+    ///
+    /// Run at the three moments a condition can newly hold — after a train, after a battle, after a
+    /// step accrual tick — and NEVER on a timer, because a drop is a reward for a thing the player
+    /// did rather than for time passing. The engine collects the slots whose conditions are all met
+    /// and whose egg is not already HELD (US-127), then hands back one; an empty set awards nothing.
+    ///
+    /// The context is the same `ConditionContext` an evolution and the map detail's hints are judged
+    /// on, off the same saved state, so the egg that drops is exactly the one the detail promised was
+    /// "Ready to find". A dead active Digimon drops nothing — the three callers already refuse to run
+    /// on one, and this is belt to their braces.
+    private func checkForDigitamaDrop() {
+        guard let state, let store, let profile, state.healthStatus != .dead else { return }
+        let context = ConditionContext(state: state, now: now(), calendar: calendar)
+        let held = (try? store.heldDigitamaIds()) ?? []
+        var generator = makeDropGenerator()
+        guard let dropId = DigitamaDropEngine.award(
+            in: maps.map(id: profile.selectedMapId ?? ""),
+            context: context, held: held, using: &generator
+        ) else { return }
+
+        do {
+            try store.grantDigitama(dropId, now: now())
+        } catch {
+            // The egg simply is not awarded — the box is unchanged, so the same check next train or
+            // step will offer it again. Not worth interrupting the player over a failed flush.
+            Self.log.error("Could not grant dropped Digitama: \(String(describing: error))")
+            return
+        }
+        // Kept in step with the store the way `advance` does, so US-121's map detail reveals the egg
+        // the instant it drops rather than at the next launch.
+        discoveredDigimonIds.insert(dropId)
+        // The announcement, off the roster because most eggs have no graph node (only six are wired).
+        // A drop whose id the roster does not know is granted and recorded all the same — it simply
+        // shows no banner rather than a blank one — but the US-117 validator makes that unreachable
+        // for shipped data.
+        if let entry = roster.entry(id: dropId) {
+            pendingDigitamaDrop = DigitamaDropAnnouncement(
+                id: entry.id, displayName: entry.displayName,
+                spriteFile: entry.spriteFile, stage: entry.stage)
+        }
+    }
+
+    /// Clears the pending drop once its banner has been dismissed, so it shows exactly once.
+    func acknowledgeDigitamaDrop() {
+        pendingDigitamaDrop = nil
     }
 
     /// What to show on the memorial screen, or nil while the Digimon lives.

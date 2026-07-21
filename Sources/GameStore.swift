@@ -236,6 +236,29 @@ final class GameStore {
         return fresh
     }
 
+    /// Puts a Digitama the player found on a map (US-128) into the box, frozen and inactive.
+    ///
+    /// A dropped egg joins the box exactly as one activated out of it would sit — `isActive == false`
+    /// and frozen from the moment it dropped, so `heldDigitamaIds()` counts it at once (its
+    /// `originDigitamaId` defaults to itself) and US-125's clock leaves it untouched until the player
+    /// takes it out. The existing active Digimon is not disturbed: this only inserts, so the store
+    /// still holds exactly one out. Freezing here rather than at activation is what makes a boxed egg
+    /// "exactly as you left it" — thawed forward to a fresh egg whenever it is finally hatched.
+    ///
+    /// Records the egg in the Dex and notes it on the profile as ever-owned, like any discovery, and
+    /// saves all three together so a found egg, its first Dex entry and the owned note reach disk as
+    /// one transaction. Returns the inserted record.
+    @discardableResult
+    func grantDigitama(_ digitamaId: String, now: Date = Date()) throws -> GameState {
+        let egg = GameState(currentDigimonId: digitamaId, isActive: false, now: now)
+        egg.freeze(at: now)
+        context.insert(egg)
+        recordDiscovery(id: digitamaId, now: now)
+        try loadOrCreateProfile().record(ownedDigitama: digitamaId)
+        try context.save()
+        return egg
+    }
+
     /// Records a Digimon in the Dex the first time it is discovered.
     ///
     /// Idempotent: a Digimon already in the Dex is not duplicated and its `firstDiscovered` date is

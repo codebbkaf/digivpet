@@ -371,6 +371,18 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingEvolution)
+        // A dropped egg is announced over the game (US-128). Below the ceremony overlay, since a
+        // hatch or evolution is the bigger moment and should cover a drop banner if they ever
+        // coincide; a tap acknowledges it, which is what stops it showing twice.
+        .overlay {
+            if let drop = model.pendingDigitamaDrop {
+                DigitamaDropBanner(announcement: drop) {
+                    model.acknowledgeDigitamaDrop()
+                }
+                .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingDigitamaDrop)
         // The battle sits above the ceremony for the same reason the ceremony sits above the bars:
         // it is a moment, not a place, and the Feed and Train buttons underneath must not be
         // tappable through it. `finishBattle` is what files the win or loss and takes it down.

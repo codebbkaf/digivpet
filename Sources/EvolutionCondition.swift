@@ -77,6 +77,27 @@ enum ConditionMetric: String, CaseIterable {
     /// True for the HealthKit-backed family. Used by the validator's range rules and by US-061
     /// when it decides which criteria need an authorization grant.
     var isHealthMetric: Bool { rawValue.hasPrefix("health.") }
+
+    /// True for the seven HealthKit metrics that are typically iPhone- or feature-sourced and so are
+    /// usually EMPTY on a watch-only user's device — the set the type comment above names:
+    /// handwashing, toothbrushing, dietary water, time in daylight, environmental audio exposure,
+    /// low-cardio-fitness events and walking-steadiness events.
+    ///
+    /// The doc comment above already STATES the rule these metrics live under — a condition on one of
+    /// them "must be a bonus branch, never the only way out of a node, or an empty metric on real
+    /// hardware makes that Digimon unreachable". This property is what lets a validator ENFORCE it.
+    /// It matters more for a Digitama slot than for an evolution edge: a slot is the ONLY route to
+    /// its egg, so a slot gated solely on one of these is an egg no watch-only player can ever earn.
+    /// See `MapValidationError.soleSparseCondition` and US-128.
+    var isSparseOnHardware: Bool {
+        switch self {
+        case .healthHandwashing, .healthToothbrushing, .healthWater, .healthDaylight,
+             .healthAudioExposure, .healthLowCardioFitnessEvents, .healthWalkingSteadinessEvents:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 /// The span of history a condition's value is measured over.
