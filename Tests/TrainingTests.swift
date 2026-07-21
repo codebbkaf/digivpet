@@ -291,8 +291,8 @@ final class TrainApplyTests: XCTestCase {
         model.finishTraining(.good)
 
         XCTAssertEqual(model.state?.strengthStat, TrainAction.strengthGainPerTraining)
-        XCTAssertEqual(model.animation, .still(.attack))
-        XCTAssertEqual(model.animation.stageFrames, [.attack])
+        XCTAssertEqual(model.animation, .pose(.attack))
+        XCTAssertEqual(model.animation.stageFrames, [.attack, .walk1])
         XCTAssertEqual(SpriteFrame.attack.rawValue, 11)
         XCTAssertEqual(trainHaptics, 1)
         XCTAssertEqual(feedHaptics, 0, "training taps differently from feeding")

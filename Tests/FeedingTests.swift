@@ -295,7 +295,7 @@ final class FeedApplyTests: XCTestCase {
         let model = try await startedModel(named: "refuse", hunger: 0, vitality: 20)
 
         XCTAssertEqual(model.feed(), .refused)
-        XCTAssertEqual(model.animation, .still(.refuse))
+        XCTAssertEqual(model.animation, .pose(.refuse))
         XCTAssertEqual(SpriteFrame.refuse.rawValue, 6)
         XCTAssertEqual(hapticCount, 0, "nothing was eaten, so nothing taps")
     }

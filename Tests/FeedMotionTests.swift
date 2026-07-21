@@ -86,8 +86,27 @@ final class FeedMotionTests: XCTestCase {
         let model = try await startedModel(named: "refused", hunger: 0, vitality: 20)
 
         XCTAssertEqual(model.feed(), .refused)
-        XCTAssertEqual(model.animation, .still(.refuse), "the pose US-024 already published")
+        XCTAssertEqual(model.animation, .pose(.refuse), "the pose US-024 published, now looping (US-103)")
         XCTAssertEqual(model.actionMotion?.kind, .shake)
+    }
+
+    // MARK: - US-103: the refusal is a loop rather than one held frame
+
+    /// Two frames, and the refuse frame FIRST: a refusal that opened on the walk frame would read
+    /// as an ordinary step for half a second before the head turned away.
+    func testTheRefusalAlternatesBetweenTheRefuseFrameAndTheWalkFrame() async throws {
+        let model = try await startedModel(named: "refuseLoop", hunger: 0, vitality: 20)
+
+        XCTAssertEqual(model.feed(), .refused)
+        XCTAssertEqual(model.animation.stageFrames, [.refuse, .walk1])
+
+        // Sampled through the shipped index rule at the pose's own beat, so this is the drawing the
+        // screen actually puts up: what is shown at t is not what is shown at t + one beat.
+        let beat = model.animation.frameDuration
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        XCTAssertNotEqual(SpriteAnimation.frameIndex(at: start, count: 2, duration: beat),
+                          SpriteAnimation.frameIndex(at: start.addingTimeInterval(beat),
+                                                     count: 2, duration: beat))
     }
 
     /// A refusal has to be legible without reading the caption, and what makes it legible is that it

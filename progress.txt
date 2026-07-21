@@ -22,3 +22,34 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   nothing, Hashable in a Set and distinct from `.still` of the same frame.
 - PASSED: build green; full suite 1264 tests, 0 failures; SpriteAnimationTests 24/24.
 - REMAINS: US-103 onward. Nothing blocked.
+
+## 2026-07-21 — US-103: The Digimon actually moves when it refuses, trains and celebrates
+- Three call sites in Sources/MainScreenModel.swift moved from `.still(_)` to US-102's `.pose(_)`:
+  - :972 refusal -> `.pose(.refuse)`, still `motion: .shake`, still "Not hungry."
+  - :1066 training -> `.pose(.attack)` on a gain / `.pose(.angry)` on none, still `.lunge` / `.recoil`
+  - :1117 cleaning -> `.pose(.happy)`, still `motion: .hop`, still "All clean!"
+- NOT touched, deliberately: `ActionMotion` (frame swapping is added ALONGSIDE the displacement),
+  `restingPoses` (:915 — `.pose` is never a resting pose, so the set still matches
+  `restingAnimation` exactly), and `SpriteAnimation.resting(for: .dead)`, which is still
+  `.still(.hurt2)`: a corpse bobbing between two frames would read as alive.
+  BattleView.swift:389's `.still(.attack)` is US-105's, left alone.
+- Comments that would now contradict the code rewritten, not deleted: the training block's "Both
+  poses are single held frames", the refusal's "the refuse frame alone is a still pose", and
+  `clean()`'s "The happy frame, held".
+- Tests: 3 new (FeedMotionTests: the refusal's [refuse, walk1] and that the shipped index rule puts
+  a different frame up one beat later; CleanTrainMotionTests: all three outcomes pair with .walk1,
+  and the dead pose is STILL one held frame). 6 existing assertions moved from `.still` to `.pose`
+  across FeedingTests, FeedMotionTests, TrainingTests, TrainingRoundTests, CleanTrainMotionTests.
+- PASSED: build green; 1267 tests, 0 failures (was 1264 — the 3 new ones are the delta).
+- PASSED on the Simulator, 42mm (F4A12A1C — the 46mm still has the wedged notification alert the
+  last wave logged): `-healthAnswered -noNotificationPrompt -poopCleanDemo`, 16 screenshots at
+  ~0.13s. Lit-pixel count in the sprite tile takes exactly TWO values, 3518 and 3734, in runs of
+  four shots (~0.52s) — the 0.5s beat. Shots 01 and 05, 0.575s apart, differ. Counting lit pixels
+  rather than diffing them is the point: translation cannot change the count, so the hop cannot
+  explain the difference and only a FRAME SWAP can.
+  - Trap for the next screenshot story: uninstall before installing. A save left by an earlier run
+    can carry US-099's light OFF, and the scrim dims the sprite so far that a threshold picks up
+    only a fragment of it — the first burst read as "one drawing" purely because of that.
+  - The classifier was throwaway Swift at /tmp/burstclassify.swift, NOT committed: it hard-codes
+    this screen's crop, which moves the moment the layout does.
+- REMAINS: US-104 onward. Nothing blocked.

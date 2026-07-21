@@ -967,9 +967,10 @@ final class MainScreenModel: ObservableObject {
             // them, so a meal is something the Digimon does rather than something its art does.
             show(.eat, motion: .chew, message: nil)
         case .refused:
-            // The head-shake is what makes a refusal legible without reading the caption: the
-            // refuse frame alone is a still pose, and a still pose is what every block looks like.
-            show(.still(.refuse), motion: .shake, message: "Not hungry.")
+            // The refuse pose alternates with the walk frame, so the Digimon is drawn turning its
+            // head away rather than holding one picture; the head-shake dips that whole sprite side
+            // to side, which is what makes a refusal legible without reading the caption.
+            show(.pose(.refuse), motion: .shake, message: "Not hungry.")
         case .blocked(let reason):
             // No animation and NO MOTION: nothing happened to the Digimon, so it keeps idling and
             // only the reason appears. Either would read as the action having half-worked.
@@ -1053,17 +1054,16 @@ final class MainScreenModel: ObservableObject {
         let gain = TrainAction.finish(state, result: result)
 
         playTrainHaptic()
-        // The attack frame for a round that bought something, held: it is a pose in the sheet, not a
-        // loop, so there is no second frame to alternate with. A miss gets the angry frame instead —
+        // The attack frame for a round that bought something. A miss gets the angry frame instead —
         // the round happened and it was not enough, which is a different thing to show than a
         // successful blow. The caption names the currency, because the Digimon picked that itself
         // when the round opened and the bar dropping would otherwise be unexplained.
         //
-        // The motion is what makes the two outcomes tell themselves apart at a glance: a paid round
-        // LUNGES, forward in the direction the sprite faces and home again, and a miss RECOILS
-        // backward. Both poses are single held frames, so without the motion a miss and a landed
-        // blow are two stills that differ only in which sixteen-pixel drawing is up.
-        show(gain > 0 ? .still(.attack) : .still(.angry),
+        // Both are `.pose`, so the sheet frame alternates with the walk frame and the Digimon is
+        // seen swinging or bristling rather than being shoved about as one picture. The motion is
+        // the other half of telling the two outcomes apart at a glance: a paid round LUNGES, forward
+        // in the direction the sprite faces and home again, and a miss RECOILS backward.
+        show(gain > 0 ? .pose(.attack) : .pose(.angry),
              motion: gain > 0 ? .lunge : .recoil,
              message: "\(result.displayName) +\(gain) STR · -\(round.cost) \(round.spent.displayName)")
 
@@ -1099,10 +1099,10 @@ final class MainScreenModel: ObservableObject {
     /// intervals' worth of elapsed time and put all four poops straight back — cleaning would
     /// visibly undo itself. The clock starts again from the moment the user cleaned.
     ///
-    /// The happy frame, held: it is a pose in the sheet rather than a loop, and it is the one
-    /// action in the row whose whole reward is the Digimon being pleased about it. The hop is the
-    /// other half of that reward — a held still frame is what every BLOCKED action looks like, so
-    /// without the motion the happiest moment in the game reads the same as a refusal.
+    /// The happy frame, alternating with the walk frame: this is the one action in the row whose
+    /// whole reward is the Digimon being pleased about it, so it is drawn celebrating rather than
+    /// holding one picture. The hop is the other half of that reward — it lifts the whole sprite off
+    /// the floor, which no frame swap on its own can do.
     @discardableResult
     func clean() -> Bool {
         guard let state, state.poopCount > 0 else { return false }
@@ -1114,7 +1114,7 @@ final class MainScreenModel: ObservableObject {
         // below. A screen left to fill again is a new mess and earns a new notice.
         state.poopNotified = false
         notifications.cancel(.poop)
-        show(.still(.happy), motion: .hop, message: "All clean!")
+        show(.pose(.happy), motion: .hop, message: "All clean!")
 
         do {
             try store?.save()

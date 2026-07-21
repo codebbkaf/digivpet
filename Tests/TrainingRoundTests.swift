@@ -207,7 +207,7 @@ final class TrainingRoundTests: XCTestCase {
         model.train()
         model.finishTraining(.miss)
 
-        XCTAssertEqual(model.animation, .still(.angry))
+        XCTAssertEqual(model.animation, .pose(.angry))
         XCTAssertEqual(model.state?.strengthStat, 0)
         XCTAssertTrue(try XCTUnwrap(model.actionMessage).contains("+0 STR"))
     }

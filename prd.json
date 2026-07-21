@@ -46,8 +46,8 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "The three action call sites now show .pose(.refuse) / .pose(.attack) / .pose(.angry) / .pose(.happy) with their motions and captions unchanged; the dead pose is still .still(.hurt2) and ActionMotion is untouched. Contradicting comments rewritten. Build green, 1267 tests / 0 failures. Screenshot burst on the 42mm sim (-poopCleanDemo, 16 shots at 0.13s) shows the sprite tile alternating between two lit-pixel counts (3518 / 3734) in ~0.5s runs — two shots 0.575s apart differ."
     },
     {
       "id": "US-104",
