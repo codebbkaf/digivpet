@@ -89,6 +89,42 @@ extension MetricLedger {
         get { MetricTotals(values: creditedTodayStorage) }
         set { creditedTodayStorage = newValue.values }
     }
+
+    /// Starts the day's baselines over when the local day has turned.
+    ///
+    /// Yesterday's baseline is not today's — the readings restarted at zero at midnight too, so
+    /// keeping it would refuse to credit today until it out-walked yesterday.
+    ///
+    /// - Parameter calendar: decides when midnight is, and must be the one the readings were taken
+    ///   with. The app uses `.current` throughout.
+    func rollDay(to now: Date, calendar: Calendar = .current) {
+        let today = calendar.startOfDay(for: now)
+        guard day != today else { return }
+        day = today
+        creditedToday = .zero
+    }
+
+    /// Banks whatever part of this metric's whole-day reading has not been banked yet, and hands
+    /// that delta back to the caller.
+    ///
+    /// **The one place the de-duplication rule lives**, so every consumer of a metric — the stage
+    /// and lifetime totals `MetricCreditor` keeps, and the per-map step accrual of US-118 — is
+    /// spending the SAME delta rather than each computing its own from a private baseline. Two
+    /// baselines over one reading is how "walking 1,000 steps credited the map 2,000" happens.
+    ///
+    /// `max(0,)`: a day's reading can go DOWN. Health data can be deleted from the Health app, and
+    /// a source can revise a sample downward. Progress is never taken back.
+    ///
+    /// A claimed delta is spent: calling this twice for the same reading returns 0 the second time.
+    /// That is the point of it, and it is also the constraint on adding a second caller — see
+    /// `MainScreenModel.creditMapSteps`, which is today the only claimer of `health.steps`.
+    func claim(_ metric: ConditionMetric, dayTotal: Double, now: Date, calendar: Calendar = .current) -> Double {
+        rollDay(to: now, calendar: calendar)
+        let delta = max(0, dayTotal - creditedToday[metric])
+        guard delta > 0 else { return 0 }
+        creditedToday[metric] += delta
+        return delta
+    }
 }
 
 /// Banks a day's per-metric readings into the stage, lifetime and best-day totals a `window:`
@@ -111,14 +147,7 @@ enum MetricCreditor {
         now: Date,
         calendar: Calendar = .current
     ) -> MetricTotals {
-        let today = calendar.startOfDay(for: now)
-        if ledger.day != today {
-            // A new day. Yesterday's baseline is not today's — the readings restarted at zero at
-            // midnight too, so keeping it would refuse to credit today until it out-walked
-            // yesterday.
-            ledger.day = today
-            ledger.creditedToday = .zero
-        }
+        ledger.rollDay(to: now, calendar: calendar)
 
         var credited = MetricTotals.zero
         for (metric, reading) in readings {
@@ -132,13 +161,11 @@ enum MetricCreditor {
                 state.stageBestDayMetrics[metric] = dayTotal
             }
 
-            // `max(0,)`: a day's reading can go DOWN. Health data can be deleted from the Health
-            // app, and a source can revise a sample downward. Progress is never taken back — a
-            // Digimon does not un-earn a stage because the watch changed its mind.
-            let delta = max(0, dayTotal - ledger.creditedToday[metric])
+            // Through `claim` rather than inline, so this and US-118's map accrual share one
+            // baseline and one "a reading can go DOWN" rule — see `MetricLedger.claim`.
+            let delta = ledger.claim(metric, dayTotal: dayTotal, now: now, calendar: calendar)
             guard delta > 0 else { continue }
             credited[metric] = delta
-            ledger.creditedToday[metric] += delta
             // Both totals accrue in the same place so they cannot drift apart. They diverge only
             // where they are meant to: `enterStage` clears the stage totals and leaves the
             // lifetime ones standing.

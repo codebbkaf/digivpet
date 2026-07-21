@@ -80,6 +80,31 @@ enum EnergyCreditor {
     }
 }
 
+/// One refresh's health read, before anything has been made of it.
+///
+/// Exists so the readings can be spent twice without being read twice: energy wants them keyed by
+/// `EnergyType` and converted at `EnergyRates`, while US-118's map accrual wants the raw step
+/// count. Keeping both off one read is what makes "the map is credited from the SAME reading the
+/// energy came from" structurally true rather than a comment.
+struct HealthDayReadings {
+    /// Today's totals for the three daily quantities, keyed as they were read.
+    let quantities: [QuantityMetric: HealthReading]
+
+    /// Last night's asleep minutes — a different window and a different reader. See
+    /// `HealthEnergySource`.
+    let sleep: HealthReading
+
+    /// What `EnergyCreditor` takes: one reading per energy type, sleep included as Spirit.
+    var byEnergyType: [EnergyType: HealthReading] {
+        var readings: [EnergyType: HealthReading] = [:]
+        for (metric, reading) in quantities {
+            readings[metric.energyType] = reading
+        }
+        readings[.spirit] = sleep
+        return readings
+    }
+}
+
 /// Reads all four energy metrics: the three daily quantities, plus last night's sleep.
 ///
 /// The two readers exist because the questions differ — Spirit comes from a category type over a
@@ -101,12 +126,19 @@ struct HealthEnergySource {
     /// Every energy type's whole-day reading. Each is read independently, so one denied or failing
     /// metric costs its own energy type and nothing else.
     func readings(now: Date) async -> [EnergyType: HealthReading] {
-        var readings: [EnergyType: HealthReading] = [:]
-        for (metric, reading) in await todayReader.readToday(now: now) {
-            readings[metric.energyType] = reading
-        }
-        readings[.spirit] = await sleepReader.read(now: now)
-        return readings
+        await dayReadings(now: now).byEnergyType
+    }
+
+    /// The same one read, kept in the shape it was read in.
+    ///
+    /// US-118 needs the STEP total specifically — a map records steps, not Strength — and
+    /// `byEnergyType` has already thrown that away: `.strength` says how much energy the steps
+    /// bought, capped and divided by the rate, which is not a number of steps. Reading HealthKit a
+    /// second time for it would be a second read of the same day, one refresh apart, and the two
+    /// answers would not have to agree.
+    func dayReadings(now: Date) async -> HealthDayReadings {
+        HealthDayReadings(quantities: await todayReader.readToday(now: now),
+                          sleep: await sleepReader.read(now: now))
     }
 
     /// Last night's longest asleep block, or nil if there was none to read.

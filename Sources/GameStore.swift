@@ -10,7 +10,8 @@ import SwiftData
 final class GameStore {
     /// Every model that gets persisted. Adding a `@Model` type means adding it here too, or it
     /// silently will not be saved.
-    static let schema = Schema([GameState.self, EnergyLedger.self, MetricLedger.self, DexEntry.self])
+    static let schema = Schema([GameState.self, EnergyLedger.self, MetricLedger.self, DexEntry.self,
+                                MapProgress.self])
 
     let container: ModelContainer
 
@@ -153,6 +154,21 @@ final class GameStore {
             return saved
         }
         let fresh = MetricLedger(day: calendar.startOfDay(for: now))
+        context.insert(fresh)
+        try context.save()
+        return fresh
+    }
+
+    /// The player's map progress, starting an empty one if there is none yet.
+    ///
+    /// Untouched by `resetGame` and `rebirth`, and that is the whole point of it being its own
+    /// record: the sixteen maps outlive the Digimon that walked them, so a death must not send the
+    /// player back to the start of the grassland. See `MapProgress`.
+    func loadOrCreateMapProgress() throws -> MapProgress {
+        if let saved = try context.fetch(FetchDescriptor<MapProgress>()).first {
+            return saved
+        }
+        let fresh = MapProgress()
         context.insert(fresh)
         try context.save()
         return fresh

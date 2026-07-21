@@ -162,14 +162,12 @@ final class MainScreenModel: ObservableObject {
     /// The asset-catalog name of the map the Digimon is adventuring in (US-115), or nil for "no map
     /// selected" — which draws no background at all and leaves the screen exactly as US-114 left it.
     ///
-    /// **Nil for every save today, and that is correct rather than unfinished.** US-115 ships the
-    /// drawing; the catalog that names the sixteen maps is US-116, and the picker that persists a
-    /// choice onto `PlayerProfile` is US-119. When that lands, this becomes a read of the profile's
-    /// selected map id resolved through the catalog, and the view above it does not change — which
-    /// is the point of putting the seam here rather than reaching for the asset name from the view.
+    /// Since US-118 this is the saved selection on `MapProgress`, resolved through the catalog:
+    /// `selectMap(_:)` is what moves it, and the view above it did not change — which is the point
+    /// of the seam being here rather than the view reaching for an asset name itself. Still nil on
+    /// a save that has never chosen a map, which is every save until US-120 ships the picker.
     ///
-    /// Until then the only thing that can set it is `-mapDemo=<asset>`, which is how the story's
-    /// screenshots were taken.
+    /// `-mapDemo=<asset>` still overrides it, which is how US-115's screenshots were taken.
     @Published private(set) var selectedMapAsset: String?
 
     private let makeStore: @MainActor () throws -> GameStore
@@ -180,6 +178,10 @@ final class MainScreenModel: ObservableObject {
     /// `MinigameAssignment` offers and half of it is not worth the saving. Injected alongside `graph`
     /// so a test on a fixture graph can hand over a matching fixture roster.
     private let roster: Roster
+    /// The sixteen adventure maps. Injected alongside `graph` and `roster` for the same reason: a
+    /// test drives step accrual against a two-map fixture catalog rather than against whatever
+    /// `maps.json` currently says a map is worth.
+    private let maps: MapCatalog
     private let energySource: HealthEnergySource
     private let calendar: Calendar
     private let now: () -> Date
@@ -233,6 +235,11 @@ final class MainScreenModel: ObservableObject {
 
     private var store: GameStore?
     private var ledger: EnergyLedger?
+    /// The de-duplication baseline for raw health readings. Held for US-118's step accrual: the map
+    /// is credited the delta this ledger claims, never the day's total.
+    private var metricLedger: MetricLedger?
+    /// The player's map progress. Nil only before `start()`.
+    private(set) var mapProgress: MapProgress?
     private var isRefreshing = false
     private var actionResetTask: Task<Void, Never>?
 
@@ -269,6 +276,7 @@ final class MainScreenModel: ObservableObject {
         makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
         graph: EvolutionGraph = .bundled,
         roster: Roster = .bundled,
+        maps: MapCatalog = .bundled,
         energySource: HealthEnergySource = HealthEnergySource(),
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init,
@@ -285,6 +293,7 @@ final class MainScreenModel: ObservableObject {
         self.makeStore = makeStore
         self.graph = graph
         self.roster = roster
+        self.maps = maps
         self.energySource = energySource
         self.calendar = calendar
         self.now = now
@@ -336,7 +345,10 @@ final class MainScreenModel: ObservableObject {
                 let store = try makeStore()
                 self.state = try store.loadOrCreate(digitamaId: digitamaId, now: now())
                 self.ledger = try store.loadOrCreateLedger(now: now(), calendar: calendar)
+                self.metricLedger = try store.loadOrCreateMetricLedger(now: now(), calendar: calendar)
+                self.mapProgress = try store.loadOrCreateMapProgress()
                 self.store = store
+                publishSelectedMap()
                 self.phase = .playing
             } catch {
                 self.phase = .failed(String(describing: error))
@@ -788,20 +800,34 @@ final class MainScreenModel: ObservableObject {
     }
 
     /// Debug-only: selects a map to draw behind the Digimon, since nothing can select one yet — the
-    /// picker is US-119 and the catalog it picks from is US-116.
+    /// picker is US-120.
     ///
     /// `-mapDemo=01_grassland`, taking the asset name inline rather than one flag per map: there are
     /// sixteen backgrounds and US-115 has to be photographed over the three brightest of them.
     ///
-    /// Unvalidated on purpose. This sets the name the shipped view will draw, so a typo screenshots
-    /// the missing-resource placeholder — which is the honest result, and cheaper to spot than a
-    /// silent fallback to grassland would be.
+    /// Since US-118 it names a real map where it can: if a catalog map draws that asset, the demo
+    /// goes through the shipped `selectMap(_:)`, so the run also accrues steps and can be
+    /// screenshotted with progress on it. An asset no map uses still just draws — unvalidated on
+    /// purpose, so a typo screenshots the missing-resource placeholder, which is the honest result
+    /// and cheaper to spot than a silent fallback to grassland.
+    ///
+    /// **`-mapDemo=none` is its inverse, and exists because the selection is now SAVED.** A demo
+    /// flag that writes to the store and has no way back poisons every screenshot taken on that
+    /// container afterwards, silently, since the shot still looks plausible — which is exactly what
+    /// `-lightOffDemo` cost US-115 an hour of. Pass `none` to go back to no map at all.
     private func seedMapDemoIfRequested() {
         let prefix = "-mapDemo="
         guard let argument = CommandLine.arguments.first(where: { $0.hasPrefix(prefix) }) else {
             return
         }
-        selectedMapAsset = String(argument.dropFirst(prefix.count))
+        let asset = String(argument.dropFirst(prefix.count))
+        if asset == "none" || asset.isEmpty {
+            selectMap(nil)
+        } else if let map = maps.maps.first(where: { $0.assetName == asset }) {
+            selectMap(map.id)
+        } else {
+            selectedMapAsset = asset
+        }
     }
 
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
@@ -880,9 +906,14 @@ final class MainScreenModel: ObservableObject {
         // so it is settled before the health read rather than after it.
         state.advancePoop(isAsleep: isAsleep, now: now())
 
-        let readings = await energySource.readings(now: now())
+        let dayReadings = await energySource.dayReadings(now: now())
+        let readings = dayReadings.byEnergyType
         let credited = EnergyCreditor.credit(readings, to: state, ledger: ledger, now: now(),
                                              calendar: calendar)
+        // Beside the energy credit and off the SAME read, because a map records the steps that
+        // bought that energy — see `creditMapSteps`. Before the evolution and hatch checks below
+        // only because everything is; nothing here depends on it.
+        creditMapSteps(dayReadings.quantities[.steps] ?? .noData)
         // After crediting and before evolving, because `careMistakeCount` is one of the things an
         // edge is gated on — an audit run after `evolveIfReady` would let a neglected Digimon take
         // a branch it had just disqualified itself from, one refresh late.
@@ -937,6 +968,57 @@ final class MainScreenModel: ObservableObject {
         // Last, once every rule above has settled: the complication must never show a Digimon
         // mid-refresh — hatched but not yet evolved, or sick but not yet dead.
         publishComplicationSnapshot()
+    }
+
+    /// Accrues the steps this read brought in to the map the player is adventuring in (US-118).
+    ///
+    /// The delta is claimed off `MetricLedger`, which is the ledger that remembers what of today's
+    /// STEP TOTAL has already been banked. That is the whole story of this method: a health reading
+    /// is a cumulative day total — 4,000 steps at noon and still those same 4,000 at 18:00 — so a
+    /// map credited the reading would gain 4,000 more every time the app was opened. It is claimed
+    /// through the shared `claim` rather than against a private baseline of its own, so the day a
+    /// second consumer of `health.steps` arrives the two are spending one delta and not two.
+    ///
+    /// Called from `refresh` alone, so the map is credited from the same read that bought the
+    /// energy — and only ever the map that is selected AT THE MOMENT OF THE READ. Steps banked
+    /// while a different map was selected stay where they were put: nothing here can reach them,
+    /// because the ledger has already spent them and only the counter they landed on remembers.
+    ///
+    /// Nothing accrues from `noData` or `unavailable`. Being told nothing is not being told zero —
+    /// the same rule as everywhere else here — and a zero would in any case credit nothing.
+    private func creditMapSteps(_ stepsToday: HealthReading) {
+        guard let metricLedger, let mapProgress else { return }
+        guard case .value(let dayTotal) = stepsToday else { return }
+        let delta = metricLedger.claim(.healthSteps, dayTotal: dayTotal, now: now(),
+                                       calendar: calendar)
+        MapStepCreditor.credit(steps: delta, to: mapProgress, catalog: maps, now: now())
+    }
+
+    /// Chooses the map the Digimon is adventuring in, from here on.
+    ///
+    /// Not retroactive, and that is the design: steps already credited to the previous map stay
+    /// there. Only what is read AFTER this accrues to the new one, which is what makes a map a
+    /// place you went rather than a filter over your day.
+    ///
+    /// Passing an id the catalog does not know, or nil, leaves the player nowhere — legal, and what
+    /// a fresh save already is. US-120's list is the caller.
+    func selectMap(_ id: String?) {
+        guard let mapProgress else { return }
+        mapProgress.selectedMapId = id
+        publishSelectedMap()
+        do {
+            try store?.save()
+        } catch {
+            // In-memory selection is kept: the screen already shows the new map, and the next
+            // refresh saves it. Same call as `refresh`'s — a failed flush is not worth taking the
+            // screen away from the user, but it does not pass in silence.
+            Self.log.error("Could not save the map selection: \(String(describing: error))")
+        }
+    }
+
+    /// Republishes the background asset from the saved selection. The one place the two are joined.
+    private func publishSelectedMap() {
+        selectedMapAsset = mapProgress?.selectedMapId.flatMap { maps.map(id: $0)?.assetName }
     }
 
     /// The pose the Digimon returns to when nothing else is happening: the slow hurt loop while it

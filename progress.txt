@@ -291,3 +291,75 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-118 onward (4/56 passing). The map data is now guarded end to end — US-118 starts
   the behaviour half of Phase B by accruing steps to the selected map.
 ---
+
+## 2026-07-22 — US-118: Steps accrue to the selected map
+- `Sources/MapProgress.swift` (new): `@Model MapProgress` — ONE global record holding
+  `selectedMapId`, `[mapId: recordedSteps]` and `[mapId: finishedAt]`, in `MetricLedger`'s
+  dictionary shape — plus `MapStepCreditor.credit(steps:to:catalog:now:)` beside `EnergyCreditor`
+  and `MetricCreditor`. Sixteen rows that are only ever read together are not sixteen records.
+- `Sources/MetricLedger.swift`: new `MetricLedger.claim(_:dayTotal:now:calendar:)` and `rollDay`.
+  `MetricCreditor` was refactored onto them, so the day-roll and the `max(0, total - baseline)`
+  rule now live in exactly ONE place and the map spends the same delta any later metric consumer
+  will. This is AC3 made structural rather than promised.
+- `Sources/EnergyLedger.swift`: new `HealthDayReadings` + `HealthEnergySource.dayReadings(now:)`,
+  keeping one read in both shapes — `byEnergyType` for energy, `quantities[.steps]` for the map.
+  `readings(now:)` is now a one-line wrapper, so every existing caller and fixture is untouched.
+- `Sources/GameStore.swift`: `MapProgress` added to `schema` + `loadOrCreateMapProgress()`.
+- `Sources/MainScreenModel.swift`: holds `metricLedger` and `mapProgress`, takes `maps:` (injected
+  like `graph`/`roster`), and gains `selectMap(_:)` and `creditMapSteps(_:)`. `selectedMapAsset` is
+  now published FROM the saved selection through the catalog — the US-115 seam, repointed as that
+  story predicted, with the view unchanged.
+- Files: Sources/MapProgress.swift (new), Sources/MetricLedger.swift, Sources/EnergyLedger.swift,
+  Sources/GameStore.swift, Sources/MainScreenModel.swift, Tests/MapProgressTests.swift (new, 23
+  tests). No project.yml change — `Sources` and `Tests` are directory globs.
+- PASSED: build green. `Executed 1386 tests, with 0 failures` (1363 + the 23 new). All 23 were also
+  observed passing on their own with `-only-testing`, grepped rather than inferred.
+- PASSED, criterion by criterion:
+  - AC4, THE ONE THAT MATTERS: 1,000 steps read twice through the real `refresh()` credits the map
+    1,000. A day that grew to 1,600 credits 600 more, not 1,600 more.
+  - AC2/AC5: 600 steps on `first`, switch, 400 more -> `first` still 600 and `second` 400. Steps
+    walked BEFORE any map was chosen credit nothing.
+  - AC6: 999 does not finish a 1,000-step map and 1,000 does; a second and a third crossing keep
+    the FIRST stamp. AC7: the counter runs on to 4,500 on that same 1,000-step map.
+  - AC1: a second `MainScreenModel` over the same store file — which is what a cold launch is —
+    reads back the steps, the stamp and the selection, and publishes `01_grassland` behind the
+    Digimon again.
+  - AC8: the clock is injected, every reading comes from a `FixtureSampleFetcher`, nothing waits.
+  - Extra, not asked for but cheap: map progress survives a `rebirth`, because `resetGame` deletes
+    only the `GameState`. US-123/129 both depend on that staying true.
+- **Learnings for future iterations:**
+  - **`MetricCreditor` HAS NEVER BEEN WIRED INTO THE APP, and that is a real bug waiting for a
+    story.** US-058 built `MetricLedger`/`MetricCreditor` and deliberately left the wiring to a
+    "which metrics are worth reading every refresh" story that was never written. Nothing in
+    `Sources/` calls `MetricCreditor.credit` — so `state.stageMetricTotals` is permanently zero in
+    the shipped app, and the **78 `window: "stage"` conditions in evolutions.json** (15 of them on
+    `health.steps`) can never be satisfied by a real player. It was left alone here ON PURPOSE:
+    wiring it changes evolution eligibility across the entire game and belongs in its own story
+    with its own regression pass, not inside a map-accrual story. Whoever takes it: credit through
+    `MetricLedger.claim` and have `creditMapSteps` read `credited[.healthSteps]` instead of
+    claiming for itself — that is a two-line change and the doc comments on both point at it.
+    Do NOT bank `health.sleep` through the same day-roll without thinking: its window is 18:00
+    yesterday to noon today, not the local day `rollDay` keys on.
+  - **A delta is SPENT once it is claimed, so decide deliberately who claims it.** With no map
+    selected this story claims the step delta and DROPS it. The alternative — not claiming — would
+    let a player who picks a map at 18:00 retroactively bank the whole day into it, which is
+    exactly what "only steps read while that map is selected accrue to it" forbids. Six of the new
+    tests failed on the first run because of this and they were RIGHT to: `start()` performs a
+    refresh, so a fixture walked before `start()` is already banked by the time a test selects a
+    map. Select the map first, then walk.
+  - **Do not derive a raw measurement back out of an energy figure.** `readings[.strength]` is
+    steps ÷ 100, capped by `EnergyRates.dailyCapPerEnergyType` — it is not a number of steps and
+    cannot be turned back into one. That is why `dayReadings` exists; the alternative, a second
+    HealthKit read for the map, would be two answers about one day taken microseconds apart with
+    no reason to agree.
+  - **A demo flag that writes to the SAVE needs its inverse in the same commit.** `-mapDemo=` now
+    persists the selection, so it would have poisoned every later screenshot on that container the
+    way `-lightOffDemo` did to US-115. `-mapDemo=none` clears it. The Codebase Patterns entry
+    above was written from that exact bruise; this is the first flag to obey it up front.
+  - `MapProgress` is one record with three properties and no relationships specifically so US-123
+    can MOVE those fields onto `PlayerProfile` rather than rewrite them. It is already the thing
+    US-123's AC describes.
+- REMAINS: US-119 onward (5/56 passing). Phase B's data and accrual are done; US-119 is the first
+  screen that reads them, and `MapProgress.recordedByMap` + `finishedAt(forMap:)` are what it
+  wants. `MainScreenModel.selectMap(_:)` is already the call US-120's list makes.
+---
