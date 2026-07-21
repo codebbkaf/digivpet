@@ -12,6 +12,18 @@ struct BattleBout: Equatable {
     let player: DigimonPresentation
     let opponent: DigimonPresentation
     let report: BattleReport
+
+    /// Each side's attack identity from the `MoveCatalog` (US-070), resolved once when the bout is
+    /// built — where the ids are still to hand — so the view never has to reach for the graph or a
+    /// bundle to know what colour a projectile flies. Defaulted to `Move.placeholder` so a test or a
+    /// preview that only cares about the frames need not name a move.
+    var playerMove: Move = .placeholder
+    var opponentMove: Move = .placeholder
+
+    /// The attacking side's move, so the projectile is tinted and shaped by whoever is swinging.
+    func move(for side: BattleSide) -> Move {
+        side == .player ? playerMove : opponentMove
+    }
 }
 
 /// The full-screen battle: two Digimon trading blows, then the result.
@@ -65,13 +77,16 @@ struct BattleView: View {
     /// facing left, so the arena reads as a fight rather than as two Digimon both looking the same way.
     private var arena: some View {
         VStack(spacing: 6) {
-            HStack(spacing: 8) {
-                DigimonSpriteView(stage: bout.player.spriteStage, name: bout.player.spriteFile,
-                                  animation: animation(for: .player), scale: 3,
-                                  flipped: Self.faces(.player))
-                DigimonSpriteView(stage: bout.opponent.spriteStage, name: bout.opponent.spriteFile,
-                                  animation: animation(for: .opponent), scale: 3,
-                                  flipped: Self.faces(.opponent))
+            ZStack {
+                HStack(spacing: 8) {
+                    DigimonSpriteView(stage: bout.player.spriteStage, name: bout.player.spriteFile,
+                                      animation: animation(for: .player), scale: 3,
+                                      flipped: Self.faces(.player))
+                    DigimonSpriteView(stage: bout.opponent.spriteStage, name: bout.opponent.spriteFile,
+                                      animation: animation(for: .opponent), scale: 3,
+                                      flipped: Self.faces(.opponent))
+                }
+                projectile
             }
 
             Text(bout.opponent.displayName)
@@ -86,6 +101,42 @@ struct BattleView: View {
                 .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
         }
+    }
+
+    /// The attacker's projectile mid-flight (US-072): drawn only during an exchange, tinted and
+    /// shaped by the attacker's `MoveCatalog` move, sliding from the attacker toward the defender as
+    /// `projectileProgress` runs 0 → 1 over `turnDuration`. Its direction is read off `faces(attacker)`
+    /// so the opponent's shots fly leftward out of its front rather than backward out of its back.
+    ///
+    /// `.interpolation(.none)` is not needed here — an SF Symbol is a vector, not the pixel art the
+    /// sprites are, so scaling it stays crisp on its own.
+    @ViewBuilder private var projectile: some View {
+        if case .turn(let index) = beat, index < bout.report.turns.count {
+            let move = bout.move(for: bout.report.turns[index].attacker)
+            Image(systemName: move.projectileSymbol)
+                .font(.system(size: 15, weight: .bold))
+                .foregroundStyle(move.tint.color)
+                .offset(x: Self.projectileOffset(
+                    rightward: Self.faces(bout.report.turns[index].attacker),
+                    progress: projectileProgress,
+                    span: Self.projectileSpan))
+        }
+    }
+
+    /// How far the projectile travels, point to point — roughly the gap between the two sprites'
+    /// centres (each 16pt of art at scale 3, plus the HStack's 8pt spacing), so it reads as leaving
+    /// the attacker and reaching the defender.
+    static let projectileSpan: CGFloat = 56
+
+    /// How far along its flight the current projectile is, 0 at the attacker and 1 at the defender.
+    /// Reset to 0 and re-animated on every exchange in `run()`.
+    @State private var projectileProgress: CGFloat = 0
+
+    /// The projectile's horizontal offset from the arena centre, as a pure function so the flight can
+    /// be asserted without a view. A rightward (player) shot runs from `-span/2` to `+span/2`; a
+    /// leftward (opponent) shot mirrors it, from `+span/2` back to `-span/2`.
+    static func projectileOffset(rightward: Bool, progress: CGFloat, span: CGFloat) -> CGFloat {
+        rightward ? span * (progress - 0.5) : span * (0.5 - progress)
     }
 
     /// The outcome: the winner's happy frame (7) on a win, the player's hurt frame on a loss.
@@ -181,7 +232,12 @@ struct BattleView: View {
         try? await Task.sleep(for: .seconds(introDuration))
 
         for index in bout.report.turns.indices {
+            // Snap the projectile back to the attacker (no animation), then fly it across the gap
+            // over the exchange's own beat — so impact lands as the exchange ends and the defender is
+            // already in its hurt loop. Driven off `turnDuration`, so a test still runs in milliseconds.
+            projectileProgress = 0
             withAnimation(.easeInOut(duration: 0.15)) { beat = .turn(index) }
+            withAnimation(.linear(duration: turnDuration)) { projectileProgress = 1 }
             try? await Task.sleep(for: .seconds(turnDuration))
         }
 
@@ -196,6 +252,31 @@ struct BattleView: View {
         #if canImport(WatchKit)
         WKInterfaceDevice.current().play(playerWon ? .success : .failure)
         #endif
+    }
+}
+
+extension MoveTint {
+    /// The SwiftUI colour a move is drawn in. Deferred here from US-070 (`MoveCatalog` is pure
+    /// Foundation and draws nothing) to the renderer that first needs it. The enum's names mirror
+    /// SwiftUI's system colours, so the mapping is exhaustive with no `default:` — adding a tint to
+    /// `MoveTint` is a compile error here until it is given a colour, rather than silently drawing grey.
+    var color: Color {
+        switch self {
+        case .red: return .red
+        case .orange: return .orange
+        case .yellow: return .yellow
+        case .green: return .green
+        case .mint: return .mint
+        case .teal: return .teal
+        case .cyan: return .cyan
+        case .blue: return .blue
+        case .indigo: return .indigo
+        case .purple: return .purple
+        case .pink: return .pink
+        case .brown: return .brown
+        case .gray: return .gray
+        case .white: return .white
+        }
     }
 }
 

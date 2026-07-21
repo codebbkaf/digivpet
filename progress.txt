@@ -1270,3 +1270,62 @@ FOR THE NEXT ITERATION (US-072 — projectiles fly on each exchange)
    (0.7s, driven from `run()`), so a whole battle still resolves in milliseconds in tests.
 4. `-battleTurnDemo` is the flag that freezes one exchange for a screenshot; `-battleResultDemo`
    lands on the result. Both already exist in `MainScreenModel.seedBattleDemoIfRequested`.
+
+================================================================================
+2026-07-21 — US-072 — Projectiles fly on each exchange — PASSES
+================================================================================
+
+WHAT SHIPPED
+
+On each BattleTurn the attacker's projectile now flies from attacker toward defender, tinted with
+the attacker's MoveCatalog move (US-070). No BattleEngine change — presentation only.
+
+- `BattleBout` gains `playerMove` / `opponentMove`, DEFAULTED to `Move.placeholder`. Defaulted on
+  purpose: the synthesized memberwise init keeps the property defaults, so the two existing
+  construction sites that only care about frames (BattleViewHapticTests.makeBout, the #Preview)
+  compile untouched. `move(for: BattleSide)` returns the attacker's move.
+- `MainScreenModel.battle()` resolves both moves via `MoveCatalog.bundled.move(forId:line:stage:)`.
+  Both combatants ARE graph nodes (player from graph, opponent from BattleMatchmaker over
+  graph.nodes), so the PURE two-tier core answers with the node's line+stage — no roster needed.
+- `BattleView`: the arena's sprite HStack is now inside a ZStack with a `projectile` overlay. The
+  projectile is an `Image(systemName: move.projectileSymbol)` tinted `move.tint.color`, offset by a
+  new PURE static `projectileOffset(rightward:progress:span:)`. Direction is read off
+  `faces(attacker)` (US-071's single source of truth), so the opponent's shot flies out its FRONT,
+  not backward out of its back. `run()` snaps `projectileProgress` to 0 (no animation) then animates
+  it 0→1 with `.linear(duration: turnDuration)` — driven by the EXISTING injectable turnDuration, so
+  a whole battle still resolves in ms in tests.
+- New `MoveTint.color` extension in BattleView.swift — an exhaustive switch (no `default:`), the
+  SwiftUI Color mapping US-070 note 6 deliberately DEFERRED to the renderer. Adding a MoveTint case
+  without a colour is now a compile error here rather than a grey projectile at battle time.
+
+DESIGN CALLS THE NEXT ITERATION SHOULD KNOW (US-073 — signature move on the knockout)
+
+1. **The ordinary projectile is drawn for EVERY turn, including the knockout turn, today.** US-073
+   must swap it for the winner's `signatureSymbol` (larger) + `signatureName` banner on the turn
+   where `isKnockout` is true. The seam is already there: `bout.move(for:)` carries the signature
+   fields, and the knockout turn is `bout.report.turns.last` / `turn.isKnockout`. Do NOT touch
+   BattleEngine (AC) — `BattleTurn.isKnockout` already exists (Battle.swift:51).
+2. **`projectileSpan` (56pt) is centre-to-centre of the two scale-3 sprites.** A larger signature
+   glyph will want the same offset path but a bigger `.font` size; reuse `projectileOffset`.
+3. **`.interpolation(.none)` is NOT applied to the projectile and must not be** — an SF Symbol is a
+   vector, not the pixel art the sprites are; it scales crisply on its own. That rule is only for the
+   sprite sheets.
+
+VERIFIED (all observed, none assumed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   861 passed / 0 failures (was 856; +5 all mine in BattleFrameTests). BattleEngine,
+          BattleTests' existing assertions and BattlePowerTests all untouched and green (AC6).
+  AC1/2   `testAPlayerProjectileFliesLeftToRight` / `testAnOpponentProjectileFliesRightToLeft` /
+          `testTheTwoDirectionsAreMirrored` pin the pure offset at progress 0/0.5/1 both ways.
+  AC3     `testTheProjectileTakesTheAttackersMove` + `testEveryMoveTintHasAColour`.
+  AC4     Frame assignment preserved — `animation(for:during:)` UNTOUCHED, so
+          `testTheAttackerAttacksAndTheDefenderIsHurtOnEveryTurn` still holds; impact lands as the
+          flight ends and the defender is already in its hurt loop.
+  AC7     Screenshot, Series 11 46mm, `-battleTurnDemo -noNotificationPrompt -healthAnswered`
+          (stretches one exchange to 60s). Two frames 6s apart: an orange `flame.fill` leaving
+          Agumon on the LEFT, then visibly further right toward Cyclomon on the right — orange is
+          Agumon's authored tint, crisp, name "Cyclomon" and HP "10 — 8" both intact.
+          /tmp/us072_projectile.png and /tmp/us072_projectile2.png.
+
+Next: US-073 (signature move on the finishing blow).

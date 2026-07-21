@@ -358,8 +358,8 @@
         "Tests pass"
       ],
       "priority": 19,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Each BattleTurn now flies the attacker's projectile across the arena. BattleBout gains playerMove/opponentMove (defaulted to Move.placeholder so existing fixtures/preview compile), resolved in MainScreenModel.battle() via MoveCatalog.bundled.move(forId:line:stage:) - both combatants are graph nodes so the pure two-tier core answers without a roster. BattleView draws an SF-Symbol projectile in a ZStack over the sprite HStack: tinted with the attacker's MoveTint (new MoveTint.color exhaustive-switch extension, deferred here from US-070), offset by pure BattleView.projectileOffset(rightward:progress:span:), direction read off faces(attacker) so the opponent's shot flies out its front not its back. run() snaps projectileProgress to 0 then animates it 0->1 over the existing injectable turnDuration (whole battle still runs in ms in tests). BattleEngine and animation(for:during:) UNTOUCHED - attacker still holds frame 11, defender still plays 9<->10, so impact coincides with the hurt loop. 5 new tests in BattleFrameTests (both flight directions, mirror symmetry, per-side move, tint colours); suite 861/0 (was 856). Screenshotted on Series 11 46mm via -battleTurnDemo (stretches one beat to 60s): an orange flame.fill leaving Agumon on the left and, six seconds later, visibly further right toward Cyclomon - crisp, correctly tinted, name+HP intact."
     },
     {
       "id": "US-073",

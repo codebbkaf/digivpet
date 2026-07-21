@@ -1,4 +1,5 @@
 import Foundation
+import SwiftUI
 import XCTest
 
 @testable import DigiVPet
@@ -328,6 +329,70 @@ final class BattleFrameTests: XCTestCase {
     func testTheResultShowsHappyOnAWinAndHurtOnALoss() {
         XCTAssertEqual(BattleView.resultFrame(playerWon: true), .happy)
         XCTAssertEqual(BattleView.resultFrame(playerWon: false), .hurt1)
+    }
+
+    // MARK: - US-072: the projectile's flight
+
+    /// The player's shot leaves the player (on the left) and reaches the opponent (on the right): a
+    /// rightward flight runs from `-span/2` at the attacker to `+span/2` at the defender.
+    func testAPlayerProjectileFliesLeftToRight() {
+        let span = BattleView.projectileSpan
+        XCTAssertEqual(BattleView.projectileOffset(rightward: true, progress: 0, span: span),
+                       -span / 2, accuracy: 0.001, "starts at the player on the left")
+        XCTAssertEqual(BattleView.projectileOffset(rightward: true, progress: 0.5, span: span),
+                       0, accuracy: 0.001, "halfway is arena centre")
+        XCTAssertEqual(BattleView.projectileOffset(rightward: true, progress: 1, span: span),
+                       span / 2, accuracy: 0.001, "reaches the opponent on the right")
+    }
+
+    /// The opponent's shot is the mirror image: it leaves the opponent on the right and reaches the
+    /// player on the left, so it flies out of the opponent's front rather than backward out of its back.
+    func testAnOpponentProjectileFliesRightToLeft() {
+        let span = BattleView.projectileSpan
+        XCTAssertEqual(BattleView.projectileOffset(rightward: false, progress: 0, span: span),
+                       span / 2, accuracy: 0.001, "starts at the opponent on the right")
+        XCTAssertEqual(BattleView.projectileOffset(rightward: false, progress: 1, span: span),
+                       -span / 2, accuracy: 0.001, "reaches the player on the left")
+    }
+
+    /// The two directions are genuine mirror images at every point of the flight — the same progress
+    /// puts the two shots on opposite sides of centre, never the same place.
+    func testTheTwoDirectionsAreMirrored() {
+        let span = BattleView.projectileSpan
+        for step in 0...10 {
+            let progress = CGFloat(step) / 10
+            let right = BattleView.projectileOffset(rightward: true, progress: progress, span: span)
+            let left = BattleView.projectileOffset(rightward: false, progress: progress, span: span)
+            XCTAssertEqual(right, -left, accuracy: 0.001)
+        }
+    }
+
+    /// The projectile is drawn in whichever side is swinging's colour — read off the bout's per-side
+    /// move, so the opponent's shot is not silently painted in the player's tint.
+    func testTheProjectileTakesTheAttackersMove() {
+        let bout = BattleBout(
+            player: DigimonPresentation(displayName: "Hero", stage: .child, spriteFile: "Agumon"),
+            opponent: DigimonPresentation(displayName: "Foe", stage: .adult, spriteFile: "Greymon"),
+            report: BattleReport(playerPower: 10, opponentPower: 10, turns: [], winner: .player),
+            playerMove: Move(projectileSymbol: "flame.fill", tint: .orange,
+                             signatureName: "Pepper Breath", signatureSymbol: "flame"),
+            opponentMove: Move(projectileSymbol: "drop.fill", tint: .blue,
+                               signatureName: "Splash", signatureSymbol: "drop"))
+
+        XCTAssertEqual(bout.move(for: .player).tint, .orange)
+        XCTAssertEqual(bout.move(for: .opponent).tint, .blue)
+        XCTAssertEqual(bout.move(for: .player).projectileSymbol, "flame.fill")
+        XCTAssertEqual(bout.move(for: .opponent).projectileSymbol, "drop.fill")
+    }
+
+    /// Every tint the catalog can name maps to a colour — an exhaustive switch (no `default:`), so a
+    /// tint added to `MoveTint` without a colour is a compile error rather than a grey projectile at
+    /// battle time. The distinctness check confirms the mapping is not a single constant for all.
+    func testEveryMoveTintHasAColour() {
+        let colours = MoveTint.allCases.map(\.color)
+        XCTAssertEqual(colours.count, MoveTint.allCases.count)
+        XCTAssertNotEqual(MoveTint.red.color, MoveTint.blue.color)
+        XCTAssertNotEqual(MoveTint.orange.color, MoveTint.green.color)
     }
 
     /// US-071: the two combatants face each other. The pack's art faces left, so the player on the

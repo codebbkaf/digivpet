@@ -893,12 +893,20 @@ final class MainScreenModel: ObservableObject {
         let report = BattleEngine.resolve(playerPower: state.battlePower,
                                           opponentPower: opponent.power,
                                           using: &generator)
+        // Each side's attack identity (US-070), resolved here where both ids and their graph nodes are
+        // in hand: both combatants ARE graph nodes, so the pure two-tier core answers without a roster.
+        let catalog = MoveCatalog.bundled
+        let playerNode = graph.node(id: state.currentDigimonId)
         let bout = BattleBout(
             player: player,
             opponent: DigimonPresentation(displayName: opponent.node.displayName,
                                           stage: opponent.node.stage,
                                           spriteFile: opponent.node.spriteFile),
-            report: report
+            report: report,
+            playerMove: catalog.move(forId: state.currentDigimonId,
+                                     line: playerNode?.line, stage: playerNode?.stage),
+            opponentMove: catalog.move(forId: opponent.node.id,
+                                       line: opponent.node.line, stage: opponent.node.stage)
         )
         // Spent here and not in `finishBattle()`: the fight has happened by this line, so walking
         // away from the result screen must not hand the allowance back. Saved immediately for the
