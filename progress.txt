@@ -186,3 +186,62 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     nearest-neighbour drops rows and columns unevenly.
 - REMAINS: US-116 onward (2/56 passing). Phase A is done; Phase B starts with the map catalog.
 ---
+
+## 2026-07-22 — US-116: Map catalog data file and model
+- `Resources/maps.json` (16 maps) and `Sources/MapCatalog.swift` — `AdventureMap` (id, displayName,
+  assetName, tier, totalSteps, unlockedBy, opponentPool, digitamaSlots), `DigitamaSlot`
+  (digitamaId + `[EvolutionCondition]`), and `MapCatalog` in the `Roster` shape: private id index,
+  hand-written decoder, `load(from:)` for tests, `bundled` that fatalErrors on bad data.
+- `DigitamaSlot` reuses `EvolutionCondition` wholesale rather than getting a parallel type. That is
+  what lets US-121 draw a `?` slot's hints through the Dex's own `ConditionReveal`, and it means
+  US-117's blank-hint rule is the same rule the graph validator already has.
+- Files: Resources/maps.json (new), Sources/MapCatalog.swift (new), Tests/MapCatalogTests.swift
+  (new, 17 tests). NO project.yml change — the `Resources` folder is already a `resources` build
+  phase, so the file is picked up by existing config.
+- PASSED: build green. `Executed 1348 tests, with 0 failures` (1331 + the 17 new).
+- PASSED, checked rather than assumed:
+  - BUNDLED FOR REAL. `ls` on the built product shows `DigiVPet.app/maps.json`, 28,644 bytes, and
+    every test loads it through `MapCatalog.load()` off `Bundle.main` rather than off a fixture.
+  - ART RESOLVES. All 16 `assetName`s return a non-nil `UIImage(named:)` at runtime, which is the
+    same lookup `Image(_:)` does, and all 16 pass `MapBackgroundLayout.shouldDraw`. The 16
+    imagesets were confirmed with `ls Resources/Assets.xcassets` before a name was written.
+  - THE FR-6 TABLE IS SPELLED OUT IN THE TEST, not derived from the file — a test that read the
+    order and totals back out of `maps.json` would agree with whatever the file said, which is the
+    one thing it must not do. Order, tier and totalSteps all match; totals also strictly increase
+    and tiers never drop.
+  - THE CHAIN IS LINEAR AND COMPLETE. Map 1 has no `unlockedBy`, every other names its predecessor,
+    exactly one map has none, and walking the chain forward from `startingMap` reaches all 16 —
+    the second test catches a strand that the pairwise one would not.
+- SCOPE CALL, deliberate and worth knowing: **`opponentPool` and `digitamaSlots` are authored here,
+  not left empty.** No later story authors them, and US-121 (detail view), US-122 (opponent picks)
+  and US-128 (drop engine) all consume them — empty lists would have made those untestable. 170
+  opponent ids and all 57 Digitama are placed.
+- **Learnings for future iterations:**
+  - **AUTHOR ROSTER-REFERENCING DATA FROM DISPLAY NAMES THROUGH A RESOLVER SCRIPT, NEVER BY TYPING
+    IDS.** /tmp/us116/build_maps.py (throwaway, NOT committed) holds the 16 maps as display names
+    and resolves each against `roster.json`, hard-failing on an unknown name, an AMBIGUOUS name, or
+    a `dexOnly` entry, then emits the JSON. Every Phase E story has this same problem at ten times
+    the scale and should do the same. It earned its keep immediately: `Rapidmon` is TWO roster
+    entries — `rapidmon` (Perfect) and `rapidmon_armor` (Armor-Hybrid) — so a hand-typed
+    `"rapidmon"` would have been a coin flip nobody would have noticed. Display names are not
+    unique in this roster; ids are.
+  - The same script asserts the whole-file invariants at authoring time (all 57 Digitama placed,
+    none placed twice), so the test suite confirms them rather than discovering them.
+  - `Roster.bundled.entries(at: .digitama)` is the clean way to enumerate eggs; there are exactly
+    57 and NONE is dexOnly, so every egg on disk is placeable.
+  - CONDITION UNITS, read off `HealthMetricReader` rather than guessed — steps: count;
+    `health.sleep`: MINUTES (evolutions.json uses 1400–1800 over a stage); `health.activeEnergy`:
+    kilocalories; `health.exerciseMinutes` / `health.standTime` / `health.mindfulMinutes`: minutes;
+    `health.distanceWalkingRunning`: METRES; `health.standHours` / `health.flightsClimbed` /
+    `health.workouts`: counts. Authoring "8 km" as `8` would have shipped a slot that drops on the
+    first step.
+  - The empty-on-hardware metric family (handwashing, toothbrushing, water, daylight, audio
+    exposure) is a real trap for DROP slots specifically: an evolution edge gated on one can be a
+    bonus branch beside a reachable one, but a Digitama slot is the ONLY route to that egg, so any
+    such gate makes it unobtainable. FR-13 names `health.handwashing` for 06_industrial/Pulse, so
+    it is authored as asked but PAIRED with a steps condition to satisfy US-128's "never solely"
+    rule; every other slot avoids the family. If US-128 wants a stronger rule than "not solely",
+    Pulse is the one slot to revisit.
+- REMAINS: US-117 onward (3/56 passing). US-117 now has real data to validate — 16 assetNames,
+  170 opponent ids, 57 Digitama slots and a 16-long unlock chain.
+---

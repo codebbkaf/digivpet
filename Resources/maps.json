@@ -1,0 +1,1133 @@
+{
+  "maps": [
+    {
+      "id": "01_grassland",
+      "displayName": "Grassland",
+      "assetName": "01_grassland",
+      "tier": 1,
+      "totalSteps": 3000,
+      "opponentPool": [
+        "koromon",
+        "tanemon",
+        "tsunomon",
+        "nyaromon",
+        "tokomon",
+        "agumon",
+        "patamon",
+        "palmon",
+        "elecmon",
+        "gotsumon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "agu_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1,
+              "hint": "Train it once"
+            }
+          ]
+        },
+        {
+          "digitamaId": "pata_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Walk 2,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "pal_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1,
+              "hint": "Fight one battle"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "14_farmland",
+      "displayName": "Farmland",
+      "assetName": "14_farmland",
+      "tier": 1,
+      "totalSteps": 5000,
+      "unlockedBy": "01_grassland",
+      "opponentPool": [
+        "tanemon",
+        "budmon",
+        "minomon",
+        "pyocomon",
+        "mochimon",
+        "floramon",
+        "mushmon",
+        "wormmon",
+        "herissmon",
+        "piyomon",
+        "kunemon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "piyo_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Walk 3,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "flora_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3,
+              "hint": "Train it three times"
+            }
+          ]
+        },
+        {
+          "digitamaId": "mush_digitama",
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Stand up in 6 different hours today"
+            }
+          ]
+        },
+        {
+          "digitamaId": "worm_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3,
+              "hint": "Fight three battles"
+            }
+          ]
+        },
+        {
+          "digitamaId": "heriss_digitama",
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "Get 15 exercise minutes in a day"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "02_river",
+      "displayName": "River",
+      "assetName": "02_river",
+      "tier": 2,
+      "totalSteps": 8000,
+      "unlockedBy": "14_farmland",
+      "opponentPool": [
+        "gomamon",
+        "otamamon",
+        "shakomon",
+        "blucomon",
+        "swimmon",
+        "gekomon",
+        "ikkakumon",
+        "coelamon",
+        "rukamon",
+        "gawappamon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "goma_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 5000,
+              "hint": "Walk 5,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "kame_digitama",
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Get 20 exercise minutes in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "beta_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Fight five battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.5,
+              "hint": "Win half of them"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "08_jungle",
+      "displayName": "Jungle",
+      "assetName": "08_jungle",
+      "tier": 2,
+      "totalSteps": 10000,
+      "unlockedBy": "02_river",
+      "opponentPool": [
+        "lalamon",
+        "tentomon",
+        "kunemon",
+        "morphomon",
+        "dokunemon",
+        "muchomon",
+        "kuwagamon",
+        "woodmon",
+        "togemon",
+        "junglemojyamon",
+        "vegimon",
+        "kabuterimon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "lala_digitama",
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Climb 10 flights in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "tento_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Train it eight times"
+            }
+          ]
+        },
+        {
+          "digitamaId": "kune_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 6000,
+              "hint": "Walk 6,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "morpho_digitama",
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Burn 300 active calories in a day"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "09_lake",
+      "displayName": "Lake",
+      "assetName": "09_lake",
+      "tier": 2,
+      "totalSteps": 12000,
+      "unlockedBy": "08_jungle",
+      "opponentPool": [
+        "swimmon",
+        "otamamon",
+        "penmon",
+        "gomamon",
+        "jellymon",
+        "seadramon",
+        "ebidramon",
+        "gesomon",
+        "octmon",
+        "shellmon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "swim_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 8000,
+              "hint": "Walk 8,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "kuda_digitama",
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "Get 30 exercise minutes in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "bluco_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Fight ten battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.5,
+              "hint": "Win half of them"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "04_desert",
+      "displayName": "Desert",
+      "assetName": "04_desert",
+      "tier": 3,
+      "totalSteps": 16000,
+      "unlockedBy": "09_lake",
+      "opponentPool": [
+        "sandyanmamon",
+        "tuskmon",
+        "drimogemon",
+        "monochromon",
+        "darktyranomon",
+        "tsuchidarumon",
+        "scorpiomon",
+        "mummymon",
+        "etemon",
+        "asuramon",
+        "skullbaluchimon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "zuba_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 10000,
+              "hint": "Walk 10,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "sunariza_digitama",
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 500,
+              "hint": "Burn 500 active calories in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "commandra_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Train it twenty times"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "07_mountains",
+      "displayName": "Mountains",
+      "assetName": "07_mountains",
+      "tier": 3,
+      "totalSteps": 18000,
+      "unlockedBy": "04_desert",
+      "opponentPool": [
+        "leomon",
+        "ogremon",
+        "mojyamon",
+        "unimon",
+        "gryzmon",
+        "musyamon",
+        "panjyamon",
+        "grappleomon",
+        "triceramon",
+        "shishimamon",
+        "karatenmon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "gabu_digitama",
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Climb 20 flights in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "lioll_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "Fight fifteen battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "Win more than you lose"
+            }
+          ]
+        },
+        {
+          "digitamaId": "bear_digitama",
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 45,
+              "hint": "Get 45 exercise minutes in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "gao_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "Train it twenty-five times"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "16_iceland",
+      "displayName": "Iceland",
+      "assetName": "16_iceland",
+      "tier": 3,
+      "totalSteps": 20000,
+      "unlockedBy": "07_mountains",
+      "opponentPool": [
+        "yukidarumon",
+        "icedevimon",
+        "hyougamon",
+        "icemon",
+        "garurumon",
+        "gururumon",
+        "zudomon",
+        "crescemon",
+        "panjyamon",
+        "sekkamon",
+        "mermaimon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "hyoko_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 12000,
+              "hint": "Walk 12,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "angora_digitama",
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 480,
+              "hint": "Sleep eight hours"
+            }
+          ]
+        },
+        {
+          "digitamaId": "espi_digitama",
+          "conditions": [
+            {
+              "metric": "health.mindfulMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Spend 10 mindful minutes in a day"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "03_ocean",
+      "displayName": "Ocean",
+      "assetName": "03_ocean",
+      "tier": 3,
+      "totalSteps": 22000,
+      "unlockedBy": "16_iceland",
+      "opponentPool": [
+        "seadramon",
+        "gesomon",
+        "ebidramon",
+        "coelamon",
+        "morishellmon",
+        "tylomon_x",
+        "whamon",
+        "megaseadramon",
+        "dagomon",
+        "marindevimon",
+        "anomalocarimon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "vorvo_digitama",
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 8000,
+              "hint": "Cover 8 km on foot in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "kuda2006_digitama",
+          "conditions": [
+            {
+              "metric": "health.workouts",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Finish five workouts"
+            }
+          ]
+        },
+        {
+          "digitamaId": "baku_digitama",
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 420,
+              "hint": "Sleep seven hours"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "And leave it to sleep too"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "05_wasteland",
+      "displayName": "Wasteland",
+      "assetName": "05_wasteland",
+      "tier": 4,
+      "totalSteps": 26000,
+      "unlockedBy": "03_ocean",
+      "opponentPool": [
+        "skullgreymon",
+        "mephismon",
+        "mametyramon",
+        "ex-tyranomon",
+        "deathmeramon",
+        "rusttyrannomon",
+        "skullmammon",
+        "megidramon",
+        "titamon",
+        "zanbamon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "gazi_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "Fight twenty-five battles"
+            }
+          ]
+        },
+        {
+          "digitamaId": "gabublack_digitama",
+          "conditions": [
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Stuff it with food five times"
+            }
+          ]
+        },
+        {
+          "digitamaId": "blackguil_digitama",
+          "conditions": [
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Wake it five times in the night"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "06_industrial",
+      "displayName": "Industrial",
+      "assetName": "06_industrial",
+      "tier": 4,
+      "totalSteps": 28000,
+      "unlockedBy": "05_wasteland",
+      "opponentPool": [
+        "andromon",
+        "nanomon",
+        "giromon",
+        "metalmamemon",
+        "karakurumon",
+        "locomon",
+        "hi-andromon",
+        "boltmon",
+        "breakdramon",
+        "grandlocomon",
+        "gundramon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "elec_digitama",
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 700,
+              "hint": "Burn 700 active calories in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "pulse_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 6000,
+              "hint": "Walk 6,000 steps in a day"
+            },
+            {
+              "metric": "health.handwashing",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Wash your hands five times today"
+            }
+          ]
+        },
+        {
+          "digitamaId": "funbee_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40,
+              "hint": "Train it forty times"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "13_factory_town",
+      "displayName": "Factory Town",
+      "assetName": "13_factory_town",
+      "tier": 4,
+      "totalSteps": 30000,
+      "unlockedBy": "06_industrial",
+      "opponentPool": [
+        "knightmon",
+        "mamemon",
+        "bigmamemon",
+        "pandamon",
+        "monzaemon",
+        "guardromon_gold",
+        "banchomamemon",
+        "princemamemon",
+        "shinmonzaemon",
+        "chaosdramon",
+        "metallicdramon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "pawnchesswhite_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "Fight thirty battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "Win seven of every ten"
+            }
+          ]
+        },
+        {
+          "digitamaId": "pawnchessblack_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "Fight thirty battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 0.4,
+              "hint": "And lose more of them than you win"
+            }
+          ]
+        },
+        {
+          "digitamaId": "koe_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 15000,
+              "hint": "Walk 15,000 steps in a day"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "10_city_dusk",
+      "displayName": "City Dusk",
+      "assetName": "10_city_dusk",
+      "tier": 4,
+      "totalSteps": 32000,
+      "unlockedBy": "13_factory_town",
+      "opponentPool": [
+        "rapidmon",
+        "angewomon",
+        "holyangemon",
+        "superstarmon",
+        "cyberdramon",
+        "paildramon",
+        "ulforcev-dramon",
+        "seraphimon",
+        "ophanimon",
+        "imperialdramon_fighter",
+        "sakuyamon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "plot_digitama",
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Get an hour of exercise in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "rena_digitama",
+          "conditions": [
+            {
+              "metric": "health.workouts",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "Finish fifteen workouts"
+            }
+          ]
+        },
+        {
+          "digitamaId": "terrier_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 18000,
+              "hint": "Walk 18,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "lop_digitama",
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 480,
+              "hint": "Sleep eight hours"
+            },
+            {
+              "metric": "health.mindfulMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "And spend 20 mindful minutes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "15_dungeon",
+      "displayName": "Dungeon",
+      "assetName": "15_dungeon",
+      "tier": 5,
+      "totalSteps": 38000,
+      "unlockedBy": "10_city_dusk",
+      "opponentPool": [
+        "piemon",
+        "demon",
+        "barbamon",
+        "lilithmon",
+        "beelzebumon",
+        "granddracumon",
+        "anubimon",
+        "venomvamdemon",
+        "deathmon",
+        "titamon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "ghost_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Fight twenty battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "Win more than you lose"
+            }
+          ]
+        },
+        {
+          "digitamaId": "picodevi_digitama",
+          "conditions": [
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Wake it ten times in the night"
+            }
+          ]
+        },
+        {
+          "digitamaId": "imp_digitama",
+          "conditions": [
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Overfeed it ten times"
+            }
+          ]
+        },
+        {
+          "digitamaId": "kera_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Train it sixty times"
+            }
+          ]
+        },
+        {
+          "digitamaId": "cand_digitama",
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Burn 900 active calories in a day"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "11_city_night",
+      "displayName": "City Night",
+      "assetName": "11_city_night",
+      "tier": 5,
+      "totalSteps": 42000,
+      "unlockedBy": "15_dungeon",
+      "opponentPool": [
+        "belialvamdemon",
+        "beelzebumon_blast",
+        "mastemon",
+        "ordinemon",
+        "raguelmon",
+        "blackseraphimon",
+        "cherubimon_vice",
+        "lilithmon",
+        "piemon",
+        "duftmon"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "guil_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40,
+              "hint": "Fight forty battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "Win seven of every ten"
+            }
+          ]
+        },
+        {
+          "digitamaId": "monodra_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 20000,
+              "hint": "Walk 20,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "phasco_digitama",
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 540,
+              "hint": "Sleep nine hours"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 0,
+              "hint": "Never once waking it"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "12_cyberpunk",
+      "displayName": "Cyberpunk",
+      "assetName": "12_cyberpunk",
+      "tier": 5,
+      "totalSteps": 50000,
+      "unlockedBy": "11_city_night",
+      "opponentPool": [
+        "millenniumon",
+        "mugendramon",
+        "diablomon",
+        "apocalymon",
+        "armagemon",
+        "omegamon",
+        "alphamon",
+        "examon_x",
+        "quantumon",
+        "chaosdramon_x"
+      ],
+      "digitamaSlots": [
+        {
+          "digitamaId": "v_digitama",
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50,
+              "hint": "Fight fifty battles"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 0.75,
+              "hint": "Win three of every four"
+            }
+          ]
+        },
+        {
+          "digitamaId": "luce_digitama",
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 90,
+              "hint": "Get ninety exercise minutes in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "ludo_digitama",
+          "conditions": [
+            {
+              "metric": "health.workouts",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "Finish thirty workouts"
+            }
+          ]
+        },
+        {
+          "digitamaId": "meicoo_digitama",
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "day",
+              "comparison": "atLeast",
+              "value": 25000,
+              "hint": "Walk 25,000 steps in a day"
+            }
+          ]
+        },
+        {
+          "digitamaId": "agu2006_digitama",
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 100,
+              "hint": "Train it a hundred times in its life"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
