@@ -1376,3 +1376,57 @@ VERIFIED (all observed)
   AC5     result/resultHaptic/resultFrame untouched; existing haptic + win/loss-frame tests green.
 
 Next: US-074 (author moves for all 69 curated Digimon).
+
+================================================================================
+2026-07-21 — US-074: Author moves for all 69 curated Digimon — PASSES
+================================================================================
+
+WHAT I DID
+
+- Rewrote `Resources/moves.json`'s `moves` map from a 6-entry starter set to an EXPLICIT entry for
+  every node in `evolutions.json`. Both fallback tiers (`lineDefaults`, `stageDefaults`) are
+  untouched and still cover the ~930 roster-only Digimon; they are now a safety net for a node added
+  later rather than a live path for anything curated.
+- Attacks are authored per Digimon, mostly from canon: Agumon "Pepper Breath" (orange flame) vs
+  Gabumon "Blue Blaster" (BLUE flame) — same glyph, different colour; the palmon line throws
+  `leaf.fill` (Poison Ivy / Needle Spray / Flower Cannon / Thorn Whip); the gazimon line throws
+  `bolt.fill` (Electric Stun Blast / Static Electricity / Nuclear Laser). Junk branches get junk:
+  Numemon `drop.fill` green, Gerbemon `trash.fill` gray, Etemon/MetalEtemon `music.note`.
+- Signature symbols diverge from the projectile where it earns it (PlatinumNumemon finishes on
+  `sparkles`, Gankoomon's Tekken Seisai on `flame.fill`, KingEtemon's Monkey Wrench on `music.note`).
+
+COUNT DISCREPANCY (honest note)
+
+  The AC says "all 69 nodes in evolutions.json". The graph is now 88 nodes — it grew in US-061/
+  US-062, after this story was written. I authored all 88, so the AC's intent (full coverage, no
+  curated Digimon on a generic fallback) is met and then some. The tests count off `graph.nodes`,
+  not a literal, so a 89th node added later fails the coverage test instead of silently shipping a
+  stage default.
+
+VERIFIED (all observed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   870 passed / 0 failures (was 865; +5 mine in MoveCatalogTests).
+  AC1/6   `testEveryGraphNodeHasAnExplicitMoveEntry` — all 88 nodes have a `moves[id]` entry.
+          `testEveryAuthoredMoveNamesARealNode` guards the other direction (no typo'd id).
+  AC2     `testAttacksSuitTheDigimon` pins the four cases the story names by name: agumon
+          flame/orange, gabumon flame/blue, palmon+togemon leaf, gazimon+metaltyranomon bolt.
+  AC3/6   `testNoTwoDigimonInALineShareASymbolAndTint` — zero collisions across all six lines
+          (largest are piyomon and gazimon at 20 members each).
+  AC4     `testEverySymbolInTheCatalogRenders` (pre-existing) — 21 distinct symbols, ≥ 8 required,
+          and every one returns a non-nil `UIImage(systemName:)` on the simulator. `bolt.fill`,
+          `circle.fill`, `drop.fill`, `eye.fill`, `flame.fill`, `gearshape.fill`, `hammer.fill`,
+          `hand.raised.fill`, `heart.fill`, `leaf.fill`, `moon.fill`, `music.note`, `scissors`,
+          `shield.fill`, `snowflake`, `sparkles`, `star.fill`, `trash.fill`, `triangle.fill`,
+          `wind`, `wrench.fill`. All are watchOS 8 or older, under the 10.0 deployment target.
+  AC5     `testSignatureNamesAreAuthoredRatherThanTemplated` — no name contains its Digimon's
+          displayName or stage, and all 88 are distinct. A generated file fails both halves.
+
+TEST I HAD TO CHANGE (not a skip)
+
+- `testFallsBackByLineWhenIdIsUnauthored` asserted `catalog.moves["greymon"] == nil`. Greymon is now
+  authored, so that premise is dead. Rewrote it to exercise the same tier against an id the graph
+  does not contain (`greymon_x`), and added an assert that the line tier BEATS the stage floor so
+  the test can still fail for the right reason. Tier 2 is also still covered by the pure-core test.
+
+Next: US-075 (minigame foundation and graded gain).

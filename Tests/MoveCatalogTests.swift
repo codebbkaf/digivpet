@@ -16,11 +16,14 @@ final class MoveCatalogTests: XCTestCase {
     }
 
     func testFallsBackByLineWhenIdIsUnauthored() {
-        // greymon is in the agumon line and has NO id entry in moves.json.
-        XCTAssertNil(catalog.moves["greymon"], "test assumes greymon is unauthored")
-        XCTAssertEqual(graph.node(id: "greymon")?.line, "agumon")
-        let move = catalog.move(for: "greymon", in: graph, roster: roster)
+        // US-074 authored every graph node, so the line tier is now a safety net for a node added
+        // LATER rather than a live path — exercised here with an id the graph does not yet contain.
+        XCTAssertNil(catalog.moves["greymon_x"], "test assumes greymon_x is unauthored")
+        XCTAssertNil(graph.node(id: "greymon_x"), "test assumes greymon_x is not yet a node")
+        let move = catalog.move(forId: "greymon_x", line: "agumon", stage: .adult)
         XCTAssertEqual(move, catalog.lineDefaults["agumon"])
+        XCTAssertNotEqual(move, catalog.stageDefaults[Stage.adult.rawValue],
+                          "line tier must win over the stage floor")
     }
 
     func testFallsBackByStageForARosterOnlyDigimon() {
@@ -75,6 +78,75 @@ final class MoveCatalogTests: XCTestCase {
         let lines = Set(graph.nodes.map { $0.line })
         for line in lines {
             XCTAssertNotNil(catalog.lineDefaults[line], "no lineDefault for line \(line)")
+        }
+    }
+
+    // MARK: - Authored coverage of the curated graph (US-074)
+
+    /// AC1. Every curated node is authored EXPLICITLY, so no playable Digimon reaches battle on a
+    /// line or stage fallback. Counted off the graph rather than a literal so adding a node to
+    /// `evolutions.json` without a move fails here instead of shipping a generic attack.
+    func testEveryGraphNodeHasAnExplicitMoveEntry() {
+        XCTAssertFalse(graph.nodes.isEmpty)
+        for node in graph.nodes {
+            XCTAssertNotNil(catalog.moves[node.id],
+                            "\(node.id) (\(node.displayName)) has no explicit moves.json entry")
+        }
+    }
+
+    /// The other direction: no authored entry names a Digimon the graph does not have, which would
+    /// be a typo'd id quietly doing nothing.
+    func testEveryAuthoredMoveNamesARealNode() {
+        let ids = Set(graph.nodes.map(\.id))
+        for id in catalog.moves.keys {
+            XCTAssertTrue(ids.contains(id), "moves.json authors \(id), which is not a graph node")
+        }
+    }
+
+    /// AC3. Two members of the same family must never throw the same thing, so an evolution reads
+    /// as a change. Uniqueness is on the pair — reusing `flame.fill` in a fire line is fine as long
+    /// as the colour differs.
+    func testNoTwoDigimonInALineShareASymbolAndTint() {
+        var seen: [String: [String: String]] = [:]  // line -> "symbol|tint" -> id
+        for node in graph.nodes {
+            guard let move = catalog.moves[node.id] else { continue }
+            let key = "\(move.projectileSymbol)|\(move.tint.rawValue)"
+            if let other = seen[node.line]?[key] {
+                XCTFail("\(node.id) and \(other) both throw \(key) in line \(node.line)")
+            }
+            seen[node.line, default: [:]][key] = node.id
+        }
+    }
+
+    /// AC2, spot-checked on the cases the story names: the two starter rivals throw the same glyph
+    /// in different colours, the plant line throws leaves, the electric one bolts.
+    func testAttacksSuitTheDigimon() {
+        XCTAssertEqual(catalog.moves["agumon"]?.projectileSymbol, "flame.fill")
+        XCTAssertEqual(catalog.moves["agumon"]?.tint, .orange)
+        XCTAssertEqual(catalog.moves["gabumon"]?.projectileSymbol, "flame.fill")
+        XCTAssertEqual(catalog.moves["gabumon"]?.tint, .blue)
+        XCTAssertEqual(catalog.moves["palmon"]?.projectileSymbol, "leaf.fill")
+        XCTAssertEqual(catalog.moves["togemon"]?.projectileSymbol, "leaf.fill")
+        XCTAssertEqual(catalog.moves["gazimon"]?.projectileSymbol, "bolt.fill")
+        XCTAssertEqual(catalog.moves["metaltyranomon"]?.projectileSymbol, "bolt.fill")
+    }
+
+    /// AC5. Authored, not generated: no signature name is derived from the Digimon's own name or
+    /// stage, and the 88 names are all distinct. A templated file would fail both halves.
+    func testSignatureNamesAreAuthoredRatherThanTemplated() {
+        var names: [String: String] = [:]
+        for node in graph.nodes {
+            guard let move = catalog.moves[node.id] else { continue }
+            let name = move.signatureName
+            XCTAssertFalse(name.isEmpty, "\(node.id) has an empty signature name")
+            XCTAssertFalse(name.lowercased().contains(node.displayName.lowercased()),
+                           "\(node.id)'s signature \"\(name)\" is built from its display name")
+            XCTAssertFalse(name.lowercased().contains(node.stage.rawValue.lowercased()),
+                           "\(node.id)'s signature \"\(name)\" is built from its stage")
+            if let other = names[name] {
+                XCTFail("\(node.id) and \(other) share the signature name \"\(name)\"")
+            }
+            names[name] = node.id
         }
     }
 

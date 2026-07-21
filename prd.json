@@ -234,7 +234,7 @@
       ],
       "priority": 12,
       "passes": true,
-      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered \u2014 US-066 wires it into the view."
+      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered — US-066 wires it into the view."
     },
     {
       "id": "US-066",
@@ -288,7 +288,7 @@
       ],
       "priority": 15,
       "passes": true,
-      "notes": "Sick now plays the hurt loop (frames 9<->10) via a new SpriteAnimation.sick case at 1.5s/frame vs the battle hurt loop's 0.5s; DigimonSpriteView drives both its TimelineView schedule and its frame index off animation.frameDuration. The choice is the pure SpriteAnimation.resting(for:isAsleep:), unit-tested with no view or store. Wandering stays suppressed (isWandering keys off animation == .idle). Screenshotted with -sickDemo on Series 11 46mm: a slumped Agumon alternating two hurt frames, crisp, centred, not walking. NOTE: the Simulator's screen idles and throttles, so screenshot sampling CANNOT measure the 0.5s vs 1.5s cadence \u2014 that clause is proven by unit test, not by the screenshots. 831 tests pass (was 823)."
+      "notes": "Sick now plays the hurt loop (frames 9<->10) via a new SpriteAnimation.sick case at 1.5s/frame vs the battle hurt loop's 0.5s; DigimonSpriteView drives both its TimelineView schedule and its frame index off animation.frameDuration. The choice is the pure SpriteAnimation.resting(for:isAsleep:), unit-tested with no view or store. Wandering stays suppressed (isWandering keys off animation == .idle). Screenshotted with -sickDemo on Series 11 46mm: a slumped Agumon alternating two hurt frames, crisp, centred, not walking. NOTE: the Simulator's screen idles and throttles, so screenshot sampling CANNOT measure the 0.5s vs 1.5s cadence — that clause is proven by unit test, not by the screenshots. 831 tests pass (was 823)."
     },
     {
       "id": "US-069",
@@ -340,7 +340,7 @@
       ],
       "priority": 18,
       "passes": true,
-      "notes": "BattleView.arena now draws the two combatants facing each other via a new pure BattleView.faces(_:) helper: the pack's art faces LEFT, so the player on the left is flipped=true to turn right and the opponent on the right keeps its natural leftward heading (faces(.player)==true, faces(.opponent)==false). Mirroring stays crisp for free \u2014 DigimonSpriteView.image already applies .interpolation(.none) on the Image AHEAD of the .scaleEffect(x:-1), so US-070's pixels survive the flip. Verified on Series 9 41mm via -battleTurnDemo -noNotificationPrompt -healthAnswered: Agumon on the left faces right, Tanemon on the right faces left, name 'Tanemon' and HP '10 \u2014 8' both visible above the fold, no horizontal clipping, blocky not smoothed. Test testTheCombatantsFaceEachOther in BattleFrameTests pins the pure helper; BattleEngine untouched. Build green, full suite 856/0 (was 855)."
+      "notes": "BattleView.arena now draws the two combatants facing each other via a new pure BattleView.faces(_:) helper: the pack's art faces LEFT, so the player on the left is flipped=true to turn right and the opponent on the right keeps its natural leftward heading (faces(.player)==true, faces(.opponent)==false). Mirroring stays crisp for free — DigimonSpriteView.image already applies .interpolation(.none) on the Image AHEAD of the .scaleEffect(x:-1), so US-070's pixels survive the flip. Verified on Series 9 41mm via -battleTurnDemo -noNotificationPrompt -healthAnswered: Agumon on the left faces right, Tanemon on the right faces left, name 'Tanemon' and HP '10 — 8' both visible above the fold, no horizontal clipping, blocky not smoothed. Test testTheCombatantsFaceEachOther in BattleFrameTests pins the pure helper; BattleEngine untouched. Build green, full suite 856/0 (was 855)."
     },
     {
       "id": "US-072",
@@ -395,8 +395,8 @@
         "Tests pass"
       ],
       "priority": 21,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Authored an explicit moves.json entry for all 88 curated nodes (the AC says 69 — the graph grew to 88 in US-061/US-062; every node is covered, so the intent is met and then some). 21 distinct SF Symbols, all verified to render; within-line projectileSymbol+tint uniqueness holds for all six lines; all 88 signature names distinct and none derived from displayName/stage. New tests: explicit-coverage both ways, in-line uniqueness, suitability spot-checks, anti-template check. Build green, 870 tests / 0 failures."
     },
     {
       "id": "US-075",
