@@ -339,8 +339,8 @@
         "Tests pass"
       ],
       "priority": 18,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleView.arena now draws the two combatants facing each other via a new pure BattleView.faces(_:) helper: the pack's art faces LEFT, so the player on the left is flipped=true to turn right and the opponent on the right keeps its natural leftward heading (faces(.player)==true, faces(.opponent)==false). Mirroring stays crisp for free — DigimonSpriteView.image already applies .interpolation(.none) on the Image AHEAD of the .scaleEffect(x:-1), so US-070's pixels survive the flip. Verified on Series 9 41mm via -battleTurnDemo -noNotificationPrompt -healthAnswered: Agumon on the left faces right, Tanemon on the right faces left, name 'Tanemon' and HP '10 — 8' both visible above the fold, no horizontal clipping, blocky not smoothed. Test testTheCombatantsFaceEachOther in BattleFrameTests pins the pure helper; BattleEngine untouched. Build green, full suite 856/0 (was 855)."
     },
     {
       "id": "US-072",

@@ -61,14 +61,17 @@ struct BattleView: View {
         .task { await run() }
     }
 
-    /// The two combatants facing off, the player on the left.
+    /// The two combatants facing off: the player on the left facing right, the opponent on the right
+    /// facing left, so the arena reads as a fight rather than as two Digimon both looking the same way.
     private var arena: some View {
         VStack(spacing: 6) {
             HStack(spacing: 8) {
                 DigimonSpriteView(stage: bout.player.spriteStage, name: bout.player.spriteFile,
-                                  animation: animation(for: .player), scale: 3)
+                                  animation: animation(for: .player), scale: 3,
+                                  flipped: Self.faces(.player))
                 DigimonSpriteView(stage: bout.opponent.spriteStage, name: bout.opponent.spriteFile,
-                                  animation: animation(for: .opponent), scale: 3)
+                                  animation: animation(for: .opponent), scale: 3,
+                                  flipped: Self.faces(.opponent))
             }
 
             Text(bout.opponent.displayName)
@@ -129,6 +132,18 @@ struct BattleView: View {
     private func hitPoints(_ side: BattleSide) -> Int {
         guard case .turn(let index) = beat else { return BattleEngine.startingHitPoints }
         return Self.hitPoints(side, afterTurn: index, of: bout.report.turns)
+    }
+
+    /// Which way `side` should be drawn, as a pure function so the face-off can be asserted without a
+    /// view: the two combatants look AT each other, the player on the left facing right, the opponent
+    /// on the right facing left.
+    ///
+    /// The pack's art faces LEFT (see `DigimonSpriteView.flipped` and `SpriteWanderer`), so the
+    /// player is the side that gets mirrored to turn toward the opponent, and the opponent keeps its
+    /// natural leftward heading. `.interpolation(.none)` sits ahead of that mirror on the `Image`, so
+    /// the pixels stay crisp whichever way a sprite faces.
+    static func faces(_ side: BattleSide) -> Bool {
+        side == .player
     }
 
     /// The PRD's frame assignment, as a pure function: the attacker holds the attack frame (11) and

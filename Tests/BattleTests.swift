@@ -329,6 +329,15 @@ final class BattleFrameTests: XCTestCase {
         XCTAssertEqual(BattleView.resultFrame(playerWon: true), .happy)
         XCTAssertEqual(BattleView.resultFrame(playerWon: false), .hurt1)
     }
+
+    /// US-071: the two combatants face each other. The pack's art faces left, so the player on the
+    /// left is mirrored to turn right and the opponent on the right keeps its natural leftward
+    /// heading — the two are drawn facing opposite ways, which is the whole point of the face-off.
+    func testTheCombatantsFaceEachOther() {
+        XCTAssertTrue(BattleView.faces(.player), "player on the left is mirrored to face right")
+        XCTAssertFalse(BattleView.faces(.opponent), "opponent on the right keeps its leftward art")
+        XCTAssertNotEqual(BattleView.faces(.player), BattleView.faces(.opponent))
+    }
 }
 
 /// AC4's haptic. The Simulator has no haptics and `simctl` cannot capture one, so what is checkable

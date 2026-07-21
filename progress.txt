@@ -1222,3 +1222,51 @@ DESIGN CALLS LATER ITERATIONS MUST NOT UNDO
    where it can be exercised by the view. Adding it here would ship untested UI code.
 
 REMAINS: nothing for this story. Next: US-071 (face-to-face battle arena).
+
+================================================================================
+2026-07-21 — US-071 — Face-to-face battle arena — PASSES
+================================================================================
+
+WHAT SHIPPED
+
+`Sources/BattleView.swift`: the arena's two `DigimonSpriteView`s now pass `flipped:` so the
+combatants FACE EACH OTHER instead of both looking the same way. The direction is a new PURE
+static `BattleView.faces(_ side: BattleSide) -> Bool` — `faces(.player) == true`,
+`faces(.opponent) == false` — testable with no view.
+
+THE ONE THING TO GET RIGHT: the pack's art faces LEFT (confirmed by `DigimonSpriteView.flipped`'s
+own comment and `SpriteWanderer`, which mirrors for a RIGHTWARD heading). So the PLAYER on the
+left is the side that gets mirrored (flipped=true) to turn right toward the opponent, and the
+OPPONENT on the right keeps its natural leftward art. The story's wording "opponent... mirrored
+to face left" assumes a rightward default that this pack does not have — followed the INTENT (the
+two look at each other), not the letter, or they would both end up facing the same way.
+
+CRISP PIXELS CAME FREE: `DigimonSpriteView.image` already puts `.interpolation(.none)` on the
+`Image` AHEAD of the `.scaleEffect(x: flipped ? -1 : 1)`, and an x of exactly -1 maps each source
+pixel onto exactly one destination pixel. Nothing to add for AC2 — the flip path was built for
+US-036's wander and was always interpolation-safe.
+
+VERIFIED
+
+- Build green (46mm and the 41mm/watchOS-10.4 Series 9 by UDID).
+- Full suite 856 tests / 0 failures (was 855; +1, `testTheCombatantsFaceEachOther` in
+  `BattleFrameTests`, run in isolation and observed "passed").
+- BattleEngine and BattleTests resolution assertions untouched — only presentation changed.
+- Screenshot on Series 9 41mm, `-battleTurnDemo -noNotificationPrompt -healthAnswered`
+  (`-battleTurnDemo` holds one exchange so the arena, not the result, is on screen): Agumon on the
+  LEFT faces RIGHT (snout toward centre), Tanemon on the RIGHT faces LEFT, the opponent name
+  "Tanemon" and the HP line "10 — 8" both visible above the fold, three-wide fits 41mm with margin,
+  sprites blocky not smoothed.
+
+FOR THE NEXT ITERATION (US-072 — projectiles fly on each exchange)
+
+1. `BattleView.faces(_:)` is now the single source of truth for which way each side points. The
+   projectile must travel in the ATTACKER's facing direction — read it off `faces(turn.attacker)`
+   rather than hardcoding left-to-right, or the opponent's shots will fly backwards out of its back.
+2. The arena is an `HStack` (player left, opponent right) inside a `VStack` with the name and HP
+   below. A projectile that animates between the two sprites wants to sit in that HStack's coordinate
+   space; adding it must not shove the name/HP or break the 41mm fit that was just re-verified.
+3. AC says BattleEngine is NOT touched and turn timing rides the existing injectable `turnDuration`
+   (0.7s, driven from `run()`), so a whole battle still resolves in milliseconds in tests.
+4. `-battleTurnDemo` is the flag that freezes one exchange for a screenshot; `-battleResultDemo`
+   lands on the result. Both already exist in `MainScreenModel.seedBattleDemoIfRequested`.
