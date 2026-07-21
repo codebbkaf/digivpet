@@ -839,6 +839,13 @@ final class MainScreenModel: ObservableObject {
     /// against. Zero when there is no game, which is also what leaves the button disabled.
     var poopCount: Int { state?.poopCount ?? 0 }
 
+    /// Whether the sick badge is owed (US-069).
+    ///
+    /// Deliberately `== .sick` and not `!= .healthy`: a dead Digimon is past being ill, and the
+    /// memorial is the only thing that state owes anyone. Written as a property rather than read
+    /// off `state` in the view so the badge and the pose can never disagree about what "sick" means.
+    var isSick: Bool { state?.healthStatus == .sick }
+
     /// Picks an opponent near the player's stage, fights the battle out, and hands the replay to the
     /// screen via `pendingBattle`.
     ///

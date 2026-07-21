@@ -168,10 +168,19 @@ struct ContentView: View {
                         stage: presentation.spriteStage,
                         name: presentation.spriteFile,
                         animation: model.animation,
-                        scale: SpriteScale.fitting(geometry.size.height),
+                        scale: SpriteScale.fitting(
+                            SickBadgeLayout.spriteHeight(in: geometry.size.height,
+                                                         isSick: model.isSick)
+                        ),
                         isMoving: model.isWandering
                     )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    // Bottom-aligned while ill, centred otherwise. The sprite is sized against a
+                    // slot one badge-band shorter than this frame, so pushing it to the floor is
+                    // what turns that missing band into clear space at the TOP rather than half of
+                    // it at each end — see `SickBadgeLayout`. Nothing changes when healthy.
+                    .frame(maxWidth: .infinity,
+                           maxHeight: .infinity,
+                           alignment: model.isSick ? .bottom : .center)
                     // On the ground at the near edge, beside the Digimon rather than under it:
                     // the sprite is drawn with `.offset` and walks the full width, so anything
                     // sharing its centre would be walked over. The bottom-trailing corner is the
@@ -181,6 +190,15 @@ struct ContentView: View {
                         if model.poopCount > 0 {
                             PoopPile(count: model.poopCount)
                                 .padding(.trailing, 6)
+                        }
+                    }
+                    // In the band the sprite was just sized out of, so it sits above the Digimon
+                    // rather than on it, and well clear of the action row at the bottom of the
+                    // screen. Centred, because the sprite walks the full width and there is no
+                    // corner it cannot reach — height is the only clearance that holds.
+                    .overlay(alignment: .top) {
+                        if model.isSick {
+                            SickBadgeView()
                         }
                     }
                 }

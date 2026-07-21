@@ -1122,3 +1122,47 @@ WHAT REMAINS / FOR THE NEXT ITERATION
    hurt frames differ noticeably around the head and legs.
 
 Next: US-069 (pulsing medical-bandage icon).
+
+--------------------------------------------------------------------------------
+2026-07-21  US-069  Pulsing medical-bandage icon                           PASSED
+--------------------------------------------------------------------------------
+
+Implementation was already present uncommitted from a prior interrupted iteration
+(Sources/SickBadgeView.swift, Tests/SickBadgeTests.swift, edits to ContentView.swift
+and MainScreenModel.swift). This iteration verified every AC against a real build,
+the full test suite, and a Simulator screenshot, then committed.
+
+  AC1  `bandage.fill` overlays the main screen while healthStatus == .sick. Driven by
+       new `MainScreenModel.isSick` (== .sick, deliberately not != .healthy) and an
+       `.overlay(alignment: .top) { if model.isSick { SickBadgeView() } }` in ContentView.
+  AC2  Continuous pulse, not one-shot: repeatForever(autoreverses:true) easeInOut on
+       opacity 1<->0.25, kicked in onAppear. Proved on Series 9 41mm by 8 sequential
+       badge-region crops, ALL 8 distinct md5s -> the badge is redrawing. (Per US-068's
+       note the Simulator throttles redraws, so this proves CHANGE, not rate; rate is a
+       unit-test concern only.)
+  AC3  Absent healthy AND dead. `testTheBadgeIsOwedForSicknessAndNothingElse` sweeps every
+       HealthStatus and asserts isSick only for .sick; `testCuringTakesTheBadgeAway` and
+       `testThereIsNoBadgeWithoutAGame` cover the transitions and the no-game screens.
+  AC4  No overlap on 41mm. The badge band is RESERVED, not drawn over: SickBadgeLayout
+       .spriteHeight() takes reservedHeight(18) out of the slot the sprite sizes against,
+       the sprite is bottom-aligned, badge is top overlay. 5 layout tests pin that the
+       sprite can never reach the band above clearanceFloor, incl. the below-floor case
+       where SpriteScale.minimum is binding (US-039's deliberate overflow, not this badge).
+       Screenshot: red bandage centred above the slumped Agumon, well clear of body and
+       of the 5-button action row.
+  AC5  US-039 not regressed. `testTheBandCostsAtMostOneScaleStep` bounds the cost at one
+       SpriteScale step. 41mm screenshot fits with no scrolling: badge, stats strip,
+       sprite, JP stat block and action row all on one screen.
+  AC6  Verified on Apple Watch Series 9 (41mm), watchOS 10.4, launch flags
+       `-sickDemo -noNotificationPrompt -healthAnswered`. Screenshot /tmp/us069_sick_41mm.png.
+  AC7  BUILD SUCCEEDED on both Series 11 46mm (26.4) and Series 9 41mm (10.4).
+  AC8  844 passed / 0 failures (was 831). 13 new in SickBadgeTests.
+
+WHAT REMAINS / FOR THE NEXT ITERATION
+
+1. `-sickDemo` still writes careMistakeCount=3 to the persisted save (US-068's warning
+   holds): a later `-wanderDemo` on the SAME sim may come up still sick. Use a fresh /
+   different simulator for any healthy control. Do NOT uninstall to reset — it wipes the
+   HealthKit grant and strands the app on an untappable system sheet.
+
+Next: US-070 (Move catalog).

@@ -234,7 +234,7 @@
       ],
       "priority": 12,
       "passes": true,
-      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered — US-066 wires it into the view."
+      "notes": "ConditionMetric.defaultHint gives all 32 metrics flavour text (exhaustive switch, no default clause); ConditionHint.resolve prefers an edge's authored hint, treats whitespace-only as unauthored, falls back to ConditionHint.fallback for an unknown metric. 11 ConditionHintTests, incl. a digit scan over defaults + all 89 authored hints in evolutions.json. Build green, 804 tests / 0 failures. Not yet rendered \u2014 US-066 wires it into the view."
     },
     {
       "id": "US-066",
@@ -288,7 +288,7 @@
       ],
       "priority": 15,
       "passes": true,
-      "notes": "Sick now plays the hurt loop (frames 9<->10) via a new SpriteAnimation.sick case at 1.5s/frame vs the battle hurt loop's 0.5s; DigimonSpriteView drives both its TimelineView schedule and its frame index off animation.frameDuration. The choice is the pure SpriteAnimation.resting(for:isAsleep:), unit-tested with no view or store. Wandering stays suppressed (isWandering keys off animation == .idle). Screenshotted with -sickDemo on Series 11 46mm: a slumped Agumon alternating two hurt frames, crisp, centred, not walking. NOTE: the Simulator's screen idles and throttles, so screenshot sampling CANNOT measure the 0.5s vs 1.5s cadence — that clause is proven by unit test, not by the screenshots. 831 tests pass (was 823)."
+      "notes": "Sick now plays the hurt loop (frames 9<->10) via a new SpriteAnimation.sick case at 1.5s/frame vs the battle hurt loop's 0.5s; DigimonSpriteView drives both its TimelineView schedule and its frame index off animation.frameDuration. The choice is the pure SpriteAnimation.resting(for:isAsleep:), unit-tested with no view or store. Wandering stays suppressed (isWandering keys off animation == .idle). Screenshotted with -sickDemo on Series 11 46mm: a slumped Agumon alternating two hurt frames, crisp, centred, not walking. NOTE: the Simulator's screen idles and throttles, so screenshot sampling CANNOT measure the 0.5s vs 1.5s cadence \u2014 that clause is proven by unit test, not by the screenshots. 831 tests pass (was 823)."
     },
     {
       "id": "US-069",
@@ -305,8 +305,8 @@
         "Tests pass"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "bandage.fill badge overlays the top band while healthStatus==.sick; band is reserved out of the sprite's sizing height (SickBadgeLayout) so it cannot collide with the walking sprite. Pulses via repeatForever easeInOut opacity 1<->0.25 (off both sprite cadences). isSick==(.sick), so absent when healthy/dead. 844 tests pass (13 new in SickBadgeTests). Build green on 46mm and 41mm. Screenshot on Series 9 41mm -sickDemo: red bandage centred above slumped Agumon, clear of body and action row, no scrolling; 8 badge-region crops all hash distinctly, proving continuous pulse. See progress.txt."
     },
     {
       "id": "US-070",
