@@ -106,7 +106,12 @@ struct EnergyBarsView: View {
         // cost 44 of the 136 points the whole screen has; the same four bars in two rows cost 22,
         // and that 22 is most of the difference between a 32pt Digimon and a 48pt one. The pairing
         // is by `EnergyType.allCases` order, so a type does not move between builds.
-        VStack(spacing: 2) {
+        // One point between the two bar rows since US-120, down from two. The bars are filled
+        // capsules with their own contrast against the background, so the gap was never what made
+        // them readable as separate rows; it was the last whole point of chrome left to pay the map
+        // strip with (US-120 AC4). The hatch caption below keeps the same gap — it is text against
+        // bars, which is the one place here the separation is doing real work.
+        VStack(spacing: 1) {
             ForEach(Array(rowPairs.enumerated()), id: \.offset) { _, pair in
                 HStack(spacing: 6) {
                     ForEach(pair) { goal in

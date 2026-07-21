@@ -66,6 +66,33 @@ final class MainScreenLayoutTests: XCTestCase {
         XCTAssertEqual(SpriteScale.fitting(3 * 16 - 0.1), 2)
     }
 
+    /// US-120 AC4: the map strip must not shrink the sprite slot below what US-114 left.
+    ///
+    /// It does not, but only just, and only because the chrome around it was trimmed to pay for it.
+    /// The slot was MEASURED on the Simulator at 49.5pt on 41mm and 64.0pt on 46mm with the strip in
+    /// place, against 49.0pt and 64.0pt without it (progress.txt has the method). Those are 0.5pt
+    /// and 0.0pt of slack over a 16pt quantum.
+    ///
+    /// This cannot assert the layout — that is a screenshot. What it CAN hold is the two font sizes
+    /// the trim spent, so that growing one fails here rather than silently costing the Digimon a
+    /// third of its size on 41mm, which is a regression no test would otherwise catch and no crash
+    /// would announce.
+    func testTheMainScreenFontsStaySmallEnoughToKeepTheSpriteScale() {
+        XCTAssertLessThanOrEqual(MainScreenTypography.nameFontSize,
+                                 MainScreenTypography.maximumSafeFontSize)
+        XCTAssertLessThanOrEqual(MainScreenTypography.statValueFontSize,
+                                 MainScreenTypography.maximumSafeFontSize)
+
+        // The measured slots still land on the scales US-114 drew: 3 on 41mm, 4 on 46mm. If a later
+        // story changes the layout it must re-measure and update these two numbers — they are
+        // evidence, not arithmetic.
+        XCTAssertEqual(SpriteScale.fitting(49.5), 3, "41mm slot measured with the map strip")
+        XCTAssertEqual(SpriteScale.fitting(64.0), 4, "46mm slot measured with the map strip")
+
+        // And they are genuinely at the edge: half a point less on 46mm is a smaller Digimon.
+        XCTAssertEqual(SpriteScale.fitting(63.5), 3)
+    }
+
     /// More room never draws a smaller Digimon.
     func testTheScaleNeverDecreasesAsHeightGrows() {
         var previous = SpriteScale.fitting(0)

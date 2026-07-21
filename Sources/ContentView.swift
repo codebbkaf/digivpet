@@ -445,7 +445,16 @@ struct ContentView: View {
             // scrolling away from the Digimon, so the rows are all fixed-height and the sprite
             // takes whatever they leave — see `SpriteScale`. What used to be three stacked stat
             // blocks is one strip, which is most of the room that bought.
-            VStack(spacing: 1) {
+            //
+            // Zero spacing since US-120, not one point. The map strip added a sixth row to this
+            // stack, and `SpriteScale.fitting` FLOORS `slotHeight / 16`: the slot sat at exactly
+            // 49.0pt on 41mm and exactly 64.0pt on 46mm, so a row of any height at all cost the
+            // Digimon a whole scale step (48 -> 32pt, 64 -> 48pt — measured, not predicted). The
+            // strip's ~13.5pt had to come back out of the chrome around it, and this stack's five
+            // inter-row gaps are 5.0pt of it. They are the cheapest 5 points on the screen: every
+            // row here is already a self-contained band of text or controls, so what the gaps were
+            // buying was air between things that do not touch anyway.
+            VStack(spacing: 0) {
                 if let state = model.state {
                     StatsStrip(hunger: state.hunger,
                                strengthStat: state.strengthStat,
@@ -508,8 +517,16 @@ struct ContentView: View {
                 // present, so a message still does not shove the sprite up mid-animation; what a
                 // message now costs is the name for the two seconds it is up, and while a Digimon
                 // is refusing food its name is not the thing the user needs to read.
+                // Size 9 since US-120, down from 12. Three points of this row's height is 3.6pt of
+                // the map strip's cost paid back, and this is the row that can best afford it: 9pt
+                // is already this screen's small-text size — the stats strip's labels and the action
+                // row's caption are both 9 — so the name line joins a size the screen already
+                // speaks rather than inventing a smaller one. The Digimon's name is also the one
+                // thing here a glance does not need: the sprite says which Digimon it is, and a
+                // 48pt sprite says it far better than a 12pt caption did.
                 Text(model.actionMessage ?? "\(presentation.displayName) · \(presentation.stage.displayName)")
-                    .font(.system(size: 12, weight: model.actionMessage == nil ? .semibold : .regular))
+                    .font(.system(size: MainScreenTypography.nameFontSize,
+                                  weight: model.actionMessage == nil ? .semibold : .regular))
                     .foregroundStyle(model.actionMessage == nil ? Color.primary : Color.orange)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
@@ -537,6 +554,10 @@ struct ContentView: View {
                     // preference is something you visit once, but it is still a destination
                     // like the others, and a fourth circle costs less room than the labelled
                     // link below the fold that it replaces.
+                    //
+                    // The 2pt top padding this used to carry went to the sprite in US-120. The
+                    // circles are 30pt discs with their own visual margin, so the gap above them
+                    // was decoration; the Digimon needed it more.
                     ActionControls(canAffordBattle: model.canAffordBattle,
                                    poopCount: model.poopCount,
                                    feed: { model.feed() },
@@ -545,7 +566,6 @@ struct ContentView: View {
                                    battle: { model.battle() }) {
                         NotificationSettingsView(settings: model.notificationSettings)
                     }
-                    .padding(.top, 2)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -633,6 +653,31 @@ struct ContentView: View {
 ///
 /// Free-standing rather than a static on the view that uses it, because the view is generic over
 /// nothing useful here and a test should not have to build a view graph to check the arithmetic.
+/// The two text sizes on the main screen that the sprite's scale depends on (US-120).
+///
+/// Named rather than left as literals in a `body` for `MapStripLayout.fontSize`'s reason: these are
+/// not taste, they are load-bearing. `SpriteScale.fitting` FLOORS `slotHeight / 16`, and after the
+/// map strip took a sixth row the slot lands at 49.5pt on 41mm and 64.0pt on 46mm — 0.5pt and 0.0pt
+/// above the scale boundary. Both numbers were measured on the Simulator, not derived.
+///
+/// Growing either of these by a point pushes the slot back under a multiple of 16 and costs the
+/// Digimon a THIRD of its size on 41mm, silently — the layout does not break, the sprite just gets
+/// small. `MainScreenLayoutTests` holds them here so that change fails a test instead.
+enum MainScreenTypography {
+    /// The Digimon's name and stage, and the action message that replaces it.
+    static let nameFontSize: CGFloat = 9
+
+    /// The stats strip's values (STR, PWR). Matched to the 9pt labels beside them; the strip's
+    /// height is its tallest element, and these were it.
+    static let statValueFontSize: CGFloat = 9
+
+    /// The largest either may be before the 41mm slot drops below `3 * 16` and the sprite shrinks.
+    ///
+    /// Not a style rule — a measured ceiling. The 41mm slot has 0.5pt of slack and a point of font
+    /// costs it about 1.2pt of height, so there is no room above 9 for either of them.
+    static let maximumSafeFontSize: CGFloat = 9
+}
+
 enum SpriteScale {
     /// The scale the screen showed before there was anything to compete with it for room.
     static let maximum: CGFloat = 5
@@ -714,8 +759,13 @@ struct StatsStrip: View {
                 .font(.system(size: 9))
                 .foregroundStyle(.secondary)
 
+            // Size 9 since US-120, down from 11, which matches the label beside it. The strip's
+            // height is its tallest element and the values were it, so those two points came
+            // straight off the row and went to the sprite (US-120 AC4). The values keep their
+            // semibold weight and their tint, which is what separated them from the labels — the
+            // size difference was never doing that work on its own.
             Text(value)
-                .font(.system(size: 11, weight: .semibold))
+                .font(.system(size: MainScreenTypography.statValueFontSize, weight: .semibold))
                 .foregroundStyle(tint)
         }
     }

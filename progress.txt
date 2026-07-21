@@ -50,18 +50,37 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - To prove a constant (an opacity, a scale) is really what the screen paints: render the source
   asset yourself with the same layout math into the measured slot over black, then divide the
   Simulator's band by it. Turns "it looks about right" into a number.
-- **THE MAIN SCREEN HAS NO VERTICAL BUDGET LEFT.** `SpriteScale.fitting` floors `slotHeight / 16`,
-  and the slot lands at EXACTLY 49.0pt on 41mm (a 48pt Digimon, 1.0pt of slack) and EXACTLY 64.0pt
-  on 46mm (a 64pt Digimon, 0.0pt of slack) on a hatched Child. **Any row added to `ContentView`'s
-  VStack costs the Digimon a whole scale step, however thin the row is** — US-120 measured a 13.5pt
-  row taking 48 -> 32pt and 64 -> 48pt. Measure the slot BEFORE designing a row. The only unspent
-  height on the screen is the bottom safe area (26pt on 41mm, 36pt on 46mm, verified with an
-  `.ignoresSafeArea(.container, edges: .bottom)` probe), and spending it puts the action row's outer
-  circles inside the display's corner arc.
+- **THE MAIN SCREEN'S VERTICAL BUDGET IS NOW SPENT — genuinely, as of US-120.** `SpriteScale.fitting`
+  floors `slotHeight / 16`, and on a hatched Child the slot lands at **49.5pt on 41mm** (a 48pt
+  Digimon, **0.5pt of slack**) and **64.0pt on 46mm** (a 64pt Digimon, **0.0pt of slack**).
+  **Any row added to `ContentView`'s VStack costs the Digimon a whole scale step, however thin** —
+  US-120 measured a 13.5pt row taking 48 -> 32pt and 64 -> 48pt before it paid for itself. Measure
+  the slot BEFORE designing a row. What is left to pay with, in order of preference:
+  - **Nothing cheap.** US-120 already spent the five 1pt VStack gaps, `ActionControls`' 2pt top
+    padding, the energy bars' row spacing, and took the name line and the stats values to 9pt.
+    `MainScreenTypography` holds those two sizes and a test fails if they grow.
+  - The bottom safe area — 26pt on 41mm, 36pt on 46mm, real and unused, verified with an
+    `.ignoresSafeArea(.container, edges: .bottom)` probe — but spending it puts the action row's
+    outer circles inside the display's corner arc, which is what the inset is for.
+  - The top band holds the clock and BOTH toolbar buttons (US-114's light, the Dex). Not reclaimable.
+  - **Price a trade before declining it.** US-120's first iteration set the chrome trim aside as "a
+    screen-wide legibility regression"; measured, half of it was pure whitespace costing nothing.
 - To measure the sprite SLOT in one command: the map band under `-mapDemo=<asset>` IS the slot,
-  exactly, so diff that shot against a `-mapDemo=none` one. To measure the sprite SCALE: a brand-new
-  save is a Digitama whose sheet yields no frames, so `DigimonSpriteView.placeholder` draws a
-  stroked box of exactly `16 x scale` points — a free ruler that needs no matched walk frame.
+  exactly, so diff that shot against a `-mapDemo=none` one — **but only count a row as slot if
+  >=75% of the WIDTH differs.** The map band is full width (344 of 352px on 41mm); `-mapDemo=none`
+  also flips the map strip to its prompt state and nudges the name row, so a naive "differs at all"
+  diff swallows those two text rows and over-reports the slot by ~23pt. To measure the sprite SCALE:
+  a brand-new save is a Digitama whose sheet yields no frames, so `DigimonSpriteView.placeholder`
+  draws a stroked box of exactly `16 x scale` points — a free ruler that needs no matched walk frame.
+  On a HATCHED save use the sprite's ink WIDTH, not its height: height changes with the walk frame.
+- **A demo flag's "inverse" is rarely a pure inverse** — `-mapDemo=none` undoes US-115's background
+  AND changes US-120's strip. When a before/after rests on one flag, check what else that flag
+  reaches, or the diff attributes every change to the thing you were testing.
+- **Build a pre-story baseline in a `git worktree`, not a `git stash`.** The two builds land in
+  different DerivedData directories, so there is no copy-the-app-out-first race and the working tree
+  is never disturbed. `git worktree add /tmp/<name> <commit>`, then `git worktree remove --force`.
+  A baseline that reproduces the previous iteration's published numbers is what makes a
+  before/after worth anything — check that it does before trusting the "after".
 - `xcodegen generate` is required for a NEW source file even though `project.yml` globs `Sources`.
   The symptom is "cannot find type 'X' in scope" on a file that plainly exists.
 
@@ -539,4 +558,70 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-120 (6/56 passing, unchanged). The strip itself is finished, tested and photographed;
   what is open is a layout-budget decision that belongs to a person, not to a measurement — accept
   a one-step smaller Digimon, or free a full line first and say which of the three ways above.
+---
+
+## 2026-07-22 — US-120: Map strip on the main screen, and switching maps — NOW PASSING
+- The previous iteration left AC4 as the only failure and framed it as a decision rather than a
+  measurement: accept a one-step smaller Digimon, or free a full line first. **This iteration freed
+  the line.** No change to `MapStripView`, `MainScreenModel` or the strip's own tests — the strip was
+  already finished. What changed is who pays for its ~13.5pt.
+- **The five trims, and why each is the cheapest point on the screen:**
+  - `ContentView`'s `VStack(spacing: 1)` -> `0` — **5.0pt**, five gaps. Every row here is already a
+    self-contained band of text or controls, so the gaps bought air between things that do not touch.
+  - The name/stage line `12` -> `9pt` — **3.6pt**. 9 is already this screen's small size: the stats
+    labels and the action row's caption are both 9. The name is also the one thing a glance does not
+    need — the sprite says which Digimon it is, and a 48pt sprite says it better than a 12pt caption.
+  - `StatsStrip`'s values `11` -> `9pt` — **2.4pt**. The strip's height is its tallest element and
+    the values were it. They keep their semibold weight and their tint, which is what separated them
+    from the labels; the size was not doing that work.
+  - `ActionControls`' `.padding(.top, 2)` — **2.0pt**. The circles are 30pt discs with their own
+    visual margin.
+  - `EnergyBarsView`'s bar-row spacing `2` -> `1` — **1.0pt**. The hatch caption below keeps its gap;
+    text against bars is the one place the separation does real work.
+- Files: Sources/ContentView.swift, Sources/EnergyBarsView.swift, Tests/MainScreenLayoutTests.swift.
+- PASSED: build green. `Executed 1436 tests, with 0 failures` (1435 + 1 new), the new one also
+  observed passing on its own with `-only-testing`.
+- **AC4 PASSED, MEASURED — the criterion that cost two iterations.** Pre- vs post-story, both watch
+  sizes, fresh install, identical script and identical launch command. The baseline is a REAL BUILD
+  of `858fa43` (US-119, the last commit before the strip) made in a `git worktree` — and it
+  reproduced the previous iteration's numbers to the point, 49.0pt on 41mm and 64.0pt on 46mm, which
+  is what makes the comparison worth anything.
+  - **SLOT: 41mm 49.0 -> 49.5pt. 46mm 64.0 -> 64.0pt.** Not smaller on either.
+  - **SPRITE**, measured directly as ink on black inside the slot: 41mm **78x72px in BOTH** builds,
+    the same size at a different walk offset; 46mm **104px wide in BOTH**. Scale 3 on 41mm and 4 on
+    46mm before and after. (The 46mm 104 vs 96 HEIGHT is the walk1/walk2 confound — width is the
+    honest signal, and 78/104 = 3/4 confirms both scales independently.)
+  - The name line no longer runs through the Digimon, which is the defect the previous iteration
+    photographed: sprite ink ends y221 and the name starts y233 on 41mm (6.0pt clear), y266 and y279
+    on 46mm (6.5pt clear).
+- **A MEASUREMENT BUG THAT NEARLY PRODUCED A FALSE PASS — in the generous direction, which is the
+  dangerous one.** Diffing `-mapDemo=<asset>` against `-mapDemo=none` on "rows that differ at all"
+  reported the slot as **72.0pt / 87.5pt** — a ~23pt gain from ~14pt of trims, which is what gave it
+  away. `-mapDemo=none` does not only remove the map: it flips the strip to its PROMPT state (grey
+  folded-map glyph for the orange walk glyph) and nudges the name row, so those two text rows differ
+  for reasons that have nothing to do with the background. Fix: the map band is FULL WIDTH (344 of
+  352px on 41mm) and a text row differs over at most half of it, so require **>=75% of the width**
+  to differ. The band then comes out contiguous on all four shots and lands on the real numbers.
+- AC7 re-verified on the new build with `-mapStripWidestDemo`, since the fonts around the strip
+  moved: 41mm glyph x7-19, "Cyberpunk" x31-137, "50000" x147-202, "/" x210-216, "50000" x224-279, an
+  **18.5pt clear gap**, party icon x317-343, 4.5pt right margin. Both five-digit runs are the full
+  56px with no ellipsis, and "Cyberpunk" is 107px on BOTH screens, so `minimumScaleFactor(0.7)` never
+  fired on the narrow one. US-115 is intact: the map band is exactly the slot on both sizes.
+- **Learnings for future iterations:**
+  - **The screen's vertical budget was not exhausted — it was unaudited.** The previous iteration
+    priced the chrome trim at "about 14pt" and set it aside as "a screen-wide legibility regression
+    bought with one row". Measured, **7 of those 14 points are pure whitespace** (five 1pt VStack
+    gaps and a 2pt padding) and cost no legibility at all, and the other ~6 move two labels onto a
+    size the same screen already uses in three other places. Price a trade before declining it.
+  - **A demo flag's inverse is rarely a pure inverse.** `-mapDemo=none` was built as US-115's undo,
+    but it also drives the strip's prompt state — so it changes two things and a diff attributes
+    both to the map. When a before/after rests on one flag, check what ELSE that flag reaches.
+  - **A result that beats its own arithmetic is a bug report.** +23pt from 14pt of trims was not good
+    news, it was a broken measurement. The estimate was right the whole time.
+  - Build the pre-story baseline in a **`git worktree`**, not a `git stash`: the two builds land in
+    different DerivedData directories, so there is no copy-the-app-out-first race, and the working
+    tree is never disturbed. `git worktree remove --force` when done.
+- REMAINS: US-121 onward (7/56 passing). Phase B has two stories left, US-121 (map detail) and
+  US-122 (opponents from the map); both consume `opponentPool` and `digitamaSlots`, which US-116
+  already authored.
 ---
