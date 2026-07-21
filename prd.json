@@ -39,8 +39,8 @@
         "Typecheck passes"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MapBackgroundView draws the selected map at 0.35 inside a backgroundPreferenceValue off SpriteSlotBoundsKey - the same anchor the scrim uses - so it is behind the sprite and below the scrim by construction. Build green, 1331 tests (1324 + 7 new), 0 failures. MEASURED on 46mm, clean installs, pre- vs post-story builds (details in progress.txt): a map changes EXACTLY rows y153-259, x4-411, and nothing else on the 496-row screen, over all three of 01_grassland/14_farmland/16_iceland - so it is not behind the stats strip, the name line, the bars, the action row or the toolbar, and it grows layout in neither axis. On matched walk frames all 2916 of the sprite's pixels are BYTE-IDENTICAL with a map behind them, on all three maps: the map is strictly behind the Digimon. Scrim: the map band's mean luma 63.485 -> 31.721 at semi (x0.4997) -> 9.480 at off (x0.1493), exactly dimOpacity, while chrome above and below is identical to three decimals with the light on and out. Opacity recovered from the screen against a same-math reference render is 0.339/0.339/0.342 on the three assets, i.e. the authored 0.35. AC6: with no map selected the ONLY pixels differing from the US-114 build are the clock digits (x175-240 y39-62) - byte-for-byte otherwise. AC7: the sprite's DIMMEST pixel is luma 146.3 and the BRIGHTEST map pixel beside it is 88.4 across all three brightest assets, so the two ranges do not overlap at all. Seam for US-116/US-119: MainScreenModel.selectedMapAsset is nil for every real save today and is set only by the new DEBUG -mapDemo=<asset> flag; US-119 repoints it at PlayerProfile without touching the view."
     },
     {
       "id": "US-116",

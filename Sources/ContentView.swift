@@ -524,6 +524,38 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // The adventure map (US-115), behind the Digimon and inside its slot alone. Off the same
+            // anchor the scrim uses, so the map and the darkness that falls on it are the same rect
+            // by construction rather than by two sets of arithmetic agreeing.
+            //
+            // A BACKGROUND rather than an overlay, which is the whole difference between scenery and
+            // a stain: this layer is painted before the VStack, so the sprite, the stats strip and
+            // the action row are all drawn on top of it, and `LightLayer` — an overlay — is painted
+            // after all of them. That stacking is what makes the map dim with the room instead of
+            // floating above the scrim.
+            //
+            // Costs the sprite nothing: a background is sized by the view it is behind and never
+            // proposes a size back to it, so the map cannot grow the layout in either axis however
+            // large the asset is.
+            .backgroundPreferenceValue(SpriteSlotBoundsKey.self) { spriteSlot in
+                GeometryReader { proxy in
+                    // Nothing at all with no map selected, and nothing before the first layout pass
+                    // has measured the slot — the same nil rule the scrim follows.
+                    if MapBackgroundLayout.shouldDraw(assetName: model.selectedMapAsset),
+                       let mapAsset = model.selectedMapAsset,
+                       let slot = spriteSlot.map({ proxy[$0] }) {
+                        MapBackgroundView(assetName: mapAsset)
+                            .frame(width: slot.width, height: slot.height)
+                            // The fill's overflow stops here. Without this the map spills up over
+                            // the stats strip and down over the energy bars.
+                            .clipped()
+                            // `.offset` rather than padding, for the reason the scrim uses one:
+                            // padding is laid out, an offset only moves the drawing.
+                            .offset(x: slot.minX, y: slot.minY)
+                    }
+                }
+                .allowsHitTesting(false)
+            }
             // The room light's scrim (US-099), over the sprite's slot and nothing beyond it since
             // US-112. Applied HERE and not to the `NavigationStack`, so the ceremony, the battle,
             // the training round and the memorial — which are applied out there — are painted on

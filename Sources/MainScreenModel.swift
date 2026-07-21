@@ -159,6 +159,19 @@ final class MainScreenModel: ObservableObject {
     /// `.fallback` (22:00–07:00) when HealthKit had no usable history to infer from.
     @Published private(set) var sleepSchedule: SleepSchedule = .fallback
 
+    /// The asset-catalog name of the map the Digimon is adventuring in (US-115), or nil for "no map
+    /// selected" — which draws no background at all and leaves the screen exactly as US-114 left it.
+    ///
+    /// **Nil for every save today, and that is correct rather than unfinished.** US-115 ships the
+    /// drawing; the catalog that names the sixteen maps is US-116, and the picker that persists a
+    /// choice onto `PlayerProfile` is US-119. When that lands, this becomes a read of the profile's
+    /// selected map id resolved through the catalog, and the view above it does not change — which
+    /// is the point of putting the seam here rather than reaching for the asset name from the view.
+    ///
+    /// Until then the only thing that can set it is `-mapDemo=<asset>`, which is how the story's
+    /// screenshots were taken.
+    @Published private(set) var selectedMapAsset: String?
+
     private let makeStore: @MainActor () throws -> GameStore
     private let graph: EvolutionGraph
     /// Consulted for one thing only: the stage of a Digimon the graph has no node for, when picking
@@ -343,6 +356,7 @@ final class MainScreenModel: ObservableObject {
         seedBattleDemoIfRequested()
         seedPoopDemoIfRequested()
         seedLightDemoIfRequested()
+        seedMapDemoIfRequested()
         // Every seed above runs AFTER the refresh that published, so the snapshot on disk still
         // describes the pre-demo game — a `-sickDemo -complicationDemo` run would screenshot an idle
         // pose. Republishing here is the same rule as `clean()`'s, applied to the demos: the state
@@ -771,6 +785,23 @@ final class MainScreenModel: ObservableObject {
         guard semi || arguments.contains("-lightOffDemo"), let state else { return }
 
         state.setLight(semi ? .semi : .off, now: now())
+    }
+
+    /// Debug-only: selects a map to draw behind the Digimon, since nothing can select one yet — the
+    /// picker is US-119 and the catalog it picks from is US-116.
+    ///
+    /// `-mapDemo=01_grassland`, taking the asset name inline rather than one flag per map: there are
+    /// sixteen backgrounds and US-115 has to be photographed over the three brightest of them.
+    ///
+    /// Unvalidated on purpose. This sets the name the shipped view will draw, so a typo screenshots
+    /// the missing-resource placeholder — which is the honest result, and cheaper to spot than a
+    /// silent fallback to grassland would be.
+    private func seedMapDemoIfRequested() {
+        let prefix = "-mapDemo="
+        guard let argument = CommandLine.arguments.first(where: { $0.hasPrefix(prefix) }) else {
+            return
+        }
+        selectedMapAsset = String(argument.dropFirst(prefix.count))
     }
 
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start

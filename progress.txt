@@ -39,6 +39,17 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   moving sprite, and a peak/mean-luma pass over a band proves a dim is exactly `dimOpacity`.
 - The scrim is invisible over a black background, so it cannot be measured directly. Measure what
   it DIMS instead: the sprite's peak luma with the light on vs off.
+- NEVER diff a single screenshot per build when the sprite is in shot. The walk1/walk2 alternation
+  is driven by a TimelineView that runs whether or not the sprite translates, so two shots taken
+  seconds apart routinely catch opposite frames and read as a large bogus diff. Take a BURST of ~6
+  per configuration, compare every pair, and use the pair that agrees — a matched pair goes to 100%
+  byte identity while a mismatched one sticks at the ~50% the two poses share.
+- Demo flags that write to the SAVE persist across launches, and several have no inverse
+  (`-lightOffDemo` has no `-lightOnDemo`). Order the screenshot pass so the default state is
+  photographed FIRST, or `simctl erase` between runs — a poisoned shot still looks plausible.
+- To prove a constant (an opacity, a scale) is really what the screen paints: render the source
+  asset yourself with the same layout math into the measured slot over black, then divide the
+  Simulator's band by it. Turns "it looks about right" into a number.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -101,3 +112,77 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-115 onward (1/56 passing).
 ---
 
+
+## 2026-07-22 — US-115: The selected map draws behind the Digimon
+- `MapBackgroundView` draws the selected map's asset at `MapBackgroundLayout.opacity` (0.35),
+  `.resizable().scaledToFill()`, installed as a **`backgroundPreferenceValue`** off the SAME
+  `SpriteSlotBoundsKey` anchor the scrim reads, sized to that slot, `.clipped()` and `.offset` into
+  place. Background rather than overlay is the whole design: the layer is painted before the VStack,
+  so the sprite and every row are drawn on top of it and `LightLayer` — an overlay — is painted
+  after all of them. The map being dimmed by the scrim is therefore structural, not arithmetic.
+- `MainScreenModel.selectedMapAsset` is the seam: nil for every real save today (the catalog is
+  US-116, the persisted pick is US-119), set only by the new DEBUG `-mapDemo=<asset>` flag.
+- Files: Sources/MapBackgroundView.swift (new), Sources/ContentView.swift,
+  Sources/MainScreenModel.swift, Tests/MapBackgroundTests.swift (new, 7 tests).
+- PASSED: build green. `Executed 1331 tests, with 0 failures` (1324 + the 7 new).
+- PASSED, MEASURED on 46mm, clean install per build, `-healthAnswered -noNotificationPrompt
+  -wanderDemo`. Screenshots + throwaway measurers in /tmp/us115 (NOT committed). Boxes are
+  screenshot pixels, i.e. @2x on a 416x496 shot.
+  - THE MAP IS CONFINED TO THE ROOM (AC1, AC3). Diffing the no-map shot against the map shot from
+    the SAME build: the screen changes in **x4-411 y153-259 and nowhere else**, one contiguous band,
+    identically for 01_grassland, 14_farmland and 16_iceland. The stats strip above it, the name
+    line, the energy bars, the action row and the whole toolbar are byte-identical — so the map is
+    behind none of them, and it grew layout in neither axis.
+  - THE MAP IS BEHIND THE DIGIMON, not over it. On matched walk frames, **all 2916 pixels the
+    sprite paints are byte-identical with a map behind them**, on all three maps. First run of this
+    read 1512/2916 on farmland and that was a FALSE ALARM — see the walk-frame trap below.
+  - THE SCRIM COVERS THE MAP (AC5). Map band mean luma 63.485 with the light on -> 31.721 at semi
+    (x0.4997) -> 9.480 at off (x0.1493); peak 244.1 -> 122.6 -> 36.3. That is exactly
+    `LightState.dimOpacity` applied to the map, which is what "inside the scrimmed region, painted
+    below the scrim" means in numbers. Chrome above (rows 100-150) and below (265-495) the slot is
+    identical to three decimals with the light on and out. Reproduced twice, on two installs.
+  - THE OPACITY ON SCREEN IS THE AUTHORED ONE (AC2). Rendering each asset with the same
+    scaledToFill math into the same 416x107 slot over black, then dividing the Simulator's band by
+    it, recovers **0.339 / 0.339 / 0.342** for grassland / farmland / iceland against the authored
+    0.35. (The ~3% shortfall is the reference render's own colour handling and the display's
+    rounded corners, both included in the divisor; it settles 0.35 vs 0.5 or 1.0 beyond doubt.)
+  - NO MAP SELECTED IS US-114's SCREEN (AC6). Pre-story build vs post-story build, both fresh
+    installs, no map: the ONLY differing pixels on the entire 416x496 screen are **x175-240 y39-62,
+    the clock digits**, because the minute rolled between the two runs. Everything else — lamp, Dex
+    book, stats strip, sprite, name line, bars, action row, caption — is byte-identical.
+  - THE DIGIMON STAYS LEGIBLE (AC7). Over the three brightest assets: the sprite's mean luma is
+    190.3 and its **dimmest** pixel is 146.3, while the **brightest** map pixel beside it is 88.4
+    (grassland 85.9, farmland 87.0, iceland 88.4). The two ranges do not overlap at all — no pixel
+    of the Digimon is ever as dark as the brightest pixel of the brightest map. Mean-vs-mean
+    contrast is 2.93:1 / 3.16:1 / 3.01:1.
+- **Learnings for future iterations:**
+  - **THE WALK-FRAME TRAP, and it will bite any story that diffs the sprite between two builds.**
+    A single screenshot from each build is NOT comparable: the inner `TimelineView` in
+    `DigimonSpriteView` alternates walk1/walk2 regardless of whether the sprite translates, so two
+    shots taken seconds apart routinely catch opposite frames and read as a large bogus diff.
+    Fix: take a BURST of ~6 shots per configuration and compare every pair, then use the pair that
+    agrees. The frames are trivially separable by lit-pixel count (here 1476 vs 1620 under a scrim,
+    2916 vs 2916-with-different-geometry lit) and the matching pair goes to 100% identity while a
+    mismatched pair sticks at the ~50% both poses share. Four hypotheses were burned before this
+    was the answer.
+  - **THE LIGHT STATE PERSISTS ACROSS LAUNCHES AND POISONS LATER SCREENSHOTS.** `-lightOffDemo`
+    writes `.off` to the save, and there is no `-lightOnDemo` to undo it, so every subsequent run
+    on that container is photographed under a 0.85 scrim — silently, since the shot still looks
+    plausible. Always take the light-on shots FIRST, or `simctl erase` between. Lost a burst to it.
+  - `.backgroundPreferenceValue` is the mirror of the `.overlayPreferenceValue` already on this
+    VStack and costs the sprite nothing: a background is sized by the view it is behind and never
+    proposes a size back, so no asset can grow the layout however large it is. Reading the SAME
+    anchor as the scrim is what makes "the map is inside the scrimmed region" true by construction
+    rather than by two rects happening to agree.
+  - Recovering a constant like an opacity from a screenshot works and is worth the twenty lines:
+    render the source asset yourself with the same fill math into the measured slot over black,
+    then divide. It is the difference between "the map looks faint" and "the screen is painting
+    0.339".
+  - The pre-existing US-114 trap is unchanged and did NOT block this story: `-wanderDemo` still
+    animates without translating. The sprite's fixed position is actually what made the
+    byte-identity test above easy, so nobody needs to fix it before US-116.
+  - Do NOT put `.interpolation(.none)` on the map backgrounds. The sprite rule exists to stop 16x16
+    art being smoothed UP; these are 822x330 assets drawn DOWN into a ~208pt slot, where
+    nearest-neighbour drops rows and columns unevenly.
+- REMAINS: US-116 onward (2/56 passing). Phase A is done; Phase B starts with the map catalog.
+---
