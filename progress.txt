@@ -155,3 +155,73 @@ REMAINS
 US-087 (author `Resources/elements.json` for every curated Digimon) is next. It
 should mirror `MoveCatalog`'s three-tier lookup — id, then line, then keyword
 rule, then `neutral`/`free` — per D-1.
+
+================================================================================
+2026-07-21 — US-087: Author elements.json for every curated Digimon
+================================================================================
+
+WHAT I DID
+- `Resources/elements.json` — three sections mirroring `moves.json`:
+  - `types` (by id): all **88** nodes of `evolutions.json`, hand-authored.
+  - `lineDefaults` (by line): all six lines, a safety net for a node added later.
+  - `keywordRules`: 44 ORDERED substring rules, first match wins.
+- `Sources/ElementCatalog.swift` — `DigimonType` (element + attribute, with the
+  inert `.unauthored = neutral/free` floor), `ElementKeywordRule`, and
+  `ElementCatalog` with `type(forId:line:)` (pure) plus `type(for:in:)` that
+  resolves the line off the graph. `load(from:)` / `bundled` copied verbatim
+  from `MoveCatalog`, including the fatalError on an undecodable file.
+- `Tests/ElementCatalogTests.swift` — 19 tests.
+- `docs/elements.md` — a new section documenting the four tiers, the ordering
+  rule, and why 776 neutrals is the honest answer.
+- `project.yml` — comment only. `Resources` is a directory path, so xcodegen
+  picks the new file up automatically; regenerated and verified elements.json is
+  in the app target's resources build phase.
+
+THE NUMBER THE STORY ASKS FOR (AC7, reported not asserted)
+Over all 1,022 roster ids: 85 resolve by id, 161 by a keyword rule, and **776
+(75.9%) land on neutral/free**. Non-neutral spread: dark 80, fire 40, machine
+30, ice 20, light 20, plant 12, electric 11, water 10, earth 10, wind 9,
+steel 4. The floor is designed for this — a rule invented to cover a family
+nobody has looked at would hand out real matchups on a guess.
+
+DESIGN NOTES FOR LATER STORIES
+- ORDER IS THE COLLISION RESOLVER in `keywordRules`. Five rules exist only to be
+  reached first: `trice` before `ice` (Triceramon is not an ice type),
+  `cherubimon` before `ice` (`_vice`), `orange` before `ange` (Growmon Orange is
+  not an angel), `aquila` before `aqua`, and `yuki`/`kaguya`/`raguel`/`haguru`
+  before `agu`. Adding a rule near the top can silently re-type ids below it —
+  re-run the whole-roster test and eyeball the per-keyword hits.
+- Six rules the story REQUIRES currently match no roster id at all (`angel`,
+  `machine`, `raidra`, `frigi`, `aqua`, `flame`). They are kept deliberately;
+  the test asserts them through the lookup with a synthetic `zz<keyword>zz` id,
+  so a rule that exists but is shadowed by an earlier one still fails.
+- An explicit `types` entry beats the keyword table. `darkdramon` is the pinned
+  case: a Vaccine machine dragon whose name says `dark`.
+- Keyword-tier attributes are a genre heuristic, not canon: only the angel
+  families (vaccine) and the devil/undead families (virus) are typed; every
+  other rule says `free` rather than fabricating an attribute for a family.
+- Elements agree with the Digimon's authored attack in `moves.json` — Meramon
+  throws flame, so it is fire. US-088's badges will sit next to US-089's move
+  row, so a mismatch between the two files would be visible on one screen.
+
+VERIFICATION
+- `xcodegen generate` then `xcodebuild build` — ** BUILD SUCCEEDED **.
+- `xcodebuild test` — ** TEST SUCCEEDED **, 1086 tests, 0 failures (was 1067;
+  the 19 new tests are the whole delta).
+- Every AC checked literally:
+  - three sections present and decoded from the bundle.
+  - all 88 nodes have a `types` entry — counted off the graph, not a literal —
+    and the reverse direction (no authored id that is not a node) too.
+  - canon attributes spot-checked on the ids the story names.
+  - elements vary within a line: asserted for EVERY line, not just Agumon's.
+  - all four tiers unit-tested on a fixture catalog, plus case-insensitivity and
+    the earlier-rule-wins ordering.
+  - every keyword family the story lists asserted THROUGH the lookup.
+  - all 1,022 roster ids resolve; neutral count bounded (<90%) not pinned.
+  - malformed file: unknown element, unknown attribute, and a missing section
+    each fail the decode; a bundle without the file throws `.fileNotBundled`.
+
+REMAINS
+US-088 (element/attribute badges on the Dex detail view) is next. It should read
+`ElementCatalog.bundled.type(for:in:)` and `DigimonElement.badgeText` /
+`symbolName` / the colours already in `ElementColors.swift`.

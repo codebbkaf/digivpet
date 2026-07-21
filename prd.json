@@ -61,8 +61,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Resources/elements.json + Sources/ElementCatalog.swift: 4-tier lookup (id -> line -> ordered keyword substring -> neutral/free) mirroring MoveCatalog. All 88 graph nodes typed explicitly, attributes canon where canon exists (judgement calls listed in the file's _comment). Over the 1,022 roster ids: 85 by id, 161 by keyword, 776 land on neutral/free (75.9%) - reported, not asserted. 19 new tests; build green, 1086 tests pass."
     },
     {
       "id": "US-088",
