@@ -561,6 +561,9 @@ final class MainScreenModel: ObservableObject {
     ///   payable energies rather than hand-setting a flag, so what is screenshotted is the shipped
     ///   rule's own answer. No scroll flag needed since US-039 — the action row is on screen on both
     ///   watch sizes.
+    /// - `-battleAffordableDemo` — the same screen with exactly one battle's worth of Strength, so
+    ///   US-109's two screenshots differ in nothing but the energy: Battle live and NO caption under
+    ///   the row. Its own flag because every other funded demo goes straight into the arena.
     /// - `-battleRoundDemo` — US-093's pre-battle round, left to play itself out: nothing taps it, so
     ///   the game's own window expires and its shipped `onFinish` grades the `.miss` that opens the
     ///   arena. One launch, screenshotted twice — the minigame in the first seconds, the arena after —
@@ -576,8 +579,9 @@ final class MainScreenModel: ObservableObject {
         // The two US-094 demos, and the only ones that need a matchup with something to SAY.
         let showingMatchup = ["-battleResultDemo", "-battleIntroDemo"]
         let broke = arguments.contains("-battleBrokeDemo")
+        let affordable = arguments.contains("-battleAffordableDemo")
         let round = arguments.contains("-battleRoundDemo")
-        guard staged.contains(where: arguments.contains) || losing || broke || round,
+        guard staged.contains(where: arguments.contains) || losing || broke || round || affordable,
               let state else { return }
 
         // Off the starting egg for the same reason the other demos are: a Digitama sheet has no
@@ -614,6 +618,15 @@ final class MainScreenModel: ObservableObject {
             // button is unaffordable. Nothing else is done — the main screen draws, with Battle
             // disabled by the shipped rule reading these two zeroes.
             state.stageEnergy.strength = 0
+            state.stageEnergy.stamina = 0
+            return
+        }
+
+        if affordable {
+            // The other half of US-109's pair: the same screen with the cost covered, so the two
+            // 41mm screenshots differ in nothing but the energy. Exactly the price of one battle
+            // rather than a comfortable pile, because the boundary is what the story is about.
+            state.stageEnergy.strength = BattleCost.energy
             state.stageEnergy.stamina = 0
             return
         }

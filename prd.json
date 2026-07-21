@@ -187,8 +187,8 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Battle now disables on affordability and captions it in energy: the 4/4-vs-5 rule and the absent-when-affordable caption are asserted in ActionControlsTests through EnergyPurchase over a real GameState (moved there from BattleCostTests, strengthened not deleted); orange run-out tint kept; new -battleAffordableDemo gave the matching 41mm screenshot. Build green, 1287 tests 0 failures, both 41mm states photographed with all five buttons fitting."
     },
     {
       "id": "US-110",

@@ -253,3 +253,41 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
 - REMAINS: US-109 onward. Nothing blocked. US-109 inherits a `canAffordBattle` that already disables
   the button and already shows an energy caption — what it has to decide is the WORDING at 41mm (the
   full sentence fits, but only just) and it has to keep `ActionControlsTests` in step.
+
+## 2026-07-22 — US-109: The Battle button says what it is waiting for
+- Most of the MECHANICAL swap was already in the tree: US-108 had to rename `ActionControls.battlesLeft`
+  to `canAffordBattle` just to make the project compile once `BattleLimits` was deleted, and it left the
+  wording, the tint and the 41mm proof to this story. `grep -rn "battlesLeft\|battlesRemaining\|BattleLimits"
+  Sources/ Tests/` now returns NOTHING, which is AC1 observed rather than assumed.
+- The real work was the TESTS. US-108's two assertions lived in `BattleCostTests` and were driven by a bare
+  `Bool` — which cannot express AC7 at all, since "4 points in both payable energies" is a fact about
+  `GameState`, not about a flag. Moved both to `ActionControlsTests` (AC9: updated, not deleted — the old
+  class is replaced by a comment naming the two tests that took it over) and re-driven through
+  `EnergyPurchase.payer` over a real `GameState`, asked exactly the way `MainScreenModel.canAffordBattle`
+  asks it. The bug that guards against is the view and `battle()` drifting apart: a button that looks
+  tappable and then refuses. 4/4 disabled, 5/4 and 4/5 enabled, and `XCTAssertEqual(BattleCost.energy, 5)`
+  first so the numbers in the test fail loudly if the cost ever moves.
+- Caption: nil when affordable (99/0 as well as 5/5), `BattleCost.insufficientEnergyReason` when not (0/0 as
+  well as 4/4). No new string invented — it is the model's own refusal, so the row and the enforcement cannot
+  disagree, and it names ENERGY because the allowance it used to name no longer exists.
+- AC5 needed no code change but did need explaining, so the comment is now in `ActionControls`: orange is not
+  new, it is the colour US-032's caption turned at zero battles left. What changed is that the CONDITION it
+  was conditional on is gone — the caption only exists in the run-out state now — so the tint is unconditional.
+- AC6 was satisfied by touching nothing: `TrainAction` is unchanged, and the two buttons read consistently
+  because `BattleCost.insufficientEnergyReason` IS `TrainAction.insufficientEnergyReason` (an alias since
+  US-108), not a copy of its wording.
+- New demo flag `-battleAffordableDemo`, sibling to `-battleBrokeDemo`: same Agumon, same screen, Strength set
+  to exactly `BattleCost.energy` and Stamina to 0. Needed because every OTHER funded demo walks straight into
+  the arena, so there was no way to photograph the affordable action ROW. Exactly one battle's worth rather
+  than a comfortable pile — the boundary is what the story is about.
+- PASSED: build green on both the 46mm (watchOS 26.4) and the 41mm (watchOS 10.4) destinations; 1287 tests,
+  0 failures (unchanged count — two moved, two added, two removed).
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, screenshots at /tmp/us109/ (not committed):
+  `-battleBrokeDemo` -> STEP 0/60, EXER 0/60, the Battle bolt grey, and the orange sentence fitting ONE line
+  under the row; `-battleAffordableDemo` -> STEP 5/60, the bolt purple and live, and NO caption at all. Five
+  circles fit the 176pt row with margin in both.
+  - The 41mm sim was wedged behind the undismissable notification alert US-108 hit. `xcrun simctl erase` on
+    the device clears it; then launch with `-noNotificationPrompt` and it never comes back. The bundle id is
+    `com.digivpet.DigiVPet`, NOT `com.digivpet.app` — that guess costs a FBSOpenApplicationServiceErrorDomain
+    code=4 that looks like a crash and is not one.
+- REMAINS: US-110 onward. Nothing blocked.

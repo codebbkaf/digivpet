@@ -120,6 +120,10 @@ struct ActionControls<Settings: View>: View {
             if let limitCaption {
                 Text(limitCaption)
                     .font(.system(size: 9))
+                    // Orange because that is already what "you have run out" looks like here: it is
+                    // the colour US-032's caption turned at zero battles left. The condition it was
+                    // once conditional ON is gone — the caption now exists only in the run-out
+                    // state — so the tint is unconditional rather than newly invented.
                     .foregroundStyle(Color.orange)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)

@@ -45,6 +45,50 @@ final class ActionControlsTests: XCTestCase {
         }
     }
 
+    /// US-109 AC7: the Battle button's rule IS the energy rule, not a copy of it. Four points in
+    /// both payable energies cannot buy a five-point battle; five in either can.
+    ///
+    /// Driven through `EnergyPurchase` over a real `GameState` rather than a hand-written `true`,
+    /// because the bug this guards against is the view and `MainScreenModel.battle()` drifting
+    /// apart — a button that looks tappable and then refuses.
+    func testBattleIsDisabledWithFourPointsInBothEnergiesAndEnabledWithFive() {
+        XCTAssertEqual(BattleCost.energy, 5, "the four-and-five cases below assume a 5-point battle")
+
+        XCTAssertTrue(controls(strength: 4, stamina: 4).isBattleDisabled, "4 and 4 cannot pay 5")
+        XCTAssertFalse(controls(strength: 5, stamina: 4).isBattleDisabled, "Strength can pay")
+        XCTAssertFalse(controls(strength: 4, stamina: 5).isBattleDisabled, "Stamina can pay")
+    }
+
+    /// US-109 AC3, AC4 and AC8: the caption names ENERGY when the Digimon is broke and is absent
+    /// entirely when it is not.
+    ///
+    /// The unaffordable string is the model's OWN refusal, so what a user reads under the row cannot
+    /// disagree with what `battle()` enforces; and it says nothing about a daily allowance, because
+    /// US-108 deleted the allowance. Nothing is shown while a battle is affordable — a permanent
+    /// cost label on one of five buttons would be noise on a 41mm screen.
+    func testTheCaptionNamesEnergyOnlyWhileABattleIsUnaffordable() {
+        XCTAssertNil(controls(strength: 5, stamina: 5).limitCaption)
+        XCTAssertNil(controls(strength: 99, stamina: 0).limitCaption)
+
+        XCTAssertEqual(controls(strength: 4, stamina: 4).limitCaption,
+                       BattleCost.insufficientEnergyReason)
+        XCTAssertEqual(controls(strength: 0, stamina: 0).limitCaption,
+                       BattleCost.insufficientEnergyReason)
+    }
+
+    /// A row whose Battle button reads the affordability of the energies it is given, asked the same
+    /// way `MainScreenModel.canAffordBattle` asks it.
+    private func controls(strength: Int, stamina: Int) -> ActionControls<EmptyView> {
+        let state = GameState(currentDigimonId: "hero", now: Date(timeIntervalSince1970: 0))
+        state.stageEnergy.strength = strength
+        state.stageEnergy.stamina = stamina
+        let canAfford = EnergyPurchase.payer(for: BattleCost.energy,
+                                             from: BattleCost.payableWith, in: state) != nil
+
+        return ActionControls(canAffordBattle: canAfford, poopCount: 0,
+                              feed: {}, train: {}, clean: {}, battle: {}) { EmptyView() }
+    }
+
     /// US-052 AC2: five circles and their gaps still fit the narrowest supported screen (176pt at
     /// 41mm). This is the arithmetic that forced the diameter down from 32 — without it, a later
     /// sixth button or a bumped diameter would silently clip the row at both ends, which no unit

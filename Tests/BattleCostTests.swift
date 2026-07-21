@@ -194,34 +194,11 @@ final class BattleDayCountTests: XCTestCase {
     }
 }
 
-// MARK: - The button's disabled state and its reason
-
-final class BattleAffordabilityControlsTests: XCTestCase {
-    /// The rule moved from `BattleControls` to `ActionControls` in US-038; what it reads changed in
-    /// US-108, from a daily count to whether the cost can be paid at all.
-    private func controls(canAffordBattle: Bool) -> ActionControls<EmptyView> {
-        ActionControls(canAffordBattle: canAffordBattle, poopCount: 0,
-                       feed: {}, train: {}, clean: {}, battle: {}) { EmptyView() }
-    }
-
-    /// Broke: the button is disabled and the reason is the SAME string the model refuses with, so
-    /// what the user reads can never disagree with what was enforced.
-    func testTheButtonIsDisabledWithTheModelsOwnReasonWhenBroke() {
-        let controls = controls(canAffordBattle: false)
-
-        XCTAssertTrue(controls.isBattleDisabled)
-        XCTAssertEqual(controls.limitCaption, BattleCost.insufficientEnergyReason)
-    }
-
-    /// Affordable: the button works and there is no caption at all — a permanent cost label on one of
-    /// five buttons would be noise on a screen this small.
-    func testThereIsNoCaptionWhenABattleIsAffordable() {
-        let controls = controls(canAffordBattle: true)
-
-        XCTAssertFalse(controls.isBattleDisabled)
-        XCTAssertNil(controls.limitCaption)
-    }
-}
+// The button's disabled state and its caption were asserted here in US-108 against a bare `Bool`.
+// US-109 moved them to `ActionControlsTests`, where the rest of the row's rules live, and drove them
+// through `EnergyPurchase` over a real `GameState` instead — the 4-and-4 versus 5 case the bool
+// could not express. Nothing was dropped: see `testBattleIsDisabledWithFourPointsInBothEnergies…`
+// and `testTheCaptionNamesEnergyOnlyWhileABattleIsUnaffordable`.
 
 // MARK: - Through the real model and the real store
 
