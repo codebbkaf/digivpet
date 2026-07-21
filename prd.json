@@ -93,8 +93,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "animation(for:during:landed:) is pure and static: attacker .pose(.attack) throughout, defender .idle before impact and .hurt after, keyed off US-104's hasLanded. Result screen still .still(.happy)/.still(.hurt1). 7 new tests in Tests/BattleFlinchTests.swift; build green, 1281 tests 0 failures. Simulator 42mm, -battleTurnDemo: the defender tile alternates two drawings every ~0.52s after impact (1764 pixels differ, lit count constant), and the idle loop's 2592-lit frame never appears after impact."
     },
     {
       "id": "US-106",

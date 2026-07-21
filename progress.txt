@@ -93,3 +93,34 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   - Throwaway classifiers at /tmp/orangecount.swift, /tmp/gapcount.swift, /tmp/hprow.swift, NOT
     committed: all three hard-code this screen's crops and this bout's tint.
 - REMAINS: US-105 onward. Nothing blocked. US-105 has its `hasLanded` to hang the hurt loop on.
+
+## 2026-07-21 — US-105: The defender flinches on impact, and the attacker's swing animates
+- Sources/BattleView.swift only. `animation(for:during:)` becomes
+  `animation(for:during:landed:)`, still static and pure: the attacker gets `.pose(.attack)`
+  (US-102's attack <-> walk1 loop) for the WHOLE turn, the defender `.idle` before impact and
+  `.hurt` after. The instance wrapper passes `hasLanded`, which US-104 already resets per turn — so
+  AC5 needed no new state, only the read.
+- Two doc comments rewritten because the code now contradicts them: the type's "the ATTACKER holds
+  the attack frame (11)" header, and the static function's own. The result screen is untouched:
+  `.still(.happy)` / `.still(.hurt1)` stay HELD, the fight being over.
+- Tests: 7 new in Tests/BattleFlinchTests.swift (attacker at landed false AND true; defender idle ->
+  hurt for BOTH BattleSide values; every turn of a real multi-turn report; the hurt loop really is
+  two different frames one beat apart; the swing is [attack, walk1]; AC5 composed by driving run()
+  and mapping each turn's ProjectileChange stream through the pure mapping — every turn OPENS `.idle`
+  and CLOSES `.hurt`; the result screen still holds one frame). BattleTests' existing frame test
+  updated from `.still(.attack)` to `.pose(.attack)` at `landed: true`.
+- PASSED: build green; 1281 tests, 0 failures (1274 + 7).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-battleTurnDemo -healthAnswered -noNotificationPrompt`
+  (intro 0.01s, flight 12s, turn 60s), 200 screenshots at ~0.13s over 27s, uninstalled first:
+  - AC12: in the defender's tile, consecutive post-impact shots ~0.52s apart differ by exactly 1764
+    pixels, over and over from 12.75s to the end of the burst. DIFFING pixels is the point here and
+    counting them would have missed it — both hurt frames light exactly 2376 pixels, so the lit count
+    is constant across the swap.
+  - The before/after halves are separable in the same numbers: pre-impact the tile alternates
+    lit=2592 (walk1) and lit=2376, and the 2592 frame NEVER appears after impact. Impact itself lands
+    between 12.24s and 12.75s, which is flight 12s plus launch.
+  - The attacker animates too, visible in the same pair: lunge in one shot, walk1 0.52s later.
+  - Throwaway classifier at /tmp/us105/defender.swift, NOT committed: it hard-codes this screen's
+    crop, which moves the moment the layout does.
+- REMAINS: US-106 onward. Nothing blocked. US-106 deletes a source file, so re-run `xcodegen
+  generate` before building it.

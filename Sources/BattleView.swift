@@ -73,9 +73,13 @@ enum BattleArenaLayout {
 /// `MemorialView` are — it is a moment, not a place, and the Feed and Train buttons underneath must
 /// not be tappable through it.
 ///
-/// Each exchange holds `turnDuration`, during which the ATTACKER holds the attack frame (11) and the
-/// DEFENDER plays the hurt loop (9 <-> 10) — the PRD's frame assignment, and the reason the resolved
-/// report carries `attacker` per turn rather than only a winner. The result then holds until the user
+/// Each exchange holds `turnDuration`, during which the ATTACKER swings — the attack frame (11)
+/// looped against walk1, so the blow is a moving drawing rather than one frame held for the whole
+/// exchange — and the DEFENDER stands in its idle loop until the shot LANDS, and plays the hurt loop
+/// (9 <-> 10) only from that instant on (US-105). That is the PRD's frame assignment plus the one
+/// thing it left out: the flinch is caused by the impact, so it cannot begin before it. Both are the
+/// reason the resolved report carries `attacker` per turn rather than only a winner, and the reason
+/// `hasLanded` is view state rather than a local. The result then holds until the user
 /// dismisses it: a button rather than a timer, as on the memorial, because a result that scrolls past
 /// unread is a battle that never happened as far as the user is concerned.
 struct BattleView: View {
@@ -417,10 +421,12 @@ struct BattleView: View {
         }
     }
 
-    /// What `side` is doing during the exchange on screen.
+    /// What `side` is doing during the exchange on screen. `hasLanded` is the impact instant US-104
+    /// put on screen, read here so the defender's flinch starts when the shot arrives rather than
+    /// when the exchange begins.
     private func animation(for side: BattleSide) -> SpriteAnimation {
         guard case .turn(let index) = beat, index < bout.report.turns.count else { return .idle }
-        return Self.animation(for: side, during: bout.report.turns[index])
+        return Self.animation(for: side, during: bout.report.turns[index], landed: hasLanded)
     }
 
     /// `side`'s hit points as of the exchange on screen.
@@ -441,14 +447,22 @@ struct BattleView: View {
         side == .player
     }
 
-    /// The PRD's frame assignment, as a pure function: the attacker holds the attack frame (11) and
-    /// the defender plays the hurt loop (9 <-> 10).
+    /// The PRD's frame assignment, as a pure function: the attacker SWINGS — the attack frame (11)
+    /// looped against walk1 (US-102) for the whole exchange, before and after impact alike — and the
+    /// defender stands in its idle loop until the shot lands, then plays the hurt loop (9 <-> 10).
+    ///
+    /// `landed` is the whole of US-105. With the flinch keyed off the turn instead of the impact the
+    /// defender began recoiling 1.1s before anything reached it, which reads as two sprites twitching
+    /// at each other rather than as a blow landing. Taken as a parameter rather than read from
+    /// `hasLanded` so this stays pure.
     ///
     /// Static and separate from the view for the same reason `BattleEngine` is separate from both —
     /// this mapping IS the acceptance criterion, and a screenshot can only ever show one instant of
     /// it. A test asserts every turn of a real battle against this instead.
-    static func animation(for side: BattleSide, during turn: BattleTurn) -> SpriteAnimation {
-        turn.attacker == side ? .still(.attack) : .hurt
+    static func animation(for side: BattleSide, during turn: BattleTurn,
+                          landed: Bool) -> SpriteAnimation {
+        guard turn.attacker != side else { return .pose(.attack) }
+        return landed ? .hurt : .idle
     }
 
     /// `side`'s hit points once the exchange at `index` has been played out.

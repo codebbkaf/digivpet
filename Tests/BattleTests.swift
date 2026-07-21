@@ -301,18 +301,19 @@ final class BattleMatchmakerTests: XCTestCase {
 // MARK: - AC3 / AC4: the frames
 
 final class BattleFrameTests: XCTestCase {
-    /// AC3, asserted over every turn of a real battle: the attacker holds the attack frame (11) and
-    /// the defender plays the hurt loop (9 <-> 10). A screenshot can only show one instant of this.
+    /// AC3, asserted over every turn of a real battle: the attacker swings the attack frame (11) and
+    /// the defender plays the hurt loop (9 <-> 10) once the blow has landed. A screenshot can only
+    /// show one instant of this. The before-impact half of the mapping is `BattleFlinchTests`.
     func testTheAttackerAttacksAndTheDefenderIsHurtOnEveryTurn() {
         var generator = SeededGenerator(seed: 4242)
         let report = BattleEngine.resolve(playerPower: 38, opponentPower: 31, using: &generator)
         XCTAssertFalse(report.turns.isEmpty)
 
         for turn in report.turns {
-            let attacker = BattleView.animation(for: turn.attacker, during: turn)
-            let defender = BattleView.animation(for: turn.attacker.other, during: turn)
+            let attacker = BattleView.animation(for: turn.attacker, during: turn, landed: true)
+            let defender = BattleView.animation(for: turn.attacker.other, during: turn, landed: true)
 
-            XCTAssertEqual(attacker, .still(.attack))
+            XCTAssertEqual(attacker, .pose(.attack))
             XCTAssertEqual(defender, .hurt)
         }
     }
