@@ -134,6 +134,14 @@ final class MainScreenModel: ObservableObject {
     /// This is where a blocked feed says WHY it was blocked, per US-024's "visible reason".
     @Published private(set) var actionMessage: String?
 
+    /// The scripted nudge running under the current pose (US-095), or nil when nothing is moving the
+    /// sprite — which is every resting pose, and every BLOCKED action.
+    ///
+    /// Set and cleared by the same `show(_:motion:message:)` call as `animation`, so the two cannot
+    /// get out of step: there is no path that leaves a Digimon bobbing after it has stopped eating,
+    /// or eating without bobbing.
+    @Published private(set) var actionMotion: ActionMotion?
+
     /// Whether the Digimon is in its sleep window, which blocks feeding and training.
     ///
     /// DERIVED, not saved: `refresh()` recomputes it from `sleepSchedule` and the clock, so it is
@@ -915,12 +923,16 @@ final class MainScreenModel: ObservableObject {
         switch outcome {
         case .fed:
             playFeedHaptic()
-            show(.eat, message: nil)
+            // The eat loop swaps the frames; the chew dips the whole sprite into the bowl between
+            // them, so a meal is something the Digimon does rather than something its art does.
+            show(.eat, motion: .chew, message: nil)
         case .refused:
-            show(.still(.refuse), message: "Not hungry.")
+            // The head-shake is what makes a refusal legible without reading the caption: the
+            // refuse frame alone is a still pose, and a still pose is what every block looks like.
+            show(.still(.refuse), motion: .shake, message: "Not hungry.")
         case .blocked(let reason):
-            // No animation: nothing happened to the Digimon, so it keeps idling and only the
-            // reason appears. Animating a block would read as the action having half-worked.
+            // No animation and NO MOTION: nothing happened to the Digimon, so it keeps idling and
+            // only the reason appears. Either would read as the action having half-worked.
             show(nil, message: reason)
             noteWakingEarly()
         }
@@ -1283,17 +1295,40 @@ final class MainScreenModel: ObservableObject {
     /// second action for its full duration instead of being cut short by the first one's timer.
     ///
     /// A nil animation means "nothing happened to the Digimon" — a blocked action — so it keeps
-    /// RESTING, which for a sleeping Digimon is the sleep loop and not the walk loop.
-    private func show(_ animation: SpriteAnimation?, message: String?) {
+    /// RESTING, which for a sleeping Digimon is the sleep loop and not the walk loop. A nil `motion`
+    /// means the same about the sprite's position, and a blocked action passes both: motion would
+    /// read as the action having half-worked.
+    ///
+    /// The motion is RESTARTED for as long as the pose is held, rather than played once and left to
+    /// run out. Every track in `ActionMotion` is shorter than the two seconds a pose is held for —
+    /// chewing is 1.2s — so a single play would leave the Digimon eating stock-still for the rest of
+    /// the loop. Restarting is seamless because every track is `.zero` at both ends, and the last
+    /// repeat is only begun if a whole one still fits, so the sprite is always home before the pose
+    /// ends rather than being cut off mid-arc.
+    private func show(_ animation: SpriteAnimation?,
+                      motion kind: ActionMotion.Kind? = nil,
+                      message: String?) {
         actionResetTask?.cancel()
         self.animation = animation ?? restingAnimation
         self.actionMessage = message
+        self.actionMotion = kind.map { ActionMotion(kind: $0, start: now()) }
 
         actionResetTask = Task { [actionDuration] in
-            try? await Task.sleep(for: .seconds(actionDuration))
+            var held: TimeInterval = 0
+            if let kind {
+                let period = ActionMotion.duration(of: kind)
+                while held + 2 * period <= actionDuration {
+                    try? await Task.sleep(for: .seconds(period))
+                    guard !Task.isCancelled else { return }
+                    held += period
+                    self.actionMotion = ActionMotion(kind: kind, start: self.now())
+                }
+            }
+            try? await Task.sleep(for: .seconds(actionDuration - held))
             guard !Task.isCancelled else { return }
             self.animation = self.restingAnimation
             self.actionMessage = nil
+            self.actionMotion = nil
         }
     }
 

@@ -446,7 +446,12 @@ struct ContentView: View {
                             SickBadgeLayout.spriteHeight(in: geometry.size.height,
                                                          isSick: model.isSick)
                         ),
-                        isMoving: model.isWandering
+                        isMoving: model.isWandering,
+                        // The nudge under the pose (US-095): the chew of a meal, the shake of a
+                        // refusal. Nil while resting, and nil for a blocked action. It rides on top
+                        // of wherever the walk left the sprite, which is safe because a pose that
+                        // carries a motion is never `.idle` and so `isWandering` is already false.
+                        motion: model.actionMotion
                     )
                     // Bottom-aligned while ill, centred otherwise. The sprite is sized against a
                     // slot one badge-band shorter than this frame, so pushing it to the floor is

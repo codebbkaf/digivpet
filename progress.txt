@@ -804,3 +804,103 @@ WHAT REMAINS
 - `ActionMotion.isRunning` exists for a caller that wants to stop scheduling once
   a motion is spent. Nothing calls it yet — `offset` alone is enough to be
   correct, this is only enough to be cheap.
+
+================================================================================
+2026-07-21 — US-096 — The Digimon moves while it eats and while it refuses — PASSES
+================================================================================
+
+Build green. 1180/1180 tests pass on Apple Watch Series 11 (46mm) — 9 new, in
+`Tests/FeedMotionTests.swift`, and nothing else in the suite changed behaviour.
+US-095 built the motion tracks and nothing on screen used one; this is the
+wiring, and it is only feeding's half. US-097 is the other half.
+
+WHAT CHANGED
+- `Sources/MainScreenModel.swift`:
+  - New `@Published private(set) var actionMotion: ActionMotion?`.
+  - `show(_:message:)` became `show(_:motion:message:)`, `motion` defaulting to
+    nil so the six existing call sites (clean, train, battle blocks...) compile
+    untouched and keep publishing no motion. It stamps the motion with `now()`
+    and CLEARS it in the same reset task that clears the pose and the caption —
+    which is the whole of AC5: there is no path that sets one without the other.
+  - `feed()` passes `.chew` on `.fed`, `.shake` on `.refused`, and nothing on
+    `.blocked`.
+- `Sources/ContentView.swift` — `motion: model.actionMotion` on the
+  `WanderingSpriteView` that was already built to take it in US-095.
+
+THE MOTION REPEATS FOR AS LONG AS THE POSE IS HELD — read this before US-097
+- Every track in `ActionMotion` is SHORTER than the two seconds a pose is held
+  for: chew is 1.2s, shake 0.6s, and hop/lunge/recoil are shorter still. Played
+  once, the Digimon would chew for 1.2s and then stand stock-still with its
+  mouth open for the remaining 0.8s.
+- So the reset task re-stamps `start` every `duration(of:)` until the hold is up.
+  Seamless because every track is `.zero` at both ends (US-095's central
+  property) — a restart puts the sprite exactly where the previous repeat left
+  it.
+- The loop condition is `held + 2 * period <= actionDuration`, i.e. a repeat is
+  only STARTED if a whole one still fits. That is what keeps the sprite home when
+  the motion is cleared instead of being cut off mid-arc and snapping.
+- This is also what makes the demos photographable: `-feedDemo` sets
+  `actionDuration = 60`, so the chew runs ~50 times and `simctl` — which needs
+  ~8s to boot, launch and settle — can still catch it mid-arc. Without the
+  repeat the whole motion would be over 1.2s after launch and AC7 would be
+  unverifiable.
+- Tests inject `actionDuration: 0.05`, which is shorter than the shortest track,
+  so the repeat never fires there and no test waits a real second.
+
+VERIFICATION
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
+- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1180 tests, 0 failures (was
+  1171; the 9 new ones are the delta). Whole suite 11.9s.
+- AC7, MEASURED in pixels rather than eyeballed. All three demos on the 42mm
+  (F4A12A1C), launched with `-healthAnswered -noNotificationPrompt`, burst-
+  screenshotted at simctl's ~0.11s floor, and the sprite's bounding box found in
+  Swift by saturation (the sprite is the only saturated thing in the band; the
+  band was tightened to y<220 after the orange "Not hungry." caption at y~225
+  contaminated the first pass).
+  - `-feedDemo`: left/right pinned at 163/210 in all 20 shots — no sideways
+    component, correct for a chew — while top and bottom move TOGETHER by 3px
+    within each eat frame (bottom 208 <-> 211). Pairs ~0.23s apart at the same
+    eat frame: t=1.835 bottom=211 vs t=2.070 bottom=208; t=0.827 bottom=208 vs
+    t=1.051 bottom=211. The frame swap is separable from the motion because
+    eat1 and eat2 have different lit-pixel counts (1264 vs 1152), so the
+    comparisons above are same-frame.
+  - `-feedRefuseDemo`: px count pinned at 1328 (one held refuse frame) and
+    top/bottom pinned at 161/208 — no vertical component — while left swings
+    157..169, a 12px range about a centre of 163. That is 6pt, i.e. EXACTLY
+    2 x `shakeSwing` (1.5 sprite px) x scale 2, and it goes both ways.
+  - `-feedAsleepDemo`: left=163, right=210, bottom=208 in all 16 shots, not one
+    pixel of movement, with "Asleep — let it rest." on screen. The top alternates
+    161/165 with the lit-pixel count — that is the sleep1<->sleep2 art loop
+    inside a bounding box that never moves, not a position change.
+  - The 3px chew and the 12px shake are both 2pt-scaled: 42mm lands on
+    `SpriteScale.fitting` = 2, confirmed by the shake measuring its predicted
+    amplitude to the pixel. A larger watch would show proportionally more.
+
+WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
+- AC1 describes the chew as "two cycles over actionDuration". The SHIPPED chew is
+  US-095's pinned shape — three dips over a fixed 1.2s — because
+  `ActionMotionTests` pins that amplitude and duration, and re-cutting the track
+  to be a function of `actionDuration` would have meant rewriting a story that
+  already passed. The substance of AC1 (a small vertical bob for the whole meal)
+  is met, and the repeat is what makes it last the whole meal. If a later story
+  wants the shape parameterised, `duration(of:)` is the one place to change.
+
+TRAPS FOR THE NEXT ITERATION
+- The 42mm sim needs `-healthAnswered` or it launches into the HealthKit
+  onboarding gate and every screenshot is of the Continue button. The earlier
+  progress notes mention `-noNotificationPrompt` but not this one; both are
+  needed.
+- The 46mm sim (BA425DD4) STILL has the wedged system notification alert
+  US-091 recorded — confirmed again this iteration, in Chinese, over a fresh
+  install. Builds and tests on it are fine; screenshots are not. Use 42mm.
+- The sprite measurer was throwaway Swift at /tmp/us096/measure.swift and is
+  deliberately NOT committed: it hard-codes this screen's band geometry and
+  would rot into a lie. Rewriting one is ten minutes.
+
+WHAT REMAINS
+- US-097 wires `.hop` (a clean screen) and `.lunge` (a landed blow). `clean()`
+  already calls `show(.still(.happy), message:)` and needs only `motion: .hop`;
+  the battle path is the harder half, because `BattleView` draws its own sprites
+  rather than going through `WanderingSpriteView`, so a lunge there has nowhere
+  to land yet.
+- `.recoil` is still unused by anything.

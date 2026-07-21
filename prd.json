@@ -230,8 +230,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MainScreenModel now publishes `actionMotion` alongside `animation`, both set and cleared by one `show(_:motion:message:)` call: a fed Digimon plays .eat + .chew, a refusal .still(.refuse) + .shake, a blocked feed neither. The motion RESTARTS for as long as the pose is held (every track is shorter than the 2s hold and is zero at both ends). 9 new tests in FeedMotionTests; 1180/1180 pass. Measured on the 42mm sim: -feedDemo moves the sprite 3px (1.5pt) vertically with left/right fixed, -feedRefuseDemo swings it 12px (6pt = 2 x 1.5 sprite px x scale 2) horizontally with top/bottom fixed, -feedAsleepDemo never moves at all. NOTE: the chew is US-095's pinned shape - 3 dips over 1.2s, repeated - not the 'two cycles over actionDuration' the AC's parenthetical describes."
     },
     {
       "id": "US-097",
