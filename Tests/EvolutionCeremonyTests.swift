@@ -142,6 +142,10 @@ final class EvolutionCeremonyModelTests: XCTestCase {
         // ceremony would ever fire here.
         state.healthDataLastSeen = Self.morning
         state.hungerUpdatedAt = Self.morning
+        // US-101, likewise: a light left on charges a mistake per night, and this fixture spans a
+        // fortnight of them. Put out when the stage was entered, so the ceremony is not called off
+        // by an illness this test is not about.
+        state.setLight(.off, now: Self.lastStage)
         state.stageEnteredDate = Self.lastStage
         try store.save()
 

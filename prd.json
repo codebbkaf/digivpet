@@ -329,8 +329,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 17,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "refresh() now runs MainScreenModel.auditLights beside auditCareMistakes: it walks back over EVERY unaudited night (not just the last), asking LightsOutRule.shouldChargeMistake at each night's own deadline and charging through recordLightsLeftOn. Walking back was forced by ClosedAppRecomputeTests — one night per refresh made 48h shut score 7 against 48h open's 8. 15 new tests in Tests/LightNeglectTests.swift, full suite green (1256 cases). docs/care-mistakes.md holds the five-mistake table."
     }
   ]
 }

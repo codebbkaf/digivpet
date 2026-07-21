@@ -481,6 +481,10 @@ final class CareMistakeApplyTests: XCTestCase {
             // And restamped for exactly the same reason (US-053): two elapsed days would otherwise
             // fill the screen with poop and leave it full, which is neglect this rule is not about.
             state.poopUpdatedAt = CareClock.at("2026-03-12 12:00")
+            // And the light put out (US-101), for the third time and the same reason: the two nights
+            // between the seed and the launch were both spent under it in a new game, and this test
+            // is about the silent day rather than about the lamp.
+            state.setLight(.off, now: CareClock.at("2026-03-10 12:00"))
             state.healthDataLastSeen = CareClock.at("2026-03-10 12:00")
             try store.save()
         }

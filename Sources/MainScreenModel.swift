@@ -824,6 +824,10 @@ final class MainScreenModel: ObservableObject {
         state.auditCareMistakes(now: now(),
                                 health: CareMistakes.HealthDataVerdict(readings.values),
                                 calendar: calendar)
+        // The fifth mistake, charged beside the other four and for the same reasons — see
+        // `auditLights`, which is separate only because it needs the sleep window and that is the
+        // model's to know rather than the saved game's.
+        auditLights(state)
         // Straight after the audit and before evolving, for both of the same reasons: the mistake
         // that tips a Digimon over is usually one the audit has only just charged, and a sick
         // Digimon's evolution is paused — so a sickness settled after `evolveIfReady` would let it
@@ -1577,6 +1581,72 @@ final class MainScreenModel: ObservableObject {
         state.lightNotifiedNight = night
         notifications.schedule(.lights, body: body,
                                at: night.addingTimeInterval(LightsOutRule.notifyGrace))
+    }
+
+    /// Charges the care mistake for a night slept under the light (US-101), at most once a night.
+    ///
+    /// Beside `auditCareMistakes` rather than inside it, and the reason is the argument list: this
+    /// rule is the only one of the five that needs the SLEEP WINDOW, which is derived from HealthKit
+    /// by `updateSleepState` and belongs to the model. Every other mistake is a question the saved
+    /// game can answer about itself, so `GameState` keeps them and this one is asked from here.
+    ///
+    /// It runs in the same place in `refresh()` as the audit it sits beside — after crediting, before
+    /// `updateSickness` and `evolveIfReady` — so the night just charged for counts toward the illness
+    /// and gates the same edges in the very refresh that discovered it, with no plumbing of its own.
+    ///
+    /// NOT gated on the Digimon being asleep NOW: the neglect happened at bedtime, and the whole
+    /// point of `LightsOutRule` reading timestamps is that a night nobody opened the app for is still
+    /// judged by the morning that follows it. Nor is it gated on `.dead` — unlike the notices, which
+    /// are messages to a user and would be tactless, a count on a dead Digimon changes nothing that
+    /// is still running, and `auditCareMistakes` keeps no such guard either.
+    ///
+    /// **EVERY unaudited night, not just the last one**, and `ClosedAppRecomputeTests` is why. An app
+    /// left open over a long weekend refreshes inside each of those nights and charges each; an app
+    /// that was shut sees only the morning at the end of them. Charging one night per refresh would
+    /// make the same three nights cost three mistakes or one depending only on whether anyone was
+    /// watching, which is exactly the asymmetry that rule exists to forbid. Unlike US-053's mess —
+    /// paused by a sleep only a running refresh can observe — nothing here is observation-dependent:
+    /// each night's verdict is a timestamp compared with a deadline, so it can be recovered long
+    /// afterwards, and the honest answer is one mistake per night that was slept through lit.
+    ///
+    /// The walk stops on its own. Going back, `shouldChargeMistake` fails at the night already
+    /// audited or at the first deadline that precedes `lightStateChangedAt` — and every earlier one
+    /// precedes it too, so a light that has only been on since this morning ends the loop
+    /// immediately. `maximumNightsChargedAtOnce` bounds the one case that cannot end itself: a save
+    /// with no stamp at all, which reads as lit for all of time.
+    private func auditLights(_ state: GameState) {
+        // The most recent night whose deadline has actually passed. Starting from
+        // `mostRecentWindowStart` alone would stop the walk dead at 22:10, when tonight is not yet
+        // owed and last night may well be.
+        var night = LightsOutRule.mostRecentWindowStart(at: now(), schedule: sleepSchedule,
+                                                        calendar: calendar)
+        if night.addingTimeInterval(LightsOutRule.mistakeGrace) > now() {
+            night = LightsOutRule.previousWindowStart(before: night, schedule: sleepSchedule,
+                                                      calendar: calendar)
+        }
+
+        var owed: [Date] = []
+        while owed.count < LightsOutRule.maximumNightsChargedAtOnce {
+            // Asked AT each night's own deadline rather than at `now`, which is what turns the
+            // one-night rule into a question about a particular night without changing it: at that
+            // instant `mostRecentWindowStart` is that night, and the grace is exactly satisfied.
+            let deadline = night.addingTimeInterval(LightsOutRule.mistakeGrace)
+            guard LightsOutRule.shouldChargeMistake(now: deadline, schedule: sleepSchedule,
+                                                    lightState: state.lightState,
+                                                    lightStateChangedAt: state.lightStateChangedAt,
+                                                    lastAuditedNight: state.lightAuditedNight,
+                                                    calendar: calendar) else { break }
+            owed.append(deadline)
+            night = LightsOutRule.previousWindowStart(before: night, schedule: sleepSchedule,
+                                                      calendar: calendar)
+        }
+
+        // Oldest first, so `lightAuditedNight` ends on the most recent night charged. Paid in the
+        // other order it would end on the oldest, and the next refresh would charge the newer nights
+        // all over again.
+        for deadline in owed.reversed() {
+            state.recordLightsLeftOn(now: deadline, schedule: sleepSchedule, calendar: calendar)
+        }
     }
 
     /// Moves the saved game onto `next`, the one reset a hatch and an evolution both perform: the

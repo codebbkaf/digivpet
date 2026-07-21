@@ -1338,3 +1338,112 @@ TRAPS FOR THE NEXT ITERATION
 WHAT REMAINS
 
 - US-101 only.
+
+================================================================================
+2026-07-21 — US-101 "Charge a care mistake for a night under the light" — PASSES
+================================================================================
+
+WHAT WAS BUILT
+
+- `MainScreenModel.auditLights(_:)`, called from `refresh()` on the line after
+  `state.auditCareMistakes(...)` and before `updateSickness` / `evolveIfReady`.
+  It is beside that audit rather than inside it for one reason: this is the only
+  one of the five mistakes that needs the SLEEP WINDOW, which `updateSleepState`
+  derives from HealthKit and which belongs to the model, not to the saved game.
+- `LightsOutRule.previousWindowStart(before:schedule:calendar:)` — one second off
+  the bedtime and `mostRecentWindowStart` again, so the step back cannot disagree
+  with the forward question about which nights exist.
+- `LightsOutRule.maximumNightsChargedAtOnce = 30`, a trap guard in the manner of
+  `CareMistakes.maximumStarvationMistakesCharged`. Only reachable by a save whose
+  `lightStateChangedAt` is nil; a known stamp ends the walk by itself.
+- `docs/care-mistakes.md` — all five mistakes, their thresholds, the marker that
+  caps each, where each is charged, and what is deliberately NOT a mistake.
+
+THE ONE REAL DESIGN DECISION: EVERY UNAUDITED NIGHT, NOT JUST THE LAST
+
+The obvious implementation — call `shouldChargeMistake` once at `now` and charge
+one night — was written first, built, and FAILED `ClosedAppRecomputeTests
+.testFortyEightHoursShutMatchesFortyEightHoursOpen`: 48h open scored 8 mistakes,
+48h shut scored 7. The open run refreshes inside both bedtimes and charges both;
+the shut run only ever sees the morning after the second. That is precisely the
+asymmetry that test exists to forbid, and AC4 ("two consecutive neglected nights
+charge exactly two") says nothing about anybody having been there to watch.
+
+So `auditLights` walks back: from the most recent night whose deadline has
+PASSED, it asks `shouldChargeMistake` at each night's own deadline instant, and
+pays them oldest-first so `lightAuditedNight` ends on the most recent.
+
+- Asking AT the deadline is what turns the one-night rule into a question about
+  a particular night without changing the rule: at bedtime+30min,
+  `mostRecentWindowStart` is that night and the grace is exactly satisfied.
+- Starting at `mostRecentWindowStart` alone would be wrong at 22:10 — tonight is
+  not owed yet, and last night may well be. Hence the one-step back when the
+  most recent deadline is still ahead.
+- Oldest-first is not cosmetic. Paid newest-first the marker would end on the
+  OLDEST night charged and the next refresh would charge the newer ones again.
+- The walk terminates on its own: going back, `shouldChargeMistake` fails at the
+  night already audited, or at the first deadline preceding
+  `lightStateChangedAt` — and every earlier deadline precedes it too, since
+  `wasLit` is monotone in that direction.
+
+Note this is the OPPOSITE choice from US-053's mess (once per spell, never a
+rate) and for a consistent reason, now written into both docs and that test's
+doc comment: the poop pause is observation-dependent, so a rate would score
+differently depending on who was watching. Nothing about the lamp is — each
+night's verdict is one timestamp against one deadline, recoverable days later.
+
+WHAT WAS OBSERVED, NOT ASSUMED
+
+- `** BUILD SUCCEEDED **` and `** TEST SUCCEEDED **`, 1256 test cases passing.
+- 15 new tests in `Tests/LightNeglectTests.swift`, every one seen to run: the
+  21:00 close / 08:00 reopen charging exactly one (AC3) and its dark-room
+  control charging none; `semi` all night charged (AC5); lights out at 17:00,
+  21:59, 22:29 and 22:30 all clean, seeded LIT and then put out, so a dead rule
+  could not pass; three launches in one morning costing one mistake with the
+  marker read back through a fresh store (AC2); two nights with the app opened
+  each morning costing two AND the same two nights slept through shut also
+  costing two (AC4); nothing charged for nights before the game existed; three
+  neglected nights reaching `Sickness.careMistakesUntilSick` and turning the
+  Digimon sick; an edge with `maxCareMistakes: 0` closed by one night under the
+  light, WITH the light-out control that takes the same edge (AC6); and 25 lost
+  battles plus a refresh costing nothing (AC7).
+
+FIXTURES THAT HAD TO CHANGE — READ THIS BEFORE ADDING A REFRESH TEST
+
+A new game starts with the light ON (US-098), so ANY fixture that seeds a state
+days before the refresh it runs now earns one mistake per night crossed. Four
+files needed a seed put right, each with a comment saying so:
+
+- `EvolutionTests`/`EvolutionCeremonyTests` `makeModelAtHero` — a fortnight
+  between `lastStage` and `morning` was a dozen mistakes, which made the Digimon
+  sick and paused every evolution under test. Both now `setLight(.off, now:
+  lastStage)`, next to the US-027 seed that was added for the same reason.
+- `CareMistakeApplyTests.testLaunchingAfterASilentDayRecordsOneCareMistake` —
+  two nights lit between seed and launch. Light put out at the seed instant.
+- `BackgroundRefreshCoordinatorTests.testAWakeEvolves...` — its 25 hours cross
+  one bedtime, and that was the third mistake, so it fell ill and stopped
+  evolving. Light out at hour 0.
+- `ClosedAppRecomputeTests` deliberately keeps its light ON: the count moved 6 ->
+  8 (two bedtimes in 48 hours) and the assertion and its doc comment now say so.
+  The EQUALITY between the two runs — the actual point of that test — holds.
+
+TRAPS FOR THE NEXT ITERATION
+
+- A model-level test must KEEP THE MODEL ALIVE while it reads `model.state`.
+  The `GameState` belongs to the model's `ModelContainer`; let the model go and
+  SwiftData resets the context under you, and the next field read traps with
+  "This model instance was destroyed by calling ModelContext.reset". My first
+  harness returned the state out of a `launch()` helper and every test in the
+  class crashed the runner. `launch` now returns the MODEL.
+- When quieting the other rules in a fixture, count the hours: 20 hours from a
+  midday seed fills the screen (12h) and leaves it full past the 6h threshold,
+  so the "lights out is clean" cases were charging a POOP mistake and looking
+  like a broken light rule. Quiet `poopUpdatedAt`/`hungerUpdatedAt` at the
+  LAUNCH instant for any fixture spanning more than ~12 hours.
+- `refresh()` now charges for the light. Nothing else is left unwired: US-098's
+  `shouldChargeMistake` and `recordLightsLeftOn` were the last pieces written
+  but never called.
+
+WHAT REMAINS
+
+- Nothing. Every story in prd.json now passes.

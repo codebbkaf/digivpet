@@ -127,6 +127,30 @@ enum LightsOutRule {
         return bedtime(on: yesterday, schedule: schedule, calendar: calendar)
     }
 
+    /// The start of the sleep window before the one beginning at `night` — last night, from tonight.
+    ///
+    /// A second off the bedtime and the same question again, rather than arithmetic of its own, so a
+    /// step back over a clock change lands on the wall-clock bedtime `mostRecentWindowStart` would
+    /// have given and the two can never disagree about which nights exist.
+    ///
+    /// This is what lets US-101 charge a WEEKEND of neglect rather than only its last night: an app
+    /// that was open across two bedtimes and one that was shut across the same two have to arrive at
+    /// the same count, and the shut one can only get there by walking back.
+    static func previousWindowStart(before night: Date, schedule: SleepSchedule,
+                                    calendar: Calendar = .current) -> Date {
+        mostRecentWindowStart(at: night.addingTimeInterval(-1), schedule: schedule,
+                              calendar: calendar)
+    }
+
+    /// How many nights one audit will walk back over: thirty.
+    ///
+    /// Not a game rule — the same kind of guard as `CareMistakes.maximumStarvationMistakesCharged`,
+    /// and only ever reached by a save whose `lightStateChangedAt` is nil, because a known stamp
+    /// stops the walk by itself (`wasLit` is false for every deadline before it). A month is past any
+    /// neglect a user could act on, and it keeps the loop bounded whatever a restored backup or a
+    /// device clock claims.
+    static let maximumNightsChargedAtOnce = 30
+
     /// The start of the next sleep window that opens strictly after `now` — tonight's bedtime, seen
     /// from an afternoon.
     ///

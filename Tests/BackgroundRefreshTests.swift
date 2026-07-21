@@ -311,6 +311,10 @@ final class BackgroundRefreshCoordinatorTests: XCTestCase {
                                        fetcher: DailyStepFetcher(steps: 8_000),
                                        clock: { [weak self] in self?.currentTime ?? Fixture.start })
         fixture.state.stage = .babyI
+        // US-101: with the light left on, the one bedtime this test's 25 hours crosses is a fifth
+        // mistake, and three is the sickness threshold — a Digimon that falls ill does not evolve,
+        // for a reason that has nothing to do with the stage gate under test. Put out at hour 0.
+        fixture.state.setLight(.off, now: Fixture.start)
         let coordinator = BackgroundRefreshCoordinator(model: fixture.model,
                                                        scheduler: SpyScheduler(),
                                                        observer: SpyObserver(),
@@ -429,6 +433,12 @@ final class ClosedAppRecomputeTests: XCTestCase {
     /// that it can hold here. Sleep pauses poop only when a refresh runs to observe it, so the open
     /// run below skips hours the closed run cannot know to skip; as a rate that scored 2 mistakes
     /// against 6 for the very same 48 hours. See `secondsAtMaximumPoopBeforeMistake`.
+    ///
+    /// US-101's light goes the other way for the same reason. It IS charged per night, because
+    /// nothing about it is observation-dependent — each night's verdict is `lightStateChangedAt`
+    /// against that night's deadline, recoverable days later — so the open run's two nights and the
+    /// shut run's two nights are the same two. That is why `auditLights` walks back over every
+    /// unaudited night instead of charging only the one the refresh landed after.
     func testFortyEightHoursShutMatchesFortyEightHoursOpen() async throws {
         let openGame = try Fixture.make(directory: directory, name: "Open",
                                         clock: { [weak self] in self?.openClock ?? Fixture.start })
@@ -461,10 +471,11 @@ final class ClosedAppRecomputeTests: XCTestCase {
                        "the timestamp freezes at the moment hunger maxed, 4 units x 4h in")
         XCTAssertEqual(closed.starvationMistakesCharged, 4,
                        "starving from hour 16 to hour 48 is four whole eight-hour spells")
-        XCTAssertEqual(closed.careMistakeCount, 6,
+        XCTAssertEqual(closed.careMistakeCount, 8,
                        """
-                       four starvation spells, the one whole day that went by with no data, and one \
-                       for the screen of poop that filled at hour 12 and was never cleaned
+                       four starvation spells, the one whole day that went by with no data, one \
+                       for the screen of poop that filled at hour 12 and was never cleaned, and one \
+                       for each of the two bedtimes these 48 hours crossed with the light left on
                        """)
         XCTAssertEqual(closed.healthStatus, .sick, "five mistakes is well past the threshold")
     }

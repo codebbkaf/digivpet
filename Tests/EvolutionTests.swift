@@ -281,6 +281,11 @@ final class EvolutionApplyTests: XCTestCase {
         // anything to charge for the fortnight this fixture spans.
         state.healthDataLastSeen = Fixture.morning
         state.hungerUpdatedAt = Fixture.morning
+        // US-101 is the same story again for the fifth mistake: the light is ON in a new game, and
+        // the audit charges one per night slept under it, so the fortnight this fixture spans would
+        // arrive at the edge a dozen mistakes deep. Put out when the stage was entered, so every
+        // night since has been dark and the `careMistakes:` argument is still the whole care record.
+        state.setLight(.off, now: Fixture.lastStage)
         state.stageEnteredDate = Fixture.lastStage
         try store.save()
 
