@@ -29,13 +29,18 @@ enum EnergyType: String, Codable, CaseIterable {
     /// English. Like `displayName`, nothing persists it — unlike `rawValue`, this is free to change.
     ///
     /// The source and not the type (US-085): "Strength" does not tell a user that walking is what
-    /// fills the first bar, and a single glyph told them even less. Four characters where five fit,
+    /// fills the first bar, and a single glyph told them even less. Four characters at most,
     /// because four of these share a 41mm screen with the Digimon — see `EnergyBarLayout`.
+    ///
+    /// Sleep is "Zz" and not the five-character "SLEEP" (US-113): it was the one label wide enough
+    /// to set `nameWidth` for all four, so the other three paid a column's worth of width for it.
+    /// The comic-strip snore is read as sleep without spelling it, and VoiceOver is handed
+    /// `displayName` ("Spirit") rather than this, so nothing is spoken as "Zz".
     var shortName: String {
         switch self {
         case .strength: return "STEP"
         case .vitality: return "KCAL"
-        case .spirit: return "SLEEP"
+        case .spirit: return "Zz"
         case .stamina: return "EXER"
         }
     }

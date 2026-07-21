@@ -298,8 +298,8 @@
         "Typecheck passes"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Sleep's bar label is 'Zz'; nameWidth 25 -> 21 (fits 'KCAL' at 20.91pt bold, measured on watchOS) and the 4pt went to barMinWidth 18 -> 22, so rowWidth is still 160. Measured on the 41mm sim: the bar grew 48px -> 56px (24 -> 28pt) with its right edge unmoved. Complication fixture longestEnergyLabel is now KCAL/Vitality. VoiceOver still gets displayName. 1324 tests, 0 failures."
     }
   ]
 }

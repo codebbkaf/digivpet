@@ -143,9 +143,14 @@ struct EnergyBarsView: View {
 /// Free-standing rather than constants on the view, in the same spirit as `SpriteScale`: a test
 /// should not have to build a view graph to check that a row fits the narrowest screen.
 enum EnergyBarLayout {
-    /// The name column. Wide enough for "SLEEP" at `nameFontSize` — the longest of the four short
-    /// names (US-085) — so no label truncates and all four columns line up.
-    static let nameWidth: CGFloat = 25
+    /// The name column. Wide enough for the longest of the four short names at `nameFontSize`, in
+    /// its BOLD weight — the dominant bar's name is bold — so no label truncates and all four
+    /// columns line up.
+    ///
+    /// That longest label is now four characters, not five: US-113 turned Sleep's "SLEEP" into
+    /// "Zz", and the widest thing left to fit is "KCAL", measured at 20.91pt bold on watchOS.
+    /// The 4pt this gave back went to `barMinWidth`, not to padding.
+    static let nameWidth: CGFloat = 21
 
     /// Size 8, matching the value column. A word needs more room than the single glyph this
     /// replaced, and the row is as tall as its tallest element, so the point the name gives up in
@@ -161,7 +166,11 @@ enum EnergyBarLayout {
 
     /// The floor on the bar itself. A bar is the one flexible column, so without a floor a wider
     /// name column would be paid for by the thing the row exists to draw.
-    static let barMinWidth: CGFloat = 18
+    ///
+    /// 22 and not 18 since US-113: the 4pt the name column gave up is the bar's, at the floor as
+    /// well as above it. `nameWidth + barMinWidth` is unchanged at 43, which is what makes that a
+    /// transfer and not a slackening — `rowWidth` still comes to exactly what it did.
+    static let barMinWidth: CGFloat = 22
 
     /// Between the three columns of one bar.
     static let columnSpacing: CGFloat = 3
@@ -170,7 +179,8 @@ enum EnergyBarLayout {
     static let pairSpacing: CGFloat = 6
 
     /// The narrowest screen this has to fit: 41mm, 176 points wide. What `rowWidth` is measured
-    /// against, and the reason `nameWidth` is 25 and not whatever looks comfortable.
+    /// against, and the reason every width above is the tightest that fits rather than whatever
+    /// looks comfortable.
     static let narrowestScreenWidth: CGFloat = 176
 
     /// What two bars cost, with the bars themselves at their floor. Everything left over past this

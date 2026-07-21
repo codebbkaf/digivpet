@@ -446,3 +446,47 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   The sprite walks between shots, so the app is not suspended. Anyone screenshotting US-097's
   shrink-and-fade needs to fix that flag first.
 - REMAINS: US-113. Nothing blocked.
+
+## 2026-07-22 — US-113: The sleep bar's label is Zz
+- `EnergyType.spirit.shortName` is `"Zz"`; STEP / KCAL / EXER untouched. The switch is the only
+  place a label lives, and `rawValue` ("spirit") is what persists, so no saved game is touched.
+- The widths were MEASURED, not guessed, with a throwaway test on the 46mm sim (removed before
+  commit) using the real watchOS font: at size 8, SLEEP 23.73 regular / 24.83 bold, KCAL 19.89 /
+  20.91, EXER 19.69 / 20.55, STEP 19.21 / 20.15, Zz 9.16 / 9.52. So `nameWidth` 25 -> 21: the same
+  hair of slack over the widest label that 25 gave over SLEEP, and it has to clear the BOLD width
+  because the dominant bar draws its name bold. `testTheNameColumnFitsTheLongestShortName` now
+  measures both weights; it only measured regular before, which would have passed at 20.5.
+- The 4pt went to `barMinWidth`, 18 -> 22, so `nameWidth + barMinWidth` is still 43 and `rowWidth`
+  still comes to exactly 160 against the 176pt of a 41mm screen. That is the story's point stated
+  as arithmetic: a transfer between two columns, not slack handed to padding.
+- OBSERVED on the Simulator, and this is the criterion worth the trouble. 41mm Series 9 FB045EDB,
+  a build from the pre-story commit (`git stash`) vs this one, same launch args
+  (`-healthAnswered -noNotificationPrompt`), fresh install each time, measured off the screenshots
+  with a throwaway pixel-run tool at /tmp/us113 (not committed):
+  - left bar BEFORE x60-107 = 48px, AFTER x52-107 = 56px. Right bar BEFORE x238-285, AFTER
+    x230-285, same 48 -> 56. At 2x that is 24pt -> 28pt, exactly the 4pt the name column gave up.
+  - both bars' RIGHT edges are unmoved (107 and 285), so the width came out of the name column and
+    not out of the value column, which is what "goes to the bar, not to padding" means in pixels.
+  - 46mm Series 11: bars 88px = 44pt, "STEP" spans 5-40px inside a 42px column — nothing truncates
+    and the four columns line up. The second row reads "Zz" and "EXER".
+- The complication DOES draw `shortName` (`RectangularComplicationView`'s gauge label), so
+  `ComplicationSnapshot.longestEnergyLabel` — the `-complicationEnergyDemo` fixture, hard-coded
+  because the widget extension does not compile `EnergyType` — moved from SLEEP/Spirit to
+  KCAL/Vitality. Three labels now tie at four characters and KCAL is the widest of them in points,
+  so it is the one the demo photographs. Screenshotted on both 41mm and 46mm: gauge reads "KCAL",
+  no truncation. `ComplicationTests` had asserted the fixture was `.spirit`'s label; it now pins
+  `.vitality` plus "nothing is longer than what the demo photographs", since a `max(by: count)`
+  over a tie is an arbitrary winner and would have been a test of Swift's tie-breaking.
+- VoiceOver is untouched: `EnergyBarRow` labels itself `goal.type.displayName` and that line was not
+  edited. `testTheShortNameIsNotTheDisplayName` now also asserts displayName is the LONGER of the
+  two per type and that Spirit is still "Spirit" — "Zz" is the one label of the four that would be
+  unintelligible read aloud, so it is worth a test rather than a comment.
+- DominantEnergyTests needed NO change: it asserts on `.spirit` the case and on totals, never on
+  the string "SLEEP". The AC named it; grep says it never mentioned the label.
+- PASSED: build green; 1324 tests, 0 failures (was 1321), 3 new in `Tests/EnergyBarsTests.swift`.
+- TRAP, pre-existing and not caused by this story: on the 26.4 sim the notification permission
+  alert sat on screen through uninstall/reinstall and swallowed the first two 46mm screenshots,
+  even with `-noNotificationPrompt`. It is queued by the `xcodebuild test` runs, which launch the
+  app host with NO launch arguments. `xcrun simctl erase` on the device is what cleared it; the
+  41mm sim, which never ran the suite, was fine throughout.
+- REMAINS: nothing. Every story in prd.json now passes.

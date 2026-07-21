@@ -178,11 +178,15 @@ final class ComplicationTests: XCTestCase {
                        EnergyType.strength.displayName)
 
         // The demo exists to photograph the WIDEST label, so it has to still be the widest one.
+        // Since US-113 that is Vitality's "KCAL" and no longer Spirit's, which is now "Zz": three
+        // labels are tied at four characters and KCAL is the widest of the three in points.
         let longest = ComplicationSnapshot.longestEnergyLabel.dominantEnergySymbol
-        XCTAssertEqual(longest, EnergyType.allCases.map(\.shortName).max { $0.count < $1.count })
+        XCTAssertEqual(longest, EnergyType.vitality.shortName)
         XCTAssertEqual(ComplicationSnapshot.longestEnergyLabel.dominantEnergyName,
-                       EnergyType.spirit.displayName)
-        XCTAssertEqual(longest, EnergyType.spirit.shortName)
+                       EnergyType.vitality.displayName)
+        // Tied, so no single case can be asserted as THE longest — but nothing may be longer than
+        // what the demo photographs, which is the property the screenshot depends on.
+        XCTAssertEqual(longest?.count, EnergyType.allCases.map(\.shortName.count).max())
     }
 
     // MARK: - Crossing the process boundary
