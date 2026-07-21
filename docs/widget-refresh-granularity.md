@@ -203,10 +203,18 @@ and do not make the design depend on motion being visible in AOD.
 The AOD open item above is carried forward unchanged and is still the one thing here that needs real
 hardware. Nothing in the shipped design depends on the motion being visible with the wrist down.
 
-`RefreshGranularitySpike.swift` is **deliberately still here** despite the note above saying to delete
-it once US-049 landed. It is the instrument for the AOD measurement, which is still open, and it is
-`#if DEBUG` so it costs a release build nothing. Delete it when the AOD floor has been measured on a
-watch, not before.
+## The instrument is gone (2026-07-21)
+
+`RefreshGranularitySpike.swift` and its `#if DEBUG` entry in `DigiVPetComplicationBundle` were
+**removed on 2026-07-21** (US-106). It was kept past US-049 in case it could be re-pointed at the
+AOD question; it could not, because that needs a real watch and not a second widget. This document
+is what the spike produced, and it stands on its own.
+
+**The AOD repaint floor is still unmeasured**, exactly as it has been since US-048. Everything above
+was measured with the display awake. If a later story needs the wrist-down number, rebuild the
+instrument from the method described here — the entry-band design is written down, it is a page of
+code, and reconstructing it on demand is cheaper than carrying a dead widget that offers itself in
+the picker on every DEBUG install.
 
 ## Ruled out, permanently
 

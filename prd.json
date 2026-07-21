@@ -113,8 +113,8 @@
         "Typecheck passes"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Deleted Sources/Complication/RefreshGranularitySpike.swift and its #if DEBUG bundle entry; grep for RefreshGranularitySpike/SpikeEntry/SpikeBand over Sources and Tests returns nothing. docs/widget-refresh-granularity.md kept, its 'deliberately still here' paragraph replaced by a removal record dated 2026-07-21 stating the AOD floor is still unmeasured. xcodegen re-run; DEBUG build green; 1281 tests 0 failures incl. ComplicationTests 27/27. Picker verified on the 42mm sim via chronod's descriptor cache: the uninstall purged BOTH DigiVPetComplication and DigiVPetRefreshSpike, and the reinstall Found exactly one descriptor - kind DigiVPetComplication, displayName Digimon - with no spike descriptor anywhere after it."
     },
     {
       "id": "US-107",

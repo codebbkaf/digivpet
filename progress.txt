@@ -124,3 +124,36 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
     crop, which moves the moment the layout does.
 - REMAINS: US-106 onward. Nothing blocked. US-106 deletes a source file, so re-run `xcodegen
   generate` before building it.
+
+## 2026-07-21 — US-106: Delete the US-048 measurement spike
+- Deleted Sources/Complication/RefreshGranularitySpike.swift (git rm) and the `#if DEBUG
+  RefreshGranularitySpikeWidget()` entry from DigiVPetComplicationBundle, so DigiVPetComplication()
+  is now the bundle's only widget. Its stale "delete both once US-049 has landed" comment went with
+  it. No project.yml change needed — the extension target takes `path: Sources/Complication` as a
+  whole — but `xcodegen generate` was re-run, and the DEBUG build reported removing the stale
+  RefreshGranularitySpike.o, which is a second confirmation the file left the compile.
+- docs/widget-refresh-granularity.md KEPT — it is the spike's actual deliverable. Its
+  "`RefreshGranularitySpike.swift` is deliberately still here" paragraph is now a dated removal
+  record: instrument removed 2026-07-21, AOD repaint floor STILL UNMEASURED (everything in the doc
+  was measured with the display awake), and if a later story needs the wrist-down number it should
+  rebuild the instrument from the method written down here rather than carry a dead widget.
+- No test changes: nothing in Tests ever referenced the spike.
+  `grep -rn 'RefreshGranularitySpike\|SpikeEntry\|SpikeBand' Sources Tests` exits 1 with no output.
+- PASSED: DEBUG build green (`-configuration Debug` explicitly — the spike was DEBUG-only, so a
+  release build would have proved nothing); 1281 tests, 0 failures, unchanged from US-105 as
+  expected; ComplicationTests re-run alone, 27/27.
+- PASSED on the Simulator, 42mm (F4A12A1C), uninstall -> install -> launch with
+  `xcrun simctl spawn ... log stream` on chronod:
+  - The watch face picker's source of truth is chronod's descriptor cache, and the simulator gives
+    no way to TAP through the face editor, so the cache is what was read. It is the stronger
+    reading anyway: the uninstall purged TWO descriptors from the OLD build — `kind:
+    DigiVPetComplication` and `kind: DigiVPetRefreshSpike` — which proves the spike really was
+    being offered in the picker before this story.
+  - The reinstall then logged `[com.digivpet.DigiVPet::com.digivpet.DigiVPet.Widget] Found:` exactly
+    ONE descriptor, `kind: DigiVPetComplication; displayName = Digimon; widgetDescription = "Your
+    Digimon and its strongest energy."`, and `Publishing changed widget descriptors - count = 1`.
+    The string "spike" appears NOWHERE in the log after the purge.
+  - Log kept at /tmp/us106_chronod.log, NOT committed.
+- REMAINS: US-107 onward. Nothing blocked. US-107 changes frameInterval to 1 s / 300 entries and
+  must read docs/widget-refresh-granularity.md first — including the new section, which records
+  that the AOD floor is unmeasured, i.e. US-107's wrist-down behaviour is unknown by construction.
