@@ -86,8 +86,27 @@ final class FeedMotionTests: XCTestCase {
         let model = try await startedModel(named: "refused", hunger: 0, vitality: 20)
 
         XCTAssertEqual(model.feed(), .refused)
-        XCTAssertEqual(model.animation, .still(.refuse), "the pose US-024 already published")
+        XCTAssertEqual(model.animation, .pose(.refuse), "the pose US-024 published, now looping (US-103)")
         XCTAssertEqual(model.actionMotion?.kind, .shake)
+    }
+
+    // MARK: - US-103: the refusal is a loop rather than one held frame
+
+    /// Two frames, and the refuse frame FIRST: a refusal that opened on the walk frame would read
+    /// as an ordinary step for half a second before the head turned away.
+    func testTheRefusalAlternatesBetweenTheRefuseFrameAndTheWalkFrame() async throws {
+        let model = try await startedModel(named: "refuseLoop", hunger: 0, vitality: 20)
+
+        XCTAssertEqual(model.feed(), .refused)
+        XCTAssertEqual(model.animation.stageFrames, [.refuse, .walk1])
+
+        // Sampled through the shipped index rule at the pose's own beat, so this is the drawing the
+        // screen actually puts up: what is shown at t is not what is shown at t + one beat.
+        let beat = model.animation.frameDuration
+        let start = Date(timeIntervalSinceReferenceDate: 0)
+        XCTAssertNotEqual(SpriteAnimation.frameIndex(at: start, count: 2, duration: beat),
+                          SpriteAnimation.frameIndex(at: start.addingTimeInterval(beat),
+                                                     count: 2, duration: beat))
     }
 
     /// A refusal has to be legible without reading the caption, and what makes it legible is that it
@@ -113,14 +132,19 @@ final class FeedMotionTests: XCTestCase {
 
     // MARK: - AC3: a blocked feed does not move at all
 
-    func testAFeedBlockedBySleepPlaysNoMotion() async throws {
+    /// Sleep stopped being a block at US-110 — a prodded Digimon wakes and eats — so what this pins
+    /// now is the other half of AC3's rule: the woken feed is a WHOLE feed, chew and all. A wake
+    /// that produced the eat loop without the motion would be exactly the "half-worked" reading the
+    /// blocked cases are written to rule out. `testAFeedBlockedByDeathPlaysNoMotion` below is the
+    /// blocked control this used to be.
+    func testAFeedThatWakesTheDigimonStillChews() async throws {
         let model = try await startedModel(named: "asleep", hunger: 3, vitality: 20)
         model.isAsleep = true
 
-        guard case .blocked = model.feed() else { return XCTFail("expected a block") }
-        XCTAssertEqual(model.animation, .sleep, "still resting — nothing happened to it")
-        XCTAssertNil(model.actionMotion, "motion would read as the feed having half-worked")
-        XCTAssertNotNil(model.actionMessage, "only the reason appears")
+        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.animation, .eat, "awake and eating, not resting")
+        XCTAssertEqual(model.actionMotion?.kind, .chew)
+        XCTAssertNil(model.actionMessage, "a meal eaten needs no caption")
     }
 
     func testAFeedBlockedByDeathPlaysNoMotion() async throws {

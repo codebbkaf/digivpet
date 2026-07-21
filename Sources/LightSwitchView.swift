@@ -32,10 +32,14 @@ enum LightButtonLayout {
 
 /// Where the sprite's slot is on screen.
 ///
-/// The light button is drawn in a layer ABOVE the scrim, which covers the whole screen — so it
-/// cannot simply be an overlay inside the sprite's own row, or the scrim would be painted over it
-/// and the user would be locked in the dark with nothing legible to tap. This preference is how the
-/// button, drawn in that top layer, still lands in the corner of a row it is no longer inside.
+/// The light button is drawn in a layer ABOVE the scrim — so it cannot simply be an overlay inside
+/// the sprite's own row, or the scrim would be painted over it and the user would be locked in the
+/// dark with nothing legible to tap. This preference is how the button, drawn in that top layer,
+/// still lands in the corner of a row it is no longer inside.
+///
+/// Since US-112 it carries a second job: it is also the EXTENT of the scrim, which darkens the
+/// Digimon's room and nothing else. So one rect now says both where the lamp hangs and how far its
+/// light reaches, which is the right pairing — they are the same room.
 ///
 /// An `Anchor` rather than a number in a named coordinate space, and that is not a style choice: a
 /// layer holding a view that ignores the safe area does not necessarily start where the row it
@@ -59,6 +63,11 @@ struct SpriteSlotBoundsKey: PreferenceKey {
 /// button second, so the button is above it — a light switch you cannot find in the dark is not a
 /// light switch. Splitting them would leave that ordering to whoever composed them next.
 ///
+/// **The scrim covers the sprite's slot, not the screen (US-112).** Turning the light down darkens
+/// the room the Digimon is in; the action row, the energy bars, the name line and the Dex button
+/// are chrome around that room and stay at full brightness, because a night light is not a reason
+/// to lose the buttons. Both halves of this view are therefore placed off the same rect.
+///
 /// Applied inside the main screen and nowhere else, which is what keeps the scrim off the battle,
 /// training, ceremony and memorial overlays: those are applied to the `NavigationStack` itself, so
 /// they are painted after this and cover it. A moment that takes the whole screen is not happening
@@ -70,28 +79,44 @@ struct LightLayer: View {
     let spriteSlot: Anchor<CGRect>?
     let cycle: () -> Void
 
+    /// How far the scrim reaches, given the sprite slot resolved against the drawing proxy: the
+    /// slot itself, and nil for "paint nothing at all" (US-112).
+    ///
+    /// A named function rather than an expression buried in `body` because it is the one part of
+    /// the layering arithmetic can reach — a test can ask what the scrim covers without building a
+    /// view graph to ask it. The nil is the load-bearing half: a slot that has not been measured
+    /// yet must fall through to nothing, never to the layer's own bounds, or the single pass before
+    /// the first layout would black out the whole screen.
+    static func scrimRect(spriteSlot: CGRect?) -> CGRect? { spriteSlot }
+
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            // Never removed, only faded: a scrim that comes and goes as a view cannot animate its
-            // own arrival, and at `on` its opacity is zero, which draws nothing.
-            //
-            // `allowsHitTesting(false)` is what keeps AC6 true — Feed, Train, Clean, Battle and the
-            // bell are all underneath this, and a scrim that swallowed taps would make turning the
-            // light down a way to lock yourself out of the game.
-            Color.black
-                .opacity(state.dimOpacity)
-                .ignoresSafeArea()
-                .allowsHitTesting(false)
+        // The reader is what the anchor is resolved against, so both halves are placed in the
+        // reader's own space rather than in one a full-screen child stretched.
+        GeometryReader { proxy in
+            let slot = spriteSlot.map { proxy[$0] }
 
-            // The reader is what the anchor is resolved against, so the button is placed in the
-            // reader's own space rather than in one the scrim above may have stretched.
-            GeometryReader { proxy in
-                let slot = spriteSlot.map { proxy[$0] } ?? .zero
+            ZStack(alignment: .topLeading) {
+                if let scrim = Self.scrimRect(spriteSlot: slot) {
+                    // Never removed, only faded: a scrim that comes and goes as a view cannot
+                    // animate its own arrival, and at `on` its opacity is zero, which draws
+                    // nothing. The `if` is not that switch — it is the unmeasured slot, which is
+                    // one layout pass long and has no rect to draw in yet.
+                    //
+                    // `allowsHitTesting(false)` is what keeps AC6 true — Feed, Train, Clean,
+                    // Battle and the bell are all underneath this, and a scrim that swallowed taps
+                    // would make turning the light down a way to lock yourself out of the game.
+                    Color.black
+                        .opacity(state.dimOpacity)
+                        .frame(width: scrim.width, height: scrim.height)
+                        // `.offset` rather than padding: padding is laid out and would push the
+                        // reader's content around, while an offset moves the drawing alone.
+                        .offset(x: scrim.minX, y: scrim.minY)
+                        .allowsHitTesting(false)
+                }
 
+                // Second, so it is above the scrim — the ordering this view exists for.
                 LightButton(state: state, action: cycle)
-                    // `.offset` rather than padding: padding is laid out and would push the reader's
-                    // content around, while an offset moves the drawing alone.
-                    .offset(x: slot.minX + LightButtonLayout.inset, y: slot.minY)
+                    .offset(x: (slot?.minX ?? 0) + LightButtonLayout.inset, y: slot?.minY ?? 0)
             }
         }
         .animation(.easeInOut(duration: LightButtonLayout.dimDuration), value: state)

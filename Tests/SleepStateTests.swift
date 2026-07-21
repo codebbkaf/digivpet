@@ -301,27 +301,48 @@ final class SleepStateTests: XCTestCase {
         XCTAssertTrue(awake.isWandering, "and an awake one must, or nothing moves at all")
     }
 
-    // MARK: AC3 — cannot be fed or trained
+    // MARK: AC3, as US-110 rewrote it — prodded awake and then obeyed
 
     /// Driven by the DERIVED sleep state rather than by setting `isAsleep` by hand, which is the
     /// part US-024 and US-025 could not test: nothing here says "asleep" except the sleep history.
-    func testASleepingDigimonCannotBeFedOrTrained() async throws {
-        let model = try await startedModel(named: "blocked", now: SleepClock.at("2026-03-11 01:00"),
+    ///
+    /// This used to assert that neither action happened. US-110 reversed that — the user was paying
+    /// a care mistake and getting nothing — so what it pins now is that the sleep history really is
+    /// what the wake overrides: the same fixture, the same 01:00, and the meal is eaten.
+    func testASleepingDigimonIsWokenAndThenFedAndTrained() async throws {
+        let model = try await startedModel(named: "woken", now: SleepClock.at("2026-03-11 01:00"),
                                            samples: [SleepClock.night], vitality: 30, strength: 30)
         XCTAssertTrue(model.isAsleep)
-
-        guard case .blocked = model.feed() else { return XCTFail("expected feeding to be blocked") }
-        XCTAssertEqual(model.state?.hunger, 3, "nothing was eaten")
-        XCTAssertEqual(model.state?.stageEnergy[.vitality], 30, "nothing was spent")
-        XCTAssertNotNil(model.actionMessage, "the reason is what the screen shows")
-        XCTAssertEqual(model.animation, .sleep, "still asleep, not knocked back into the walk loop")
-
-        guard case .blocked = model.train() else { return XCTFail("expected training to be blocked") }
-        XCTAssertEqual(model.state?.strengthStat, 0)
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 30)
         XCTAssertEqual(model.animation, .sleep)
-        // US-083: no minigame either. A block that still opened a game would be a free training.
-        XCTAssertNil(model.pendingTraining)
+
+        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertFalse(model.isAsleep, "the tap woke it")
+        XCTAssertEqual(model.state?.hunger, 2, "and the meal was eaten")
+        XCTAssertEqual(model.state?.stageEnergy[.vitality], 30 - FeedAction.vitalityCostPerFeed)
+        XCTAssertEqual(model.animation, .eat)
+
+        guard case .started = try XCTUnwrap(model.train()) else {
+            return XCTFail("expected the round to open")
+        }
+        XCTAssertEqual(model.state?.stageEnergy[.strength], 30 - TrainAction.energyCostPerTraining)
+        // US-083: the minigame really is on screen, which is what a woken round means.
+        XCTAssertNotNil(model.pendingTraining)
+        // ONE disturbance for the two actions: the second landed inside the grace period, so the
+        // Digimon was already awake and there was nothing left to disturb.
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1)
+    }
+
+    /// The marker overrides the window and nothing else. Same fixture, same night, but the Digimon
+    /// is left alone — so it is still asleep, which is what makes the test above a WAKE rather than
+    /// a fixture that was never asleep to begin with.
+    func testAnUndisturbedDigimonStaysAsleepInsideTheSameWindow() async throws {
+        let model = try await startedModel(named: "undisturbed",
+                                           now: SleepClock.at("2026-03-11 01:00"),
+                                           samples: [SleepClock.night], vitality: 30)
+        XCTAssertNil(model.state?.awakeUntil, "nobody prodded it")
+        await model.refresh()
+        XCTAssertTrue(model.isAsleep)
+        XCTAssertEqual(model.animation, .sleep)
     }
 
     /// The same game one window later feeds normally — so the block above is the WINDOW's doing

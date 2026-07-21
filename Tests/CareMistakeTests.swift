@@ -495,9 +495,14 @@ final class CareMistakeApplyTests: XCTestCase {
         XCTAssertEqual(model.state?.careMistakeCount, 1)
     }
 
-    /// AC1's fourth rule where the user meets it: an action attempted inside the sleep window is
-    /// blocked AND charged. Driven by the derived sleep state, with nothing hand-set.
-    func testAFeedAttemptedWhileAsleepIsChargedAsACareMistake() async throws {
+    /// AC1's fourth rule where the user meets it: an action taken inside the sleep window is charged.
+    /// Driven by the derived sleep state, with nothing hand-set.
+    ///
+    /// Since US-110 the feed also GOES AHEAD — the mistake is for a disturbance that really happened
+    /// rather than for a refusal — so the second prod is checked against the grace period instead of
+    /// against a second block: the Digimon is already awake, so there is nothing left to disturb and
+    /// nothing more to charge.
+    func testAFeedWhileAsleepIsChargedAsACareMistake() async throws {
         let url = storeURL("Waking")
         let night = SleepSample(start: CareClock.at("2026-03-10 23:30"),
                                 end: CareClock.at("2026-03-11 06:15"), category: .asleepCore)
@@ -515,11 +520,12 @@ final class CareMistakeApplyTests: XCTestCase {
         XCTAssertTrue(model.isAsleep)
         let before = try XCTUnwrap(model.state?.careMistakeCount)
 
-        guard case .blocked = model.feed() else { return XCTFail("expected feeding to be blocked") }
+        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
         XCTAssertEqual(model.state?.careMistakeCount, before + 1)
+        XCTAssertFalse(model.isAsleep, "and it is really awake, not merely charged for")
 
         // A second prod the same night costs nothing more.
-        guard case .blocked = model.feed() else { return XCTFail("expected feeding to be blocked") }
+        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
         XCTAssertEqual(model.state?.careMistakeCount, before + 1)
     }
 

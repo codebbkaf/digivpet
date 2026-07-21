@@ -156,8 +156,11 @@ struct ComplicationSnapshot: Codable, Equatable {
 
 #if DEBUG
     /// The placeholder wearing the LONGEST of the four short names, for the `-complicationEnergyDemo`
-    /// screenshot (US-085). The widest label is the only one worth photographing: if SLEEP fits the
+    /// screenshot (US-085). The widest label is the only one worth photographing: if KCAL fits the
     /// rectangular gauge, the other three do.
+    ///
+    /// KCAL and not SLEEP since US-113, which made Sleep's label "Zz". Three labels are now tied at
+    /// four characters and KCAL is the widest of them in points, so it is the one that has to fit.
     ///
     /// Spelled out rather than read off `EnergyType`: this file is shared with the widget extension,
     /// which does not compile the game's model at all. `ComplicationTests` is what pins the two
@@ -166,8 +169,8 @@ struct ComplicationSnapshot: Codable, Equatable {
         displayName: "Agumon",
         spriteStage: "Child",
         spriteFile: "Agumon",
-        dominantEnergySymbol: "SLEEP",
-        dominantEnergyName: "Spirit",
+        dominantEnergySymbol: "KCAL",
+        dominantEnergyName: "Vitality",
         dominantEnergyFraction: 0.5,
         dominantEnergyEarned: 150,
         published: .distantPast

@@ -291,8 +291,8 @@ final class TrainApplyTests: XCTestCase {
         model.finishTraining(.good)
 
         XCTAssertEqual(model.state?.strengthStat, TrainAction.strengthGainPerTraining)
-        XCTAssertEqual(model.animation, .still(.attack))
-        XCTAssertEqual(model.animation.stageFrames, [.attack])
+        XCTAssertEqual(model.animation, .pose(.attack))
+        XCTAssertEqual(model.animation.stageFrames, [.attack, .walk1])
         XCTAssertEqual(SpriteFrame.attack.rawValue, 11)
         XCTAssertEqual(trainHaptics, 1)
         XCTAssertEqual(feedHaptics, 0, "training taps differently from feeding")
@@ -316,17 +316,23 @@ final class TrainApplyTests: XCTestCase {
 
     // MARK: - AC3: blocked with a visible reason
 
-    func testTrainingWhileAsleepShowsAReasonAndDoesNotAnimate() async throws {
+    /// US-025 AC3 used to read "blocked while asleep". US-110 reversed it for the same reason it
+    /// reversed the feed: the mistake was being charged for an action that never happened. The round
+    /// now OPENS, the energy is charged, and the disturbance is charged too.
+    func testTrainingWhileAsleepWakesTheDigimonAndOpensTheRound() async throws {
         let model = try await startedModel(named: "asleep", strength: 20)
         model.isAsleep = true
+        let mistakesBefore = try XCTUnwrap(model.state?.careMistakeCount)
 
-        guard case .blocked = model.train() else { return XCTFail("expected a block") }
-        XCTAssertNotNil(model.actionMessage, "the reason is what the screen shows")
-        // US-026 made the resting pose depend on the sleep window: nothing happened to it, so it
-        // keeps RESTING, and a sleeping Digimon rests in the sleep loop rather than the walk loop.
-        XCTAssertEqual(model.animation, .sleep)
-        XCTAssertEqual(trainHaptics, 0)
-        XCTAssertEqual(model.state?.strengthStat, 0)
+        guard case .started = try XCTUnwrap(model.train()) else {
+            return XCTFail("expected the round to open")
+        }
+        XCTAssertFalse(model.isAsleep, "prodding it woke it")
+        XCTAssertNotNil(model.pendingTraining, "and the minigame is on screen")
+        XCTAssertEqual(model.state?.stageEnergy[.strength],
+                       20 - TrainAction.energyCostPerTraining, "the round was paid for")
+        XCTAssertEqual(model.state?.careMistakeCount, mistakesBefore + 1)
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1)
     }
 
     func testTrainingWhileSickShowsAReasonAndDoesNotPlayTheAttackPose() async throws {

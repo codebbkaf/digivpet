@@ -301,18 +301,19 @@ final class BattleMatchmakerTests: XCTestCase {
 // MARK: - AC3 / AC4: the frames
 
 final class BattleFrameTests: XCTestCase {
-    /// AC3, asserted over every turn of a real battle: the attacker holds the attack frame (11) and
-    /// the defender plays the hurt loop (9 <-> 10). A screenshot can only show one instant of this.
+    /// AC3, asserted over every turn of a real battle: the attacker swings the attack frame (11) and
+    /// the defender plays the hurt loop (9 <-> 10) once the blow has landed. A screenshot can only
+    /// show one instant of this. The before-impact half of the mapping is `BattleFlinchTests`.
     func testTheAttackerAttacksAndTheDefenderIsHurtOnEveryTurn() {
         var generator = SeededGenerator(seed: 4242)
         let report = BattleEngine.resolve(playerPower: 38, opponentPower: 31, using: &generator)
         XCTAssertFalse(report.turns.isEmpty)
 
         for turn in report.turns {
-            let attacker = BattleView.animation(for: turn.attacker, during: turn)
-            let defender = BattleView.animation(for: turn.attacker.other, during: turn)
+            let attacker = BattleView.animation(for: turn.attacker, during: turn, landed: true)
+            let defender = BattleView.animation(for: turn.attacker.other, during: turn, landed: true)
 
-            XCTAssertEqual(attacker, .still(.attack))
+            XCTAssertEqual(attacker, .pose(.attack))
             XCTAssertEqual(defender, .hurt)
         }
     }
@@ -657,6 +658,10 @@ final class BattleApplyTests: XCTestCase {
         let state = try store.loadOrCreate(digitamaId: "hero", now: Self.now)
         state.stage = .child
         state.strengthStat = strength
+        // US-108: a battle is paid for in Strength or Stamina, and the empty readers credit neither.
+        // Funded well past the cost, since what these tests are about is the fight rather than the
+        // affording of it.
+        state.stageEnergy[.strength] = 100
         // US-027: the empty readers would otherwise have the audit charge a mistake for every day
         // since the epoch, which would sicken the Digimon before a single battle.
         state.healthDataLastSeen = Self.now
@@ -763,18 +768,19 @@ final class BattleApplyTests: XCTestCase {
         XCTAssertEqual(state.careMistakeCount, 0)
     }
 
-    /// A sleeping Digimon is not dragged into a fight — the same block feeding and training apply,
-    /// with the same reason shown and the same waking-early mistake charged.
-    func testASleepingDigimonCannotBeBattled() async throws {
+    /// A sleeping Digimon IS dragged into a fight since US-110 — the same treatment feeding and
+    /// training now give it. The mistake was always charged; what changed is that the user gets the
+    /// battle they paid it for instead of a refusal.
+    func testASleepingDigimonIsWokenAndBattles() async throws {
         let (model, _) = try makeModel(strength: 8, seed: 1)
         await model.start()
         model.isAsleep = true
 
-        XCTAssertNil(model.battle(), "no battle while it sleeps")
-        XCTAssertNil(model.pendingBattleRound, "and a blocked battle opens no minigame")
-        XCTAssertNil(model.pendingBattle)
-        XCTAssertEqual(model.actionMessage, "Asleep — let it rest.")
+        XCTAssertNotNil(model.battle(), "prodded out of bed and into the arena")
+        XCTAssertFalse(model.isAsleep)
+        XCTAssertNotNil(model.pendingBattleRound, "the pre-battle round really opened")
         XCTAssertEqual(model.state?.careMistakeCount, 1, "prodding it awake is the usual mistake")
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1)
     }
 
     /// A dead Digimon cannot battle. The memorial covers the button, but the guard is what makes that

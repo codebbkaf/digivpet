@@ -178,11 +178,15 @@ final class ComplicationTests: XCTestCase {
                        EnergyType.strength.displayName)
 
         // The demo exists to photograph the WIDEST label, so it has to still be the widest one.
+        // Since US-113 that is Vitality's "KCAL" and no longer Spirit's, which is now "Zz": three
+        // labels are tied at four characters and KCAL is the widest of the three in points.
         let longest = ComplicationSnapshot.longestEnergyLabel.dominantEnergySymbol
-        XCTAssertEqual(longest, EnergyType.allCases.map(\.shortName).max { $0.count < $1.count })
+        XCTAssertEqual(longest, EnergyType.vitality.shortName)
         XCTAssertEqual(ComplicationSnapshot.longestEnergyLabel.dominantEnergyName,
-                       EnergyType.spirit.displayName)
-        XCTAssertEqual(longest, EnergyType.spirit.shortName)
+                       EnergyType.vitality.displayName)
+        // Tied, so no single case can be asserted as THE longest — but nothing may be longer than
+        // what the demo photographs, which is the property the screenshot depends on.
+        XCTAssertEqual(longest?.count, EnergyType.allCases.map(\.shortName.count).max())
     }
 
     // MARK: - Crossing the process boundary
@@ -579,17 +583,18 @@ final class ComplicationTimelineTests: XCTestCase {
         let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
 
         XCTAssertEqual(entries.count, ComplicationTimeline.motionEntryCount)
-        XCTAssertEqual(entries.count, 60)
+        XCTAssertEqual(entries.count, 300)
         XCTAssertEqual(entries.first?.date, Fixture.morning)
-        // 60 entries at 5 s means the last one lands at t+295, five seconds short of five minutes.
-        XCTAssertEqual(entries.last?.date, Fixture.morning.addingTimeInterval(295))
+        // 300 entries at 1 s means the last one lands at t+299, one second short of five minutes —
+        // the SAME horizon 60 entries at 5 s gave, which is what keeps the reload rate unchanged.
+        XCTAssertEqual(entries.last?.date, Fixture.morning.addingTimeInterval(299))
     }
 
     func testTheIdleBatchIsSpacedAtTheMeasuredFrameInterval() {
         let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
 
         // The cadence is the measured one from docs/widget-refresh-granularity.md, not an assumption.
-        XCTAssertEqual(ComplicationTimeline.frameInterval, 5)
+        XCTAssertEqual(ComplicationTimeline.frameInterval, 1)
         for (earlier, later) in zip(entries, entries.dropFirst()) {
             XCTAssertEqual(later.date.timeIntervalSince(earlier.date),
                            ComplicationTimeline.frameInterval,
@@ -612,9 +617,13 @@ final class ComplicationTimelineTests: XCTestCase {
 
     func testTheBatchReloadsOneFrameAfterItsLastEntry() {
         let reload = ComplicationTimeline.reloadDate(for: snapshot(pose: .idle), from: Fixture.morning)
+        let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
 
-        // t+300: the last entry (t+295) gets its full five seconds before the batch is replaced.
+        // t+300: the last entry (t+299) gets its full second before the batch is replaced.
         XCTAssertEqual(reload, Fixture.morning.addingTimeInterval(300))
+        // And that is one `frameInterval` past the last entry whatever the two constants become.
+        XCTAssertEqual(reload,
+                       entries.last?.date.addingTimeInterval(ComplicationTimeline.frameInterval))
     }
 
     // MARK: - Suppression in held poses
@@ -678,12 +687,12 @@ final class ComplicationTimelineTests: XCTestCase {
         let entries = ComplicationTimeline.entries(for: snapshot(pose: .idle), from: Fixture.morning)
 
         XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning, in: entries)?.step, 0)
-        // Four seconds in, entry 1 is not due yet.
-        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(4), in: entries)?.step, 0)
-        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(5), in: entries)?.step, 1)
-        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(12), in: entries)?.step, 2)
+        // Nine-tenths of a second in, entry 1 is not due yet.
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(0.9), in: entries)?.step, 0)
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(1), in: entries)?.step, 1)
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(12), in: entries)?.step, 12)
         // Past the horizon the last entry holds — which is exactly how running out of budget looks.
-        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(9999), in: entries)?.step, 59)
+        XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(9999), in: entries)?.step, 299)
         // Before the batch even starts, the first entry rather than nil.
         XCTAssertEqual(ComplicationTimeline.entry(at: Fixture.morning.addingTimeInterval(-60), in: entries)?.step, 0)
     }

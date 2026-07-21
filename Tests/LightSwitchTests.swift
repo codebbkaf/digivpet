@@ -212,16 +212,19 @@ final class LightButtonModelTests: XCTestCase {
         XCTAssertNotNil(model.battle(), "the battle opened its round in the dark")
     }
 
-    /// The control for the test above: the actions are not simply unblockable. A SLEEPING Digimon
+    /// The control for the test above: the actions are not simply unblockable. A DEAD Digimon
     /// refuses the same feed in the same darkness, so what the test above measured is the light
     /// having no say rather than nothing having any say.
+    ///
+    /// A dead one and not a sleeping one, since US-110: a sleeping Digimon is now WOKEN by the tap
+    /// and fed, so it stopped being an example of anything blocked. Death is the block that stands.
     func testAnActionThatIsBlockedIsStillBlockedInTheDark() async throws {
         let model = try await startedModel()
         model.cycleLight()
         model.cycleLight()
-        model.isAsleep = true
+        model.state?.healthStatus = .dead
 
-        XCTAssertEqual(model.feed(), .blocked(reason: "Asleep — let it rest."))
+        XCTAssertEqual(model.feed(), .blocked(reason: "It cannot eat."))
     }
 
     /// A tap with no saved game is a no-op rather than a crash — the same shape as `feed()` and

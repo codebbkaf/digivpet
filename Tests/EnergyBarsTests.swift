@@ -39,11 +39,32 @@ private extension EnergyProgress {
 final class EnergyShortNameTests: XCTestCase {
     /// THE AC, literally: the SOURCE of the energy in short English, these four and no others.
     /// Asserted as hand-written literals rather than by round-tripping some mapping through itself.
+    /// Sleep's label is the one US-113 changed; the other three are asserted in the same breath
+    /// precisely so a fifth edit to this switch cannot quietly drift them too.
     func testTheFourShortNamesAreTheOnesTheACNames() {
         XCTAssertEqual(EnergyType.strength.shortName, "STEP")
         XCTAssertEqual(EnergyType.vitality.shortName, "KCAL")
-        XCTAssertEqual(EnergyType.spirit.shortName, "SLEEP")
+        XCTAssertEqual(EnergyType.spirit.shortName, "Zz")
         XCTAssertEqual(EnergyType.stamina.shortName, "EXER")
+    }
+
+    /// THE US-113 AC, spelled out: two characters, a capital Z then a lowercase z. "ZZ" and "zz"
+    /// would both satisfy the equality above if it were ever loosened to a case-insensitive one,
+    /// and both read as a shout rather than as a snore.
+    func testSleepsLabelIsACapitalZThenALowercaseZ() {
+        let sleep = EnergyType.spirit.shortName
+        XCTAssertEqual(sleep.count, 2)
+        XCTAssertEqual(Array(sleep), ["Z", "z"])
+        XCTAssertNotEqual(sleep, "ZZ")
+    }
+
+    /// The point of US-113: no label is five characters any more, so the name column is sized by a
+    /// four-character one. Asserted on every case rather than on Sleep alone — the column belongs
+    /// to whichever label is longest, not to the one that used to be.
+    func testNoShortNameIsLongerThanFourCharacters() {
+        for type in EnergyType.allCases {
+            XCTAssertLessThanOrEqual(type.shortName.count, 4, "\(type): \(type.shortName)")
+        }
     }
 
     /// A copy-paste that gave two types one name would leave two bars that cannot be told apart —
@@ -60,12 +81,16 @@ final class EnergyShortNameTests: XCTestCase {
         }
     }
 
-    /// The short name is what the bar shows; `displayName` is what VoiceOver reads. Both must
-    /// exist, and they are not interchangeable — VoiceOver must not say "STEP".
+    /// The short name is what the bar shows; `displayName` is what VoiceOver reads
+    /// (`EnergyBarRow.accessibilityLabel`). Both must exist, and they are not interchangeable —
+    /// VoiceOver must not say "STEP", and after US-113 it must not say "Zz" either, which is the
+    /// one of the four that would be unintelligible spoken.
     func testTheShortNameIsNotTheDisplayName() {
         for type in EnergyType.allCases {
             XCTAssertNotEqual(type.shortName, type.displayName, "\(type)")
+            XCTAssertGreaterThan(type.displayName.count, type.shortName.count, "\(type)")
         }
+        XCTAssertEqual(EnergyType.spirit.displayName, "Spirit")
     }
 
     /// The names are display-only, like `displayName`. `rawValue` is the persisted spelling and
@@ -89,17 +114,36 @@ final class EnergyShortNameTests: XCTestCase {
 // MARK: - The row fits
 
 final class EnergyBarLayoutTests: XCTestCase {
-    /// THE AC: the name column fits "SLEEP" at the size it is drawn, so the longest of the four
-    /// labels does not truncate. Measured against the real watchOS system font rather than a
-    /// guess at how wide five capitals are.
+    /// THE AC: the name column fits the longest of the four labels at the size it is drawn, so no
+    /// label truncates. Measured against the real watchOS system font rather than a guess at how
+    /// wide four capitals are — and in BOTH weights, because the dominant bar draws its name bold
+    /// and bold is the wider of the two. Since US-113 the widest is "KCAL", not "SLEEP".
     func testTheNameColumnFitsTheLongestShortName() {
-        let font = UIFont.systemFont(ofSize: EnergyBarLayout.nameFontSize)
-        for type in EnergyType.allCases {
-            let width = (type.shortName as NSString)
-                .size(withAttributes: [.font: font]).width
-            XCTAssertLessThanOrEqual(width, EnergyBarLayout.nameWidth,
-                                     "\(type.shortName) needs \(width)pt")
+        for font in [UIFont.systemFont(ofSize: EnergyBarLayout.nameFontSize),
+                     UIFont.boldSystemFont(ofSize: EnergyBarLayout.nameFontSize)] {
+            for type in EnergyType.allCases {
+                let width = (type.shortName as NSString)
+                    .size(withAttributes: [.font: font]).width
+                XCTAssertLessThanOrEqual(width, EnergyBarLayout.nameWidth,
+                                         "\(type.shortName) needs \(width)pt in \(font.fontName)")
+            }
         }
+    }
+
+    /// US-113's real subject. Shrinking the name column is only worth doing if the bar gets the
+    /// width, so the two are asserted as a TRANSFER: the pair still comes to the 43pt it came to
+    /// when the name column was 25 and the bar's floor 18. Padding — `columnSpacing`,
+    /// `pairSpacing` — is pinned in the same breath, since that is where the width would have gone
+    /// instead.
+    func testTheWidthTheNameColumnGaveUpWentToTheBar() {
+        XCTAssertEqual(EnergyBarLayout.nameWidth, 21)
+        XCTAssertEqual(EnergyBarLayout.barMinWidth, 22)
+        XCTAssertEqual(EnergyBarLayout.nameWidth + EnergyBarLayout.barMinWidth, 43)
+        XCTAssertEqual(EnergyBarLayout.columnSpacing, 3)
+        XCTAssertEqual(EnergyBarLayout.pairSpacing, 6)
+        // Which is to say the row costs exactly what it always did: the change moved width from
+        // one column to another, it did not buy any.
+        XCTAssertEqual(EnergyBarLayout.rowWidth, 160)
     }
 
     /// Two bars share a row, so the widths have to clear the narrowest screen with the bars still

@@ -1,0 +1,336 @@
+{
+  "project": "Digimon Health V-Pet",
+  "branchName": "ralph/elements-battle-depth-and-care-polish",
+  "description": "Elements, Battle Depth and Care Polish - English energy-bar labels naming their health source, a two-axis element/attribute system with a counter chart, a battle you can watch and influence (spaced arena, slow eased projectiles, a pre-fight minigame that multiplies power), sprite motion on every action, and a three-state light with a real care obligation. Source PRD: tasks/prd-elements-battle-depth-and-care-polish.md",
+  "userStories": [
+    {
+      "id": "US-085",
+      "title": "English energy-bar labels naming their health source",
+      "description": "As a user, I want each energy bar to say in English which real-world activity feeds it, so I know that walking more fills the first bar.",
+      "acceptanceCriteria": [
+        "EnergyType.symbol is renamed shortName and returns the SOURCE in short English: strength -> STEP, vitality -> KCAL, spirit -> SLEEP, stamina -> EXER. It is display-only like displayName - nothing persists it, unlike rawValue",
+        "No CJK glyph remains anywhere in Sources/ - a grep for the four characters returns nothing. Today they are in GameState.swift:32-35 and ComplicationSnapshot.swift:150",
+        "EnergyBarRow's name column widens from its current 11pt to fit SLEEP at font size 8 without truncation; the value column (28pt) and the 4pt bar keep working, and the bar is never narrower than 18pt. Two bars share a row, so the arithmetic must clear the 176pt of the narrowest screen",
+        "ComplicationSnapshot.dominantEnergySymbol carries the new short name; the complication's corner and rectangular families render it without clipping",
+        "Tests/EnergyBarsTests.swift and Tests/ComplicationTests.swift assert the new strings (they currently pin the four CJK glyphs)",
+        "VoiceOver still reads the full displayName ('Strength'), not the abbreviation - EnergyBarRow's accessibilityLabel is unchanged",
+        "Verified by simctl screenshot on Apple Watch Series 11 (42mm) - the narrowest supported screen - showing all four labelled bars unclipped, plus one on 46mm",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": "DONE. EnergyType.symbol -> shortName (STEP/KCAL/SLEEP/EXER); no CJK glyph left anywhere in Sources/ (grep returns nothing). New free-standing EnergyBarLayout holds the arithmetic in one place: name column 25pt at font size 8 (was 11pt at size 9), bar floor 18pt, value column unchanged at 28pt, so two bars cost 154pt of the narrowest 176pt screen. accessibilityLabel still reads displayName. Tests measure SLEEP against the REAL watchOS UIFont at size 8 rather than guessing, and pin the row-width arithmetic; ComplicationTests pins both hard-coded snapshot labels back to EnergyType. 1048 tests pass, build green. Screenshots: 42mm and 46mm -wanderDemo both show STEP / KCAL / SLEEP / EXER unclipped with bars and values intact; 42mm -complicationEnergyDemo shows the rectangular gauge labelled SLEEP unclipped. That last flag is NEW and was necessary: the Simulator has no HealthKit data, so a real run always publishes a snapshot with NO dominant type and the face draws 'No energy yet' - and the app republishes on launch, overwriting any fixture written into the app-group file. CAVEAT for the AC's 'corner and rectangular families': there is no corner family to check. DigiVPetComplication ships .accessoryCircular + .accessoryRectangular only, and corner is deliberately excluded (reason recorded at Sources/Complication/RefreshGranularitySpike.swift:116). The circular family draws the sprite alone and carries no energy label at all."
+    },
+    {
+      "id": "US-086",
+      "title": "Element and attribute vocabulary with a counter chart",
+      "description": "As a developer, I need elements, attributes and their counter relations as pure, tested Swift before anything renders or resolves a battle with them.",
+      "acceptanceCriteria": [
+        "DigimonElement: String, Codable, CaseIterable with the twelve cases from D-2: fire, water, plant, electric, ice, wind, earth, steel, light, dark, machine, neutral",
+        "DigimonAttribute: String, Codable, CaseIterable with vaccine, data, virus, free",
+        "Each has displayName, a short badgeText (<=5 chars), an SF Symbol name, and a Color - the colour lives in a SwiftUI extension, not in the pure type, which is the pattern MoveTint uses",
+        "DigimonElement.beats: Set<DigimonElement> implements D-2's table exactly: fire beats plant/ice/steel; water beats fire/earth/machine; plant beats water/earth; electric beats water/machine/steel; ice beats plant/wind; wind beats earth/plant; earth beats fire/electric; steel beats ice/plant; light beats dark; dark beats light; machine beats plant/ice; neutral beats nothing",
+        "Effectiveness enum - advantage | disadvantage | even - with DigimonElement.effectiveness(against:) and the same on DigimonAttribute (the triangle vaccine -> virus -> data -> vaccine, free inert)",
+        "Mutual advantage (light vs dark) reports advantage for BOTH sides; the cancelling-out is US-092's arithmetic, not this type's",
+        "Tests pin: no element beats itself; neutral and free neither beat nor are beaten by anything; every other case beats at least one and is beaten by at least one, so no element is strictly best or strictly worst; effectiveness is consistent with beats in both directions",
+        "docs/elements.md documents both axes, the full chart, and why neutral is inert",
+        "Add new files to project.yml and re-run xcodegen generate",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": "DigimonElement (12 cases) + DigimonAttribute (4) in Sources/DigimonElement.swift with beats/effectiveness/displayName/badgeText/symbolName; colours in Sources/ElementColors.swift (SwiftUI, MoveTint pattern); docs/elements.md; 19 tests in Tests/ElementTests.swift. Build green, 1067 tests 0 failures."
+    },
+    {
+      "id": "US-087",
+      "title": "Author elements.json for every curated Digimon",
+      "description": "As a player, I want every Digimon I can actually raise or fight to have a real, sensible element and attribute, so the matchup means something.",
+      "acceptanceCriteria": [
+        "Resources/elements.json with three sections mirroring MoveCatalog: types (by id), lineDefaults (by evolution line), keywordRules (ordered substring -> element/attribute)",
+        "All 88 nodes in evolutions.json have an explicit types entry - a test enumerates the graph and fails naming any id that is missing, so this cannot silently regress",
+        "Attributes use canon where canon exists (Agumon Vaccine, Greymon Vaccine, Numemon Virus, Gabumon Data, Devimon Virus, Angemon Vaccine, ...); the file's _comment records which ids were judgement calls rather than looked up",
+        "Elements are flavour-consistent within a line's theme but need not be identical across it - Agumon fire -> Greymon fire -> MetalGreymon machine is correct, not a bug",
+        "ElementCatalog.type(forId:line:) resolves id -> line -> keyword rules -> (.neutral, .free), pure and unit-tested at every tier",
+        "Keyword rules cover at least: Agu/Mera/Flame -> fire, Gomamon/Seadra/Aqua -> water, Palmon/Woodmon/Floramon -> plant, Thunder/Raidra/Kabuterimon -> electric, Yuki/Ice/Frigi -> ice, Piyo/Birdra/Aquila -> wind, Gotsu/Golem/Ankylo -> earth, Metal/Andro/Guardro/Machine -> machine, Angel/Holy/Seraphi -> light, Devi/Dark/Black/Skull/Vamde -> dark",
+        "Every one of the 1,022 roster ids resolves to something - a test walks the whole roster and asserts no throw and no crash; how many land on neutral is REPORTED in this story's notes, not asserted",
+        "A malformed elements.json fails the decode at load, like MoveCatalog.bundled",
+        "Add the resource to project.yml and re-run xcodegen generate",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": "Resources/elements.json + Sources/ElementCatalog.swift: 4-tier lookup (id -> line -> ordered keyword substring -> neutral/free) mirroring MoveCatalog. All 88 graph nodes typed explicitly, attributes canon where canon exists (judgement calls listed in the file's _comment). Over the 1,022 roster ids: 85 by id, 161 by keyword, 776 land on neutral/free (75.9%) - reported, not asserted. 19 new tests; build green, 1086 tests pass."
+    },
+    {
+      "id": "US-088",
+      "title": "Element and attribute badges on the Dex detail view",
+      "description": "As a player, I want to see a Digimon's element and attribute when I open it in the Dex, so I can plan a matchup before I fight.",
+      "acceptanceCriteria": [
+        "DexDetailView shows a badge row under the name: element badge (symbol + short name, tinted) and attribute badge, side by side",
+        "Shown for DISCOVERED entries only; an undiscovered entry shows neither, because the type is part of what discovery reveals",
+        "A Digimon resolving to neutral/free shows those badges rather than an empty row",
+        "The badge row costs no more than 16pt of height, and the candidate tiles below it are still above the fold on a 41mm screen - this is what US-064 fought for, do not spend it",
+        "Tapping the element badge is NOT a navigation - no counter-chart screen in this story",
+        "Verified by simctl screenshot on 42mm and 46mm: one discovered Digimon showing both badges, one undiscovered showing neither",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": "TypeBadgeRow + DexTypeBadges (Sources/TypeBadgeView.swift) draw the element and attribute badges under the name in DexDetailView, from ElementCatalog.bundled; nil for an unmet row so no badges are drawn, neutral/free draws NEUT+FREE. 14pt row + 2pt stack spacing = the 16pt budget, asserted. Not a Button, so no navigation. 8 new tests (1094 total, 0 failures), build green; screenshots on 42mm/46mm (met shows both, unmet shows neither) and a 41mm before/after showing the candidate tiles still above the fold. New debug flag -dexUnmetDetailDemo."
+    },
+    {
+      "id": "US-089",
+      "title": "Projectile and signature move on the Dex detail view",
+      "description": "As a player, I want to see what a Digimon throws once I have owned it, so the Dex records what I learned by raising it.",
+      "acceptanceCriteria": [
+        "For a DISCOVERED entry, DexDetailView shows an attack row: the projectileSymbol glyph in its MoveTint colour, and the signatureName beside it",
+        "For an UNDISCOVERED entry the row is absent entirely - not a greyed-out placeholder, which would leak that a signature exists and how long its name is",
+        "'Discovered' is the existing DexRow.isDiscovered - no new ownership concept is introduced",
+        "The move comes from MoveCatalog.bundled through the existing move(for:in:roster:) lookup",
+        "A test asserts the row's presence is exactly row.isDiscovered, and that the symbol and name shown are the ones the catalog returns for that id",
+        "Verified by simctl screenshot: a discovered Digimon showing its glyph and signature name",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": "MoveRowView.swift: DexMoveRow.move(for:in:roster:catalog:) returns nil unless row.isDiscovered, else MoveCatalog.bundled.move(for:in:roster:); MoveRow draws projectileSymbol + signatureName in move.tint.color under the type badges. 8 tests, 1102 total, 0 failures; build green. Screenshots: 42mm/41mm Agumon shows orange flame.fill + 'Pepper Breath'; 42mm -dexUnmetDetailDemo Aegisdramon shows no row at all. 41mm now clips the candidate tile CAPTION - see progress.txt."
+    },
+    {
+      "id": "US-090",
+      "title": "Push the combatants to opposite sides of the arena",
+      "description": "As a player, I want the two Digimon standing at opposite ends of the screen, so there is room to see a projectile cross the gap.",
+      "acceptanceCriteria": [
+        "BattleView.arena lays the player against the leading edge and the opponent against the trailing edge - HStack { player; Spacer(minLength: 0); opponent }, each inset 4pt from the bezel - not HStack(spacing: 8) centred",
+        "They still face each other: player mirrored, opponent unmirrored (faces(_:) unchanged)",
+        "The gap between the two sprites' inner edges is at least 60pt on a 42mm (176pt) screen; a test asserts the arithmetic against both supported screen widths",
+        "projectileSpan is DERIVED from the measured arena width rather than the current 56pt literal, so the flight actually starts at the attacker and ends at the defender on both screen sizes",
+        "The HP readout and the opponent's name keep their places and are not overlapped by either sprite",
+        "Verified by simctl screenshot on 42mm and 46mm using -battleTurnDemo, showing both sprites at the edges with the projectile visible between them",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": "BattleArenaLayout (gap/projectileSpan off the measured arena width) + arena in a GeometryReader: HStack { player; Spacer(minLength: 0); opponent } inset 4pt, faces(_:) unchanged. 72pt gap at 176pt, 104pt at 208pt; the 56pt span literal is gone. Build + 1112 tests green; 42mm and 46mm screenshots show both sprites at the bezels with the projectile between them. NOTE: the real 42mm is 187pt wide, not the 176pt the AC names (176 is the 41mm); the test asserts 176 and 208, so 42mm is covered with room to spare."
+    },
+    {
+      "id": "US-091",
+      "title": "Slow, eased projectile flight",
+      "description": "As a player, I want to actually see the projectile travel, so an exchange reads as an attack rather than as a flicker.",
+      "acceptanceCriteria": [
+        "The projectile animates with .easeInOut over its whole flight - not .linear",
+        "Flight duration is 1.1s and turnDuration rises from 0.7s to 1.4s, so the projectile lands and the defender's hurt loop is legible before the next exchange starts",
+        "introDuration rises to 1.2s",
+        "Both remain injectable properties, so every existing test still drives a whole battle in milliseconds and Tests/BattleTests.swift needs no waiting",
+        "A test asserts the flight duration is strictly less than turnDuration - impact must land inside the turn that threw it, not during the next one",
+        "A whole battle of the median length (4-6 exchanges) completes in under 12 seconds; this story's notes record the measured wall-clock time of a real Simulator battle",
+        "Verified by two simctl screenshots of the same -battleTurnDemo launch taken ~0.4s apart, showing the projectile at visibly different positions along its arc",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": "easeInOut flight over an injectable flightDuration=1.1s inside turnDuration=1.4s (intro 1.2s), all three defaulted from BattleView.default* constants that ContentView now reads too; 4 new tests (1116 total, 0 failures). Measured on the 42mm sim: a real -battleDemo battle of 7 exchanges - one ABOVE the 4-6 median band - ran 11.59s wall clock from arena to result screen, so a 6-exchange battle is ~10.2s, under the 12s budget. -battleTurnDemo (flight stretched to 12s, since a 1.1s flight cannot be caught twice by simctl) shots 0.401s apart put the flame centroid at 74.4pt then 81.5pt, a 14px shift, over half the glyph's own width."
+    },
+    {
+      "id": "US-092",
+      "title": "BattleModifiers - effective power from matchup and training",
+      "description": "As a developer, I need one pure function turning stage/stat power plus the matchup plus the training grade into the two numbers BattleEngine.resolve fights with.",
+      "acceptanceCriteria": [
+        "New BattleModifiers implementing D-4 exactly: effective = max(1, round(BattlePower.power(...) x element x attribute x training))",
+        "Every multiplier is a named static let: elementAdvantage = 1.25, elementDisadvantage = 0.8, attributeAdvantage = 1.1, attributeDisadvantage = 0.9",
+        "TrainingResult.battleMultiplier: miss 0.8, good 1.0, great 1.15, perfect 1.3",
+        "Returns a struct carrying BOTH sides' effective powers AND the individual factors that produced them, so US-094 can show the breakdown without recomputing it",
+        "Pure: no clock, no store, no randomness - same inputs, same output, always",
+        "Effective power is floored at 1, so a ratio is always safe to take",
+        "BattleEngine.resolve is UNCHANGED; it receives effective powers as its two arguments",
+        "Tests pin: a light-vs-dark mutual matchup nets 1.0; an even matchup with a good grade equals raw BattlePower unchanged; a perfect grade with element advantage beats an opponent one stage higher; a miss with element disadvantage loses to an equal-stage opponent; the training multiplier is NEVER applied to the opponent",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": "BattleModifiers + BattleMatchup/BattleSideModifiers in Sources/BattleModifiers.swift; TrainingResult.battleMultiplier 0.8/1.0/1.15/1.3. Both chart directions are tested separately so light-vs-dark nets 1.0; effectiveness is read off the FACTOR, not off DigimonElement.effectiveness. Battle.swift untouched. 19 new tests; build green, 1135 tests pass (was 1116)."
+    },
+    {
+      "id": "US-093",
+      "title": "Train before you fight",
+      "description": "As a player, I want to play my Digimon's training game right before a battle, so my performance in the moment decides how hard it hits.",
+      "acceptanceCriteria": [
+        "Tapping Battle opens MinigameAssignment.game(for:)'s game for the current Digimon, full screen, exactly as train() does - the battle does not begin until the round is graded",
+        "The round costs NO energy, does NOT raise strengthStat, and does NOT increment stageTrainingSessions - each asserted separately against the saved state",
+        "The daily battle allowance is spent and SAVED when the minigame opens, so a force-quit mid-round still costs the battle (mirrors TrainAction.begin)",
+        "Backgrounding mid-round grades .miss and the battle proceeds with the miss multiplier - the fight is not cancelled and the allowance is not refunded",
+        "The grade is carried into BattleModifiers and the resolved BattleReport is built from the effective powers",
+        "Battle is still blocked while asleep, dead, or out of allowance, with the same messages, and a blocked battle opens NO minigame",
+        "The Digimon cannot be in a training round and a battle round at once - a test asserts Train during a pending battle round is a no-op and vice versa",
+        "Verified by simctl screenshot: the minigame on screen after a Battle tap, then the arena",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": "Battle split in two like Train: battle() picks the opponent, spends and SAVES the allowance and opens MinigameAssignment's game as pendingBattleRound; finishBattleRound(grade) resolves the fight from BattleModifiers.matchup's effective powers. Round costs no energy/STR/session; backgrounding grades .miss and the fight still happens; blocked battles open no game; Train and Battle rounds lock each other out. 1145 tests green; -battleRoundDemo screenshotted the Reflex Strike then the arena in one launch."
+    },
+    {
+      "id": "US-094",
+      "title": "Show the matchup and what decided the fight",
+      "description": "As a player, I want to see why I won or lost, so the element chart and the training game feel like things I can play rather than dice.",
+      "acceptanceCriteria": [
+        "The battle intro beat shows both combatants' element badges and an effectiveness caption: 'Super effective', 'Not very effective', or nothing when even",
+        "The result screen lists the three contributions to the player's effective power as signed percentages, e.g. 'Perfect +30% - Fire vs Plant +25% - Vaccine vs Virus +10%', followed by 'PWR 41 -> 73'",
+        "Every number shown comes from the BattleModifiers result the fight was actually resolved from - nothing is recomputed for display, so the caption and the outcome cannot disagree",
+        "An even matchup with a good grade shows 'PWR 41' and no percentage row at all, rather than a row of +0%",
+        "The breakdown fits a 42mm screen at font size 9 with minimumScaleFactor(0.7) and does not push the Done button off screen",
+        "Verified by simctl screenshots of -battleResultDemo for a win with advantage and a loss with disadvantage",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": "BattleMatchup now carries both typings and the grade; pure BattleBreakdown formats the stare-down caption and the result screen's signed-percentage row + 'PWR 41 → 73' off it, never recomputing. Verified by 42mm screenshots of -battleResultDemo (win, Fire vs Ice +25%, PWR 61 → 76), -battleResultDemo -battleLossDemo (loss, Fire vs Water -20% · Vaccine vs Data -10%, PWR 25 → 18) and the new -battleIntroDemo (FIRE/ICE badges + 'Super effective'). Build and tests green."
+    },
+    {
+      "id": "US-095",
+      "title": "ActionMotion - scripted sprite motion",
+      "description": "As a developer, I need a pure motion track for action poses before any action can use one.",
+      "acceptanceCriteria": [
+        "ActionMotion with a Kind per motion - chew, hop, lunge, shake, recoil - and static func offset(for:elapsed:) -> CGPoint, pure and total",
+        "Every motion returns .zero at elapsed == 0 and at elapsed >= duration, so a sprite always starts and ends where it stood - a motion can never strand the Digimon off centre",
+        "Amplitudes are named constants in sprite PIXELS, scaled by the view's scale at draw time, so a hop is the same visual height on a 2x and a 5x sprite",
+        "DigimonSpriteView gains a vertical offset alongside its existing horizontal one; both are applied in one .offset, and .interpolation(.none) still sits ahead of the mirror",
+        "WanderingSpriteView takes an optional motion (kind + start date) and, when present, adds its offset to the walk position - the walk is still suspended by isMoving: false, so the two can never fight over the sprite",
+        "Tests pin each motion's start/end zero, its peak amplitude and its sign (a hop goes UP, i.e. negative y), driven by elapsed times a test chooses - no real waiting",
+        "Add new files to project.yml and re-run xcodegen generate",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": "ActionMotion.offset(for:elapsed:) is a pure, total track in SPRITE PIXELS for chew/hop/lunge/shake/recoil, .zero at elapsed 0 and forever past duration; DigimonSpriteView gained verticalOffset applied in the same .offset, and WanderingSpriteView takes an optional ActionMotion, scales it by `scale`, mirrors its x with `flipped`, and ticks at 1/30s while one runs. 13 ActionMotionTests pin each shape's ends, peak and sign; 1171/1171 tests pass."
+    },
+    {
+      "id": "US-096",
+      "title": "The Digimon moves while it eats and while it refuses",
+      "description": "As a player, I want my Digimon to visibly react when I feed it, so feeding feels like something that happened to a creature.",
+      "acceptanceCriteria": [
+        "A successful feed plays .eat frames AND the chew motion - a small vertical bob, two cycles over actionDuration",
+        "A refusal plays the refuse frame AND the shake motion - a horizontal head-shake, so 'not hungry' is legible without reading the caption",
+        "A BLOCKED feed (asleep, dead) still plays no animation and no motion - nothing happened to the Digimon, and motion would read as the action having half-worked",
+        "The motion ends when the pose does; the Digimon resumes wandering from exactly where it stood",
+        "MainScreenModel publishes the motion alongside animation, so the two are set and cleared by the same show(_:message:) call and cannot get out of step",
+        "A test asserts the motion published for each of fed / refused / blocked",
+        "Verified by two simctl screenshots of one -feedDemo launch ~0.3s apart showing the sprite at different heights, plus one -feedRefuseDemo and one -feedAsleepDemo (which must show no motion at all)",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": "MainScreenModel now publishes `actionMotion` alongside `animation`, both set and cleared by one `show(_:motion:message:)` call: a fed Digimon plays .eat + .chew, a refusal .still(.refuse) + .shake, a blocked feed neither. The motion RESTARTS for as long as the pose is held (every track is shorter than the 2s hold and is zero at both ends). 9 new tests in FeedMotionTests; 1180/1180 pass. Measured on the 42mm sim: -feedDemo moves the sprite 3px (1.5pt) vertically with left/right fixed, -feedRefuseDemo swings it 12px (6pt = 2 x 1.5 sprite px x scale 2) horizontally with top/bottom fixed, -feedAsleepDemo never moves at all. NOTE: the chew is US-095's pinned shape - 3 dips over 1.2s, repeated - not the 'two cycles over actionDuration' the AC's parenthetical describes."
+    },
+    {
+      "id": "US-097",
+      "title": "The Digimon celebrates a clean screen and lunges on a landed blow",
+      "description": "As a player, I want cleaning up and training to visibly do something, so the two actions with no loop of their own stop looking broken.",
+      "acceptanceCriteria": [
+        "clean() plays the happy frame AND the hop motion - two hops over actionDuration",
+        "The poop pile animates OUT rather than vanishing between frames: scale to 0.6 and fade to 0 over 0.35s, driven by the count going to zero",
+        "A training round that bought a stat plays the attack frame AND the lunge motion - forward in the direction the sprite faces, then back",
+        "A .miss plays the angry frame AND the recoil motion, so a missed round is distinguishable from a landed one without reading the caption",
+        "Cleaning with nothing to clean stays a no-op - no pose, no motion, no animation on the pile",
+        "Tests assert the motion for clean, for a paid round and for a miss",
+        "Verified by simctl screenshots: mid-hop and mid-fade on -poopCleanDemo, and mid-lunge on -trainResultDemo",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": "clean() plays .still(.happy) + .hop and finishTraining plays .still(.attack) + .lunge for a paid round, .still(.angry) + .recoil for a miss; PoopGround gives the pile a 0.35s scale-to-0.6 + fade exit driven by poopCount reaching zero. 11 tests in CleanTrainMotionTests; 1191 total, 0 failures. Screenshot-verified on the 42mm sim: -poopCleanDemo (clean deferred 10s so the fade lands mid-burst) shows the pile's box shrinking 74->56->42px while its peak brightness falls 183->116->41->gone over ~0.35s, and the held happy frame translating 12 screenshot px (= 3 sprite px x scale 2 = hopHeight) straight up with x pinned; -trainResultDemo shows the held attack frame swinging 16 px (= lungeReach x 2) forward and home with y pinned. NOTE: the hop is US-095's two-arc 0.8s track REPEATED for the hold rather than two arcs stretched over actionDuration, same divergence US-096 recorded for the chew."
+    },
+    {
+      "id": "US-098",
+      "title": "Light state and the lights-out rule",
+      "description": "As a developer, I need the light's three states persisted and the neglect rule written as a pure function before anything renders or notifies.",
+      "acceptanceCriteria": [
+        "LightState: String, Codable, CaseIterable - on, semi, off - with displayName, an SF Symbol per state, and dimOpacity (0, 0.5, 0.85)",
+        "GameState gains lightState (default .on), lightStateChangedAt, lightAuditedNight, lightNotifiedNight - all with defaults, so an existing store opens cleanly (see US-015's warning about non-optional attributes)",
+        "LightsOutRule - PURE, taking now, the SleepSchedule, the light state and its timestamp - with windowStart(containing:) returning the start Date of the sleep window now falls in, or nil when awake, correct across midnight and for a night-shift non-wrapping window",
+        "LightsOutRule.shouldNotify(...) is true once the window has been open notifyGrace (10 min) with the light not .off, and not already notified this night",
+        "LightsOutRule.shouldChargeMistake(...) is true once the window has been open mistakeGrace (30 min) with the light not .off, and not already charged this night",
+        "Setting the light to .off at any point before windowStart + mistakeGrace is clean, EVEN IF the app never ran during the window - the rule reads lightStateChangedAt, not observations",
+        "semi does NOT satisfy lights-out: a test asserts semi held all night charges the mistake",
+        "GameState.recordLightsLeftOn(now:) increments careMistakeCount at most once per night, in the manner of recordWakingEarly",
+        "A Digimon that is awake is never charged, whatever the light is doing",
+        "Tests use an injected clock throughout and never wait real time",
+        "Add new files to project.yml and re-run xcodegen generate",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": "Sources/Light.swift: LightState (on/semi/off, displayName, symbolName, dimOpacity 0/0.5/0.85) + pure LightsOutRule (windowStart(containing:), mostRecentWindowStart, shouldNotify @10min, shouldChargeMistake @30min, wasLit) + GameState.setLight/recordLightsLeftOn; four optional-backed light fields on GameState. Build green, 1219 tests pass (28 new). TWO DIVERGENCES, both in progress.txt: shouldNotify omits lightStateChangedAt (it reads the state as it is NOW - there is no point nudging about a light already out), and shouldChargeMistake is NOT gated on the Digimon still being asleep, because AC6 ('even if the app never ran during the window') and US-101 AC3 ('reopens at 08:00, exactly one mistake') both require judging a closed night from the morning after. AC9 holds in the sense that matters: a light switched on during waking hours is never charged."
+    },
+    {
+      "id": "US-099",
+      "title": "The light button and the dimmed screen",
+      "description": "As a player, I want a light switch on the main screen so I can put my Digimon to bed properly.",
+      "acceptanceCriteria": [
+        "A lamp button on the main screen cycles on -> semi -> off -> on, with a distinct SF Symbol per state (lightbulb.fill / lightbulb.led.fill / lightbulb.slash)",
+        "It is placed as an overlay in the sprite region's top-LEADING corner, so it costs zero layout height - the action row stays five 30pt circles and the sprite scale on a 42mm screen is UNCHANGED (a test on SpriteScale.fitting pins this)",
+        "semi and off draw a black scrim at dimOpacity over the whole screen; the light button itself is drawn ABOVE the scrim and stays fully legible and tappable, or the user is locked in the dark",
+        "The scrim never covers the battle, training, ceremony or memorial overlays",
+        "The state persists across app launches",
+        "Changing the light is not a care mistake in itself and never blocks Feed, Train, Clean or Battle",
+        "Verified by simctl screenshots of all three states on 42mm, plus one showing the action row and sprite unchanged in size versus the pre-story build",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": "Lamp button cycles on->semi->off->on as an anchor-placed overlay in the sprite slot's top-leading corner, above a full-screen scrim at LightState.dimOpacity; measured on the 42mm: sprite region peak luma 244.7 lit -> 122.8 semi -> 36.4 off (exactly 1-dimOpacity), button peak stays 255 while the screen mean falls to 2.68, action row pixel-identical to the pre-story build (box 5,302-367,383, 5628 lit px) and the sprite still scale 3. Battle, training, ceremony and memorial all screenshot undimmed. 1231 tests green."
+    },
+    {
+      "id": "US-100",
+      "title": "Alert the user to turn the light off",
+      "description": "As a player, I want a nudge when I have left the light on over my sleeping Digimon, so the mistake is avoidable rather than a surprise the next morning.",
+      "acceptanceCriteria": [
+        "New NotificationKind.lights with title 'Lights out', a body naming the Digimon, its own toggle in NotificationSettingsView, and firesWhileAsleep == true - WITHOUT this the dispatcher's sleep gate would suppress the one notice that only makes sense while asleep",
+        "Sent at most once per night, guarded by lightNotifiedNight",
+        "Sent immediately when a refresh (foreground or background wake) lands inside the window past notifyGrace with the light not .off",
+        "ALSO scheduled ahead: PetNotificationDelivering gains a delivery at a Date, and a refresh that happens before tonight's bedtime with the light not .off schedules one for bedtime + notifyGrace - otherwise a user whose app is closed all evening is never told. Keep the immediate path unchanged for the other four kinds",
+        "Setting the light to .off cancels both the pending and the delivered notice, exactly as clean() withdraws the mess notice",
+        "A test with a spy deliverer asserts: sent once and only once per night; suppressed when the toggle is off; cancelled on lights-out; and NOT sent when the light is already .off",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": "NotificationKind.lights (title 'Lights out', firesWhileAsleep true, toggle row observed on the settings screen); MainScreenModel.notifyLights sends immediately inside the window past notifyGrace and otherwise queues tonight's 22:10 nudge through the new PetNotificationDelivering.deliver(_:at:); lightNotifiedNight claims the night for both paths; cycleLight to .off cancels and, if the notice was only queued, gives the night back via withdrawLightsNotice. 8 spy tests."
+    },
+    {
+      "id": "US-101",
+      "title": "Charge a care mistake for a night under the light",
+      "description": "As a player, I want leaving the light on over my sleeping Digimon to actually cost something, so lights-out is part of caring for it.",
+      "acceptanceCriteria": [
+        "refresh() runs LightsOutRule.shouldChargeMistake and charges through recordLightsLeftOn(now:), alongside the existing auditCareMistakes call",
+        "At most one mistake per night, however many times the app is opened; lightAuditedNight is the guard and it is SAVED",
+        "A night the app never ran is charged on the next launch - a test closes the store at 21:00 with the light on, reopens it at 08:00, and asserts exactly one mistake",
+        "Two consecutive neglected nights charge exactly two",
+        "semi all night charges the mistake; off set at any time before bedtime + 30min charges nothing",
+        "The mistake feeds careMistakeCount like every other, so it gates maxCareMistakes edges and counts toward sickness (US-028) with no new plumbing",
+        "Losing a battle still costs nothing - this story adds no path from battling to a care mistake",
+        "docs/ gains a note listing all five care mistakes and their thresholds in one table",
+        "Typecheck passes (xcodebuild build succeeds)",
+        "Tests pass (xcodebuild test succeeds)"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": "refresh() now runs MainScreenModel.auditLights beside auditCareMistakes: it walks back over EVERY unaudited night (not just the last), asking LightsOutRule.shouldChargeMistake at each night's own deadline and charging through recordLightsLeftOn. Walking back was forced by ClosedAppRecomputeTests — one night per refresh made 48h shut score 7 against 48h open's 8. 15 new tests in Tests/LightNeglectTests.swift, full suite green (1256 cases). docs/care-mistakes.md holds the five-mistake table."
+    }
+  ]
+}

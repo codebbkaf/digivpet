@@ -253,27 +253,25 @@ struct DexDetailView: View {
     /// Whether the owning line's tree is pushed. Set by the link, and by `-dexTreeDemo`.
     @State private var showsTree = false
 
+    /// The branch the player has tapped, as a `DexCandidate.ID`, or nil for the flat list.
+    ///
+    /// State of THIS view and nowhere else, which is what makes US-111's "selection resets when the
+    /// sheet is dismissed and reopened" true by construction: `DexGridView` presents the sheet with
+    /// `.sheet(item:)`, so dismissing it destroys this view and reopening builds a fresh one. A
+    /// selection parked on the model or on the row would survive that and reopen the sheet in a
+    /// filtered state, which looks like a bug rather than like a filter.
+    @State private var selectedBranch: DexCandidate.ID?
+
     /// Cheap enough to recompute as `body` re-runs: at most three edges and a dictionary hit each.
     private var candidates: [DexCandidate] {
         DexRow.candidates(of: row.id, in: graph, resolvedAgainst: pool)
     }
 
-    /// Every criterion on every branch out of here, in authored order, first mention only.
-    ///
-    /// Flattened across the branches rather than listed per branch ON PURPOSE. Most branch targets
-    /// are undiscovered, and `DexCandidateCell` withholds their names — so a per-branch list would
-    /// be a column of "?" headings, and worse, it would tell the player exactly how many criteria
-    /// stand between them and each unnamed thing. A flat list of what this Digimon is watching
-    /// says which directions matter without mapping them onto branches.
-    ///
-    /// Deduplicated on the criterion itself and not on its text, so two branches gated on the same
-    /// metric at DIFFERENT thresholds still each get their line — those are genuinely two things
-    /// to know, and collapsing them would hide one behind the other's checkmark.
-    private var conditions: [EvolutionCondition] {
-        var seen: Set<String> = []
-        return candidates.flatMap(\.conditions).filter { condition in
-            seen.insert("\(condition.metric)|\(condition.window)|\(condition.comparison)|\(condition.value)").inserted
-        }
+    /// What the hint section says: the flat all-branches list, or the tapped branch's own criteria.
+    /// Both the flattening and the reasoning behind it now live in `DexHintList`, which is pure and
+    /// testable without a sheet.
+    private var hintList: DexHintList? {
+        DexHintList.list(selecting: selectedBranch, from: candidates)
     }
 
     /// Three columns, as on the Dex grid, so one to three candidates are a single line that fits a
@@ -294,6 +292,7 @@ struct DexDetailView: View {
             // fold by design, `simctl` has no scroll command, and this is the only way to
             // screenshot it. Compiled out of release builds.
             .onAppear {
+                selectBranchIfRequested()
                 // Follows the link without a tap, so grid -> detail -> tree can be screenshotted
                 // end to end. It sets the same state the button does, so what the screenshot proves
                 // is the real path and not a second one built for the camera.
@@ -301,13 +300,44 @@ struct DexDetailView: View {
                     showsTree = true
                 } else if CommandLine.arguments.contains("-dexTreeLinkDemo") {
                     scroller.scrollTo(Self.treeLinkAnchor, anchor: .bottom)
-                } else if CommandLine.arguments.contains("-dexRevealDemo") {
+                } else if Self.scrollsToHints {
                     scroller.scrollTo(Self.hintsAnchor, anchor: .bottom)
                 }
             }
             #endif
         }
     }
+
+    #if DEBUG
+    /// Whether the hint list is what is being screenshotted. Every US-111 branch demo scrolls there
+    /// too, since a selection nobody can see settles nothing.
+    private static var scrollsToHints: Bool {
+        ["-dexRevealDemo", "-dexBranchDemo", "-dexBranchNoneDemo", "-dexBranchToggleDemo"]
+            .contains { CommandLine.arguments.contains($0) }
+    }
+
+    /// Debug-only: US-111's selection, set by calling `toggle(_:)` — the same function a tap calls,
+    /// once for `-dexBranchDemo` and twice for `-dexBranchToggleDemo`, so the deselected screenshot
+    /// comes from a second tap on the selected cell rather than from never having selected at all.
+    /// `simctl` has no touch command; see `DexGridView.selectFirstDiscoveredIfRequested`.
+    /// Compiled out of release builds.
+    private func selectBranchIfRequested() {
+        let args = CommandLine.arguments
+        let target: DexCandidate?
+        if args.contains("-dexBranchNoneDemo") {
+            // The unconditional branch — Numemon out of Agumon — which is the only way to see the
+            // `DexHintList.nothingRequired` line.
+            target = candidates.first { $0.conditions.isEmpty }
+        } else if args.contains("-dexBranchDemo") || args.contains("-dexBranchToggleDemo") {
+            target = candidates.first { !$0.conditions.isEmpty }
+        } else {
+            target = nil
+        }
+        guard let target else { return }
+        toggle(target)
+        if args.contains("-dexBranchToggleDemo") { toggle(target) }
+    }
+    #endif
 
     /// Split out of `body` only so the debug scroll hook above has one view to attach to.
     private var sheet: some View {
@@ -429,12 +459,31 @@ struct DexDetailView: View {
         } else {
             LazyVGrid(columns: columns, spacing: 4) {
                 ForEach(candidates) { candidate in
-                    DexCandidateCell(row: candidate.row, isEarned: isEarned(candidate))
+                    // Tappable whether or not the target has been met, and NOT `.disabled` for an
+                    // undiscovered one the way the Dex grid's cells are: a "?" has no detail sheet
+                    // to open, but it does have conditions, and asking what the "?" wants is the
+                    // whole of US-111.
+                    Button {
+                        toggle(candidate)
+                    } label: {
+                        DexCandidateCell(row: candidate.row, isEarned: isEarned(candidate),
+                                         isSelected: selectedBranch == candidate.id)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 
             hints
         }
+    }
+
+    /// A tap on a candidate: select it, or clear the selection if it was already selected.
+    ///
+    /// Assigning straight over an existing selection is what moves the selection from one candidate
+    /// to another in one step — there is no deselect-then-select, so no frame in which the list is
+    /// briefly the flat one.
+    private func toggle(_ candidate: DexCandidate) {
+        selectedBranch = selectedBranch == candidate.id ? nil : candidate.id
     }
 
     /// Scroll target for the hint list. Read by the debug hook in `body`.
@@ -452,20 +501,31 @@ struct DexDetailView: View {
         !candidate.conditions.isEmpty && ConditionReveal.allMet(candidate.conditions, in: context)
     }
 
-    /// The reveal list: one warmed-up line per criterion. Omitted entirely when the branches out of
-    /// here are gated only by energy and care, which is most of the graph — a heading over nothing
-    /// is the "No evolutions recorded." mistake in a second place.
+    /// The reveal list: one warmed-up line per criterion, of the tapped branch or of all of them.
+    /// Omitted entirely — heading and all — when the flat list has nothing in it, which is the case
+    /// for branches gated only by energy and care and so for most of the graph.
+    ///
+    /// The heading comes from the list rather than being written here, because which heading is
+    /// right depends on which list this is. See `DexHintList.branchHeading`.
     @ViewBuilder
     private var hints: some View {
-        if !conditions.isEmpty {
-            Text("It wants")
+        if let list = hintList {
+            Text(list.heading)
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
                 .padding(.top, 4)
 
             VStack(alignment: .leading, spacing: 3) {
-                ForEach(Array(conditions.enumerated()), id: \.offset) { _, condition in
-                    ConditionHintRow(condition: condition, context: context)
+                ForEach(Array(list.lines.enumerated()), id: \.offset) { _, line in
+                    switch line {
+                    case .condition(let condition):
+                        ConditionHintRow(condition: condition, context: context)
+                    case .plain(let sentence):
+                        Text(sentence)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             .padding(.horizontal, 4)
@@ -533,6 +593,15 @@ private struct DexCandidateCell: View {
     /// That pair is exactly the interesting case: a branch you have qualified for and never seen.
     var isEarned = false
 
+    /// Whether this is the branch the player has tapped (US-111).
+    ///
+    /// Marked with a ring INSIDE the tile, in white, which is a third channel and had to be: the
+    /// cell's brightness already means discovered-or-not and its outer outline already means
+    /// earned-or-not, so a second meaning on either would make an earned-but-unselected cell
+    /// indistinguishable from a selected one — and that pair is on screen together the moment a
+    /// player taps the branch they have qualified for.
+    var isSelected = false
+
     var body: some View {
         VStack(spacing: 0) {
             if row.isDiscovered {
@@ -566,6 +635,17 @@ private struct DexCandidateCell: View {
         // The earned mark stays at full strength on an undiscovered cell: dimming it would sink
         // the one thing this cell has to say underneath the dimming that means "not met yet".
         .opacity(row.isDiscovered || isEarned ? 1 : 0.55)
+        // Applied AFTER the opacity rather than exempted inside it, so selecting an unmet "?"
+        // brightens nothing: a selected "?" is exactly as dim as any other "?", and the ring is
+        // the only thing that changed. Inset by 2 so it never sits on top of the earned outline —
+        // a cell can be both at once, and both have to stay readable.
+        .overlay {
+            if isSelected {
+                RoundedRectangle(cornerRadius: 4)
+                    .strokeBorder(.white, lineWidth: 1)
+                    .padding(2)
+            }
+        }
     }
 }
 

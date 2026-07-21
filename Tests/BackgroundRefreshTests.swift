@@ -178,7 +178,7 @@ private struct ElapsedTimeState: Equatable, CustomStringConvertible {
     var healthStatus: HealthStatus
     var stageEnergy: EnergyTotals
     var lifetimeEnergy: EnergyTotals
-    var battlesRemaining: Int
+    var battlesFoughtToday: Int
 
     @MainActor
     init(_ state: GameState, now: Date, calendar: Calendar) {
@@ -192,7 +192,7 @@ private struct ElapsedTimeState: Equatable, CustomStringConvertible {
         healthStatus = state.healthStatus
         stageEnergy = state.stageEnergy
         lifetimeEnergy = state.lifetimeEnergy
-        battlesRemaining = state.battlesRemaining(now: now, calendar: calendar)
+        battlesFoughtToday = state.battlesFought(now: now, calendar: calendar)
     }
 
     var description: String {
@@ -201,7 +201,7 @@ private struct ElapsedTimeState: Equatable, CustomStringConvertible {
         mistakes \(careMistakeCount) (starvation \(starvationMistakesCharged)), \
         data last seen \(String(describing: healthDataLastSeen)), \(healthStatus), \
         stage energy \(stageEnergy.total), lifetime \(lifetimeEnergy.total), \
-        battles left \(battlesRemaining)
+        battles today \(battlesFoughtToday)
         """
     }
 }
@@ -480,25 +480,30 @@ final class ClosedAppRecomputeTests: XCTestCase {
         XCTAssertEqual(closed.healthStatus, .sick, "five mistakes is well past the threshold")
     }
 
-    /// AC3: the battle allowance is one of the things that recomputes on a READ, so a day spent shut
-    /// hands back a full allowance with nothing having run at midnight to reset it.
-    func testTheBattleAllowanceRollsOverWhileTheAppIsShut() async throws {
+    /// AC3: the day's battle count is one of the things that recomputes on a READ, so a day spent
+    /// shut reads as zero battles with nothing having run at midnight to reset it. Since US-108 the
+    /// count gates nothing — but `ConditionEvaluator` asks it for `.day`-window battle conditions,
+    /// and a stale count would open or close an evolution edge that should not have moved.
+    func testTheDaysBattleCountRollsOverWhileTheAppIsShut() async throws {
         let game = try Fixture.make(directory: directory, name: "Allowance",
                                     clock: { [weak self] in self?.closedClock ?? Fixture.start })
         await game.model.start()
+        // The Simulator's own problem, in a test: no health data means no energy, and since US-108 a
+        // battle has to be paid for. Funded here so the fights below actually happen.
+        game.state.stageEnergy[.strength] = 100
 
-        for _ in 0..<BattleLimits.perDay {
+        for _ in 0..<5 {
             game.model.battle()
             // US-093: the tap opens the pre-battle round; grading it is what fights the fight.
             game.model.finishBattleRound(.good)
             game.model.finishBattle()
         }
-        XCTAssertEqual(game.model.battlesRemainingToday, 0)
+        XCTAssertEqual(game.state.battlesFought(now: closedClock, calendar: Fixture.calendar), 5)
 
         // Shut for two days. Nothing runs; the clock simply moves.
         closedClock = Fixture.start.addingTimeInterval(Self.closure)
 
-        XCTAssertEqual(game.model.battlesRemainingToday, BattleLimits.perDay,
+        XCTAssertEqual(game.state.battlesFought(now: closedClock, calendar: Fixture.calendar), 0,
                        "a new local day, read rather than reset")
     }
 

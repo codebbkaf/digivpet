@@ -1,1449 +1,492 @@
 # Ralph Progress Log
-Started: 2026年 7月21日 星期二 16時06分51秒 CST
+Started: 2026-07-21
+Feature: Animation Quality and Play Rules (ralph/animation-quality-and-play-rules)
+Source PRDs: tasks/prd-live-animation-and-battle-impact.md
+             tasks/prd-battle-cost-sleep-and-screen-polish.md
+Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-polish/
 ---
 
-## 2026-07-21 — US-085: English energy-bar labels naming their health source
-
-DONE. All acceptance criteria observed to pass except one that has nothing to
-observe (see CAVEAT).
-
-WHAT CHANGED
-- `EnergyType.symbol` -> `EnergyType.shortName`, returning the SOURCE of the
-  energy rather than the name of the type: strength STEP, vitality KCAL,
-  spirit SLEEP, stamina EXER. Display-only, like `displayName`; `rawValue` is
-  untouched so no saved game is rewritten (a test pins all four raw values).
-- Zero CJK glyphs left in `Sources/` — `grep -rn '力\|活\|心\|耐' Sources` returns
-  nothing. They were at GameState.swift:32-35 and ComplicationSnapshot.swift:150.
-- New free-standing `enum EnergyBarLayout` in EnergyBarsView.swift holds every
-  width the row is built from, in the spirit of `SpriteScale`: a test checks the
-  arithmetic without building a view graph. name 25pt @ size 8 (was 11pt @ size
-  9), bar floor 18pt, value 28pt (unchanged), column spacing 3, pair spacing 6.
-  Two bars therefore cost 2*(25+3+18+3+28)+6 = 154pt of the narrowest 176pt
-  screen — 22pt of slack for the system's own insets.
-- The bar got an explicit `.frame(minWidth: 18)`, so the wider name column can
-  never be paid for out of the thing the row exists to draw.
-- `accessibilityLabel` is untouched: VoiceOver still says "Strength", not "STEP".
-- `ComplicationPublisher` carries `shortName` into `dominantEnergySymbol`; the
-  snapshot's `placeholder` says "STEP".
-
-VERIFICATION
-- `xcodebuild build` green on 46mm and 42mm.
-- `xcodebuild test` — 1048 tests, 0 failures.
-- New tests: EnergyShortNameTests (5) pin the four literals, distinctness,
-  non-emptiness, that the short name is not the displayName, that rawValue did
-  not move, and that no label is non-ASCII. EnergyBarLayoutTests (3) measure
-  each short name against the REAL watchOS `UIFont.systemFont(ofSize: 8)` —
-  not a guess at how wide five capitals are — and pin the row-width arithmetic
-  and the 18/28/4 constants. ComplicationTests gained one test tying the two
-  hard-coded snapshot labels back to `EnergyType`.
-- Screenshot, Series 11 42mm, `-healthAnswered -noNotificationPrompt -wanderDemo`:
-  all four bars read STEP 0/60, KCAL 0, SLEEP 0, EXER 0/60 — no truncation, bars
-  and values intact, sprite and action row unchanged.
-- Same on Series 11 46mm.
-- Screenshot, 42mm, `-complicationEnergyDemo -complicationDemo`: the rectangular
-  family's gauge labelled SLEEP, unclipped, over a half-full bar reading 150.
-
-NEW DEBUG FLAG, and why it was needed
-`-complicationEnergyDemo` makes `ComplicationDemoView` draw
-`ComplicationSnapshot.longestEnergyLabel` (the placeholder wearing SLEEP, the
-widest of the four). Without it the gauge label cannot be photographed at all:
-the Simulator has no HealthKit data, so every game it publishes has NO dominant
-energy and the face correctly draws "No energy yet". Hand-writing a snapshot
-into the app-group JSON does not work either — the app republishes on launch and
-overwrites it (verified: the file came back with `dominantEnergySymbol` absent).
-The flag chooses only WHO is on the face; the views drawn are the shipping ones.
-
-CAVEAT — the AC's "corner and rectangular families"
-There is no corner family to check. `DigiVPetComplication` ships
-`.accessoryCircular` + `.accessoryRectangular` only (Sources/Complication/
-DigiVPetComplication.swift:14); `.accessoryCorner` exists solely inside the
-US-049 refresh spike, which records at RefreshGranularitySpike.swift:116 why it
-is deliberately NOT on the shipping complication. The circular family draws the
-sprite alone and carries no energy label, so rectangular is the only family this
-story could affect, and it was verified.
-
-INCIDENT — prd.json was destroyed and rebuilt mid-iteration
-While marking the story passed I ran `git checkout prd.json` to undo a
-reformatting, forgetting that the NEW prd.json (elements-battle-depth) was
-uncommitted — HEAD still held the previous run's progression-and-play file. The
-checkout replaced the new PRD with the old one. Recovered by regenerating
-prd.json from `tasks/prd-elements-battle-depth-and-care-polish.md`, which was
-untracked but intact, via the ralph skill.
-WHAT THE NEXT ITERATION MUST KNOW: US-085's story text is reproduced verbatim
-(it had been read into context before the loss). US-086 through US-101 were
-re-derived from the source markdown — the ids, titles, priorities and ordering
-match the lost file exactly (they had been listed before the loss), and the
-criteria are faithful to the PRD, but the wording may differ in detail from the
-original conversion. If a criterion reads oddly, trust
-`tasks/prd-elements-battle-depth-and-care-polish.md` over prd.json.
-LESSON: never `git checkout` a tracked file in this repo without checking
-`git status` first — this loop keeps its work uncommitted between stories.
-
-REMAINS
-US-086 (element/attribute vocabulary) is next. Nothing in this story blocks it.
-
-================================================================================
-2026-07-21 — US-086: Element and attribute vocabulary with a counter chart
-================================================================================
-
-WHAT WAS BUILT
-- `Sources/DigimonElement.swift` — PURE Foundation, no SwiftUI:
-  - `DigimonElement: String, Codable, CaseIterable` — fire, water, plant,
-    electric, ice, wind, earth, steel, light, dark, machine, neutral.
-  - `DigimonAttribute: String, Codable, CaseIterable` — vaccine, data, virus,
-    free.
-  - Each: `displayName`, `badgeText` (<=5 chars, uppercase like US-085's energy
-    short names), `symbolName` (SF Symbol), `beats: Set<Self>`,
-    `effectiveness(against:)`.
-  - `Effectiveness: String, Codable, CaseIterable` — advantage | disadvantage |
-    even. Three cases, NOT a multiplier: the numbers are US-092's/D-4's job, so
-    the chart can be re-tuned without touching the vocabulary.
-- `Sources/ElementColors.swift` — `import SwiftUI`, `var color: Color` on both
-  enums. Split exactly the way `MoveTint.color` is split out of `MoveCatalog`
-  into `BattleView.swift`: the vocabulary stays decodable and testable with no
-  SwiftUI. Both switches are exhaustive with no `default:`, so a thirteenth
-  element is a compile error until someone gives it a colour rather than a
-  silent grey badge.
-- `docs/elements.md` — both axes, the full 12-row chart with the derived "weak
-  to" column, why `neutral`/`free` are inert, why light and dark beat each
-  other, and why `Effectiveness` carries no numbers.
-- `Tests/ElementTests.swift` — 19 tests.
-
-DESIGN NOTES FOR LATER STORIES
-- `beats` is the SINGLE source of truth for the chart. The "therefore weak to"
-  column in D-2 is never authored anywhere in code — the test derives it by
-  reading `beats` backwards, so the two halves of the published table cannot
-  drift apart.
-- `effectiveness(against:)` answers "am I strong here?", not "who wins?".
-  Advantage wins the tie, so light vs dark reports `.advantage` for BOTH sides
-  (pinned). US-092 must do the cancelling arithmetic (1.25 x 0.8 = 1.0) itself;
-  do not "fix" the mutual pair here.
-- `neutral` and `free` are inert BECAUSE they are the US-087 lookup floor. If a
-  later story gives either one a matchup, ~930 unauthored roster Digimon all
-  silently inherit that advantage.
-- Raw values are the wire format of US-087's `elements.json`. A test pins each
-  one; renaming a case re-types every Digimon authored under the old name.
-
-VERIFICATION
-- `xcodegen generate` then `xcodebuild build` — ** BUILD SUCCEEDED **.
-- `xcodebuild test` — ** TEST SUCCEEDED **, 1067 tests, 0 failures (was 1048;
-  the 19 new tests are the whole delta).
-- Every AC checked literally:
-  - twelve cases / four cases: pinned in declaration order by rawValue.
-  - <=5 chars, ASCII, non-empty, all-distinct badge texts: pinned.
-  - SF Symbol names checked against the REAL symbol table with
-    `UIImage(systemName:)` (the idiom MoveCatalogTests already uses), plus the
-    negative control that a nonsense name returns nil — an unknown symbol draws
-    a blank square, which no compile or decode catches.
-  - `beats` asserted row by row against D-2, and the inverse column asserted
-    row by row too.
-  - no element beats itself; neutral and free inert in both directions; every
-    other case beats >=1 and is beaten by >=1 (no strictly best/worst element);
-    effectiveness consistent with beats over all 144 ordered pairs; light/dark
-    proven to be the ONLY mutual pair.
-  - attribute triangle vaccine -> virus -> data -> vaccine both ways, and
-    proven to contain no mutual pair.
-
-PROJECT.YML
-The AC says "add new files to project.yml". No edit was needed and none was
-made: `Sources` and `Tests` are directory paths, so xcodegen picks up new files
-in them automatically. `xcodegen generate` was re-run and all three new files
-are in the regenerated pbxproj (verified by grep); the app target compiled
-them and the test target links against them.
-
-REMAINS
-US-087 (author `Resources/elements.json` for every curated Digimon) is next. It
-should mirror `MoveCatalog`'s three-tier lookup — id, then line, then keyword
-rule, then `neutral`/`free` — per D-1.
-
-================================================================================
-2026-07-21 — US-087: Author elements.json for every curated Digimon
-================================================================================
-
-WHAT I DID
-- `Resources/elements.json` — three sections mirroring `moves.json`:
-  - `types` (by id): all **88** nodes of `evolutions.json`, hand-authored.
-  - `lineDefaults` (by line): all six lines, a safety net for a node added later.
-  - `keywordRules`: 44 ORDERED substring rules, first match wins.
-- `Sources/ElementCatalog.swift` — `DigimonType` (element + attribute, with the
-  inert `.unauthored = neutral/free` floor), `ElementKeywordRule`, and
-  `ElementCatalog` with `type(forId:line:)` (pure) plus `type(for:in:)` that
-  resolves the line off the graph. `load(from:)` / `bundled` copied verbatim
-  from `MoveCatalog`, including the fatalError on an undecodable file.
-- `Tests/ElementCatalogTests.swift` — 19 tests.
-- `docs/elements.md` — a new section documenting the four tiers, the ordering
-  rule, and why 776 neutrals is the honest answer.
-- `project.yml` — comment only. `Resources` is a directory path, so xcodegen
-  picks the new file up automatically; regenerated and verified elements.json is
-  in the app target's resources build phase.
-
-THE NUMBER THE STORY ASKS FOR (AC7, reported not asserted)
-Over all 1,022 roster ids: 85 resolve by id, 161 by a keyword rule, and **776
-(75.9%) land on neutral/free**. Non-neutral spread: dark 80, fire 40, machine
-30, ice 20, light 20, plant 12, electric 11, water 10, earth 10, wind 9,
-steel 4. The floor is designed for this — a rule invented to cover a family
-nobody has looked at would hand out real matchups on a guess.
-
-DESIGN NOTES FOR LATER STORIES
-- ORDER IS THE COLLISION RESOLVER in `keywordRules`. Five rules exist only to be
-  reached first: `trice` before `ice` (Triceramon is not an ice type),
-  `cherubimon` before `ice` (`_vice`), `orange` before `ange` (Growmon Orange is
-  not an angel), `aquila` before `aqua`, and `yuki`/`kaguya`/`raguel`/`haguru`
-  before `agu`. Adding a rule near the top can silently re-type ids below it —
-  re-run the whole-roster test and eyeball the per-keyword hits.
-- Six rules the story REQUIRES currently match no roster id at all (`angel`,
-  `machine`, `raidra`, `frigi`, `aqua`, `flame`). They are kept deliberately;
-  the test asserts them through the lookup with a synthetic `zz<keyword>zz` id,
-  so a rule that exists but is shadowed by an earlier one still fails.
-- An explicit `types` entry beats the keyword table. `darkdramon` is the pinned
-  case: a Vaccine machine dragon whose name says `dark`.
-- Keyword-tier attributes are a genre heuristic, not canon: only the angel
-  families (vaccine) and the devil/undead families (virus) are typed; every
-  other rule says `free` rather than fabricating an attribute for a family.
-- Elements agree with the Digimon's authored attack in `moves.json` — Meramon
-  throws flame, so it is fire. US-088's badges will sit next to US-089's move
-  row, so a mismatch between the two files would be visible on one screen.
-
-VERIFICATION
-- `xcodegen generate` then `xcodebuild build` — ** BUILD SUCCEEDED **.
-- `xcodebuild test` — ** TEST SUCCEEDED **, 1086 tests, 0 failures (was 1067;
-  the 19 new tests are the whole delta).
-- Every AC checked literally:
-  - three sections present and decoded from the bundle.
-  - all 88 nodes have a `types` entry — counted off the graph, not a literal —
-    and the reverse direction (no authored id that is not a node) too.
-  - canon attributes spot-checked on the ids the story names.
-  - elements vary within a line: asserted for EVERY line, not just Agumon's.
-  - all four tiers unit-tested on a fixture catalog, plus case-insensitivity and
-    the earlier-rule-wins ordering.
-  - every keyword family the story lists asserted THROUGH the lookup.
-  - all 1,022 roster ids resolve; neutral count bounded (<90%) not pinned.
-  - malformed file: unknown element, unknown attribute, and a missing section
-    each fail the decode; a bundle without the file throws `.fileNotBundled`.
-
-REMAINS
-US-088 (element/attribute badges on the Dex detail view) is next. It should read
-`ElementCatalog.bundled.type(for:in:)` and `DigimonElement.badgeText` /
-`symbolName` / the colours already in `ElementColors.swift`.
-
-================================================================================
-2026-07-21 — US-088: Element and attribute badges on the Dex detail view
-================================================================================
-
-WHAT I DID
-- `Sources/TypeBadgeView.swift` (new):
-  - `TypeBadgeLayout` — the height budget as arithmetic rather than literals
-    buried in a `body`, the `SickBadgeLayout` pattern. `budget = 16` (the AC's
-    number), `height = 14` (the row's fixed frame), `stackSpacing = 2` (what the
-    sheet's `VStack` pays for one more child), plus the 9pt caption / 8pt symbol.
-  - `DexTypeBadges.type(for:in:catalog:)` — nil for an UNDISCOVERED row, the
-    catalog's typing otherwise. Split out of the view so "shown exactly when
-    discovered" is a fact a test can assert without a view graph.
-  - `TypeBadgeRow` — the two badges side by side: symbol + short name in the
-    type's colour on a faint capsule of the same colour. Faint rather than solid
-    because `.light` is white and `.neutral` is `.secondary`; a solid fill would
-    need a second contrasting-foreground table to keep in step with the first.
-- `Sources/DexView.swift` — `DexDetailView` gains `catalog: ElementCatalog =
-  .bundled` beside the existing `graph`, and a `typeBadges` view placed under the
-  stage/date subtitle. New DEBUG flag `-dexUnmetDetailDemo` opens the sheet of a
-  never-met entry, which NO tap can reach (the grid disables unmet cells) — the
-  only way to photograph "shows neither".
-- `Tests/DexTypeBadgeTests.swift` — 8 tests.
-
-VERIFICATION
-- `xcodebuild build` — ** BUILD SUCCEEDED **. `xcodebuild test` — ** TEST
-  SUCCEEDED **, 1094 tests, 0 failures (was 1086; the 8 new tests are the delta).
-- Screenshots, all on `-healthAnswered -noNotificationPrompt -dexDemo`:
-  - 42mm `-dexDetailDemo`: Agumon, FIRE (red flame) + VAC (green), candidate row
-    (Greymon and two "?") fully on screen under it.
-  - 46mm `-dexDetailDemo`: Agu Digitama, FIRE + FREE — the inert attribute drawn
-    as a badge rather than an empty slot.
-  - 42mm and 46mm `-dexUnmetDetailDemo`: Aegisdramon, NO badge row at all.
-  - 41mm (Series 9, watchOS 10.4) before/after the change, same launch args: the
-    tiles are fully visible in both; the row costs the "It wants" heading that
-    was peeking below them, not the tiles. US-064's fold survives.
-- Presence-is-discovery is asserted over ALL 1,022 roster entries in both
-  directions, not on two hand-picked ids.
-- Neutral/free: the test finds the first roster entry that resolves to
-  `.unauthored` rather than hard-coding one, and asserts NEUT + FREE.
-- Not a navigation: `TypeBadgeRow` is a plain `HStack` — no `Button`, no
-  `NavigationLink`, no `navigationDestination`. Nothing to tap.
-
-NOTES FOR LATER STORIES
-- The badge row sits under the SUBTITLE, not between the name and it: name,
-  stage/date, then typing reads as one identity block. US-089's move row should
-  go directly below the badges, before the `Divider()` that opens "Evolves into".
-- 41mm has ~0 slack left under the tiles. US-089 adds another row to this sheet;
-  budget it the same way and re-take the 41mm shot, because the next thing to go
-  is the tile row itself.
-- `-dexUnmetDetailDemo` is the general way to photograph withheld-until-met
-  content on this sheet; US-089 needs exactly the same shot.
-
-================================================================================
-2026-07-21 — US-089: Projectile and signature move on the Dex detail view
-================================================================================
-
-WHAT I DID
-- `Sources/MoveRowView.swift` (new), mirroring `TypeBadgeView.swift`:
-  - `MoveRowLayout` — the height budget as arithmetic, not literals in a `body`.
-    `budget = 16` (matched to `TypeBadgeLayout.budget` so the two identity rows
-    together cost a KNOWN 32pt), `height = 14` fixed frame, `stackSpacing = 2`,
-    9pt name / 10pt glyph. The glyph is the larger of the two here — the reverse
-    of the badge row — because there the word is the answer and the symbol is a
-    bullet, while here the thrown thing IS the answer and the name labels it.
-  - `DexMoveRow.move(for:in:roster:catalog:)` — nil for an UNDISCOVERED row, and
-    `catalog.move(for:in:roster:)` otherwise. Split out of the view so "shown
-    exactly when discovered" is a fact a test asserts with no view graph.
-  - `MoveRow` — `projectileSymbol` glyph and `signatureName` on one line, BOTH in
-    `move.tint.color` so the row reads as one attack rather than a coloured icon
-    with an unrelated caption. The ORDINARY projectile's symbol, not the
-    signature's: it is what the Digimon throws every turn, so it is the truer
-    picture of fighting it. Not a Button, not a NavigationLink — no move screen
-    exists to reach.
-- `Sources/DexView.swift` — `DexDetailView` gains `moves: MoveCatalog = .bundled`
-  and `roster: Roster = .bundled` beside `graph`/`catalog` (the three travel
-  together: the lookup reads line off the graph and stage off the roster). New
-  `attackRow` sits directly under `typeBadges` and above the `Divider()`, as
-  US-088's note asked — element, attribute and attack are three answers to "what
-  is this in a fight"; the divider opens the separate question of what it becomes.
-- `Tests/DexMoveRowTests.swift` — 8 tests.
-
-VERIFICATION
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **. `xcodebuild test` (46mm) —
-  ** TEST SUCCEEDED **, 1102 tests, 0 failures (was 1094; the 8 new ones are the
-  delta). Also built clean against 41mm/watchOS 10.4 by device id.
-- Screenshots, all on `-healthAnswered -noNotificationPrompt -dexDemo`:
-  - 42mm `-dexDetailDemo`: Agumon — orange `flame.fill` glyph + "Pepper Breath"
-    in orange, directly under FIRE/VAC. Matches `Resources/moves.json` exactly
-    (`flame.fill` / `orange` / `Pepper Breath`), checked against the file.
-  - 41mm `-dexDetailDemo`: same row, drawn and legible.
-  - 42mm `-dexUnmetDetailDemo`: Aegisdramon — NO badge row and NO attack row.
-    The sheet runs name -> "Ultimate" -> divider. Not a dimmed placeholder.
-- Presence-is-discovery is asserted over ALL 1,022 roster entries in both
-  directions, not on hand-picked ids. The stage-tier fallback is proved through
-  `megaseadramon`, which has no graph node.
-
-KNOWN REGRESSION — READ THIS BEFORE ADDING ANOTHER ROW
-- On 41mm the candidate tiles are now CLIPPED at the caption. I took a before
-  shot by stashing this change and rebuilding, so this is measured, not guessed:
-  before, "Greymon" was legible under its tile at the bottom edge; after, the
-  tile sprite is still visible and tappable but its name is cut off. The sheet
-  scrolls, so nothing is unreachable — but this is exactly what US-088's note
-  predicted would happen when the next row landed, and the slack is now gone.
-- I chose the semantically right placement over the extra 11pt. Recovering it
-  means taking something AWAY, not shaving 1pt off a font: the honest candidates
-  are merging the badge row and the attack row onto one line (measured too tight
-  on 41mm — the badges already span ~half the width and signature names run
-  longer than "Pepper Breath"), or dropping the hero sprite below US-064's
-  `scale: 3`.
-- **US-090 onward must not add a fourth row to this sheet.** The next thing to go
-  is the candidate tile row itself, which is the thing US-064 spent two rounds of
-  41mm screenshots buying.
-
-NOTES FOR LATER STORIES
-- The 46mm simulator (BA425DD4) has a WEDGED system notification alert that
-  survives terminate, uninstall/reinstall, and `simctl privacy grant` (which
-  fails with EPERM). `-noNotificationPrompt` does not clear it because the alert
-  is already queued at the system level. 42mm and 41mm are unaffected and were
-  used for the shots; the 46mm sim needs `simctl erase` before it can be
-  photographed again. Builds and tests on 46mm are fine — only screenshots.
-- `MoveTint.color` still lives in `BattleView.swift` as an exhaustive switch. The
-  Dex now depends on it too, so adding a tint breaks two screens, not one.
-
-================================================================================
-2026-07-21 — US-090: Push the combatants to opposite sides of the arena
-================================================================================
-
-WHAT CHANGED
-- `Sources/BattleView.swift`:
-  - New `BattleArenaLayout` enum above `BattleView`, holding the whole geometry
-    as arithmetic on a width: `spriteScale` (3), `spriteSide` (16pt frame * 3 =
-    48), `bezelInset` (4), `narrowestScreenWidth` (176), `widestScreenWidth`
-    (208), `gap(inWidth:)` = width - 2*inset - 2*sprite, and
-    `projectileSpan(inWidth:)` = width - 2*inset - sprite (centre to centre =
-    the gap plus one sprite). Both floored at 0.
-  - `arena` is now a `GeometryReader` whose `VStack` is framed to the full
-    size, so the standing positions AND the flight come off ONE measurement and
-    cannot disagree. Inside it, `HStack(spacing: 0) { player; Spacer(minLength:
-    0); opponent }.padding(.horizontal, 4)` — was `HStack(spacing: 8)` centred.
-  - `projectile` became `projectile(inWidth:)`; the `static let projectileSpan
-    = 56` literal is DELETED. `projectileOffset(rightward:progress:span:)` is
-    untouched — the span it is handed is what changed.
-  - `faces(_:)` untouched (AC2): player mirrored, opponent not.
-- `Tests/BattleArenaTests.swift` — 10 new tests.
-- `Tests/BattleTests.swift` — the three US-072 flight tests took the 56pt
-  literal as their span; they now take
-  `BattleArenaLayout.projectileSpan(inWidth: .narrowestScreenWidth)`. Their
-  assertions are unchanged: those tests are about the offset function's shape,
-  not about how long the flight is.
-
-VERIFICATION
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
-- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1112 tests, 0 failures (was
-  1102; the 10 new ones are the delta).
-- Screenshots on `-healthAnswered -noNotificationPrompt -battleTurnDemo`, then
-  MEASURED in pixels (first/last lit column of the sprite band) rather than
-  eyeballed:
-  - 42mm (374x496px @2x = 187pt wide): player art 9-47.5pt, opponent art
-    157-198.5pt. The opponent's 48pt box starts at 187-4-48 = 135pt and its art
-    begins 1pt in, so the arena is being given the FULL screen width — watchOS
-    applies no horizontal safe-area inset here. Orange `flame.fill` clearly
-    airborne between them. "Ogremon" and "10 — 9" sit below, unoverlapped.
-  - 46mm (416x496px @2x = 208pt wide): player art 9-47.5pt, flame 56.5-68.5pt,
-    opponent art 157-198.5pt against a box starting at 208-4-48 = 156pt. Same
-    result, wider gap.
-- Real gap between the sprite BOXES: 83pt on 42mm, 104pt on 46mm, 72pt on a
-  176pt screen. All clear AC3's 60pt.
-
-READ THIS — THE AC's "42mm (176pt)" IS WRONG BY 11pt
-- The 42mm Series 11 is 187pt wide (374px @2x, measured above). 176pt is the
-  41mm Series 9, which is the genuinely narrowest supported screen and is what
-  `EnergyBarLayout.narrowestScreenWidth` already means by that number. The test
-  asserts the gap at 176 AND 208, so the 42mm is covered with 11pt to spare —
-  but do not "fix" 176 to 187 later thinking it is a typo. 176 is the floor.
-- `widestScreenWidth = 208` was CONFIRMED against the 46mm screenshot, not
-  assumed. The 49mm Ultra is wider still (~205-210); nothing here breaks on it,
-  since more width only becomes more gap.
-
-NOTES FOR LATER STORIES
-- US-091 (eased flight) should slow `projectileProgress`, not shorten the span:
-  the span is now ~132pt on 42mm and ~152pt on 46mm, up from the old flat 56pt,
-  so the SAME `turnDuration` already moves the glyph more than twice as far per
-  second. A linear ramp over that distance is what US-091 is being asked to fix.
-- AC5 (name/HP not overlapped) is checked ONLY on the screenshots and says so in
-  a comment at the foot of `BattleArenaTests`. The sprites move within their own
-  `VStack` row, so no arithmetic in that file could be made to fail by an
-  overlap; a test claiming to cover it would pass for the wrong reason.
-- The 46mm sim's wedged notification alert (flagged by US-089) is GONE — it took
-  `xcrun simctl erase BA425DD4-8856-4933-8198-0E4B89960E48` followed by a
-  re-boot and re-install. Screenshots on 46mm work again.
-
-## 2026-07-21 — US-091: Slow, eased projectile flight
-
-DONE. Every acceptance criterion observed — four by test, two by measured
-Simulator screenshots.
-
-WHAT CHANGED
-- `Sources/BattleView.swift`
-  - New injectable `flightDuration`, and three named constants the properties
-    now default from: `defaultIntroDuration = 1.2`, `defaultTurnDuration = 1.4`,
-    `defaultFlightDuration = 1.1` (were 1.0 / 0.7 / none). The flight is a
-    SEPARATE knob from the turn — that is the whole point of the story: the shot
-    lands at 1.1s and the remaining 0.3s of the turn is the defender's hurt loop
-    alone, which is what makes an exchange read as a hit.
-  - `run()` flies the projectile with `Self.flightAnimation(duration:)` over
-    `flightDuration`, not `.linear(duration: turnDuration)`.
-  - New `static func flightAnimation(duration:) -> Animation` returning
-    `.easeInOut`. Pulled out of the `withAnimation` call ON PURPOSE: `Animation`
-    is `Equatable`, so AC1 ("easeInOut, not linear") becomes a real assertion
-    instead of something only a video could show.
-- `Sources/ContentView.swift` — the shipped pacing now READS `BattleView.default*`
-  rather than repeating 1.0 / 0.7 as literals, so the app and the tests cannot
-  drift apart. New `battleFlightDuration`, stretched to 12s under
-  `-battleTurnDemo` / `-battleSignatureDemo` — NOT to the 60s the turn is
-  stretched to (see the trap below).
-- `Tests/BattleTests.swift` — new `BattlePacingTests`, 4 tests: flight < turn;
-  the animation IS `.easeInOut` and is NOT `.linear`; intro + 6 turns < 12s; and
-  the view really defaults to 1.2/1.4/1.1 while all three stay injectable.
-
-VERIFICATION
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
-- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1116 tests, 0 failures (was
-  1112; the 4 new ones are the delta). Whole suite still 11.4s — no test waits a
-  single one of these beats.
-- AC6, measured rather than reasoned: `-battleDemo` (SHIPPED pacing) on the 42mm,
-  screenshotted in a burst at ~0.13s cadence and classified in Swift by lit-pixel
-  bands. Arena first drawn at t=360.387, result screen ("Victory!" + Done) at
-  t=371.978 → **11.59s wall clock**, for a battle of **7 exchanges** (counted as
-  7 separate flame crossings of the centre band) against DarkTyranomon. Seven is
-  one ABOVE the story's 4-6 median band, so a median battle is
-  1.2 + 6*1.4 ≈ 9.6s of pacing, ~10.2s wall clock. Under 12s with room.
-- AC7, measured in pixels rather than eyeballed: `-battleTurnDemo`, two shots
-  0.401s apart (t=262.121 and t=262.522). Flame centroid 148.8px → 162.9px
-  (74.4pt → 81.5pt) — a 14px move, over HALF the glyph's own 23px width.
-  Confirmed visually too: mid-gap in one shot, against the opponent by the end
-  of the burst.
-- Easing is visible in that same burst as ACCELERATION: displacement per 0.13s
-  frame ran 2px early, 4px at mid-flight, 5px late. `.linear` would be flat.
-
-TRAP FOR THE NEXT ITERATION — the demo flight is NOT the turn
-- `-battleTurnDemo` holds an exchange for 60s. Do NOT let the flight inherit
-  that: a shot crawling ~150pt over 60s moves ~2px in 0.4s and photographs as a
-  still. 12s was chosen so it is slow enough for `simctl` to catch mid-arc and
-  fast enough to have visibly moved between two shots. If you change the demo
-  turn length, leave `battleFlightDuration` alone.
-- The 46mm sim (BA425DD4) has the wedged notification-permission alert BACK —
-  `-noNotificationPrompt` does not clear it because it is a system alert queued
-  outside the app. All screenshots here were taken on the **42mm**
-  (F4A12A1C-1C5E-4B83-8278-341634CDE4F5), which is clean. Erasing the 46mm fixes
-  it (US-090 did exactly that) but costs a boot + reinstall.
-- The screenshot classifier and the flame-centroid measurer were throwaway Swift
-  at /tmp/bands.swift and /tmp/flame.swift, deliberately NOT committed — they
-  hard-code this screen's band geometry and would rot into a lie. Re-writing one
-  is ten minutes; trusting a stale one is worse.
-
-================================================================================
-2026-07-21 — US-092: BattleModifiers — effective power from matchup and training
-================================================================================
-STATUS: PASSES. Build green, 1135 tests / 0 failures (was 1116 — the 19 new ones
-are the delta). Pure arithmetic story, no UI, so no Simulator screenshot: every
-acceptance criterion is assertable in a unit test and all of them are asserted.
-
-WHAT CHANGED — two NEW files, nothing existing edited
-- `Sources/BattleModifiers.swift`
-  - `enum BattleModifiers` with the four named constants D-4 asks for:
-    `elementAdvantage = 1.25`, `elementDisadvantage = 0.8`,
-    `attributeAdvantage = 1.1`, `attributeDisadvantage = 0.9`.
-  - `elementFactor(_:against:)` / `attributeFactor(_:against:)` test BOTH
-    DIRECTIONS SEPARATELY and multiply both in if both apply. This is the
-    load-bearing design choice of the story — see the trap below.
-  - `effectivePower(basePower:elementFactor:attributeFactor:trainingFactor:)`
-    = `max(1, Int((base * e * a * t).rounded()))`. D-4 verbatim.
-  - `matchup(playerPower:playerType:opponentPower:opponentType:training:)`
-    returns `BattleMatchup { player, opponent, elementEffectiveness,
-    attributeEffectiveness }`, each side a `BattleSideModifiers { basePower,
-    elementFactor, attributeFactor, trainingFactor, effectivePower }` plus a
-    `totalFactor` convenience. The factors are CARRIED, not multiplied away, so
-    US-094 can render the breakdown without re-deriving it (a second
-    implementation of D-4 that could drift is exactly what that AC forbids).
-    `training` reaches the PLAYER only; the opponent's `trainingFactor` is
-    hard-coded 1.0.
-  - `TrainingResult.battleMultiplier` in an extension here rather than in
-    TrainingMinigame.swift: it is a battle number, and the minigames must not
-    grow a dependency on the battle.
-- `Tests/BattleModifierTests.swift` — 19 tests, including all five the AC pins:
-  light-vs-dark nets 1.0 both ways; even matchup + `good` == raw BattlePower
-  exactly; `perfect` + element advantage (child 25 -> 41) beats an adult
-  (33 -> 26) AND out-rolls it through `BattleEngine.maximumDamage`; `miss` +
-  element disadvantage (25 -> 16) loses to an equal-stage opponent (25 -> 31);
-  the opponent's effective power is IDENTICAL across all four grades.
-
-TRAP FOR THE NEXT ITERATION (US-094 will hit this) — effectiveness is read off
-the FACTOR, never off `DigimonElement.effectiveness(against:)`
-- Those two disagree on exactly one pairing and it is the interesting one.
-  `DigimonElement.light.effectiveness(against: .dark)` returns `.advantage`
-  (both sides are strong — that type answers "am I strong here?"), but the
-  arithmetic is 1.25 x 0.8 = 1.0, a wash. So `BattleMatchup.elementEffectiveness`
-  is derived by `BattleModifiers.effectiveness(of: playerElementFactor)` and
-  reports `.even`. If US-094 labels the matchup by calling the vocabulary type
-  directly it will tell the user "Advantage!" about a fight that got no
-  advantage. A test pins both halves of this.
-- Same reason `elementFactor` does not `switch` on an `Effectiveness`: a single
-  three-case value cannot express "both applied".
-
-BALANCE NOTE, measured rather than assumed
-- D-4's prose says a well-played underdog "can beat one rung up and cannot beat
-  three". The first half is true and tested. The SECOND HALF IS NOT TRUE of the
-  numbers as authored: perfect + element advantage is x1.625 while the opponent
-  simultaneously takes x0.8, a 2x swing between the sides, so a child at 25 ->
-  41 out-powers an ultimate at 49 -> 39. I did NOT write a test asserting the
-  false claim and did NOT retune the constants to make it true — the constants
-  are the AC, verbatim. Instead the test asserts what IS true and is the point:
-  the best possible boost (1.25 x 1.1 x 1.3 = 1.7875) does not double a Digimon,
-  so stage stays the dominant term. If a later story wants the three-rung
-  ceiling to hold, the fix is the opponent's disadvantage stacking, not the
-  player's boost.
-- `BattleEngine` fights on the RATIO of the two powers, so these swings matter
-  less than they look: 41 vs 39 is a 4-vs-3 damage ceiling, not a rout.
-
-WHAT REMAINS
-- Nothing hooks this up yet. `MainScreenModel.startBattle` still resolves from
-  raw `battlePower` — US-093 (pre-battle training round, D-3) is what feeds a
-  `TrainingResult` in, and US-094 is what shows the breakdown. `BattleEngine.resolve`
-  is deliberately UNCHANGED (git confirms Battle.swift was not touched this
-  iteration); it already takes two Ints and does not care where they came from.
-
-================================================================================
-2026-07-21 — US-093: Train before you fight
-================================================================================
-STATUS: PASSES. Build green, 1145 tests / 0 failures (was 1135 — 9 new tests in
-`Tests/PreBattleRoundTests.swift`, plus one added assertion in WanderingTests).
-AC8's two screenshots taken from ONE `simctl` launch of `-battleRoundDemo`.
-
-THE SHAPE OF IT — Battle is now two halves, exactly like Train since US-083
-- `MainScreenModel.battle()` no longer fights anything. It runs every guard,
-  picks the opponent, spends and SAVES the day's allowance, and publishes
-  `pendingBattleRound`. It returns `MinigameKind?` now, not `BattleBout?` —
-  nil still means "refused", so every existing `XCTAssertNil/NotNil(battle())`
-  kept its meaning.
-- `finishBattleRound(_ result: TrainingResult) -> BattleBout?` is the other
-  half and the one call the minigame's `onFinish` lands in. It builds
-  `BattleModifiers.matchup(...)` from the two typings and the grade, resolves
-  `BattleEngine` FROM THE EFFECTIVE POWERS, and publishes `pendingBattle`.
-- `abandonBattleRound()` is `abandonTraining()`'s twin; `ContentView` calls
-  both on `.background`.
-
-THE ONE DESIGN DECISION WORTH KNOWING — the generator is CARRIED
-- `PendingBattleRound` holds `{ game, player, opponent, generator }`, and
-  `SeededGenerator` gained `Equatable` so it can ride in a `@Published` value.
-- Matchmaking happens in `battle()`, BEFORE the allowance is spent, so "Nobody
-  to fight." can never cost a battle. The half-used generator is then carried
-  into `finishBattleRound`, so the draw sequence across the two halves is
-  byte-identical to what the single-call `battle()` used to do. That is what
-  kept every pinned-seed test (BattleTests' `seed: 3` loss fixture especially)
-  valid without retuning a single seed.
-- Had the generator been re-made at grading time, one seed would have produced
-  a different fight than before and the outcome-pinned tests would have had to
-  be re-derived — which would have hidden any real regression among them.
-
-WHAT THE ROUND COSTS: NOTHING BUT THE ALLOWANCE
-- `TrainAction` is never called from `battle()`. No energy, no `strengthStat`,
-  no `stageTrainingSessions` — asserted separately, in memory AND read back off
-  disk from a reopened store.
-- The allowance is spent when the GAME OPENS, not when the grade arrives, and
-  flushed immediately. `testTheAllowanceIsSpentAndSavedWhenTheMinigameOpens`
-  reopens the store mid-round and finds the battle already charged.
-
-TRAP THAT COST A TEST RUN — hold the reopened `GameStore` in a `let`
-- `try GameStore(url: url).loadOrCreate(...)` traps with "This model instance
-  was destroyed by calling ModelContext.reset" the moment the returned
-  `GameState` is read: the store is a temporary, and it takes its `ModelContext`
-  with it when the statement ends. `let reopened = try GameStore(url: url)`
-  first. BattleTests got away with it because it holds its store in a `let`.
-
-DEMOS — `-battleRoundDemo` fights as PIYOMON, and that is load-bearing
-- Its assigned game is the Reflex Strike, the one of the six that ENDS ON ITS
-  OWN: it draws a delay, opens a reaction window, and grades a miss when nothing
-  taps it. Agumon's Button Masher sits on "Tap to start" forever, and `simctl`
-  cannot tap — the first attempt screenshotted the same waiting round twice.
-  With Piyomon, one launch gives the minigame at ~2s and the arena at ~11s with
-  NOTHING staged: the real assignment, the real timeout, the real `.miss`.
-- Every ARENA demo (`-battleDemo`, `-battleResultDemo`, `-battleTurnDemo`,
-  `-battleSignatureDemo`, `-battleLossDemo`, `-battleLimitDemo`) now stages
-  `finishBattleRound(.good)` after its `battle()`, the way `-trainResultDemo`
-  stages its grade. `good` is the neutral multiplier, so what they screenshot is
-  the fight they screenshotted before this story.
-- Screenshots need `-healthAnswered` on a fresh install or the authorization
-  gate is what lands in the PNG.
-
-WHAT REMAINS / FOR US-094
-- `BattleBout` gained `matchup: BattleMatchup?` (defaulted nil, so no existing
-  construction changed). It is SET but NOT SHOWN — US-094 is what renders the
-  breakdown, and it must read the factors off this rather than re-deriving them.
-  See US-092's note on why `elementEffectiveness` is read off the FACTOR.
-- The pre-battle grade is not persisted anywhere. It lives only as long as the
-  bout does, which is fine today: nothing after the result screen asks what the
-  round was worth.
-
-================================================================================
-2026-07-21 — US-094: Show the matchup and what decided the fight
-================================================================================
-
-WHAT CHANGED
-- `Sources/BattleModifiers.swift`: `BattleMatchup` gained `playerType`,
-  `opponentType` and `training`. The factors were already kept (US-092 kept them
-  for exactly this); what was missing was what to CALL them. A screen that
-  looked the typings up again in `ElementCatalog` could answer differently from
-  the fight if the catalog changed between them.
-- `Sources/BattleBreakdown.swift` (new, pure, no SwiftUI): `percent(of:)`,
-  `contributions(for:)`, `text(for:)`, `powerText(for:)`,
-  `effectivenessCaption(_:)`, plus `BattleBreakdownLayout` for the 9pt / 0.7 /
-  2-line budget. Everything is read off the matchup — nothing consults
-  `DigimonElement.beats` or `battleMultiplier` a second time.
-- `Sources/TypeBadgeView.swift`: the badge is now a `TypeBadge` view with
-  `.element(_:)` / `.attribute(_:)` factories instead of a private method on
-  `TypeBadgeRow`, so the arena draws the Dex's badge rather than a copy.
-- `Sources/BattleView.swift`: `matchupBanner` over the arena on the INTRO beat
-  only (both element badges + caption), `breakdown` on the result screen, and
-  the result stack tightened from 6pt to `BattleBreakdownLayout.resultSpacing`
-  (4) to pay for the two new children.
-- `Sources/ContentView.swift`: `-battleIntroDemo` holds the stare-down for 600s.
-- `Sources/MainScreenModel.swift`: DEBUG `battleSeedOverride` +
-  `nextBattleGenerator()`, and `demoBattleSeed(showing:playerWins:...)`.
-
-WHY THE PERCENTAGES ARE DROPPED RATHER THAN SHOWN AT ZERO
-- AC4 is the whole reason `contributions` returns `[Contribution]` and not three
-  fields: a `good` round and an even axis contribute nothing, and "+0%" is noise
-  that makes the two rows that DO matter harder to find. `text(for:)` returns
-  nil when the list is empty and `powerText` drops the arrow when the power did
-  not move, so an untouched fight reads "PWR 41" and nothing else.
-
-THE ONE CASE THAT PROVES NOTHING IS RECOMPUTED — light vs dark
-- `DigimonElement.effectiveness(against:)` calls light vs dark `.advantage` on
-  BOTH sides, while the arithmetic nets exactly 1.0. A breakdown that re-derived
-  from the typings would print "Super effective" over a fight that got no bonus.
-  Reading `matchup.elementEffectiveness` (derived from the FACTOR) prints
-  nothing, which is the truth. `testAMutualRivalryIsShownAsTheWashItIs` pins it.
-
-THE DEMO SEED IS SEARCHED, NOT THE OPPONENT STAGED
-- `demoBattleSeed` replays exactly what `battle()` + `finishBattleRound(.good)`
-  will do with a given seed — `BattleMatchmaker.choose` draws first, then
-  `BattleEngine.resolve` draws from the same generator — and returns the lowest
-  seed whose fight shows the wanted effectiveness AND ends the wanted way. So
-  the real matchmaker and the real engine still decide everything; only WHICH
-  seed is staged. Costs no allowance and touches no state.
-- `-battleLossDemo` now fights as an untrained AGUMON, not Botamon. A Baby I is
-  matched against rungs 0-2 and NOTHING in that pool is typed water or earth —
-  the two elements that beat fire — so "a loss at a disadvantage" is not merely
-  rare there, it is impossible. Verified against evolutions.json + elements.json
-  before changing it. A Child at strengthStat 0 has the Adults in its pool.
-
-SCREENSHOTS — all on the 42mm (F4A12A1C), which is what AC5 names
-- `-battleResultDemo`: Victory, "Fire vs Ice +25%", "PWR 61 → 76", Done fully on
-  screen. The `good` grade contributes nothing and is absent, as AC4 wants.
-- `-battleResultDemo -battleLossDemo`: Defeat, "Fire vs Water -20% · Vaccine vs
-  Data -10%", "PWR 25 → 18", Done fully on screen.
-- `-battleIntroDemo`: FIRE and ICE badges over the two combatants and "Super
-  effective" between them.
-- The three-contribution worst case was checked by temporarily staging
-  `.perfect` instead of `.good`: "Perfect +30% · Fire vs Water -20% · Vaccine vs
-  Data -10%" fit ONE 42mm line at the 0.7 floor with Done still clear. The
-  `lineLimit` of 2 is headroom for the longer labels ("Electric vs Machine"),
-  not a fit already observed to need it. The staging was reverted.
-
-TRAPS THAT COST A RUN
-- The 42mm sim had the same WEDGED notification alert progress.txt recorded for
-  46mm; `-noNotificationPrompt` does not clear it because it is queued at the
-  system level. `xcrun simctl erase F4A12A1C-1C5E-4B83-8278-341634CDE4F5` then
-  boot fixed it. 42mm is now erased and clean.
-- UNINSTALL between demo launches. The battle allowance is 5/day and persists,
-  so the fourth or fifth launch screenshots "No battles left today."
-- On a FRESH install, `start()` publishes the created state before `refresh()`
-  finishes, so a screenshot at 5s can catch the untouched starting Digitama and
-  none of the demo. 12s was enough; a fresh install needs the longer wait.
-
-WHAT REMAINS
-- The attribute badges are deliberately NOT on the stare-down — four capsules
-  across 42mm is too many. The attribute only gets named on the result screen.
-- The result screen is now FULL at 42mm: sprite (scale 4), headline, flavour
-  line, breakdown row, PWR line, Done. US-095 onward must not add a seventh
-  child to it without taking something away.
-
-================================================================================
-2026-07-21 — US-095 — ActionMotion: scripted sprite motion — PASSES
-================================================================================
-
-Build green. 1171/1171 tests pass on Apple Watch Series 11 (46mm), 13 of them the
-new ActionMotionTests. Nothing else in the suite changed behaviour.
-
-WHAT WAS ADDED
-- `Sources/ActionMotion.swift` — a motion TRACK, not an animator. The whole thing
-  is `static func offset(for: Kind, elapsed: TimeInterval) -> CGPoint`: no timer,
-  no state, no view. Five kinds — chew, hop, lunge, shake, recoil. The value type
-  itself is only `kind` + `start`, so restarting a motion is assigning a new
-  `start` and a spent motion just keeps answering `.zero`.
-- `Sources/DigimonSpriteView.swift` — `verticalOffset`, applied in the SAME
-  `.offset(x:y:)` as the existing horizontal one.
-- `Sources/WanderingSpriteView.swift` — optional `motion: ActionMotion?`, ADDED
-  to the walk position.
-- `Tests/ActionMotionTests.swift`.
-
-PIXELS, NOT POINTS — the reason the amplitudes live in an `Amplitude` enum
-- Sprites are 16x16 drawn at a scale the caller picks (5x main screen, 4x battle,
-  2x Dex). A hop written as "10 points" clears a fifth of the body at 5x and half
-  of it at 2x. Written as `hopHeight = 3` PIXELS and multiplied by the view's
-  scale at draw time, it is three pixels of the Digimon's own body everywhere.
-- `WanderingSpriteView.motionOffset(at:)` is the ONE place that multiplies by
-  `scale`. `testAmplitudesAreSpritePixels` fails any constant that drifts into
-  points, by asserting no motion travels more than half a sprite.
-
-THE PROPERTY EVERYTHING RESTS ON — zero at both ends
-- Every kind returns `.zero` at `elapsed == 0` and at EVERY elapsed past its
-  duration, so a view can leave a finished motion mounted forever and the Digimon
-  is not stranded a few pixels off centre. `testAMotionLeftRunningStaysHome`
-  walks 60s past each end; the tail is flat, not merely zero at one instant.
-- Total, not just pure: negative, infinite and NaN elapsed all answer `.zero`
-  rather than trapping (`testUnexpectedElapsedTimesAreAnswered`). A motion whose
-  start is in the future has simply not begun.
-- Shapes are built from two helpers that are zero-ended BY CONSTRUCTION rather
-  than by clamping: `arcs(count:_:)` = |sin(pi*count*p)| (n humps, all on the
-  same side — a plain multi-cycle sine would send the second hop as far BELOW the
-  ground as the first went above) and `thrust(_:out:)` (quarter-sine out to
-  exactly 1 at `out`, quarter-cosine home).
-
-SIGNS, AND WHY LUNGE IS NEGATIVE X
-- y is SwiftUI's: positive down. So `hop` is negative (up) and `chew` positive
-  (the Digimon leans INTO the bowl) — deliberately opposite, and both pinned.
-- x is written for an UNMIRRORED sprite, and every sheet in this pack faces LEFT.
-  So `lunge` is -x (forward) and `recoil` is +x (knocked back). A caller drawing a
-  mirrored sprite negates x with it — `WanderingSpriteView` does exactly that off
-  `position.flipped`, or a Digimon walking right would lunge over its own
-  shoulder. `shake` is the only motion that goes both ways, which is what makes a
-  refusal read as a refusal.
-- Peaks are found by SAMPLING the whole duration finely, not by evaluating a
-  hand-derived peak time, so the tests do not re-implement the shapes they check.
-  Only a changed amplitude fails them.
-
-THE TICK — 1/30s while a motion runs, `MovementModel.step` (0.25s) otherwise
-- The shortest motion is `recoil` at 0.35s. At the walk's cadence it would be
-  drawn once or not at all. The faster schedule is safe for the walk because
-  `MovementModel.advance(to:)` is idempotent within a step — extra samples redraw
-  the same position rather than walking further.
-- `testTheSamplingTickResolvesTheShortestMotion` pins both halves: at least eight
-  frames for the shortest motion, and finer than the walk's step.
-
-THE WALK AND THE MOTION CANNOT FIGHT
-- The motion is ADDED to the walk offset, and it is safe to add precisely because
-  US-096/097 will pass `isMoving: false` alongside a motion, so the walk is HELD
-  (see `MovementModel.hold(at:)`) for the motion's whole length. Even if they did
-  overlap the sprite would be somewhere sane — a walk with a bob on it.
-
-THE ONE THING THAT COST A RUN — Date round-trips are not bit-exact
-- `start.addingTimeInterval(d).timeIntervalSince(start)` is NOT `d`. A `Date` is
-  absolute, so the addition rounds against a reference-date magnitude (600,000 in
-  these tests) and the last bit or two of a fractional second do not survive. The
-  first draft compared date-sampled and elapsed-sampled offsets bit-for-bit (49
-  failures) and asserted `isRunning` false at exactly `start + duration`, which
-  measures back a hair UNDER duration and so is still "running" (4 failures).
-- Fixed in the TESTS, not by bending the shapes: an accuracy on the comparison,
-  and the end asserted one tick past the duration. Nothing rests on that hair —
-  `offset` there is already home to within a millionth of a pixel, and one extra
-  `isRunning == true` costs one redraw of a sprite that has not moved. This is
-  also the argument for the shapes taking an elapsed INTERVAL and only the view
-  turning a `Date` into one.
-
-PROJECT FILE
-- `project.yml` needed NO edit: it globs `Sources` and `Tests` by directory, so
-  both new files were picked up. Verified after `xcodegen generate` — ActionMotion
-  appears in the regenerated pbxproj (8 references).
-
-WHAT REMAINS
-- Nothing on screen uses a motion yet. US-096 (eat/refuse) and US-097 (celebrate/
-  lunge) are what wire `MainScreenModel` to hand `WanderingSpriteView` a motion,
-  and they are also what will decide who owns the `start` date.
-- `ActionMotion.isRunning` exists for a caller that wants to stop scheduling once
-  a motion is spent. Nothing calls it yet — `offset` alone is enough to be
-  correct, this is only enough to be cheap.
-
-================================================================================
-2026-07-21 — US-096 — The Digimon moves while it eats and while it refuses — PASSES
-================================================================================
-
-Build green. 1180/1180 tests pass on Apple Watch Series 11 (46mm) — 9 new, in
-`Tests/FeedMotionTests.swift`, and nothing else in the suite changed behaviour.
-US-095 built the motion tracks and nothing on screen used one; this is the
-wiring, and it is only feeding's half. US-097 is the other half.
-
-WHAT CHANGED
-- `Sources/MainScreenModel.swift`:
-  - New `@Published private(set) var actionMotion: ActionMotion?`.
-  - `show(_:message:)` became `show(_:motion:message:)`, `motion` defaulting to
-    nil so the six existing call sites (clean, train, battle blocks...) compile
-    untouched and keep publishing no motion. It stamps the motion with `now()`
-    and CLEARS it in the same reset task that clears the pose and the caption —
-    which is the whole of AC5: there is no path that sets one without the other.
-  - `feed()` passes `.chew` on `.fed`, `.shake` on `.refused`, and nothing on
-    `.blocked`.
-- `Sources/ContentView.swift` — `motion: model.actionMotion` on the
-  `WanderingSpriteView` that was already built to take it in US-095.
-
-THE MOTION REPEATS FOR AS LONG AS THE POSE IS HELD — read this before US-097
-- Every track in `ActionMotion` is SHORTER than the two seconds a pose is held
-  for: chew is 1.2s, shake 0.6s, and hop/lunge/recoil are shorter still. Played
-  once, the Digimon would chew for 1.2s and then stand stock-still with its
-  mouth open for the remaining 0.8s.
-- So the reset task re-stamps `start` every `duration(of:)` until the hold is up.
-  Seamless because every track is `.zero` at both ends (US-095's central
-  property) — a restart puts the sprite exactly where the previous repeat left
-  it.
-- The loop condition is `held + 2 * period <= actionDuration`, i.e. a repeat is
-  only STARTED if a whole one still fits. That is what keeps the sprite home when
-  the motion is cleared instead of being cut off mid-arc and snapping.
-- This is also what makes the demos photographable: `-feedDemo` sets
-  `actionDuration = 60`, so the chew runs ~50 times and `simctl` — which needs
-  ~8s to boot, launch and settle — can still catch it mid-arc. Without the
-  repeat the whole motion would be over 1.2s after launch and AC7 would be
-  unverifiable.
-- Tests inject `actionDuration: 0.05`, which is shorter than the shortest track,
-  so the repeat never fires there and no test waits a real second.
-
-VERIFICATION
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
-- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1180 tests, 0 failures (was
-  1171; the 9 new ones are the delta). Whole suite 11.9s.
-- AC7, MEASURED in pixels rather than eyeballed. All three demos on the 42mm
-  (F4A12A1C), launched with `-healthAnswered -noNotificationPrompt`, burst-
-  screenshotted at simctl's ~0.11s floor, and the sprite's bounding box found in
-  Swift by saturation (the sprite is the only saturated thing in the band; the
-  band was tightened to y<220 after the orange "Not hungry." caption at y~225
-  contaminated the first pass).
-  - `-feedDemo`: left/right pinned at 163/210 in all 20 shots — no sideways
-    component, correct for a chew — while top and bottom move TOGETHER by 3px
-    within each eat frame (bottom 208 <-> 211). Pairs ~0.23s apart at the same
-    eat frame: t=1.835 bottom=211 vs t=2.070 bottom=208; t=0.827 bottom=208 vs
-    t=1.051 bottom=211. The frame swap is separable from the motion because
-    eat1 and eat2 have different lit-pixel counts (1264 vs 1152), so the
-    comparisons above are same-frame.
-  - `-feedRefuseDemo`: px count pinned at 1328 (one held refuse frame) and
-    top/bottom pinned at 161/208 — no vertical component — while left swings
-    157..169, a 12px range about a centre of 163. That is 6pt, i.e. EXACTLY
-    2 x `shakeSwing` (1.5 sprite px) x scale 2, and it goes both ways.
-  - `-feedAsleepDemo`: left=163, right=210, bottom=208 in all 16 shots, not one
-    pixel of movement, with "Asleep — let it rest." on screen. The top alternates
-    161/165 with the lit-pixel count — that is the sleep1<->sleep2 art loop
-    inside a bounding box that never moves, not a position change.
-  - The 3px chew and the 12px shake are both 2pt-scaled: 42mm lands on
-    `SpriteScale.fitting` = 2, confirmed by the shake measuring its predicted
-    amplitude to the pixel. A larger watch would show proportionally more.
-
-WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
-- AC1 describes the chew as "two cycles over actionDuration". The SHIPPED chew is
-  US-095's pinned shape — three dips over a fixed 1.2s — because
-  `ActionMotionTests` pins that amplitude and duration, and re-cutting the track
-  to be a function of `actionDuration` would have meant rewriting a story that
-  already passed. The substance of AC1 (a small vertical bob for the whole meal)
-  is met, and the repeat is what makes it last the whole meal. If a later story
-  wants the shape parameterised, `duration(of:)` is the one place to change.
-
-TRAPS FOR THE NEXT ITERATION
-- The 42mm sim needs `-healthAnswered` or it launches into the HealthKit
-  onboarding gate and every screenshot is of the Continue button. The earlier
-  progress notes mention `-noNotificationPrompt` but not this one; both are
-  needed.
-- The 46mm sim (BA425DD4) STILL has the wedged system notification alert
-  US-091 recorded — confirmed again this iteration, in Chinese, over a fresh
-  install. Builds and tests on it are fine; screenshots are not. Use 42mm.
-- The sprite measurer was throwaway Swift at /tmp/us096/measure.swift and is
-  deliberately NOT committed: it hard-codes this screen's band geometry and
-  would rot into a lie. Rewriting one is ten minutes.
-
-WHAT REMAINS
-- US-097 wires `.hop` (a clean screen) and `.lunge` (a landed blow). `clean()`
-  already calls `show(.still(.happy), message:)` and needs only `motion: .hop`;
-  the battle path is the harder half, because `BattleView` draws its own sprites
-  rather than going through `WanderingSpriteView`, so a lunge there has nowhere
-  to land yet.
-- `.recoil` is still unused by anything.
-
-================================================================================
-2026-07-21 — US-097 — The Digimon celebrates a clean screen and lunges on a
-landed blow.  DONE (passes: true)
-================================================================================
-
-WHAT SHIPPED
-- `MainScreenModel.clean()` now calls `show(.still(.happy), motion: .hop, ...)`.
-  One line: US-095 already had the track, US-096 already had `show`'s motion
-  parameter and its repeat.
-- `MainScreenModel.finishTraining(_:)` now passes `motion: gain > 0 ? .lunge :
-  .recoil` alongside the pose it already published. `gain > 0` is exactly
-  `result != .miss` (TrainingResult.miss is the only 0), so the paid/missed
-  split is the one that was already there.
-- `PoopGround` (new, in PoopView.swift) wraps `PoopPile` in a ZStack with
-  `.transition(.scale(scale: 0.6).combined(with: .opacity))` and
-  `.animation(.easeOut(duration: 0.35), value: count)`. `ContentView`'s overlay
-  now always hosts `PoopGround(count:)` instead of an `if poopCount > 0`.
-  - Its OWN view on purpose: a transition only plays if the transaction that
-    removes the view carries an animation, and the only way to give it one
-    without putting `.animation` on the whole GeometryReader is to scope it to a
-    container. Left at the call site the implicit animation would be inherited
-    by the sprite above it, and a walk drawn by a `TimelineView` must not have
-    its steps interpolated.
-  - The two numbers are `PoopPile.vanishScale` / `.vanishDuration`, named so a
-    unit test can hold the shipped exit to them — a transition inside a view
-    graph is unreachable from XCTest.
-- `-poopCleanDemo` now DEFERS its `clean()` by 10s
-  (`MainScreenModel.poopCleanDemoDelay`). Necessary, not cosmetic: the fade is a
-  0.35s EVENT, so a clean run during `start()` is over long before simctl takes
-  its first shot. The hop needed no such help — `show` repeats it for the whole
-  60s demo hold.
-
-TESTS — Tests/CleanTrainMotionTests.swift, 11 new
-- clean -> happy + .hop; the hop is two peaks, up only, x == 0, home at both
-  ends; motion cleared with the pose and the walk resumes.
-- clean with nothing to clean -> false, .idle, no motion, no message.
-- paid round -> attack + .lunge; the lunge is level, never backward, and home at
-  the end. miss -> angry + .recoil; sampled against each other, forward is
-  negative x and backward positive.
-- both training outcomes hold the walk (`isWandering == false`).
-- the pile's exit constants, and that `poopCount` reaching zero is what
-  `PoopGround` animates on (the complication's CleanIntent zeroes the same
-  count from another process).
-
-VERIFICATION
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
-- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1191 tests, 0 failures (was
-  1180; the 11 new ones are the delta).
-- AC7, MEASURED in pixels on the 42mm (F4A12A1C), launched with
-  `-healthAnswered -noNotificationPrompt`, burst-screenshotted at simctl's
-  ~0.11s floor. Throwaway Swift measurer at /tmp/us097/measure.swift, NOT
-  committed (it hard-codes this screen's band geometry and would rot into a
-  lie). Bands: sprite = saturated pixels in y 140..222, x < 270 (both ends
-  matter — y >= 132 catches the stats strip, y >= 223 catches the orange
-  caption, and either contaminates the box); pile = r>g>b brown in y 170..235,
-  x >= 250.
-  - MID-FADE, `-poopCleanDemo`, the clean firing at t=10.9s:
-      t=10.786  px=496  box 284,208-357,219  peakR=183   (full)
-      t=10.900  px=456  box 286,208-355,219  peakR=179
-      t=11.015  px=246  box 293,210-348,217  peakR=116
-      t=11.130  px=18   box 300,212-341,214  peakR=41
-      t=11.244  px=0                          peakR=0    (gone)
-    Width 74 -> 70 -> 56 -> 42 and brightness 183 -> 0 over ~0.35s: BOTH the
-    shrink and the fade, not one or the other.
-  - MID-HOP, same run, after t=10.9: lit-pixel count PINNED at 1280 (one held
-    happy frame, so no art loop is confounding this) and x PINNED at 61..108
-    (no sideways component), while top and bottom move TOGETHER through
-    141/196, 142/197, 144/199, 146/201, 149/204, 152/207. That is a rigid
-    12-screenshot-px translation = 6pt = 3 sprite px x scale 2 = exactly
-    `hopHeight`, and it never passes 208 — the ground line the walk sat on for
-    the ten seconds before the clean, where the bottom was pinned at 208 while
-    the count alternated 1152/1184 (walk1/walk2).
-  - MID-LUNGE, `-trainResultDemo`: count PINNED at 1312 (one held attack frame)
-    and y PINNED at 153/208, while the left edge swings 179 -> 163 -> 179, a
-    16px range = 8pt = 4 sprite px x scale 2 = exactly `lungeReach`. One
-    direction only (it never crosses to the right of home), which is what
-    separates a thrust from a shake. Caption read "Great +2 STR - -5 Strength".
-
-WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
-- AC1 says "two hops over actionDuration". The SHIPPED hop is US-095's pinned
-  track: two arcs over a fixed 0.8s, REPEATED by `show` for as long as the pose
-  is held. Identical divergence to the one US-096 recorded for the chew, and for
-  the same reason — `ActionMotionTests` pins the 0.8s, and re-cutting the track
-  as a function of `actionDuration` would rewrite a story that already passed.
-  The substance (two hops, celebration lasting the whole hold) is met and was
-  measured. `ActionMotion.duration(of:)` is the one place to parameterise it.
-
-TRAPS FOR THE NEXT ITERATION
-- `-trainDemo` does NOT play itself out into a `.miss` the way an earlier
-  progress note claims. Button Masher sits on "Tap to start" until it is tapped,
-  and simctl cannot tap it, so that flag screenshots the game's idle state
-  forever. There is no demo flag that reaches a miss on screen; the recoil is
-  covered by the unit tests instead.
-- The 46mm sim (BA425DD4) is still the one with the wedged system alert from
-  US-091 for screenshots; builds and tests on it are fine. Use 42mm for images.
-- The 42mm sim needs BOTH `-healthAnswered` and `-noNotificationPrompt`.
-
-WHAT REMAINS
-- US-098..US-101 are the light: `GameState` light state and the lights-out rule,
-  the light button and the dimmed screen, the alert to turn it off, and the care
-  mistake for a night spent under it. Nothing in this story touches them.
-
-================================================================================
-2026-07-21 — US-098: Light state and the lights-out rule
-================================================================================
-
-WHAT I BUILT
-- `Sources/Light.swift` (new):
-  - `LightState: String, Codable, CaseIterable` — `on` / `semi` / `off`, with
-    `displayName`, `symbolName` (lightbulb.fill / lightbulb.led.fill /
-    lightbulb.slash — the names US-099 asks for) and `dimOpacity` 0 / 0.5 / 0.85.
-    `off` stops at 0.85 on purpose: a fully black screen is indistinguishable
-    from a crashed app and the user still has to find the button to undo it.
-  - `LightsOutRule` — pure, no store, no clock, no view:
-      `notifyGrace` = 10min, `mistakeGrace` = 30min
-      `windowStart(containing:schedule:calendar:) -> Date?`  (nil when awake)
-      `mostRecentWindowStart(at:schedule:calendar:) -> Date` (never nil)
-      `shouldNotify(now:schedule:lightState:lastNotifiedNight:calendar:)`
-      `shouldChargeMistake(now:schedule:lightState:lightStateChangedAt:
-                           lastAuditedNight:calendar:)`
-      `wasLit(at:lightState:lightStateChangedAt:)`
-  - `GameState.setLight(_:now:)` and `GameState.recordLightsLeftOn(now:
-    schedule:calendar:)`.
-- `Sources/GameState.swift`: four new OPTIONAL storage attributes
-  (`lightStateStorage`, `lightStateChangedAtStorage`, `lightAuditedNightStorage`,
-  `lightNotifiedNightStorage`) with computed accessors, exactly the shape every
-  other post-ship field here uses. `lightState` reads `.on` from nil; the init
-  stamps `lightStateChangedAt` with `now` so the very first night has a real
-  timestamp instead of a nil.
-- `Tests/LightTests.swift` (new): 28 tests in five suites.
-
-THE ONE DESIGN DECISION WORTH READING
-`mostRecentWindowStart` is the key both once-a-night markers are stamped with,
-and it is the whole reason a night can be identified from the morning after it.
-`windowStart(containing:)` is just it plus `schedule.contains`. Two candidates
-(today's bedtime, yesterday's) and no minute-of-day arithmetic, so a night-shift
-02:00–10:00 window takes the identical path to an ordinary 22:00–07:00 one.
-
-Charging turns on `wasLit(at: windowStart + 30min)`, which is
-`lightState != .off && lightStateChangedAt <= deadline`. BOTH halves matter. My
-first cut only applied the timestamp test on the `.off` side and three AC9 tests
-caught it: a lamp switched on at 08:00 was being charged against the night that
-ended at 07:00.
-
-VERIFICATION
-- `xcodegen generate` — project.yml needed NO edit: it globs `- path: Sources`
-  and `- path: Tests` as directories, so both new files were picked up. Confirmed
-  by them compiling and the new tests running.
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
-- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1219 tests, 0 failures (was
-  1191; the 28 new ones are the delta).
-- Every test names its hours as fixed `Date`s in America/Los_Angeles. Nothing
-  waits real time; nothing touches HealthKit.
-
-WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
-1. `shouldNotify` does NOT take `lightStateChangedAt`. AC3 lists the timestamp
-   among the rule TYPE's inputs and `shouldChargeMistake` does take it, but the
-   nudge deliberately reads the light as it is NOW: there is no point telling
-   someone to turn off a light they have already turned off, however late they
-   got round to it. An unused parameter would have been the dishonest way to
-   match the sentence.
-2. `shouldChargeMistake` is NOT gated on the Digimon still being asleep, so an
-   awake Digimon CAN be charged — for the night that just ended, never for the
-   hours it has been awake. AC9 ("a Digimon that is awake is never charged")
-   reads as contradicting that, but AC6 forces it: "clean EVEN IF the app never
-   ran during the window" is only a meaningful claim if the rule can be
-   evaluated after the window closed, and US-101 AC3 spells the same case out
-   ("closes the store at 21:00, reopens at 08:00, exactly one mistake") — 08:00
-   is awake under the 22:00–07:00 fallback. Gating on asleep would have made
-   US-101 unimplementable as written. AC9 is honoured in the sense that bites:
-   `testTheLightBeingOnWhileTheDigimonIsAwakeIsNeverAMistake` asserts a light
-   switched on at breakfast costs nothing at 09:00, 14:00 or 21:59.
-3. AC2's "an existing store opens cleanly" is argued from the pattern, not
-   observed. All four attributes are optional, which is the one shape US-015
-   established as migrating without a default, and the round-trip test proves
-   they persist — but I could not open a store file written by the PRE-story
-   binary, because the test target only ever compiles against the new model. If
-   a later iteration finds a cheap way to keep an old store fixture around, this
-   is the claim to go back and really check.
-
-TRAPS FOR THE NEXT ITERATION
-- The rule alone cannot see a light put out AFTER the 30min grace — it reads as
-  clean, and `testTheRuleAloneCannotSeeALightPutOutAfterTheGrace` asserts exactly
-  that rather than papering over it. It is not an exploit in the shipped game
-  only because turning the light off means opening the app, and US-101's
-  refresh() must charge the night BEFORE the user's tap can land. If US-101
-  wires the charge in after the toggle handler, that hole opens for real.
-- `recordLightsLeftOn` takes `schedule:` with a `.fallback` default. US-101 must
-  pass `MainScreenModel.sleepSchedule` explicitly — the default is only right
-  while no window has been inferred, and silently taking it would charge the
-  wrong night for anyone whose real bedtime is not 22:00.
-- Two consecutive neglected nights charge two only if the app runs once between
-  them; a single launch after 48 dark hours charges one, because
-  `mostRecentWindowStart` looks back exactly one window. That is US-101 AC4's
-  test to shape.
-- `lightNotifiedNight` and `lightAuditedNight` are both stamped with a
-  `windowStart`, NOT a `startOfDay`. Comparing either against
-  `calendar.startOfDay(for:)` will silently never match.
-
-WHAT REMAINS
-- US-099 (light button + dimmed screen), US-100 (the notice), US-101 (the care
-  mistake and the docs/ table). Nothing here renders, notifies or charges from
-  `refresh()` yet — this story is state and rule only.
-
-================================================================================
-2026-07-21 — US-099: The light button and the dimmed screen
-================================================================================
-
-WHAT I BUILT
-- `LightState.next` (Sources/Light.swift) — on -> semi -> off -> on. A cycle, not
-  a toggle: three states, one button, in the order a room goes through at
-  bedtime.
-- `Sources/LightSwitchView.swift` (new):
-  - `LightButtonLayout` — diameter 24, icon 12, leading inset 2, dim fade 0.25s.
-    NOTHING here reserves height; the button is an overlay in the sprite's slot,
-    which is the whole of why it costs the Digimon nothing.
-  - `SpriteSlotBoundsKey: PreferenceKey` — carries the sprite row's bounds as an
-    `Anchor<CGRect>`.
-  - `LightLayer` — the scrim (`Color.black.opacity(state.dimOpacity)`,
-    `.ignoresSafeArea()`, `.allowsHitTesting(false)`) with the button drawn AFTER
-    it inside a `GeometryReader` that resolves the anchor.
-  - `LightButton` — the lamp: yellow glyph while lit, WHITE once out, on its own
-    disc, at full opacity. Labelled "Light", valued with `displayName`.
-- `MainScreenModel.lightState` and `cycleLight() -> LightState?` — goes through
-  `GameState.setLight(_:now:)` (so state and stamp cannot drift apart) and saves
-  immediately. No sleep guard, no sickness guard, no `noteWakingEarly()`, no
-  care mistake.
-- `ContentView` — the sprite row reports `.anchorPreference(.bounds)`, the VStack
-  carries `.overlayPreferenceValue { LightLayer(...) }`, and the toolbar's Dex
-  link takes `.opacity(1 - dimOpacity)`.
-- `seedLightDemoIfRequested()` — `-lightSemiDemo` / `-lightOffDemo`, set through
-  the real `setLight`. `simctl` cannot tap the lamp any more than it can tap
-  Feed, so the state is what moves; the scrim, symbol and button are shipped code
-  drawing it.
-
-TESTS — Tests/LightSwitchTests.swift (11 new) + 1 in MainScreenLayoutTests
-- the cycle: on->semi->off->on, three taps from ANY state come back round, and
-  the three states are what the cycle visits (not two of them).
-- the three symbol names the story names, all distinct; only `on` draws no scrim
-  and `off` never reaches 1.0.
-- model: the tap cycles, stamps `lightStateChangedAt`, and survives being read
-  back through a SECOND model on the same file (AC5).
-- nine taps -> `careMistakeCount` untouched and `lightAuditedNight` still nil.
-- with the light OFF: feed really feeds, clean really cleans, train opens its
-  round, battle opens its round. Control: a SLEEPING Digimon is still blocked in
-  the same darkness, so what that measured is the light having no say rather than
-  nothing having any say.
-- a tap with no saved game is nil, and an unopened game draws `.on`.
-- MainScreenLayoutTests pins the action row at 30pt and the 42mm slot band at
-  scale 3 (and the band below it at 2).
-
-VERIFICATION
-- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
-- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1231 tests, 0 failures (was
-  1219; the 12 new ones are the delta).
-- AC7, MEASURED in pixels on the 42mm (F4A12A1C), `-healthAnswered
-  -noNotificationPrompt -wanderDemo`, throwaway measurers in /tmp/us099 (NOT
-  committed — they hard-code this screen's bands).
-  - THE PRE-STORY BUILD WAS REBUILT FROM `git stash` AND SHOT ON A FRESH INSTALL,
-    because the two are only comparable on the same save: a save that has spent a
-    battle shows "4 left today" under the action row, and that one caption line
-    costs the sprite a whole scale step (3 -> 2). The first comparison I took was
-    against a stale save and was worthless.
-  - action row, pre-story vs post-story: box 5,302-367,383, 5628 lit px, and the
-    row profiles identical line for line. Not "about the same" — the same.
-  - sprite: 78px wide in both, and 6 screenshot px per sprite px in both = 3pt =
-    scale 3 at @2x. The lamp cost it nothing.
-  - the three states, each on a fresh install: on = `lightbulb.fill` yellow, semi
-    = `lightbulb.led.fill` yellow at half dim, off = `lightbulb.slash` white at
-    full dim.
-  - the scrim is EXACTLY `dimOpacity`, measured on the sprite's own peak: 244.7
-    lit -> 122.8 semi -> 36.4 off. 244.7 x 0.5 = 122.4 and 244.7 x 0.15 = 36.7.
-  - the button is above it and legible: its peak stays 255 in all three states
-    (255,214,0 yellow lit; 255,255,255 white out) while the content area's mean
-    luma falls 13.46 -> 7.19 -> 2.68.
-  - AC4, all four, all with `-lightOffDemo`: `-battleResultDemo` (Victory! screen
-    at full brightness), `-trainDemo` (Button Masher, full brightness),
-    `-evolutionCeremonyDemo` (caught in a burst — it auto-finishes, so a 5s
-    screenshot misses it — sprite peak 244.7, i.e. undimmed), `-deathDemo` (the
-    memorial, full brightness).
-
-WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
-1. AC3 says the scrim covers "the whole screen". It covers the whole GAME. The
-   navigation bar is not inside the overlay, so the Dex button is dimmed
-   separately by `.opacity(1 - dimOpacity)` on the toolbar item — same number,
-   different mechanism, and it stays tappable. The clock beside it is drawn by
-   watchOS above every app and is not ours to dim at all.
-2. "tappable" in AC3 is argued, not observed: `simctl` cannot tap. What is
-   observed is that the button is DRAWN above the scrim, and what is code is that
-   the scrim is `.allowsHitTesting(false)` — which is also what AC6's "never
-   blocks Feed, Train, Clean or Battle" rests on, and that half IS covered by a
-   test that takes all four actions in the dark.
-3. AC2's "a test on SpriteScale.fitting pins this" pins the two SCALE BANDS the
-   42mm was measured in rather than a slot height, because nothing in the app
-   exposes the slot to a test. The real evidence for AC2 is the pixel-identical
-   action row above.
-
-TRAPS FOR THE NEXT ITERATION
-- The light button is positioned by an `Anchor<CGRect>`, NOT by a number in a
-  named coordinate space. I tried the coordinate-space way first and the lamp
-  landed on top of the stats strip: the layer holding the scrim does not start
-  where the row it covers starts, because a child that ignores the safe area
-  stretches it. If US-100 or US-101 moves that layer, keep the anchor.
-- `-lightSemiDemo` / `-lightOffDemo` do not save by themselves, but the next
-  `refresh()` flushes the store, so the demo state PERSISTS into later launches.
-  Uninstall the app between screenshot runs or you will shoot a dark screen and
-  think the flag was ignored.
-- Anything US-100 adds to the main screen must go on the `NavigationStack`'s
-  overlays (with the battle and the memorial) if it must stay bright, or inside
-  the VStack if it should dim with the room. That choice is the whole of AC4.
-- `cycleLight()` deliberately does not touch `lightNotifiedNight`. If US-100
-  wants a nudge withdrawn when the user turns the light out — the way `clean()`
-  withdraws the mess notice — it has to add that here.
-
-WHAT REMAINS
-- US-100 (the notice to turn the light off) and US-101 (the care mistake and the
-  docs/ table). `refresh()` still neither notifies nor charges for the light.
-
-================================================================================
-2026-07-21 — US-100 "Alert the user to turn the light off" — PASSES
-================================================================================
-
-WHAT WAS BUILT
-
-- `NotificationKind.lights`, the fifth kind. Title "Lights out", displayName
-  "Lights Out", detail "The light left on at bedtime.", and `firesWhileAsleep`
-  TRUE. That last one turned `firesWhileAsleep` from `self == .deathWarning`
-  into an exhaustive switch, deliberately: a `default` there is how a future
-  kind gets the wrong answer by accident, and this kind is the one where the
-  wrong answer deletes the feature rather than delaying it — ten minutes past
-  bedtime is INSIDE the sleep window by definition, so a false gate would
-  suppress every nudge that was ever owed, always.
-- `PetNotificationDelivering.deliver(_:at:)` — the first scheduled-ahead
-  delivery in the project. `UserNotificationDeliverer` grew a private `post(_:
-  trigger:)` that both paths go through, so the immediate and the scheduled
-  notice cannot drift apart in identifier, content or sound; that shared
-  identifier is what makes `cancel(_:)` reach a pending request as readily as a
-  delivered one, which is the whole of AC5 at the system level.
-- `NotificationDispatcher.schedule(_:body:at:)`. Its sleep gate is spelled
-  `kind.firesWhileAsleep` rather than an `isAsleep:` argument, because the only
-  reason anything is ever scheduled is that the moment it is owed for is in the
-  future and inside the window — so a caller must not be able to claim it is
-  scheduling for a waking hour.
-- `LightsOutRule.nextWindowStart(after:schedule:calendar:)`, the forward twin of
-  `mostRecentWindowStart`. Same two-candidate shape, so the night-shift window
-  that never crosses midnight takes the same path as an ordinary one.
-- `MainScreenModel.notifyLights(_:)`, called from `refresh()` right after
-  `notifyPoop` and before the save.
-- `GameState.withdrawLightsNotice(now:)`.
-
-THE TWO PATHS, AND WHY THE SECOND ONE IS THE STORY
-
-1. IMMEDIATE — this refresh landed inside the window past `notifyGrace` with the
-   light not `.off`. Straight to `notifications.send(.lights, ...)`.
-2. QUEUED — this refresh happened while AWAKE. Tonight's bedtime plus the grace
-   is computable, so it is handed to the system there and then.
-
-Path 2 is not a nicety. The nudge is owed at 22:10, which is close to the least
-likely minute for a watch app to be running; without it a user who leaves the
-light on and puts the watch down after dinner is charged US-101's mistake having
-never been told anything. AC4 is right that the immediate path alone is a
-feature that only works for people who happened to raise their wrist.
-
-THE ONCE-A-NIGHT BOOKKEEPING — read this before touching US-101
-
-`lightNotifiedNight` is stamped by BOTH paths, each with the night it is for,
-and that single stamp is what makes "at most once per night" hold across the two
-mechanisms. The subtle part, which cost the most thought:
-
-- Path 2 is deliberately restricted to `windowStart(containing: now) == nil`
-  (awake), and therefore only ever stamps the night that is NEXT. It never skips
-  ahead. I tried the more general version first — schedule whatever the next
-  nudge deadline is, from anywhere — and it is BROKEN: at 23:30, after tonight's
-  nudge has gone out, it stamps TOMORROW, and then the 23:45 refresh sees
-  `lastNotifiedNight (tomorrow) != night (tonight)` and fires a duplicate for a
-  night already nudged. `shouldNotify` compares for INEQUALITY, so a stamp that
-  runs ahead of the night being asked about reads as "not yet notified". Either
-  keep scheduling to the awake case, or change `shouldNotify` to `>=` — do not
-  do the first half of that without the second.
-- `withdrawLightsNotice(now:)` gives the claim back only when
-  `lightNotifiedNight > now`. That test is exact, not a heuristic: a stamp for a
-  night whose bedtime is still ahead can ONLY have come from path 2, because
-  path 1 stamps the night it is already inside. So future stamp = "queued, never
-  seen" = withdraw it; past stamp = "the user has read it" = the night stays
-  claimed however often the lamp is flicked afterwards. Without the withdrawal,
-  a user who put the light out at 20:00 and turned it back on at 21:00 would
-  never be nudged that night.
-- The stamp is taken whether or not the toggle let the notice through, matching
-  `claimPoopNotification`: the claim is on the NIGHT, not on the delivery.
-
-WHAT WAS OBSERVED, NOT ASSUMED
-
-- Build green, full test suite green (`** TEST SUCCEEDED **`), 1 pre-existing
-  test renamed and 1 widened — see below.
-- Eight new spy-driven tests in `NotificationDeliveryTests`, all seen to run:
-  once inside the window and not again that night; not repeated on a RELAUNCH
-  (the stamp is on disk, not in memory); the next night earns its own; toggle
-  off delivers and queues nothing; a light already out is nudged neither at
-  23:30 nor at 20:00; the 20:00 refresh queues exactly one notice for 22:10 and
-  the 23:30 refresh that follows adds nothing; lights-out cancels and DIMMING
-  DOES NOT; and a queued-then-cancelled notice leaves no claim, so the light
-  going back on at 21:00 re-queues 22:10.
-- AC1's toggle is the one criterion no test could reach, so it was
-  photographed: `-settingsDemo -settingsBottomDemo` on a freshly erased 46mm
-  sim shows "Lights Out / The light left on at bedtime." on, below Mess, its
-  detail on two lines and not truncated.
-
-TRAPS FOR THE NEXT ITERATION
-
-- THE NOTIFICATION PERMISSION ALERT IS STICKY AT THE SYSTEM LEVEL. It survives
-  terminate AND uninstall/reinstall — I lost two screenshots to it, both showing
-  the alert rather than the app, even with `-noNotificationPrompt` (that flag
-  suppresses OUR ask; it cannot dismiss an alert an earlier `xcodebuild test`
-  run already raised). Only `xcrun simctl erase BA425DD4-8856-4933-8198-
-  0E4B89960E48` clears it. progress.txt already said this at line ~345; it is
-  still true.
-- Every fixture in `NotificationDeliveryTests` now seeds `setLight(.off, ...)`
-  and the comment says why: the light defaults to `.on`, `NoteClock.nightTime`
-  is 23:30, and a lit save at 23:30 is genuinely owed a nudge — which lands in
-  the middle of assertions about sickness and death. A NEW seed in that class
-  must do the same or its `spy.kinds` assertions will pick up a stray `.lights`.
-- `NotificationRuleTests.testOnlyTheDeathWarningFiresWhileAsleep` is now
-  `...AndTheLightsNudgeFireWhileAsleep` and expects `[.deathWarning, .lights]`,
-  and the sleep table expects the same pair. Both are guards against a kind
-  getting `firesWhileAsleep` by copy-paste — keep them literal.
-- `refresh()` still does NOT charge for the light. `LightsOutRule
-  .shouldChargeMistake` and `recordLightsLeftOn` are written and unit-tested
-  (US-098) but nothing calls them. That is exactly US-101's job, alongside the
-  existing `auditCareMistakes` call, plus the docs/ table of all five mistakes.
-
-WHAT REMAINS
-
-- US-101 only.
-
-================================================================================
-2026-07-21 — US-101 "Charge a care mistake for a night under the light" — PASSES
-================================================================================
-
-WHAT WAS BUILT
-
-- `MainScreenModel.auditLights(_:)`, called from `refresh()` on the line after
-  `state.auditCareMistakes(...)` and before `updateSickness` / `evolveIfReady`.
-  It is beside that audit rather than inside it for one reason: this is the only
-  one of the five mistakes that needs the SLEEP WINDOW, which `updateSleepState`
-  derives from HealthKit and which belongs to the model, not to the saved game.
-- `LightsOutRule.previousWindowStart(before:schedule:calendar:)` — one second off
-  the bedtime and `mostRecentWindowStart` again, so the step back cannot disagree
-  with the forward question about which nights exist.
-- `LightsOutRule.maximumNightsChargedAtOnce = 30`, a trap guard in the manner of
-  `CareMistakes.maximumStarvationMistakesCharged`. Only reachable by a save whose
-  `lightStateChangedAt` is nil; a known stamp ends the walk by itself.
-- `docs/care-mistakes.md` — all five mistakes, their thresholds, the marker that
-  caps each, where each is charged, and what is deliberately NOT a mistake.
-
-THE ONE REAL DESIGN DECISION: EVERY UNAUDITED NIGHT, NOT JUST THE LAST
-
-The obvious implementation — call `shouldChargeMistake` once at `now` and charge
-one night — was written first, built, and FAILED `ClosedAppRecomputeTests
-.testFortyEightHoursShutMatchesFortyEightHoursOpen`: 48h open scored 8 mistakes,
-48h shut scored 7. The open run refreshes inside both bedtimes and charges both;
-the shut run only ever sees the morning after the second. That is precisely the
-asymmetry that test exists to forbid, and AC4 ("two consecutive neglected nights
-charge exactly two") says nothing about anybody having been there to watch.
-
-So `auditLights` walks back: from the most recent night whose deadline has
-PASSED, it asks `shouldChargeMistake` at each night's own deadline instant, and
-pays them oldest-first so `lightAuditedNight` ends on the most recent.
-
-- Asking AT the deadline is what turns the one-night rule into a question about
-  a particular night without changing the rule: at bedtime+30min,
-  `mostRecentWindowStart` is that night and the grace is exactly satisfied.
-- Starting at `mostRecentWindowStart` alone would be wrong at 22:10 — tonight is
-  not owed yet, and last night may well be. Hence the one-step back when the
-  most recent deadline is still ahead.
-- Oldest-first is not cosmetic. Paid newest-first the marker would end on the
-  OLDEST night charged and the next refresh would charge the newer ones again.
-- The walk terminates on its own: going back, `shouldChargeMistake` fails at the
-  night already audited, or at the first deadline preceding
-  `lightStateChangedAt` — and every earlier deadline precedes it too, since
-  `wasLit` is monotone in that direction.
-
-Note this is the OPPOSITE choice from US-053's mess (once per spell, never a
-rate) and for a consistent reason, now written into both docs and that test's
-doc comment: the poop pause is observation-dependent, so a rate would score
-differently depending on who was watching. Nothing about the lamp is — each
-night's verdict is one timestamp against one deadline, recoverable days later.
-
-WHAT WAS OBSERVED, NOT ASSUMED
-
-- `** BUILD SUCCEEDED **` and `** TEST SUCCEEDED **`, 1256 test cases passing.
-- 15 new tests in `Tests/LightNeglectTests.swift`, every one seen to run: the
-  21:00 close / 08:00 reopen charging exactly one (AC3) and its dark-room
-  control charging none; `semi` all night charged (AC5); lights out at 17:00,
-  21:59, 22:29 and 22:30 all clean, seeded LIT and then put out, so a dead rule
-  could not pass; three launches in one morning costing one mistake with the
-  marker read back through a fresh store (AC2); two nights with the app opened
-  each morning costing two AND the same two nights slept through shut also
-  costing two (AC4); nothing charged for nights before the game existed; three
-  neglected nights reaching `Sickness.careMistakesUntilSick` and turning the
-  Digimon sick; an edge with `maxCareMistakes: 0` closed by one night under the
-  light, WITH the light-out control that takes the same edge (AC6); and 25 lost
-  battles plus a refresh costing nothing (AC7).
-
-FIXTURES THAT HAD TO CHANGE — READ THIS BEFORE ADDING A REFRESH TEST
-
-A new game starts with the light ON (US-098), so ANY fixture that seeds a state
-days before the refresh it runs now earns one mistake per night crossed. Four
-files needed a seed put right, each with a comment saying so:
-
-- `EvolutionTests`/`EvolutionCeremonyTests` `makeModelAtHero` — a fortnight
-  between `lastStage` and `morning` was a dozen mistakes, which made the Digimon
-  sick and paused every evolution under test. Both now `setLight(.off, now:
-  lastStage)`, next to the US-027 seed that was added for the same reason.
-- `CareMistakeApplyTests.testLaunchingAfterASilentDayRecordsOneCareMistake` —
-  two nights lit between seed and launch. Light put out at the seed instant.
-- `BackgroundRefreshCoordinatorTests.testAWakeEvolves...` — its 25 hours cross
-  one bedtime, and that was the third mistake, so it fell ill and stopped
-  evolving. Light out at hour 0.
-- `ClosedAppRecomputeTests` deliberately keeps its light ON: the count moved 6 ->
-  8 (two bedtimes in 48 hours) and the assertion and its doc comment now say so.
-  The EQUALITY between the two runs — the actual point of that test — holds.
-
-TRAPS FOR THE NEXT ITERATION
-
-- A model-level test must KEEP THE MODEL ALIVE while it reads `model.state`.
-  The `GameState` belongs to the model's `ModelContainer`; let the model go and
-  SwiftData resets the context under you, and the next field read traps with
-  "This model instance was destroyed by calling ModelContext.reset". My first
-  harness returned the state out of a `launch()` helper and every test in the
-  class crashed the runner. `launch` now returns the MODEL.
-- When quieting the other rules in a fixture, count the hours: 20 hours from a
-  midday seed fills the screen (12h) and leaves it full past the 6h threshold,
-  so the "lights out is clean" cases were charging a POOP mistake and looking
-  like a broken light rule. Quiet `poopUpdatedAt`/`hungerUpdatedAt` at the
-  LAUNCH instant for any fixture spanning more than ~12 hours.
-- `refresh()` now charges for the light. Nothing else is left unwired: US-098's
-  `shouldChargeMistake` and `recordLightsLeftOn` were the last pieces written
-  but never called.
-
-WHAT REMAINS
-
-- Nothing. Every story in prd.json now passes.
+## 2026-07-21 — US-102: Two-frame loops for the poses that were held still
+- Added ONE case to SpriteAnimation (Sources/DigimonSpriteView.swift): `case pose(SpriteFrame)`.
+  - stageFrames: `[frame, .walk1]` — pose frame first.
+  - frameDuration: the shared 0.5s V-Pet beat.
+  - eggFrames: `[]`, so a Digitama falls through to the placeholder exactly as `.still` does.
+  - `pose(.walk1)` -> `[.walk1, .walk1]`, no guard needed.
+- `.still(_)` untouched: still one held frame, still used for the dead Digimon
+  (MainScreenModel.swift:916) and the battle result screen (BattleView.swift:303).
+- Purely additive: DigimonSpriteView is the only switch over SpriteAnimation; no call sites moved
+  to `.pose` yet — that is US-103 (main screen) and US-105 (battle).
+- Tests: 8 new in Tests/SpriteAnimationTests.swift — pose/walk1 pairing for refuse/happy/angry/
+  attack, `.still` unchanged, pose(.walk1), shared beat, two distinct crops off a synthetic
+  48x64 checker sheet (identity + drawn pixels), 0/1/0/1 over four 0.5s samples, egg yields
+  nothing, Hashable in a Set and distinct from `.still` of the same frame.
+- PASSED: build green; full suite 1264 tests, 0 failures; SpriteAnimationTests 24/24.
+- REMAINS: US-103 onward. Nothing blocked.
+
+## 2026-07-21 — US-103: The Digimon actually moves when it refuses, trains and celebrates
+- Three call sites in Sources/MainScreenModel.swift moved from `.still(_)` to US-102's `.pose(_)`:
+  - :972 refusal -> `.pose(.refuse)`, still `motion: .shake`, still "Not hungry."
+  - :1066 training -> `.pose(.attack)` on a gain / `.pose(.angry)` on none, still `.lunge` / `.recoil`
+  - :1117 cleaning -> `.pose(.happy)`, still `motion: .hop`, still "All clean!"
+- NOT touched, deliberately: `ActionMotion` (frame swapping is added ALONGSIDE the displacement),
+  `restingPoses` (:915 — `.pose` is never a resting pose, so the set still matches
+  `restingAnimation` exactly), and `SpriteAnimation.resting(for: .dead)`, which is still
+  `.still(.hurt2)`: a corpse bobbing between two frames would read as alive.
+  BattleView.swift:389's `.still(.attack)` is US-105's, left alone.
+- Comments that would now contradict the code rewritten, not deleted: the training block's "Both
+  poses are single held frames", the refusal's "the refuse frame alone is a still pose", and
+  `clean()`'s "The happy frame, held".
+- Tests: 3 new (FeedMotionTests: the refusal's [refuse, walk1] and that the shipped index rule puts
+  a different frame up one beat later; CleanTrainMotionTests: all three outcomes pair with .walk1,
+  and the dead pose is STILL one held frame). 6 existing assertions moved from `.still` to `.pose`
+  across FeedingTests, FeedMotionTests, TrainingTests, TrainingRoundTests, CleanTrainMotionTests.
+- PASSED: build green; 1267 tests, 0 failures (was 1264 — the 3 new ones are the delta).
+- PASSED on the Simulator, 42mm (F4A12A1C — the 46mm still has the wedged notification alert the
+  last wave logged): `-healthAnswered -noNotificationPrompt -poopCleanDemo`, 16 screenshots at
+  ~0.13s. Lit-pixel count in the sprite tile takes exactly TWO values, 3518 and 3734, in runs of
+  four shots (~0.52s) — the 0.5s beat. Shots 01 and 05, 0.575s apart, differ. Counting lit pixels
+  rather than diffing them is the point: translation cannot change the count, so the hop cannot
+  explain the difference and only a FRAME SWAP can.
+  - Trap for the next screenshot story: uninstall before installing. A save left by an earlier run
+    can carry US-099's light OFF, and the scrim dims the sprite so far that a threshold picks up
+    only a fragment of it — the first burst read as "one drawing" purely because of that.
+  - The classifier was throwaway Swift at /tmp/burstclassify.swift, NOT committed: it hard-codes
+    this screen's crop, which moves the moment the layout does.
+- REMAINS: US-104 onward. Nothing blocked.
+
+## 2026-07-21 — US-104: The battle projectile vanishes on impact and never flies backward
+- Sources/BattleView.swift only. Four changes, two of them found by the Simulator, not by reading:
+  1. run()'s reset is now `withTransaction(snap) { projectileProgress = 0; hasLanded = false }` with
+     `snap.disablesAnimations = true`. Bare, it shared an update with the animated `beat` change and
+     SwiftUI swept it — the 0.15s backward slide the story is named after.
+  2. New `@State private var hasLanded`; the projectile draws only while `!hasLanded`. run() sleeps
+     `flight`, sets it, then sleeps the rest of the turn, so the ~0.3s tail has NO glyph parked on
+     the defender. `flight` = flightDuration clamped to turnDuration, for injected pacings only
+     (BattlePacingTests already asserts the shipped pair satisfies it).
+  3. `run()` is now @MainActor. Off the main actor its three writes can land in SEPARATE SwiftUI
+     updates, and the animated middle one then interpolates the projectile.
+  4. `.id(index)` on the projectile, so each exchange's shot is its own view rather than one Image
+     reused across turns.
+  Fixes 3 and 4 came from a screenshot: at the turn 0 -> 1 boundary, one frame showed AGUMON'S
+  ORANGE glyph mid-gap while the HP text was ghosting mid-crossfade — turn 1's shot is Monochromon's
+  BROWN one starting at the far right. That is the same bug wearing a different hat, and AC1 says
+  "not for a single frame", so it had to go.
+- Pure `BattleView.isProjectileVisible(atElapsed:flightDuration:)` — half-open at both ends — is the
+  drawing rule as arithmetic, in the `isKnockoutTurn` / `projectileOffset` pattern.
+- `BattleView.ProjectileChange` + injected `onProjectileChange`, on the same footing as `playHaptic`:
+  SwiftUI animates projectileProgress inside a view no test can mount, so the only observable thing
+  is the WRITES — progress, visible, and whether the write is animated.
+- Tests: 7 new in Tests/BattleProjectileTests.swift. The AC10 one drives run() through a real
+  multi-turn report and asserts every DROP in progress is (a) not animated and (b) made while the
+  previous shot was already invisible — both halves fail under the old code. The same-attacker case
+  is a HAND-BUILT report: BattleEngine alternates strictly, so no seed produces it.
+- PASSED: build green; 1274 tests, 0 failures (1267 + 7).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-battleTurnDemo -healthAnswered -noNotificationPrompt`
+  (intro 0.01s, flight 12s, turn 60s):
+  - AC13: at 0.52x flight the flame is in the gap; at 1.22x there is no glyph anywhere. Measured,
+    not just eyeballed — orange pixels in the arena band go baseline+~460 -> baseline, and the
+    glyph's leading edge advances 77 -> 325px monotonically across 30 in-flight frames, then the
+    extra pixels vanish between two frames 0.4s apart and never return for the rest of the turn.
+  - The turn boundary: two independent boundaries burst at 0.17s (simctl's floor) — 61 frames over
+    57-67s and 75 over 114-126.6s. The gap between the sprites is EMPTY in every one, including the
+    frames bracketing the beat change, which is pinned by the HP readout's pixel count changing.
+  - Throwaway classifiers at /tmp/orangecount.swift, /tmp/gapcount.swift, /tmp/hprow.swift, NOT
+    committed: all three hard-code this screen's crops and this bout's tint.
+- REMAINS: US-105 onward. Nothing blocked. US-105 has its `hasLanded` to hang the hurt loop on.
+
+## 2026-07-21 — US-105: The defender flinches on impact, and the attacker's swing animates
+- Sources/BattleView.swift only. `animation(for:during:)` becomes
+  `animation(for:during:landed:)`, still static and pure: the attacker gets `.pose(.attack)`
+  (US-102's attack <-> walk1 loop) for the WHOLE turn, the defender `.idle` before impact and
+  `.hurt` after. The instance wrapper passes `hasLanded`, which US-104 already resets per turn — so
+  AC5 needed no new state, only the read.
+- Two doc comments rewritten because the code now contradicts them: the type's "the ATTACKER holds
+  the attack frame (11)" header, and the static function's own. The result screen is untouched:
+  `.still(.happy)` / `.still(.hurt1)` stay HELD, the fight being over.
+- Tests: 7 new in Tests/BattleFlinchTests.swift (attacker at landed false AND true; defender idle ->
+  hurt for BOTH BattleSide values; every turn of a real multi-turn report; the hurt loop really is
+  two different frames one beat apart; the swing is [attack, walk1]; AC5 composed by driving run()
+  and mapping each turn's ProjectileChange stream through the pure mapping — every turn OPENS `.idle`
+  and CLOSES `.hurt`; the result screen still holds one frame). BattleTests' existing frame test
+  updated from `.still(.attack)` to `.pose(.attack)` at `landed: true`.
+- PASSED: build green; 1281 tests, 0 failures (1274 + 7).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-battleTurnDemo -healthAnswered -noNotificationPrompt`
+  (intro 0.01s, flight 12s, turn 60s), 200 screenshots at ~0.13s over 27s, uninstalled first:
+  - AC12: in the defender's tile, consecutive post-impact shots ~0.52s apart differ by exactly 1764
+    pixels, over and over from 12.75s to the end of the burst. DIFFING pixels is the point here and
+    counting them would have missed it — both hurt frames light exactly 2376 pixels, so the lit count
+    is constant across the swap.
+  - The before/after halves are separable in the same numbers: pre-impact the tile alternates
+    lit=2592 (walk1) and lit=2376, and the 2592 frame NEVER appears after impact. Impact itself lands
+    between 12.24s and 12.75s, which is flight 12s plus launch.
+  - The attacker animates too, visible in the same pair: lunge in one shot, walk1 0.52s later.
+  - Throwaway classifier at /tmp/us105/defender.swift, NOT committed: it hard-codes this screen's
+    crop, which moves the moment the layout does.
+- REMAINS: US-106 onward. Nothing blocked. US-106 deletes a source file, so re-run `xcodegen
+  generate` before building it.
+
+## 2026-07-21 — US-106: Delete the US-048 measurement spike
+- Deleted Sources/Complication/RefreshGranularitySpike.swift (git rm) and the `#if DEBUG
+  RefreshGranularitySpikeWidget()` entry from DigiVPetComplicationBundle, so DigiVPetComplication()
+  is now the bundle's only widget. Its stale "delete both once US-049 has landed" comment went with
+  it. No project.yml change needed — the extension target takes `path: Sources/Complication` as a
+  whole — but `xcodegen generate` was re-run, and the DEBUG build reported removing the stale
+  RefreshGranularitySpike.o, which is a second confirmation the file left the compile.
+- docs/widget-refresh-granularity.md KEPT — it is the spike's actual deliverable. Its
+  "`RefreshGranularitySpike.swift` is deliberately still here" paragraph is now a dated removal
+  record: instrument removed 2026-07-21, AOD repaint floor STILL UNMEASURED (everything in the doc
+  was measured with the display awake), and if a later story needs the wrist-down number it should
+  rebuild the instrument from the method written down here rather than carry a dead widget.
+- No test changes: nothing in Tests ever referenced the spike.
+  `grep -rn 'RefreshGranularitySpike\|SpikeEntry\|SpikeBand' Sources Tests` exits 1 with no output.
+- PASSED: DEBUG build green (`-configuration Debug` explicitly — the spike was DEBUG-only, so a
+  release build would have proved nothing); 1281 tests, 0 failures, unchanged from US-105 as
+  expected; ComplicationTests re-run alone, 27/27.
+- PASSED on the Simulator, 42mm (F4A12A1C), uninstall -> install -> launch with
+  `xcrun simctl spawn ... log stream` on chronod:
+  - The watch face picker's source of truth is chronod's descriptor cache, and the simulator gives
+    no way to TAP through the face editor, so the cache is what was read. It is the stronger
+    reading anyway: the uninstall purged TWO descriptors from the OLD build — `kind:
+    DigiVPetComplication` and `kind: DigiVPetRefreshSpike` — which proves the spike really was
+    being offered in the picker before this story.
+  - The reinstall then logged `[com.digivpet.DigiVPet::com.digivpet.DigiVPet.Widget] Found:` exactly
+    ONE descriptor, `kind: DigiVPetComplication; displayName = Digimon; widgetDescription = "Your
+    Digimon and its strongest energy."`, and `Publishing changed widget descriptors - count = 1`.
+    The string "spike" appears NOWHERE in the log after the purge.
+  - Log kept at /tmp/us106_chronod.log, NOT committed.
+- REMAINS: US-107 onward. Nothing blocked. US-107 changes frameInterval to 1 s / 300 entries and
+  must read docs/widget-refresh-granularity.md first — including the new section, which records
+  that the AOD floor is unmeasured, i.e. US-107's wrist-down behaviour is unknown by construction.
+
+## 2026-07-21 — US-107: One-second complication cadence
+- `ComplicationTimeline.frameInterval` 5 -> 1 s and `motionEntryCount` 60 -> 300, so the five-minute
+  horizon and therefore the reload rate are UNCHANGED — only the spacing got finer. `reloadDate` is
+  untouched arithmetic (`count * interval`) and still lands one frameInterval past the last entry
+  (t+300 for an animating pose, heldRefreshInterval for a held one). The held-pose guard and
+  `heldRefreshInterval` were not touched.
+- The cadence doc comment was rewritten: it argued FOR 5 s over 1 s and would have contradicted the
+  code. It now states the trade explicitly (US-048 measured 1 s as honoured-but-jittery; frames WILL
+  sometimes be served late and that is accepted) and why 300 entries rather than 60 — 60 at 1 s is a
+  one-minute horizon, 1440 reloads a day, budget spent, then a frozen still sprite. The demo view's
+  "more than five seconds apart" comment was corrected to one second.
+- Tests: existing ComplicationTests updated rather than added to — the batch-count/horizon test now
+  asserts 300 entries with the last at t+299, the spacing test asserts frameInterval == 1, the
+  reload test additionally asserts `reload == entries.last.date + frameInterval` (constant-free, so
+  it holds if the two numbers move again), and the demo-selection test's 5 s boundaries became 1 s.
+  The alternation test (0,1,0,1 across the WHOLE horizon) and the held-pose test needed no change
+  and now cover 300 entries and 1 entry respectively.
+- PASSED: build green; 1281 tests, 0 failures (unchanged count — this story rewrote assertions
+  rather than adding cases).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-complicationDemo -complicationEnergyDemo`: the screen
+  reads "step 1 of 300", and over a 36-shot burst at ~0.35 s the tile alternates between two frames
+  (lit=702 / lit=720). Of the 37 pairs ~1.05 s apart, 35 show DIFFERENT frames; the 2 identical ones
+  are the sampling phase crossing two swaps, not a dropped frame.
+- PASSED on the Simulator, Series 9 45mm (1E3ACFF4), watchOS 10.4, complication LIVE in a face slot:
+  chronod accepted the batch VERBATIM — `entry count: 300; date range: 15:44:30 to 15:49:29` (299 s,
+  i.e. 300 entries at exactly 1 s) on BOTH accessoryCircular and accessoryRectangular, 7 reloads all
+  300. Nothing coalesced or truncated, so the 2 s / 150 fallback US-107 authorised was NOT taken.
+  Two `succeeded with 1 entries` lines in the same log are the held-pose path, read before the
+  published pose was edited from `sleeping` to `idle` — a live confirmation of the one-entry rule.
+  Face repaints sampled by diffing the top-left circular slot 36 times at ~0.30 s: swaps at 0.90,
+  0.91, 1.22, 0.89, 1.19, 0.93 s apart — 1 s within the sampling error, no 2 s stall in that window.
+- Two things that cost time and are now written into docs/widget-refresh-granularity.md so the next
+  run does not rediscover them: (1) the SHIPPING complication is not `accessoryCorner`, so US-048's
+  Crosswind `top left` slot gives `CHSErrorDomain Code=1100 "No matching descriptor was found for
+  the kind and family specified"` and stays `on no host` — a hand-authored Infograph Modular face
+  (bundle id `com.apple.NTKInfographModularFaceBundle`, same `"type": 56` descriptor in `top left` /
+  `middle` / the three `bottom *` slots) hosts circular AND rectangular; (2) `log stream` misses the
+  boot-time reload, so use `log show --last 4m`, and delete the cached
+  `.../SystemData/com.apple.chrono/timelines/DigiVPetComplication` first or chronod never re-asks.
+- Simulator-only state left behind, NOT in the repo: Series 9 45mm now has that authored face at
+  UUID 11111111-2222-3333-4444-555555555555 (selected), and its published snapshot was hand-edited
+  to pose `idle` — the app overwrites that on next launch. Throwaway crop classifiers at
+  /tmp/us107/, not committed.
+- REMAINS: US-108 onward. Nothing blocked. AOD is still unmeasured and still needs real hardware —
+  this story made the cadence faster without learning anything about the wrist-down case.
+
+## 2026-07-22 — US-108: A battle costs energy, and the daily cap is gone
+- The cap is GONE: `BattleLimits`, `GameState.battlesRemaining`, `MainScreenModel.battlesRemainingToday`
+  and `battleLimitReason` are all deleted. `battlesFought(now:calendar:)` and its midnight rollover are
+  KEPT and their doc comment now says why — `ConditionEvaluator` reads them for `.day`-window battle
+  conditions, which are the only thing that still asks. `consumeBattleAllowance` kept but renamed
+  `recordBattleStarted`: the word "allowance" described a rule that no longer exists.
+- ONE payment rule, new file `Sources/EnergyPurchase.swift`, lifted out of `TrainAction.begin`:
+  `payer(for:from:in:)` reads and `charge(_:from:in:)` spends, richest of `payableWith` wins, ties to
+  the first listed (Swift's `max(by:)` keeps the FIRST of equal maxima — asserted, not assumed, by the
+  7/7 tie test). `TrainAction.begin` and `MainScreenModel.battle()` both call it and nothing else does:
+  `grep -rn "max(by:" Sources/` finds `EnergyPurchase` and `EvolutionEngine`'s unrelated edge pick, and
+  `grep -rn "stageEnergy\[.*\] -=" Sources/` finds `EnergyPurchase` and `FeedAction`'s fixed Vitality
+  charge, which is a different rule and out of scope.
+- `BattleCost` replaces `BattleLimits` in Battle.swift. `energy`, `payableWith` and
+  `insufficientEnergyReason` are all ALIASES of `TrainAction`'s, so "identical to TrainAction" is
+  enforced by the compiler rather than by a comment; a test asserts all three anyway. The comment the
+  PRD asked for is there: the anti-farming protection changed FORM (20 battles = 100 points = ~40,000
+  steps of real walking), it did not disappear.
+- Guard order in `battle()` is dead -> asleep -> funds -> matchmaking. The funds GUARD is before
+  matchmaking so a broke Digimon is told it is broke; the CHARGE is at the commit point where
+  `consumeBattleAllowance` used to sit, after matchmaking succeeded, so "nobody to fight" still costs
+  nothing. Never refunded — `abandonBattleRound` and a force-quit both leave the 5 points spent.
+  `recordBattle` was not touched: losing still costs nothing.
+- `-battleLimitDemo` -> `-battleBrokeDemo`, which zeroes Strength and Stamina. The OTHER battle demos
+  needed funding they never needed before (`stageEnergy.strength = max(..., BattleCost.energy)`) or
+  every arena screenshot would now catch the refusal instead — the Simulator earns no steps.
+- `ActionControls.battlesLeft` had to become `canAffordBattle` for the tree to compile, and
+  `limitCaption` with it. That is US-109's story: it still owns the final caption wording, the tint
+  rule and the 41mm screenshots. What is here is the mechanical swap plus two tests.
+- Tests: `BattleLimitTests.swift` renamed `BattleCostTests.swift` and rewritten against the energy
+  rule — six battles in one day, 4/4 blocked spending nothing, 7/6 and 6/7 and 7/7 payers, exactly 5
+  off `stageEnergy` with `lifetimeEnergy` untouched, the spend surviving a reopen, losing six in a row
+  costing no care mistake. Four other files needed their fixtures FUNDED, because a battle that used
+  to be free is not: BattleTests, PreBattleRoundTests, BackgroundRefreshTests, and
+  ConditionEvaluationTests (rename only). PreBattleRound's "the round costs no energy" test now asserts
+  the honest thing — the tap costs `BattleCost.energy` and the ROUND adds nothing on top.
+- PASSED: build green; 1287 tests, 0 failures (was 1281).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-healthAnswered -noNotificationPrompt -battleBrokeDemo`:
+  STEP 0/60 and EXER 0/60, the Battle bolt greyed, and "Not enough Strength or Stamina. Move to earn
+  more." in orange under the row, fitting one line on the narrow screen. `-battleTurnDemo` on the same
+  device still reaches the arena, which is what proves the demo funding works and the shipped path is
+  not blocked by its own new cost.
+  - Trap re-learned: `-noNotificationPrompt` is REQUIRED or the system's notification alert covers the
+    screen and cannot be dismissed — simctl has no tap on watchOS, and `simctl privacy` has no
+    notifications service. The 41mm and 45mm watchOS 10.4 sims are now wedged behind that alert for
+    this bundle id; 42mm F4A12A1C is the one to use.
+- REMAINS: US-109 onward. Nothing blocked. US-109 inherits a `canAffordBattle` that already disables
+  the button and already shows an energy caption — what it has to decide is the WORDING at 41mm (the
+  full sentence fits, but only just) and it has to keep `ActionControlsTests` in step.
+
+## 2026-07-22 — US-109: The Battle button says what it is waiting for
+- Most of the MECHANICAL swap was already in the tree: US-108 had to rename `ActionControls.battlesLeft`
+  to `canAffordBattle` just to make the project compile once `BattleLimits` was deleted, and it left the
+  wording, the tint and the 41mm proof to this story. `grep -rn "battlesLeft\|battlesRemaining\|BattleLimits"
+  Sources/ Tests/` now returns NOTHING, which is AC1 observed rather than assumed.
+- The real work was the TESTS. US-108's two assertions lived in `BattleCostTests` and were driven by a bare
+  `Bool` — which cannot express AC7 at all, since "4 points in both payable energies" is a fact about
+  `GameState`, not about a flag. Moved both to `ActionControlsTests` (AC9: updated, not deleted — the old
+  class is replaced by a comment naming the two tests that took it over) and re-driven through
+  `EnergyPurchase.payer` over a real `GameState`, asked exactly the way `MainScreenModel.canAffordBattle`
+  asks it. The bug that guards against is the view and `battle()` drifting apart: a button that looks
+  tappable and then refuses. 4/4 disabled, 5/4 and 4/5 enabled, and `XCTAssertEqual(BattleCost.energy, 5)`
+  first so the numbers in the test fail loudly if the cost ever moves.
+- Caption: nil when affordable (99/0 as well as 5/5), `BattleCost.insufficientEnergyReason` when not (0/0 as
+  well as 4/4). No new string invented — it is the model's own refusal, so the row and the enforcement cannot
+  disagree, and it names ENERGY because the allowance it used to name no longer exists.
+- AC5 needed no code change but did need explaining, so the comment is now in `ActionControls`: orange is not
+  new, it is the colour US-032's caption turned at zero battles left. What changed is that the CONDITION it
+  was conditional on is gone — the caption only exists in the run-out state now — so the tint is unconditional.
+- AC6 was satisfied by touching nothing: `TrainAction` is unchanged, and the two buttons read consistently
+  because `BattleCost.insufficientEnergyReason` IS `TrainAction.insufficientEnergyReason` (an alias since
+  US-108), not a copy of its wording.
+- New demo flag `-battleAffordableDemo`, sibling to `-battleBrokeDemo`: same Agumon, same screen, Strength set
+  to exactly `BattleCost.energy` and Stamina to 0. Needed because every OTHER funded demo walks straight into
+  the arena, so there was no way to photograph the affordable action ROW. Exactly one battle's worth rather
+  than a comfortable pile — the boundary is what the story is about.
+- PASSED: build green on both the 46mm (watchOS 26.4) and the 41mm (watchOS 10.4) destinations; 1287 tests,
+  0 failures (unchanged count — two moved, two added, two removed).
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, screenshots at /tmp/us109/ (not committed):
+  `-battleBrokeDemo` -> STEP 0/60, EXER 0/60, the Battle bolt grey, and the orange sentence fitting ONE line
+  under the row; `-battleAffordableDemo` -> STEP 5/60, the bolt purple and live, and NO caption at all. Five
+  circles fit the 176pt row with margin in both.
+  - The 41mm sim was wedged behind the undismissable notification alert US-108 hit. `xcrun simctl erase` on
+    the device clears it; then launch with `-noNotificationPrompt` and it never comes back. The bundle id is
+    `com.digivpet.DigiVPet`, NOT `com.digivpet.app` — that guess costs a FBSOpenApplicationServiceErrorDomain
+    code=4 that looks like a crash and is not one.
+- REMAINS: US-110 onward. Nothing blocked.
+
+## 2026-07-22 — US-110: Feeding, training or battling wakes a sleeping Digimon
+- The shape of the fix is ONE new private method, `MainScreenModel.wakeIfAsleep()`, called at the top
+  of `feed()`, `train()` and `battle()` where `noteWakingEarly()` used to be called at the bottom of
+  their blocked arms. `grep -rn noteWakingEarly Sources/ Tests/` now returns nothing. It does three
+  things and all three are load-bearing: `recordWakingEarly` (untouched — every disturbance counts in
+  `stageSleepDisturbances`, at most one a day in `careMistakeCount`), stamps `state.awakeUntil`, and
+  clears the model's `isAsleep` there and then, because the actions read it in the same call stack and
+  the next re-derivation is a whole refresh away.
+- AC8 is the one that would have shipped this broken. `updateSleepState()` used to ask
+  `sleepSchedule.contains(now())`, which every foreground would have used to undo a wake the user had
+  just been charged a care mistake for. It now asks `SleepSchedule.isAsleep(at:wokenUntil:)` — a new
+  pure method beside `contains`, so the override lives in ONE place. The two DEBUG demo forcers were
+  moved onto it too, or `-sleepDemo` would have been the third copy.
+- The marker is `GameState.awakeUntil: Date?`, an optional storage property + computed accessor like
+  every other one there (the SwiftData migration shape). AC9 needs no sweeper: it is an ABSOLUTE
+  instant, so once past it reads expired forever and last night's 02:05 cannot make tonight's 02:00
+  awake. There is one exception — `forceAsleepForDemo` clears it, because the Simulator's store
+  survives between launches and a `-sleepDemo` run within five minutes of the last one would have
+  opened on a Digimon still awake from that run's Feed tap.
+- `wakeGracePeriod` is `SleepSchedule.wakeGracePeriod = 5 * 60`, commented as a chosen balance number.
+- AC10 is satisfied INSIDE `wakeIfAsleep` (`guard ..., state.healthStatus != .dead`) rather than at
+  each of the three call sites, so it is one rule rather than three copies. Bonus: the old code
+  charged the waking-early mistake for a DEAD Digimon, which was a mistake for a disturbance that
+  could not have happened. It no longer does.
+- Decision worth recording: a woken Digimon that turns out to be SICK or BROKE is still blocked, and
+  is still charged the disturbance. It really was disturbed — it is awake and walking about either
+  way — and this is the same reasoning US-108 already applied to a battle with no energy.
+- `FeedAction.feed` and `TrainAction.begin` are byte-for-byte unchanged. Only their `isAsleep` doc
+  comments moved, to say the buttons never pass `true` any more and that the sleep arms are the
+  contract for a caller that has NOT woken the Digimon — explicitly "do not delete as dead code",
+  because the next iteration will otherwise read them as unreachable and be right about the app while
+  being wrong about the type.
+- Tests: new `Tests/WakeOnActionTests.swift`, 14 tests on a captured `var now` the model's closure
+  reads, so the grace period is SAMPLED at chosen instants. The only `Task.sleep` in the file waits
+  out the action-pose timer (a real timer, not the injected clock) and says so. A `quieten(_:at:)`
+  helper restamps the four unrelated care rules — silent day, starvation, uncleaned mess, lights left
+  on — with a comment naming each, because these tests jump whole nights and a count polluted by any
+  of them says nothing about disturbances.
+- Nine existing tests asserted the old blocked behaviour and were rewritten, not deleted:
+  SleepStateTests (plus a new "an undisturbed Digimon stays asleep in the same window" control, so
+  the wake test cannot pass on a fixture that was never asleep), CareMistakeTests, FeedingTests (plus
+  a grace-period test: a second tap inside it is not a second disturbance and does not extend it),
+  FeedMotionTests, TrainingTests, TrainingRoundTests, BattleTests, PreBattleRoundTests. LightSwitch's
+  "an action that is blocked is still blocked in the dark" control had to switch from a SLEEPING
+  Digimon to a DEAD one — sleeping stopped being an example of anything blocked.
+- PASSED: build green; 1304 tests, 0 failures (was 1287).
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, `-healthAnswered -noNotificationPrompt`,
+  screenshots at /tmp/us110/ (not committed). `-sleepDemo` -> Agumon lying in the sleep loop, centred
+  and not moving. `-feedAsleepDemo` (same forced window, the only difference is the tap) -> upright in
+  the eat pose, KCAL 30 -> 25 and the hunger pips 3 -> 2, so the meal was really eaten; and 60s later,
+  once the pose expired, upright and WANDERING (two shots, sprite at different x and mirrored) while
+  still inside the same forced sleep window. That last pair is AC23 and AC6 together.
+- REMAINS: US-111, US-112, US-113. Nothing blocked.
+
+## 2026-07-22 — US-111: Tapping an evolution candidate shows that branch's conditions
+- The whole selection behaviour is a new pure value, `Sources/DexHintList.swift`:
+  `DexHintList.list(selecting:from:) -> DexHintList?` over `(DexCandidate.ID?, [DexCandidate])`.
+  `DexView` no longer computes conditions at all — its old `conditions` property (the flattening
+  AND its dedup key) moved wholesale into `DexHintList.flat`, so AC13's "flat merges, a branch does
+  not" is one function's contract rather than two code paths that could drift.
+- A `Line` enum (`.condition` / `.plain`) is what let AC8 and AC15 both be real. The view switches
+  on it: `.condition` still goes to the UNCHANGED `ConditionHintRow`, `.plain` draws one secondary
+  10pt line. That is also what makes `list.text(in:)` honest — it is the same `ConditionReveal.line`
+  the row draws, so the "name appears nowhere" test reads what the sheet says instead of a
+  reconstruction of it. `ConditionReveal.swift` is not in the diff at all.
+- nil from `list(selecting:)` still means DRAW NO SECTION, which is only ever the flat case. A
+  SELECTED branch never returns nil — that is AC8: an unconditional edge answers with
+  `nothingRequired` ("Nothing in particular. This is where it drifts on its own."), worded in
+  ConditionHint's register and pinned by a no-digit test like every other hint. A stale selection
+  falls back to flat rather than to nothing.
+- AC6's third channel is a WHITE ring inset 2pt inside the tile, and the placement of the modifier
+  is the load-bearing part: it is applied AFTER `.opacity(...)`, not exempted inside it the way the
+  earned checkmark is. So selecting an unmet "?" brightens nothing — the cell stays at 0.55 and only
+  the ring is at full strength. Inset 2 so it never lands on the green earned outline; a cell can be
+  earned and selected at once and both stay readable (screenshot `nothing.png` has one of each).
+- AC1: the candidate `Button` has NO `.disabled(!row.isDiscovered)`, unlike `DexGridView`'s cells.
+  Deliberate and commented — a "?" has no detail sheet to open but it does have conditions, and
+  asking what the "?" wants is the entire story.
+- AC9 is true BY CONSTRUCTION and is the one criterion with no test: the selection is `@State` on
+  `DexDetailView`, which `.sheet(item:)` destroys on dismiss and rebuilds on reopen. Nothing stores
+  it on the model or the row. Verified by inspection, not by assertion — said plainly here rather
+  than covered by a test that would only be re-asserting SwiftUI's own lifecycle.
+- The DexView comment arguing for the flat list was rewritten, not deleted (AC12): it now says flat
+  is the DEFAULT and why, and that US-111 made per-branch something the player ASKS for — "asking
+  about one is a different thing from being handed all of them".
+- Three new debug flags, all calling the real `toggle(_:)`: `-dexBranchDemo` (first conditioned
+  branch), `-dexBranchNoneDemo` (first unconditional one) and `-dexBranchToggleDemo`, which calls
+  `toggle` TWICE on the same candidate — so the deselected screenshot comes from a second tap, not
+  from never having selected. The hint-scroll hook now fires for all of them.
+- PASSED: build green; 1316 tests, 0 failures (was 1304), 12 new in `Tests/DexBranchHintTests.swift`.
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, args `-healthAnswered -noNotificationPrompt
+  -dexDemo -dexDetailDemo -dexRevealDemo` plus the branch flag; screenshots at /tmp/us111/ (not
+  committed). flat -> "It wants" with all four criteria across the three branches; selected ->
+  "To become this" with Greymon's two only and a white ring on its cell; deselected -> BYTE-IDENTICAL
+  to flat (same md5, 0db00362...), which is AC4 as strongly as a screenshot can put it; nothing ->
+  Numemon's "?" ringed, still a "?", with the plain line under "To become this".
+- REMAINS: US-112, US-113. Nothing blocked.
+
+## 2026-07-22 — US-112: The light dims the Digimon's room, not the whole screen
+- The scrim's extent is now one function: `LightLayer.scrimRect(spriteSlot:) -> CGRect?`, the slot
+  itself and nil for "paint nothing". It is the ONLY part of the layering arithmetic can reach, so
+  it is a named static with one call site in `body` rather than an expression inline — the test
+  reads what the view draws, not a copy of it. The nil is the load-bearing half (AC9): the tempting
+  fallback for an unmeasured slot is the layer's own bounds, which is the whole screen blacked out
+  for one pass. The button keeps its old `?? .zero` fallback and still draws that pass.
+- `LightLayer` lost its outer ZStack: BOTH halves now live inside the one `GeometryReader` that
+  resolves the anchor, scrim first and button second, so the ordering its doc comment calls "the
+  feature" is unchanged and both are placed off the same rect. `.ignoresSafeArea()` went with the
+  full-screen scrim; a rect inside the layout has nothing to escape.
+- AC2's "the poop pile is at FULL brightness" is the one criterion that could NOT be met by
+  confining the scrim, because the pile lives INSIDE the sprite slot — bottom-trailing of the row
+  the anchor reports. Anything drawn in that row is under the scrim, and `zIndex` does not cross
+  containers. So the pile moved into the same above-scrim layer as the lamp, placed off the SAME
+  anchor (`.frame(slot.size, alignment: .bottomTrailing).offset(slot.origin)`, which is exactly what
+  the old `.overlay(alignment: .bottomTrailing)` did). `.allowsHitTesting(false)` on it is not
+  optional: the frame it is placed in is the whole slot, and the lamp's own taps land in the corner
+  of that frame. The alternative — dimming the pile — was rejected on the story's own logic: a pile
+  the user cannot see is a pile they will not clean, and the Clean button beside it stays lit.
+- The sick badge was left where it is and so still dims with the room. It is not in AC2's list, and
+  it says something about the Digimon rather than about a chore, so it belongs to the room.
+- The Dex toolbar item lost `.opacity(1 - dimOpacity)` and its comment (AC3), replaced by a comment
+  saying why US-099 needed it and why the scrim's new extent does not.
+- No corner radius and no gradient at the scrim's boundary (the PRD left this to a screenshot): the
+  slot spans the full width, so its only edges are two horizontal lines over a black background and
+  they are invisible in all three states. A radius would have to land on the screen edges.
+- PASSED: build green; 1321 tests, 0 failures (was 1316), 5 new in `Tests/LightScrimExtentTests.swift`.
+- PASSED on the 41mm Simulator, Series 9 FB045EDB, `-healthAnswered -noNotificationPrompt
+  -poopDemo` plus the light flag, fresh install per state; screenshots and the throwaway measurers
+  at /tmp/us112/ (not committed). Measured, pre-story build vs post-story build:
+  - mean luma per band, on / semi / off. BEFORE: stats 10.30 / 5.19 / 1.53, name 24.87 / 12.48 /
+    3.71, bars 11.48 / 5.81 / 1.75, action row 23.93 / 12.04 / 3.52. AFTER: 10.30 / 10.30 / 10.30,
+    24.87 / 24.87 / 24.87, 11.48 / 11.48 / 11.48, 23.93 / 23.93 / 23.93 — identical, not "about the
+    same". The Dex band is 11.03 at all three (before: 11.54 / 8.87 / 6.86).
+  - only the room dims: the sprite's own peak is 255 / 128 / 38, and 255 x 0.5 = 127.5, 255 x 0.15 =
+    38.25. So `dimOpacity` is untouched (AC7) and what moved is the extent.
+  - the pile: box x262-335 y202-213, 480 px, peak red 172 — the SAME in the pre-story `on` shot and
+    in all three post-story states. It did not move by a pixel and it is not dimmed.
+  - the lamp at `off`: peak (255,255,255) on its disc over the scrim, at `on` (255,214,10). Above
+    the scrim and legible (AC4). Its disc's left and bottom edges are pixel-identical to the
+    pre-story shot (AC5) — and the offset expression it is placed by is unchanged.
+  - AC10 re-checked with `-lightOffDemo -battleResultDemo`: the Victory screen is at full brightness
+    and NO pile leaks over it, which is the one new way the overlays could have been spoiled.
+- ARGUED, NOT OBSERVED, for the same reason US-099 had to argue them: `simctl` cannot tap, so AC4's
+  "tappable", AC6's hit-testing and AC8's fade are code plus the existing suite —
+  `testTheLightBlocksNoneOfTheFourActions` still takes all four actions in the dark, the scrim is
+  still `allowsHitTesting(false)`, and it is still an opacity on a view that is never removed with
+  `.animation(value: state)` over it.
+- TRAP FOR THE NEXT ITERATION, pre-existing and NOT caused by this story: `-poopCleanDemo`'s
+  deferred clean did not fire on this 41mm sim. Fourteen shots from t=9s to ~t=20s show the pile
+  still there and no "All clean!" caption — and the SAME is true of a binary built from the
+  pre-story commit (`git stash`, /tmp/dd41before), so it is the demo flag, not the pile's new home.
+  The sprite walks between shots, so the app is not suspended. Anyone screenshotting US-097's
+  shrink-and-fade needs to fix that flag first.
+- REMAINS: US-113. Nothing blocked.
+
+## 2026-07-22 — US-113: The sleep bar's label is Zz
+- `EnergyType.spirit.shortName` is `"Zz"`; STEP / KCAL / EXER untouched. The switch is the only
+  place a label lives, and `rawValue` ("spirit") is what persists, so no saved game is touched.
+- The widths were MEASURED, not guessed, with a throwaway test on the 46mm sim (removed before
+  commit) using the real watchOS font: at size 8, SLEEP 23.73 regular / 24.83 bold, KCAL 19.89 /
+  20.91, EXER 19.69 / 20.55, STEP 19.21 / 20.15, Zz 9.16 / 9.52. So `nameWidth` 25 -> 21: the same
+  hair of slack over the widest label that 25 gave over SLEEP, and it has to clear the BOLD width
+  because the dominant bar draws its name bold. `testTheNameColumnFitsTheLongestShortName` now
+  measures both weights; it only measured regular before, which would have passed at 20.5.
+- The 4pt went to `barMinWidth`, 18 -> 22, so `nameWidth + barMinWidth` is still 43 and `rowWidth`
+  still comes to exactly 160 against the 176pt of a 41mm screen. That is the story's point stated
+  as arithmetic: a transfer between two columns, not slack handed to padding.
+- OBSERVED on the Simulator, and this is the criterion worth the trouble. 41mm Series 9 FB045EDB,
+  a build from the pre-story commit (`git stash`) vs this one, same launch args
+  (`-healthAnswered -noNotificationPrompt`), fresh install each time, measured off the screenshots
+  with a throwaway pixel-run tool at /tmp/us113 (not committed):
+  - left bar BEFORE x60-107 = 48px, AFTER x52-107 = 56px. Right bar BEFORE x238-285, AFTER
+    x230-285, same 48 -> 56. At 2x that is 24pt -> 28pt, exactly the 4pt the name column gave up.
+  - both bars' RIGHT edges are unmoved (107 and 285), so the width came out of the name column and
+    not out of the value column, which is what "goes to the bar, not to padding" means in pixels.
+  - 46mm Series 11: bars 88px = 44pt, "STEP" spans 5-40px inside a 42px column — nothing truncates
+    and the four columns line up. The second row reads "Zz" and "EXER".
+- The complication DOES draw `shortName` (`RectangularComplicationView`'s gauge label), so
+  `ComplicationSnapshot.longestEnergyLabel` — the `-complicationEnergyDemo` fixture, hard-coded
+  because the widget extension does not compile `EnergyType` — moved from SLEEP/Spirit to
+  KCAL/Vitality. Three labels now tie at four characters and KCAL is the widest of them in points,
+  so it is the one the demo photographs. Screenshotted on both 41mm and 46mm: gauge reads "KCAL",
+  no truncation. `ComplicationTests` had asserted the fixture was `.spirit`'s label; it now pins
+  `.vitality` plus "nothing is longer than what the demo photographs", since a `max(by: count)`
+  over a tie is an arbitrary winner and would have been a test of Swift's tie-breaking.
+- VoiceOver is untouched: `EnergyBarRow` labels itself `goal.type.displayName` and that line was not
+  edited. `testTheShortNameIsNotTheDisplayName` now also asserts displayName is the LONGER of the
+  two per type and that Spirit is still "Spirit" — "Zz" is the one label of the four that would be
+  unintelligible read aloud, so it is worth a test rather than a comment.
+- DominantEnergyTests needed NO change: it asserts on `.spirit` the case and on totals, never on
+  the string "SLEEP". The AC named it; grep says it never mentioned the label.
+- PASSED: build green; 1324 tests, 0 failures (was 1321), 3 new in `Tests/EnergyBarsTests.swift`.
+- TRAP, pre-existing and not caused by this story: on the 26.4 sim the notification permission
+  alert sat on screen through uninstall/reinstall and swallowed the first two 46mm screenshots,
+  even with `-noNotificationPrompt`. It is queued by the `xcodebuild test` runs, which launch the
+  app host with NO launch arguments. `xcrun simctl erase` on the device is what cleared it; the
+  41mm sim, which never ran the suite, was fine throughout.
+- REMAINS: nothing. Every story in prd.json now passes.

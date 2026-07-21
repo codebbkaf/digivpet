@@ -69,8 +69,36 @@ final class CleanTrainMotionTests: XCTestCase {
         try stagePoop(in: model)
 
         XCTAssertTrue(model.clean())
-        XCTAssertEqual(model.animation, .still(.happy), "the pose US-052 already published")
+        XCTAssertEqual(model.animation, .pose(.happy), "the pose US-052 published, now looping (US-103)")
         XCTAssertEqual(model.actionMotion?.kind, .hop)
+    }
+
+    // MARK: - US-103: the three action poses are loops rather than held frames
+
+    /// Each of the three ends on TWO frames, its own first. The celebration, the landed blow and the
+    /// miss are all things the Digimon is seen doing now, not one picture being shoved about.
+    func testCleaningAndBothTrainingOutcomesAlternateWithTheWalkFrame() async throws {
+        let cleaned = try await startedModel(named: "cleanLoop")
+        try stagePoop(in: cleaned)
+        XCTAssertTrue(cleaned.clean())
+        XCTAssertEqual(cleaned.animation.stageFrames, [.happy, .walk1])
+
+        let landed = try await startedModel(named: "landedLoop")
+        landed.train()
+        landed.finishTraining(.great)
+        XCTAssertEqual(landed.animation.stageFrames, [.attack, .walk1])
+
+        let missed = try await startedModel(named: "missedLoop")
+        missed.train()
+        missed.finishTraining(.miss)
+        XCTAssertEqual(missed.animation.stageFrames, [.angry, .walk1])
+    }
+
+    /// The one pose that must NOT have joined them. A dead Digimon lies still; a corpse bobbing
+    /// between two frames would read as alive, which is the whole of what the memorial is about.
+    func testTheDeadPoseIsStillOneHeldFrame() {
+        XCTAssertEqual(SpriteAnimation.resting(for: .dead, isAsleep: false), .still(.hurt2))
+        XCTAssertEqual(SpriteAnimation.still(.hurt2).stageFrames, [.hurt2])
     }
 
     /// TWO hops, and both of them UP. The count is what the story asks for and what separates a
@@ -171,7 +199,7 @@ final class CleanTrainMotionTests: XCTestCase {
 
         XCTAssertEqual(model.state?.strengthStat, TrainingResult.great.strengthGain,
                        "a round that bought something")
-        XCTAssertEqual(model.animation, .still(.attack), "the pose US-083 already published")
+        XCTAssertEqual(model.animation, .pose(.attack), "the pose US-083 published, now looping (US-103)")
         XCTAssertEqual(model.actionMotion?.kind, .lunge)
     }
 
@@ -209,7 +237,7 @@ final class CleanTrainMotionTests: XCTestCase {
         model.finishTraining(.miss)
 
         XCTAssertEqual(model.state?.strengthStat, 0, "a round that bought nothing")
-        XCTAssertEqual(model.animation, .still(.angry), "the pose US-083 already published")
+        XCTAssertEqual(model.animation, .pose(.angry), "the pose US-083 published, now looping (US-103)")
         XCTAssertEqual(model.actionMotion?.kind, .recoil)
     }
 

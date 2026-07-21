@@ -29,13 +29,18 @@ enum EnergyType: String, Codable, CaseIterable {
     /// English. Like `displayName`, nothing persists it — unlike `rawValue`, this is free to change.
     ///
     /// The source and not the type (US-085): "Strength" does not tell a user that walking is what
-    /// fills the first bar, and a single glyph told them even less. Four characters where five fit,
+    /// fills the first bar, and a single glyph told them even less. Four characters at most,
     /// because four of these share a 41mm screen with the Digimon — see `EnergyBarLayout`.
+    ///
+    /// Sleep is "Zz" and not the five-character "SLEEP" (US-113): it was the one label wide enough
+    /// to set `nameWidth` for all four, so the other three paid a column's worth of width for it.
+    /// The comic-strip snore is read as sleep without spelling it, and VoiceOver is handed
+    /// `displayName` ("Spirit") rather than this, so nothing is spoken as "Zz".
     var shortName: String {
         switch self {
         case .strength: return "STEP"
         case .vitality: return "KCAL"
-        case .spirit: return "SLEEP"
+        case .spirit: return "Zz"
         case .stamina: return "EXER"
         }
     }
@@ -225,6 +230,15 @@ final class GameState {
     private var starvationMistakesChargedStorage: Int?
     private var refusalMistakeDayStorage: Date?
     private var wakeMistakeDayStorage: Date?
+    /// Backing store for `awakeUntil` (US-110): when the grace period a prodded Digimon was woken
+    /// for runs out, or nil while it has not been woken. Optional for the same migration reason as
+    /// every other storage property here, and also because "never woken" is a real state no default
+    /// could express.
+    ///
+    /// SAVED rather than held on the model, which is the whole reason it lives here: a user who
+    /// force-quits ten seconds into the five minutes they were charged a care mistake for must not
+    /// come back to a Digimon that is asleep again.
+    private var awakeUntilStorage: Date?
     /// Backing store for the two death markers (US-029): when the current illness began, and when it
     /// finally killed the Digimon. Optional for the same migration reason as every other storage
     /// property here — an optional attribute is the one shape SwiftData migrates into an
@@ -325,6 +339,7 @@ final class GameState {
         self.starvationMistakesChargedStorage = 0
         self.refusalMistakeDayStorage = nil
         self.wakeMistakeDayStorage = nil
+        self.awakeUntilStorage = nil
         self.sickSinceStorage = nil
         self.diedAtStorage = nil
         self.deathWarningSentStorage = nil
@@ -425,6 +440,21 @@ extension GameState {
     var wakeMistakeDay: Date? {
         get { wakeMistakeDayStorage }
         set { wakeMistakeDayStorage = newValue }
+    }
+
+    /// When the wake a disturbed Digimon is currently enjoying runs out, or nil if it has never been
+    /// woken (US-110).
+    ///
+    /// Set to `now + SleepSchedule.wakeGracePeriod` by the model when a sleeping Digimon is prodded
+    /// into feeding, training or battling, and read back by `SleepSchedule.isAsleep(at:wokenUntil:)`
+    /// — which is the ONE place it overrides the window, so the every-refresh re-derivation cannot
+    /// undo the wake.
+    ///
+    /// Never cleared on a schedule, and it does not need to be: it is an absolute instant, so once
+    /// it is past it reads as expired forever and cannot leak into the next night.
+    var awakeUntil: Date? {
+        get { awakeUntilStorage }
+        set { awakeUntilStorage = newValue }
     }
 
     /// When the CURRENT illness began, or nil while the Digimon is well. `Death.updateDeath` owns
@@ -659,27 +689,23 @@ extension GameState {
     ///
     /// Reads the rollover rather than writing it: a stale `battleDay` means the count belongs to a
     /// day that is over, and a day that is over always has zero battles fought in it. That is what
-    /// makes the cap reset at local midnight without anything having to run at midnight — the app
+    /// makes the count reset at local midnight without anything having to run at midnight — the app
     /// may have been closed straight through it.
+    ///
+    /// It no longer gates anything — US-108 replaced the daily cap with `BattleCost` — but it is read
+    /// by `ConditionEvaluator` for the `.day`-window battle conditions an evolution edge can ask for,
+    /// which is why the count and its rollover are still kept.
     func battlesFought(now: Date, calendar: Calendar = .current) -> Int {
         battleDay == calendar.startOfDay(for: now) ? battleCount : 0
     }
 
-    /// How many battles are still allowed in the local day containing `now`.
-    ///
-    /// Clamped at zero so a save whose cap was lowered in an update reads as "none left" rather than
-    /// as a negative the UI would have to defend against.
-    func battlesRemaining(now: Date, calendar: Calendar = .current) -> Int {
-        max(0, BattleLimits.perDay - battlesFought(now: now, calendar: calendar))
-    }
-
-    /// Spends one of the day's battles. Rolls the count over when the day changes, for the same
+    /// Counts a battle that has STARTED. Rolls the count over when the day changes, for the same
     /// reason `recordRefusal` does.
     ///
-    /// Separate from `recordBattle`, which files the RESULT: this is spent when the fight starts, so
-    /// dismissing the result screen — or force-quitting before it — cannot hand back an allowance
-    /// and let the cap be farmed.
-    func consumeBattleAllowance(now: Date, calendar: Calendar = .current) {
+    /// Separate from `recordBattle`, which files the RESULT: this is counted when the fight starts,
+    /// so dismissing the result screen — or force-quitting before it — cannot un-count a battle that
+    /// really was fought, exactly as the energy it cost is never handed back.
+    func recordBattleStarted(now: Date, calendar: Calendar = .current) {
         let today = calendar.startOfDay(for: now)
         if battleDay != today {
             battleDay = today

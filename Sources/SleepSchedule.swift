@@ -28,6 +28,14 @@ struct SleepSchedule: Equatable {
     /// and well above any nap.
     static let minimumInferableSleep: TimeInterval = 3 * 60 * 60
 
+    /// How long a Digimon prodded awake inside its window stays awake before settling back down:
+    /// five minutes.
+    ///
+    /// A BALANCE NUMBER, chosen rather than derived — nothing in the sleep data implies it. Long
+    /// enough that the user can feed, train and watch the Digimon walk about after paying the
+    /// waking-early mistake for it (US-110), short enough that one prod does not cancel the night.
+    static let wakeGracePeriod: TimeInterval = 5 * 60
+
     /// The hours of `block`, taken as a nightly habit, or nil if the block is too short to be one.
     ///
     /// Uses the block's SPAN, not its asleep duration: the window is meant to cover the whole night
@@ -62,6 +70,24 @@ struct SleepSchedule: Equatable {
         return wrapsMidnight
             ? (minute >= bedtimeMinute || minute < wakeMinute)
             : (minute >= bedtimeMinute && minute < wakeMinute)
+    }
+
+    /// Whether the Digimon is actually asleep at `date`, given a wake the user has already paid for.
+    ///
+    /// The window alone stopped being the whole answer at US-110: prodding a sleeping Digimon wakes
+    /// it for `wakeGracePeriod`, and `awakeUntil` is when that grace runs out. Kept here, beside
+    /// `contains`, so the override is applied in ONE place — the model re-derives sleep on every
+    /// refresh, and a second copy of this rule is exactly how a foregrounding would silently undo a
+    /// wake the user was charged a care mistake for.
+    ///
+    /// An expired marker is simply IGNORED rather than needing to be cleared: it is an absolute
+    /// instant, so a marker left over from 03:00 cannot make tomorrow night's 03:00 awake.
+    ///
+    /// - Parameter awakeUntil: when the current wake expires, or nil if the Digimon was never woken.
+    func isAsleep(at date: Date, wokenUntil awakeUntil: Date?, calendar: Calendar = .current) -> Bool {
+        guard contains(date, calendar: calendar) else { return false }
+        guard let awakeUntil else { return true }
+        return date >= awakeUntil
     }
 
     private static func minuteOfDay(_ date: Date, calendar: Calendar) -> Int {

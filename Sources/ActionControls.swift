@@ -47,8 +47,9 @@ struct ActionButtonFace: View {
 /// The stat readouts that used to sit above each button (hunger pips, STR, PWR/record) are now one
 /// `StatsStrip` above the sprite, which is what let US-039 drop the screen's ScrollView.
 struct ActionControls<Settings: View>: View {
-    /// Battles still allowed today (US-032). Zero disables the Battle button and shows why.
-    let battlesLeft: Int
+    /// Whether the Digimon can pay `BattleCost.energy` (US-108, replacing US-032's daily count).
+    /// False disables the Battle button and shows why.
+    let canAffordBattle: Bool
     /// Poops on screen (US-051). Zero disables the Clean button — there is nothing to clean, and a
     /// tap that did nothing would read as the button being broken.
     let poopCount: Int
@@ -62,19 +63,17 @@ struct ActionControls<Settings: View>: View {
 
     /// Whether the Battle button is disabled. Not `private`, like `limitCaption`, so a test can
     /// assert the rule — a `.disabled` modifier inside `body` is unreachable outside a view graph.
-    var isBattleDisabled: Bool { battlesLeft == 0 }
+    var isBattleDisabled: Bool { !canAffordBattle }
 
     /// Whether the Clean button is disabled. Derived from the count the pile is DRAWN from, not
     /// from a separate flag, so the button and the mess on screen cannot disagree.
     var isCleanDisabled: Bool { poopCount == 0 }
 
-    /// The caption under the row. Nil on a full allowance — a permanent "5 left" would be noise;
-    /// the count only earns its space once it is running out. At zero it is the model's OWN refusal
+    /// The caption under the row. Nil while a battle is affordable — a permanent cost label on one of
+    /// five buttons would be noise on a 41mm screen. When it is not, it is the model's OWN refusal
     /// string, so what a user reads cannot disagree with what was enforced.
     var limitCaption: String? {
-        if battlesLeft == 0 { return MainScreenModel.battleLimitReason }
-        if battlesLeft < BattleLimits.perDay { return "\(battlesLeft) left today" }
-        return nil
+        canAffordBattle ? nil : BattleCost.insufficientEnergyReason
     }
 
     var body: some View {
@@ -121,7 +120,11 @@ struct ActionControls<Settings: View>: View {
             if let limitCaption {
                 Text(limitCaption)
                     .font(.system(size: 9))
-                    .foregroundStyle(battlesLeft == 0 ? Color.orange : Color.secondary)
+                    // Orange because that is already what "you have run out" looks like here: it is
+                    // the colour US-032's caption turned at zero battles left. The condition it was
+                    // once conditional ON is gone — the caption now exists only in the run-out
+                    // state — so the tint is unconditional rather than newly invented.
+                    .foregroundStyle(Color.orange)
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }

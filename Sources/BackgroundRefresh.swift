@@ -8,7 +8,7 @@ import WatchKit
 ///
 /// **Background refresh is an optimization, never the source of truth** (PRD: "Do not assume
 /// background refresh runs on schedule; recompute from elapsed time on launch"). Everything
-/// time-derived — hunger, care mistakes, sickness, death, the battle allowance — already recomputes
+/// time-derived — hunger, care mistakes, sickness, death, the day's battle count — already recomputes
 /// from an injected clock against a saved marker, so a wake that never happens costs nothing but
 /// freshness. What a wake actually buys is the one thing elapsed time cannot reconstruct: HEALTH
 /// DATA, which is only ever read for the day it is read on.

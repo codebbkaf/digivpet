@@ -63,14 +63,18 @@ final class PreBattleRoundTests: XCTestCase {
         ])
     }
 
+    /// - Parameter strengthEnergy: what a battle is PAID with since US-108. Funded by default,
+    ///   because these tests are about the round rather than about affording it.
     private func makeModel(storeName: String = "Round",
                            strength: Int = 8,
+                           strengthEnergy: Int = 100,
                            seed: UInt64 = 1) throws -> (MainScreenModel, GameStore, URL) {
         let url = storeDirectory.appendingPathComponent("\(storeName).store")
         let store = try GameStore(url: url)
         let state = try store.loadOrCreate(digitamaId: "agumon", now: Self.now)
         state.stage = .child
         state.strengthStat = strength
+        state.stageEnergy[.strength] = strengthEnergy
         // US-027: the empty readers would otherwise have the audit charge a mistake for every day
         // since the epoch, which would sicken the Digimon before a single battle.
         state.healthDataLastSeen = Self.now
@@ -152,8 +156,11 @@ final class PreBattleRoundTests: XCTestCase {
         // out as training, the best round is where it would show.
         model.finishBattleRound(.perfect)
 
-        XCTAssertEqual(state.stageEnergy[.strength], 40, "the round costs no Strength")
-        XCTAssertEqual(state.stageEnergy[.stamina], 30, "and no Stamina")
+        // US-108 gave the BATTLE a cost of its own — 5 points from the richer payable energy, taken
+        // by the tap. What is asserted here is unchanged: the ROUND adds nothing on top of it.
+        XCTAssertEqual(state.stageEnergy[.strength], 40 - BattleCost.energy,
+                       "the battle's own cost, and not a point more for the round")
+        XCTAssertEqual(state.stageEnergy[.stamina], 30, "and no Stamina — only one energy pays")
         XCTAssertEqual(state.strengthStat, 8, "and buys no strengthStat")
         XCTAssertEqual(state.stageTrainingSessions, 2, "and counts as no training session")
 
@@ -162,7 +169,7 @@ final class PreBattleRoundTests: XCTestCase {
         // context with it, and the `GameState` it handed back traps the moment it is read.
         let reopened = try GameStore(url: url)
         let saved = try reopened.loadOrCreate(digitamaId: "agumon", now: Self.now)
-        XCTAssertEqual(saved.stageEnergy[.strength], 40)
+        XCTAssertEqual(saved.stageEnergy[.strength], 40 - BattleCost.energy)
         XCTAssertEqual(saved.stageEnergy[.stamina], 30)
         XCTAssertEqual(saved.strengthStat, 8)
         XCTAssertEqual(saved.stageTrainingSessions, 2)
@@ -173,22 +180,24 @@ final class PreBattleRoundTests: XCTestCase {
     /// Read back off DISK with the round still on screen, which is the whole criterion: a force-quit
     /// mid-round has to have cost the battle. Nothing is saved between `battle()` and this read — the
     /// model's own flush is what has to have happened.
-    func testTheAllowanceIsSpentAndSavedWhenTheMinigameOpens() async throws {
+    func testTheCostIsSpentAndSavedWhenTheMinigameOpens() async throws {
         let (model, _, url) = try makeModel()
         await model.start()
+        let before = try XCTUnwrap(model.state).stageEnergy[.strength]
 
         model.battle()
 
         XCTAssertNotNil(model.pendingBattleRound, "still mid-round")
         XCTAssertNil(model.pendingBattle, "and nothing fought")
-        XCTAssertEqual(model.battlesRemainingToday, BattleLimits.perDay - 1)
+        XCTAssertEqual(model.state?.stageEnergy[.strength], before - BattleCost.energy)
 
         // Held in a `let` for the reason the cost test spells out — a discarded store takes the
         // context of everything it returned with it.
         let reopened = try GameStore(url: url)
         let saved = try reopened.loadOrCreate(digitamaId: "agumon", now: Self.now)
-        XCTAssertEqual(saved.battlesFought(now: Self.now, calendar: Self.calendar), 1,
-                       "the allowance reached disk when the game appeared, not when the grade did")
+        XCTAssertEqual(saved.stageEnergy[.strength], before - BattleCost.energy,
+                       "the charge reached disk when the game appeared, not when the grade did")
+        XCTAssertEqual(saved.battlesFought(now: Self.now, calendar: Self.calendar), 1)
     }
 
     // MARK: - AC4: walking out grades a miss and the fight still happens
@@ -211,8 +220,8 @@ final class PreBattleRoundTests: XCTestCase {
                                                       elementFactor: BattleModifiers.elementAdvantage,
                                                       attributeFactor: 1.0,
                                                       trainingFactor: TrainingResult.miss.battleMultiplier))
-        XCTAssertEqual(model.battlesRemainingToday, BattleLimits.perDay - 1,
-                       "and the allowance is not handed back for leaving")
+        XCTAssertEqual(state.stageEnergy[.strength], 100 - BattleCost.energy,
+                       "and the energy is not handed back for leaving")
 
         // A second backgrounding, with no round left, must not start a second battle over the first.
         model.abandonBattleRound()
@@ -269,17 +278,10 @@ final class PreBattleRoundTests: XCTestCase {
 
     // MARK: - AC6: a blocked battle opens no minigame
 
+    /// Asleep is deliberately NOT in this list any more: US-110 made a sleeping Digimon one that is
+    /// woken and fought with, not one that is refused. The two states left here are the two that
+    /// still refuse — see `testASleepingDigimonIsWokenIntoTheRound` for what replaced the third.
     func testABlockedBattleShowsItsReasonAndOpensNoMinigame() async throws {
-        // Asleep.
-        let (sleeper, _, _) = try makeModel(storeName: "Asleep")
-        await sleeper.start()
-        sleeper.isAsleep = true
-        XCTAssertNil(sleeper.battle())
-        XCTAssertEqual(sleeper.actionMessage, "Asleep — let it rest.")
-        XCTAssertNil(sleeper.pendingBattleRound, "no round")
-        XCTAssertNil(sleeper.pendingBattle, "and no fight")
-        XCTAssertEqual(sleeper.battlesRemainingToday, BattleLimits.perDay, "and nothing spent")
-
         // Dead.
         let (dead, _, _) = try makeModel(storeName: "Dead")
         await dead.start()
@@ -289,18 +291,33 @@ final class PreBattleRoundTests: XCTestCase {
         XCTAssertNil(dead.pendingBattleRound)
         XCTAssertNil(dead.pendingBattle)
 
-        // Out of allowance — five whole battles, fought and dismissed through the shipped path.
-        let (spent, _, _) = try makeModel(storeName: "Spent")
+        // Broke — everything payable spent, which since US-108 is what refuses a battle where the
+        // daily cap used to.
+        let (spent, _, _) = try makeModel(storeName: "Spent", strengthEnergy: BattleCost.energy)
         await spent.start()
-        for _ in 0..<BattleLimits.perDay {
-            spent.battle()
-            spent.finishBattleRound(.good)
-            spent.finishBattle()
-        }
+        spent.battle()
+        spent.finishBattleRound(.good)
+        spent.finishBattle()
         XCTAssertNil(spent.battle())
-        XCTAssertEqual(spent.actionMessage, MainScreenModel.battleLimitReason)
-        XCTAssertNil(spent.pendingBattleRound, "the sixth tap opens no game to play for nothing")
+        XCTAssertEqual(spent.actionMessage, BattleCost.insufficientEnergyReason)
+        XCTAssertNil(spent.pendingBattleRound, "the broke tap opens no game to play for nothing")
         XCTAssertNil(spent.pendingBattle)
+    }
+
+    /// US-110's half of the case above: the sleeping Digimon opens the round like any other, and the
+    /// energy is really spent — a wake that opened a FREE round would be the same bug the other way
+    /// round.
+    func testASleepingDigimonIsWokenIntoTheRound() async throws {
+        let (sleeper, _, _) = try makeModel(storeName: "Asleep")
+        await sleeper.start()
+        sleeper.isAsleep = true
+
+        XCTAssertEqual(sleeper.battle(), assignedGame)
+        XCTAssertFalse(sleeper.isAsleep)
+        XCTAssertNotNil(sleeper.pendingBattleRound, "the round opened")
+        XCTAssertEqual(sleeper.state?.stageEnergy[.strength], 100 - BattleCost.energy,
+                       "and was paid for")
+        XCTAssertEqual(sleeper.state?.stageSleepDisturbances, 1)
     }
 
     // MARK: - AC7: one round at a time
@@ -312,10 +329,12 @@ final class PreBattleRoundTests: XCTestCase {
         state.stageEnergy[.strength] = 40
 
         model.battle()
+        let charged = state.stageEnergy[.strength]
         XCTAssertNil(model.train(), "Train is refused while a battle round is on screen")
 
         XCTAssertNil(model.pendingTraining, "no second game")
-        XCTAssertEqual(state.stageEnergy[.strength], 40, "and no energy charged for it")
+        XCTAssertEqual(state.stageEnergy[.strength], charged,
+                       "the battle's charge and no training charge on top of it")
         XCTAssertEqual(state.stageTrainingSessions, 0)
         XCTAssertNotNil(model.pendingBattleRound, "the battle round is left alone")
     }
@@ -332,13 +351,13 @@ final class PreBattleRoundTests: XCTestCase {
 
         XCTAssertNil(model.pendingBattleRound, "no second game")
         XCTAssertNil(model.pendingBattle)
-        XCTAssertEqual(model.battlesRemainingToday, BattleLimits.perDay, "and no allowance spent")
-        XCTAssertEqual(state.stageEnergy[.strength], charged, "the training round is left alone")
+        XCTAssertEqual(state.stageEnergy[.strength], charged,
+                       "the training round is left alone and the refused battle charged nothing")
         XCTAssertNotNil(model.pendingTraining)
     }
 
     /// A second Battle tap during a round of its own is refused too — otherwise the overlay being the
-    /// only thing covering the button would make a double tap cost two allowances.
+    /// only thing covering the button would make a double tap cost two charges.
     func testASecondBattleTapDuringItsOwnRoundIsANoOp() async throws {
         let (model, _, _) = try makeModel()
         await model.start()
@@ -347,7 +366,8 @@ final class PreBattleRoundTests: XCTestCase {
         XCTAssertNil(model.battle())
 
         XCTAssertEqual(model.pendingBattleRound?.game, game)
-        XCTAssertEqual(model.battlesRemainingToday, BattleLimits.perDay - 1, "one battle, one allowance")
+        XCTAssertEqual(model.state?.stageEnergy[.strength], 100 - BattleCost.energy,
+                       "one battle, one charge")
     }
 }
 

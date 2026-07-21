@@ -295,7 +295,7 @@ final class FeedApplyTests: XCTestCase {
         let model = try await startedModel(named: "refuse", hunger: 0, vitality: 20)
 
         XCTAssertEqual(model.feed(), .refused)
-        XCTAssertEqual(model.animation, .still(.refuse))
+        XCTAssertEqual(model.animation, .pose(.refuse))
         XCTAssertEqual(SpriteFrame.refuse.rawValue, 6)
         XCTAssertEqual(hapticCount, 0, "nothing was eaten, so nothing taps")
     }
@@ -326,20 +326,41 @@ final class FeedApplyTests: XCTestCase {
         XCTAssertEqual(saved.hungerUpdatedAt, Clock.start, "restamped at the feed")
     }
 
-    // MARK: - AC4: blocked while asleep, with a visible reason
+    // MARK: - US-110: a sleeping Digimon is woken and then fed
 
-    func testFeedingWhileAsleepShowsAReasonAndDoesNotAnimate() async throws {
+    /// US-024 AC4 used to read "blocked while asleep, with a visible reason". US-110 reversed it: the
+    /// user was being charged a care mistake and handed nothing back, so the tap now WAKES the
+    /// Digimon and the meal is eaten. What survives from the old test is that the disturbance is
+    /// still charged — that half was never the problem.
+    func testFeedingWhileAsleepWakesTheDigimonAndFeedsIt() async throws {
         let model = try await startedModel(named: "asleep", hunger: 3, vitality: 20)
         model.isAsleep = true
+        let mistakesBefore = try XCTUnwrap(model.state?.careMistakeCount)
 
-        let outcome = model.feed()
+        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertFalse(model.isAsleep, "prodding it woke it")
+        XCTAssertEqual(model.animation, .eat, "and it is eating, not lying in the sleep loop")
+        XCTAssertEqual(hapticCount, 1)
+        XCTAssertEqual(model.state?.hunger, 2, "a unit of hunger really came off")
+        XCTAssertEqual(model.state?.careMistakeCount, mistakesBefore + 1,
+                       "the disturbance is still a mistake")
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1)
+    }
 
-        guard case .blocked = outcome else { return XCTFail("expected a block, got \(String(describing: outcome))") }
-        XCTAssertNotNil(model.actionMessage, "the reason is what the screen shows")
-        // US-026 made the resting pose depend on the sleep window: nothing happened to it, so it
-        // keeps RESTING, and a sleeping Digimon rests in the sleep loop rather than the walk loop.
-        XCTAssertEqual(model.animation, .sleep)
-        XCTAssertEqual(hapticCount, 0)
-        XCTAssertEqual(model.state?.hunger, 3)
+    /// The grace period is what makes the wake stick: the marker is on the SAVED game, and a second
+    /// tap inside it is not a second disturbance.
+    func testTheWokenDigimonStaysAwakeForTheGracePeriodAndIsNotDisturbedTwice() async throws {
+        let model = try await startedModel(named: "grace", hunger: 3, vitality: 20)
+        model.isAsleep = true
+
+        model.feed()
+        let awakeUntil = try XCTUnwrap(model.state?.awakeUntil)
+        XCTAssertEqual(awakeUntil, Clock.start.addingTimeInterval(SleepSchedule.wakeGracePeriod))
+        let mistakes = try XCTUnwrap(model.state?.careMistakeCount)
+
+        model.feed()
+        XCTAssertEqual(model.state?.stageSleepDisturbances, 1, "already awake, so not disturbed again")
+        XCTAssertEqual(model.state?.careMistakeCount, mistakes)
+        XCTAssertEqual(model.state?.awakeUntil, awakeUntil, "and the grace is not extended")
     }
 }
