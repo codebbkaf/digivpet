@@ -708,3 +708,99 @@ WHAT REMAINS
 - The result screen is now FULL at 42mm: sprite (scale 4), headline, flavour
   line, breakdown row, PWR line, Done. US-095 onward must not add a seventh
   child to it without taking something away.
+
+================================================================================
+2026-07-21 — US-095 — ActionMotion: scripted sprite motion — PASSES
+================================================================================
+
+Build green. 1171/1171 tests pass on Apple Watch Series 11 (46mm), 13 of them the
+new ActionMotionTests. Nothing else in the suite changed behaviour.
+
+WHAT WAS ADDED
+- `Sources/ActionMotion.swift` — a motion TRACK, not an animator. The whole thing
+  is `static func offset(for: Kind, elapsed: TimeInterval) -> CGPoint`: no timer,
+  no state, no view. Five kinds — chew, hop, lunge, shake, recoil. The value type
+  itself is only `kind` + `start`, so restarting a motion is assigning a new
+  `start` and a spent motion just keeps answering `.zero`.
+- `Sources/DigimonSpriteView.swift` — `verticalOffset`, applied in the SAME
+  `.offset(x:y:)` as the existing horizontal one.
+- `Sources/WanderingSpriteView.swift` — optional `motion: ActionMotion?`, ADDED
+  to the walk position.
+- `Tests/ActionMotionTests.swift`.
+
+PIXELS, NOT POINTS — the reason the amplitudes live in an `Amplitude` enum
+- Sprites are 16x16 drawn at a scale the caller picks (5x main screen, 4x battle,
+  2x Dex). A hop written as "10 points" clears a fifth of the body at 5x and half
+  of it at 2x. Written as `hopHeight = 3` PIXELS and multiplied by the view's
+  scale at draw time, it is three pixels of the Digimon's own body everywhere.
+- `WanderingSpriteView.motionOffset(at:)` is the ONE place that multiplies by
+  `scale`. `testAmplitudesAreSpritePixels` fails any constant that drifts into
+  points, by asserting no motion travels more than half a sprite.
+
+THE PROPERTY EVERYTHING RESTS ON — zero at both ends
+- Every kind returns `.zero` at `elapsed == 0` and at EVERY elapsed past its
+  duration, so a view can leave a finished motion mounted forever and the Digimon
+  is not stranded a few pixels off centre. `testAMotionLeftRunningStaysHome`
+  walks 60s past each end; the tail is flat, not merely zero at one instant.
+- Total, not just pure: negative, infinite and NaN elapsed all answer `.zero`
+  rather than trapping (`testUnexpectedElapsedTimesAreAnswered`). A motion whose
+  start is in the future has simply not begun.
+- Shapes are built from two helpers that are zero-ended BY CONSTRUCTION rather
+  than by clamping: `arcs(count:_:)` = |sin(pi*count*p)| (n humps, all on the
+  same side — a plain multi-cycle sine would send the second hop as far BELOW the
+  ground as the first went above) and `thrust(_:out:)` (quarter-sine out to
+  exactly 1 at `out`, quarter-cosine home).
+
+SIGNS, AND WHY LUNGE IS NEGATIVE X
+- y is SwiftUI's: positive down. So `hop` is negative (up) and `chew` positive
+  (the Digimon leans INTO the bowl) — deliberately opposite, and both pinned.
+- x is written for an UNMIRRORED sprite, and every sheet in this pack faces LEFT.
+  So `lunge` is -x (forward) and `recoil` is +x (knocked back). A caller drawing a
+  mirrored sprite negates x with it — `WanderingSpriteView` does exactly that off
+  `position.flipped`, or a Digimon walking right would lunge over its own
+  shoulder. `shake` is the only motion that goes both ways, which is what makes a
+  refusal read as a refusal.
+- Peaks are found by SAMPLING the whole duration finely, not by evaluating a
+  hand-derived peak time, so the tests do not re-implement the shapes they check.
+  Only a changed amplitude fails them.
+
+THE TICK — 1/30s while a motion runs, `MovementModel.step` (0.25s) otherwise
+- The shortest motion is `recoil` at 0.35s. At the walk's cadence it would be
+  drawn once or not at all. The faster schedule is safe for the walk because
+  `MovementModel.advance(to:)` is idempotent within a step — extra samples redraw
+  the same position rather than walking further.
+- `testTheSamplingTickResolvesTheShortestMotion` pins both halves: at least eight
+  frames for the shortest motion, and finer than the walk's step.
+
+THE WALK AND THE MOTION CANNOT FIGHT
+- The motion is ADDED to the walk offset, and it is safe to add precisely because
+  US-096/097 will pass `isMoving: false` alongside a motion, so the walk is HELD
+  (see `MovementModel.hold(at:)`) for the motion's whole length. Even if they did
+  overlap the sprite would be somewhere sane — a walk with a bob on it.
+
+THE ONE THING THAT COST A RUN — Date round-trips are not bit-exact
+- `start.addingTimeInterval(d).timeIntervalSince(start)` is NOT `d`. A `Date` is
+  absolute, so the addition rounds against a reference-date magnitude (600,000 in
+  these tests) and the last bit or two of a fractional second do not survive. The
+  first draft compared date-sampled and elapsed-sampled offsets bit-for-bit (49
+  failures) and asserted `isRunning` false at exactly `start + duration`, which
+  measures back a hair UNDER duration and so is still "running" (4 failures).
+- Fixed in the TESTS, not by bending the shapes: an accuracy on the comparison,
+  and the end asserted one tick past the duration. Nothing rests on that hair —
+  `offset` there is already home to within a millionth of a pixel, and one extra
+  `isRunning == true` costs one redraw of a sprite that has not moved. This is
+  also the argument for the shapes taking an elapsed INTERVAL and only the view
+  turning a `Date` into one.
+
+PROJECT FILE
+- `project.yml` needed NO edit: it globs `Sources` and `Tests` by directory, so
+  both new files were picked up. Verified after `xcodegen generate` — ActionMotion
+  appears in the regenerated pbxproj (8 references).
+
+WHAT REMAINS
+- Nothing on screen uses a motion yet. US-096 (eat/refuse) and US-097 (celebrate/
+  lunge) are what wire `MainScreenModel` to hand `WanderingSpriteView` a motion,
+  and they are also what will decide who owns the `start` date.
+- `ActionMotion.isRunning` exists for a caller that wants to stop scheduling once
+  a motion is spent. Nothing calls it yet — `offset` alone is enough to be
+  correct, this is only enough to be cheap.

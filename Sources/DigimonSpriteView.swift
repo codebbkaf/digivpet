@@ -117,6 +117,12 @@ struct DigimonSpriteView: View {
     /// re-running layout, so a walking Digimon cannot shove the name above it or the caption below
     /// it around as it goes.
     var offset: CGFloat = 0
+    /// Points to shift the sprite vertically, positive DOWN; US-095's action motions.
+    ///
+    /// Separate from `offset` as a parameter but applied in the SAME `.offset` below, because two
+    /// stacked `.offset` modifiers would each round to the pixel grid independently and a hop taken
+    /// mid-stride would shimmer horizontally for no reason.
+    var verticalOffset: CGFloat = 0
     /// Mirrors the sprite horizontally. Every sheet in the pack is drawn facing LEFT, so this is
     /// what a caller sets to show the Digimon walking right.
     var flipped: Bool = false
@@ -146,7 +152,7 @@ struct DigimonSpriteView: View {
             }
         }
         .frame(width: side, height: side)
-        .offset(x: offset)
+        .offset(x: offset, y: verticalOffset)
     }
 
     private func image(_ frame: CGImage) -> some View {

@@ -211,8 +211,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ActionMotion.offset(for:elapsed:) is a pure, total track in SPRITE PIXELS for chew/hop/lunge/shake/recoil, .zero at elapsed 0 and forever past duration; DigimonSpriteView gained verticalOffset applied in the same .offset, and WanderingSpriteView takes an optional ActionMotion, scales it by `scale`, mirrors its x with `flipped`, and ticks at 1/30s while one runs. 13 ActionMotionTests pin each shape's ends, peak and sign; 1171/1171 tests pass."
     },
     {
       "id": "US-096",

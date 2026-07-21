@@ -56,6 +56,22 @@ struct WanderingSpriteView: View {
     /// False while the Digimon is asleep, eating, sick, dead, or behind an overlay. The sprite
     /// stays exactly where it stood and resumes from there — see `MainScreenModel.isWandering`.
     var isMoving: Bool = true
+    /// A scripted nudge running on top of wherever the walk left the sprite, or nil for none.
+    ///
+    /// ADDED to the walk position rather than replacing it, and it is safe to add precisely because
+    /// the two cannot both be live: an action that plays a motion also passes `isMoving: false`, so
+    /// the walk is held at a fixed offset for the motion's whole length and the motion is the only
+    /// thing moving. If they ever did overlap the sprite would still be somewhere sane — a walk
+    /// with a bob on it — rather than fighting over the position.
+    var motion: ActionMotion?
+
+    /// The motion's displacement at `date`, in POINTS: `ActionMotion` speaks in sprite pixels, and
+    /// this is the one place that turns them into the screen distance this `scale` makes them.
+    private func motionOffset(at date: Date) -> CGPoint {
+        guard let motion else { return .zero }
+        let pixels = ActionMotion.offset(for: motion, at: date)
+        return CGPoint(x: pixels.x * scale, y: pixels.y * scale)
+    }
 
     @State private var wanderer: SpriteWanderer
 
@@ -83,12 +99,14 @@ struct WanderingSpriteView: View {
          name: String,
          animation: SpriteAnimation = .idle,
          scale: CGFloat = 5,
-         isMoving: Bool = true) {
+         isMoving: Bool = true,
+         motion: ActionMotion? = nil) {
         self.stage = stage
         self.name = name
         self.animation = animation
         self.scale = scale
         self.isMoving = isMoving
+        self.motion = motion
         // Seeded at random, so two sessions do not pace identically. Tests seed `MovementModel`
         // directly; there is nothing here to pin.
         _wanderer = State(wrappedValue: SpriteWanderer(bound: 0))
@@ -97,16 +115,23 @@ struct WanderingSpriteView: View {
     var body: some View {
         // Ticking at exactly the model's step, so one tick applies one step. A faster schedule
         // would redraw between steps to show the same position, and a slower one would apply
-        // several at once and stutter.
-        TimelineView(.periodic(from: .now, by: MovementModel.step)) { context in
+        // several at once and stutter. A motion is the one thing worth the extra redraws: its
+        // shortest track is shorter than two walk steps, so at the walk's cadence it would be
+        // drawn once or not at all.
+        TimelineView(.periodic(from: .now, by: motion == nil ? MovementModel.step : ActionMotion.tick)) { context in
             let position = wanderer.position(at: context.date, bound: bound, isMoving: isMoving)
+            let nudge = motionOffset(at: context.date)
 
             DigimonSpriteView(
                 stage: stage,
                 name: name,
                 animation: animation,
                 scale: scale,
-                offset: position.offset,
+                // The motion's x is written for the way the art faces, which is LEFT; a mirrored
+                // sprite lunges the other way, so the nudge is mirrored with it. Without this a
+                // Digimon walking right would lunge over its own shoulder.
+                offset: position.offset + (position.flipped ? -nudge.x : nudge.x),
+                verticalOffset: nudge.y,
                 flipped: position.flipped
             )
         }
