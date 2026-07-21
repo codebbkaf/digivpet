@@ -108,12 +108,22 @@ struct BattleView: View {
     /// numbers scattered across two files not to drift apart. `ContentView` reads these too, so the
     /// app and the defaults cannot disagree.
     ///
-    /// The flight is a hair short of the turn on purpose: the remaining ~0.3s is the beat where the
-    /// projectile has hit and the defender's hurt loop is the only thing moving, which is what makes
-    /// an exchange read as a hit rather than as a flicker.
+    /// The flight is a hair short of the turn on purpose: the remaining ~0.3s is the tail where the
+    /// shot has LANDED and is off screen entirely (US-104), leaving the defender flinching alone with
+    /// nothing else moving. That beat is what makes an exchange read as a blow landing rather than as
+    /// a glyph flickering past; a projectile still drawn during it would read as parked on the
+    /// defender instead of as having hit it.
     static let defaultIntroDuration: TimeInterval = 1.2
     static let defaultTurnDuration: TimeInterval = 1.4
     static let defaultFlightDuration: TimeInterval = 1.1
+
+    /// How long the shot is actually in the air. `flightDuration`, but never longer than the turn
+    /// that threw it: the shipped constants already satisfy that (`defaultFlightDuration <
+    /// defaultTurnDuration`, asserted in `BattlePacingTests`), and the clamp is for an INJECTED
+    /// pacing, where a flight outlasting its turn would leave the previous shot still airborne when
+    /// the next exchange snaps it back to the attacker — precisely the reverse slide this story
+    /// removes. Clamped rather than trapped because a test's pacing is allowed to be silly.
+    private var flight: TimeInterval { min(flightDuration, max(0, turnDuration)) }
 
     /// Debug-only: the single exchange to skip straight to after the intro, instead of playing every
     /// turn in order. nil in the app — every battle plays out normally. Set by `ContentView`'s
@@ -183,10 +193,14 @@ struct BattleView: View {
         }
     }
 
-    /// The attacker's projectile mid-flight (US-072): drawn only during an exchange, tinted and
-    /// shaped by the attacker's `MoveCatalog` move, sliding from the attacker toward the defender as
-    /// `projectileProgress` runs 0 → 1 over `turnDuration`. Its direction is read off `faces(attacker)`
-    /// so the opponent's shots fly leftward out of its front rather than backward out of its back.
+    /// The attacker's projectile mid-flight (US-072): drawn only while an exchange's shot is in the
+    /// AIR, tinted and shaped by the attacker's `MoveCatalog` move, sliding from the attacker toward
+    /// the defender as `projectileProgress` runs 0 → 1 over `flightDuration`. Its direction is read
+    /// off `faces(attacker)` so the opponent's shots fly leftward out of its front rather than
+    /// backward out of its back.
+    ///
+    /// `!hasLanded` is US-104's other half: the moment the shot reaches the defender it is gone, so
+    /// the turn's tail shows a flinch with an empty gap rather than a glyph parked on the defender.
     ///
     /// On the FINISHING blow — the one turn where `isKnockout` is true — it becomes the winner's
     /// `signatureSymbol`, drawn visibly larger (US-073), so the killing blow reads as special rather
@@ -195,7 +209,7 @@ struct BattleView: View {
     /// `.interpolation(.none)` is not needed here — an SF Symbol is a vector, not the pixel art the
     /// sprites are, so scaling it stays crisp on its own.
     @ViewBuilder private func projectile(inWidth arenaWidth: CGFloat) -> some View {
-        if case .turn(let index) = beat, index < bout.report.turns.count {
+        if case .turn(let index) = beat, index < bout.report.turns.count, !hasLanded {
             let move = bout.move(for: bout.report.turns[index].attacker)
             let knockout = Self.isKnockoutTurn(index, of: bout.report.turns)
             Image(systemName: knockout ? move.signatureSymbol : move.projectileSymbol)
@@ -205,6 +219,12 @@ struct BattleView: View {
                     rightward: Self.faces(bout.report.turns[index].attacker),
                     progress: projectileProgress,
                     span: BattleArenaLayout.projectileSpan(inWidth: arenaWidth)))
+                // Each exchange's shot is its OWN view. Without this every turn reuses one Image, so
+                // the animated `beat` change interpolates it from the last turn's tint and offset to
+                // this one's — a glyph sliding across the arena between exchanges, which is US-104's
+                // reverse travel wearing a different hat. Photographed at the turn boundary before
+                // this line existed; see the story's notes.
+                .id(index)
         }
     }
 
@@ -278,6 +298,48 @@ struct BattleView: View {
     /// How far along its flight the current projectile is, 0 at the attacker and 1 at the defender.
     /// Reset to 0 and re-animated on every exchange in `run()`.
     @State private var projectileProgress: CGFloat = 0
+
+    /// Whether this exchange's shot has reached the defender yet: false for the first `flight`
+    /// seconds of every turn, true for the tail after it, and false again the instant the next turn
+    /// begins. The impact instant as view state, which is what takes the projectile off screen here
+    /// and what US-105 hangs the defender's hurt loop on.
+    @State private var hasLanded = false
+
+    /// Whether the projectile is drawn `elapsed` seconds into an exchange: in the air once the turn
+    /// has begun, and gone from the moment it lands. Pure and view-free — the same rule `run()` plays
+    /// out with a sleep and `hasLanded` — so "no parked glyph, no reverse travel" is assertable
+    /// against the clock rather than against a screenshot, the way `isKnockoutTurn` and
+    /// `projectileOffset` already are.
+    ///
+    /// Half-open at BOTH ends on purpose. At `elapsed >= flightDuration` the shot has landed and is
+    /// already gone — that is the half of US-104 where the glyph sat on the defender for the turn's
+    /// last ~0.3s. At `elapsed <= 0` the turn has not started, so there is nothing yet to draw and
+    /// certainly nothing left over from the turn before.
+    static func isProjectileVisible(atElapsed elapsed: TimeInterval,
+                                    flightDuration: TimeInterval) -> Bool {
+        elapsed > 0 && elapsed < flightDuration
+    }
+
+    /// One change `run()` makes to the projectile, in the order it is made.
+    ///
+    /// Reported to `onProjectileChange` for the same reason the result haptic is injected: SwiftUI
+    /// animates `projectileProgress` inside a view no test can mount, so the only place the
+    /// reset-then-fly ORDER can be observed is where the writes are issued. `animated` is the crux of
+    /// US-104 — a reset reported as animated is the bug itself, because SwiftUI would then sweep the
+    /// glyph BACKWARD from the defender to the attacker instead of snapping it there.
+    struct ProjectileChange: Equatable {
+        /// The exchange this shot belongs to.
+        let turn: Int
+        /// Where the projectile is being sent, 0 at the attacker and 1 at the defender.
+        let progress: CGFloat
+        /// Whether the projectile is drawn at all once this change has landed.
+        let visible: Bool
+        /// Whether SwiftUI sweeps the value there over time rather than snapping to it.
+        let animated: Bool
+    }
+
+    /// A spy on the projectile's flight. No-op in the app; see `ProjectileChange`.
+    var onProjectileChange: (ProjectileChange) -> Void = { _ in }
 
     /// The projectile's horizontal offset from the arena centre, as a pure function so the flight can
     /// be asserted without a view. A rightward (player) shot runs from `-span/2` to `+span/2`; a
@@ -410,19 +472,45 @@ struct BattleView: View {
 
     /// The stare-down, every exchange in order, then the result and its haptic. Not private so a test
     /// can drive it directly at a fast pacing with a haptic spy.
+    ///
+    /// `@MainActor` is load-bearing, not hygiene. An exchange begins with three writes — snap the
+    /// projectile back, change the beat, launch the shot — and they only coalesce into ONE SwiftUI
+    /// update if they happen in a single main-thread turn. Off the main actor they can land in
+    /// separate updates, and the animated middle one then interpolates the projectile from where the
+    /// spent shot was to where the new one starts: a glyph sliding across the arena between
+    /// exchanges. That was photographed at the turn boundary on the Simulator, which is why this and
+    /// `.id(index)` on the projectile both exist.
+    @MainActor
     func run() async {
         try? await Task.sleep(for: .seconds(introDuration))
 
         let indices = demoFocusTurn.map { [$0] } ?? Array(bout.report.turns.indices)
         for index in indices where bout.report.turns.indices.contains(index) {
-            // Snap the projectile back to the attacker (no animation), then fly it across the gap over
-            // `flightDuration` — which is SHORTER than the turn, so the shot lands with a beat of the
-            // defender's hurt loop still to run before the next exchange begins. Both are injected, so
-            // a test still runs a whole battle in milliseconds.
-            projectileProgress = 0
+            // Snap the projectile back to the attacker with animations EXPLICITLY disabled, and clear
+            // the impact. Left bare, this write shares an update with the animated `beat` change below
+            // and SwiftUI sweeps it: the glyph slides backward from the defender to the attacker over
+            // 0.15s before flying out again (US-104). The transaction is what makes the snap a
+            // property of the write rather than of the order of these three lines.
+            var snap = Transaction()
+            snap.disablesAnimations = true
+            withTransaction(snap) {
+                projectileProgress = 0
+                hasLanded = false
+            }
+            onProjectileChange(ProjectileChange(turn: index, progress: 0, visible: true, animated: false))
+
+            // Then fly it across the gap. `flight` is SHORTER than the turn, so the shot lands with a
+            // beat of the defender's flinch still to run before the next exchange begins. Both are
+            // injected, so a test still runs a whole battle in milliseconds.
             withAnimation(.easeInOut(duration: 0.15)) { beat = .turn(index) }
-            withAnimation(Self.flightAnimation(duration: flightDuration)) { projectileProgress = 1 }
-            try? await Task.sleep(for: .seconds(turnDuration))
+            withAnimation(Self.flightAnimation(duration: flight)) { projectileProgress = 1 }
+            onProjectileChange(ProjectileChange(turn: index, progress: 1, visible: true, animated: true))
+
+            // Impact: the shot is gone the moment it arrives, and the tail belongs to the defender.
+            try? await Task.sleep(for: .seconds(flight))
+            hasLanded = true
+            onProjectileChange(ProjectileChange(turn: index, progress: 1, visible: false, animated: false))
+            try? await Task.sleep(for: .seconds(turnDuration - flight))
         }
 
         playHaptic(bout.report.playerWon)

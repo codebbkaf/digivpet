@@ -53,3 +53,43 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
   - The classifier was throwaway Swift at /tmp/burstclassify.swift, NOT committed: it hard-codes
     this screen's crop, which moves the moment the layout does.
 - REMAINS: US-104 onward. Nothing blocked.
+
+## 2026-07-21 — US-104: The battle projectile vanishes on impact and never flies backward
+- Sources/BattleView.swift only. Four changes, two of them found by the Simulator, not by reading:
+  1. run()'s reset is now `withTransaction(snap) { projectileProgress = 0; hasLanded = false }` with
+     `snap.disablesAnimations = true`. Bare, it shared an update with the animated `beat` change and
+     SwiftUI swept it — the 0.15s backward slide the story is named after.
+  2. New `@State private var hasLanded`; the projectile draws only while `!hasLanded`. run() sleeps
+     `flight`, sets it, then sleeps the rest of the turn, so the ~0.3s tail has NO glyph parked on
+     the defender. `flight` = flightDuration clamped to turnDuration, for injected pacings only
+     (BattlePacingTests already asserts the shipped pair satisfies it).
+  3. `run()` is now @MainActor. Off the main actor its three writes can land in SEPARATE SwiftUI
+     updates, and the animated middle one then interpolates the projectile.
+  4. `.id(index)` on the projectile, so each exchange's shot is its own view rather than one Image
+     reused across turns.
+  Fixes 3 and 4 came from a screenshot: at the turn 0 -> 1 boundary, one frame showed AGUMON'S
+  ORANGE glyph mid-gap while the HP text was ghosting mid-crossfade — turn 1's shot is Monochromon's
+  BROWN one starting at the far right. That is the same bug wearing a different hat, and AC1 says
+  "not for a single frame", so it had to go.
+- Pure `BattleView.isProjectileVisible(atElapsed:flightDuration:)` — half-open at both ends — is the
+  drawing rule as arithmetic, in the `isKnockoutTurn` / `projectileOffset` pattern.
+- `BattleView.ProjectileChange` + injected `onProjectileChange`, on the same footing as `playHaptic`:
+  SwiftUI animates projectileProgress inside a view no test can mount, so the only observable thing
+  is the WRITES — progress, visible, and whether the write is animated.
+- Tests: 7 new in Tests/BattleProjectileTests.swift. The AC10 one drives run() through a real
+  multi-turn report and asserts every DROP in progress is (a) not animated and (b) made while the
+  previous shot was already invisible — both halves fail under the old code. The same-attacker case
+  is a HAND-BUILT report: BattleEngine alternates strictly, so no seed produces it.
+- PASSED: build green; 1274 tests, 0 failures (1267 + 7).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-battleTurnDemo -healthAnswered -noNotificationPrompt`
+  (intro 0.01s, flight 12s, turn 60s):
+  - AC13: at 0.52x flight the flame is in the gap; at 1.22x there is no glyph anywhere. Measured,
+    not just eyeballed — orange pixels in the arena band go baseline+~460 -> baseline, and the
+    glyph's leading edge advances 77 -> 325px monotonically across 30 in-flight frames, then the
+    extra pixels vanish between two frames 0.4s apart and never return for the rest of the turn.
+  - The turn boundary: two independent boundaries burst at 0.17s (simctl's floor) — 61 frames over
+    57-67s and 75 over 114-126.6s. The gap between the sprites is EMPTY in every one, including the
+    frames bracketing the beat change, which is pinned by the HP readout's pixel count changing.
+  - Throwaway classifiers at /tmp/orangecount.swift, /tmp/gapcount.swift, /tmp/hprow.swift, NOT
+    committed: all three hard-code this screen's crops and this bout's tint.
+- REMAINS: US-105 onward. Nothing blocked. US-105 has its `hasLanded` to hang the hurt loop on.

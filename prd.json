@@ -70,8 +70,8 @@
         "Typecheck passes"
       ],
       "priority": 3,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "The reset is now a withTransaction(disablesAnimations) snap of projectileProgress AND a new `hasLanded` @State, the projectile is drawn only while `!hasLanded`, and run() sleeps `flight` (flightDuration clamped to the turn) before setting it. Pure BattleView.isProjectileVisible(atElapsed:flightDuration:) is the drawing rule as arithmetic. TWO further fixes the Simulator forced: run() is now @MainActor (its three writes only coalesce into one SwiftUI update on the main thread) and the projectile carries .id(index) — without them the animated `beat` change interpolated ONE reused glyph from the old turn's tint and offset to the new one's, photographed mid-gap at the turn boundary. 7 new BattleProjectileTests; build green, 1274 tests / 0 failures. On the 42mm sim (-battleTurnDemo, flight 12s, turn 60s): glyph in the gap at 0.52x flight, nothing anywhere at 1.22x; 30 in-flight frames advance monotonically and never come back; two turn boundaries burst at 0.17s (136 frames) show an empty gap through the crossfade."
     },
     {
       "id": "US-105",
