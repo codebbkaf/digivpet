@@ -1222,3 +1222,119 @@ TRAPS FOR THE NEXT ITERATION
 WHAT REMAINS
 - US-100 (the notice to turn the light off) and US-101 (the care mistake and the
   docs/ table). `refresh()` still neither notifies nor charges for the light.
+
+================================================================================
+2026-07-21 — US-100 "Alert the user to turn the light off" — PASSES
+================================================================================
+
+WHAT WAS BUILT
+
+- `NotificationKind.lights`, the fifth kind. Title "Lights out", displayName
+  "Lights Out", detail "The light left on at bedtime.", and `firesWhileAsleep`
+  TRUE. That last one turned `firesWhileAsleep` from `self == .deathWarning`
+  into an exhaustive switch, deliberately: a `default` there is how a future
+  kind gets the wrong answer by accident, and this kind is the one where the
+  wrong answer deletes the feature rather than delaying it — ten minutes past
+  bedtime is INSIDE the sleep window by definition, so a false gate would
+  suppress every nudge that was ever owed, always.
+- `PetNotificationDelivering.deliver(_:at:)` — the first scheduled-ahead
+  delivery in the project. `UserNotificationDeliverer` grew a private `post(_:
+  trigger:)` that both paths go through, so the immediate and the scheduled
+  notice cannot drift apart in identifier, content or sound; that shared
+  identifier is what makes `cancel(_:)` reach a pending request as readily as a
+  delivered one, which is the whole of AC5 at the system level.
+- `NotificationDispatcher.schedule(_:body:at:)`. Its sleep gate is spelled
+  `kind.firesWhileAsleep` rather than an `isAsleep:` argument, because the only
+  reason anything is ever scheduled is that the moment it is owed for is in the
+  future and inside the window — so a caller must not be able to claim it is
+  scheduling for a waking hour.
+- `LightsOutRule.nextWindowStart(after:schedule:calendar:)`, the forward twin of
+  `mostRecentWindowStart`. Same two-candidate shape, so the night-shift window
+  that never crosses midnight takes the same path as an ordinary one.
+- `MainScreenModel.notifyLights(_:)`, called from `refresh()` right after
+  `notifyPoop` and before the save.
+- `GameState.withdrawLightsNotice(now:)`.
+
+THE TWO PATHS, AND WHY THE SECOND ONE IS THE STORY
+
+1. IMMEDIATE — this refresh landed inside the window past `notifyGrace` with the
+   light not `.off`. Straight to `notifications.send(.lights, ...)`.
+2. QUEUED — this refresh happened while AWAKE. Tonight's bedtime plus the grace
+   is computable, so it is handed to the system there and then.
+
+Path 2 is not a nicety. The nudge is owed at 22:10, which is close to the least
+likely minute for a watch app to be running; without it a user who leaves the
+light on and puts the watch down after dinner is charged US-101's mistake having
+never been told anything. AC4 is right that the immediate path alone is a
+feature that only works for people who happened to raise their wrist.
+
+THE ONCE-A-NIGHT BOOKKEEPING — read this before touching US-101
+
+`lightNotifiedNight` is stamped by BOTH paths, each with the night it is for,
+and that single stamp is what makes "at most once per night" hold across the two
+mechanisms. The subtle part, which cost the most thought:
+
+- Path 2 is deliberately restricted to `windowStart(containing: now) == nil`
+  (awake), and therefore only ever stamps the night that is NEXT. It never skips
+  ahead. I tried the more general version first — schedule whatever the next
+  nudge deadline is, from anywhere — and it is BROKEN: at 23:30, after tonight's
+  nudge has gone out, it stamps TOMORROW, and then the 23:45 refresh sees
+  `lastNotifiedNight (tomorrow) != night (tonight)` and fires a duplicate for a
+  night already nudged. `shouldNotify` compares for INEQUALITY, so a stamp that
+  runs ahead of the night being asked about reads as "not yet notified". Either
+  keep scheduling to the awake case, or change `shouldNotify` to `>=` — do not
+  do the first half of that without the second.
+- `withdrawLightsNotice(now:)` gives the claim back only when
+  `lightNotifiedNight > now`. That test is exact, not a heuristic: a stamp for a
+  night whose bedtime is still ahead can ONLY have come from path 2, because
+  path 1 stamps the night it is already inside. So future stamp = "queued, never
+  seen" = withdraw it; past stamp = "the user has read it" = the night stays
+  claimed however often the lamp is flicked afterwards. Without the withdrawal,
+  a user who put the light out at 20:00 and turned it back on at 21:00 would
+  never be nudged that night.
+- The stamp is taken whether or not the toggle let the notice through, matching
+  `claimPoopNotification`: the claim is on the NIGHT, not on the delivery.
+
+WHAT WAS OBSERVED, NOT ASSUMED
+
+- Build green, full test suite green (`** TEST SUCCEEDED **`), 1 pre-existing
+  test renamed and 1 widened — see below.
+- Eight new spy-driven tests in `NotificationDeliveryTests`, all seen to run:
+  once inside the window and not again that night; not repeated on a RELAUNCH
+  (the stamp is on disk, not in memory); the next night earns its own; toggle
+  off delivers and queues nothing; a light already out is nudged neither at
+  23:30 nor at 20:00; the 20:00 refresh queues exactly one notice for 22:10 and
+  the 23:30 refresh that follows adds nothing; lights-out cancels and DIMMING
+  DOES NOT; and a queued-then-cancelled notice leaves no claim, so the light
+  going back on at 21:00 re-queues 22:10.
+- AC1's toggle is the one criterion no test could reach, so it was
+  photographed: `-settingsDemo -settingsBottomDemo` on a freshly erased 46mm
+  sim shows "Lights Out / The light left on at bedtime." on, below Mess, its
+  detail on two lines and not truncated.
+
+TRAPS FOR THE NEXT ITERATION
+
+- THE NOTIFICATION PERMISSION ALERT IS STICKY AT THE SYSTEM LEVEL. It survives
+  terminate AND uninstall/reinstall — I lost two screenshots to it, both showing
+  the alert rather than the app, even with `-noNotificationPrompt` (that flag
+  suppresses OUR ask; it cannot dismiss an alert an earlier `xcodebuild test`
+  run already raised). Only `xcrun simctl erase BA425DD4-8856-4933-8198-
+  0E4B89960E48` clears it. progress.txt already said this at line ~345; it is
+  still true.
+- Every fixture in `NotificationDeliveryTests` now seeds `setLight(.off, ...)`
+  and the comment says why: the light defaults to `.on`, `NoteClock.nightTime`
+  is 23:30, and a lit save at 23:30 is genuinely owed a nudge — which lands in
+  the middle of assertions about sickness and death. A NEW seed in that class
+  must do the same or its `spy.kinds` assertions will pick up a stray `.lights`.
+- `NotificationRuleTests.testOnlyTheDeathWarningFiresWhileAsleep` is now
+  `...AndTheLightsNudgeFireWhileAsleep` and expects `[.deathWarning, .lights]`,
+  and the sleep table expects the same pair. Both are guards against a kind
+  getting `firesWhileAsleep` by copy-paste — keep them literal.
+- `refresh()` still does NOT charge for the light. `LightsOutRule
+  .shouldChargeMistake` and `recordLightsLeftOn` are written and unit-tested
+  (US-098) but nothing calls them. That is exactly US-101's job, alongside the
+  existing `auditCareMistakes` call, plus the docs/ table of all five mistakes.
+
+WHAT REMAINS
+
+- US-101 only.

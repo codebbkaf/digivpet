@@ -126,6 +126,31 @@ final class LightsOutWindowTests: XCTestCase {
                                                 schedule: LightClock.night, calendar: calendar),
             LightClock.at("2026-03-11 22:00"))
     }
+
+    /// US-100 AC4's arithmetic: the instant an evening refresh queues tonight's nudge for. Asked
+    /// while awake, which is the only time it is asked at all.
+    func testTheNextWindowIsTonightsBedtimeSeenFromTheAfternoon() {
+        let tonight = LightClock.at("2026-03-11 22:00")
+        for hour in ["2026-03-11 07:00", "2026-03-11 14:00", "2026-03-11 21:59"] {
+            XCTAssertEqual(
+                LightsOutRule.nextWindowStart(after: LightClock.at(hour),
+                                              schedule: LightClock.night, calendar: calendar),
+                tonight, "at \(hour)")
+        }
+    }
+
+    /// The non-wrapping branch of the same question: a 02:00 bedtime already gone by teatime is
+    /// tomorrow's, not today's.
+    func testTheNextWindowRollsToTomorrowOnceTonightsBedtimeHasPassed() {
+        XCTAssertEqual(
+            LightsOutRule.nextWindowStart(after: LightClock.at("2026-03-11 14:00"),
+                                          schedule: LightClock.dayShift, calendar: calendar),
+            LightClock.at("2026-03-12 02:00"))
+        XCTAssertEqual(
+            LightsOutRule.nextWindowStart(after: LightClock.at("2026-03-11 01:00"),
+                                          schedule: LightClock.dayShift, calendar: calendar),
+            LightClock.at("2026-03-11 02:00"), "still ahead today")
+    }
 }
 
 // MARK: - AC4: the nudge
@@ -319,6 +344,28 @@ final class LightGameStateTests: XCTestCase {
 
         state.recordLightsLeftOn(now: LightClock.at("2026-03-11 23:00"), calendar: calendar)
         XCTAssertEqual(state.careMistakeCount, 2, "the next night is its own mistake")
+    }
+
+    /// US-100 AC5, on the claim alone: a nudge only ever QUEUED — its night still ahead — is given
+    /// back when the light goes out, so the same evening can earn a new one. A nudge already
+    /// DELIVERED keeps its claim, which is what holds one night to one nudge however often the
+    /// light is flicked afterwards.
+    func testWithdrawingTheNudgeOnlyGivesBackANightNotYetBegun() {
+        let state = newGame()
+        let tonight = LightClock.at("2026-03-10 22:00")
+
+        state.lightNotifiedNight = tonight
+        state.withdrawLightsNotice(now: LightClock.at("2026-03-10 20:00"))
+        XCTAssertNil(state.lightNotifiedNight, "queued for a bedtime still ahead: never seen")
+
+        state.lightNotifiedNight = tonight
+        state.withdrawLightsNotice(now: LightClock.at("2026-03-10 23:30"))
+        XCTAssertEqual(state.lightNotifiedNight, tonight, "already read: the night stays claimed")
+
+        // Nothing claimed at all is a no-op rather than a crash.
+        state.lightNotifiedNight = nil
+        state.withdrawLightsNotice(now: LightClock.at("2026-03-10 23:30"))
+        XCTAssertNil(state.lightNotifiedNight)
     }
 
     /// The counter every other mistake feeds, so nothing new has to be plumbed for the evolution

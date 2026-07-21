@@ -309,8 +309,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "NotificationKind.lights (title 'Lights out', firesWhileAsleep true, toggle row observed on the settings screen); MainScreenModel.notifyLights sends immediately inside the window past notifyGrace and otherwise queues tonight's 22:10 nudge through the new PetNotificationDelivering.deliver(_:at:); lightNotifiedNight claims the night for both paths; cycleLight to .off cancels and, if the notice was only queued, gives the night back via withdrawLightsNotice. 8 spy tests."
     },
     {
       "id": "US-101",

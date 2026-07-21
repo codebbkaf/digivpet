@@ -127,6 +127,26 @@ enum LightsOutRule {
         return bedtime(on: yesterday, schedule: schedule, calendar: calendar)
     }
 
+    /// The start of the next sleep window that opens strictly after `now` — tonight's bedtime, seen
+    /// from an afternoon.
+    ///
+    /// The forward twin of `mostRecentWindowStart`, and US-100 AC4 is the whole reason it exists: a
+    /// nudge that can only be posted by a refresh landing inside the window is a nudge a user with
+    /// the app closed all evening never gets, so the evening's refresh has to be able to name the
+    /// instant the nudge falls due and hand it to the system ahead of time.
+    ///
+    /// Only ever asked while the Digimon is awake. The `<=` is what makes a night-shift 02:00–10:00
+    /// window asked at 14:00 answer tomorrow's 02:00 rather than the 02:00 that has already passed.
+    static func nextWindowStart(after now: Date, schedule: SleepSchedule,
+                                calendar: Calendar = .current) -> Date {
+        let today = calendar.startOfDay(for: now)
+        let tonight = bedtime(on: today, schedule: schedule, calendar: calendar)
+        guard tonight <= now else { return tonight }
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: today)
+            ?? today.addingTimeInterval(24 * 60 * 60)
+        return bedtime(on: tomorrow, schedule: schedule, calendar: calendar)
+    }
+
     /// Whether this moment is the one that owes the user a "lights out" nudge.
     ///
     /// Reads the light state as it is NOW rather than as it was at the deadline, unlike
@@ -205,6 +225,24 @@ extension GameState {
         guard state != lightState else { return }
         lightState = state
         lightStateChangedAt = now
+    }
+
+    /// Gives back the once-a-night claim IF the notice it stands for has not gone out yet.
+    ///
+    /// The mirror of `clean()` clearing `poopNotified`: US-100 AC5 says putting the light out
+    /// withdraws the nudge, and a claim left standing for a notice that was cancelled before it ever
+    /// appeared would swallow the one this night still might owe — the user who puts the light out
+    /// at 20:00 and turns it back on at 21:00 has to be nudged at 22:10 like anyone else.
+    ///
+    /// `night > now` is the whole test, and it is exact rather than approximate: a stamp for a night
+    /// whose bedtime is still ahead can only have come from the scheduling path, because the
+    /// immediate one stamps the night it is already inside. So a stamp in the FUTURE means "queued,
+    /// not yet seen" and a stamp in the past means "the user has read it" — and a notice already
+    /// read stays claimed, which is what keeps one night to one nudge however often the light is
+    /// flicked afterwards.
+    func withdrawLightsNotice(now: Date) {
+        guard let night = lightNotifiedNight, night > now else { return }
+        lightNotifiedNight = nil
     }
 
     /// Charges the mistake for a night spent under the light, at most once per night.

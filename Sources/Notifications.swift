@@ -21,6 +21,10 @@ enum NotificationKind: String, CaseIterable, Identifiable {
     /// The screen has filled with mess. Fires when it FILLS, not while it is full — see
     /// `GameState.claimPoopNotification`.
     case poop
+    /// The light has been left burning over a sleeping Digimon (US-100). The only kind that is ever
+    /// scheduled AHEAD rather than decided by a rule that has just run — see
+    /// `PetNotificationDelivering.deliver(_:at:)`.
+    case lights
 
     var id: String { rawValue }
 
@@ -31,6 +35,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .sickness: return "Sickness"
         case .deathWarning: return "Death Warning"
         case .poop: return "Mess"
+        case .lights: return "Lights Out"
         }
     }
 
@@ -43,17 +48,28 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .sickness: return "When neglect makes it ill."
         case .deathWarning: return "24 hours before it dies."
         case .poop: return "When the screen needs cleaning."
+        case .lights: return "The light left on at bedtime."
         }
     }
 
     /// Whether this kind is still delivered while the Digimon is in its sleep window.
     ///
-    /// FALSE for everything but the death warning, per AC4. The Digimon's sleep window is the
-    /// user's own — it is inferred from when they actually slept (US-026) — so a notification sent
-    /// inside it is a notification sent at 3am. The death warning is the one exception because
-    /// holding it until morning can cost the user the Digimon: the warning already IS the last
-    /// 24 hours, and a night is a third of them.
-    var firesWhileAsleep: Bool { self == .deathWarning }
+    /// FALSE by default, per US-035 AC4. The Digimon's sleep window is the user's own — it is
+    /// inferred from when they actually slept (US-026) — so a notification sent inside it is a
+    /// notification sent at 3am. The two exceptions each earn it:
+    ///
+    /// - The death warning, because holding it until morning can cost the user the Digimon: the
+    ///   warning already IS the last 24 hours, and a night is a third of them.
+    /// - The lights-out nudge (US-100), because the sleep window is the ONLY time it means
+    ///   anything. Ten minutes past bedtime with the light still burning is by definition inside
+    ///   the window, so leaving this false would suppress every one of them, always — the gate
+    ///   would silently delete the feature rather than merely delay it.
+    var firesWhileAsleep: Bool {
+        switch self {
+        case .deathWarning, .lights: return true
+        case .evolution, .sickness, .poop: return false
+        }
+    }
 
     var title: String {
         switch self {
@@ -61,6 +77,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .sickness: return "Your Digimon is sick"
         case .deathWarning: return "Your Digimon is dying"
         case .poop: return "Time to clean up"
+        case .lights: return "Lights out"
         }
     }
 }
@@ -119,6 +136,17 @@ final class NotificationSettings: ObservableObject {
 @MainActor
 protocol PetNotificationDelivering: AnyObject {
     func deliver(_ notification: PetNotification)
+    /// Hands `notification` to the system to deliver at `date` instead of now.
+    ///
+    /// Needed by exactly one kind, and US-100 AC4 is the reason: every other notification is decided
+    /// by a rule that has JUST run, so there is nothing to schedule — but the lights-out nudge is
+    /// owed at an hour the app is least likely to be running. A user who leaves the light on and
+    /// puts the watch down all evening would never be told at all if the notice could only be posted
+    /// by a refresh that happened to land inside the window.
+    ///
+    /// Same identifier as the immediate path, so the two coalesce rather than stack, and so
+    /// `cancel(_:)` withdraws a scheduled notice as readily as a delivered one.
+    func deliver(_ notification: PetNotification, at date: Date)
     /// Asked once, at `MainScreenModel.start()`. Defaulted to nothing, because a test double has
     /// nobody to ask.
     func requestAuthorization()
@@ -134,12 +162,13 @@ extension PetNotificationDelivering {
     func requestAuthorization() {}
 }
 
-/// Delivers through `UNUserNotificationCenter`, immediately (a nil trigger).
+/// Delivers through `UNUserNotificationCenter`.
 ///
-/// Immediate rather than scheduled ahead, because every one of these is decided by a rule that has
+/// Immediate (a nil trigger) for four of the five kinds, because each is decided by a rule that has
 /// just run: the game does not know at 09:00 that it will be ill at 14:00, so there is nothing to
-/// schedule. `requestAuthorization` is fired once at start — an unauthorized `add` fails silently,
-/// so the ask has to precede the first send rather than accompany it.
+/// schedule. The lights-out nudge is the exception and `deliver(_:at:)` is why — see US-100 AC4.
+/// `requestAuthorization` is fired once at start — an unauthorized `add` fails silently, so the ask
+/// has to precede the first send rather than accompany it.
 @MainActor
 final class UserNotificationDeliverer: PetNotificationDelivering {
     private static let log = Logger(subsystem: "com.digivpet.DigiVPet", category: "notifications")
@@ -158,6 +187,27 @@ final class UserNotificationDeliverer: PetNotificationDelivering {
 
     func deliver(_ notification: PetNotification) {
         #if canImport(UserNotifications)
+        post(notification, trigger: nil)
+        #endif
+    }
+
+    /// A `UNTimeIntervalNotificationTrigger` rather than a calendar one, because the instant is
+    /// already an absolute `Date` computed from the user's own sleep window — re-expressing it as
+    /// wall-clock components would only give the system a chance to disagree about which day it
+    /// meant. A date already past fires immediately (the interval floors at one second), which is
+    /// the right answer for a notice that was owed and is late.
+    func deliver(_ notification: PetNotification, at date: Date) {
+        #if canImport(UserNotifications)
+        let delay = max(1, date.timeIntervalSinceNow)
+        post(notification, trigger: UNTimeIntervalNotificationTrigger(timeInterval: delay,
+                                                                      repeats: false))
+        #endif
+    }
+
+    #if canImport(UserNotifications)
+    /// The one path to the system, shared so an immediate and a scheduled notice cannot drift apart
+    /// in identifier, sound or content — which is what makes `cancel(_:)` reach both.
+    private func post(_ notification: PetNotification, trigger: UNNotificationTrigger?) {
         let content = UNMutableNotificationContent()
         content.title = notification.title
         content.body = notification.body
@@ -167,14 +217,14 @@ final class UserNotificationDeliverer: PetNotificationDelivering {
         // sickness notice, not the same one twice.
         let request = UNNotificationRequest(identifier: notification.kind.rawValue,
                                             content: content,
-                                            trigger: nil)
+                                            trigger: trigger)
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
                 Self.log.error("Could not post \(notification.kind.rawValue): \(String(describing: error))")
             }
         }
-        #endif
     }
+    #endif
 
     /// BOTH lists, and both are needed. `deliver` uses a nil trigger, so a notice is normally
     /// already delivered rather than pending by the time anything cancels it — but a notice posted
@@ -222,6 +272,24 @@ final class NotificationDispatcher {
         guard settings.isEnabled(kind) else { return false }
         guard !isAsleep || kind.firesWhileAsleep else { return false }
         deliverer.deliver(PetNotification(kind: kind, title: kind.title, body: body))
+        return true
+    }
+
+    /// Hands `kind` to the system to deliver at `date`, unless the toggle stops it.
+    ///
+    /// The sleep gate is spelled `kind.firesWhileAsleep` rather than an `isAsleep` argument, and the
+    /// difference is that a caller cannot lie about it: the only reason to schedule anything is that
+    /// the moment it is owed for has not arrived yet, and the only such moment in this game is one
+    /// inside the sleep window. So the question `send` asks about NOW is asked here about a kind —
+    /// a kind that would be suppressed on arrival must not be queued to arrive.
+    ///
+    /// - Returns: whether it was handed over, so a caller can stamp its once-a-night marker on the
+    ///   strength of it and a test can assert on it.
+    @discardableResult
+    func schedule(_ kind: NotificationKind, body: String, at date: Date) -> Bool {
+        guard settings.isEnabled(kind) else { return false }
+        guard kind.firesWhileAsleep else { return false }
+        deliverer.deliver(PetNotification(kind: kind, title: kind.title, body: body), at: date)
         return true
     }
 

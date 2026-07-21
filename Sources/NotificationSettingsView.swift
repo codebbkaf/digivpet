@@ -2,9 +2,9 @@ import SwiftUI
 
 /// The settings screen: one switch per kind of notification, all on to begin with (AC3).
 ///
-/// A plain `List` of toggles rather than anything cleverer, because there are exactly three of them
-/// and they are the whole screen. Driven off `NotificationKind.allCases`, so a fourth kind gets its
-/// row for free — and cannot be added without a way to turn it off.
+/// A plain `List` of toggles rather than anything cleverer, because there is a handful of them and
+/// they are the whole screen. Driven off `NotificationKind.allCases`, so a new kind gets its row for
+/// free — and cannot be added without a way to turn it off. US-100's lights-out nudge is the fifth.
 struct NotificationSettingsView: View {
     @ObservedObject var settings: NotificationSettings
 

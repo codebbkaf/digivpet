@@ -842,6 +842,10 @@ final class MainScreenModel: ObservableObject {
         // The count it reads was settled by `advancePoop` above, and the claim it stamps is saved by
         // the same flush that saves that count.
         notifyPoop(state)
+        // After `updateSleepState`, because both halves of it are asked about the sleep window this
+        // refresh has just settled — and before the save, because the once-a-night marker it stamps
+        // is what stops the next refresh sending the same nudge twice.
+        notifyLights(state)
         // The pose is settled again here and not only in `updateSleepState`, because falling sick,
         // being cured or dying all change the resting pose too and are decided after the sleep
         // window.
@@ -1151,6 +1155,15 @@ final class MainScreenModel: ObservableObject {
         // Through `setLight` rather than by assignment, because it is the one thing that keeps the
         // state and the "since when" stamp in step — see `GameState.setLight(_:now:)`.
         state.setLight(state.lightState.next, now: now())
+        // US-100 AC5, and exactly what `clean()` does with the mess notice: the nudge asked for one
+        // thing, that thing has now been done, and a notice still sitting on the wrist — or worse,
+        // one queued to arrive at 22:10 in a room that went dark at 21:00 — is worse than none.
+        // `cancel` reaches the pending request and the delivered one alike; `withdrawLightsNotice`
+        // gives back the claim only if the notice never actually appeared.
+        if state.lightState == .off {
+            state.withdrawLightsNotice(now: now())
+            notifications.cancel(.lights)
+        }
 
         do {
             try store?.save()
@@ -1513,6 +1526,57 @@ final class MainScreenModel: ObservableObject {
         notifications.send(.poop,
                            body: "\(name)'s screen is filthy. Clean it before it gets sick.",
                            isAsleep: isAsleep)
+    }
+
+    /// Tells the user the light is still on over a sleeping Digimon (US-100), at most once a night.
+    ///
+    /// Two paths to the same nudge, and the second is what makes the feature work at all:
+    ///
+    /// 1. **Now**, when this refresh has landed inside the sleep window past `notifyGrace` — the
+    ///    user has the app open at 22:10 and can act on it immediately.
+    /// 2. **Ahead**, when this refresh happens while the Digimon is still awake: the instant the
+    ///    nudge falls due is computable (tonight's bedtime plus the grace) and is handed to the
+    ///    system there and then. Without this a user who leaves the light on and puts the watch
+    ///    down for the evening is never told, because nothing runs to tell them — and being told is
+    ///    the entire difference between US-101's mistake being avoidable and being a surprise.
+    ///
+    /// `lightNotifiedNight` is stamped by BOTH, with the night each is for, so one night can only
+    /// ever produce one of them. That the stamp is taken whether or not the toggle let the notice
+    /// through is the same choice `claimPoopNotification` makes: the claim is on the night, not on
+    /// the delivery, and a user who switches the toggle on at midnight is asking to be nudged
+    /// tomorrow rather than retroactively.
+    ///
+    /// A dead Digimon is not nagged about its lighting, for the reason `notifyPoop` gives.
+    private func notifyLights(_ state: GameState) {
+        guard state.healthStatus != .dead else { return }
+        // Checked here as well as inside `shouldNotify` because it also gates the scheduling half,
+        // which asks a question about tonight rather than about now: a light already out at
+        // teatime has nothing to queue.
+        guard state.lightState != .off else { return }
+        let name = presentation?.displayName ?? "Your Digimon"
+        let body = "\(name) is trying to sleep with the light on. Tap the lamp to turn it out."
+
+        if LightsOutRule.shouldNotify(now: now(), schedule: sleepSchedule,
+                                      lightState: state.lightState,
+                                      lastNotifiedNight: state.lightNotifiedNight,
+                                      calendar: calendar) {
+            state.lightNotifiedNight = LightsOutRule.mostRecentWindowStart(at: now(),
+                                                                          schedule: sleepSchedule,
+                                                                          calendar: calendar)
+            notifications.send(.lights, body: body, isAsleep: isAsleep)
+            return
+        }
+
+        // Only while AWAKE. Inside the window there is nothing left to schedule — either the nudge
+        // was owed and has just gone out above, or this night has already had its one.
+        guard LightsOutRule.windowStart(containing: now(), schedule: sleepSchedule,
+                                        calendar: calendar) == nil else { return }
+        let night = LightsOutRule.nextWindowStart(after: now(), schedule: sleepSchedule,
+                                                  calendar: calendar)
+        guard state.lightNotifiedNight != night else { return }
+        state.lightNotifiedNight = night
+        notifications.schedule(.lights, body: body,
+                               at: night.addingTimeInterval(LightsOutRule.notifyGrace))
     }
 
     /// Moves the saved game onto `next`, the one reset a hatch and an evolution both perform: the

@@ -54,9 +54,17 @@ private final class SpyDeliverer: PetNotificationDelivering {
     /// What was withdrawn, in order. Kept separate from `delivered` rather than removing from it,
     /// so a test can tell "sent then cancelled" from "never sent" — US-054 AC5 is about the first.
     private(set) var cancelled: [NotificationKind] = []
+    /// What was handed over to be delivered LATER, with the instant asked for. Kept apart from
+    /// `delivered` because US-100 AC4 turns on the difference: a notice queued for 22:10 and a
+    /// notice posted now are the same content and completely different behaviour.
+    private(set) var scheduled: [(notification: PetNotification, date: Date)] = []
 
     func deliver(_ notification: PetNotification) {
         delivered.append(notification)
+    }
+
+    func deliver(_ notification: PetNotification, at date: Date) {
+        scheduled.append((notification, date))
     }
 
     func cancel(_ kind: NotificationKind) {
@@ -114,11 +122,12 @@ final class NotificationRuleTests: XCTestCase {
         XCTAssertEqual(spy.kinds, [.evolution])
     }
 
-    /// AC4 AND AC5, as one table: asleep suppresses evolution and sickness but NOT the death
-    /// warning, and awake delivers all three. The awake column is the control — without it a
-    /// dispatcher that suppressed everything always would pass the sleep half.
+    /// AC4 AND AC5, as one table: asleep suppresses evolution, sickness and the mess but NOT the
+    /// death warning or the lights-out nudge, and awake delivers all five. The awake column is the
+    /// control — without it a dispatcher that suppressed everything always would pass the sleep half.
     func testSleepSuppressesEverythingExceptTheDeathWarning() {
-        for (isAsleep, expected) in [(false, NotificationKind.allCases), (true, [.deathWarning])] {
+        for (isAsleep, expected) in [(false, NotificationKind.allCases),
+                                     (true, [.deathWarning, .lights])] {
             let spy = SpyDeliverer()
             let dispatcher = NotificationDispatcher(settings: isolatedSettings(), deliverer: spy)
 
@@ -130,10 +139,12 @@ final class NotificationRuleTests: XCTestCase {
         }
     }
 
-    /// The exception is pinned to the death warning specifically, so a later kind added with
-    /// `firesWhileAsleep` true has to be a deliberate act rather than a copied default.
-    func testOnlyTheDeathWarningFiresWhileAsleep() {
-        XCTAssertEqual(NotificationKind.allCases.filter(\.firesWhileAsleep), [.deathWarning])
+    /// The exceptions are pinned by name, so a later kind added with `firesWhileAsleep` true has to
+    /// be a deliberate act rather than a copied default. Two of them now: US-100 AC1 adds the
+    /// lights-out nudge, which is the one notice that ONLY makes sense inside the sleep window.
+    func testOnlyTheDeathWarningAndTheLightsNudgeFireWhileAsleep() {
+        XCTAssertEqual(NotificationKind.allCases.filter(\.firesWhileAsleep),
+                       [.deathWarning, .lights])
     }
 }
 
@@ -288,6 +299,11 @@ final class NotificationDeliveryTests: XCTestCase {
         state.stageEnergy = EnergyTotals(strength: 50, vitality: 0, spirit: 0, stamina: 0)
         state.healthDataLastSeen = now
         state.hungerUpdatedAt = now
+        // Lights out since yesterday, so US-100's nudge has nothing to add to any of these:
+        // the light defaults to `.on`, and a game seeded at 23:30 under a burning light is
+        // genuinely owed a lights-out notice that would land in the middle of assertions
+        // about sickness and death. The lights suite below seeds the light deliberately.
+        state.setLight(.off, now: now.addingTimeInterval(-24 * NoteClock.hour))
         try store.save()
     }
 
@@ -305,6 +321,11 @@ final class NotificationDeliveryTests: XCTestCase {
         state.careMistakeCount = Sickness.careMistakesUntilSick
         state.healthDataLastSeen = now
         state.hungerUpdatedAt = now
+        // Lights out since yesterday, so US-100's nudge has nothing to add to any of these:
+        // the light defaults to `.on`, and a game seeded at 23:30 under a burning light is
+        // genuinely owed a lights-out notice that would land in the middle of assertions
+        // about sickness and death. The lights suite below seeds the light deliberately.
+        state.setLight(.off, now: now.addingTimeInterval(-24 * NoteClock.hour))
         try store.save()
     }
 
@@ -322,6 +343,11 @@ final class NotificationDeliveryTests: XCTestCase {
         state.sickSince = now.addingTimeInterval(-hoursSick * NoteClock.hour)
         state.healthDataLastSeen = now
         state.hungerUpdatedAt = now
+        // Lights out since yesterday, so US-100's nudge has nothing to add to any of these:
+        // the light defaults to `.on`, and a game seeded at 23:30 under a burning light is
+        // genuinely owed a lights-out notice that would land in the middle of assertions
+        // about sickness and death. The lights suite below seeds the light deliberately.
+        state.setLight(.off, now: now.addingTimeInterval(-24 * NoteClock.hour))
         try store.save()
     }
 
@@ -482,6 +508,8 @@ final class NotificationDeliveryTests: XCTestCase {
         state.hungerUpdatedAt = now
         state.poopCount = 0
         state.poopUpdatedAt = now.addingTimeInterval(-hoursOfMess * NoteClock.hour)
+        // Lights out, for the reason the seeds above give.
+        state.setLight(.off, now: now.addingTimeInterval(-24 * NoteClock.hour))
         try store.save()
     }
 
@@ -610,6 +638,242 @@ final class NotificationDeliveryTests: XCTestCase {
 
         XCTAssertEqual(model.poopCount, PoopClock.maximumPoops, "the control: it filled again")
         XCTAssertEqual(spy.kinds, [.poop, .poop], "a second mess is a second notice")
+    }
+
+    // MARK: US-100 — the lights-out nudge
+
+    /// A model over a MOVING clock, which the fixed-`now` `makeModel` above cannot give: every
+    /// "once per night" assertion below is two refreshes at two different hours of the same night.
+    private func makeModel(url: URL, clock: @escaping () -> Date, spy: SpyDeliverer,
+                           settings: NotificationSettings) -> MainScreenModel {
+        MainScreenModel(
+            makeStore: { try GameStore(url: url) },
+            graph: fixtureGraph(),
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: EmptySampleFetcher(),
+                                               calendar: NoteClock.calendar),
+                sleepReader: LastNightSleepReader(fetcher: EmptySleepFetcher(),
+                                                  calendar: NoteClock.calendar)
+            ),
+            calendar: NoteClock.calendar,
+            now: clock,
+            chooseStartingDigitama: { $0.first },
+            actionDuration: 0.05,
+            notificationSettings: settings,
+            notificationDeliverer: spy
+        )
+    }
+
+    /// A healthy `hero` with every care marker stamped at `now`, so the only thing a refresh over it
+    /// can have to say is about the light — which is put into `light` as of six hours ago, i.e. well
+    /// before any bedtime these tests use.
+    private func seedLitGame(url: URL, now: Date, light: LightState = .on) throws {
+        let store = try GameStore(url: url)
+        let state = try store.loadOrCreate(digitamaId: "egg", now: now)
+        state.currentDigimonId = "hero"
+        state.stage = .babyI
+        state.birthDate = now.addingTimeInterval(-6 * 24 * NoteClock.hour)
+        state.stageEnteredDate = now.addingTimeInterval(-6 * 24 * NoteClock.hour)
+        state.healthDataLastSeen = now
+        state.hungerUpdatedAt = now
+        state.poopUpdatedAt = now
+        state.setLight(light, now: now.addingTimeInterval(-6 * NoteClock.hour))
+        try store.save()
+    }
+
+    /// AC1 and AC3: a refresh landing inside the sleep window past the ten-minute grace, with the
+    /// light still on, nudges — with the title AC1 names and a body naming the Digimon — and the
+    /// sleep gate does NOT eat it, which is the whole point of `firesWhileAsleep`.
+    ///
+    /// AC2's second half in the same test: an hour later, the same night, the same lit room says
+    /// nothing more.
+    func testTheNudgeIsSentOnceInsideTheWindowAndNotAgainThatNight() async throws {
+        let url = storeURL("LightsOnce")
+        try seedLitGame(url: url, now: NoteClock.nightTime)
+        let spy = SpyDeliverer()
+        var currentTime = NoteClock.nightTime
+        let model = makeModel(url: url, clock: { currentTime }, spy: spy,
+                              settings: isolatedSettings())
+
+        await model.start()
+
+        XCTAssertTrue(model.isAsleep, "the control: 23:30 is inside the fallback sleep window")
+        XCTAssertEqual(spy.kinds, [.lights])
+        XCTAssertEqual(spy.delivered.first?.title, "Lights out")
+        XCTAssertEqual(spy.delivered.first?.body,
+                       "Hero is trying to sleep with the light on. Tap the lamp to turn it out.")
+
+        // 00:30 — past midnight but the SAME night, which is the case a local-day key would get
+        // wrong and `mostRecentWindowStart` gets right.
+        currentTime = NoteClock.nightTime.addingTimeInterval(NoteClock.hour)
+        await model.refresh()
+
+        XCTAssertEqual(spy.kinds, [.lights], "one night, one nudge")
+    }
+
+    /// AC2's hardest half: `lightNotifiedNight` is SAVED, so a relaunch onto the same lit night does
+    /// not nudge a second time. An in-memory flag passes the test above and fails this one.
+    func testTheNudgeIsNotRepeatedOnTheNextLaunch() async throws {
+        let url = storeURL("LightsRelaunch")
+        try seedLitGame(url: url, now: NoteClock.nightTime)
+
+        let firstSpy = SpyDeliverer()
+        let first = makeModel(url: url, now: NoteClock.nightTime, spy: firstSpy,
+                              settings: isolatedSettings())
+        await first.start()
+        XCTAssertEqual(firstSpy.kinds, [.lights])
+
+        let laterSpy = SpyDeliverer()
+        let later = makeModel(url: url, now: NoteClock.nightTime.addingTimeInterval(NoteClock.hour),
+                              spy: laterSpy, settings: isolatedSettings())
+        await later.start()
+
+        XCTAssertEqual(later.lightState, .on, "the control: the light is still on")
+        XCTAssertEqual(laterSpy.delivered, [], "the claim survived the relaunch")
+    }
+
+    /// The control for "once per NIGHT" rather than "once ever": the next night's refresh over the
+    /// same still-lit save nudges afresh.
+    func testTheNextNightEarnsItsOwnNudge() async throws {
+        let url = storeURL("LightsSecondNight")
+        try seedLitGame(url: url, now: NoteClock.nightTime)
+
+        let firstSpy = SpyDeliverer()
+        let first = makeModel(url: url, now: NoteClock.nightTime, spy: firstSpy,
+                              settings: isolatedSettings())
+        await first.start()
+        XCTAssertEqual(firstSpy.kinds, [.lights])
+
+        let nextSpy = SpyDeliverer()
+        let next = makeModel(url: url, now: NoteClock.at("2026-03-11 23:30"), spy: nextSpy,
+                             settings: isolatedSettings())
+        await next.start()
+
+        XCTAssertEqual(nextSpy.kinds, [.lights], "a second night is a second nudge")
+    }
+
+    /// AC6: with the Lights Out toggle off, the same lit night says nothing at all.
+    func testTheNudgeIsSuppressedWhenTheToggleIsOff() async throws {
+        let url = storeURL("LightsMuted")
+        try seedLitGame(url: url, now: NoteClock.nightTime)
+        let spy = SpyDeliverer()
+        let settings = isolatedSettings()
+        settings.setEnabled(false, for: .lights)
+        let model = makeModel(url: url, now: NoteClock.nightTime, spy: spy, settings: settings)
+
+        await model.start()
+
+        XCTAssertTrue(model.isAsleep, "the control: it was inside the window")
+        XCTAssertEqual(spy.delivered, [])
+        XCTAssertEqual(spy.scheduled.count, 0)
+    }
+
+    /// AC6's last clause: a room that was already dark at bedtime is nudged about nothing, awake or
+    /// asleep. Without this every other test here would pass under "nudge every night".
+    func testALightAlreadyOutIsNeverNudged() async throws {
+        let nightURL = storeURL("LightsAlreadyOut")
+        try seedLitGame(url: nightURL, now: NoteClock.nightTime, light: .off)
+        let nightSpy = SpyDeliverer()
+        let atNight = makeModel(url: nightURL, now: NoteClock.nightTime, spy: nightSpy,
+                                settings: isolatedSettings())
+        await atNight.start()
+
+        XCTAssertEqual(atNight.lightState, .off, "the control: it really is out")
+        XCTAssertEqual(nightSpy.delivered, [])
+
+        let eveningURL = storeURL("LightsOutBeforeBed")
+        let evening = NoteClock.at("2026-03-10 20:00")
+        try seedLitGame(url: eveningURL, now: evening, light: .off)
+        let eveningSpy = SpyDeliverer()
+        let beforeBed = makeModel(url: eveningURL, now: evening, spy: eveningSpy,
+                                  settings: isolatedSettings())
+        await beforeBed.start()
+
+        XCTAssertEqual(eveningSpy.delivered, [])
+        XCTAssertEqual(eveningSpy.scheduled.count, 0, "and nothing is queued for tonight either")
+    }
+
+    /// AC4: a refresh at 20:00 — before bedtime, app about to be put down for the evening — hands
+    /// the system a notice for 22:10 rather than saying nothing. This is the path that covers a user
+    /// whose watch never wakes inside the window at all.
+    ///
+    /// And the queued notice claims the night: the 23:30 refresh that follows it adds nothing.
+    func testAnEveningRefreshQueuesTonightsNudgeAhead() async throws {
+        let url = storeURL("LightsQueued")
+        let evening = NoteClock.at("2026-03-10 20:00")
+        try seedLitGame(url: url, now: evening)
+        let spy = SpyDeliverer()
+        var currentTime = evening
+        let model = makeModel(url: url, clock: { currentTime }, spy: spy,
+                              settings: isolatedSettings())
+
+        await model.start()
+
+        XCTAssertFalse(model.isAsleep, "the control: 20:00 is before bedtime")
+        XCTAssertEqual(spy.delivered, [], "nothing is owed yet, so nothing is posted now")
+        XCTAssertEqual(spy.scheduled.count, 1)
+        XCTAssertEqual(spy.scheduled.first?.notification.kind, .lights)
+        XCTAssertEqual(spy.scheduled.first?.notification.title, "Lights out")
+        XCTAssertEqual(spy.scheduled.first?.date, NoteClock.at("2026-03-10 22:10"),
+                       "bedtime plus the ten-minute grace")
+
+        currentTime = NoteClock.nightTime
+        await model.refresh()
+
+        XCTAssertEqual(spy.delivered, [], "the queued notice WAS tonight's one")
+        XCTAssertEqual(spy.scheduled.count, 1, "and it is not queued twice")
+    }
+
+    /// AC5: putting the light out withdraws the notice, exactly as cleaning withdraws the mess
+    /// notice — and DIMMING does not, because `semi` is still a light left on.
+    func testLightsOutCancelsTheNudgeAndDimmingDoesNot() async throws {
+        let url = storeURL("LightsCancelled")
+        try seedLitGame(url: url, now: NoteClock.nightTime)
+        let spy = SpyDeliverer()
+        let model = makeModel(url: url, now: NoteClock.nightTime, spy: spy,
+                              settings: isolatedSettings())
+
+        await model.start()
+        XCTAssertEqual(spy.kinds, [.lights])
+        XCTAssertEqual(spy.cancelled, [], "nothing is withdrawn before the light goes out")
+
+        XCTAssertEqual(model.cycleLight(), .semi)
+        XCTAssertEqual(spy.cancelled, [], "dimming is not lights out")
+
+        XCTAssertEqual(model.cycleLight(), .off)
+        XCTAssertEqual(spy.cancelled, [.lights])
+    }
+
+    /// AC5's other half, and the reason `withdrawLightsNotice` exists: a notice that was only ever
+    /// QUEUED is withdrawn claim and all, so the evening is free to earn a new one if the light goes
+    /// back on. A delivered notice keeps its claim — that is the test above, where the stamp is for
+    /// a night already under way.
+    func testPuttingTheLightOutBeforeBedtimeGivesTheNightBack() async throws {
+        let url = storeURL("LightsQueuedThenOut")
+        let evening = NoteClock.at("2026-03-10 20:00")
+        try seedLitGame(url: url, now: evening)
+        let spy = SpyDeliverer()
+        var currentTime = evening
+        let model = makeModel(url: url, clock: { currentTime }, spy: spy,
+                              settings: isolatedSettings())
+
+        await model.start()
+        XCTAssertEqual(spy.scheduled.count, 1)
+        XCTAssertNotNil(model.state?.lightNotifiedNight)
+
+        model.cycleLight()                      // on -> semi
+        XCTAssertEqual(model.cycleLight(), .off)
+
+        XCTAssertEqual(spy.cancelled, [.lights])
+        XCTAssertNil(model.state?.lightNotifiedNight, "a notice never seen leaves no claim")
+
+        // The light back on at 21:00, and the evening's next refresh queues tonight's nudge again.
+        currentTime = NoteClock.at("2026-03-10 21:00")
+        XCTAssertEqual(model.cycleLight(), .on)
+        await model.refresh()
+
+        XCTAssertEqual(spy.scheduled.count, 2)
+        XCTAssertEqual(spy.scheduled.last?.date, NoteClock.at("2026-03-10 22:10"))
     }
 }
 
