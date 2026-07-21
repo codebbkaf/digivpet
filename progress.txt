@@ -126,6 +126,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `grep -rcE '^\s+func test' Tests/*.swift`; if it is short, grep the log for `Fatal error` and
   `Restarting after unexpected exit`. A trailing `simctl` diagnostics error on its own is
   environmental and does NOT mean a test failed — read the Executed line.
+- **When a story splits "the machinery" from "the data" (US-130/US-131 for Jogress, and every one of
+  Phase E's authoring stories), the machinery story's "validator reports zero findings over the
+  shipped file" test is VACUOUS — say so, and buy back what it cannot prove.** An empty
+  `{"recipes": []}` exercises no field name, so a typo in a key survives the story and surfaces as a
+  `fatalError` at launch in the next one (every `bundled` here traps by design). Two cheap fixes,
+  both used in US-130: decode a LITERAL in the authored shape through the real `JSONDecoder`, and
+  leave an explicit `...UntilUS1NN` marker test that FAILS the day the data lands, so the next
+  iteration is told rather than having to notice.
+- **Update `prd.json` with `python3` + `json.load`/`json.dump(..., indent=2, ensure_ascii=False)`,
+  then re-add the trailing newline.** It round-trips the existing formatting exactly — the diff for
+  a `passes`/`notes` update is 2 lines — so a 1,000-line JSON file never has to be hand-edited.
+  Check with `git diff --stat prd.json` before committing.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -1290,4 +1302,74 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     would be hidden under it and then name an egg a rebirth had already deleted.
 - REMAINS: US-130 onward (16/56 passing). Phase C is COMPLETE. Phase D (Jogress, US-130..132) is next,
   and US-132 must call `MainScreenModel.checkForStranding()` after it consumes its two parents.
+---
+
+## 2026-07-22 — US-130: Jogress data file, model and validator
+- `Sources/JogressCatalog.swift` (new): `JogressPair` (the two parents as ONE unordered,
+  canonicalised value), `JogressRecipe` (parentA, parentB, result, conditions: [EvolutionCondition]),
+  `JogressCatalog` (recipes + a private `byPair` index, `recipe(for:and:)`, `recipes(involving:)`,
+  `load(from:)`, fatalError-on-bad-data `bundled`) — the `MapCatalog`/`Roster` shape throughout.
+- `Sources/JogressCatalogValidator.swift` (new): `JogressValidationError` (9 cases) +
+  `JogressCatalog.validate(roster:)`, returning findings in file order with the duplicate pairs
+  last, never throwing — the `MapCatalogValidator` shape.
+- `Resources/jogress.json` (new): `{"recipes": []}`. **Deliberately empty — authoring the recipes
+  IS US-131.**
+- Files: Sources/JogressCatalog.swift (new), Sources/JogressCatalogValidator.swift (new),
+  Resources/jogress.json (new), Tests/JogressCatalogTests.swift (new, 12 tests),
+  Tests/JogressCatalogValidatorTests.swift (new, 20 tests). `xcodegen generate` for the new files;
+  no `project.yml` change was needed and none was made — `Resources` is already a folder reference,
+  and the file was confirmed in the built app at `DigiVPet.app/jogress.json`.
+- PASSED: build green. `Executed 1655 tests, with 0 failures` (1623 + 32 new), `** TEST SUCCEEDED **`.
+  The 32 new were also observed passing on their own with `-only-testing`, grepped not inferred.
+- PASSED, criterion by criterion:
+  - AC1: the file, the two types and the four fields, decoded through the real path.
+  - AC2: asserted four ways — the pair's equality AND hash, lookup in both directions, lookup
+    against a catalog that authored the pair the OTHER way round, and `recipes(involving:)` finding
+    a parent on either side of the file.
+  - AC3/AC4: every rule fired on a hand-built fixture — each the sound one-recipe catalog with
+    exactly one thing broken, so a reported error can only be the break. `unknownParent`,
+    `unknownResult`, `dexOnlyParent`, `dexOnlyResult`, `sameParents`, `resultBelowParent` and
+    `duplicatePair` (twice; in both orders; three times reported ONCE with count 3; and two pairs
+    sharing a parent NOT flagged). A control test asserts the sound catalog reports `[]`.
+  - AC5: `JogressCatalog.load().validate()` over the shipped file, against the REAL roster —
+    zero findings. **Vacuous today, see below.**
+- **HONEST NOTE ON AC5.** The shipped file holds no recipes, so "zero findings over the shipped
+  file" is literally true and currently proves nothing about authored data — the fixtures are what
+  prove the validator works. The test's own doc comment says so rather than leaving a later reader
+  to infer it. Two things were done so the emptiness cannot hurt US-131:
+  `testTheShippedFileHoldsNoRecipesUntilUS131` is an explicit marker that FAILS the day recipes land
+  (delete it then), and `testARecipeDecodesFromTheShippedShape` runs a literal in the authored shape
+  through the real `JSONDecoder`, so a renamed key is a failing test rather than the launch trap
+  `JogressCatalog.bundled` would otherwise become on US-131's first recipe. A companion test also
+  proves the real roster behind AC5 is a check at all (three invented ids → three findings), so the
+  zero cannot be a stub saying yes to everything.
+- **Learnings for future iterations:**
+  - **Canonicalise an unordered key in the TYPE, not at the call sites.** `JogressPair` sorts its two
+    ids on construction, which makes "A+B and B+A are the same recipe" a property nothing can forget
+    — and it collapses the PRD's two separate rejection rules ("lists both A+B and B+A" and "a
+    duplicate parent pair") into ONE finding, because by construction they are the same key. There
+    is no `reversedPair` rule to write, and therefore none to get wrong. Both are still tested
+    separately, since the ACs name them separately.
+  - **The ladder rule for a fusion is `<`, never `<=`.** This roster files WarGreymon, MetalGarurumon
+    AND Omegamon at `Stage.ultimate` (the sprite folder is "Ultimate-Super Ultimate", holding both
+    Ultimate and Ultra), so a Jogress result is normally LEVEL with its parents. An accidental `<=`
+    would reject every real recipe US-131 is about to author while the fixture suite stayed green —
+    which is why the equal case is pinned as SOUND from both directions, not just left untested.
+  - **An empty shipped data file makes its own "zero findings" test vacuous, and a decode test over
+    a LITERAL in the shipped shape is the cheap fix.** `{"recipes": []}` exercises no field name at
+    all, so a typo in `parentA` would survive this story and surface as a `fatalError` at launch in
+    the next one (`bundled` traps by design). One literal decoded through the real decoder closes it.
+    Worth copying whenever a story splits "the machinery" from "the data".
+  - **Collect a condition's OWN faults before the roster lookup.** Third validator in a row to want
+    this (`EvolutionGraphValidator` for edges, `MapCatalogValidator` for slots, now recipes): a blank
+    hint or a typo'd metric is wrong whatever the ids resolve to, and reporting it only after the id
+    resolves means the author fixes the id, re-runs, and meets a second error they could have fixed
+    in the same pass.
+  - **`python3` + `json.load`/`json.dump(indent=2)` round-trips `prd.json` with a 2-line diff.** The
+    file's existing formatting survives exactly, so updating a story's `passes`/`notes` needs no
+    hand-editing of a 1000-line JSON file and no risk of breaking it. Add the trailing newline back.
+- REMAINS: US-131 onward (17/56 passing). US-131 authors the recipes into the empty
+  `Resources/jogress.json` and must delete `testTheShippedFileHoldsNoRecipesUntilUS131`; the
+  validator is ready for it. US-132 then consumes `recipes(involving:)` + `recipe(for:and:)` and
+  must call `MainScreenModel.checkForStranding()` after it consumes its two parents (US-129).
 ---
