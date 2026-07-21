@@ -538,7 +538,12 @@ struct DexDetailView: View {
 ///
 /// The level is carried by a SYMBOL rather than by a number or a bar, because a bar has a length
 /// and a length is a percentage read off with a ruler. A symbol has three states and no more.
-private struct ConditionHintRow: View {
+///
+/// Not `private` since US-121: the map detail draws a Digitama slot's criteria with THIS row rather
+/// than a copy of it, which is the strongest available form of that story's "identical wording to
+/// the Dex's evolution hints" — a second implementation could drift a word or a threshold, and the
+/// player would be reading two different promises about the same `ConditionReveal` output.
+struct ConditionHintRow: View {
     let condition: EvolutionCondition
     let context: ConditionContext
 

@@ -170,13 +170,23 @@ final class MainScreenModel: ObservableObject {
     /// `-mapDemo=<asset>` still overrides it, which is how US-115's screenshots were taken.
     @Published private(set) var selectedMapAsset: String?
 
+    /// Every Digimon the player has ever raised, by id — the Dex, as a set (US-121).
+    ///
+    /// "Has ever owned" is the question the map detail asks before it draws a Digitama's name, and
+    /// the Dex is the record of it the game already keeps: it is written the moment an egg is
+    /// handed over or hatched, and it survives death and rebirth, which is exactly the span the
+    /// story means by "owns or has owned".
+    @Published private(set) var discoveredDigimonIds: Set<String> = []
+
     private let makeStore: @MainActor () throws -> GameStore
     private let graph: EvolutionGraph
-    /// Consulted for one thing only: the stage of a Digimon the graph has no node for, when picking
-    /// its minigame (US-082). Unreachable from here in practice — a saved id with no node draws
-    /// `SavedGameUnavailableView` and never shows a Train button — but the full lookup is what
-    /// `MinigameAssignment` offers and half of it is not worth the saving. Injected alongside `graph`
-    /// so a test on a fixture graph can hand over a matching fixture roster.
+    /// Consulted for two things. The stage of a Digimon the graph has no node for, when picking its
+    /// minigame (US-082) — unreachable from here in practice, since a saved id with no node draws
+    /// `SavedGameUnavailableView` and never shows a Train button, but the full lookup is what
+    /// `MinigameAssignment` offers and half of it is not worth the saving. And, since US-121, the
+    /// name, stage and art of a map's opponents and Digitama, which are roster ids and have no graph
+    /// node at all for the most part. Injected alongside `graph` so a test on a fixture graph can
+    /// hand over a matching fixture roster.
     private let roster: Roster
     /// The sixteen adventure maps. Injected alongside `graph` and `roster` for the same reason: a
     /// test drives step accrual against a two-map fixture catalog rather than against whatever
@@ -347,6 +357,10 @@ final class MainScreenModel: ObservableObject {
                 self.ledger = try store.loadOrCreateLedger(now: now(), calendar: calendar)
                 self.metricLedger = try store.loadOrCreateMetricLedger(now: now(), calendar: calendar)
                 self.mapProgress = try store.loadOrCreateMapProgress()
+                // The Dex read once at open rather than on every redraw of the map detail: it is a
+                // fetch of every entry, the screen that asks is drawn inside a `body`, and the set
+                // only ever grows — `advance` inserts into it as it records.
+                self.discoveredDigimonIds = Set((try? store.dexIds()) ?? [])
                 self.store = store
                 publishSelectedMap()
                 self.phase = .playing
@@ -1099,6 +1113,87 @@ final class MainScreenModel: ObservableObject {
     var mapStrip: MapStrip? {
         MapStrip.make(in: maps, progress: mapProgress)
     }
+
+    /// What one map's detail screen draws (US-121), or nil if the map is locked — which is what
+    /// "a locked map has no reachable detail view" means at the seam the view pushes from.
+    ///
+    /// A function of the row rather than of an id, because the lock is a fact about the row and
+    /// `MapDetail.make` reads it rather than deciding it a second way.
+    func mapDetail(for row: MapListRow) -> MapDetail? {
+        MapDetail.make(for: row, in: maps, roster: roster,
+                       discovered: mapDetailDiscoveries, context: mapDetailContext)
+    }
+
+    /// The ids a map detail treats as met. The Dex, plus whatever `-mapDetailDemo` pretends to.
+    private var mapDetailDiscoveries: Set<String> {
+        #if DEBUG
+        return discoveredDigimonIds.union(Self.mapDetailDemoDiscoveries)
+        #else
+        return discoveredDigimonIds
+        #endif
+    }
+
+    /// The counters a map detail's hints are warmed against: the same `ConditionContext` an
+    /// evolution is judged on, off the same saved state, so a hint on this screen and the branch it
+    /// describes can never disagree about how far along the player is.
+    ///
+    /// `.unknown` before `start()` has a save — every condition then reads as unearned, which is
+    /// the honest answer for a game that has not begun.
+    private var mapDetailContext: ConditionContext {
+        #if DEBUG
+        if let demo = Self.mapDetailDemoContext { return demo }
+        #endif
+        guard let state else { return .unknown }
+        return ConditionContext(state: state, now: now(), calendar: calendar)
+    }
+
+    #if DEBUG
+    /// Whether any of US-121's three screenshot flags is present. `-mapDetailSlotsDemo` and
+    /// `-mapDetailFoesDemo` are `-mapDetailDemo` scrolled to the eggs and to the pool — same
+    /// screen, same seeding, a different scroll position — so the two below must answer to all
+    /// three, or a scrolled shot is a photograph of an unseeded screen.
+    private static var isMapDetailDemo: Bool {
+        let arguments = CommandLine.arguments
+        return arguments.contains("-mapDetailDemo")
+            || arguments.contains("-mapDetailSlotsDemo")
+            || arguments.contains("-mapDetailFoesDemo")
+    }
+
+    /// Debug-only: the part-met totals `-mapDetailDemo` draws the Digitama hints against, or nil
+    /// when the flag is absent.
+    ///
+    /// The Simulator has no HealthKit data at all, so a real game there earns nothing and every
+    /// slot on the screen would read `far` — which is a photograph of one third of the story. This
+    /// puts 2,100 steps on the best day of the stage, which clears `01_grassland`'s Patamon slot
+    /// (`health.steps day atLeast 2000`) and so marks it READY, while its Palmon slot
+    /// (`care.battleCount stage atLeast 1`) stays unearned and its Agumon slot is revealed by the
+    /// starting egg's own Dex entry. One screenshot, all three states.
+    ///
+    /// A context literal rather than seeded state, so it cannot write a fake game to the store —
+    /// the same discipline, and the same reason, as `DexModel.revealDemoContext`.
+    private static var mapDetailDemoContext: ConditionContext? {
+        guard isMapDetailDemo else { return nil }
+        return ConditionContext(bestDayThisStage: MetricTotals(values: [
+            ConditionMetric.healthSteps.rawValue: 2_100,
+        ]))
+    }
+
+    /// Debug-only: the Digitama `-mapDetailDemo` pretends the player has raised, so the screenshot
+    /// has a REVEALED slot beside its two withheld ones.
+    ///
+    /// A brand-new save discovers exactly one Digitama — the egg it was handed — and which one is
+    /// RANDOM among the graph's six, of which only three live in the starting map. So a fresh
+    /// install shows a revealed slot about half the time, which is no good for a photograph that
+    /// has to show the mix every time.
+    ///
+    /// Unioned into the read rather than written to the Dex, and for the reason
+    /// `mapDetailDemoContext` is a literal: a flag that seeds the store leaves the container
+    /// poisoned for every screenshot taken on it afterwards, which US-119 learned the expensive way.
+    /// Nothing here reaches disk, so there is nothing to undo.
+    private static var mapDetailDemoDiscoveries: Set<String> {
+        isMapDetailDemo ? ["agu_digitama"] : []
+    }
+    #endif
 
     /// Republishes the background asset from the saved selection. The one place the two are joined.
     private func publishSelectedMap() {
@@ -1930,6 +2025,9 @@ final class MainScreenModel: ObservableObject {
         // together — see `GameState.enterStage(at:)`, which owns the list.
         state.enterStage(at: now())
         store?.recordDiscovery(id: next.id, now: now())
+        // Kept in step with the store rather than re-fetched, so US-121's map detail reveals a
+        // Digitama the moment it is hatched from rather than at the next launch.
+        discoveredDigimonIds.insert(next.id)
         // A transition the screen has not celebrated yet. Both forms are drawn from the graph, so a
         // missing node (a save whose id the roster dropped) simply skips the ceremony rather than
         // showing half of one.

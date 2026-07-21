@@ -17,6 +17,11 @@ struct ContentView: View {
     /// it yet — the strip that will is US-120 — and because `simctl` could not tap it if it did.
     @State private var showsMapListDemo = CommandLine.arguments.contains("-mapListDemo")
         || CommandLine.arguments.contains("-mapListPartialDemo")
+    /// US-121's map detail. Same reason as the list above, one level deeper: the detail is what a
+    /// tap on a row opens, and `simctl` cannot tap a row.
+    @State private var showsMapDetailDemo = CommandLine.arguments.contains("-mapDetailDemo")
+        || CommandLine.arguments.contains("-mapDetailSlotsDemo")
+        || CommandLine.arguments.contains("-mapDetailFoesDemo")
     /// US-076's timing bar, in isolation from whichever game Train actually opens. `-timingBarDemo`
     /// shows it sweeping; `-timingBarResultDemo` shows a decided round, since `simctl` cannot tap
     /// the marker to decide one.
@@ -328,7 +333,19 @@ struct ContentView: View {
             // destination, back button and all, and not a preview of it. US-120's strip is what
             // will push it with a tap.
             .navigationDestination(isPresented: $showsMapListDemo) {
-                MapListView(rows: model.mapRows) { model.selectMap($0) }
+                MapListView(rows: model.mapRows,
+                            detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
+            }
+            // US-121's detail, pushed straight rather than through the list: `simctl` has no tap
+            // command, so the only way to photograph the screen a tap opens is to open it from the
+            // launch command. It takes the first UNLOCKED row, which on any save is the starting
+            // map — see `MainScreenModel.mapDetailDemoContext` for why that map shows all three
+            // slot states at once.
+            .navigationDestination(isPresented: $showsMapDetailDemo) {
+                if let row = model.mapRows.first(where: { !$0.isLocked }),
+                   let detail = model.mapDetail(for: row) {
+                    MapDetailView(detail: detail) { model.selectMap(row.id) }
+                }
             }
             #endif
         }
@@ -541,7 +558,8 @@ struct ContentView: View {
                 // it (AC6).
                 if let strip = model.mapStrip {
                     MapStripView(strip: strip) {
-                        MapListView(rows: model.mapRows) { model.selectMap($0) }
+                        MapListView(rows: model.mapRows,
+                                    detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
                     }
                 }
 

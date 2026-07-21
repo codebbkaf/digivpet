@@ -625,3 +625,75 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   US-122 (opponents from the map); both consume `opponentPool` and `digitamaSlots`, which US-116
   already authored.
 ---
+
+## 2026-07-22 — US-121: Map detail shows opponents and Digitama with progressive hints
+- `Sources/MapDetailView.swift`: `MapDetail` — a pure value built from the catalog, the roster, the
+  Dex and the player's counters — plus `MapDetailView`, pushed from `MapListView` with
+  `navigationDestination(item:)`. `MainScreenModel` gains `discoveredDigimonIds` and
+  `mapDetail(for:)`; `ConditionHintRow` in `DexView.swift` stopped being `private`.
+- Files: Sources/MapDetailView.swift (new), Sources/MapListView.swift, Sources/MainScreenModel.swift,
+  Sources/ContentView.swift, Sources/DexView.swift, Tests/MapDetailTests.swift (new).
+- PASSED: build green. `Executed 1466 tests, with 0 failures` (1436 + 30 new), and all 30 also
+  observed passing on their own with `-only-testing`, grepped rather than inferred.
+- **THE NAVIGATION CHANGED, and it is the one decision in this story worth a second reader.**
+  US-119 made a row tap select the map and pop back. AC1 here says a tap opens the detail. Both
+  cannot be a tap on the same row, so travelling moved one step deeper: the row opens the detail,
+  and the detail carries a **"Travel here"** button that selects through `MapListSelector` and drops
+  BOTH levels. Everything US-120 AC5 asked of a selection still holds of it — made through the
+  selector, persisted, moves the US-115 background and the strip, ends on the main screen — and what
+  the player gains is seeing what is in a map before committing their steps to it. `MapListSelector`
+  and every US-119 test are untouched, because they were always pure functions of `(row, current)`.
+  **NOT TAP-VERIFIED**: `simctl` has no tap command, so the two-level pop (`openMapId = nil` then
+  `dismiss()`) is reasoned rather than photographed. If SwiftUI honours only one of the two the
+  player lands on the map list, which is a degradation and not a hang.
+- PASSED, criterion by criterion:
+  - **AC1**, screenshotted on 46mm (`-mapDetailFoesDemo`): the pool draws **grouped**, with the
+    `Child` heading between Nyaromon/Tokomon and Agumon/Patamon — grouping, not merely ordering.
+    Group order is `Stage.allCases` and not `ladderIndex`, because Armor-Hybrid has no rung to sort
+    on and `allCases` is already authored in ladder order with the side branch last. Within a group
+    the authored order stands: that is what US-116 wrote and what US-122 will band.
+  - **AC2 / AC3 / AC4 / AC5 are all on ONE 46mm screenshot** (`-mapDetailSlotsDemo`), which is what
+    that flag exists for: `Agu Digitama` with its real sprite and name and **no hint rows**; a `?`
+    marked `Ready to find` (sparkles, yellow) over a green-checked "Walk 2,000 steps in a day"; and
+    a second `?` with an open circle beside "Fight one battle". Three states, one shot.
+  - AC3 is not merely the same WORDING as the Dex's hints — the view draws them with
+    **`ConditionHintRow`, the Dex's own row type**, made non-private for this. A second
+    implementation could drift a word or a threshold, and the player would be reading two different
+    promises about one `ConditionReveal` output.
+  - AC4's "no hint rows" is enforced **on the value**: a revealed slot's `conditions` is empty, so
+    there is nothing for the view to draw even if it tried. A test asserts the withheld slot beside
+    it still has its own, so the emptiness is the reveal and not a slot that lost them on the way in.
+  - AC5 is `!revealed && ConditionReveal.allMet` — an egg already owned is one that HAS dropped, so
+    it is never "ready" however met its conditions are. Pinned against an unowned slot that IS ready
+    on the same context, so the false is the ownership and not the context.
+  - **AC6**: `MapDetail.make` returns **nil** for a locked row — not a stripped detail. There is
+    nothing to push, the row's button is disabled as well, and a test shows the detail appearing the
+    moment the lock opens on the same save, so the nil is the lock and not the fixture.
+- Reveal source is the **Dex** (`GameStore.dexIds`), which is written the moment an egg is handed
+  over or hatched and survives death and rebirth — exactly the span AC4's "owns or has owned" names.
+  US-127's held-Digitama set will refine it; the seam is `MapDetail.make(discovered:)`.
+- **Learnings for future iterations:**
+  - **A screenshot caught a defect no test could have.** The withheld row drew `?` twice — the art
+    tile and the title — which reads as a rendering fault rather than as one withheld egg. Both were
+    "correct" by every assertion in the suite. The title is now drawn only for a revealed slot.
+  - **A demo flag does not have to write to the save.** All three of this story's
+    (`-mapDetailDemo`, `-mapDetailSlotsDemo`, `-mapDetailFoesDemo`) seed through LITERALS — a
+    `ConditionContext` and a discovery `Set` unioned at read time — so unlike US-119's there is
+    nothing to undo and no `-…ResetDemo` inverse to remember. `DexModel.revealDemoContext` is the
+    older example of the same trick. Prefer it: the container cannot be poisoned by something that
+    never reaches disk.
+  - When two screenshot flags stage the same screen at different scroll positions, the seeding must
+    answer to **both** or the scrolled shot photographs an unseeded screen. `isMapDetailDemo` is one
+    predicate all three flags go through, for exactly that reason.
+  - To photograph that a list is GROUPED rather than merely ordered, scroll to the **first** row of
+    the last group with `anchor: .bottom` — the heading lands on screen with the tail of the group
+    before it. Scrolling to the last row shows three rows that could have come from anywhere.
+  - The starting Digitama is **random among the graph's six**, and only three of them live in the
+    starting map — so "a fresh install reveals a slot" is a coin flip, not a fact. Any screenshot
+    that needs a revealed entry has to seed it.
+  - `xcodebuild`'s DerivedData path for this project is not stable across runs; `find … -name
+    DigiVPet.app -path "*Debug-watchsimulator*"` returns several, and the one to install is the
+    NEWEST by mtime. Installing the wrong one silently photographs the previous story.
+- REMAINS: US-122 onward (8/56 passing). Phase B is finished with US-122, which consumes the same
+  `opponentPool` this screen now draws.
+---

@@ -157,8 +157,23 @@ enum MapListSelector {
 struct MapListView: View {
     let rows: [MapListRow]
 
+    /// What one row opens (US-121), or nil for a map that has no detail — which is what a locked
+    /// map has. `MainScreenModel.mapDetail(for:)` in the app.
+    ///
+    /// Defaulted so the DEBUG demo destinations and the previews can push the list without a model
+    /// behind them; a nil detail simply does not navigate.
+    var detail: (MapListRow) -> MapDetail? = { _ in nil }
+
     /// Called with the id of the map the player chose. `MainScreenModel.selectMap(_:)` in the app.
     let select: (String) -> Void
+
+    /// The map whose detail is pushed, by id.
+    ///
+    /// The id and not the detail itself, because `navigationDestination(item:)` wants a `Hashable`
+    /// and the detail carries conditions and a whole `ConditionContext`. Keeping the state to a
+    /// `String` also means the detail is rebuilt from the CURRENT rows on every redraw, so a step
+    /// credited while the screen is open moves the figure on it.
+    @State private var openMapId: String?
 
     @Environment(\.dismiss) private var dismiss
 
@@ -176,6 +191,11 @@ struct MapListView: View {
                     // the row and the row is dimmed, so the refusal is visible before it is felt.
                     .disabled(!row.isSelectable)
                     .id(row.id)
+                }
+            }
+            .navigationDestination(item: $openMapId) { id in
+                if let row = rows.first(where: { $0.id == id }), let detail = detail(row) {
+                    MapDetailView(detail: detail) { travel(to: row) }
                 }
             }
             #if DEBUG
@@ -201,13 +221,26 @@ struct MapListView: View {
         rows.first(where: \.isSelected)?.id
     }
 
-    /// Travel there, and go back to the game — choosing a map is a one-tap errand, not a place to
-    /// stay. A locked row cannot get this far (the button is disabled), and would change nothing if
-    /// it did.
+    /// Open the map — US-121's detail, which is where the player finds out what lives there and
+    /// what its eggs are waiting for BEFORE committing their steps to it.
+    ///
+    /// It used to select and pop straight back (US-119). Travelling moved one step deeper when the
+    /// detail arrived, and everything US-120 asked of a selection still holds of it: it is made
+    /// through `MapListSelector`, it persists, it moves the background and the strip, and it ends
+    /// on the main screen. A locked row cannot get this far — the button is disabled and
+    /// `MapDetail.make` would refuse it anyway.
     private func tap(_ row: MapListRow) {
         guard row.isSelectable else { return }
+        openMapId = row.id
+    }
+
+    /// Travel there, and go back to the game — choosing a map is an errand, not a place to stay.
+    /// Both levels are dropped: the detail first, then the list, which is what puts the player back
+    /// where the map they just chose is drawn behind their Digimon.
+    private func travel(to row: MapListRow) {
         let next = MapListSelector.selection(tapping: row, current: currentSelection)
         if let next, next != currentSelection { select(next) }
+        openMapId = nil
         dismiss()
     }
 }
