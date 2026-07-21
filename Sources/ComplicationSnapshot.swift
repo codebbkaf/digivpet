@@ -147,12 +147,32 @@ struct ComplicationSnapshot: Codable, Equatable {
         displayName: "Agumon",
         spriteStage: "Child",
         spriteFile: "Agumon",
-        dominantEnergySymbol: "力",
+        dominantEnergySymbol: "STEP",
         dominantEnergyName: "Strength",
         dominantEnergyFraction: 0.5,
         dominantEnergyEarned: 25,
         published: .distantPast
     )
+
+#if DEBUG
+    /// The placeholder wearing the LONGEST of the four short names, for the `-complicationEnergyDemo`
+    /// screenshot (US-085). The widest label is the only one worth photographing: if SLEEP fits the
+    /// rectangular gauge, the other three do.
+    ///
+    /// Spelled out rather than read off `EnergyType`: this file is shared with the widget extension,
+    /// which does not compile the game's model at all. `ComplicationTests` is what pins the two
+    /// together, so a rename cannot leave this string behind.
+    static let longestEnergyLabel = ComplicationSnapshot(
+        displayName: "Agumon",
+        spriteStage: "Child",
+        spriteFile: "Agumon",
+        dominantEnergySymbol: "SLEEP",
+        dominantEnergyName: "Spirit",
+        dominantEnergyFraction: 0.5,
+        dominantEnergyEarned: 150,
+        published: .distantPast
+    )
+#endif
 
     /// The Digimon and what it is doing, spoken. Just the name when it is doing nothing notable.
     var accessibilityLabel: String {

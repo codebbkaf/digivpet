@@ -331,7 +331,15 @@ struct DigiVPetComplicationEntryView: View {
 /// caught.
 struct ComplicationDemoView: View {
     /// The published snapshot, falling back to the placeholder exactly as the provider does.
-    var snapshot: ComplicationSnapshot = ComplicationSnapshotStore.read() ?? .placeholder
+    ///
+    /// `-complicationEnergyDemo` overrides it with the LONGEST short name (US-085), because the
+    /// gauge label is the one thing on the rectangular face that a real Simulator run can never
+    /// show: HealthKit has no data there, so every game the app publishes has no dominant energy
+    /// at all and the face draws "No energy yet". Everything else about the view is the shipping
+    /// one — only who is on it is chosen here.
+    var snapshot: ComplicationSnapshot = CommandLine.arguments.contains("-complicationEnergyDemo")
+        ? .longestEnergyLabel
+        : (ComplicationSnapshotStore.read() ?? .placeholder)
 
     /// Fixed at first draw so the batch does not regenerate underneath the `TimelineView`.
     @State private var start = Date()
@@ -342,7 +350,7 @@ struct ComplicationDemoView: View {
             let entry = ComplicationTimeline.entry(at: context.date, in: batch)
                 ?? ComplicationEntry(date: start, snapshot: snapshot)
             VStack(spacing: 10) {
-                Text(ComplicationSnapshotStore.read() == nil ? "placeholder" : "published")
+                Text(source)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                 Text("step \(entry.step) of \(batch.count)")
@@ -355,6 +363,13 @@ struct ComplicationDemoView: View {
             }
         }
         .padding(.horizontal, 4)
+    }
+
+    /// Where the snapshot on screen came from, so a screenshot says so rather than being read as
+    /// a real game when it is not one.
+    private var source: String {
+        if CommandLine.arguments.contains("-complicationEnergyDemo") { return "energy demo" }
+        return ComplicationSnapshotStore.read() == nil ? "placeholder" : "published"
     }
 }
 #endif

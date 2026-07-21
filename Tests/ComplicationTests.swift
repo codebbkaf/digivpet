@@ -139,7 +139,10 @@ final class ComplicationTests: XCTestCase {
         await model.start()
 
         let snapshot = try XCTUnwrap(model.complicationSnapshot)
-        XCTAssertEqual(snapshot.dominantEnergySymbol, EnergyType.strength.symbol)
+        // The short name and not the display name: the face labels the gauge with where the energy
+        // came from, and spells the type out in the accessibility label beside it (US-085).
+        XCTAssertEqual(snapshot.dominantEnergySymbol, "STEP")
+        XCTAssertEqual(snapshot.dominantEnergySymbol, EnergyType.strength.shortName)
         XCTAssertEqual(snapshot.dominantEnergyName, "Strength")
         XCTAssertEqual(snapshot.dominantEnergyEarned, 40)
 
@@ -164,6 +167,24 @@ final class ComplicationTests: XCTestCase {
         XCTAssertEqual(snapshot.dominantEnergyEarned, 0)
     }
 
+    /// The two snapshots this file spells its labels out in — it is shared with the widget
+    /// extension, which does not compile `EnergyType` — have to say what `EnergyType` says. Nothing
+    /// else ties the two together, so a rename that missed them would ship a stale label to the
+    /// gallery and to the `-complicationEnergyDemo` screenshot.
+    func testTheHardCodedSnapshotLabelsMatchTheEnergyTypes() {
+        XCTAssertEqual(ComplicationSnapshot.placeholder.dominantEnergySymbol,
+                       EnergyType.strength.shortName)
+        XCTAssertEqual(ComplicationSnapshot.placeholder.dominantEnergyName,
+                       EnergyType.strength.displayName)
+
+        // The demo exists to photograph the WIDEST label, so it has to still be the widest one.
+        let longest = ComplicationSnapshot.longestEnergyLabel.dominantEnergySymbol
+        XCTAssertEqual(longest, EnergyType.allCases.map(\.shortName).max { $0.count < $1.count })
+        XCTAssertEqual(ComplicationSnapshot.longestEnergyLabel.dominantEnergyName,
+                       EnergyType.spirit.displayName)
+        XCTAssertEqual(longest, EnergyType.spirit.shortName)
+    }
+
     // MARK: - Crossing the process boundary
 
     /// The whole point of the file: what the app writes is what a SEPARATE process reads back. Every
@@ -173,7 +194,7 @@ final class ComplicationTests: XCTestCase {
             displayName: "Greymon",
             spriteStage: "Adult",
             spriteFile: "Greymon",
-            dominantEnergySymbol: "力",
+            dominantEnergySymbol: "STEP",
             dominantEnergyName: "Strength",
             dominantEnergyFraction: 0.4,
             dominantEnergyEarned: 40,
@@ -360,7 +381,7 @@ final class ComplicationTests: XCTestCase {
             displayName: "Greymon",
             spriteStage: "Adult",
             spriteFile: "Greymon",
-            dominantEnergySymbol: "力",
+            dominantEnergySymbol: "STEP",
             dominantEnergyName: "Strength",
             dominantEnergyFraction: 0.4,
             dominantEnergyEarned: 40,
@@ -543,7 +564,7 @@ final class ComplicationTimelineTests: XCTestCase {
             displayName: "Agumon",
             spriteStage: "Child",
             spriteFile: "Agumon",
-            dominantEnergySymbol: "力",
+            dominantEnergySymbol: "STEP",
             dominantEnergyName: "Strength",
             dominantEnergyFraction: 0.5,
             dominantEnergyEarned: 25,

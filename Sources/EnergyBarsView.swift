@@ -138,16 +138,52 @@ struct EnergyBarsView: View {
     }
 }
 
-private struct EnergyBarRow: View {
-    let goal: EnergyGoal
-    let fraction: Double
-    let isDominant: Bool
+/// The widths one energy bar is built from, and the arithmetic that says two of them fit.
+///
+/// Free-standing rather than constants on the view, in the same spirit as `SpriteScale`: a test
+/// should not have to build a view graph to check that a row fits the narrowest screen.
+enum EnergyBarLayout {
+    /// The name column. Wide enough for "SLEEP" at `nameFontSize` — the longest of the four short
+    /// names (US-085) — so no label truncates and all four columns line up.
+    static let nameWidth: CGFloat = 25
+
+    /// Size 8, matching the value column. A word needs more room than the single glyph this
+    /// replaced, and the row is as tall as its tallest element, so the point the name gives up in
+    /// height is a point the sprite keeps.
+    static let nameFontSize: CGFloat = 8
 
     /// Wide enough for the seed's longest label ("150/150") so the bars line up regardless of
     /// what any one type has earned. Two of these now share a screen width, so it is as tight as
     /// that label allows rather than as tight as it looks.
-    private static let labelWidth: CGFloat = 28
-    private static let barHeight: CGFloat = 4
+    static let valueWidth: CGFloat = 28
+
+    static let barHeight: CGFloat = 4
+
+    /// The floor on the bar itself. A bar is the one flexible column, so without a floor a wider
+    /// name column would be paid for by the thing the row exists to draw.
+    static let barMinWidth: CGFloat = 18
+
+    /// Between the three columns of one bar.
+    static let columnSpacing: CGFloat = 3
+
+    /// Between the two bars that share a row.
+    static let pairSpacing: CGFloat = 6
+
+    /// The narrowest screen this has to fit: 41mm, 176 points wide. What `rowWidth` is measured
+    /// against, and the reason `nameWidth` is 25 and not whatever looks comfortable.
+    static let narrowestScreenWidth: CGFloat = 176
+
+    /// What two bars cost, with the bars themselves at their floor. Everything left over past this
+    /// is width the two bars grow into.
+    static var rowWidth: CGFloat {
+        2 * (nameWidth + columnSpacing + barMinWidth + columnSpacing + valueWidth) + pairSpacing
+    }
+}
+
+private struct EnergyBarRow: View {
+    let goal: EnergyGoal
+    let fraction: Double
+    let isDominant: Bool
 
     /// The dominant bar's colour.
     ///
@@ -162,14 +198,16 @@ private struct EnergyBarRow: View {
     private var tint: Color { isDominant ? Self.dominantColor : .secondary }
 
     var body: some View {
-        HStack(spacing: 3) {
+        HStack(spacing: EnergyBarLayout.columnSpacing) {
             // Weight carries the distinction too, so the dominant bar is not marked by hue alone.
-            // Size 9, not 11: the row is as tall as its tallest element, so the symbol's line
-            // height — not the 4pt bar — is what four of these rows actually cost the sprite.
-            Text(goal.type.symbol)
-                .font(.system(size: 9, weight: isDominant ? .bold : .regular))
+            // The name says where the energy comes from — STEP, not Strength — so a user reading
+            // the bar learns that walking is what fills it (US-085).
+            Text(goal.type.shortName)
+                .font(.system(size: EnergyBarLayout.nameFontSize,
+                              weight: isDominant ? .bold : .regular))
                 .foregroundStyle(tint)
-                .frame(width: 11)
+                .lineLimit(1)
+                .frame(width: EnergyBarLayout.nameWidth, alignment: .leading)
 
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
@@ -179,14 +217,15 @@ private struct EnergyBarRow: View {
                         .frame(width: geometry.size.width * fraction)
                 }
             }
-            .frame(height: Self.barHeight)
+            .frame(height: EnergyBarLayout.barHeight)
+            .frame(minWidth: EnergyBarLayout.barMinWidth)
 
             Text(label)
                 .font(.system(size: 8, weight: isDominant ? .semibold : .regular).monospacedDigit())
                 .foregroundStyle(tint)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
-                .frame(width: Self.labelWidth, alignment: .trailing)
+                .frame(width: EnergyBarLayout.valueWidth, alignment: .trailing)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(goal.type.displayName)

@@ -25,14 +25,18 @@ enum EnergyType: String, Codable, CaseIterable {
         }
     }
 
-    /// The single glyph that labels this type's energy bar. Like `displayName`, nothing persists
-    /// it — a bar is one glyph wide because four of them share a 41mm screen with the Digimon.
-    var symbol: String {
+    /// What labels this type's energy bar: the real-world SOURCE the energy comes from, in short
+    /// English. Like `displayName`, nothing persists it — unlike `rawValue`, this is free to change.
+    ///
+    /// The source and not the type (US-085): "Strength" does not tell a user that walking is what
+    /// fills the first bar, and a single glyph told them even less. Four characters where five fit,
+    /// because four of these share a 41mm screen with the Digimon — see `EnergyBarLayout`.
+    var shortName: String {
         switch self {
-        case .strength: return "力"
-        case .vitality: return "活"
-        case .spirit: return "心"
-        case .stamina: return "耐"
+        case .strength: return "STEP"
+        case .vitality: return "KCAL"
+        case .spirit: return "SLEEP"
+        case .stamina: return "EXER"
         }
     }
 }

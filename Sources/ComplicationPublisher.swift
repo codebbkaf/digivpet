@@ -18,7 +18,7 @@ extension MainScreenModel {
             displayName: presentation.displayName,
             spriteStage: presentation.spriteStage,
             spriteFile: presentation.spriteFile,
-            dominantEnergySymbol: dominant?.symbol,
+            dominantEnergySymbol: dominant?.shortName,
             dominantEnergyName: dominant?.displayName,
             // No dominant type means no bar rather than an empty one aimed at an arbitrary type.
             dominantEnergyFraction: goal.flatMap { energyProgress?.fraction(of: $0) } ?? 0,

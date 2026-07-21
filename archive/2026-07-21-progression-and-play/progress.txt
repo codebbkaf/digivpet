@@ -1,0 +1,50 @@
+# Ralph Progress Log
+Started: 2026-07-21
+Feature: Elements, Battle Depth and Care Polish (branch ralph/elements-battle-depth-and-care-polish)
+Source PRD: tasks/prd-elements-battle-depth-and-care-polish.md
+
+Previous run (Progression and Play, US-055..US-084, all 30 passing) archived to
+archive/2026-07-21-progression-and-play/. Two runs before that are in
+archive/2026-07-20-vpet-enhancements/ and archive/2026-07-19-digimon-health-vpet/.
+
+CARRIED-FORWARD FACTS worth knowing before iteration 1. The full detail is in the
+archived progress.txt files, but these cost previous iterations real time:
+
+1. DO NOT UNINSTALL THE APP to reset game state. It wipes the HealthKit grant and
+   every launch then sticks on the system health sheet, which no simctl command can
+   tap. Repair means editing `authorization` in
+   ~/Library/Developer/CoreSimulator/Devices/<UDID>/data/Library/Health/healthdb.sqlite
+   (status 103 == granted). Add a #if DEBUG launch flag instead.
+
+2. EvolutionGraph.bundled, Roster.bundled and MoveCatalog.bundled all fatalError on a
+   decode failure, and the app is the TEST_HOST -- so ONE JSON typo kills the whole
+   suite before a single test reports. US-087 adds elements.json to that list. Validate
+   any authored JSON with `python3 -m json.tool` BEFORE running xcodebuild test, or you
+   will spend the iteration reading a crash log that names no file.
+
+3. simctl CANNOT TAP, SCROLL, MASH, TURN THE CROWN, OR BACKGROUND THE APP. Every visual
+   acceptance criterion in this PRD is met by adding a #if DEBUG launch flag that stages
+   the state and lets the SHIPPED code path render it -- never by building a second
+   render path for the camera. ~47 such flags already exist; `grep -rno '\-[a-zA-Z]*Demo'
+   Sources/` lists them. Follow the existing pattern.
+
+4. The main screen has NO LAYOUT ROOM LEFT. Five 30pt action buttons plus 4pt gaps come
+   to 166pt against the 176pt of a 42mm screen, and SpriteScale already floors at 2x.
+   US-099's light button therefore goes in the sprite region's free top-LEADING corner
+   as an overlay (the poop pile owns bottom-trailing, the sick badge owns top-centre).
+   A sixth circle in the action row will clip. Screenshot 42mm, not just 46mm.
+
+5. NotificationDispatcher.send DROPS anything whose kind is not `firesWhileAsleep` while
+   the Digimon sleeps. US-100's lights notice fires ONLY during sleep, so it must opt in
+   -- and a spy test written with `isAsleep: false` would pass while the shipped app
+   never notified anyone. Test it with isAsleep: true.
+
+6. An added NON-OPTIONAL attribute on an existing @Model is not a lightweight migration.
+   US-098 adds four fields to GameState; every one needs a declared default or an
+   existing store fails to open. US-015's note in the archived log is the warning.
+
+7. Sprite rendering must keep `.interpolation(.none)` on the Image, AHEAD of the
+   scaleEffect mirror. US-095 adds a vertical offset to DigimonSpriteView -- if the
+   modifier moves, motion ships blurred pixel art and only a screenshot will say so.
+
+---

@@ -1,5 +1,6 @@
 import XCTest
 import Foundation
+import UIKit
 
 @testable import DigiVPet
 
@@ -33,38 +34,87 @@ private extension EnergyProgress {
     }
 }
 
-// MARK: - The symbols
+// MARK: - The short names
 
-final class EnergySymbolTests: XCTestCase {
-    /// THE AC, literally: these four glyphs and no others. Asserted as hand-written literals rather
-    /// than by round-tripping some mapping through itself.
-    func testTheFourSymbolsAreTheOnesTheACNames() {
-        XCTAssertEqual(EnergyType.strength.symbol, "力")
-        XCTAssertEqual(EnergyType.vitality.symbol, "活")
-        XCTAssertEqual(EnergyType.spirit.symbol, "心")
-        XCTAssertEqual(EnergyType.stamina.symbol, "耐")
+final class EnergyShortNameTests: XCTestCase {
+    /// THE AC, literally: the SOURCE of the energy in short English, these four and no others.
+    /// Asserted as hand-written literals rather than by round-tripping some mapping through itself.
+    func testTheFourShortNamesAreTheOnesTheACNames() {
+        XCTAssertEqual(EnergyType.strength.shortName, "STEP")
+        XCTAssertEqual(EnergyType.vitality.shortName, "KCAL")
+        XCTAssertEqual(EnergyType.spirit.shortName, "SLEEP")
+        XCTAssertEqual(EnergyType.stamina.shortName, "EXER")
     }
 
-    /// A copy-paste that gave two types one glyph would leave two bars that cannot be told apart —
+    /// A copy-paste that gave two types one name would leave two bars that cannot be told apart —
     /// and every assertion above would still pass if only one of the pair were wrong.
-    func testEverySymbolIsDistinct() {
-        let symbols = EnergyType.allCases.map(\.symbol)
-        XCTAssertEqual(Set(symbols).count, EnergyType.allCases.count)
+    func testEveryShortNameIsDistinct() {
+        let names = EnergyType.allCases.map(\.shortName)
+        XCTAssertEqual(Set(names).count, EnergyType.allCases.count)
     }
 
-    /// An empty glyph would draw a bar with no label at all rather than failing anywhere.
-    func testEveryTypeHasASymbol() {
+    /// An empty name would draw a bar with no label at all rather than failing anywhere.
+    func testEveryTypeHasAShortName() {
         for type in EnergyType.allCases {
-            XCTAssertFalse(type.symbol.isEmpty, "\(type)")
+            XCTAssertFalse(type.shortName.isEmpty, "\(type)")
         }
     }
 
-    /// The symbol is what the bar shows; `displayName` is what VoiceOver reads. Both must exist,
-    /// and they are not interchangeable.
-    func testTheSymbolIsNotTheDisplayName() {
+    /// The short name is what the bar shows; `displayName` is what VoiceOver reads. Both must
+    /// exist, and they are not interchangeable — VoiceOver must not say "STEP".
+    func testTheShortNameIsNotTheDisplayName() {
         for type in EnergyType.allCases {
-            XCTAssertNotEqual(type.symbol, type.displayName, "\(type)")
+            XCTAssertNotEqual(type.shortName, type.displayName, "\(type)")
         }
+    }
+
+    /// The names are display-only, like `displayName`. `rawValue` is the persisted spelling and
+    /// changing the label must not have touched it — a saved game decodes by raw value.
+    func testTheShortNameIsNotThePersistedSpelling() {
+        XCTAssertEqual(EnergyType.strength.rawValue, "strength")
+        XCTAssertEqual(EnergyType.vitality.rawValue, "vitality")
+        XCTAssertEqual(EnergyType.spirit.rawValue, "spirit")
+        XCTAssertEqual(EnergyType.stamina.rawValue, "stamina")
+    }
+
+    /// The old glyphs are gone from the shipping code, not merely unused by it — a leftover mapping
+    /// somewhere else would put one back on screen.
+    func testNoShortNameIsAGlyph() {
+        for type in EnergyType.allCases {
+            XCTAssertTrue(type.shortName.allSatisfy { $0.isASCII }, "\(type): \(type.shortName)")
+        }
+    }
+}
+
+// MARK: - The row fits
+
+final class EnergyBarLayoutTests: XCTestCase {
+    /// THE AC: the name column fits "SLEEP" at the size it is drawn, so the longest of the four
+    /// labels does not truncate. Measured against the real watchOS system font rather than a
+    /// guess at how wide five capitals are.
+    func testTheNameColumnFitsTheLongestShortName() {
+        let font = UIFont.systemFont(ofSize: EnergyBarLayout.nameFontSize)
+        for type in EnergyType.allCases {
+            let width = (type.shortName as NSString)
+                .size(withAttributes: [.font: font]).width
+            XCTAssertLessThanOrEqual(width, EnergyBarLayout.nameWidth,
+                                     "\(type.shortName) needs \(width)pt")
+        }
+    }
+
+    /// Two bars share a row, so the widths have to clear the narrowest screen with the bars still
+    /// at their floor. Fail this and a 41mm screen either truncates a value or draws a hairline.
+    func testTwoBarsFitTheNarrowestScreen() {
+        XCTAssertLessThanOrEqual(EnergyBarLayout.rowWidth,
+                                 EnergyBarLayout.narrowestScreenWidth)
+    }
+
+    /// The bar is the point of the row. The floor is what stops a wider name column from being
+    /// paid for out of it.
+    func testTheBarHasAFloorAndTheValueColumnIsUnchanged() {
+        XCTAssertGreaterThanOrEqual(EnergyBarLayout.barMinWidth, 18)
+        XCTAssertEqual(EnergyBarLayout.valueWidth, 28)
+        XCTAssertEqual(EnergyBarLayout.barHeight, 4)
     }
 }
 
