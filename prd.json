@@ -97,8 +97,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 5,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MoveRowView.swift: DexMoveRow.move(for:in:roster:catalog:) returns nil unless row.isDiscovered, else MoveCatalog.bundled.move(for:in:roster:); MoveRow draws projectileSymbol + signatureName in move.tint.color under the type badges. 8 tests, 1102 total, 0 failures; build green. Screenshots: 42mm/41mm Agumon shows orange flame.fill + 'Pepper Breath'; 42mm -dexUnmetDetailDemo Aegisdramon shows no row at all. 41mm now clips the candidate tile CAPTION - see progress.txt."
     },
     {
       "id": "US-090",

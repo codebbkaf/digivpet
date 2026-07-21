@@ -278,3 +278,74 @@ NOTES FOR LATER STORIES
   is the tile row itself.
 - `-dexUnmetDetailDemo` is the general way to photograph withheld-until-met
   content on this sheet; US-089 needs exactly the same shot.
+
+================================================================================
+2026-07-21 — US-089: Projectile and signature move on the Dex detail view
+================================================================================
+
+WHAT I DID
+- `Sources/MoveRowView.swift` (new), mirroring `TypeBadgeView.swift`:
+  - `MoveRowLayout` — the height budget as arithmetic, not literals in a `body`.
+    `budget = 16` (matched to `TypeBadgeLayout.budget` so the two identity rows
+    together cost a KNOWN 32pt), `height = 14` fixed frame, `stackSpacing = 2`,
+    9pt name / 10pt glyph. The glyph is the larger of the two here — the reverse
+    of the badge row — because there the word is the answer and the symbol is a
+    bullet, while here the thrown thing IS the answer and the name labels it.
+  - `DexMoveRow.move(for:in:roster:catalog:)` — nil for an UNDISCOVERED row, and
+    `catalog.move(for:in:roster:)` otherwise. Split out of the view so "shown
+    exactly when discovered" is a fact a test asserts with no view graph.
+  - `MoveRow` — `projectileSymbol` glyph and `signatureName` on one line, BOTH in
+    `move.tint.color` so the row reads as one attack rather than a coloured icon
+    with an unrelated caption. The ORDINARY projectile's symbol, not the
+    signature's: it is what the Digimon throws every turn, so it is the truer
+    picture of fighting it. Not a Button, not a NavigationLink — no move screen
+    exists to reach.
+- `Sources/DexView.swift` — `DexDetailView` gains `moves: MoveCatalog = .bundled`
+  and `roster: Roster = .bundled` beside `graph`/`catalog` (the three travel
+  together: the lookup reads line off the graph and stage off the roster). New
+  `attackRow` sits directly under `typeBadges` and above the `Divider()`, as
+  US-088's note asked — element, attribute and attack are three answers to "what
+  is this in a fight"; the divider opens the separate question of what it becomes.
+- `Tests/DexMoveRowTests.swift` — 8 tests.
+
+VERIFICATION
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **. `xcodebuild test` (46mm) —
+  ** TEST SUCCEEDED **, 1102 tests, 0 failures (was 1094; the 8 new ones are the
+  delta). Also built clean against 41mm/watchOS 10.4 by device id.
+- Screenshots, all on `-healthAnswered -noNotificationPrompt -dexDemo`:
+  - 42mm `-dexDetailDemo`: Agumon — orange `flame.fill` glyph + "Pepper Breath"
+    in orange, directly under FIRE/VAC. Matches `Resources/moves.json` exactly
+    (`flame.fill` / `orange` / `Pepper Breath`), checked against the file.
+  - 41mm `-dexDetailDemo`: same row, drawn and legible.
+  - 42mm `-dexUnmetDetailDemo`: Aegisdramon — NO badge row and NO attack row.
+    The sheet runs name -> "Ultimate" -> divider. Not a dimmed placeholder.
+- Presence-is-discovery is asserted over ALL 1,022 roster entries in both
+  directions, not on hand-picked ids. The stage-tier fallback is proved through
+  `megaseadramon`, which has no graph node.
+
+KNOWN REGRESSION — READ THIS BEFORE ADDING ANOTHER ROW
+- On 41mm the candidate tiles are now CLIPPED at the caption. I took a before
+  shot by stashing this change and rebuilding, so this is measured, not guessed:
+  before, "Greymon" was legible under its tile at the bottom edge; after, the
+  tile sprite is still visible and tappable but its name is cut off. The sheet
+  scrolls, so nothing is unreachable — but this is exactly what US-088's note
+  predicted would happen when the next row landed, and the slack is now gone.
+- I chose the semantically right placement over the extra 11pt. Recovering it
+  means taking something AWAY, not shaving 1pt off a font: the honest candidates
+  are merging the badge row and the attack row onto one line (measured too tight
+  on 41mm — the badges already span ~half the width and signature names run
+  longer than "Pepper Breath"), or dropping the hero sprite below US-064's
+  `scale: 3`.
+- **US-090 onward must not add a fourth row to this sheet.** The next thing to go
+  is the candidate tile row itself, which is the thing US-064 spent two rounds of
+  41mm screenshots buying.
+
+NOTES FOR LATER STORIES
+- The 46mm simulator (BA425DD4) has a WEDGED system notification alert that
+  survives terminate, uninstall/reinstall, and `simctl privacy grant` (which
+  fails with EPERM). `-noNotificationPrompt` does not clear it because the alert
+  is already queued at the system level. 42mm and 41mm are unaffected and were
+  used for the shots; the 46mm sim needs `simctl erase` before it can be
+  photographed again. Builds and tests on 46mm are fine — only screenshots.
+- `MoveTint.color` still lives in `BattleView.swift` as an exhaustive switch. The
+  Dex now depends on it too, so adding a tint breaks two screens, not one.

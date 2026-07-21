@@ -228,6 +228,17 @@ struct DexDetailView: View {
     /// catalog against a roster it was not authored for.
     var catalog: ElementCatalog = .bundled
 
+    /// Where the attack row's projectile and signature come from (US-089). Injectable beside
+    /// `graph` and `roster` for the same reason `catalog` is — `MoveCatalog.move(for:in:roster:)`
+    /// resolves a Digimon's line off the graph and its stage off the roster, so the three travel
+    /// together or they answer for a Digimon that is not the one on screen.
+    var moves: MoveCatalog = .bundled
+
+    /// The roster the attack row falls back to for a stage. Needed because ~930 of the 1,022
+    /// entries have no graph node at all, and the stage tier is the floor that keeps every one of
+    /// them throwing something.
+    var roster: Roster = .bundled
+
     /// The totals the hints are resolved against. `.unknown` shows every hint at its coldest,
     /// which is what a preview or a grid with no model gets.
     var context: ConditionContext = .unknown
@@ -316,6 +327,8 @@ struct DexDetailView: View {
 
                 typeBadges
 
+                attackRow
+
                 evolutions
 
                 lineTreeLink
@@ -373,6 +386,20 @@ struct DexDetailView: View {
     private var typeBadges: some View {
         if let type = DexTypeBadges.type(for: row, in: graph, catalog: catalog) {
             TypeBadgeRow(type: type)
+        }
+    }
+
+    /// What this Digimon throws (US-089) — directly under the type badges, because element,
+    /// attribute and attack are three answers to the one question "what is this thing in a fight",
+    /// and the `Divider()` below opens the separate question of what it becomes.
+    ///
+    /// Absent entirely for an unmet entry rather than dimmed: see `DexMoveRow.move(for:)`. Costs
+    /// `MoveRowLayout.budget`, the second charge in a row against a 41mm sheet with very little
+    /// left under the candidate tiles.
+    @ViewBuilder
+    private var attackRow: some View {
+        if let move = DexMoveRow.move(for: row, in: graph, roster: roster, catalog: moves) {
+            MoveRow(move: move)
         }
     }
 
