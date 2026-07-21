@@ -54,15 +54,16 @@ struct ContentView: View {
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
     /// it down to nothing so a `simctl` screenshot lands on the result screen rather than mid-
     /// exchange, and `-battleTurnDemo` stretches one exchange out long enough to catch the attack and
-    /// hurt frames. `simctl` can neither tap nor time a screenshot to a 0.7s beat, so the pacing is
-    /// what has to move.
+    /// hurt frames. `simctl` can neither tap nor time a screenshot to a 1.4s beat, so the pacing is
+    /// what has to move. The shipped values are `BattleView`'s own defaults rather than literals, so
+    /// the app can never be paced differently from what the tests assert.
     private static var battleIntroDuration: TimeInterval {
         #if DEBUG
         if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
         if CommandLine.arguments.contains("-battleTurnDemo") { return 0.01 }
         if CommandLine.arguments.contains("-battleSignatureDemo") { return 0.01 }
         #endif
-        return 1.0
+        return BattleView.defaultIntroDuration
     }
 
     private static var battleTurnDuration: TimeInterval {
@@ -71,7 +72,21 @@ struct ContentView: View {
         if CommandLine.arguments.contains("-battleTurnDemo") { return 60 }
         if CommandLine.arguments.contains("-battleSignatureDemo") { return 60 }
         #endif
-        return 0.7
+        return BattleView.defaultTurnDuration
+    }
+
+    /// How long a shot spends in the air. Stretched under the held-exchange demos — but nowhere near
+    /// as far as the exchange itself is (60s), because a projectile crawling a screen width over a
+    /// minute is indistinguishable from a still one: two `simctl` screenshots a fraction of a second
+    /// apart have to land at visibly different points on the arc (US-091 AC7), and 12s is slow enough
+    /// to catch and fast enough to see move.
+    private static var battleFlightDuration: TimeInterval {
+        #if DEBUG
+        if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
+        if CommandLine.arguments.contains("-battleTurnDemo") { return 12 }
+        if CommandLine.arguments.contains("-battleSignatureDemo") { return 12 }
+        #endif
+        return BattleView.defaultFlightDuration
     }
 
     /// The exchange the battle overlay holds on for a screenshot. nil in a release build and for the
@@ -308,6 +323,7 @@ struct ContentView: View {
                            onFinish: { model.finishBattle() },
                            introDuration: Self.battleIntroDuration,
                            turnDuration: Self.battleTurnDuration,
+                           flightDuration: Self.battleFlightDuration,
                            demoFocusTurn: Self.battleDemoFocusTurn(bout))
                     .transition(.opacity)
             }

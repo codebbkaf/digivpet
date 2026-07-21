@@ -783,3 +783,64 @@ final class BattleApplyTests: XCTestCase {
         XCTAssertEqual(model.state?.battleLosses, 0)
     }
 }
+
+/// US-091 — the pacing of an exchange. All four of these are arithmetic on the shipped constants, so
+/// they run instantly: the numbers themselves are the criterion, and a screenshot can only ever show
+/// one instant of a flight. The two things a screenshot CAN show — that the glyph is genuinely
+/// airborne, and that it has moved between two shots a fraction of a second apart — are recorded in
+/// the story's notes, measured in pixels.
+@MainActor
+final class BattlePacingTests: XCTestCase {
+    /// The typical battle length the pacing has to fit inside. The engine's exchanges run 4-6 for
+    /// evenly matched combatants; the worst of those is what the budget below is checked against.
+    private static let medianExchanges = 6
+
+    /// AC5, and the reason the two constants exist separately: the shot must LAND inside the turn
+    /// that threw it. A flight as long as the turn would still be in the air when the next exchange
+    /// snapped it back to the attacker, and the hit would never be seen at all.
+    func testTheShotLandsInsideTheTurnThatThrewIt() {
+        XCTAssertLessThan(BattleView.defaultFlightDuration, BattleView.defaultTurnDuration,
+                          "impact lands inside its own turn, not during the next one")
+    }
+
+    /// AC1: eased over the whole flight, so the shot winds up and settles rather than sliding across
+    /// at a constant crawl. `Animation` is `Equatable`, so this is checkable directly — and checked
+    /// against `.linear` too, since that is precisely what it used to be.
+    func testTheFlightIsEasedNotLinear() {
+        let flight = BattleView.flightAnimation(duration: BattleView.defaultFlightDuration)
+
+        XCTAssertEqual(flight, .easeInOut(duration: BattleView.defaultFlightDuration))
+        XCTAssertNotEqual(flight, .linear(duration: BattleView.defaultFlightDuration))
+    }
+
+    /// AC6: slowing an exchange down must not turn a battle into something you wait out. The longest
+    /// ordinary battle — the stare-down plus six exchanges — still has to be over inside 12 seconds.
+    func testABattleOfTheMedianLengthFitsInTwelveSeconds() {
+        let longest = BattleView.defaultIntroDuration
+            + BattleView.defaultTurnDuration * Double(Self.medianExchanges)
+
+        XCTAssertLessThan(longest, 12, "a median battle is watched, not waited out")
+    }
+
+    /// AC2/AC3/AC4: the view really does default to the shipped pacing, and every one of the three
+    /// stays injectable — which is what keeps `BattleViewHapticTests` running a whole battle in
+    /// milliseconds without waiting a single one of these beats.
+    func testTheShippedPacingIsWhatTheViewDefaultsTo() {
+        var generator = SeededGenerator(seed: 91)
+        let bout = BattleBout(
+            player: DigimonPresentation(displayName: "Hero", stage: .child, spriteFile: "Agumon"),
+            opponent: DigimonPresentation(displayName: "Foe", stage: .adult, spriteFile: "Greymon"),
+            report: BattleEngine.resolve(playerPower: 40, opponentPower: 40, using: &generator))
+
+        let shipped = BattleView(bout: bout, onFinish: {})
+        XCTAssertEqual(shipped.introDuration, 1.2, accuracy: 0.001)
+        XCTAssertEqual(shipped.turnDuration, 1.4, accuracy: 0.001)
+        XCTAssertEqual(shipped.flightDuration, 1.1, accuracy: 0.001)
+
+        let paced = BattleView(bout: bout, onFinish: {},
+                               introDuration: 0.01, turnDuration: 0.02, flightDuration: 0.03)
+        XCTAssertEqual(paced.introDuration, 0.01, accuracy: 0.0001)
+        XCTAssertEqual(paced.turnDuration, 0.02, accuracy: 0.0001)
+        XCTAssertEqual(paced.flightDuration, 0.03, accuracy: 0.0001)
+    }
+}

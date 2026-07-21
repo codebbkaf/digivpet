@@ -417,3 +417,67 @@ NOTES FOR LATER STORIES
 - The 46mm sim's wedged notification alert (flagged by US-089) is GONE — it took
   `xcrun simctl erase BA425DD4-8856-4933-8198-0E4B89960E48` followed by a
   re-boot and re-install. Screenshots on 46mm work again.
+
+## 2026-07-21 — US-091: Slow, eased projectile flight
+
+DONE. Every acceptance criterion observed — four by test, two by measured
+Simulator screenshots.
+
+WHAT CHANGED
+- `Sources/BattleView.swift`
+  - New injectable `flightDuration`, and three named constants the properties
+    now default from: `defaultIntroDuration = 1.2`, `defaultTurnDuration = 1.4`,
+    `defaultFlightDuration = 1.1` (were 1.0 / 0.7 / none). The flight is a
+    SEPARATE knob from the turn — that is the whole point of the story: the shot
+    lands at 1.1s and the remaining 0.3s of the turn is the defender's hurt loop
+    alone, which is what makes an exchange read as a hit.
+  - `run()` flies the projectile with `Self.flightAnimation(duration:)` over
+    `flightDuration`, not `.linear(duration: turnDuration)`.
+  - New `static func flightAnimation(duration:) -> Animation` returning
+    `.easeInOut`. Pulled out of the `withAnimation` call ON PURPOSE: `Animation`
+    is `Equatable`, so AC1 ("easeInOut, not linear") becomes a real assertion
+    instead of something only a video could show.
+- `Sources/ContentView.swift` — the shipped pacing now READS `BattleView.default*`
+  rather than repeating 1.0 / 0.7 as literals, so the app and the tests cannot
+  drift apart. New `battleFlightDuration`, stretched to 12s under
+  `-battleTurnDemo` / `-battleSignatureDemo` — NOT to the 60s the turn is
+  stretched to (see the trap below).
+- `Tests/BattleTests.swift` — new `BattlePacingTests`, 4 tests: flight < turn;
+  the animation IS `.easeInOut` and is NOT `.linear`; intro + 6 turns < 12s; and
+  the view really defaults to 1.2/1.4/1.1 while all three stay injectable.
+
+VERIFICATION
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
+- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1116 tests, 0 failures (was
+  1112; the 4 new ones are the delta). Whole suite still 11.4s — no test waits a
+  single one of these beats.
+- AC6, measured rather than reasoned: `-battleDemo` (SHIPPED pacing) on the 42mm,
+  screenshotted in a burst at ~0.13s cadence and classified in Swift by lit-pixel
+  bands. Arena first drawn at t=360.387, result screen ("Victory!" + Done) at
+  t=371.978 → **11.59s wall clock**, for a battle of **7 exchanges** (counted as
+  7 separate flame crossings of the centre band) against DarkTyranomon. Seven is
+  one ABOVE the story's 4-6 median band, so a median battle is
+  1.2 + 6*1.4 ≈ 9.6s of pacing, ~10.2s wall clock. Under 12s with room.
+- AC7, measured in pixels rather than eyeballed: `-battleTurnDemo`, two shots
+  0.401s apart (t=262.121 and t=262.522). Flame centroid 148.8px → 162.9px
+  (74.4pt → 81.5pt) — a 14px move, over HALF the glyph's own 23px width.
+  Confirmed visually too: mid-gap in one shot, against the opponent by the end
+  of the burst.
+- Easing is visible in that same burst as ACCELERATION: displacement per 0.13s
+  frame ran 2px early, 4px at mid-flight, 5px late. `.linear` would be flat.
+
+TRAP FOR THE NEXT ITERATION — the demo flight is NOT the turn
+- `-battleTurnDemo` holds an exchange for 60s. Do NOT let the flight inherit
+  that: a shot crawling ~150pt over 60s moves ~2px in 0.4s and photographs as a
+  still. 12s was chosen so it is slow enough for `simctl` to catch mid-arc and
+  fast enough to have visibly moved between two shots. If you change the demo
+  turn length, leave `battleFlightDuration` alone.
+- The 46mm sim (BA425DD4) has the wedged notification-permission alert BACK —
+  `-noNotificationPrompt` does not clear it because it is a system alert queued
+  outside the app. All screenshots here were taken on the **42mm**
+  (F4A12A1C-1C5E-4B83-8278-341634CDE4F5), which is clean. Erasing the 46mm fixes
+  it (US-090 did exactly that) but costs a boot + reinstall.
+- The screenshot classifier and the flame-centroid measurer were throwaway Swift
+  at /tmp/bands.swift and /tmp/flame.swift, deliberately NOT committed — they
+  hard-code this screen's band geometry and would rot into a lie. Re-writing one
+  is ten minutes; trusting a stale one is worse.

@@ -88,10 +88,25 @@ struct BattleView: View {
     }
     @State private var beat: Beat = .intro
 
-    /// How long the stare-down and each exchange hold. Injected for the same reason the ceremony's
-    /// beats are — a test drives the whole battle in milliseconds instead of waiting it out.
-    var introDuration: TimeInterval = 1.0
-    var turnDuration: TimeInterval = 0.7
+    /// How long the stare-down and each exchange hold, and how long a shot spends in the air. Injected
+    /// for the same reason the ceremony's beats are — a test drives the whole battle in milliseconds
+    /// instead of waiting it out.
+    var introDuration: TimeInterval = BattleView.defaultIntroDuration
+    var turnDuration: TimeInterval = BattleView.defaultTurnDuration
+    var flightDuration: TimeInterval = BattleView.defaultFlightDuration
+
+    /// The shipped pacing (US-091). Named constants rather than literals on the properties above so a
+    /// test can assert the one invariant that makes an exchange readable — the shot LANDS inside the
+    /// turn that threw it, `defaultFlightDuration < defaultTurnDuration` — instead of trusting three
+    /// numbers scattered across two files not to drift apart. `ContentView` reads these too, so the
+    /// app and the defaults cannot disagree.
+    ///
+    /// The flight is a hair short of the turn on purpose: the remaining ~0.3s is the beat where the
+    /// projectile has hit and the defender's hurt loop is the only thing moving, which is what makes
+    /// an exchange read as a hit rather than as a flicker.
+    static let defaultIntroDuration: TimeInterval = 1.2
+    static let defaultTurnDuration: TimeInterval = 1.4
+    static let defaultFlightDuration: TimeInterval = 1.1
 
     /// Debug-only: the single exchange to skip straight to after the intro, instead of playing every
     /// turn in order. nil in the app — every battle plays out normally. Set by `ContentView`'s
@@ -229,6 +244,14 @@ struct BattleView: View {
         rightward ? span * (progress - 0.5) : span * (0.5 - progress)
     }
 
+    /// The curve a shot flies on: eased, so it leaves the attacker with a wind-up and arrives with a
+    /// settle rather than sliding across at a constant crawl (US-091). Static and separate from the
+    /// `withAnimation` call for the same reason `faces(_:)` is — `Animation` is `Equatable`, so a test
+    /// can assert this IS `.easeInOut` and is NOT `.linear`, which no screenshot can show.
+    static func flightAnimation(duration: TimeInterval) -> Animation {
+        .easeInOut(duration: duration)
+    }
+
     /// The outcome: the winner's happy frame (7) on a win, the player's hurt frame on a loss.
     private var result: some View {
         VStack(spacing: 6) {
@@ -323,12 +346,13 @@ struct BattleView: View {
 
         let indices = demoFocusTurn.map { [$0] } ?? Array(bout.report.turns.indices)
         for index in indices where bout.report.turns.indices.contains(index) {
-            // Snap the projectile back to the attacker (no animation), then fly it across the gap
-            // over the exchange's own beat — so impact lands as the exchange ends and the defender is
-            // already in its hurt loop. Driven off `turnDuration`, so a test still runs in milliseconds.
+            // Snap the projectile back to the attacker (no animation), then fly it across the gap over
+            // `flightDuration` — which is SHORTER than the turn, so the shot lands with a beat of the
+            // defender's hurt loop still to run before the next exchange begins. Both are injected, so
+            // a test still runs a whole battle in milliseconds.
             projectileProgress = 0
             withAnimation(.easeInOut(duration: 0.15)) { beat = .turn(index) }
-            withAnimation(.linear(duration: turnDuration)) { projectileProgress = 1 }
+            withAnimation(Self.flightAnimation(duration: flightDuration)) { projectileProgress = 1 }
             try? await Task.sleep(for: .seconds(turnDuration))
         }
 
