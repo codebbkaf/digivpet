@@ -33,6 +33,14 @@ struct ContentView: View {
     /// through the game's own handler rather than the hardware.
     @State private var showsCrownSprintDemo = CommandLine.arguments.contains("-crownSprintDemo")
         || CommandLine.arguments.contains("-crownSprintResultDemo")
+    /// US-080's reflex strike, on the same footing again: `-reflexStrikeDemo` pins the wait long
+    /// enough that one launch can be screenshotted on both sides of it, `-reflexStrikeResultDemo`
+    /// shows the grade a fast answer earned, and `-reflexStrikeFalseStartDemo` shows what tapping
+    /// early costs. `simctl` cannot tap, so the last two stage the reaction and let the real rule
+    /// grade it.
+    @State private var showsReflexStrikeDemo = CommandLine.arguments.contains("-reflexStrikeDemo")
+        || CommandLine.arguments.contains("-reflexStrikeResultDemo")
+        || CommandLine.arguments.contains("-reflexStrikeFalseStartDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -156,6 +164,33 @@ struct ContentView: View {
         }
         return game
     }
+
+    /// The reflex strike staged for a screenshot. `simctl` cannot tap, so the two decided rounds
+    /// stage a reaction time and let the real `grade(latency:)` say what it was worth.
+    ///
+    /// `-reflexStrikeDemo` pins the wait to a stretched-out eight seconds and holds the reaction
+    /// window open, so ONE launch can be screenshotted before and after the signal — the round is
+    /// the real one, sleeping on a real drawn delay and revealing itself, with nothing staged.
+    /// `-reflexStrikeResultDemo` stages exactly `perfectLatency`, which is the threshold itself
+    /// rather than a number that happens to clear it.
+    /// `-reflexStrikeFalseStartDemo` stages a tap two tenths BEFORE the signal, which is a negative
+    /// latency and so the false start rule (AC2) rendering its own verdict.
+    private static var reflexStrikeDemoGame: ReflexStrikeGame {
+        var game = ReflexStrikeGame(onFinish: { _ in })
+        if CommandLine.arguments.contains("-reflexStrikeResultDemo") {
+            game.demoLatency = ReflexStrikeGame.perfectLatency
+            game.resultDuration = 600
+        } else if CommandLine.arguments.contains("-reflexStrikeFalseStartDemo") {
+            game.demoLatency = -0.2
+            game.resultDuration = 600
+        } else {
+            // A pinned wait rather than a wide one: a screenshot has to know which side of the
+            // signal it is on. It is still drawn through `delay(using:range:)` and still slept.
+            game.delayRange = 8...8
+            game.reactionTimeout = 600
+        }
+        return game
+    }
     #endif
 
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
@@ -265,6 +300,8 @@ struct ContentView: View {
                 Self.powerMeterDemoGame
             } else if showsCrownSprintDemo {
                 Self.crownSprintDemoGame
+            } else if showsReflexStrikeDemo {
+                Self.reflexStrikeDemoGame
             }
         }
         #endif

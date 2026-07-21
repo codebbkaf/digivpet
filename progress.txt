@@ -1906,3 +1906,102 @@ NOTES FOR THE NEXT ITERATIONS (US-080/081, then US-082/083)
    minigame yet. Still US-083's job. Four games conform now.
 
 Next: US-080 (training minigame — Reflex Strike).
+
+================================================================================
+2026-07-21 — US-080 — Training minigame: Reflex Strike            passes: TRUE
+================================================================================
+
+WHAT WAS BUILT
+
+`Sources/ReflexStrikeGame.swift` + `Tests/ReflexStrikeTests.swift`. Fifth game, same template as the
+last four: one file, one test file, NO project.yml edit (the Sources/ and Tests/ globs pick both up).
+The three demo flags are the only ContentView change.
+
+The game: a randomised wait, then a green signal, then you tap. Reaction time is the whole score.
+
+  - `delay(using:range:)`  — static, draws ONE wait from an inout `SeededGenerator`. This is AC3.
+  - `grade(latency:)`      — static, 0.25 / 0.5 / 1.0 seconds for perfect / great / good, inclusive
+                             of the better grade, and `guard latency > 0 else { return .miss }`.
+  - `makeGenerator: () -> SeededGenerator` — injected exactly like `MainScreenModel
+                             .makeBattleGenerator`, defaulted to a randomly seeded one. A factory
+                             rather than a generator because SeededGenerator is a value type you
+                             have to mutate to draw from.
+  - `delayRange` 1...3s, `reactionTimeout` 2s, `resultDuration` 1s — all stored properties with
+    defaults, so US-082 can retune the game per Digimon without touching a rule.
+
+THE ONE DESIGN DECISION WORTH INHERITING
+
+A false start is NOT a special case. It is a negative latency. The round fixes `signalDueDate` the
+moment it starts (start + drawn delay), so a tap before the signal has a real number to be early
+against, and `tap()` has ONE path for both a real reaction and a false start. That is what makes
+"grade-from-latency is pure and unit-tested INCLUDING the false start" one function rather than two.
+
+Two details in there that are load-bearing:
+  - Latency is measured from `signalDate` (the actual reveal) once the signal is up, not from the
+    due date — a Task.sleep that oversleeps by a millisecond must not be charged to the user.
+  - Before the reveal it is measured from the DUE date and clamped with `min(..., 0).nextDown`.
+    Without the clamp, a tap landing in the gap between "due" and "revealed" would score a positive
+    few-millisecond latency and win a perfect for reacting to a signal that is not on screen.
+  - Zero grades as a MISS, deliberately. A tap timed to the microsecond is a guess that got lucky,
+    and if it out-earned an honest reaction the game would be "mash from frame one".
+
+VERIFICATION — every AC, and how
+
+  Build   `xcodebuild build` on Series 11 46mm: ** BUILD SUCCEEDED **
+  Tests   `xcodebuild test`: Executed 983 tests, 0 failures. 19 of them are new.
+  AC1     `testEachThresholdIsInclusiveAndAHairPastIsTheGradeBeneath` walks all three thresholds
+          with `nextUp`, so the assertion is ON the boundary, not near it. The randomised-wait half
+          is AC3's tests plus the screenshots below.
+  AC2     `ReflexStrikeFalseStartTests` — early by any amount is a miss, zero is a miss, and
+          `testGuessingEarnsStrictlyLessThanTheSlowestHonestReaction` states the actual game-design
+          claim rather than just the arithmetic.
+  AC3     `testTheSameSeedDrawsTheSameDelay`, plus `testAWholeSequenceOfRoundsRepeatsFromTheSameSeed`
+          which also asserts the five draws are not all the same number — a constant wearing a
+          generator's clothes would pass the first test and fail this one. 200 seeds all land inside
+          the range. `testTheShippedGameDoesNotWaitTheSameLengthTwice` is the reverse guard: the
+          SHIPPED default must not be a pinned seed someone copy-pasted from a test.
+  AC4     `grade(latency:)` is static and exercised directly, false start included.
+  AC5     Screenshots, Series 11 46mm, all four observed and read:
+          /tmp/us080_wait.png and /tmp/us080_signal.png — ONE launch of `-reflexStrikeDemo`, shot at
+            ~4s and ~12s against a wait pinned to 8s. Dark circle + "Wait for it…", then the green
+            circle + "Strike!". Nothing staged in that run: the round drew its delay through
+            `delay(using:range:)`, slept it, and revealed itself. That is AC1's "after a delay a
+            signal appears" observed happening, not inferred.
+          /tmp/us080_result.png — `-reflexStrikeResultDemo`: "Perfect" in yellow, "0.25s" on a yellow
+            signal, "+3 STR". Staged at `ReflexStrikeGame.perfectLatency` BY NAME, so it is the
+            threshold itself and not a number that happens to clear it.
+          /tmp/us080_falsestart.png — `-reflexStrikeFalseStartDemo`: "Miss", grey signal still
+            UNLIT (the bolt at its dim waiting opacity), "Too soon", "+0 STR". A staged latency of
+            -0.2 going through the real rule.
+
+WHAT IS NOT CLAIMED
+
+Nobody tapped this. `simctl` cannot tap, so no real reaction time has ever been measured — the two
+decided rounds stage a latency and let the real `grade(latency:)` judge it. What that leaves untested
+is the wall-clock arithmetic in `tap()` itself (`Date().timeIntervalSince(signalDate)`), which is two
+lines and no branch. Same gap the masher and the meter have, and the same fix if it ever matters: a
+watchOS UI-test target, which is a story of its own.
+
+The three thresholds are a first guess, not a measured one. 0.25s is about the floor of a primed
+human thumb, so `perfect` is meant to be rare — if playtesting says it is impossible rather than
+rare, move `perfectLatency`, not the grading rule. `reactionTimeout` (2s) buys no grade at all; it
+only stops an unanswered round sitting lit forever.
+
+LAUNCH FLAGS
+
+`-noNotificationPrompt -healthAnswered` are STILL mandatory alongside any demo flag. Do NOT use
+`-healthAutoConfirm`. Do NOT uninstall the app. Bundle id is `com.digivpet.DigiVPet`.
+
+NOTES FOR THE NEXT ITERATIONS (US-081, then US-082/083)
+
+1. Five games in, the template still has not moved: a file plus a test file, no project.yml edit.
+2. US-081 (Sequence Recall) is tap-driven, so it is fully screenshottable with staged state — no
+   crown problem to budget for. It will want a randomised sequence: `delay(using:range:)` here is
+   the worked example of drawing from `SeededGenerator` in a View without breaking purity.
+3. `TrainingMinigame.remainingFraction(at:window:)` is there if a sixth game wants a draining bar.
+   This one deliberately does NOT use it — a bar would count the delay down and give away the one
+   thing the round is built on.
+4. The Train button still calls `TrainAction.train(_:isAsleep:result: .good)`; nothing opens a
+   minigame yet. Still US-083's job. Five games conform now.
+
+Next: US-081 (training minigame — Sequence Recall).
