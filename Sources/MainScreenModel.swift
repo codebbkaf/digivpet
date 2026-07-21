@@ -378,6 +378,11 @@ final class MainScreenModel: ObservableObject {
                 // only ever grows — `advance` inserts into it as it records.
                 self.discoveredDigimonIds = Set((try? store.dexIds()) ?? [])
                 self.store = store
+                // US-129, the first of the three failsafe checks: a store left with nothing alive in
+                // it — the app killed after the last Digimon died, or a grant whose save failed —
+                // hands the player an egg here, before the screen is ever drawn. The other two are
+                // in `refresh` (after a death) and, when it lands, after a Jogress.
+                checkForStranding()
                 publishSelectedMap()
                 self.phase = .playing
             } catch {
@@ -1099,6 +1104,11 @@ final class MainScreenModel: ObservableObject {
         // the stage counters a drop condition may read), the last of US-128's three drop checks: the
         // one that fires for a day's walking. It saves for itself, before this refresh's own flush.
         checkForDigitamaDrop()
+        // US-129, after `updateDeath` and after the drop check: the refresh that finds the last
+        // Digimon dead is the moment the player has nothing left, so the egg is waiting by the time
+        // the memorial is drawn. A no-op on every other refresh — see
+        // `GameStore.grantFailsafeDigitamaIfStranded`.
+        checkForStranding()
         do {
             try store?.save()
         } catch {
@@ -2280,6 +2290,32 @@ final class MainScreenModel: ObservableObject {
     /// Clears the pending drop once its banner has been dismissed, so it shows exactly once.
     func acknowledgeDigitamaDrop() {
         pendingDigitamaDrop = nil
+    }
+
+    /// Hands the player a fresh `agu_digitama` if their box has left them with nothing to raise
+    /// (US-129), from the two places the box can empty today: `start()` and the refresh that settles
+    /// a death. US-132's Jogress is the third and must call this after it consumes its parents.
+    ///
+    /// Silent on purpose — it does NOT raise `pendingDigitamaDrop`. That banner announces a REWARD
+    /// the player earned on a map, and the failsafe is a floor rather than a prize; more concretely,
+    /// it fires at exactly the moment the memorial covers the screen, so a banner would either be
+    /// hidden under it or arrive after a rebirth had already replaced the egg it named. The party
+    /// screen is where the egg is found.
+    ///
+    /// The Dex set is kept in step the way `advance` and the drop check do, so the map detail and the
+    /// Dex reveal the egg at once rather than at the next launch.
+    private func checkForStranding() {
+        guard let store else { return }
+        do {
+            guard let egg = try store.grantFailsafeDigitamaIfStranded(now: now()) else { return }
+            discoveredDigimonIds.insert(egg.currentDigimonId)
+            Self.log.info("Failsafe: the box held nothing alive, granted \(egg.currentDigimonId)")
+        } catch {
+            // The player keeps whatever the box already held, and the next launch checks again — the
+            // condition is derived from the box, so a failed grant is retried for free rather than
+            // being lost.
+            Self.log.error("Could not grant the failsafe Digitama: \(String(describing: error))")
+        }
     }
 
     /// What to show on the memorial screen, or nil while the Digimon lives.

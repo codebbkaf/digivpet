@@ -111,6 +111,21 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   build that created X.** US-124's `isActive` stamp lives inside `loadOrCreateProfile`, which
   returns early once there is a profile — so it needs the `nil`-default backstop as well. When
   adding a migration, ask which SHIPPED build the player is coming from, not just which schema.
+- **NEVER chain a `GameStore` temporary into a `@Model` read in a test:
+  `try GameStore(url: url).loadOrCreateProfile()` CRASHES the whole test host.** ARC releases the
+  store the instant the call returns, a released store's `ModelContext` is reset, and the returned
+  `PlayerProfile`/`GameState` is destroyed with it — the next assertion trips
+  `SwiftData/BackingData.swift:835: Fatal error: This model instance was destroyed by calling
+  ModelContext.reset`. Bind the store to a local first (`let store = try GameStore(url: url)`), and
+  keep it alive for as long as anything it handed out is read. Cost a full test run in US-129.
+- **A crashed test host makes `xcodebuild test` LIE about the total, and the lie looks like a pass.**
+  It relaunches and the final summary counts only the tests since the relaunch — US-129 saw
+  `Executed 962 tests, with 0 failures` from a suite of 1623, with `** TEST FAILED **` the only
+  signal, and that came bundled with an unrelated `xcrun: error: unable to find utility "simctl"`
+  from diagnostics collection. ALWAYS compare the summary against
+  `grep -rcE '^\s+func test' Tests/*.swift`; if it is short, grep the log for `Fatal error` and
+  `Restarting after unexpected exit`. A trailing `simctl` diagnostics error on its own is
+  environmental and does NOT mean a test failed — read the Executed line.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -1209,4 +1224,70 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-129 onward (15/56 passing). Phase C's drop engine is done; US-129's failsafe and Phase D's
   Jogress are next. `MainScreenModel.heldDigitamaIds` and `GameStore.grantDigitama` are the seams
   US-129/US-132 will reuse.
+---
+
+## 2026-07-22 — US-129: Never stranded — the Agumon failsafe
+- `Sources/StrandedFailsafe.swift` (new): `StrandedFailsafe.digitamaId` (`agu_digitama`) and
+  `isStranded(in:)` — a PURE predicate over a box of `GameState`. Written as AC1's two clauses
+  (no living Digimon, no unhatched Digitama) rather than collapsed to "nothing alive", which they
+  are equivalent to today.
+- `Sources/GameStore.swift`: `grantFailsafeDigitamaIfStranded(now:)` — returns the granted egg or
+  nil. Grants through the existing `grantDigitama`, so the egg lands exactly as a US-128 drop does:
+  FROZEN, inactive, in the Dex and on `PlayerProfile.ownedDigitamaIds`, one saved transaction.
+- `Sources/MainScreenModel.swift`: `checkForStranding()`, called from `start()` (the launch check)
+  and from `refresh()` after `updateDeath`/`checkForDigitamaDrop` (the death check). It is silent —
+  it does NOT raise `pendingDigitamaDrop`; see below.
+- Files: Sources/StrandedFailsafe.swift (new), Sources/GameStore.swift, Sources/MainScreenModel.swift,
+  Tests/StrandedFailsafeTests.swift (new, 18 tests). `xcodegen generate` for the new files.
+- PASSED: build green. `Executed 1623 tests, with 0 failures` (1605 + 18 new), `** TEST SUCCEEDED **`.
+  The 18 new were also observed passing on their own with `-only-testing`, grepped not inferred.
+- PASSED, criterion by criterion:
+  - AC1: `testAWipeoutIsHandedTheAgumonEgg` — a store whose only Digimon is dead, with NO map
+    selected and no condition met, gets `agu_digitama` in the box, held, in the Dex and ever-owned.
+  - AC2: `testTheEggIsGrantedEvenWhenTheDeadDigimonHatchedFromIt` — the corpse's
+    `originDigitamaId` IS `agu_digitama` and it is already in `ownedDigitamaIds`, and the egg is
+    still handed over. This is why the failsafe deliberately shares nothing with the drop engine:
+    no held-set check, no `ConditionContext`, no generator.
+  - AC3: idempotent within a wipeout (a second and third call hand over nothing), across a REOPEN
+    off disk, and through the model on a second launch — plus `testASecondWipeoutIsHandedAnotherEgg`,
+    which is the other half: losing the failsafe egg too is a NEW wipeout and the floor holds again.
+  - AC4: launch (`testALaunchOnAWipedOutStoreGrantsTheEgg`) and after a death through the REAL rule
+    (`testTheRefreshThatFindsTheDigimonDeadGrantsTheEgg`, 80 hours sick settled by `refresh()`).
+    THE JOGRESS CALL SITE DOES NOT EXIST YET — see the honest note below.
+  - AC5/AC6: `testLifetimeEnergyAndMapProgressSurviveTheFailsafe`, asserted after a reopen off disk —
+    111/222/333/444, `selectedMapId` `02_river`, 900 steps and the `finishedAt` stamp on
+    `01_grassland` all unchanged. Structural: nothing here goes near `resetGame`.
+  - AC7 is AC3's reopen test, twice — through the store and through `MainScreenModel.start()`.
+- **HONEST NOTE ON AC4's THIRD CLAUSE:** "after a Jogress" cannot be observed, because US-132 has not
+  been written. The seam is `MainScreenModel.checkForStranding()` and the comment on it names US-132
+  as the third caller; US-132's own acceptance criteria in the PRD already include "The US-129
+  failsafe check runs afterwards", so the clause is owned by a story that will assert it. Nothing
+  else about this story is deferred.
+- **Learnings for future iterations:**
+  - **Idempotence that is DERIVED needs no flag.** "Once per wipeout, not once per launch" falls out
+    of the grant itself ending the wipeout: the egg it inserts is a living unhatched Digitama, so
+    `isStranded` is false the instant it returns. No `hasGrantedFailsafe` field to store, migrate or
+    get wrong — the same lesson as `heldDigitamaIds` (US-127) and the one-active invariant (US-124).
+    Reach for a stored flag only when the condition is about HISTORY rather than about the box.
+  - **A FOUND DEFECT, NOT FIXED HERE, and the next iteration to touch the memorial should know:
+    `dismissMemorial` → `GameStore.rebirth` → `resetGame` DELETES THE WHOLE BOX.** That was
+    deliberate for a total wipe when there was one Digimon (US-124 notes say so), but since US-124
+    the box can hold frozen LIVING Digimon and unhatched eggs, and the memorial's single button
+    destroys all of them. Concretely for this story: the failsafe egg granted at a death sits behind
+    the memorial overlay (which is the topmost overlay in `ContentView`, so the map strip and
+    `PartyView` are unreachable while it is up), and the first tap deletes it and starts a random
+    fresh egg instead. US-129's ACs are all about the GRANT and are met, so this was left alone
+    rather than smuggled in — but a "the memorial takes out your next Digimon instead of wiping the
+    box" story is worth writing, and it would change `DeathTests`' two rebirth tests, which is
+    exactly why it is not a side effect of this one.
+  - **The failsafe fires on EVERY death in the shipped single-Digimon flow**, since one dead Digimon
+    with no egg is literally a wipeout. Two visible consequences: `agu_digitama` enters the Dex and
+    `ownedDigitamaIds` at every death, and it is HELD while the egg sits in the box — so a map
+    cannot drop `agu_digitama` (US-128) while the player is holding a failsafe one. Both are the
+    intended readings, but they are new facts about the save.
+  - **Do not announce a floor with a reward's banner.** `pendingDigitamaDrop` is deliberately not
+    raised: the failsafe fires at exactly the moment the memorial covers the screen, so the banner
+    would be hidden under it and then name an egg a rebirth had already deleted.
+- REMAINS: US-130 onward (16/56 passing). Phase C is COMPLETE. Phase D (Jogress, US-130..132) is next,
+  and US-132 must call `MainScreenModel.checkForStranding()` after it consumes its two parents.
 ---

@@ -259,6 +259,32 @@ final class GameStore {
         return egg
     }
 
+    /// Hands the player `agu_digitama` if the box has left them with nothing to raise (US-129).
+    ///
+    /// Returns the granted egg, or nil when the player is not stranded — which is the normal answer
+    /// and the reason this is safe to call on every launch, after every death and after every
+    /// Jogress, the three ways the box can empty.
+    ///
+    /// THE IDEMPOTENCE (AC3) IS STRUCTURAL, and that is the whole design: the grant puts a living
+    /// unhatched Digitama in the box, so `isStranded` is false the instant it returns and stays false
+    /// until that egg is gone too. There is no "already granted" flag to store, to migrate or to get
+    /// wrong — "once per wipeout, not once per launch" falls out of the condition being about the box
+    /// rather than about history. A player who hatches the failsafe egg and loses it as well is in a
+    /// NEW wipeout and is handed another, which is what a floor means.
+    ///
+    /// Grants through `grantDigitama`, so the egg lands exactly as a found one does: frozen, inactive
+    /// and recorded in the Dex, in one saved transaction. It does NOT activate it — the dead Digimon
+    /// stays out until the player takes the egg out themselves, so US-124's one-active invariant is
+    /// untouched and nothing here can make a memorial vanish out from under the player.
+    ///
+    /// Nothing that outlives a Digimon is touched: `lifetimeEnergy` and the map progress live on
+    /// `PlayerProfile` (US-123) and this never goes near `resetGame` (AC5/AC6).
+    @discardableResult
+    func grantFailsafeDigitamaIfStranded(now: Date = Date()) throws -> GameState? {
+        guard StrandedFailsafe.isStranded(in: try allStates()) else { return nil }
+        return try grantDigitama(StrandedFailsafe.digitamaId, now: now)
+    }
+
     /// Records a Digimon in the Dex the first time it is discovered.
     ///
     /// Idempotent: a Digimon already in the Dex is not duplicated and its `firstDiscovered` date is
