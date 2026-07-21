@@ -80,6 +80,20 @@ extension MapProgress {
         guard finishedAtStorage[id] == nil else { return }
         finishedAtStorage[id] = date
     }
+
+    #if DEBUG
+    /// Debug-only: wipes every counter, stamp and the selection.
+    ///
+    /// The inverse of the US-119 screenshot flags, and compiled out of release builds because it is
+    /// the one operation the game itself must never perform — map progress is what outlives a
+    /// Digimon's death and a rebirth, so a shipped "clear it all" would be a way to lose it. See
+    /// `MainScreenModel.seedMapListDemoIfRequested`.
+    func clearForDemo() {
+        selectedMapId = nil
+        recordedStorage = [:]
+        finishedAtStorage = [:]
+    }
+    #endif
 }
 
 /// Credits already-deduplicated step deltas to the map the player is currently in (US-118).

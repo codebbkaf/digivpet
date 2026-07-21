@@ -363,3 +363,68 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   screen that reads them, and `MapProgress.recordedByMap` + `finishedAt(forMap:)` are what it
   wants. `MainScreenModel.selectMap(_:)` is already the call US-120's list makes.
 ---
+
+## 2026-07-22 — US-119: Map list screen
+- `Sources/MapListView.swift` (new): `MapListRow` — a pure value built from `MapCatalog` +
+  `MapProgress`, carrying the name, the art, the floored counter, both marks, the lock, the unlock
+  line and `contents` — plus `MapListMarks` (the three glyph names), `MapListSelector` (what a tap
+  does to the selection) and `MapListView` itself. The view is a layout of those fields and holds
+  no rule of its own, which is the only reason 30 tests can reach this screen at all.
+- `Sources/MainScreenModel.swift`: `mapRows` (computed off the INJECTED catalog, like
+  `selectedMapAsset`), and `seedMapListDemoIfRequested`.
+- `Sources/ContentView.swift`: `MapListView` pushed onto the app's one `NavigationStack`, beside
+  the Dex, so it keeps a back button and US-121 can push a detail on top of it.
+- `Sources/MapProgress.swift`: `clearForDemo()`, DEBUG-only.
+- Files: Sources/MapListView.swift (new), Sources/MainScreenModel.swift, Sources/ContentView.swift,
+  Sources/MapProgress.swift, Tests/MapListTests.swift (new, 30 tests). No project.yml change —
+  `Sources` and `Tests` are directory globs.
+- PASSED: build green. `Executed 1416 tests, with 0 failures` (1386 + the 30 new). All 30 were also
+  observed passing on their own with `-only-testing`, grepped rather than inferred.
+- PASSED, criterion by criterion:
+  - AC2/AC3: one row per map in catalog order (which is tier order, asserted as an invariant over
+    the real file rather than as sixteen re-typed strings), and `progressText` is exactly
+    `1222 / 25000`.
+  - AC4: `checkmark.seal.fill`/green vs `figure.walk.circle.fill`/orange — different on BOTH
+    channels, asserted pairwise and photographed together on one row.
+  - AC5: a locked row's `contents` is nil and its line is `Finish <previous displayName>`; all 15
+    locked rows over the shipped chain name a real map.
+  - AC6: `MapListSelector` hands `current` back unchanged for a locked row, and the view disables
+    the button as well.
+  - AC7: `50000 / 50000` in full on 41mm and 46mm, no truncation, no ellipsis.
+- **Learnings for future iterations:**
+  - **NEVER FORMAT A COUNT WITH `NumberFormatter` WHEN THE CRITERION NAMES AN EXACT STRING.** It is
+    locale-dependent: `25000` renders as `25,000` in en_US, `25.000` in de_DE and `25 000` (with a
+    NON-BREAKING space) in fr_FR — three strings for one AC, and the third would pass a naive
+    `contains(",")` check. String interpolation is the whole answer here. The test asserts the
+    absence of `,`, `.` and `\u{00A0}` for exactly that reason.
+  - **A DEMO FLAG THAT WRITES TO THE SAVE MUST BE IDEMPOTENT, not just reversible.** The Codebase
+    Patterns rule above says give it an inverse, and US-118 obeyed it — but that is not enough:
+    `-mapListDemo` credited a full map's worth on EVERY launch, so the second run photographed
+    `100000 / 50000` and the third would have shown 150000. A doubled counter looks completely
+    plausible in a screenshot. The seed now calls `clearForDemo()` first, so N launches and one
+    launch produce the same screen. Add "clears before it seeds" to the rule.
+  - That accident was worth something on its own: `100000 / 50000` — six digits over five — did not
+    truncate on 41mm either, so the layout has more headroom than the AC asks for.
+  - **`simctl` cannot scroll, so any list longer than a screen needs a `ScrollViewReader` +
+    `-...BottomDemo` hook or its far end can never be photographed.** Third time this project has
+    needed one (`-dexScrollDemo`, `-settingsBottomDemo`, now `-mapListBottomDemo`) and the 500ms
+    sleep before `scrollTo` is needed every time — `.task` runs before the rows are measured, and
+    scrolling to an unmeasured row lands short of it.
+  - The queued-notification trap bit again on the 46mm sim and cost another ~5 minutes:
+    `-noNotificationPrompt` does NOT dismiss an alert queued by an EARLIER build, so the first shot
+    came back as the permission sheet in Chinese. `simctl erase` on the device is still the only
+    fix, and `-healthAnswered` is mandatory afterwards or you land on onboarding.
+  - **Lock rule is deliberately ONE STEP — "is my predecessor finished" — not a walk up the whole
+    chain.** They agree on real data (a map cannot be finished without being selectable), and where
+    they differ the one-step answer is the one the row's own "Finish <previous>" sentence promises.
+    A lock that contradicts the line printed beside it is worse than a lock that opens early.
+  - `isFinished` comes off the finish STAMP rather than `recorded >= total`. The difference bites
+    the day a map is retuned longer in an update: the player really did cross the old line, and a
+    derived flag would take it back off them. Same reasoning as `MapProgress.markFinished`'s
+    once-only stamp, and US-121/122 should read the stamp too.
+  - `Int(x.rounded(.down))` for the counter, never `Int(x.rounded())`: a rounded 2999.6 would print
+    `3000 / 3000` on a map that is not finished, which is a screen contradicting itself.
+- REMAINS: US-120 onward (6/56 passing). `MapListView(rows: model.mapRows) { model.selectMap($0) }`
+  is exactly the expression US-120's strip needs to push, and the view already calls `dismiss()`
+  after a selection, which is that story's "pops back to the main screen".
+---

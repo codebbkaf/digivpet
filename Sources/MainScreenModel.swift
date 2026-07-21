@@ -369,6 +369,7 @@ final class MainScreenModel: ObservableObject {
         seedPoopDemoIfRequested()
         seedLightDemoIfRequested()
         seedMapDemoIfRequested()
+        seedMapListDemoIfRequested()
         // Every seed above runs AFTER the refresh that published, so the snapshot on disk still
         // describes the pre-demo game — a `-sickDemo -complicationDemo` run would screenshot an idle
         // pose. Republishing here is the same rule as `clean()`'s, applied to the demos: the state
@@ -830,6 +831,54 @@ final class MainScreenModel: ObservableObject {
         }
     }
 
+    /// Debug-only: fills in map progress so US-119's list can be screenshotted at its widest. The
+    /// Simulator earns no steps at all, so a real save there shows sixteen rows of `0 / n` with
+    /// fifteen of them locked — which shows neither the finished mark nor the six-digit progress
+    /// line the story has to prove does not truncate.
+    ///
+    /// - `-mapListDemo` — every map walked to exactly its total and finished, so map 16 reads
+    ///   `50000 / 50000`, the widest realistic figure, and every row is unlocked.
+    /// - `-mapListPartialDemo` — the mixed state a real player is in: the first two maps finished,
+    ///   the third part-walked and selected, the rest locked. Both marks, a lock and an unlock line
+    ///   on one screen.
+    /// - `-mapProgressResetDemo` — the inverse, and it exists because the two above WRITE TO THE
+    ///   SAVE. A demo flag with no way back poisons every screenshot taken on that container
+    ///   afterwards, silently; see `seedMapDemoIfRequested`, which learned it the expensive way.
+    ///
+    /// Credited through the shipped `MapStepCreditor` rather than by assignment, so the finish
+    /// stamps are the ones the real rule sets rather than ones this flag invented.
+    private func seedMapListDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        guard let mapProgress else { return }
+
+        if arguments.contains("-mapProgressResetDemo") {
+            mapProgress.clearForDemo()
+            publishSelectedMap()
+            try? store?.save()
+            return
+        }
+
+        let partial = arguments.contains("-mapListPartialDemo")
+        guard arguments.contains("-mapListDemo") || partial else { return }
+
+        // Cleared first, or the flag is not IDEMPOTENT: the selection and the counters are saved,
+        // so a second launch adds a second map's worth on top of the first. The screenshot caught
+        // exactly that — map 16 read `100000 / 50000` on the second run — and a doubled counter
+        // still looks plausible, which is what makes it worth a line of code rather than a note.
+        mapProgress.clearForDemo()
+
+        // Walked one map at a time through the real creditor, because it is the creditor that
+        // stamps a finish — crediting the whole lot against one selection would bank every step on
+        // that one map and finish nothing else.
+        for (index, map) in maps.maps.enumerated() {
+            if partial && index > 2 { break }
+            mapProgress.selectedMapId = map.id
+            let steps = partial && index == 2 ? Double(map.totalSteps) / 3 : Double(map.totalSteps)
+            MapStepCreditor.credit(steps: steps, to: mapProgress, catalog: maps, now: now())
+        }
+        selectMap(partial ? maps.maps.dropFirst(2).first?.id : maps.maps.first?.id)
+    }
+
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
     /// taking screenshots; short enough that a burst does not have to run for a minute.
     private static let poopCleanDemoDelay: TimeInterval = 10
@@ -1014,6 +1063,16 @@ final class MainScreenModel: ObservableObject {
             // screen away from the user, but it does not pass in silence.
             Self.log.error("Could not save the map selection: \(String(describing: error))")
         }
+    }
+
+    /// The sixteen maps as `MapListView` draws them (US-119): catalog order, with the save's
+    /// counters, finish stamps and selection folded in.
+    ///
+    /// Computed rather than published, because everything it reads is already observable — the
+    /// catalog is a constant and `MapProgress` is a `@Model`, so a view that builds this inside
+    /// `body` redraws when a step is credited to it.
+    var mapRows: [MapListRow] {
+        MapListRow.rows(in: maps, progress: mapProgress)
     }
 
     /// Republishes the background asset from the saved selection. The one place the two are joined.

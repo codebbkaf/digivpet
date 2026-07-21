@@ -13,6 +13,10 @@ struct ContentView: View {
     @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
     @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     @State private var showsTreeDemo = CommandLine.arguments.contains("-dexTreeDemo")
+    /// US-119's map list. Pushed from the launch command because nothing on the main screen reaches
+    /// it yet — the strip that will is US-120 — and because `simctl` could not tap it if it did.
+    @State private var showsMapListDemo = CommandLine.arguments.contains("-mapListDemo")
+        || CommandLine.arguments.contains("-mapListPartialDemo")
     /// US-076's timing bar, in isolation from whichever game Train actually opens. `-timingBarDemo`
     /// shows it sweeping; `-timingBarResultDemo` shows a decided round, since `simctl` cannot tap
     /// the marker to decide one.
@@ -318,6 +322,13 @@ struct ContentView: View {
             // independent of whatever the shipped roster happens to hold.
             .navigationDestination(isPresented: $showsTreeDemo) {
                 EvolutionTreeDemoView()
+            }
+            // US-119's map list, on the same footing and for the same reason: it is pushed onto
+            // THIS stack — the one the Dex uses — so what the screenshot photographs is the real
+            // destination, back button and all, and not a preview of it. US-120's strip is what
+            // will push it with a tap.
+            .navigationDestination(isPresented: $showsMapListDemo) {
+                MapListView(rows: model.mapRows) { model.selectMap($0) }
             }
             #endif
         }
