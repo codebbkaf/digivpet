@@ -32,21 +32,24 @@ struct ComplicationEntry: TimelineEntry {
 ///
 /// ## Cadence
 ///
-/// Five seconds, and that number is measured, not chosen — see `docs/widget-refresh-granularity.md`.
-/// US-048 put the complication in a real face slot and read the repaint interval out of chronod:
-/// 5 s was honoured *exactly* on every sample across three passes, while 1 s jittered between 1.0 and
-/// 2.0 s and silently dropped frames. A two-frame walk that stutters reads worse than one that is
-/// steady, so the finest reliable spacing wins over the finest possible one.
+/// One second (US-107). US-048 measured the floor and wrote it down in
+/// `docs/widget-refresh-granularity.md`: 1 s is *honoured but jittery* — chronod served entries
+/// between 1.00 s and 2.00 s apart across three passes, with no stable pattern — while 5 s was exact
+/// on every sample. US-049 therefore shipped 5 s. US-107 trades that steadiness for liveliness on
+/// purpose: a step every five seconds reads as a shuffle, and a walk that occasionally holds a frame
+/// for two seconds still reads as walking. Frames WILL sometimes be served late; that is accepted,
+/// not a defect to chase.
 ///
 /// ## Horizon, and what happens when it runs out
 ///
-/// `motionEntryCount` entries — five minutes of walking — then `.after` the last entry asks WidgetKit
-/// for a fresh batch. The horizon is the thing worth thinking about, not the spacing: US-048 also
-/// confirmed a whole batch is ONE budget charge however many entries it holds (the 29-minute ladder
-/// cost exactly 2 `getTimeline` calls), so a 5 s batch is no more expensive than a 5 min one. What
-/// costs is how often the batch is re-requested, and five minutes is a deliberate compromise: short
-/// enough that a few hundred entries never have to be rendered and archived at once, long enough that
-/// the reload rate stays in the same order as a widget's daily refresh budget.
+/// `motionEntryCount` entries — still five minutes of walking — then `.after` the last entry asks
+/// WidgetKit for a fresh batch. **The spacing got finer and the horizon did not move**, so the entry
+/// count went 60 → 300 and the reload rate did not change at all. That is the whole reason this is
+/// affordable: US-048 confirmed a batch is ONE budget charge however many entries it holds (the
+/// 29-minute ladder cost exactly 2 `getTimeline` calls), so entries are free and reloads are not.
+/// Keeping 60 entries at 1 s would have been a one-minute horizon — 1440 reloads a day, budget spent
+/// by mid-morning, and WidgetKit then freezing on the last entry, which is a STILL sprite and so
+/// strictly worse than the 5 s walk this replaces.
 ///
 /// **When the budget is spent, WidgetKit simply keeps showing the last entry.** That is a still
 /// sprite — precisely the behaviour that shipped before this story — so running out degrades to the
@@ -57,11 +60,11 @@ struct ComplicationEntry: TimelineEntry {
 /// hardware. Assume the sprite may hold one frame with the wrist down. Nothing in the design depends
 /// on the motion being visible in AOD — it is garnish on a complication that reads fine frozen.
 enum ComplicationTimeline {
-    /// Seconds between entries. The measured floor that is honoured exactly (US-048).
-    static let frameInterval: TimeInterval = 5
+    /// Seconds between entries. The measured floor — honoured, but expect some frames late (US-107).
+    static let frameInterval: TimeInterval = 1
 
-    /// Entries per batch: 60 x 5 s = a five-minute horizon.
-    static let motionEntryCount = 60
+    /// Entries per batch: 300 x 1 s = the same five-minute horizon 60 x 5 s gave.
+    static let motionEntryCount = 300
 
     /// How long a held pose sits before asking for a refresh anyway.
     ///
@@ -94,7 +97,7 @@ enum ComplicationTimeline {
             return start.addingTimeInterval(heldRefreshInterval)
         }
         // One `frameInterval` past the LAST entry, so the final frame gets shown for as long as the
-        // fifty-nine before it rather than being cut short by the reload.
+        // 299 before it rather than being cut short by the reload.
         return start.addingTimeInterval(Double(motionEntryCount) * frameInterval)
     }
 
@@ -324,11 +327,10 @@ struct DigiVPetComplicationEntryView: View {
 /// face will, and it is compiled out of a release build entirely. It renders the SAME views the
 /// extension does, so a sprite that failed to resolve here would fail there too.
 /// Since US-049 it also steps through the REAL batch `ComplicationTimeline` generates, on the real
-/// `frameInterval`, rather than drawing one fixed frame. Two screenshots taken more than five seconds
-/// apart therefore land on different entries and show different frames — which is how US-049's
-/// alternation gets verified without a watch face, and it verifies the shipping batch rather than a
-/// second drawing of the same idea. The step index is on screen so a screenshot says which entry it
-/// caught.
+/// `frameInterval`, rather than drawing one fixed frame. Two screenshots taken more than one second
+/// apart therefore land on different entries and show different frames — which is how the alternation
+/// gets verified without a watch face, and it verifies the shipping batch rather than a second
+/// drawing of the same idea. The step index is on screen so a screenshot says which entry it caught.
 struct ComplicationDemoView: View {
     /// The published snapshot, falling back to the placeholder exactly as the provider does.
     ///

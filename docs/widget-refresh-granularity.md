@@ -187,6 +187,9 @@ and do not make the design depend on motion being visible in AOD.
 
 ## What US-049 actually shipped (2026-07-20)
 
+**Superseded on 2026-07-21 by US-107 — see "What US-107 shipped" below. This section is the record
+of what 5 s looked like, not the current cadence.**
+
 `ComplicationTimeline` in `Sources/ComplicationViews.swift`, built on the numbers above:
 
 - **5 s spacing**, as recommended — the finest interval honoured exactly on every sample.
@@ -215,6 +218,55 @@ was measured with the display awake. If a later story needs the wrist-down numbe
 instrument from the method described here — the entry-band design is written down, it is a page of
 code, and reconstructing it on demand is cheaper than carrying a dead widget that offers itself in
 the picker on every DEBUG install.
+
+## What US-107 shipped: 1 s / 300 entries (2026-07-21)
+
+The cadence changed from 5 s / 60 entries to **1 s / 300 entries**. The horizon did not move — it is
+the same five minutes, so the reload rate is unchanged and only the spacing got finer. That is the
+affordable direction, because a batch is one budget charge however many entries it holds (measured
+above). Keeping 60 entries at 1 s would have been a one-minute horizon, 1440 reloads a day, and a
+frozen still sprite once the budget ran out.
+
+**The 300-entry batch was accepted verbatim, in both families.** Read on Apple Watch Series 9 (45mm),
+watchOS 10.4, with the complication live in a face slot:
+
+```
+DigiVPetComplication:accessoryCircular    ... entry count: 300; date range: 15:44:30 to 15:49:29
+DigiVPetComplication:accessoryRectangular ... entry count: 300; date range: 15:44:30 to 15:49:29
+```
+
+299 s end to end, which is 300 entries at exactly 1 s. Seven reloads across the session all
+delivered 300; nothing was coalesced or truncated, so the 2 s / 150 fallback US-107 authorised was
+not needed. The two `succeeded with 1 entries` lines in the same log are the held-pose path, read
+before the published pose was edited from `sleeping` to `idle` — a live confirmation that a sleeping
+Digimon still gets exactly one entry.
+
+Repaints on the face were sampled by screenshotting the top-left circular slot 36 times at ~0.30 s
+and diffing the crop. The sprite alternated with gaps of **0.90, 0.91, 1.22, 0.89, 1.19, 0.93 s** —
+1 s repaints within one sample of the sampling error, no 2 s stalls in that window. The US-048
+warning still stands as the general case (1 s is best-effort and *can* be served late); this is one
+window, not a refutation of it.
+
+**AOD remains unmeasured.** It has needed real hardware since US-048 and still does. Everything here
+was measured with the display awake, so the wrist-down behaviour of this faster cadence is unknown
+by construction. Nothing in the design depends on it.
+
+### Two notes for whoever runs this rig next
+
+- **The shipping complication is not `accessoryCorner`**, so the Crosswind `top left` slot US-048
+  used is useless for it: chronod answers `CHSErrorDomain Code=1100 "No matching descriptor was
+  found for the kind and family specified."` and the widget stays `on no host`. Author a face with
+  circular/rectangular slots instead — a `face.json` with `"bundle id":
+  "com.apple.NTKInfographModularFaceBundle"`, the same `"type": 56` descriptor in `top left`,
+  `middle` and the three `bottom *` slots, plus a `manifest.plist` entry and `selected-uuid.string`
+  pointing at the new face UUID. Slots the face does not have are ignored, so listing all of them is
+  the cheap way to hit one. The `"style": 44` copied from Crosswind was left as-is and did not stop
+  the face loading.
+- **`log stream` misses the boot-time reload**, which is the interesting one. Use
+  `log show --last 4m` after the device is up instead. Reading a batch also needs a cache miss:
+  chronod will not re-request while an archive is valid (an hour, for a held pose), so delete
+  `.../PluginKitPlugin/<UUID>/SystemData/com.apple.chrono/timelines/DigiVPetComplication` before
+  booting.
 
 ## Ruled out, permanently
 

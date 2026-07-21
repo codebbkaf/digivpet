@@ -157,3 +157,49 @@ Previous wave archived to: archive/2026-07-21-elements-battle-depth-and-care-pol
 - REMAINS: US-107 onward. Nothing blocked. US-107 changes frameInterval to 1 s / 300 entries and
   must read docs/widget-refresh-granularity.md first — including the new section, which records
   that the AOD floor is unmeasured, i.e. US-107's wrist-down behaviour is unknown by construction.
+
+## 2026-07-21 — US-107: One-second complication cadence
+- `ComplicationTimeline.frameInterval` 5 -> 1 s and `motionEntryCount` 60 -> 300, so the five-minute
+  horizon and therefore the reload rate are UNCHANGED — only the spacing got finer. `reloadDate` is
+  untouched arithmetic (`count * interval`) and still lands one frameInterval past the last entry
+  (t+300 for an animating pose, heldRefreshInterval for a held one). The held-pose guard and
+  `heldRefreshInterval` were not touched.
+- The cadence doc comment was rewritten: it argued FOR 5 s over 1 s and would have contradicted the
+  code. It now states the trade explicitly (US-048 measured 1 s as honoured-but-jittery; frames WILL
+  sometimes be served late and that is accepted) and why 300 entries rather than 60 — 60 at 1 s is a
+  one-minute horizon, 1440 reloads a day, budget spent, then a frozen still sprite. The demo view's
+  "more than five seconds apart" comment was corrected to one second.
+- Tests: existing ComplicationTests updated rather than added to — the batch-count/horizon test now
+  asserts 300 entries with the last at t+299, the spacing test asserts frameInterval == 1, the
+  reload test additionally asserts `reload == entries.last.date + frameInterval` (constant-free, so
+  it holds if the two numbers move again), and the demo-selection test's 5 s boundaries became 1 s.
+  The alternation test (0,1,0,1 across the WHOLE horizon) and the held-pose test needed no change
+  and now cover 300 entries and 1 entry respectively.
+- PASSED: build green; 1281 tests, 0 failures (unchanged count — this story rewrote assertions
+  rather than adding cases).
+- PASSED on the Simulator, 42mm (F4A12A1C), `-complicationDemo -complicationEnergyDemo`: the screen
+  reads "step 1 of 300", and over a 36-shot burst at ~0.35 s the tile alternates between two frames
+  (lit=702 / lit=720). Of the 37 pairs ~1.05 s apart, 35 show DIFFERENT frames; the 2 identical ones
+  are the sampling phase crossing two swaps, not a dropped frame.
+- PASSED on the Simulator, Series 9 45mm (1E3ACFF4), watchOS 10.4, complication LIVE in a face slot:
+  chronod accepted the batch VERBATIM — `entry count: 300; date range: 15:44:30 to 15:49:29` (299 s,
+  i.e. 300 entries at exactly 1 s) on BOTH accessoryCircular and accessoryRectangular, 7 reloads all
+  300. Nothing coalesced or truncated, so the 2 s / 150 fallback US-107 authorised was NOT taken.
+  Two `succeeded with 1 entries` lines in the same log are the held-pose path, read before the
+  published pose was edited from `sleeping` to `idle` — a live confirmation of the one-entry rule.
+  Face repaints sampled by diffing the top-left circular slot 36 times at ~0.30 s: swaps at 0.90,
+  0.91, 1.22, 0.89, 1.19, 0.93 s apart — 1 s within the sampling error, no 2 s stall in that window.
+- Two things that cost time and are now written into docs/widget-refresh-granularity.md so the next
+  run does not rediscover them: (1) the SHIPPING complication is not `accessoryCorner`, so US-048's
+  Crosswind `top left` slot gives `CHSErrorDomain Code=1100 "No matching descriptor was found for
+  the kind and family specified"` and stays `on no host` — a hand-authored Infograph Modular face
+  (bundle id `com.apple.NTKInfographModularFaceBundle`, same `"type": 56` descriptor in `top left` /
+  `middle` / the three `bottom *` slots) hosts circular AND rectangular; (2) `log stream` misses the
+  boot-time reload, so use `log show --last 4m`, and delete the cached
+  `.../SystemData/com.apple.chrono/timelines/DigiVPetComplication` first or chronod never re-asks.
+- Simulator-only state left behind, NOT in the repo: Series 9 45mm now has that authored face at
+  UUID 11111111-2222-3333-4444-555555555555 (selected), and its published snapshot was hand-edited
+  to pose `idle` — the app overwrites that on next launch. Throwaway crop classifiers at
+  /tmp/us107/, not committed.
+- REMAINS: US-108 onward. Nothing blocked. AOD is still unmeasured and still needs real hardware —
+  this story made the cadence faster without learning anything about the wrist-down case.
