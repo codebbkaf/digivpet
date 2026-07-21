@@ -481,3 +481,74 @@ TRAP FOR THE NEXT ITERATION — the demo flight is NOT the turn
   at /tmp/bands.swift and /tmp/flame.swift, deliberately NOT committed — they
   hard-code this screen's band geometry and would rot into a lie. Re-writing one
   is ten minutes; trusting a stale one is worse.
+
+================================================================================
+2026-07-21 — US-092: BattleModifiers — effective power from matchup and training
+================================================================================
+STATUS: PASSES. Build green, 1135 tests / 0 failures (was 1116 — the 19 new ones
+are the delta). Pure arithmetic story, no UI, so no Simulator screenshot: every
+acceptance criterion is assertable in a unit test and all of them are asserted.
+
+WHAT CHANGED — two NEW files, nothing existing edited
+- `Sources/BattleModifiers.swift`
+  - `enum BattleModifiers` with the four named constants D-4 asks for:
+    `elementAdvantage = 1.25`, `elementDisadvantage = 0.8`,
+    `attributeAdvantage = 1.1`, `attributeDisadvantage = 0.9`.
+  - `elementFactor(_:against:)` / `attributeFactor(_:against:)` test BOTH
+    DIRECTIONS SEPARATELY and multiply both in if both apply. This is the
+    load-bearing design choice of the story — see the trap below.
+  - `effectivePower(basePower:elementFactor:attributeFactor:trainingFactor:)`
+    = `max(1, Int((base * e * a * t).rounded()))`. D-4 verbatim.
+  - `matchup(playerPower:playerType:opponentPower:opponentType:training:)`
+    returns `BattleMatchup { player, opponent, elementEffectiveness,
+    attributeEffectiveness }`, each side a `BattleSideModifiers { basePower,
+    elementFactor, attributeFactor, trainingFactor, effectivePower }` plus a
+    `totalFactor` convenience. The factors are CARRIED, not multiplied away, so
+    US-094 can render the breakdown without re-deriving it (a second
+    implementation of D-4 that could drift is exactly what that AC forbids).
+    `training` reaches the PLAYER only; the opponent's `trainingFactor` is
+    hard-coded 1.0.
+  - `TrainingResult.battleMultiplier` in an extension here rather than in
+    TrainingMinigame.swift: it is a battle number, and the minigames must not
+    grow a dependency on the battle.
+- `Tests/BattleModifierTests.swift` — 19 tests, including all five the AC pins:
+  light-vs-dark nets 1.0 both ways; even matchup + `good` == raw BattlePower
+  exactly; `perfect` + element advantage (child 25 -> 41) beats an adult
+  (33 -> 26) AND out-rolls it through `BattleEngine.maximumDamage`; `miss` +
+  element disadvantage (25 -> 16) loses to an equal-stage opponent (25 -> 31);
+  the opponent's effective power is IDENTICAL across all four grades.
+
+TRAP FOR THE NEXT ITERATION (US-094 will hit this) — effectiveness is read off
+the FACTOR, never off `DigimonElement.effectiveness(against:)`
+- Those two disagree on exactly one pairing and it is the interesting one.
+  `DigimonElement.light.effectiveness(against: .dark)` returns `.advantage`
+  (both sides are strong — that type answers "am I strong here?"), but the
+  arithmetic is 1.25 x 0.8 = 1.0, a wash. So `BattleMatchup.elementEffectiveness`
+  is derived by `BattleModifiers.effectiveness(of: playerElementFactor)` and
+  reports `.even`. If US-094 labels the matchup by calling the vocabulary type
+  directly it will tell the user "Advantage!" about a fight that got no
+  advantage. A test pins both halves of this.
+- Same reason `elementFactor` does not `switch` on an `Effectiveness`: a single
+  three-case value cannot express "both applied".
+
+BALANCE NOTE, measured rather than assumed
+- D-4's prose says a well-played underdog "can beat one rung up and cannot beat
+  three". The first half is true and tested. The SECOND HALF IS NOT TRUE of the
+  numbers as authored: perfect + element advantage is x1.625 while the opponent
+  simultaneously takes x0.8, a 2x swing between the sides, so a child at 25 ->
+  41 out-powers an ultimate at 49 -> 39. I did NOT write a test asserting the
+  false claim and did NOT retune the constants to make it true — the constants
+  are the AC, verbatim. Instead the test asserts what IS true and is the point:
+  the best possible boost (1.25 x 1.1 x 1.3 = 1.7875) does not double a Digimon,
+  so stage stays the dominant term. If a later story wants the three-rung
+  ceiling to hold, the fix is the opponent's disadvantage stacking, not the
+  player's boost.
+- `BattleEngine` fights on the RATIO of the two powers, so these swings matter
+  less than they look: 41 vs 39 is a 4-vs-3 damage ceiling, not a rout.
+
+WHAT REMAINS
+- Nothing hooks this up yet. `MainScreenModel.startBattle` still resolves from
+  raw `battlePower` — US-093 (pre-battle training round, D-3) is what feeds a
+  `TrainingResult` in, and US-094 is what shows the breakdown. `BattleEngine.resolve`
+  is deliberately UNCHANGED (git confirms Battle.swift was not touched this
+  iteration); it already takes two Ints and does not care where they came from.

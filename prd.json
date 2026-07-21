@@ -154,8 +154,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleModifiers + BattleMatchup/BattleSideModifiers in Sources/BattleModifiers.swift; TrainingResult.battleMultiplier 0.8/1.0/1.15/1.3. Both chart directions are tested separately so light-vs-dark nets 1.0; effectiveness is read off the FACTOR, not off DigimonElement.effectiveness. Battle.swift untouched. 19 new tests; build green, 1135 tests pass (was 1116)."
     },
     {
       "id": "US-093",
