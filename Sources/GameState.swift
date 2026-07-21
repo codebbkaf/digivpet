@@ -283,6 +283,18 @@ final class GameState {
     private var stageTrainingSessionsStorage: Int?
     private var stageOverfeedsStorage: Int?
     private var stageSleepDisturbancesStorage: Int?
+    /// Backing stores for the room light (US-098): which of the three states it is in, when it was
+    /// last changed, and the two once-a-night markers. All optional for the same migration reason as
+    /// every other storage property here — an optional attribute is the one shape SwiftData migrates
+    /// into an already-shipped store without a default, and a non-optional one opens and then fails
+    /// the next save with "is a required value" because the macro's default never reaches the store.
+    ///
+    /// `nil` for the state reads as `.on`, which is both what a new game starts in and the honest
+    /// reading of a save written before the light existed: nobody had ever turned it off.
+    private var lightStateStorage: LightState?
+    private var lightStateChangedAtStorage: Date?
+    private var lightAuditedNightStorage: Date?
+    private var lightNotifiedNightStorage: Date?
     var strengthStat: Int
     var healthStatus: HealthStatus
     var battleWins: Int
@@ -328,6 +340,12 @@ final class GameState {
         self.stageTrainingSessionsStorage = 0
         self.stageOverfeedsStorage = 0
         self.stageSleepDisturbancesStorage = 0
+        self.lightStateStorage = .on
+        // Stamped with `now` rather than left nil, so the light has been on since the egg was laid
+        // and `LightsOutRule` has a real timestamp to read on the very first night.
+        self.lightStateChangedAtStorage = now
+        self.lightAuditedNightStorage = nil
+        self.lightNotifiedNightStorage = nil
         self.strengthStat = 0
         self.healthStatus = .healthy
         self.battleWins = 0
@@ -537,6 +555,43 @@ extension GameState {
     var stageSleepDisturbances: Int {
         get { stageSleepDisturbancesStorage ?? 0 }
         set { stageSleepDisturbancesStorage = newValue }
+    }
+
+    /// Which of the three states the room light is in. Reads `.on` on a save written before the
+    /// light existed, for the reason `lightStateStorage` documents. Written through
+    /// `setLight(_:now:)`, which is the only thing that keeps it and its timestamp in step.
+    var lightState: LightState {
+        get { lightStateStorage ?? .on }
+        set { lightStateStorage = newValue }
+    }
+
+    /// When `lightState` last changed, or nil on a save written before the light was tracked.
+    ///
+    /// THE LIGHTS-OUT RULE HANGS OFF THIS. `LightsOutRule` asks whether the light had been put out
+    /// by a deadline, not whether anything ever observed it being out — which is exactly what lets a
+    /// night the app slept through be judged correctly the next morning.
+    var lightStateChangedAt: Date? {
+        get { lightStateChangedAtStorage }
+        set { lightStateChangedAtStorage = newValue }
+    }
+
+    /// The `LightsOutRule.windowStart` of the night a lights-left-on mistake was last charged for,
+    /// or nil if never.
+    ///
+    /// A NIGHT and not a local day, which is the one thing that separates it from `wakeMistakeDay`:
+    /// a night crosses midnight, so a day key would let 23:00 and 01:00 of the SAME night each
+    /// charge their own mistake.
+    var lightAuditedNight: Date? {
+        get { lightAuditedNightStorage }
+        set { lightAuditedNightStorage = newValue }
+    }
+
+    /// The `LightsOutRule.windowStart` of the night the lights-out notice was last sent for, or nil
+    /// if never. Kept apart from `lightAuditedNight` because the two fall at different graces — the
+    /// nudge is meant to arrive with twenty minutes still left to act on it.
+    var lightNotifiedNight: Date? {
+        get { lightNotifiedNightStorage }
+        set { lightNotifiedNightStorage = newValue }
     }
 
     /// Wins as a 0.0–1.0 fraction of battles fought — `care.battleWinRatio`.

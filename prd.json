@@ -272,8 +272,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 14,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Sources/Light.swift: LightState (on/semi/off, displayName, symbolName, dimOpacity 0/0.5/0.85) + pure LightsOutRule (windowStart(containing:), mostRecentWindowStart, shouldNotify @10min, shouldChargeMistake @30min, wasLit) + GameState.setLight/recordLightsLeftOn; four optional-backed light fields on GameState. Build green, 1219 tests pass (28 new). TWO DIVERGENCES, both in progress.txt: shouldNotify omits lightStateChangedAt (it reads the state as it is NOW - there is no point nudging about a light already out), and shouldChargeMistake is NOT gated on the Digimon still being asleep, because AC6 ('even if the app never ran during the window') and US-101 AC3 ('reopens at 08:00, exactly one mistake') both require judging a closed night from the morning after. AC9 holds in the sense that matters: a light switched on during waking hours is never charged."
     },
     {
       "id": "US-099",

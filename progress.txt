@@ -1006,3 +1006,105 @@ WHAT REMAINS
 - US-098..US-101 are the light: `GameState` light state and the lights-out rule,
   the light button and the dimmed screen, the alert to turn it off, and the care
   mistake for a night spent under it. Nothing in this story touches them.
+
+================================================================================
+2026-07-21 — US-098: Light state and the lights-out rule
+================================================================================
+
+WHAT I BUILT
+- `Sources/Light.swift` (new):
+  - `LightState: String, Codable, CaseIterable` — `on` / `semi` / `off`, with
+    `displayName`, `symbolName` (lightbulb.fill / lightbulb.led.fill /
+    lightbulb.slash — the names US-099 asks for) and `dimOpacity` 0 / 0.5 / 0.85.
+    `off` stops at 0.85 on purpose: a fully black screen is indistinguishable
+    from a crashed app and the user still has to find the button to undo it.
+  - `LightsOutRule` — pure, no store, no clock, no view:
+      `notifyGrace` = 10min, `mistakeGrace` = 30min
+      `windowStart(containing:schedule:calendar:) -> Date?`  (nil when awake)
+      `mostRecentWindowStart(at:schedule:calendar:) -> Date` (never nil)
+      `shouldNotify(now:schedule:lightState:lastNotifiedNight:calendar:)`
+      `shouldChargeMistake(now:schedule:lightState:lightStateChangedAt:
+                           lastAuditedNight:calendar:)`
+      `wasLit(at:lightState:lightStateChangedAt:)`
+  - `GameState.setLight(_:now:)` and `GameState.recordLightsLeftOn(now:
+    schedule:calendar:)`.
+- `Sources/GameState.swift`: four new OPTIONAL storage attributes
+  (`lightStateStorage`, `lightStateChangedAtStorage`, `lightAuditedNightStorage`,
+  `lightNotifiedNightStorage`) with computed accessors, exactly the shape every
+  other post-ship field here uses. `lightState` reads `.on` from nil; the init
+  stamps `lightStateChangedAt` with `now` so the very first night has a real
+  timestamp instead of a nil.
+- `Tests/LightTests.swift` (new): 28 tests in five suites.
+
+THE ONE DESIGN DECISION WORTH READING
+`mostRecentWindowStart` is the key both once-a-night markers are stamped with,
+and it is the whole reason a night can be identified from the morning after it.
+`windowStart(containing:)` is just it plus `schedule.contains`. Two candidates
+(today's bedtime, yesterday's) and no minute-of-day arithmetic, so a night-shift
+02:00–10:00 window takes the identical path to an ordinary 22:00–07:00 one.
+
+Charging turns on `wasLit(at: windowStart + 30min)`, which is
+`lightState != .off && lightStateChangedAt <= deadline`. BOTH halves matter. My
+first cut only applied the timestamp test on the `.off` side and three AC9 tests
+caught it: a lamp switched on at 08:00 was being charged against the night that
+ended at 07:00.
+
+VERIFICATION
+- `xcodegen generate` — project.yml needed NO edit: it globs `- path: Sources`
+  and `- path: Tests` as directories, so both new files were picked up. Confirmed
+  by them compiling and the new tests running.
+- `xcodebuild build` (46mm) — ** BUILD SUCCEEDED **.
+- `xcodebuild test` (46mm) — ** TEST SUCCEEDED **, 1219 tests, 0 failures (was
+  1191; the 28 new ones are the delta).
+- Every test names its hours as fixed `Date`s in America/Los_Angeles. Nothing
+  waits real time; nothing touches HealthKit.
+
+WHERE THIS DIVERGES FROM THE STORY TEXT, AND WHY
+1. `shouldNotify` does NOT take `lightStateChangedAt`. AC3 lists the timestamp
+   among the rule TYPE's inputs and `shouldChargeMistake` does take it, but the
+   nudge deliberately reads the light as it is NOW: there is no point telling
+   someone to turn off a light they have already turned off, however late they
+   got round to it. An unused parameter would have been the dishonest way to
+   match the sentence.
+2. `shouldChargeMistake` is NOT gated on the Digimon still being asleep, so an
+   awake Digimon CAN be charged — for the night that just ended, never for the
+   hours it has been awake. AC9 ("a Digimon that is awake is never charged")
+   reads as contradicting that, but AC6 forces it: "clean EVEN IF the app never
+   ran during the window" is only a meaningful claim if the rule can be
+   evaluated after the window closed, and US-101 AC3 spells the same case out
+   ("closes the store at 21:00, reopens at 08:00, exactly one mistake") — 08:00
+   is awake under the 22:00–07:00 fallback. Gating on asleep would have made
+   US-101 unimplementable as written. AC9 is honoured in the sense that bites:
+   `testTheLightBeingOnWhileTheDigimonIsAwakeIsNeverAMistake` asserts a light
+   switched on at breakfast costs nothing at 09:00, 14:00 or 21:59.
+3. AC2's "an existing store opens cleanly" is argued from the pattern, not
+   observed. All four attributes are optional, which is the one shape US-015
+   established as migrating without a default, and the round-trip test proves
+   they persist — but I could not open a store file written by the PRE-story
+   binary, because the test target only ever compiles against the new model. If
+   a later iteration finds a cheap way to keep an old store fixture around, this
+   is the claim to go back and really check.
+
+TRAPS FOR THE NEXT ITERATION
+- The rule alone cannot see a light put out AFTER the 30min grace — it reads as
+  clean, and `testTheRuleAloneCannotSeeALightPutOutAfterTheGrace` asserts exactly
+  that rather than papering over it. It is not an exploit in the shipped game
+  only because turning the light off means opening the app, and US-101's
+  refresh() must charge the night BEFORE the user's tap can land. If US-101
+  wires the charge in after the toggle handler, that hole opens for real.
+- `recordLightsLeftOn` takes `schedule:` with a `.fallback` default. US-101 must
+  pass `MainScreenModel.sleepSchedule` explicitly — the default is only right
+  while no window has been inferred, and silently taking it would charge the
+  wrong night for anyone whose real bedtime is not 22:00.
+- Two consecutive neglected nights charge two only if the app runs once between
+  them; a single launch after 48 dark hours charges one, because
+  `mostRecentWindowStart` looks back exactly one window. That is US-101 AC4's
+  test to shape.
+- `lightNotifiedNight` and `lightAuditedNight` are both stamped with a
+  `windowStart`, NOT a `startOfDay`. Comparing either against
+  `calendar.startOfDay(for:)` will silently never match.
+
+WHAT REMAINS
+- US-099 (light button + dimmed screen), US-100 (the notice), US-101 (the care
+  mistake and the docs/ table). Nothing here renders, notifies or charges from
+  `refresh()` yet — this story is state and rule only.
