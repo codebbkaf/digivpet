@@ -81,3 +81,77 @@ LESSON: never `git checkout` a tracked file in this repo without checking
 
 REMAINS
 US-086 (element/attribute vocabulary) is next. Nothing in this story blocks it.
+
+================================================================================
+2026-07-21 — US-086: Element and attribute vocabulary with a counter chart
+================================================================================
+
+WHAT WAS BUILT
+- `Sources/DigimonElement.swift` — PURE Foundation, no SwiftUI:
+  - `DigimonElement: String, Codable, CaseIterable` — fire, water, plant,
+    electric, ice, wind, earth, steel, light, dark, machine, neutral.
+  - `DigimonAttribute: String, Codable, CaseIterable` — vaccine, data, virus,
+    free.
+  - Each: `displayName`, `badgeText` (<=5 chars, uppercase like US-085's energy
+    short names), `symbolName` (SF Symbol), `beats: Set<Self>`,
+    `effectiveness(against:)`.
+  - `Effectiveness: String, Codable, CaseIterable` — advantage | disadvantage |
+    even. Three cases, NOT a multiplier: the numbers are US-092's/D-4's job, so
+    the chart can be re-tuned without touching the vocabulary.
+- `Sources/ElementColors.swift` — `import SwiftUI`, `var color: Color` on both
+  enums. Split exactly the way `MoveTint.color` is split out of `MoveCatalog`
+  into `BattleView.swift`: the vocabulary stays decodable and testable with no
+  SwiftUI. Both switches are exhaustive with no `default:`, so a thirteenth
+  element is a compile error until someone gives it a colour rather than a
+  silent grey badge.
+- `docs/elements.md` — both axes, the full 12-row chart with the derived "weak
+  to" column, why `neutral`/`free` are inert, why light and dark beat each
+  other, and why `Effectiveness` carries no numbers.
+- `Tests/ElementTests.swift` — 19 tests.
+
+DESIGN NOTES FOR LATER STORIES
+- `beats` is the SINGLE source of truth for the chart. The "therefore weak to"
+  column in D-2 is never authored anywhere in code — the test derives it by
+  reading `beats` backwards, so the two halves of the published table cannot
+  drift apart.
+- `effectiveness(against:)` answers "am I strong here?", not "who wins?".
+  Advantage wins the tie, so light vs dark reports `.advantage` for BOTH sides
+  (pinned). US-092 must do the cancelling arithmetic (1.25 x 0.8 = 1.0) itself;
+  do not "fix" the mutual pair here.
+- `neutral` and `free` are inert BECAUSE they are the US-087 lookup floor. If a
+  later story gives either one a matchup, ~930 unauthored roster Digimon all
+  silently inherit that advantage.
+- Raw values are the wire format of US-087's `elements.json`. A test pins each
+  one; renaming a case re-types every Digimon authored under the old name.
+
+VERIFICATION
+- `xcodegen generate` then `xcodebuild build` — ** BUILD SUCCEEDED **.
+- `xcodebuild test` — ** TEST SUCCEEDED **, 1067 tests, 0 failures (was 1048;
+  the 19 new tests are the whole delta).
+- Every AC checked literally:
+  - twelve cases / four cases: pinned in declaration order by rawValue.
+  - <=5 chars, ASCII, non-empty, all-distinct badge texts: pinned.
+  - SF Symbol names checked against the REAL symbol table with
+    `UIImage(systemName:)` (the idiom MoveCatalogTests already uses), plus the
+    negative control that a nonsense name returns nil — an unknown symbol draws
+    a blank square, which no compile or decode catches.
+  - `beats` asserted row by row against D-2, and the inverse column asserted
+    row by row too.
+  - no element beats itself; neutral and free inert in both directions; every
+    other case beats >=1 and is beaten by >=1 (no strictly best/worst element);
+    effectiveness consistent with beats over all 144 ordered pairs; light/dark
+    proven to be the ONLY mutual pair.
+  - attribute triangle vaccine -> virus -> data -> vaccine both ways, and
+    proven to contain no mutual pair.
+
+PROJECT.YML
+The AC says "add new files to project.yml". No edit was needed and none was
+made: `Sources` and `Tests` are directory paths, so xcodegen picks up new files
+in them automatically. `xcodegen generate` was re-run and all three new files
+are in the regenerated pbxproj (verified by grep); the app target compiled
+them and the test target links against them.
+
+REMAINS
+US-087 (author `Resources/elements.json` for every curated Digimon) is next. It
+should mirror `MoveCatalog`'s three-tier lookup — id, then line, then keyword
+rule, then `neutral`/`free` — per D-1.

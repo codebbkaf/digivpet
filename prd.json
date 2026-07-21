@@ -40,8 +40,8 @@
         "Tests pass (xcodebuild test succeeds)"
       ],
       "priority": 2,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "DigimonElement (12 cases) + DigimonAttribute (4) in Sources/DigimonElement.swift with beats/effectiveness/displayName/badgeText/symbolName; colours in Sources/ElementColors.swift (SwiftUI, MoveTint pattern); docs/elements.md; 19 tests in Tests/ElementTests.swift. Build green, 1067 tests 0 failures."
     },
     {
       "id": "US-087",
