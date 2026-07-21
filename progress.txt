@@ -20,3 +20,84 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   57 Digitama sprites, 6 of them wired
 ---
 
+## Codebase Patterns
+- SIMULATOR SCREENSHOTS: `export DEVELOPER_DIR=/Applications/Xcode_26_4_1.app/Contents/Developer`,
+  build once against Series 11 (46mm, watchOS 26.4), then `simctl install` the SAME .app onto the
+  41mm Series 9 (watchOS 10.4) — deployment target is 10.0 and Series 9 is not a usable
+  `xcodebuild -destination`. Sim UDIDs: 46mm BA425DD4-8856-4933-8198-0E4B89960E48,
+  41mm FB045EDB-DEB9-40AA-B8FB-819E9E742517.
+- Launch flags for a screenshot: `-healthAnswered -noNotificationPrompt` plus the demo flag. If a
+  notification alert is already queued it SURVIVES terminate+uninstall and eats every shot;
+  `simctl erase` on the device is the only fix (then `-healthAnswered` is required or you land on
+  onboarding). Cost 10 minutes again this iteration.
+- To photograph a pre-story build for a before/after: `git stash push -u`, rebuild, copy the .app
+  out of DerivedData FIRST (both builds land on the same path), then `git stash pop`.
+- MEASURE screenshots, do not eyeball them. Throwaway CoreGraphics tools compiled with
+  `xcrun swiftc` are the pattern (see US-114's /tmp/us114/measure.swift, peak.swift — not
+  committed, they hard-code this screen's bands). Two that keep earning their keep:
+  a "lit in EVERY frame vs lit in ANY frame" pass over a burst separates static chrome from the
+  moving sprite, and a peak/mean-luma pass over a band proves a dim is exactly `dimOpacity`.
+- The scrim is invisible over a black background, so it cannot be measured directly. Measure what
+  it DIMS instead: the sprite's peak luma with the light on vs off.
+
+## 2026-07-22 — US-114: The light button moves to the top-left toolbar
+- `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
+  Dex book at `.topBarTrailing`. `LightLayer` lost its `cycle` closure and draws the scrim ONLY;
+  `LightButtonLayout.inset` is deleted; the button lost the `Circle` disc behind its glyph, which
+  only ever existed to keep it legible through the 0.85 scrim it no longer stands in.
+- Files: Sources/ContentView.swift, Sources/LightSwitchView.swift, Tests/LightSwitchTests.swift,
+  Tests/MainScreenLayoutTests.swift (the last two are doc comments made true again, no new asserts —
+  nothing in the suite ever referenced `inset` or the closure, so nothing broke).
+- PASSED: build green. `Executed 1324 tests, with 0 failures` (unchanged; this story adds none).
+- PASSED, MEASURED on BOTH screens, pre-story build vs post-story build, fresh install each,
+  `-healthAnswered -noNotificationPrompt -wanderDemo`. Screenshots + throwaway measurers in
+  /tmp/us114 (NOT committed). All boxes are screenshot pixels, i.e. @2x.
+  - THE LAMP LEFT THE ROOM. Its old home — the slot's top-leading corner, 48x48px = 24x24pt,
+    exactly `diameter` — is x8-55 y137-184 on 41mm and x8-55 y153-200 on 46mm in the pre-story
+    shots, and in the post-story shots that whole band is EMPTY: zero pixels over a threshold of
+    30, across 150 frames, on both screens. Not "darker" — nothing is drawn there at all.
+  - THE LAMP IS OUTSIDE THE SLOT ENTIRELY. Post-story glyph box: 41mm x47-62 y47-73, 46mm
+    x57-72 y58-84. The pre-story lamp sat at `slot.minY` exactly (its offset had no y inset), so
+    those pre-story boxes READ OFF the slot's top edge: y137 on 41mm, y153 on 46mm. The new glyph
+    clears it by 64px on 41mm and 69px on 46mm. That is AC8's "no button overlaps the sprite at
+    any walk offset" proved for ALL offsets rather than for the ones sampled — the sprite cannot
+    leave the slot, and the button is no longer in it.
+  - THE SPRITE DID NOT MOVE OR SHRINK. Its box is pixel-identical pre- and post-story: 41mm
+    x152-199 y156-203, 46mm x172-243 y177-248. The Dex button is identical too (41mm x260-328
+    y28-127, peak 147, mean 23.59 to the hundredth in both).
+  - US-112 IS UNCHANGED (AC3). Light on -> off, post-story: sprite peak 255 -> 38 on both screens,
+    and 255 x 0.15 = 38.25, the same 38 the pre-story build gives. Action row identical on and off
+    and identical between builds (41mm mean 37.82 both, 46mm 28.09 both).
+  - THE TOOLBAR LAMP IS NEVER DIMMED (AC4). With the light OFF its peak is still 255, on both
+    screens — and AC5's icon still tracks the state: rgb(255,214,10) `lightbulb.fill` lit,
+    rgb(255,255,255) `lightbulb.slash` out.
+- HONEST CORRECTION TO AC6/AC8, and the one thing the story asked for that is NOT true:
+  **the sprite's reachable area is NOT wider after this change, because `LightButtonLayout.inset`
+  was never subtracted from anything the sprite could reach.** The PRD says "the sprite's usable
+  rect grows by that inset"; in fact `inset` appeared in exactly one expression — the button's own
+  `.offset` inside `LightLayer` — and `git show HEAD:Sources/ContentView.swift | grep inset` is
+  empty. The walk bound is `max((screenWidth - side) / 2 - 4, 0)` in `WanderingSpriteView` and
+  reads only the device width and the sprite's own size, so it is unchanged, which the identical
+  sprite boxes above confirm. What grew is the UNOBSTRUCTED area, and by the button's whole 24x24pt
+  footprint rather than by the 2pt inset. Marked passing on that reading: the story's goal — the
+  switch is out of the room and never covers the Digimon — is met and measured.
+- **Learnings for future iterations:**
+  - TRAP, PRE-EXISTING AND NOT CAUSED BY THIS STORY, and US-115 will hit it first: with
+    `-wanderDemo` the Digimon ANIMATES but DOES NOT WALK on either simulator. Over 150 frames /
+    60s, and again over a 40-frame burst taken as fast as `simctl` will go, the sprite box never
+    left x152-199 (41mm) / x172-243 (46mm) — dead centre, `facing` never flipped, so
+    `advanceOneStep()` was never reached. The walk1/walk2 alternation is the INNER `TimelineView`
+    in `DigimonSpriteView`; the OUTER one in `WanderingSpriteView` is what drives the position, and
+    it is that one that looks dead. Ruled out: the pose really is `.idle` (the two frames on screen
+    match sheet indices 0 and 1 pixel for pixel, and `.sleep`'s 4/5 are a crouch that is plainly
+    not what is drawn), and `bound` is not 0 (41mm scale 2 -> 68pt, 46mm scale 3 -> 76pt).
+    IDENTICAL in the pre-story build, so this is not a regression from US-114 — but the last wave
+    DID photograph the sprite at both walls, so something between then and now broke it. Anyone
+    screenshotting a walk needs to find this first.
+  - A pre-story build is only comparable on a FRESH INSTALL: a save that has spent a battle draws
+    an extra caption line under the action row and that costs the sprite a whole scale step.
+  - `.topBarLeading` on watchOS puts the item BESIDE the time, not under it — the 41mm glyph lands
+    at y47-73 and the clock is untouched. No layout budget was spent to gain it.
+- REMAINS: US-115 onward (1/56 passing).
+---
+

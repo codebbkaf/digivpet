@@ -273,6 +273,16 @@ struct ContentView: View {
                 }
             }
             .toolbar {
+                // The room light (US-114). Here rather than in the room it lights: it used to hang
+                // in the sprite slot's top-leading corner, where the Digimon — which walks the full
+                // width — passed underneath it. Opposite the Dex book, which is the other piece of
+                // chrome that frames the room, and never dimmed for the same reason the book is not.
+                ToolbarItem(placement: .topBarLeading) {
+                    LightButton(state: model.lightState) {
+                        model.cycleLight()
+                    }
+                }
+
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
                         DexView(model: DexModel())
@@ -514,16 +524,14 @@ struct ContentView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // The room light (US-099), over the sprite's slot and nothing beyond it since US-112:
-            // the scrim, and the button that changes it sitting above the scrim in that slot's
-            // top-leading corner. Applied HERE and not to the `NavigationStack`, so the ceremony,
-            // the battle, the training round and the memorial — which are applied out there — are
-            // painted on top of it and are never dimmed, and so a pushed Dex is not dimmed either.
+            // The room light's scrim (US-099), over the sprite's slot and nothing beyond it since
+            // US-112. Applied HERE and not to the `NavigationStack`, so the ceremony, the battle,
+            // the training round and the memorial — which are applied out there — are painted on
+            // top of it and are never dimmed, and so a pushed Dex is not dimmed either. The button
+            // that changes it is in the toolbar since US-114 and is not part of this layer.
             .overlayPreferenceValue(SpriteSlotBoundsKey.self) { spriteSlot in
                 ZStack(alignment: .topLeading) {
-                    LightLayer(state: model.lightState, spriteSlot: spriteSlot) {
-                        model.cycleLight()
-                    }
+                    LightLayer(state: model.lightState, spriteSlot: spriteSlot)
 
                     // The mess, on the ground at the near edge of the sprite's slot: beside the
                     // Digimon rather than under it, because the sprite is drawn with `.offset` and

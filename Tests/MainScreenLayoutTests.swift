@@ -40,10 +40,13 @@ final class MainScreenLayoutTests: XCTestCase {
 
     /// US-099 AC2: the light button costs the screen nothing.
     ///
-    /// It is an OVERLAY in the sprite's slot rather than a row of its own — unlike the sick badge,
-    /// which takes `SickBadgeLayout.reservedHeight` out of the height the sprite is sized against —
-    /// so the slot `SpriteScale.fitting` is asked about is the same slot it was asked about before
-    /// the light existed, and the action row is still the five 30pt circles it was.
+    /// It was never a row of its own — unlike the sick badge, which takes
+    /// `SickBadgeLayout.reservedHeight` out of the height the sprite is sized against — so the slot
+    /// `SpriteScale.fitting` is asked about is the same slot it was asked about before the light
+    /// existed, and the action row is still the five 30pt circles it was.
+    ///
+    /// It was an overlay in that slot until US-114 moved it to the toolbar, which is why this still
+    /// holds: it cost the slot no height as an overlay, and costs it none from outside.
     ///
     /// The numbers are pinned rather than the layout: what the light MUST NOT do is move the row's
     /// diameter or push the 42mm slot out of the band it was in. That screen was measured drawing

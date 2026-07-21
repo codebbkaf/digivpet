@@ -10,9 +10,11 @@ import XCTest
 /// drawn as, and `LightButtonModelTests` drives the real `MainScreenModel` over a real `GameStore`,
 /// so what is asserted is what the button's own handler does and what reaches disk.
 ///
-/// What cannot be asserted here is the layering: that the scrim is painted over the whole screen,
-/// that the button stays legible and tappable above it, and that the ceremony, battle, training and
-/// memorial overlays are never dimmed. Those are Simulator screenshots, recorded in progress.txt.
+/// What cannot be asserted here is the layering: that the scrim covers the sprite's slot and only
+/// that (US-112), that the button — a toolbar item beside the Dex book since US-114, rather than a
+/// lamp hanging in the corner of the room it lights — is outside the scrim's reach entirely, and
+/// that the ceremony, battle, training and memorial overlays are never dimmed. Those are Simulator
+/// screenshots, recorded in progress.txt.
 ///
 /// No test waits real time.
 

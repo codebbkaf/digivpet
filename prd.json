@@ -20,8 +20,8 @@
         "Typecheck passes"
       ],
       "priority": 1,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Light button is now ToolbarItem(.topBarLeading), mirroring the Dex book; LightLayer draws the scrim only and LightButtonLayout.inset is gone. Build green, 1324 tests, 0 failures. Measured on 41mm and 46mm, pre- vs post-story builds: the lamp's old 24x24pt home in the slot's top-leading corner is now EMPTY (0 lit px over 150 frames, both screens); the new glyph clears the slot's top edge by 64px/69px, so no button can overlap the sprite at ANY walk offset; the sprite's box and the Dex button are pixel-identical before and after; US-112 is intact (sprite peak 255->38 = x0.15, chrome identical on and off); the toolbar lamp stays at peak 255 with the light out. CAVEAT ON AC6/AC8, see progress.txt: the sprite's REACHABLE area is not wider, because `inset` was never subtracted from the walk bound (it only placed the button); the walk bound reads device width and sprite size alone. What grew is the UNOBSTRUCTED area, by the button's whole 24x24pt footprint. Passed on the story's goal, which is met and measured. Separate pre-existing trap logged for US-115: -wanderDemo animates but does not translate on either simulator, identically in both builds."
     },
     {
       "id": "US-115",
