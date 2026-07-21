@@ -167,14 +167,15 @@ final class MapStripTests: XCTestCase {
 // MARK: - The controls
 
 final class MapStripLayoutTests: XCTestCase {
-    /// AC2: the party button must not be a dead tap target that LOOKS live. Until US-126 lands it
-    /// is both unreachable and visibly faded — either alone would be a half-measure, since a fully
-    /// bright disabled control reads as a bug and a bright-but-inert one reads as a broken tap.
-    func testThePartyButtonIsUnreachableAndVisiblyFadedUntilItLeadsSomewhere() {
-        XCTAssertFalse(MapStripLayout.isPartyReachable)
+    /// US-126 AC1: the party button leads somewhere, and so is drawn at full strength. The inverse
+    /// of what this asserted while `PartyView` was unbuilt, which is what US-120 left it here for —
+    /// the button must never be bright and inert, nor faded and live.
+    func testThePartyButtonLeadsSomewhereAndIsDrawnAtFullStrength() {
+        XCTAssertTrue(MapStripLayout.isPartyReachable)
+        // The fade the button no longer wears is still the fade a disabled control would wear, and
+        // is still neither invisible nor invisible-by-another-name: a control that vanishes takes
+        // the row's shape with it.
         XCTAssertLessThan(MapStripLayout.disabledOpacity, 1)
-        // Not invisible either: a control that vanishes takes the row's shape with it, and US-126
-        // would then move everything sideways the day it lands.
         XCTAssertGreaterThan(MapStripLayout.disabledOpacity, 0)
     }
 

@@ -253,8 +253,8 @@
         "Typecheck passes"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PartyView lists the whole box off GameStore.allStates() — every owned Digimon and every unhatched Digitama, since an egg the player holds IS a saved GameState at .digitama — with sprite, name, stage and one of active/frozen/dead per row. Reached from the map strip's trailing button, which is now a NavigationLink and MapStripLayout.isPartyReachable is true (US-120's test flipped to assert the opposite, as it said it would). Tapping a frozen row calls MainScreenModel.activate(_:) -> GameStore.activate(_:now:), which is US-124's ONE transaction (both isActive flags + both US-125 freeze clocks), then dismisses back to the game. Build green, 1577 tests (1560 + 17 new), 0 failures. MEASURED on 46mm and 41mm, fresh installs, -partyDemo seeding a four-entry box (active Digitama, frozen Agumon, frozen Gabu Digitama, DEAD Greymon): all four rows readable with nothing truncated on either screen, in two shots per device (top, and -partyBottomDemo scrolled to the last row). AC7 was measured rather than eyeballed: the sprites land in exact 4x4 device-pixel blocks at alignment (+0,+0) — 100% of blocks one flat colour on every row away from the list's own edge-scaling (156/156, 100/100, 90/90), 6-9 distinct colours in a sprite's whole box — which is nearest-neighbour, i.e. .interpolation(.none) via IdleSpriteView. TWO VIEW FIXES the screenshots caught and the tests could not: .disabled(!isSelectable) drew the ACTIVE row grey (watchOS dims a whole disabled row), so only a DEAD row is disabled now and the active row's no-op lives in tap(); and 'Gabu Digitama' truncated on 41mm, fixed by minimumScaleFactor 0.5 on the name plus .fixedSize() on the status mark. NOTE FOR US-127/US-128: taking a Digimon out REORDERS the box, because the list is birth order and US-125's thaw shifts the timeline forward by the frozen span — so PartyRow.id is a position and activate(_:) verifies the row still describes the record at it."
     },
     {
       "id": "US-127",

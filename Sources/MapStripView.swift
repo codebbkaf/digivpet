@@ -104,12 +104,14 @@ enum MapStripLayout {
     /// control at full strength that does nothing when tapped is worse than one that looks off.
     static let disabledOpacity: Double = 0.3
 
-    /// Whether the party button leads anywhere. False until US-126 builds `PartyView`; the button is
-    /// drawn either way so the row's shape does not change under the player when it lands.
+    /// Whether the party button leads anywhere. TRUE since US-126 built `PartyView`; it was false
+    /// while the button was drawn but inert, so the row's shape would not change under the player
+    /// the day the box landed.
     ///
-    /// A constant rather than a `#if`, so the test that asserts "not a dead tap target that looks
-    /// live" keeps working — and starts asserting the opposite — the day US-126 flips it.
-    static let isPartyReachable = false
+    /// It stays as a constant rather than being deleted with the fade it used to gate, because it is
+    /// what the "not a dead tap target that looks live" test turns on: the button is at full
+    /// strength exactly while it leads somewhere, and both halves move together or not at all.
+    static let isPartyReachable = true
 }
 
 /// Where you are adventuring, and the way to the box (US-120).
@@ -118,12 +120,17 @@ enum MapStripLayout {
 /// toolbar because watchOS gives a screen two toolbar slots and US-114 spent the second one on the
 /// room light, and rather than in the action row because that row is the five things you do TO the
 /// Digimon and neither of these is one of them.
-struct MapStripView<Destination: View>: View {
+struct MapStripView<Destination: View, Party: View>: View {
     let strip: MapStrip
 
     /// What the leading control pushes — `MapListView` in the app, an `EmptyView` in a test that
     /// only cares what the row says.
     @ViewBuilder let destination: () -> Destination
+
+    /// What the trailing control pushes — `PartyView` in the app (US-126). Injected on the same
+    /// footing as `destination` rather than built here, so this row still knows nothing about either
+    /// screen and a preview can stand one up without a model.
+    @ViewBuilder let party: () -> Party
 
     var body: some View {
         HStack(spacing: 4) {
@@ -154,17 +161,20 @@ struct MapStripView<Destination: View>: View {
             .accessibilityLabel(strip.accessibilityLabel)
             .accessibilityValue(strip.progressText)
 
-            Image(systemName: MapStripMarks.partySymbol)
-                .font(.system(size: MapStripLayout.iconSize))
-                .foregroundStyle(.secondary)
-                // Faded and disabled together while US-126 is unbuilt (AC2). Drawn rather than
-                // omitted so the row does not change shape under the player when the party screen
-                // lands, and faded rather than merely inert so it never reads as a live control
-                // that swallows a tap.
-                .opacity(MapStripLayout.isPartyReachable ? 1 : MapStripLayout.disabledOpacity)
-                .accessibilityLabel("Party")
-                .accessibilityHint(MapStripLayout.isPartyReachable ? "" : "Not available yet")
-                .accessibilityAddTraits(MapStripLayout.isPartyReachable ? [] : [.isStaticText])
+            NavigationLink(destination: party) {
+                Image(systemName: MapStripMarks.partySymbol)
+                    .font(.system(size: MapStripLayout.iconSize))
+                    .foregroundStyle(.secondary)
+                    // At full strength since US-126, because it now leads somewhere. The fade is
+                    // kept in the expression rather than deleted with the story: what it says is
+                    // "bright exactly while it is live", which is the rule, and a literal 1 would
+                    // say nothing.
+                    .opacity(MapStripLayout.isPartyReachable ? 1 : MapStripLayout.disabledOpacity)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!MapStripLayout.isPartyReachable)
+            .accessibilityLabel("Party")
         }
     }
 }
@@ -172,10 +182,12 @@ struct MapStripView<Destination: View>: View {
 #Preview {
     NavigationStack {
         VStack {
-            MapStripView(strip: MapStrip.make(progress: PlayerProfile(selectedMapId: "01_grassland"))!) {
-                EmptyView()
-            }
-            MapStripView(strip: MapStrip.make(progress: nil)!) { EmptyView() }
+            MapStripView(strip: MapStrip.make(progress: PlayerProfile(selectedMapId: "01_grassland"))!,
+                         destination: { EmptyView() },
+                         party: { EmptyView() })
+            MapStripView(strip: MapStrip.make(progress: nil)!,
+                         destination: { EmptyView() },
+                         party: { EmptyView() })
         }
     }
 }

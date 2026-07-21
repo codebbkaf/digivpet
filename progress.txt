@@ -1007,3 +1007,63 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
     call it and hand it the clock.
 - REMAINS: US-126 onward (12/56 passing).
 ---
+
+## 2026-07-22 — US-126: Party screen and activating a Digimon
+- New `Sources/PartyView.swift`: `PartyStatus` (active/frozen/dead), `PartyRow` (+`rows(for:in:)`),
+  `PartyRowLayout`, `PartyView` and its row view. `MainScreenModel` gained `partyRows`,
+  `activate(_ row:)` and the DEBUG `seedPartyDemoIfRequested`. `MapStripView` gained a second
+  generic `Party` view and its trailing button became a `NavigationLink`;
+  `MapStripLayout.isPartyReachable` is now true and US-120's test asserts the opposite of what it did.
+- Files: Sources/{PartyView(new),MainScreenModel,MapStripView,ContentView}.swift,
+  Tests/PartyTests.swift (new, 17 tests), Tests/MapStripTests.swift (one test flipped).
+- PASSED: build green. `Executed 1577 tests, with 0 failures` (1560 + 17).
+- **AN UNHATCHED EGG NEEDED NO SPECIAL CASE, and that is the story's one real design decision.** An
+  egg the player holds IS a saved `GameState` at `.digitama`, so `allStates()` already lists it and
+  AC6's "tapping it starts it hatching" is just AC3 applied to it — the egg becomes the record
+  `refresh()` credits, and `hatchIfReady` runs on it. Asserted through the REAL hatch rather than by
+  inspection: take the egg out with nothing walked, walk 5,000 steps, run the ordinary refresh, and
+  it is `punimon` that comes out — while the Digimon put away still has zero stage energy.
+- **DEATH IS READ BEFORE `isActive`**, deliberately: a Digimon can be dead AND out (that is what the
+  memorial screen is), and of the two facts "gone" is the one that must not be drawn as a live pet.
+- MEASURED on 46mm and 41mm, fresh installs, `-partyDemo` seeding four entries (active Digitama,
+  frozen Agumon, frozen Gabu Digitama, dead Greymon): all four readable with no truncation, in two
+  shots per device — the top, and `-partyBottomDemo` scrolled to the last row.
+- **AC7 was measured, not eyeballed** (`/tmp/us126/blocks.swift`, not committed): a party sprite's
+  ink box lands in exact 4x4 device-pixel blocks at alignment (+0,+0), **100% of blocks one flat
+  colour** on every row away from the list's own edge-scaling (156/156, 100/100, 90/90; 6–9 distinct
+  colours in a whole sprite box). That IS nearest neighbour — a smoothed sprite has no alignment
+  that works. The 46mm top row read 94.2% because watchOS scales list rows near the screen edge.
+- **TWO VIEW BUGS THE SCREENSHOTS CAUGHT AND NO TEST COULD**, which is the whole argument for AC8:
+  - `.disabled(!row.isSelectable)` drew the ACTIVE row grey — watchOS dims a disabled row's entire
+    content — so the Digimon the player has OUT read as unavailable. Only a DEAD row is disabled
+    now; the active row keeps full strength and its own mark, and its no-op lives in `tap`, which
+    dismisses without calling `activate` (a row that swallowed the tap would read as broken).
+  - "Gabu Digitama" truncated to "Gabu Digi…" on 41mm. Fixed with `minimumScaleFactor(0.5)` on the
+    name and `.fixedSize()` on the status mark, so the NAME shrinks and the status stays whole —
+    `layoutPriority(1)` on the name was tried first and merely moved the truncation onto "Frozen".
+- **Learnings for future iterations:**
+  - **A `.task` screenshot hook on a screen pushed from the LAUNCH COMMAND must be keyed**
+    (`.task(id: rows.count)`). It runs before `MainScreenModel.start()` has opened the store, sees
+    an empty list, returns — and a plain `.task` never runs again. `MapListView`'s unkeyed hook only
+    works because `mapRows` comes from the bundled catalog and is never empty. Cost ~20 minutes of
+    "the scroll flag does nothing".
+  - **TAKING A DIGIMON OUT REORDERS THE BOX.** The list is `allStates()`, sorted by `birthDate`, and
+    US-125's `thaw` shifts the whole timeline forward by the frozen span — so the sort is really by
+    EFFECTIVE AGE and a thawed Digimon moves to the end. `PartyRow.id` is a POSITION, so
+    `activate(_:)` checks the row still DESCRIBES the record at that position before acting; a list
+    held across one switch would otherwise activate the wrong Digimon. US-132's Jogress, which
+    consumes two records and inserts one, inherits exactly this.
+  - **A simulator's save survives `simctl install`** if the uninstall was silently skipped — the
+    46mm container still held a `GameState` born in 2001 from an earlier wave's demo, which made two
+    devices disagree about the box's order for reasons that had nothing to do with this story.
+    `sqlite3 "$(xcrun simctl get_app_container <udid> com.digivpet.DigiVPet data)/Library/Application
+    Support/default.store" "select ZCURRENTDIGIMONID, ZISACTIVESTORAGE, ZBIRTHDATE from ZGAMESTATE"`
+    settles it in one command — and is safe here, unlike on `Tests/Fixtures/`.
+  - `IdleSpriteView` and not `DigimonSpriteView` is the renderer for any LIST of Digimon: same
+    `.interpolation(.none)`, one still frame, memoised — a list of two-frame loops runs one
+    `TimelineView` schedule per row for art the player is scrolling past.
+  - The DEBUG box seeder inserts straight through `store.container.mainContext`, as
+    `GameBoxTests` does. Nothing in the shipped game adds a second Digimon yet; **US-128's drop
+    engine is the first thing that will**, and it wants a real `GameStore` method rather than this.
+- REMAINS: US-127 onward (13/56 passing).
+---

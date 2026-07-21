@@ -385,6 +385,7 @@ final class MainScreenModel: ObservableObject {
         seedLightDemoIfRequested()
         seedMapDemoIfRequested()
         seedMapListDemoIfRequested()
+        seedPartyDemoIfRequested()
         // Every seed above runs AFTER the refresh that published, so the snapshot on disk still
         // describes the pre-demo game — a `-sickDemo -complicationDemo` run would screenshot an idle
         // pose. Republishing here is the same rule as `clean()`'s, applied to the demos: the state
@@ -917,6 +918,42 @@ final class MainScreenModel: ObservableObject {
         }
     }
 
+    /// Debug-only: fills the box so US-126's party screen can be screenshotted with the four states
+    /// it has to show at once. Nothing in the shipped game puts a second Digimon in the box yet —
+    /// US-128's drops are what will — so a real save on the Simulator has exactly one row.
+    ///
+    /// `-partyDemo` leaves the save holding: the active Digitama the game started at, a frozen
+    /// Child, a frozen unhatched Digitama (AC6's row), and a DEAD Adult (AC5's). Four entries, three
+    /// statuses, both kinds of untappable row.
+    ///
+    /// IDEMPOTENT, and it has to be: this flag WRITES TO THE SAVE, so a second launch would
+    /// otherwise stack another three Digimon into the box and the screenshot would show seven. Every
+    /// frozen record is cleared before the three are inserted, which also means the flag never
+    /// touches the Digimon the player — or the previous demo — has out.
+    private func seedPartyDemoIfRequested() {
+        guard CommandLine.arguments.contains("-partyDemo"), let store else { return }
+        let context = store.container.mainContext
+        for stale in ((try? store.allStates()) ?? []) where !stale.isActive {
+            context.delete(stale)
+        }
+        // Born before the active record, so birth order — which is the order the box is listed in —
+        // puts the three seeded rows above the running game rather than in whatever order the
+        // fetch happens to return them.
+        let day: TimeInterval = 86_400
+        let child = GameState(currentDigimonId: "agumon", stage: .child, isActive: false,
+                              now: now().addingTimeInterval(-3 * day))
+        let egg = GameState(currentDigimonId: "gabu_digitama", isActive: false,
+                            now: now().addingTimeInterval(-2 * day))
+        let gone = GameState(currentDigimonId: "greymon", stage: .adult, isActive: false,
+                             now: now().addingTimeInterval(-1 * day))
+        gone.healthStatus = .dead
+        gone.diedAt = now()
+        for state in [child, egg, gone] {
+            context.insert(state)
+        }
+        try? store.save()
+    }
+
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
     /// taking screenshots; short enough that a burst does not have to run for a minute.
     private static let poopCleanDemoDelay: TimeInterval = 10
@@ -1132,6 +1169,71 @@ final class MainScreenModel: ObservableObject {
     /// drawn, rather than drawing a row with nothing in it.
     var mapStrip: MapStrip? {
         MapStrip.make(in: maps, progress: profile)
+    }
+
+    /// The box of Digimon as `PartyView` draws it (US-126): every owned Digimon and every unhatched
+    /// Digitama, oldest first, with the one that is out marked.
+    ///
+    /// Computed rather than published, for `mapRows`' reason: everything it reads is already
+    /// observable — the graph is a constant and each `GameState` is a `@Model` — so a screen that
+    /// builds this inside `body` redraws when a Digimon in the box changes. The fetch behind it is
+    /// a handful of records, and the party screen is not a place the player stays.
+    var partyRows: [PartyRow] {
+        PartyRow.rows(for: boxedStates, in: graph)
+    }
+
+    /// Every saved Digimon, in the order `PartyRow.id` indexes. One accessor, so the list the rows
+    /// were built from and the list `activate(_:)` indexes into can never be two different orders.
+    private var boxedStates: [GameState] {
+        (try? store?.allStates()) ?? []
+    }
+
+    /// Puts the Digimon on this row out, freezing whichever one was out before (US-126 AC3).
+    ///
+    /// The switch itself is `GameStore.activate(_:now:)` and nothing here: one saved transaction
+    /// moves both `isActive` flags AND both freeze clocks, so a crash mid-switch cannot leave the
+    /// box with zero Digimon out or two. All this adds is which record the row means, and telling
+    /// the screen about it afterwards.
+    ///
+    /// An unhatched Digitama is activated by exactly this path, which is what starts it hatching
+    /// (AC6): the egg becomes the state `refresh()` credits energy to, and `hatchIfReady` is what
+    /// the next refresh runs on it. Nothing here has to know it is an egg.
+    ///
+    /// A row that is not selectable — the active one, or a dead one — is refused rather than
+    /// activated, which is AC4 and AC5 at the seam rather than only in the view.
+    ///
+    /// - Returns: whether the Digimon on this row is now the one out.
+    @discardableResult
+    func activate(_ row: PartyRow) -> Bool {
+        guard let store, row.isSelectable else { return false }
+        let states = boxedStates
+        // The row has to still DESCRIBE the record at its position, not merely be in range. The
+        // box's order is birth order, and US-125's thaw moves a Digimon's birth date forward by the
+        // span it spent frozen — so taking one out really does reorder the list. A tap carried over
+        // from a stale list would otherwise activate whichever Digimon had moved into that slot.
+        guard row.id >= 0, row.id < states.count,
+              PartyRow.rows(for: states, in: graph)[row.id] == row else { return false }
+        let target = states[row.id]
+        do {
+            try store.activate(target, now: now())
+            state = target
+            // Cleared rather than left standing: a ceremony still pending from the Digimon being
+            // put AWAY would otherwise play over the one just taken out, crediting it with an
+            // evolution that happened to somebody else. Same rule as `dismissMemorial`'s.
+            pendingEvolution = nil
+            // The screen is holding the previous Digimon's pose — which may be a sleep loop or the
+            // dead frame — so it is settled from the new one's own health before it is drawn.
+            animation = restingAnimation
+            publishComplicationSnapshot()
+            Self.log.info("Activated \(target.currentDigimonId)")
+            return true
+        } catch {
+            // The store put every flag back the way it was, so the box is exactly as it stood and
+            // the screen still shows the Digimon that is really out. Worth a line, not worth taking
+            // the screen away from the player.
+            Self.log.error("Could not change which Digimon is out: \(String(describing: error))")
+            return false
+        }
     }
 
     /// The map the next battle draws its opponents from (US-122), or nil for "nowhere chosen yet" —

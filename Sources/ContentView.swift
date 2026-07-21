@@ -17,6 +17,10 @@ struct ContentView: View {
     /// it yet — the strip that will is US-120 — and because `simctl` could not tap it if it did.
     @State private var showsMapListDemo = CommandLine.arguments.contains("-mapListDemo")
         || CommandLine.arguments.contains("-mapListPartialDemo")
+    /// US-126's party screen. Same reason as the map list: `simctl` cannot tap the strip's trailing
+    /// button, so the only way to photograph the screen behind it is to push it from the launch
+    /// command. `MainScreenModel.seedPartyDemoIfRequested` is what fills the box it draws.
+    @State private var showsPartyDemo = CommandLine.arguments.contains("-partyDemo")
     /// US-121's map detail. Same reason as the list above, one level deeper: the detail is what a
     /// tap on a row opens, and `simctl` cannot tap a row.
     @State private var showsMapDetailDemo = CommandLine.arguments.contains("-mapDetailDemo")
@@ -336,6 +340,12 @@ struct ContentView: View {
                 MapListView(rows: model.mapRows,
                             detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
             }
+            // US-126's party screen, pushed for the same reason and onto the same stack: what the
+            // screenshot photographs is the real destination the strip's button leads to, seeded
+            // box and all, rather than a preview of it.
+            .navigationDestination(isPresented: $showsPartyDemo) {
+                PartyView(rows: model.partyRows) { model.activate($0) }
+            }
             // US-121's detail, pushed straight rather than through the list: `simctl` has no tap
             // command, so the only way to photograph the screen a tap opens is to open it from the
             // launch command. It takes the first UNLOCKED row, which on any save is the starting
@@ -557,10 +567,14 @@ struct ContentView: View {
                 // first map as an invitation, and nothing on this screen is gated on having taken
                 // it (AC6).
                 if let strip = model.mapStrip {
-                    MapStripView(strip: strip) {
+                    MapStripView(strip: strip, destination: {
                         MapListView(rows: model.mapRows,
                                     detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
-                    }
+                    }, party: {
+                        // The box of Digimon (US-126), off the strip's trailing button — the other
+                        // way out of this screen, and the one that changes which Digimon is on it.
+                        PartyView(rows: model.partyRows) { model.activate($0) }
+                    })
                 }
 
                 if let progress = model.energyProgress {
