@@ -24,6 +24,7 @@ struct ContentView: View {
         #if DEBUG
         if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
         if CommandLine.arguments.contains("-battleTurnDemo") { return 0.01 }
+        if CommandLine.arguments.contains("-battleSignatureDemo") { return 0.01 }
         #endif
         return 1.0
     }
@@ -32,8 +33,22 @@ struct ContentView: View {
         #if DEBUG
         if CommandLine.arguments.contains("-battleResultDemo") { return 0.01 }
         if CommandLine.arguments.contains("-battleTurnDemo") { return 60 }
+        if CommandLine.arguments.contains("-battleSignatureDemo") { return 60 }
         #endif
         return 0.7
+    }
+
+    /// The exchange the battle overlay holds on for a screenshot. nil in a release build and for the
+    /// other demos, which play in order; `-battleSignatureDemo` (US-073) points it at the KNOCKOUT
+    /// turn — never turn 0 — so `simctl` can catch the signature move and its banner rather than an
+    /// ordinary exchange.
+    private static func battleDemoFocusTurn(_ bout: BattleBout) -> Int? {
+        #if DEBUG
+        if CommandLine.arguments.contains("-battleSignatureDemo") {
+            return bout.report.turns.count - 1
+        }
+        #endif
+        return nil
     }
 
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
@@ -112,7 +127,8 @@ struct ContentView: View {
                 BattleView(bout: bout,
                            onFinish: { model.finishBattle() },
                            introDuration: Self.battleIntroDuration,
-                           turnDuration: Self.battleTurnDuration)
+                           turnDuration: Self.battleTurnDuration,
+                           demoFocusTurn: Self.battleDemoFocusTurn(bout))
                     .transition(.opacity)
             }
         }

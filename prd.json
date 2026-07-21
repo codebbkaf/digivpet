@@ -340,7 +340,7 @@
       ],
       "priority": 18,
       "passes": true,
-      "notes": "BattleView.arena now draws the two combatants facing each other via a new pure BattleView.faces(_:) helper: the pack's art faces LEFT, so the player on the left is flipped=true to turn right and the opponent on the right keeps its natural leftward heading (faces(.player)==true, faces(.opponent)==false). Mirroring stays crisp for free — DigimonSpriteView.image already applies .interpolation(.none) on the Image AHEAD of the .scaleEffect(x:-1), so US-070's pixels survive the flip. Verified on Series 9 41mm via -battleTurnDemo -noNotificationPrompt -healthAnswered: Agumon on the left faces right, Tanemon on the right faces left, name 'Tanemon' and HP '10 — 8' both visible above the fold, no horizontal clipping, blocky not smoothed. Test testTheCombatantsFaceEachOther in BattleFrameTests pins the pure helper; BattleEngine untouched. Build green, full suite 856/0 (was 855)."
+      "notes": "BattleView.arena now draws the two combatants facing each other via a new pure BattleView.faces(_:) helper: the pack's art faces LEFT, so the player on the left is flipped=true to turn right and the opponent on the right keeps its natural leftward heading (faces(.player)==true, faces(.opponent)==false). Mirroring stays crisp for free \u2014 DigimonSpriteView.image already applies .interpolation(.none) on the Image AHEAD of the .scaleEffect(x:-1), so US-070's pixels survive the flip. Verified on Series 9 41mm via -battleTurnDemo -noNotificationPrompt -healthAnswered: Agumon on the left faces right, Tanemon on the right faces left, name 'Tanemon' and HP '10 \u2014 8' both visible above the fold, no horizontal clipping, blocky not smoothed. Test testTheCombatantsFaceEachOther in BattleFrameTests pins the pure helper; BattleEngine untouched. Build green, full suite 856/0 (was 855)."
     },
     {
       "id": "US-072",
@@ -377,8 +377,8 @@
         "Tests pass"
       ],
       "priority": 20,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Knockout turn renders winner signatureSymbol at 30pt (vs 15pt ordinary) + signatureName banner. Pure BattleView.isKnockoutTurn(_:of:) unit-tested vs seeded reports (only last turn, fires for either winner, out-of-range safe). Verified in Sim via -battleSignatureDemo: /tmp/us073_signature.png shows Pepper Breath banner, large orange flame, HP 6-0. 865 tests pass."
     },
     {
       "id": "US-074",

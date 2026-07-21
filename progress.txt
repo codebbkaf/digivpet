@@ -1329,3 +1329,50 @@ VERIFIED (all observed, none assumed)
           /tmp/us072_projectile.png and /tmp/us072_projectile2.png.
 
 Next: US-073 (signature move on the finishing blow).
+
+================================================================================
+2026-07-21 — US-073: Signature move on the finishing blow — PASSES
+================================================================================
+
+WHAT I DID
+
+- BattleView.projectile now switches on Self.isKnockoutTurn(index, of:): on the knockout turn it
+  draws the winner's `signatureSymbol` at `signatureSize` (30pt) instead of the ordinary
+  `projectileSymbol` at `projectileSize` (15pt). Both sizes are static lets so a test asserts the
+  signature IS larger (AC2) rather than trusting two literals not to drift together.
+- New `signatureBanner` @ViewBuilder overlaid on the arena's top: the winner's `signatureName` in a
+  tinted capsule, shown ONLY during the knockout turn — driven off the SAME pure `isKnockoutTurn`
+  the projectile switches on, so banner and glyph can never disagree about which turn ends it.
+- New PURE `BattleView.isKnockoutTurn(_ index:, of turns:) -> Bool` — bounds-checked, returns
+  turns[index].isKnockout. This is the AC6 seam and is unit-tested against seeded BattleReports.
+- The winner's move is `bout.move(for: turn.attacker)` — the knockout turn's attacker IS the winner
+  (BattleEngine returns as winner whoever lands the felling blow), so AC4 (player OR opponent lands
+  it) needs no side-specific branch: same code path both ways, asserted in tests across 60 seeds.
+- The result screen (frames + haptic) is UNTOUCHED — AC5 holds; `result`, `resultFrame`,
+  `resultHaptic`, `run()`'s haptic call all unchanged.
+
+DEMO PLUMBING for AC7 (the knockout turn is never turn 0, so -battleTurnDemo can't reach it)
+
+- BattleView gains `demoFocusTurn: Int? = nil`. nil in the app => `run()` plays every turn in order,
+  exactly as before. When set, run() skips straight to that ONE real turn of the real report after
+  the intro. It's staging WHERE the screenshot lands, not WHAT it shows — HP and frames still derive
+  from the report prefix, so the felled side reads 0.
+- ContentView: `-battleSignatureDemo` sets intro 0.01, turnDuration 60, and
+  demoFocusTurn = report.turns.count-1 (the knockout). MainScreenModel seeds a real Agumon battle
+  for it via the existing staged-demo path.
+
+VERIFIED (all observed)
+
+  Build   BUILD SUCCEEDED, Series 11 46mm.
+  Tests   865 passed / 0 failures (was 861; +4 mine in BattleFrameTests).
+  AC1/6   testTheKnockoutTurnIsTheLastTurnAndOnlyThat — over 40 seeds, isKnockoutTurn is true for the
+          last turn and false for every other. testAnOutOfRangeTurnIsNotAKnockout guards -1/count/[].
+  AC2     testTheSignatureIsLargerThanAnOrdinaryProjectile — signatureSize > projectileSize.
+  AC4     testTheFinishFiresForEitherSide — 60 seeds, both player- and opponent-won battles occur,
+          and in each the knockout turn's attacker == report.winner.
+  AC3/7   Screenshot, Series 11 46mm, -battleSignatureDemo: /tmp/us073_signature.png — "Pepper Breath"
+          orange banner, a LARGE orange flame (30pt) leaving Agumon on the left toward Hyokomon on the
+          right, HP "6 — 0" (opponent felled, player landed the finish). Crisp, banner + HP intact.
+  AC5     result/resultHaptic/resultFrame untouched; existing haptic + win/loss-frame tests green.
+
+Next: US-074 (author moves for all 69 curated Digimon).

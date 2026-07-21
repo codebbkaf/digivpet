@@ -59,6 +59,14 @@ struct BattleView: View {
     var introDuration: TimeInterval = 1.0
     var turnDuration: TimeInterval = 0.7
 
+    /// Debug-only: the single exchange to skip straight to after the intro, instead of playing every
+    /// turn in order. nil in the app — every battle plays out normally. Set by `ContentView`'s
+    /// `-battleSignatureDemo` to the KNOCKOUT turn, which is never turn 0, so a `simctl` screenshot can
+    /// land on the finishing blow (US-073 AC7). It still animates the REAL turn of the REAL report — HP
+    /// and frames are all derived from the report prefix — so this stages where the screenshot lands,
+    /// not what it shows.
+    var demoFocusTurn: Int? = nil
+
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
@@ -88,6 +96,7 @@ struct BattleView: View {
                 }
                 projectile
             }
+            .overlay(alignment: .top) { signatureBanner }
 
             Text(bout.opponent.displayName)
                 .font(.caption2)
@@ -108,19 +117,57 @@ struct BattleView: View {
     /// `projectileProgress` runs 0 → 1 over `turnDuration`. Its direction is read off `faces(attacker)`
     /// so the opponent's shots fly leftward out of its front rather than backward out of its back.
     ///
+    /// On the FINISHING blow — the one turn where `isKnockout` is true — it becomes the winner's
+    /// `signatureSymbol`, drawn visibly larger (US-073), so the killing blow reads as special rather
+    /// than as one more identical shot.
+    ///
     /// `.interpolation(.none)` is not needed here — an SF Symbol is a vector, not the pixel art the
     /// sprites are, so scaling it stays crisp on its own.
     @ViewBuilder private var projectile: some View {
         if case .turn(let index) = beat, index < bout.report.turns.count {
             let move = bout.move(for: bout.report.turns[index].attacker)
-            Image(systemName: move.projectileSymbol)
-                .font(.system(size: 15, weight: .bold))
+            let knockout = Self.isKnockoutTurn(index, of: bout.report.turns)
+            Image(systemName: knockout ? move.signatureSymbol : move.projectileSymbol)
+                .font(.system(size: knockout ? Self.signatureSize : Self.projectileSize, weight: .bold))
                 .foregroundStyle(move.tint.color)
                 .offset(x: Self.projectileOffset(
                     rightward: Self.faces(bout.report.turns[index].attacker),
                     progress: projectileProgress,
                     span: Self.projectileSpan))
         }
+    }
+
+    /// The winner's named finisher, shown as a banner across the top of the arena on the knockout turn
+    /// ONLY (US-073) — the instant a win is decided gets its move said out loud. Tinted to match the
+    /// signature glyph flying beneath it, and drawn on the same pure `isKnockoutTurn` test the
+    /// projectile switches on, so banner and signature symbol can never disagree about which turn ends it.
+    @ViewBuilder private var signatureBanner: some View {
+        if case .turn(let index) = beat, Self.isKnockoutTurn(index, of: bout.report.turns) {
+            let move = bout.move(for: bout.report.turns[index].attacker)
+            Text(move.signatureName)
+                .font(.system(size: 12, weight: .heavy))
+                .foregroundStyle(move.tint.color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
+                .background(.black.opacity(0.65), in: Capsule())
+                .offset(y: -6)
+        }
+    }
+
+    /// The ordinary projectile's glyph size, and the larger size the signature move is drawn at on the
+    /// finishing blow. Static and separate so a test can assert the signature IS visibly larger (US-073
+    /// AC2) rather than trusting the two literals not to drift together.
+    static let projectileSize: CGFloat = 15
+    static let signatureSize: CGFloat = 30
+
+    /// Whether the exchange at `index` is the finishing blow — the one turn the signature move replaces
+    /// the ordinary projectile on. Pure, so US-073's "renders on the knockout turn, and only then" can
+    /// be asserted against a seeded `BattleReport` without a view. Bounds-checked so an out-of-range
+    /// index (never produced by `run()`, but cheap to rule out) is simply "not a knockout".
+    static func isKnockoutTurn(_ index: Int, of turns: [BattleTurn]) -> Bool {
+        turns.indices.contains(index) && turns[index].isKnockout
     }
 
     /// How far the projectile travels, point to point — roughly the gap between the two sprites'
@@ -231,7 +278,8 @@ struct BattleView: View {
     func run() async {
         try? await Task.sleep(for: .seconds(introDuration))
 
-        for index in bout.report.turns.indices {
+        let indices = demoFocusTurn.map { [$0] } ?? Array(bout.report.turns.indices)
+        for index in indices where bout.report.turns.indices.contains(index) {
             // Snap the projectile back to the attacker (no animation), then fly it across the gap
             // over the exchange's own beat — so impact lands as the exchange ends and the defender is
             // already in its hurt loop. Driven off `turnDuration`, so a test still runs in milliseconds.

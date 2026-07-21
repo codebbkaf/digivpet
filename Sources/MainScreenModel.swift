@@ -458,6 +458,8 @@ final class MainScreenModel: ObservableObject {
     ///   screenshot catches the attack and hurt frames rather than a 0.7s beat.
     /// - `-battleResultDemo` — the same, with `ContentView` pacing the replay down to nothing so the
     ///   screenshot lands on the result screen instead of mid-exchange.
+    /// - `-battleSignatureDemo` — the same, with `ContentView` holding the KNOCKOUT exchange (US-073)
+    ///   so the screenshot catches the signature move and its banner rather than an ordinary shot.
     /// - `-battleLossDemo` — an untrained Baby I against the stages above it: very likely the losing
     ///   result. Genuinely fought rather than hand-set, so what is screenshotted is the real rule.
     /// - `-battleLimitDemo` — the day's five battles actually FOUGHT and dismissed, leaving the
@@ -469,7 +471,7 @@ final class MainScreenModel: ObservableObject {
     private func seedBattleDemoIfRequested() {
         let arguments = CommandLine.arguments
         let losing = arguments.contains("-battleLossDemo")
-        let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo"]
+        let staged = ["-battleDemo", "-battleResultDemo", "-battleTurnDemo", "-battleSignatureDemo"]
         let limit = arguments.contains("-battleLimitDemo")
         guard staged.contains(where: arguments.contains) || losing || limit, let state else { return }
 

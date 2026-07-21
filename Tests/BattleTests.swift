@@ -395,6 +395,58 @@ final class BattleFrameTests: XCTestCase {
         XCTAssertNotEqual(MoveTint.orange.color, MoveTint.green.color)
     }
 
+    // MARK: - US-073: the signature move on the finishing blow
+
+    /// AC6: knockout-turn detection is pure and asserted against a seeded report. Exactly ONE turn —
+    /// the last — is the finishing blow, and the signature move must fire on that turn and no other.
+    func testTheKnockoutTurnIsTheLastTurnAndOnlyThat() {
+        for seed in UInt64(0)..<40 {
+            var generator = SeededGenerator(seed: seed)
+            let report = BattleEngine.resolve(playerPower: 33, opponentPower: 29, using: &generator)
+            let last = report.turns.count - 1
+            for index in report.turns.indices {
+                XCTAssertEqual(BattleView.isKnockoutTurn(index, of: report.turns), index == last,
+                               "seed \(seed): only the last turn is the knockout")
+            }
+        }
+    }
+
+    /// AC4: the finish fires whether the PLAYER or the OPPONENT lands it — the detection is about the
+    /// turn ending the battle, not about which side is swinging. Across many seeds both winners occur,
+    /// and in every case it is the winner's turn that is the knockout.
+    func testTheFinishFiresForEitherSide() {
+        var sawPlayerFinish = false
+        var sawOpponentFinish = false
+        for seed in UInt64(0)..<60 {
+            var generator = SeededGenerator(seed: seed)
+            let report = BattleEngine.resolve(playerPower: 30, opponentPower: 30, using: &generator)
+            let last = report.turns.count - 1
+            XCTAssertTrue(BattleView.isKnockoutTurn(last, of: report.turns))
+            XCTAssertEqual(report.turns[last].attacker, report.winner,
+                           "seed \(seed): the felling blow is the winner's")
+            if report.winner == .player { sawPlayerFinish = true } else { sawOpponentFinish = true }
+        }
+        XCTAssertTrue(sawPlayerFinish, "some battles are won by the player")
+        XCTAssertTrue(sawOpponentFinish, "some battles are won by the opponent")
+    }
+
+    /// AC1: an out-of-range index is not a knockout — the detection never traps or false-positives on
+    /// an index `run()` would never actually feed it.
+    func testAnOutOfRangeTurnIsNotAKnockout() {
+        var generator = SeededGenerator(seed: 7)
+        let report = BattleEngine.resolve(playerPower: 20, opponentPower: 20, using: &generator)
+        XCTAssertFalse(BattleView.isKnockoutTurn(-1, of: report.turns))
+        XCTAssertFalse(BattleView.isKnockoutTurn(report.turns.count, of: report.turns))
+        XCTAssertFalse(BattleView.isKnockoutTurn(0, of: []))
+    }
+
+    /// AC2: the signature glyph is drawn visibly larger than an ordinary projectile — asserted on the
+    /// two sizes directly so the two literals cannot quietly drift to the same value.
+    func testTheSignatureIsLargerThanAnOrdinaryProjectile() {
+        XCTAssertGreaterThan(BattleView.signatureSize, BattleView.projectileSize,
+                             "the finishing blow's glyph is bigger than an ordinary shot")
+    }
+
     /// US-071: the two combatants face each other. The pack's art faces left, so the player on the
     /// left is mirrored to turn right and the opponent on the right keeps its natural leftward
     /// heading — the two are drawn facing opposite ways, which is the whole point of the face-off.
