@@ -257,17 +257,17 @@ final class JogressCatalogValidatorTests: XCTestCase {
 
     // MARK: - The shipped file
 
-    /// THE AC: the validator reports ZERO findings over the shipped `jogress.json`, against the REAL
-    /// roster rather than a stub.
+    /// THE AC (US-130 and again US-131): the validator reports ZERO findings over the shipped
+    /// `jogress.json`, against the REAL roster rather than a stub.
     ///
-    /// HONEST NOTE: the shipped file holds NO recipes in US-130 — this story ships the machinery and
-    /// US-131 authors the data — so today this passes over an empty list and the fixtures above are
-    /// what prove the validator works at all. The test earns its keep the moment US-131 lands, and
-    /// is written now so that story inherits a failing signal rather than having to build one.
+    /// US-130 wrote this over an empty file, where it was true but vacuous. US-131 authored the
+    /// recipes, so it now sweeps real data — every parent and result resolving to a playable roster
+    /// entry, no pair authored twice in either order, no result below a parent's rung.
     func testTheShippedFileHasNoValidationErrors() throws {
         let catalog = try JogressCatalog.load()
 
         XCTAssertEqual(catalog.validate().map(\.description), [])
+        XCTAssertFalse(catalog.recipes.isEmpty, "an empty file would make the sweep above vacuous")
     }
 
     /// And the real roster the shipped file is validated against is a real check, not a permissive

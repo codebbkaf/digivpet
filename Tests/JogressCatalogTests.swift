@@ -6,11 +6,11 @@ import XCTest
 /// US-130 — the Jogress catalog: the shipped file, the decoder's contract with it, and the
 /// unordered-parents property the whole type exists to guarantee.
 ///
-/// The shipped `jogress.json` is EMPTY of recipes in this story — US-131 authors them — so the
-/// decode tests here deliberately do not lean on its contents. They pin the two things an empty
-/// file cannot pin on its own: that the file is bundled and decodes at all, and that the field
-/// names the decoder expects are the ones US-131 will be writing. Without the second, the first
-/// authored recipe would trap at launch rather than fail a test.
+/// The shipped `jogress.json` was EMPTY of recipes in US-130 and is authored in US-131, so the
+/// decode tests here still run over literals rather than over the file: a shipped recipe that
+/// happens to exercise a key says nothing about the key the file does NOT use (`conditions`), and a
+/// renamed key must fail as a test rather than as a launch trap in `JogressCatalog.bundled`.
+/// The authored data is asserted separately, further down.
 final class JogressCatalogTests: XCTestCase {
 
     // MARK: - The shipped file
@@ -21,11 +21,73 @@ final class JogressCatalogTests: XCTestCase {
         XCTAssertEqual(catalog, JogressCatalog.bundled)
     }
 
-    /// Not an assertion that the file SHOULD be empty forever — it is a marker that US-131 has not
-    /// landed yet, and the story that authors the recipes replaces it with a real count. Kept so
-    /// that "zero findings over the shipped file" is never read as proof of authored data.
-    func testTheShippedFileHoldsNoRecipesUntilUS131() throws {
-        XCTAssertEqual(try JogressCatalog.load().recipes.count, 0)
+    /// US-130's marker test asserted this file was still EMPTY; US-131 authored it, so the marker is
+    /// replaced by the count it was waiting for. A bare count is a weak assertion on its own — the
+    /// four tests below say WHICH recipes, and the validator suite sweeps the whole file — but it is
+    /// what fails first if a later story deletes the data while leaving the machinery.
+    func testTheShippedFileHoldsTheAuthoredRecipes() throws {
+        XCTAssertEqual(try JogressCatalog.load().recipes.count, 14)
+    }
+
+    // MARK: - The authored data (US-131)
+
+    /// THE AC: the four pairs the local evolution-tree document states verbatim. Looked up through
+    /// `recipe(for:and:)` in the order the DOCUMENT names them, which is not the order the file
+    /// authors them all in — so this is a fact about the catalog, not about the JSON's column order.
+    func testTheFourRecipesTheLocalDocumentStatesArePresent() throws {
+        let catalog = try JogressCatalog.load()
+
+        XCTAssertEqual(
+            catalog.recipe(for: "blitzgreymon", and: "cresgarurumon")?.result, "omegamon_alter-s")
+        XCTAssertEqual(catalog.recipe(for: "darkdramon", and: "bancholeomon")?.result, "chaosmon")
+        XCTAssertEqual(catalog.recipe(for: "mugendramon", and: "darkdramon")?.result, "chaosdramon")
+        XCTAssertEqual(catalog.recipe(for: "wargreymon", and: "metalgarurumon")?.result, "omegamon")
+    }
+
+    /// The ten recipes read off the two shipped Bandai charts beyond those four. Spelled out rather
+    /// than counted, because "10 more exist" would still pass if one of them fused the wrong pair.
+    func testTheRecipesReadOffTheShippedChartsArePresent() throws {
+        let catalog = try JogressCatalog.load()
+
+        let expected: [(String, String, String)] = [
+            ("chimairamon", "mugendramon", "millenniumon"),
+            ("angewomon", "ladydevimon", "mastemon"),
+            ("saberleomon", "eldoradimon", "tlalocmon"),
+            ("saberleomon", "metaletemon", "tlalocmon"),
+            ("metalseadramon", "plesiomon", "aegisdramon"),
+            ("marinangemon", "hououmon", "mitamamon"),
+            ("vamdemon", "piemon", "voltobautamon"),
+            ("griffomon", "pinochimon", "cernumon"),
+            ("griffomon", "hydramon", "cernumon"),
+            ("mugendramon", "hiandromon", "chaosdramon"),
+        ]
+
+        for (a, b, result) in expected {
+            XCTAssertEqual(
+                catalog.recipe(for: a, and: b)?.result, result, "\(a) + \(b) should fuse to \(result)")
+        }
+    }
+
+    /// Two Digimon can fuse only ONE way, so a pair that appears twice is a bug the lookup hides —
+    /// `byPair` keeps the first and the second is unreachable. The validator reports it; this pins
+    /// it over the shipped file as a plain fact, since the same result reached by two DIFFERENT
+    /// pairs is legitimate and shipped (Chaosdramon and Tlalocmon and Cernumon each have two).
+    func testNoTwoShippedRecipesShareAPair() throws {
+        let recipes = try JogressCatalog.load().recipes
+
+        XCTAssertEqual(Set(recipes.map(\.pair)).count, recipes.count)
+        XCTAssertEqual(recipes.filter { $0.result == "chaosdramon" }.count, 2)
+    }
+
+    /// A recipe naming a Digimon the player can never own is dead data, and the one the PRD calls
+    /// out by name is XV-mon + Stingmon -> Paildramon: `stingmon` is one of the 157 idle-only
+    /// entries. Pinned as an ABSENCE so a later iteration adding it from a wiki fails here rather
+    /// than shipping a fusion no party screen can ever offer.
+    func testTheKnownUnusableRecipesAreNotShipped() throws {
+        let catalog = try JogressCatalog.load()
+
+        XCTAssertNil(catalog.recipe(for: "xv-mon", and: "stingmon"))
+        XCTAssertTrue(Roster.bundled.entry(id: "stingmon")?.dexOnly == true)
     }
 
     // MARK: - The decoder's contract with the file

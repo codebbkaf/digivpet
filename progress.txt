@@ -1373,3 +1373,93 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   validator is ready for it. US-132 then consumes `recipes(involving:)` + `recipe(for:and:)` and
   must call `MainScreenModel.checkForStranding()` after it consumes its two parents (US-129).
 ---
+
+## 2026-07-22 - US-131 (Author the Jogress recipes)
+- **Resources/jogress.json now holds 14 recipes**, read off the two Bandai charts already committed
+  in `Resources/`. Build green, **1659 tests (1655 - 1 marker + 5 new), 0 failures**, and both
+  Jogress suites also observed passing on their own with `-only-testing` (16 + 20).
+- Files changed: `Resources/jogress.json`, `Tests/JogressCatalogTests.swift` (marker test replaced by
+  five that assert the authored data), `Tests/JogressCatalogValidatorTests.swift` (the shipped-file
+  sweep's doc comment no longer says it is vacuous, plus a non-empty guard so it cannot become
+  vacuous again). No source file changed — US-130's machinery took the data unmodified.
+- **THE SOURCE IS THE TWO SHIPPED PDFs, NOT A WEB FETCH.** The PRD's warning about
+  `humulos.com/digimon/penc` returning self-referential nonsense meant no web source was used at all.
+  `Resources/DIGIMON_COLOR_EVOLUTION.pdf` (Ver.230930, 6 pages) and
+  `Resources/DIGIMONPENDULUM COLOR_EVOLUTION.pdf` (Ver.241116, 7 pages) are Bandai's own 資料集
+  evolution charts, and every one of the 14 recipes was read off a specific page of one of them.
+  Recipe -> source page:
+  - Digimon Color 25th, the "與(Ver.N) …對戰" rows at the foot of each 究極體 column:
+    BlitzGreymon+CresGarurumon->Omegamon Alter-S (p2 VER.1 and p3 VER.2, stated from both sides);
+    Chimairamon+Mugendramon->Millenniumon (p4 VER.3 and p6 VER.5);
+    BanchoLeomon+Darkdramon->Chaosmon (p4 VER.3 and p5 VER.4);
+    Darkdramon+Mugendramon->Chaosdramon (p5 VER.4 and p6 VER.5).
+  - Pendulum Color, the separate box below each 究極體 column:
+    WarGreymon+MetalGarurumon->Omegamon (p6 Ver.5 ME and p7 Ver.0 VB);
+    Angewomon+LadyDevimon->Mastemon (p2 Ver.1, p4 Ver.3, p7 Ver.0 — three times);
+    SaberLeomon+ElDoradimon->Tlalocmon and SaberLeomon+MetalEtemon->Tlalocmon (p2 Ver.1);
+    MetalSeadramon+Plesiomon->Aegisdramon (p3 Ver.2);
+    MarinAngemon+Hououmon->Mitamamon (p3 Ver.2 and p5 Ver.4);
+    Vamdemon+Piemon->VoltoBautamon (p4 Ver.3);
+    Griffomon+Pinochimon->Cernumon and Griffomon+Hydramon->Cernumon (p5 Ver.4);
+    Mugendramon+HiAndromon->Chaosdramon (p6 Ver.5).
+- **LEFT OUT ON PURPOSE, four of them, because AC3 says a guessed recipe fails this story:**
+  - `xv-mon` + `stingmon` -> `paildramon`: `stingmon` is dexOnly (asserted in a test). The PRD names
+    this one; it is pinned as an ABSENCE so a later iteration re-adding it from a wiki fails.
+  - Siriusmon + Arcturusmon -> **Proximamon** (p7 Ver.0 VB, プロキシマモン). Both parents exist and are
+    playable, but **Proximamon is in neither `roster.json` nor `16x16 Digimon Sprites/`** —
+    `find … -iname '*proxi*'` returns nothing. The result has no sprite, so it cannot ship.
+  - ElDoradimon + MetalEtemon -> Tlalocmon, and Pinochimon + Hydramon -> Cernumon. **Ambiguous
+    source, not missing data.** Both cells read `<A>` / `+<B> / <C>` / `(3隻其中2隻)` — "2 of these
+    3". The `+` prefix anchors A as one parent, which makes A+B and A+C certain; whether B+C alone
+    also fuses depends on which way "2 of these 3" is read, and the chart does not settle it. The
+    two certain pairs shipped, the ambiguous third did not.
+- **THE ROMANISATIONS DO NOT MATCH THE PDFs OR THE PRD, AND FIVE HAD TO BE HUNTED FOR.** The charts
+  are Japanese/Chinese only; the PRD's AC5 list uses the English fan spellings. This roster uses a
+  third set. Resolved by katakana, then CONFIRMED BY SPRITE: ミレニアモン -> `millenniumon` (not
+  "millenniummon"); キメラモン -> `chimairamon`; エルドラディモン -> `eldoradimon` (displayName
+  "ElDoradimon"); グリフォモン -> `griffomon` (the PRD calls it "Gryphonmon"); ピノッキモン ->
+  `pinochimon` (not "Pinocchimon"/"Puppetmon"). A plain name search would have missed every one.
+- **VERIFICATION, all four layers, before the file was written:**
+  1. All 34 participant ids resolve in `roster.json`, none `dexOnly`.
+  2. Every one has an ANIMATED sheet at `16x16 Digimon Sprites/<stage>/<spriteFile>.png` — checked
+     with `os.path.exists`, not assumed from `dexOnly` being absent.
+  3. **The sprite art was compared against the PDF thumbnail** for the ten riskiest name resolutions
+     (Griffomon, Pinochimon, ElDoradimon, Tlalocmon, Millenniumon, Chimairamon, Cernumon,
+     VoltoBautamon, Mitamamon, Mastemon). The charts draw the same 16x16 sprites this game ships, so
+     frame 0 beside the chart thumbnail is a direct identity check — all ten matched.
+  4. `MapCatalog`-style: the validator sweeps the real file against the real roster and reports [].
+- **Learnings for future iterations:**
+  - **The two PDFs in `Resources/` are the authoritative tree source and they are READABLE — the
+    `.md` beside them is not trustworthy for the Pendulum Color half.** `Digimon_Color_And_Pendulum_
+    Color_Evolution_Trees.md` Part 2 lists Agumon/Betamon/Tentomon as Ver.1 Nature Spirits rookies;
+    the actual chart (pen p2) has Tentomon/Gotsumon/Otamamon/Angoramon. Part 1 (Digimon Color) did
+    check out against the PDF. **Phase E must read the PDFs, not Part 2 of the .md.**
+  - **HOW to read them, since neither text-extracts:** the Digimon Color PDF's names are Japanese
+    glyphs and the Pendulum one has no Latin text at all, so `zlib`-decompressing the content streams
+    gives structure but no names. `pdftotext`/`poppler` is NOT installed and neither is the Read
+    tool's `pdftoppm`. **A ~30-line `CGPDFDocument` + `CGImageDestination` tool built with
+    `xcrun swiftc` renders any page, or any fractional RECT of a page, to PNG at any scale** —
+    `/tmp/us131/render.swift` and `/tmp/us131/crop.swift` (not committed). Cropping the jogress box
+    at scale 6 is what made the small print legible. Same throwaway-CoreGraphics-tool pattern the
+    screenshot stories use, pointed at a PDF instead of the Simulator.
+  - **Page map, so the next story does not re-derive it.** `DIGIMON_COLOR_EVOLUTION.pdf`: p1 legend,
+    p2-p6 = VER.1..VER.5. `DIGIMONPENDULUM COLOR_EVOLUTION.pdf`: p1 legend, p2-p7 = Ver.1 NSp,
+    Ver.2 DS, Ver.3 NSo, Ver.4 WG, Ver.5 ME, Ver.0 VB. Columns are always
+    幼年期I・II/成長期 | 成熟期 (Child) | 完全體 (Perfect) | 究極體 (Ultimate), and the jogress rows are
+    the box at the FOOT of the last column. `勝率` = win rate, `C`/`E`/`M`/`O`/`Z` are care counters.
+  - **Resolve a Digimon by SPRITE, not by name, when the source is in another language.** Five of the
+    fourteen recipes name a Digimon this roster spells differently enough that an exact-name lookup
+    misses. Reading the katakana narrows it to a candidate; drawing frame 0 of that candidate's sheet
+    next to the chart's thumbnail proves it, because the charts use the same 16x16 art the game
+    ships. This is cheap and it is the only check that cannot be fooled by a plausible spelling.
+  - **A "no findings over the shipped file" test needs a non-empty guard once the data lands.** The
+    sweep passes trivially over `[]`, so `XCTAssertFalse(catalog.recipes.isEmpty)` sits beside it now
+    — otherwise a later story that empties the file turns the AC's own test green.
+- REMAINS: US-132 onward (18/56 passing). US-132 has 14 real recipes to fuse; entry points are
+  `recipes(involving:)` and `recipe(for:and:)`, every shipped recipe has EMPTY conditions (so a pair
+  is fusable as soon as both are owned and alive — the ordinary Color-device case), and it must call
+  `MainScreenModel.checkForStranding()` after consuming its two parents (US-129). Note for its tests:
+  three results are reachable by TWO different pairs (Chaosdramon, Tlalocmon, Cernumon), and the two
+  Perfect-stage parents (Angewomon/LadyDevimon, Vamdemon) mean a fusable pair is not always two
+  Ultimates.
+---

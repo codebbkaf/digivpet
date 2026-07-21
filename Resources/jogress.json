@@ -1,3 +1,74 @@
 {
-  "recipes": []
+  "recipes": [
+    {
+      "parentA": "blitzgreymon",
+      "parentB": "cresgarurumon",
+      "result": "omegamon_alter-s"
+    },
+    {
+      "parentA": "chimairamon",
+      "parentB": "mugendramon",
+      "result": "millenniumon"
+    },
+    {
+      "parentA": "bancholeomon",
+      "parentB": "darkdramon",
+      "result": "chaosmon"
+    },
+    {
+      "parentA": "darkdramon",
+      "parentB": "mugendramon",
+      "result": "chaosdramon"
+    },
+    {
+      "parentA": "wargreymon",
+      "parentB": "metalgarurumon",
+      "result": "omegamon"
+    },
+    {
+      "parentA": "angewomon",
+      "parentB": "ladydevimon",
+      "result": "mastemon"
+    },
+    {
+      "parentA": "saberleomon",
+      "parentB": "eldoradimon",
+      "result": "tlalocmon"
+    },
+    {
+      "parentA": "saberleomon",
+      "parentB": "metaletemon",
+      "result": "tlalocmon"
+    },
+    {
+      "parentA": "metalseadramon",
+      "parentB": "plesiomon",
+      "result": "aegisdramon"
+    },
+    {
+      "parentA": "marinangemon",
+      "parentB": "hououmon",
+      "result": "mitamamon"
+    },
+    {
+      "parentA": "vamdemon",
+      "parentB": "piemon",
+      "result": "voltobautamon"
+    },
+    {
+      "parentA": "griffomon",
+      "parentB": "pinochimon",
+      "result": "cernumon"
+    },
+    {
+      "parentA": "griffomon",
+      "parentB": "hydramon",
+      "result": "cernumon"
+    },
+    {
+      "parentA": "mugendramon",
+      "parentB": "hiandromon",
+      "result": "chaosdramon"
+    }
+  ]
 }
