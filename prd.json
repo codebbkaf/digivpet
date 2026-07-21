@@ -79,8 +79,8 @@
         "Typecheck passes"
       ],
       "priority": 4,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Sources/MapCatalogValidator.swift in the EvolutionGraphValidator shape: MapValidationError (8 cases) + MapCatalog.validate(roster:assetExists:) returning findings in map order with the unlock cycles last, never throwing, plus MapCatalog.assetExists() as the injectable real check. Build green, 1363 tests (1348 + 15 new), 0 failures. EVERY REJECTION RULE FIRES ON A FIXTURE, each one the sound two-map catalog with exactly one thing broken so the reported error can only be the break: missingAsset (unknown imageset, and separately an empty assetName through the REAL check), unknownOpponent, dexOnlyOpponent, unknownDigitama, notADigitama (a Child in a slot), unknownUnlockedBy, unlockCycle (a 3-map loop, a map that unlocks itself, and a loop three maps hang off reported ONCE), emptyConditionHint (whitespace-only). A control test asserts the sound catalog reports []. AC8 run against the REAL roster and the REAL asset catalog rather than stubs - MapCatalog.load().validate() reports zero findings over the shipped 16 maps, 170 opponent ids and 57 Digitama slots - and a companion test proves the real assetExists is a check at all ('01_grassland' true, '17_moonbase' false, '' false), so the zero cannot be a stub saying yes to everything. Ordering choice worth knowing: a slot's blank-hint findings are collected BEFORE its roster lookup, so a broken slot id does not hide them and the author fixes both in one run - the same reason EvolutionGraphValidator checks conditions before the edge target. Cycle detection walks up from EVERY map, not just the roots: a cycle nothing hangs off is invisible to a walk from the starting map, which is exactly what the US-116 reachability test cannot see."
     },
     {
       "id": "US-118",

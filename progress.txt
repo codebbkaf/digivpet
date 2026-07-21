@@ -245,3 +245,49 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-117 onward (3/56 passing). US-117 now has real data to validate — 16 assetNames,
   170 opponent ids, 57 Digitama slots and a 16-long unlock chain.
 ---
+
+## 2026-07-22 — US-117: Map catalog validator
+- `Sources/MapCatalogValidator.swift` in the `EvolutionGraphValidator` shape, deliberately down to
+  the details: a `MapValidationError` enum (8 cases, `Equatable` + `CustomStringConvertible`), an
+  `extension MapCatalog` with `validate(roster:assetExists:)` that RETURNS findings and never
+  throws, and an injectable `MapCatalog.AssetExistsCheck` / `MapCatalog.assetExists()` mirroring
+  `EvolutionGraph.SpriteExistsCheck` / `spriteExists(in:)`. Findings come back in map order with
+  the unlock cycles appended last.
+- Files: Sources/MapCatalogValidator.swift (new), Tests/MapCatalogValidatorTests.swift (new, 15
+  tests). No project.yml change — `Sources` and `Tests` are directory globs.
+- PASSED: build green. `Executed 1363 tests, with 0 failures` (1348 + the 15 new).
+- PASSED, every rejection rule fired on its own fixture. Each fixture is the sound two-map catalog
+  with EXACTLY ONE thing broken, so a reported error can only be the thing that was broken, and a
+  control test asserts the sound catalog reports `[]`:
+  `missingAsset` (an unknown imageset, and separately an empty `assetName` through the REAL
+  check), `unknownOpponent`, `dexOnlyOpponent`, `unknownDigitama`, `notADigitama` (a Child in an
+  egg slot), `unknownUnlockedBy`, `unlockCycle` (a 3-map loop, a map that unlocks ITSELF, and a
+  loop three maps hang off — reported ONCE), `emptyConditionHint` (whitespace-only).
+- PASSED, AC8 against the REAL data rather than a stub: `MapCatalog.load().validate()` reports
+  ZERO findings over the shipped 16 maps, 170 opponent ids and 57 Digitama slots, using
+  `Roster.bundled` and `UIImage(named:)`. The assertion's failure message joins the findings'
+  `description`s, so the day someone retunes a map the test names the map and the id.
+- **Learnings for future iterations:**
+  - **A "the shipped file is clean" test is worthless without a companion test that the CHECK is a
+    check.** `assetExists` is injected, so a green real-file run is also what you get from a stub
+    that says yes to everything. `testTheRealAssetCheckDistinguishesShippedArtFromMissingArt`
+    pins `01_grassland` true / `17_moonbase` false / `""` false. Any later validator with an
+    injected world-touching check wants the same pair of tests.
+  - **Order the rules so one mistake does not hide another.** A slot's blank-hint findings are
+    collected BEFORE its roster lookup, so a slot with a bad id AND a blank hint reports both and
+    the author fixes them in one run rather than two — the same reason `EvolutionGraphValidator`
+    validates conditions before resolving the edge target. A test pins it.
+  - **Cycle detection walks up from EVERY map, not from the roots.** A cycle that no other map
+    hangs off is reachable from no root, so a "walk forward from `startingMap`" check — which is
+    what US-116's reachability test does — cannot see it. Each cycle is keyed on its sorted
+    members so the same loop found from four maps is one finding, not four.
+  - `UIImage(named:)` works in the test bundle because the tests run in the app as TEST_HOST, so
+    `.main` is the app bundle. Do NOT reach for `Bundle(for:)` for asset-catalog art — that is the
+    XCTest bundle and has none of it. (`MapCatalogTests` already relied on this; it is now pinned.)
+  - The validator takes `roster: Roster = .bundled` as a PARAMETER rather than reading the global
+    inside, which is what let all nine fixture tests run against a 3-entry roster (one egg, one
+    playable, one dexOnly) instead of hunting the real one for an id with the right shape. US-130's
+    Jogress validator has the identical problem and should copy this signature.
+- REMAINS: US-118 onward (4/56 passing). The map data is now guarded end to end — US-118 starts
+  the behaviour half of Phase B by accruing steps to the selected map.
+---
