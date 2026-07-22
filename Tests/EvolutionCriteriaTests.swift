@@ -43,6 +43,13 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// Champion under its X-Antibody name (`numemon` is dmc-v1's), Manekimon a beckoning-cat
     /// figurine, Mimicmon a chest that pretends to be treasure, Troopmon a faceless mook, Damemon
     /// the washout its name says it is, and Tsuchidarumon a mud daruma. See their `comment`s.
+    /// US-151 added TWO more, and they are the same problem one rung later: `wanyamon` and
+    /// `tamers` had no PERFECT rung at all when the Adult A-D sweep needed an out-edge for
+    /// BlackGaogamon and DarkLizamon, so each needed a junk floor before either could branch.
+    /// Karakurumon is a clockwork puppet (following Manekimon, `wanyamon`'s beckoning-cat junk
+    /// Champion) and CatchMamemon a crane-game cabinet (following Numemon X, the franchise's
+    /// prize-junk Champion, on `tamers`); both are plain roster ids off unused sheets, so both
+    /// remove an orphan. Neither name is anywhere in the tree markdown — the grep US-140 insists on.
     /// US-149 added the last TWO of that kind: `xros` and `vital` were the only lines still without
     /// a Champion rung when the Child G-L sweep reached them. Targetmon is a Xros Wars gag Digimon
     /// shaped like a shooting-gallery target and Kokeshimon a limbless painted doll; both are plain
@@ -56,7 +63,7 @@ final class EvolutionCriteriaTests: XCTestCase {
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
-        "andiramon_virus",
+        "andiramon_virus", "karakurumon", "catchmamemon",
         // Ultimate
         "kingetemon",
     ]

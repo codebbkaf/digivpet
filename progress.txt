@@ -53,6 +53,32 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   (`DigitamaSweepTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened`) that fails in
   BOTH directions: a ninth dead end fails it, and so does wiring one of the eight onward. The next
   sweep is meant to edit that list down and is told to rather than having to notice.
+- **PHASE E ADULT SWEEPS: an Adult's out-edge must land on a Perfect of its OWN line, and NINE
+  lines have no Perfect rung at all.** `testNoEdgeCrossesALine` plus a per-line boundary test in
+  every device-tree file make a cross-line edge impossible, and `EvolutionCriteriaTests` demands a
+  junk fallback drawn from `junkIds` - so opening a line's Perfect rung costs TWO nodes, the earned
+  branch and the junk floor under it, and the floor has to be added to `junkIds`. US-151 opened
+  `wanyamon` and `tamers`; `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`
+  and `penc-sw` are still owed one. This is the same problem US-148/US-149 solved one rung down.
+- **`Roster.bundled` is `Resources/roster.json` (1,022 entries); `roster.generated.json` (1,025) is
+  the Appendix B mirror and carries three line-scoped aliases the shipped file does not.** Count a
+  story's RANGE off the shipped roster when the number goes into a test, and its ORPHAN COUNT off
+  the generated one. They disagree, and US-151 wrote 46 where the test wanted 41.
+- **Fetch Wikimon as wikitext, never as a summarised page:**
+  `curl -s "https://wikimon.net/index.php?title=<Page>&action=raw"`. The rendered-page fetch drops
+  and invents Evolves From / Evolves To entries. Redirects come back as `#REDIRECT [[Real Page]]`.
+- **A rung can be UNWIREABLE rather than missing, and then the argument is "which line already holds
+  this family".** All three of Burgamon Adult's Wikimon parents are idle-only or absent, and
+  `edgeToDexOnlyNode` forbids an edge to an idle-only Digimon, so no stand-in intersection existed.
+  US-151 put both Burgermon on `dmc-v4` because Torikara Ballmon - whose only canon relatives are
+  those two - is already a Baby II there and Digitamamon, a cited Evolves To, is its Perfect.
+- **A class-level Wikimon citation ("Any Blue Lv.3 Digimon from the DCG") is a real citation and is
+  checkable.** Deckerdramon has nothing else; its out-edge takes the "also Evolves from Cyborg
+  Lv.4" clause onto Andromon, which this line really does reach from Guardromon, and the test
+  asserts that parent edge. Say in the `comment` which half is cited and which is flavour.
+- **The shared `met` "did everything right" context CANNOT take an `atMost` edge.** Copy
+  `AdultSweepAToDTests.context(for:)`, which derives the context from the edge's own conditions,
+  rather than loosening a criterion to fit the fixture.
 - **PHASE E SWEEPS: THE DIGITAMA ARE SPENT AS OF US-145 — all 57 carry their one hatch edge.** A
   Baby I's only possible in-edge is an egg, so **13 playable Baby I can never be reached** and no
   later story can author that away. The count and the "no unspent egg" half are pinned by
@@ -3281,4 +3307,100 @@ US-147 opened as M-Z leaves. `evolutions.json` 548 -> 599.
   half is now EMPTY and the Adult half is 95 Champions for US-151..US-156 to wire onward. Note the
   arithmetic the Adult sweeps face: the Perfect rung has 114 orphans and only 95 Adults to hang
   them off, so doubling up starts there.
+---
+
+## 2026-07-22 - US-151 - Orphan sweep: Adult A-D
+Wired the seven playable Champions whose display name begins A-D that had NO edge at all:
+Akatorimon, BlackGaogamon, BlackTailmon, Burgermon Mama, Burgermon Papa, DarkLizamon, Deckerdramon.
+Each gained one earned in-edge from a Child of its own line and one earned out-edge to a Perfect of
+that line, plus the line's unconditioned junk fallback. Orphans 330 -> 319 (Appendix B over a
+regenerated `roster.generated.json`): Adult 34 -> 27, Perfect 114 -> 110. 599 -> 610 nodes.
+
+Files: `Resources/evolutions.json` (7 new Champions, 4 new Perfects, 7 new Child branches),
+`Resources/elements.json` and `Resources/moves.json` (11 entries each), new
+`Tests/AdultSweepAToDTests.swift` (18 tests), and the knock-on edits listed below.
+
+**Learnings for future iterations:**
+
+- **The Adult rung's scope reading is NOT the Child rung's, and the criteria say so.** US-148..150
+  read "in-edge AND out-edge on every Digimon in range" as the rung-and-range and swept dead ends
+  too. US-151's criteria say "every remaining ORPHAN at stage Adult whose displayName starts A-D",
+  and the 95 leaves US-149/US-150 left are not orphans - they have an in-edge. So this story owns
+  only the seven with no edge at all, and the 95 stay in
+  `ChildSweepAToFTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesTheSweepsHaveOpened` for
+  US-152..US-156. Doing it the other way would have meant 95 new Perfects in one iteration.
+
+- **THE PERFECT RUNG IS WHERE THE FILE RUNS OUT, and it is the Adult sweeps' version of the junk
+  floor problem US-148/US-149 hit one rung down.** An Adult's out-edge must land on a Perfect of
+  its OWN line (`testNoEdgeCrossesALine`, plus a per-line boundary test in all eleven device-tree
+  files), and `EvolutionCriteriaTests` demands a junk fallback drawn from `junkIds`. Nine lines
+  still have no Perfect at all: `wanyamon` and `tamers` were opened here (BlackMachGaogamon +
+  Karakurumon, MegaloGrowmon + CatchMamemon), leaving `xros`, `vital`, `adventure02`, `algomon`,
+  `commandramon`, `diablomon` and `penc-sw` for the sweeps that need them. Budget TWO nodes per
+  such line: the earned branch and the junk floor under it, and add the floor to `junkIds`.
+
+- **`tamers` is the line to open early and this story did.** It is the largest in the file (71
+  nodes) and holds 22 more leaf Champions; every one of them will fall to CatchMamemon.
+
+- **A `parent` for an Adult is almost always a Child an earlier sweep pinned at "exactly two
+  edges".** `ChildSweepGToLTests` and `ChildSweepMToZTests` both assert
+  `node.evolutions.count == 2` over their swept lists, and Gaomon and Monodramon are on them. The
+  fix is the scoping the Codebase Patterns already prescribe: a named exception dictionary
+  (`["gaomon": 3]`) rather than dropping the equality, so a Child that grows a third branch nobody
+  wrote down still fails.
+
+- **Two of a device tree's Perfects are pinned by an EXACT parent set, not a superset.**
+  `PendulumMetalEmpireTreeTests.testAndromonIsTheOneNodeThatJoinsTwoOfTheDocumentsThreads` and
+  `PendulumVirusBustersTreeTests.testHolyAngemonCarriesBothOfTheDocumentsDrawingsOfIt` both do
+  `XCTAssertEqual(Set(graph.parents(of:)))`. Hanging a swept Champion onto either one falsifies
+  them; both were rescoped by NAMING the third parent and saying which arrow it is, since the claim
+  each makes is about the document's two drawings.
+
+- **`Roster.bundled` is `Resources/roster.json` (1,022 entries) and is NOT
+  `roster.generated.json` (1,025).** The generated mirror carries three line-scoped aliases the
+  shipped file does not. Count a story's range off the SHIPPED roster when the number goes into a
+  test - Appendix B's orphan count is the generated one, and the two disagree (46 vs 41 playable
+  Adults A-D).
+
+- **The blanket "did everything right" `met` context cannot take an `atMost` edge.** Two edges here
+  are gated on FEW training sessions and SHORT nights, and the shared fixture every sweep copies
+  sets both high. `AdultSweepAToDTests.context(for:)` derives the context from the edge's own
+  conditions instead - copy that helper rather than loosening a criterion to fit the fixture.
+
+- **Wikimon wikitext beats the rendered page.** `curl -s "https://wikimon.net/index.php?title=<Page>
+  &action=raw"` gives the exact `==Evolves From==` / `==Evolves To==` bullet lists; a summarised
+  fetch of the HTML drops and invents entries. Redirects show up as `#REDIRECT [[Real Page]]`
+  (DarkLizamon -> Dark Lizamon, BlackGaogamon -> Black Gaogamon).
+
+- **A rung can be unwireable rather than merely missing, and `dexOnly` is why.** All three of
+  Burgamon Adult's Wikimon parents are unusable - Ebi Burgamon has no sheet, Tyumon and Burgamon
+  are idle-only, and `edgeToDexOnlyNode` forbids an edge to an idle-only Digimon. The rehome went
+  to `dmc-v4` because the FILE already holds that family: Torikara Ballmon (whose only canon
+  relatives anywhere are the two Burgamon Adult) is a Baby II of that line and Digitamamon, a cited
+  Evolves To, is its Perfect. When the parent rung cannot exist, argue from the line the rest of
+  the family is already on.
+
+- **A class-level citation is a real citation and is checkable.** Deckerdramon's whole Evolves From
+  on Wikimon is "Any Blue Lv.3 Digimon from the Digimon Card Game", and its Evolves To gives "Any
+  Digimon that also Evolves from Cyborg Lv.4" - Andromon is reached here from Guardromon, this
+  line's Cyborg Champion, so the out-edge satisfies the clause literally and the test asserts that
+  parent edge exists. Say in the `comment` which half is cited and which is flavour.
+
+- **The knock-on list for this rung, all fifteen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, `ChildSweepAToFTests`, `ChildSweepGToLTests` and
+  `ChildSweepMToZTests` (599 -> 610); the per-line dict in `EvolutionGraphTests`; line sizes in
+  `DigitamaSweepTests`, `BabyIISweepTests`, `ChildSweepAToFTests` and `ChildSweepMToZTests`;
+  `junkIds` in `EvolutionCriteriaTests`; the dead-end ledger in `ChildSweepAToFTests` (95 -> 99);
+  the "exactly two edges" claim in `ChildSweepGToLTests` and `ChildSweepMToZTests`; Muchomon's
+  exact targets in `DMCVersion4TreeTests`; `inLine.count` in `PendulumWindGuardiansTreeTests`,
+  `PendulumVirusBustersTreeTests` and `PendulumMetalEmpireTreeTests` plus the `sweepEggs` set in the
+  latter two and the line-node count in the first; the exact parent sets in
+  `PendulumMetalEmpireTreeTests` and `PendulumVirusBustersTreeTests`; and BOTH the verified set and
+  the Champion split in `SeedRosterTests`. `MinigameAssignmentTests`, `EggHatchingTests`,
+  `DexScreenTests`, `DexModel.lineTitles` and the two `lineDefaults` did NOT move: no new line, and
+  the DexScreen floor is now the 157 idle-only Digimon, which Phase E cannot reach.
+
+- REMAINS: US-152 onward (38/56 passing). Six Adult sweeps are left and they hold the 27 orphaned
+  Champions E-Z; the 95 leaves in the dead-end ledger are theirs too, and the seven lines still
+  without a Perfect rung are the cost they have to budget for.
 ---

@@ -245,10 +245,19 @@ final class ChildSweepGToLTests: XCTestCase {
     /// when nothing else qualifies, so its own criteria are never consulted. That is why "no edge is
     /// unconditional" is read here as "no edge a player has to EARN is unconditional", the reading
     /// US-144 through US-148 recorded for every rung below.
+    ///
+    /// **Scoped rather than relaxed in US-151.** "Exactly two edges" was a claim about what THIS
+    /// story authored, and a later sweep hanging a second Champion off one of these Children
+    /// falsifies it without doing anything wrong — US-151 hung BlackGaogamon off Gaomon. So the
+    /// count is now a floor plus a named exception list: a Child of this story that grows a third
+    /// earned branch nobody wrote down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
+        let branchedByALaterSweep = ["gaomon": 3]
+
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
-            XCTAssertEqual(node.evolutions.count, 2, "\(node.id) is not a branch plus a fallback")
+            XCTAssertEqual(node.evolutions.count, branchedByALaterSweep[id] ?? 2,
+                           "\(node.id) is not a branch plus a fallback")
             XCTAssertEqual(node.evolutions.filter(\.isDefault).count, 1,
                            "\(node.id) has no single fallback")
 
@@ -330,7 +339,7 @@ final class ChildSweepGToLTests: XCTestCase {
         // them too: twelve more on `tamers`, three on `dmc-v3` and on `xros`, eleven on `vital`,
         // and two on `palmon`, which this story did not touch at all.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 68)
+        XCTAssertEqual(sizes["tamers"], 71, "US-151 opened this line's Perfect rung")
         XCTAssertEqual(sizes["dmc-v3"], 46)
         XCTAssertEqual(sizes["xros"], 17)
         XCTAssertEqual(sizes["vital"], 33)
@@ -533,7 +542,8 @@ final class ChildSweepGToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 599, "497 before this story, 548 after it, 599 after US-150")
+        XCTAssertEqual(graph.nodes.count, 610,
+                       "497 before this story, 548 after it, 599 after US-150, 610 after US-151")
     }
 
     /// The one Child in range whose Champion is NOT a new node. Lalamon's canonical Champion,

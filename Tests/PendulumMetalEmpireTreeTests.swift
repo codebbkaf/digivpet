@@ -229,8 +229,13 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
     /// Perfect in the whole file with two parents AND two children, and the only one whose second
     /// outgoing edge had to be earned rather than the usual single `isDefault` climb.
     func testAndromonIsTheOneNodeThatJoinsTwoOfTheDocumentsThreads() throws {
+        // US-151 hung Deckerdramon here as a THIRD parent. Wikimon gives Deckerdramon no named
+        // parent or child on disk at all; what its Evolves To does give is "Any Digimon that also
+        // Evolves from Cyborg Lv.4", and Guardromon — already one of these two — is exactly that,
+        // so the third arrow lands on the clause rather than beside it. The claim this test makes
+        // is about the DOCUMENT's two drawings, which are unchanged.
         XCTAssertEqual(Set(graph.parents(of: "pencme_andromon").map(\.id)),
-                       ["revolmon", "guardromon"])
+                       ["revolmon", "guardromon", "deckerdramon"])
         XCTAssertEqual(try targets(of: "pencme_andromon"),
                        ["pencme_hiandromon", "pencme_mugendramon"])
 
@@ -301,9 +306,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 43,
+        XCTAssertEqual(inLine.count, 44,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
-                           + "US-150 Phascomon, ToyAgumon Black and three Champions")
+                           + "US-150 Phascomon, ToyAgumon Black and three Champions, "
+                           + "US-151 Deckerdramon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -374,7 +380,8 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       "kozenimon", "zenimon",
                                       "kokuwamon_x", "kuwagamon_x",
                                       "phascomon", "porcupamon", "toyagumon_black",
-                                      "raptordramon", "omekamon"]
+                                      "raptordramon", "omekamon",
+                                      "deckerdramon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

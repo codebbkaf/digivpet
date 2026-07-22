@@ -261,7 +261,7 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 32)
+        XCTAssertEqual(inLine.count, 33, "US-151 hung Akatorimon on Floramon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -658,7 +658,8 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "mush_digitama" }.count, 31)
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "mush_digitama" }.count, 32,
+                       "US-151 hung Akatorimon on Floramon, the parent Wikimon gives it")
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        6, "the six aliases, which remove no orphan")
     }

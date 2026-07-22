@@ -443,6 +443,10 @@ final class SeedRosterTests: XCTestCase {
         "Monochromon", "Leomon", "Kuwagamon", "Coelamon", "Mojyamon",
         "Megadramon", "Piccolomon", "Digitamamon", "Darkdramon", "BloomLordmon", "Gankoomon",
         "GoldNumemon", "GreatKingScumon", "Boltmon",
+        // US-151's two, and they are the reason this is a SET rather than a closed tree: the
+        // sweeps hang Digimon the US-045 document never drew onto lines the document opened. Both
+        // Burgamon Adult were verified the same way — an animated sheet under `Adult/`.
+        "Burgermon Papa", "Burgermon Mama",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -549,8 +553,12 @@ final class SeedRosterTests: XCTestCase {
             }
         }
 
+        // US-151 hung the two Burgamon Adult off Muchomon, which is one of the two Children
+        // US-045 invented rather than one the document draws — so the DOCUMENT's five Champions
+        // are still exactly five, and the extras are named rather than the equality dropped.
         XCTAssertEqual(champions.sorted(),
-                       ["coelamon", "kuwagamon", "leomon", "mojyamon", "monochromon"])
+                       ["burgermon_mama", "burgermon_papa", "coelamon", "kuwagamon", "leomon",
+                        "mojyamon", "monochromon"])
         // `contains` rather than `==` since US-147: Hyokomon and Muchomon each gained a second
         // Baby II parent from the Baby II sweep. Piyo's Tanemon is still one of them, which is
         // what "reachable" needs.

@@ -312,7 +312,7 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 68)
+        XCTAssertEqual(sizes["tamers"], 71, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`")
         XCTAssertEqual(sizes["dmc-v3"], 46)
         XCTAssertEqual(sizes["palmon"], 24)
     }
@@ -529,11 +529,20 @@ final class ChildSweepAToFTests: XCTestCase {
              "xv-mon"
             ]
 
+        // US-151 wired none of the ninety-five onward — its range was the seven Champions with
+        // NO edge at all, which are not on this list because they never were dead ends. What it
+        // DID add is the rung above: four Perfect leaves, two of them the junk floors `wanyamon`
+        // and `tamers` needed before any Champion of either could branch at all. They are held
+        // here rather than in a list of their own so that the ledger stays the file's single
+        // answer to "what leads nowhere", and so that wiring one of them onward fails here.
+        let perfectsFromUS151 =
+            ["blackmachgaogamon", "catchmamemon", "karakurumon", "megalogrowmon"]
+
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
-                           + championsFromUS150).sorted(),
+                           + championsFromUS150 + perfectsFromUS151).sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 95)
+        XCTAssertEqual(deadEnds.count, 99)
     }
 
     // MARK: - AC: the orphans this story removed
@@ -556,8 +565,9 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 599,
-                       "454 before this story, 497 after it, 548 after US-149, 599 after US-150")
+        XCTAssertEqual(graph.nodes.count, 610,
+                       "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
+                           + "610 after US-151")
     }
 
     // MARK: - The whole file still validates

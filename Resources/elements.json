@@ -2396,6 +2396,50 @@
     "omekamon": {
       "element": "earth",
       "attribute": "virus"
+    },
+    "akatorimon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "blackgaogamon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "blackmachgaogamon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "karakurumon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "blacktailmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "burgermon_papa": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "burgermon_mama": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "darklizamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "megalogrowmon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "catchmamemon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "deckerdramon": {
+      "element": "machine",
+      "attribute": "data"
     }
   },
   "lineDefaults": {

@@ -283,10 +283,19 @@ final class ChildSweepMToZTests: XCTestCase {
     /// when nothing else qualifies, so its own criteria are never consulted. That is why "no edge is
     /// unconditional" is read here as "no edge a player has to EARN is unconditional", the reading
     /// US-144 through US-149 recorded for every rung below.
+    ///
+    /// **Scoped rather than relaxed in US-151.** "Exactly two edges" was a claim about what THIS
+    /// story authored, and a later sweep hanging a second Champion off one of these Children
+    /// falsifies it without doing anything wrong — US-151 hung DarkLizamon off Monodramon. So the
+    /// count is now a named exception list: a Child of this story that grows a third earned branch
+    /// nobody wrote down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
+        let branchedByALaterSweep = ["monodramon": 3]
+
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
-            XCTAssertEqual(node.evolutions.count, 2, "\(node.id) is not a branch plus a fallback")
+            XCTAssertEqual(node.evolutions.count, branchedByALaterSweep[id] ?? 2,
+                           "\(node.id) is not a branch plus a fallback")
             XCTAssertEqual(node.evolutions.filter(\.isDefault).count, 1,
                            "\(node.id) has no single fallback")
 
@@ -366,9 +375,9 @@ final class ChildSweepMToZTests: XCTestCase {
         // Thirteen of the twenty-one grew, `tamers` and `vital` by a dozen and eleven. These are
         // the FILE's sizes rather than this story's, so US-148's and US-149's nodes are in them.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 68)
+        XCTAssertEqual(sizes["tamers"], 71, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`")
         XCTAssertEqual(sizes["vital"], 33)
-        XCTAssertEqual(sizes["penc-me"], 43)
+        XCTAssertEqual(sizes["penc-me"], 44, "US-151 hung Deckerdramon on Hagurumon")
         XCTAssertEqual(sizes["adventure02"], 15)
         XCTAssertEqual(sizes["dmc-v2"], 29, "the dmc-v2 line gained no node here")
     }
@@ -581,7 +590,7 @@ final class ChildSweepMToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 599, "548 before this story")
+        XCTAssertEqual(graph.nodes.count, 610, "548 before this story, 599 after it, 610 after US-151")
     }
 
     /// The two Children in range whose Champion is NOT a new node. Both take the arrow the source

@@ -3594,6 +3594,72 @@
       "tint": "red",
       "signatureName": "Doll Strike",
       "signatureSymbol": "hand.raised.fill"
+    },
+    "akatorimon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "pink",
+      "signatureName": "Crimson Coxcomb",
+      "signatureSymbol": "flame.fill"
+    },
+    "blackgaogamon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "gray",
+      "signatureName": "Midnight Fang Crush",
+      "signatureSymbol": "moon.fill"
+    },
+    "blackmachgaogamon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "indigo",
+      "signatureName": "Shadow Winding Sphere",
+      "signatureSymbol": "moon.fill"
+    },
+    "karakurumon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "brown",
+      "signatureName": "Clockwork Curtain Call",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "blacktailmon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "purple",
+      "signatureName": "Sable Cat's Paw",
+      "signatureSymbol": "moon.fill"
+    },
+    "burgermon_papa": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "brown",
+      "signatureName": "Papa's Griddle Slam",
+      "signatureSymbol": "hammer.fill"
+    },
+    "burgermon_mama": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "pink",
+      "signatureName": "Mama's Secret Sauce",
+      "signatureSymbol": "hammer.fill"
+    },
+    "darklizamon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "gray",
+      "signatureName": "Dread Fire",
+      "signatureSymbol": "moon.fill"
+    },
+    "megalogrowmon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "blue",
+      "signatureName": "Atomic Blaster",
+      "signatureSymbol": "bolt.fill"
+    },
+    "catchmamemon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "gray",
+      "signatureName": "Crane Game Grab",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "deckerdramon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "gray",
+      "signatureName": "Deck Driver",
+      "signatureSymbol": "flame.fill"
     }
   },
   "lineDefaults": {

@@ -209,7 +209,14 @@ final class DMCVersion4TreeTests: XCTestCase {
     /// the call US-135 made for Tsukaimon.
     func testTheInventedChildrenKeptTheirBranches() throws {
         XCTAssertEqual(try targets(of: "hyokomon"), ["mojyamon", "coelamon", "goldnumemon"])
-        XCTAssertEqual(try targets(of: "muchomon"), ["kuwagamon", "goldnumemon"])
+        // US-151 hung the two Burgamon Adult here. Burgamon itself is idle-only, so the Champions
+        // could not hang off their own parent; Torikara Ballmon, whose only canon relatives are
+        // exactly those two, is this line's Baby II, and Muchomon is the Child the file already
+        // draws above it. The claim this test makes is unchanged — the branch the invented Child
+        // was created to CARRY is still there — so the extras are named rather than the equality
+        // being dropped.
+        XCTAssertEqual(try targets(of: "muchomon"),
+                       ["kuwagamon", "burgermon_papa", "burgermon_mama", "goldnumemon"])
 
         // US-147 gave both a SECOND parent — Chicchimon and Torikara Ballmon, two Baby II with
         // no Evolves From anywhere on Wikimon, put on the bird line beside Piyo's Tanemon. Neither

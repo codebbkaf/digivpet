@@ -793,8 +793,8 @@
         "Typecheck passes"
       ],
       "priority": 38,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Orphan count 330 -> 319 (Appendix B, regenerated roster.generated.json); the Adult bucket 34 -> 27 and the Perfect bucket 114 -> 110. All seven playable Adults A-D that were orphaned - Akatorimon, BlackGaogamon, BlackTailmon, Burgermon Mama, Burgermon Papa, DarkLizamon, Deckerdramon - now have one earned in-edge and one earned out-edge plus their line's unconditioned junk fallback. `wanyamon` and `tamers` had no Perfect rung at all, so the story opened it on both: BlackMachGaogamon and MegaloGrowmon as earned branches, Karakurumon and CatchMamemon as the junk floors (both added to EvolutionCriteriaTests.junkIds). 599 -> 610 nodes, no new lines, no dexOnly on any edge, validator reports zero findings. New Tests/AdultSweepAToDTests.swift (18 tests). Full suite 2075 tests green, build green."
     },
     {
       "id": "US-152",

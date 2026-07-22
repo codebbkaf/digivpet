@@ -194,8 +194,10 @@ final class DigitamaSweepTests: XCTestCase {
         // this is where the lines were opened.
         // US-149 put a Champion above every Child G-L and US-150 above every Child M-Z, which
         // is where the last twelve `tamers` nodes came from.
-        XCTAssertEqual(sizes["tamers"], 68)
-        XCTAssertEqual(sizes["wanyamon"], 17)
+        // US-151 opened the Perfect rung on both, three nodes each: the Champion it swept, the
+        // Perfect above it and the junk floor under that.
+        XCTAssertEqual(sizes["tamers"], 71)
+        XCTAssertEqual(sizes["wanyamon"], 20)
     }
 
     /// Twelve of the twenty-two eggs added no rung at all, because their species is already wired.

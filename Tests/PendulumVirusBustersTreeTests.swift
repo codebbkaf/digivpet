@@ -220,8 +220,11 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         XCTAssertNil(Roster.bundled.entries.first { $0.displayName == "MagnaAngemon" })
         XCTAssertNil(graph.node(id: "magnaangemon"))
 
+        // US-151 hung BlackTailmon here as a THIRD parent, on the arrow Wikimon draws for it
+        // (Pendulum Progress 2.0, Digimon World Re:Digitize Decode). The document's own two
+        // drawings — the pair this test is about — are unchanged.
         XCTAssertEqual(Set(graph.parents(of: "holyangemon").map(\.id)),
-                       ["pencvb_angemon", "pencvb_wizarmon"])
+                       ["pencvb_angemon", "pencvb_wizarmon", "blacktailmon"])
         XCTAssertEqual(try targets(of: "holyangemon"), ["seraphimon", "cherubimon_virtue"])
 
         // Exactly one isDefault climb, and the second one EARNED — the pencme_andromon shape.
@@ -288,9 +291,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 42,
+        XCTAssertEqual(inLine.count, 43,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
-                           + "US-150 Plotmon X, Tailmon X and Cockatrimon")
+                           + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }.sorted(), ["pusumon", "pusurimon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -370,7 +373,8 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama",
                                       "pusumon", "pusurimon", "hiyarimon", "penmon",
                                       "gammamon", "betelgammamon",
-                                      "plotmon_x", "tailmon_x", "cockatrimon"]
+                                      "plotmon_x", "tailmon_x", "cockatrimon",
+                                      "blacktailmon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

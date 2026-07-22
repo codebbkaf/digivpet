@@ -339,9 +339,9 @@ final class BabyIISweepTests: XCTestCase {
         // Sizes are the FILE's, not this story's: US-150 added twelve to `tamers` and eleven
         // to `vital`, the latter because the four Otamamon variants and their Champions all
         // landed on the Vital Bracelet line.
-        XCTAssertEqual(sizes["tamers"], 68)
+        XCTAssertEqual(sizes["tamers"], 71, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`")
         XCTAssertEqual(sizes["vital"], 33)
-        XCTAssertEqual(sizes["wanyamon"], 17)
+        XCTAssertEqual(sizes["wanyamon"], 20, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`")
     }
 
     /// The line-scoped alias, called out because it is the one node here that is not its own

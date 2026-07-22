@@ -2879,6 +2879,50 @@
           ]
         },
         {
+          "to": "burgermon_papa",
+          "requiredEnergy": "vitality",
+          "minEnergy": 70,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Work the grill until the arms know it"
+            },
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "A cook stands through the whole service"
+            }
+          ]
+        },
+        {
+          "to": "burgermon_mama",
+          "requiredEnergy": "stamina",
+          "minEnergy": 70,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "The one who carries the plates never sits down"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 4,
+              "hint": "Leave the drilling to Papa"
+            }
+          ]
+        },
+        {
           "to": "goldnumemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -6577,6 +6621,28 @@
           ]
         },
         {
+          "to": "akatorimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 70,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "A flower that fights often enough grows feathers"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3500,
+              "hint": "And burns hot while it does it"
+            }
+          ]
+        },
+        {
           "to": "zassoumon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -7493,6 +7559,28 @@
           ]
         },
         {
+          "to": "deckerdramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 70,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Grind forward, kilometre after kilometre"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "A gun platform is drilled, not raised"
+            }
+          ]
+        },
+        {
           "to": "pencme_raremon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -8405,6 +8493,28 @@
               "comparison": "atMost",
               "value": 2,
               "hint": "A magician keeps a light stomach"
+            }
+          ]
+        },
+        {
+          "to": "blacktailmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 70,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "A cat that wins more than it loses darkens"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it hunting rather than sitting"
             }
           ]
         },
@@ -12335,6 +12445,28 @@
           ]
         },
         {
+          "to": "darklizamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 70,
+          "maxCareMistakes": 6,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Pick fight after fight"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4500,
+              "hint": "And spend everything it has in them"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -12487,6 +12619,28 @@
               "comparison": "atLeast",
               "value": 1400,
               "hint": "Burn hard enough to steam"
+            }
+          ]
+        },
+        {
+          "to": "blackgaogamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 70,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 900,
+              "hint": "Never let its nights run long"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "And send it out to fight anyway"
             }
           ]
         },
@@ -16347,6 +16501,315 @@
       "spriteFile": "Omekamon",
       "comment": "FLAVOUR. Wikimon draws Zenimon no Evolves To at all - the section is empty, not merely thin. Omekamon's own Evolves From names Hagurumon and Toy Agumon, both Metal Empire Children on this very line, so the Champion belongs here even though the arrow into it does not.",
       "evolutions": []
+    },
+    {
+      "id": "akatorimon",
+      "displayName": "Akatorimon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Akatorimon",
+      "comment": "Wikimon: Akatorimon Evolves From Floramon (Digimon World 2) and Evolves To Garudamon (Bo-262, Digimon Championship). Both are already on this line and no other pairing on disk is cited at both ends, so the red bird joins the Wind Guardians bird thread rather than opening one. Its junk edge is the tree's own - every Champion of `penc-wg` falls to TonosamaGekomon.",
+      "evolutions": [
+        {
+          "to": "garudamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.75,
+              "hint": "Win far more often than it loses"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "And climb, so the wings learn height"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "blackgaogamon",
+      "displayName": "BlackGaogamon",
+      "stage": "Adult",
+      "line": "wanyamon",
+      "spriteFile": "BlackGaogamon",
+      "comment": "Wikimon: Black Gaogamon Evolves From Gaomon (Digimon Crusader) and Evolves To Black Mach Gaogamon (Digimon Crusader). The variant rule sends it to its base form's line, and Gaogamon is on `wanyamon` - the cited parent is on that line too, so no rehome was needed. `wanyamon` had NO Perfect rung at all before this story: BlackMachGaogamon opens it as the earned branch and Karakurumon as the junk floor under it.",
+      "evolutions": [
+        {
+          "to": "blackmachgaogamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 24,
+              "hint": "A black beast is proved in the ring"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 600,
+              "hint": "And in the hours it never stops moving"
+            }
+          ]
+        },
+        {
+          "to": "karakurumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "blackmachgaogamon",
+      "displayName": "BlackMachGaogamon",
+      "stage": "Perfect",
+      "line": "wanyamon",
+      "spriteFile": "BlackMachGaogamon",
+      "comment": "The first Perfect this line has ever had. Wikimon draws it out of Black Gaogamon in Digimon Crusader, which is the only in-edge it is given here; it is a leaf until the Ultimate sweeps, exactly as US-149 and US-150 left their Champions.",
+      "evolutions": []
+    },
+    {
+      "id": "karakurumon",
+      "displayName": "Karakurumon",
+      "stage": "Perfect",
+      "line": "wanyamon",
+      "spriteFile": "Karakurumon",
+      "comment": "The junk floor `wanyamon` needed before any Champion of the line could branch - the same problem US-148 and US-149 solved one rung down, now at the Perfect rung. Chosen off an unused sheet to follow Manekimon, this line's junk Champion: a beckoning-cat figurine falls to a clockwork puppet. No source document draws it - the whole-file grep over the tree markdown finds neither name.",
+      "evolutions": []
+    },
+    {
+      "id": "blacktailmon",
+      "displayName": "BlackTailmon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "BlackTailmon",
+      "comment": "Wikimon: Black Tailmon Evolves From Plotmon (St-176, DM-059) and Evolves To Holy Angemon (Pendulum Progress 2.0, Digimon World Re:Digitize Decode). Both are on `penc-vb`, where the variant rule also wants it: Tailmon is on this line as `pencvb_tailmon`, beside Tailmon X. Plotmon's vitality branch is the white Tailmon and this is its strength one - the same Rookie, raised to fight instead.",
+      "evolutions": [
+        {
+          "to": "holyangemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.8,
+              "hint": "Almost never lose"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "And drill the claw that does it"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "burgermon_papa",
+      "displayName": "Burgermon Papa",
+      "stage": "Adult",
+      "line": "dmc-v4",
+      "spriteFile": "Burgermon_Papa",
+      "comment": "NO CITATION IS CLAIMED FOR THE PARENT EDGE. Wikimon gives Burgamon Adult exactly three Evolves From - Burgamon, Ebi Burgamon and Tyumon - and not one of them can carry an edge: Ebi Burgamon has no sheet at all, Tyumon is idle-only, and Burgamon is on disk as `burgermon`, which is one of the 157 idle-only Digimon `edgeToDexOnlyNode` forbids. So the parent rung is unwireable rather than merely missing, and this is a rehome. It goes to `dmc-v4` because the file already puts this family there: Torikara Ballmon, whose only canon relatives ANYWHERE are the two Burgamon Adult, is a Baby II of this line, and Digitamamon - one of Burgamon Adult's two cited Evolves To (Bo-21L) - is its Perfect. Muchomon is the Child the file already draws above Torikara Ballmon, so it is the stand-in. The OUT-edge is cited; only the in-edge is flavour.",
+      "evolutions": [
+        {
+          "to": "digitamamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Work every service to the last order"
+            },
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90,
+              "hint": "A shop is kept open on its feet"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "burgermon_mama",
+      "displayName": "Burgermon Mama",
+      "stage": "Adult",
+      "line": "dmc-v4",
+      "spriteFile": "Burgermon_Mama",
+      "comment": "The other half of the pair, and the same rehome for the same reason - see `burgermon_papa`, whose comment carries the whole argument. Wikimon's Frontier entry is explicit that there are TWO Burgamon Adult and that they are the parents of the Torikara Ballmon this line already holds, which is why they are two nodes off one Child rather than one node under two names. Papa is Muchomon's vitality branch and Mama its stamina one, so both are reachable.",
+      "evolutions": [
+        {
+          "to": "digitamamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90000,
+              "hint": "Carry every plate to every table"
+            },
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "And never once take the weight off"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "darklizamon",
+      "displayName": "DarkLizamon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "DarkLizamon",
+      "comment": "Wikimon: Dark Lizamon Evolves From Monodramon (St-632) and Evolves To Megalo Growmon (with Flare Lizamon, Digimon Story: Sunburst & Moonlight). Monodramon is on `tamers`, which is also where the anime puts Dark Lizamon - it is the wild Digimon Guilmon fights in Digimon Tamers. `tamers` had NO Perfect rung at all before this story, and it is the largest line in the file: MegaloGrowmon opens it as the earned branch and CatchMamemon as the junk floor under it, which is what the twenty-two other Champions of this line will need in US-152..US-156.",
+      "evolutions": [
+        {
+          "to": "megalogrowmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "Win the fights it picks"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6000,
+              "hint": "And burn everything it has in them"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "megalogrowmon",
+      "displayName": "MegaloGrowmon",
+      "stage": "Perfect",
+      "line": "tamers",
+      "spriteFile": "MegaloGrowmon",
+      "comment": "The first Perfect this line has ever had. Wikimon draws it out of Dark Lizamon (with Flare Lizamon), and Flare Lizamon is US-152's - it is an E-G Champion still orphaned after this story, so only one of the two cited parents could be wired here. A leaf until the Ultimate sweeps.",
+      "evolutions": []
+    },
+    {
+      "id": "catchmamemon",
+      "displayName": "CatchMamemon",
+      "stage": "Perfect",
+      "line": "tamers",
+      "spriteFile": "CatchMamemon",
+      "comment": "The junk floor `tamers` needed before any Champion of the line could branch. Chosen off an unused sheet to follow Numemon X, this line's junk Champion: a crane-game cabinet is exactly what the franchise's prize-junk Digimon falls into. No source document draws it - the whole-file grep over the tree markdown finds neither name.",
+      "evolutions": []
+    },
+    {
+      "id": "deckerdramon",
+      "displayName": "Deckerdramon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Deckerdramon",
+      "comment": "CLASS-LEVEL CITATIONS ONLY, and Wikimon has nothing else to give: the page's entire Evolves From is \"Any Blue Lv.3 Digimon from the Digimon Card Game\" and its Evolves To names no Perfect on disk - Decker Greymon has no sheet, and Mugendramon is an Ultimate, a rung too far. What the Evolves To DOES give is \"Any Digimon that also Evolves from Cyborg Lv.4 Digimon\", and Andromon is reached here from Guardromon, this line's Cyborg Champion, so the out-edge satisfies the clause literally. `penc-me` is the machine line and Deckerdramon is a Cyborg Digimon; the Hagurumon parent is the flavour half, and no named citation is claimed for it.",
+      "evolutions": [
+        {
+          "to": "pencme_andromon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80000,
+              "hint": "A tank is measured in ground covered"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "And in the guns it has actually fired"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     }
   ]
 }
