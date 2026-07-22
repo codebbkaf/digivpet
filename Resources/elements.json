@@ -121,7 +121,37 @@
     "mugendramon": { "element": "machine", "attribute": "virus" },
     "gaioumon": { "element": "steel", "attribute": "data" },
     "raidenmon": { "element": "electric", "attribute": "vaccine" },
-    "ebemon": { "element": "machine", "attribute": "virus" }
+    "ebemon": { "element": "machine", "attribute": "virus" },
+    "tento_digitama": { "element": "electric", "attribute": "free" },
+    "pencnsp_botamon": { "element": "fire", "attribute": "free" },
+    "pencnsp_koromon": { "element": "fire", "attribute": "free" },
+    "pencnsp_agumon": { "element": "fire", "attribute": "vaccine" },
+    "tentomon": { "element": "electric", "attribute": "vaccine" },
+    "angoramon": { "element": "wind", "attribute": "data" },
+    "pencnsp_greymon": { "element": "fire", "attribute": "vaccine" },
+    "pencnsp_leomon": { "element": "fire", "attribute": "vaccine" },
+    "pencnsp_seadramon": { "element": "water", "attribute": "data" },
+    "tailmon": { "element": "light", "attribute": "vaccine" },
+    "pencnsp_kabuterimon": { "element": "electric", "attribute": "vaccine" },
+    "pencnsp_garurumon": { "element": "ice", "attribute": "vaccine" },
+    "symbareangoramon": { "element": "wind", "attribute": "data" },
+    "platinumscumon": { "element": "dark", "attribute": "virus" },
+    "pencnsp_metalgreymon": { "element": "machine", "attribute": "vaccine" },
+    "asuramon": { "element": "fire", "attribute": "data" },
+    "megaseadramon": { "element": "water", "attribute": "data" },
+    "angewomon": { "element": "light", "attribute": "vaccine" },
+    "atlurkabuterimon_blue": { "element": "electric", "attribute": "vaccine" },
+    "pencnsp_weregarurumon": { "element": "ice", "attribute": "vaccine" },
+    "lamortmon": { "element": "wind", "attribute": "data" },
+    "pumpmon": { "element": "plant", "attribute": "virus" },
+    "pencnsp_wargreymon": { "element": "fire", "attribute": "vaccine" },
+    "saberleomon": { "element": "earth", "attribute": "vaccine" },
+    "metalseadramon": { "element": "steel", "attribute": "data" },
+    "holydramon": { "element": "light", "attribute": "vaccine" },
+    "heraklekabuterimon": { "element": "electric", "attribute": "vaccine" },
+    "pencnsp_metalgarurumon": { "element": "ice", "attribute": "data" },
+    "diarbbitmon": { "element": "wind", "attribute": "vaccine" },
+    "noblepumpmon": { "element": "plant", "attribute": "virus" }
   },
 
   "lineDefaults": {
@@ -130,7 +160,8 @@
     "palmon": { "element": "plant", "attribute": "free" },
     "dmc-v3": { "element": "wind", "attribute": "free" },
     "dmc-v4": { "element": "wind", "attribute": "free" },
-    "dmc-v5": { "element": "dark", "attribute": "free" }
+    "dmc-v5": { "element": "dark", "attribute": "free" },
+    "penc-nsp": { "element": "wind", "attribute": "free" }
   },
 
   "keywordRules": [

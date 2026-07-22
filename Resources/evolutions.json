@@ -3590,6 +3590,795 @@
       "stage": "Ultimate-Super Ultimate",
       "line": "dmc-v5",
       "spriteFile": "Ebemon"
+    },
+    {
+      "id": "tento_digitama",
+      "displayName": "Tento Digitama",
+      "stage": "Digitama",
+      "line": "penc-nsp",
+      "spriteFile": "Tento_Digitama",
+      "comment": "The Pendulum Color V1 Nature Spirits tree's egg. The source document starts at \"Fresh: Botamon\" and names no Digitama at all, so the choice is this app's: it has to be one of the 57 Digitama ids the ROSTER holds, because maps.json grants a Digitama by roster id (US-126) and an id the roster does not have could never be dropped — the line would be unplayable however well it was wired. `agu_digitama`, Botamon's own egg in the dmc-v1 tree, is taken. Tento Digitama is Tentomon's, Tentomon is one of this tree's four Rookies, and the egg was an orphan on 08_jungle until this story. Rooting the line at a Rookie's egg rather than at the Baby I's is also what US-045 did: the dmc-v4 line is rooted at Piyo Digitama and hatches to Yuramon.",
+      "evolutions": [
+        {
+          "to": "pencnsp_botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_botamon",
+      "displayName": "Botamon",
+      "stage": "Baby I",
+      "line": "penc-nsp",
+      "spriteFile": "Botamon",
+      "comment": "NOT a duplicate of the `botamon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The document's \"Fresh: Botamon\" — the same Fresh the Digital Monster Color Version 1 tree uses, which is why the plain id was already spoken for.",
+      "evolutions": [
+        {
+          "to": "pencnsp_koromon",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_koromon",
+      "displayName": "Koromon",
+      "stage": "Baby II",
+      "line": "penc-nsp",
+      "spriteFile": "Koromon",
+      "comment": "NOT a duplicate of the `koromon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The document's \"In-Training: Koromon\". It branches three ways rather than four: Betamon, the document's second Rookie, exists only in `Idle Frame Only/` and may never sit on an edge, so its two Champions are rehomed — see the comments on pencnsp_agumon and angoramon. Angoramon is the document's \"Rookie (Unlockable Slot 6)\", so its edge is the only one here that has to be EARNED; the other two are gated on dominant energy alone, as every other tree's In-Training is.",
+      "evolutions": [
+        {
+          "to": "pencnsp_agumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "tentomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "angoramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3,
+              "hint": "Coax it out with patient training"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Let it sleep long and easy"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_agumon",
+      "displayName": "Agumon",
+      "stage": "Child",
+      "line": "penc-nsp",
+      "spriteFile": "Agumon",
+      "comment": "NOT a duplicate of the `agumon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. DIVERGENCE FROM THE SOURCE TREE (US-138): the document gives this Rookie Greymon and Leomon; Seadramon is the third, moved here from Betamon, whose sprite exists only as a single idle frame. Agumon is where it lands rather than Tentomon or Angoramon because the shipped dmc-v1 tree already hangs a Seadramon off Agumon (US-133), so the pairing is the file's own precedent rather than a new invention. The tree draws no junk Champion of its own — the Pendulum document has none — so PlatinumScumon takes the isDefault slot for all three Rookies (US-061's house rule), sharing Greymon's strength gate from below on minEnergy so a well-raised strength Agumon still reaches Greymon.",
+      "evolutions": [
+        {
+          "to": "pencnsp_greymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Train it until its jaw sets hard"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 260,
+              "hint": "Exercise beside it through the long afternoons"
+            }
+          ]
+        },
+        {
+          "to": "pencnsp_leomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 64000,
+              "hint": "Walk the ridgelines with it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Let it test its claws in battle"
+            }
+          ]
+        },
+        {
+          "to": "pencnsp_seadramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1100,
+              "hint": "Burn calories with it until the shallows give"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep its meals light before the swim"
+            }
+          ]
+        },
+        {
+          "to": "platinumscumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tentomon",
+      "displayName": "Tentomon",
+      "stage": "Child",
+      "line": "penc-nsp",
+      "spriteFile": "Tentomon",
+      "comment": "The document's third Rookie, with the two Champions it draws: Kabuterimon and Garurumon. Both plain ids belong to the dmc-v2 tree, so both are line-scoped here.",
+      "evolutions": [
+        {
+          "to": "pencnsp_kabuterimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80,
+              "hint": "Stay on your feet beside it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it until its shell rings"
+            }
+          ]
+        },
+        {
+          "to": "pencnsp_garurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Work up a sweat with it under cold skies"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Let it den down undisturbed"
+            }
+          ]
+        },
+        {
+          "to": "platinumscumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "angoramon",
+      "displayName": "Angoramon",
+      "stage": "Child",
+      "line": "penc-nsp",
+      "spriteFile": "Angoramon",
+      "comment": "The document's \"Rookie (Unlockable Slot 6)\", which is why the edge that reaches it from pencnsp_koromon is the only conditioned In-Training edge in this tree. The document gives it one Champion, SymbareAngoramon; Tailmon is the second, moved here from Betamon along with Seadramon (see pencnsp_agumon). Tailmon lands on Angoramon rather than on Tentomon because both are small beasts, and because a Rookie with a single earned branch is not a choice at all — EvolutionCriteriaTests wants two to five outgoing edges and this one would have had exactly two.",
+      "evolutions": [
+        {
+          "to": "symbareangoramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1600,
+              "hint": "Give it long, unhurried nights"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Train it gently and often"
+            }
+          ]
+        },
+        {
+          "to": "tailmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 52000,
+              "hint": "Walk with it under open sky"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Feed it as lightly as a cat"
+            }
+          ]
+        },
+        {
+          "to": "platinumscumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_greymon",
+      "displayName": "Greymon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "Greymon",
+      "comment": "NOT a duplicate of the `greymon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "pencnsp_metalgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Drill it until the metal answers"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Send it out to fight and fight again"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_leomon",
+      "displayName": "Leomon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "Leomon",
+      "comment": "NOT a duplicate of the `leomon` node in the dmc-v4 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "asuramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 420,
+              "hint": "Exercise with it past the point of comfort"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "Win far more bouts than it drops"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_seadramon",
+      "displayName": "Seadramon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "Seadramon",
+      "comment": "NOT a duplicate of the `seadramon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "megaseadramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Burn calorie after calorie in the deep"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Train it in long, patient lengths"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tailmon",
+      "displayName": "Tailmon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "Tailmon",
+      "comment": "One of Betamon's two Champions in the document. Betamon is idle-only, so this hangs off Angoramon instead — see that node's comment.",
+      "evolutions": [
+        {
+          "to": "angewomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Let it sleep in a quiet, sunlit place"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never rouse it"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_kabuterimon",
+      "displayName": "Kabuterimon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "Kabuterimon",
+      "comment": "NOT a duplicate of the `kabuterimon` node in the dmc-v2 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "atlurkabuterimon_blue",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 96000,
+              "hint": "Walk an immense way beside it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Train it until its horn hums"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_garurumon",
+      "displayName": "Garurumon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "Garurumon",
+      "comment": "NOT a duplicate of the `garurumon` node in the dmc-v2 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "pencnsp_weregarurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 480,
+              "hint": "Run with it until the moon is up"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep the wolf hungry"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "symbareangoramon",
+      "displayName": "SymbareAngoramon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "SymbareAngoramon",
+      "evolutions": [
+        {
+          "to": "lamortmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2400,
+              "hint": "Let it dream long and deep"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Train it with quiet discipline"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "platinumscumon",
+      "displayName": "PlatinumScumon",
+      "stage": "Adult",
+      "line": "penc-nsp",
+      "spriteFile": "PlatinumScumon",
+      "comment": "THE JUNK CHAMPION, and it is NOT from the source document: the Pendulum Color V1 section draws no junk branch at all, while every Child and Adult in this app needs an isDefault edge a neglected Digimon can reach by doing nothing (US-061, EvolutionCriteriaTests). The five Digital Monster Color trees each had one to borrow — Numemon, Vegimon, Scumon, Nanimon, Raremon — and this tree had to choose one. PlatinumScumon is of the Scumon rubbish family, its sheet was an unused orphan, and its chain up (Pumpmon, NoblePumpmon) is two more, so the junk path costs the tree nothing it was already using. Its earned edge back to MetalGreymon is the redemption path US-061 gave Numemon: expensive, but a neglected Digimon is never a dead end.",
+      "evolutions": [
+        {
+          "to": "pencnsp_metalgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180000,
+              "hint": "Walk it out of the tip and keep walking"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "Fight until nobody remembers what it was"
+            }
+          ]
+        },
+        {
+          "to": "pumpmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_metalgreymon",
+      "displayName": "MetalGreymon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "MetalGreymon",
+      "comment": "NOT a duplicate of the `metalgreymon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "pencnsp_wargreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "asuramon",
+      "displayName": "Asuramon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "Asuramon",
+      "evolutions": [
+        {
+          "to": "saberleomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "megaseadramon",
+      "displayName": "MegaSeadramon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "MegaSeadramon",
+      "evolutions": [
+        {
+          "to": "metalseadramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "angewomon",
+      "displayName": "Angewomon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "Angewomon",
+      "comment": "Also a Jogress parent: jogress.json pairs it with LadyDevimon for Mastemon (US-131). That recipe worked off the roster before this story and is unaffected by the node.",
+      "evolutions": [
+        {
+          "to": "holydramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "atlurkabuterimon_blue",
+      "displayName": "AtlurKabuterimon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "AtlurKabuterimon_Blue",
+      "variant": "Blue",
+      "comment": "The document writes \"AtlurKabuterimon\" unqualified and the asset pack has TWO sheets, `AtlurKabuterimon_Blue` and `AtlurKabuterimon_Red`. Blue is the one this tree means: Wikimon's AtlurKabuterimon (Blue) page gives Digimon Pendulum Ver.1 Nature Spirits as its debut, while the Red form is Digimon Adventure's, and HerakleKabuterimon is the Blue form's evolution on that device. Red stays an orphan for a later sweep. Same shape as metalgreymon_virus: a variant is its own node keeping the base displayName.",
+      "evolutions": [
+        {
+          "to": "heraklekabuterimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_weregarurumon",
+      "displayName": "WereGarurumon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "WereGarurumon",
+      "comment": "NOT a duplicate of the `weregarurumon` node in the dmc-v2 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. ",
+      "evolutions": [
+        {
+          "to": "pencnsp_metalgarurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "lamortmon",
+      "displayName": "Lamortmon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "Lamortmon",
+      "evolutions": [
+        {
+          "to": "diarbbitmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pumpmon",
+      "displayName": "Pumpmon",
+      "stage": "Perfect",
+      "line": "penc-nsp",
+      "spriteFile": "Pumpmon",
+      "comment": "The junk Perfect — where every Adult in this tree lands if its owner does nothing. Like PlatinumScumon below it and NoblePumpmon above it, it is this app's choice rather than the document's: the Pendulum Color V1 section has no junk branch. Pumpmon and NoblePumpmon are a real evolution pair and both are prank Digimon, which is the flavour the neglect path wants.",
+      "evolutions": [
+        {
+          "to": "noblepumpmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencnsp_wargreymon",
+      "displayName": "WarGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "WarGreymon",
+      "comment": "NOT a duplicate of the `wargreymon` node in the dmc-v1 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The document's row is \"Mega: WarGreymon / Omegamon (Jogress)\": Omegamon is NOT an edge, it is the WarGreymon + MetalGarurumon recipe already in jogress.json (US-131), the same treatment V1/V2/V4/V5's Ultra rows got. Both of that recipe's parents are in this tree, which no other line can say."
+    },
+    {
+      "id": "saberleomon",
+      "displayName": "SaberLeomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "SaberLeomon",
+      "comment": "Also a Jogress parent in jogress.json (with ElDoradimon or MetalEtemon, for Tlalocmon)."
+    },
+    {
+      "id": "metalseadramon",
+      "displayName": "MetalSeadramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "MetalSeadramon",
+      "comment": "Also a Jogress parent in jogress.json (with Plesiomon, for Aegisdramon)."
+    },
+    {
+      "id": "holydramon",
+      "displayName": "Holydramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "Holydramon"
+    },
+    {
+      "id": "heraklekabuterimon",
+      "displayName": "HerakleKabuterimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "HerakleKabuterimon"
+    },
+    {
+      "id": "pencnsp_metalgarurumon",
+      "displayName": "MetalGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "MetalGarurumon",
+      "comment": "NOT a duplicate of the `metalgarurumon` node in the dmc-v2 line — it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The other parent of the Omegamon recipe — see pencnsp_wargreymon."
+    },
+    {
+      "id": "diarbbitmon",
+      "displayName": "Diarbbitmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "Diarbbitmon"
+    },
+    {
+      "id": "noblepumpmon",
+      "displayName": "NoblePumpmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "NoblePumpmon",
+      "comment": "The junk Ultimate — the top of this tree's neglect path. Every line carries one so that neglect changes WHICH Digimon you get, never whether you get one (US-061)."
     }
   ]
 }

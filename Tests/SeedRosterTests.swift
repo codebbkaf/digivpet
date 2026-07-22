@@ -38,6 +38,13 @@ final class SeedRosterTests: XCTestCase {
         ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "kingetemon"],
         ["piyo_digitama", "piyo_yuramon", "piyo_tanemon", "piyomon", "goldnumemon", "greatkingscumon", "boltmon"],
         ["gazi_digitama", "zurumon", "pagumon", "gazimon", "raremon", "vademon", "ebemon"],
+        // US-138's Pendulum Color V1 Nature Spirits line. Its junk chain is the only one in the
+        // file that no source document supplies: the Pendulum section draws no junk branch, so
+        // PlatinumScumon, Pumpmon and NoblePumpmon were chosen off unused sheets (see their
+        // `comment`s). Its egg is `tento_digitama` rather than a line-scoped one because maps.json
+        // grants a Digitama by ROSTER id and an alias has no roster entry.
+        ["tento_digitama", "pencnsp_botamon", "pencnsp_koromon", "pencnsp_agumon",
+         "platinumscumon", "pumpmon", "noblepumpmon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.

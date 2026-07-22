@@ -466,9 +466,13 @@ final class DMCVersion5TreeTests: XCTestCase {
     ///
     /// This story added no node at all, which is a first for Phase E: US-133 added 10, US-134 13,
     /// US-135 3 and US-136 1.
+    ///
+    /// The claim is about THIS LINE, so it is stated as this line's node count. It was written as
+    /// the whole file's count (115) until US-138 added a thirty-node tree of its own — a global
+    /// total cannot say anything about what one story did once another story lands beside it.
     func testTheStoryAddedNoNodesAndSoRemovedNoOrphans() throws {
-        XCTAssertEqual(graph.nodes.count, 115, "US-137 adds no node to the file")
-        XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 20)
+        XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 20,
+                       "US-137 adds no node to the Version 5 line")
 
         // Every Champion this story wired was already connected in both directions beforehand.
         for id in ["devidramon", "tuskmon", "cyclomon"] {

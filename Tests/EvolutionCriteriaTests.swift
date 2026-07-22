@@ -18,12 +18,17 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// Numemon in Ver.1, Vegimon in Ver.2, Scumon in Ver.3. Vegimon replaced Geremon as the Ver.2
     /// fallback for exactly that reason; Geremon is still reachable, as Elecmon's overfeeding
     /// branch.
+    /// `platinumscumon` and `pumpmon` joined in US-138, and they are the first two that no source
+    /// document names: the Pendulum Color V1 Nature Spirits section draws no junk branch at all,
+    /// while every Child and Adult here needs one. US-138 chose them off the unused sheets — see
+    /// their `comment`s in `evolutions.json`.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
+        "platinumscumon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
-        "etemon",
+        "etemon", "pumpmon",
         // Ultimate
         "kingetemon",
     ]

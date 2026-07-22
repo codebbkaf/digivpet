@@ -26,10 +26,18 @@ final class ElementCatalogTests: XCTestCase {
 
     /// The tier that has no counterpart in `MoveCatalog`: a roster-only Digimon in no line is typed
     /// off its NAME, because a name often says what something is even when nobody has authored it.
-    func testFallsBackToAKeywordRuleForARosterOnlyDigimon() {
-        XCTAssertNil(graph.node(id: "megaseadramon"), "test assumes megaseadramon has no graph node")
-        XCTAssertNil(catalog.types["megaseadramon"])
-        XCTAssertEqual(catalog.type(for: "megaseadramon", in: graph).element, .water)
+    ///
+    /// The Seadramon-family example is picked out of the roster at RUN TIME rather than named.
+    /// This test said `megaseadramon` until US-138 wired that one into the Pendulum Nature Spirits
+    /// tree; Phase E is pulling the roster into the graph story by story, and what the test needs
+    /// is ANY entry the graph does not have, not a particular one.
+    func testFallsBackToAKeywordRuleForARosterOnlyDigimon() throws {
+        let rosterOnly = try XCTUnwrap(
+            roster.entries.first { $0.id.contains("seadra") && graph.node(id: $0.id) == nil },
+            "every Seadramon is now a graph node — pick another keyword rule to exercise")
+
+        XCTAssertNil(catalog.types[rosterOnly.id])
+        XCTAssertEqual(catalog.type(for: rosterOnly.id, in: graph).element, .water)
         XCTAssertEqual(catalog.type(for: "seraphimon", in: graph).element, .light)
         XCTAssertEqual(catalog.type(for: "gotsumon", in: graph).element, .earth)
     }
@@ -71,7 +79,7 @@ final class ElementCatalogTests: XCTestCase {
     /// AC2. Counted off the graph rather than a literal, so adding a node to `evolutions.json`
     /// without typing it fails HERE instead of shipping a playable Digimon with no matchup.
     func testEveryGraphNodeHasAnExplicitTypesEntry() {
-        XCTAssertEqual(graph.nodes.count, 115)
+        XCTAssertEqual(graph.nodes.count, 145)
         for node in graph.nodes {
             XCTAssertNotNil(catalog.types[node.id],
                             "\(node.id) (\(node.displayName)) has no explicit elements.json entry")

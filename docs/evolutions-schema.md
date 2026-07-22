@@ -218,14 +218,14 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — thirty nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4` and
-`dmc-v5` lines.
+prose — fifty-three nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
+`dmc-v5` and `penc-nsp` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 115 nodes across six `line` values — `dmc-v1` (21 nodes),
-`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20) and `palmon` (10) — each a complete
-line from Digitama through Ultimate.
+`Resources/evolutions.json` holds 145 nodes across seven `line` values — `dmc-v1` (21 nodes),
+`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10) and `penc-nsp` (30) —
+each a complete line from Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
@@ -343,3 +343,35 @@ Seven things about it:
 - **Its last row is a Jogress, not an edge.** Mugendramon → Chaosdramon with Darkdramon lives in
   `Resources/jogress.json`, which is why Mugendramon is terminal here. Darkdramon is the Version 4
   tree's Mega, so this recipe reaches across two device trees, as V4's own Ultra row does.
+
+`penc-nsp` is the Pendulum Color V1 Nature Spirits tree (US-138), and it is the first line in the
+file that was authored from **nothing**: the five `dmc-v*` lines each renamed a pruned seed line
+that US-008/US-044/US-045/US-046 had already written, and there was no Pendulum seed to rename. At
+30 nodes it is the widest line here. Six things about it:
+
+- **Twelve of its thirty nodes are line-scoped aliases**, the `piyo_yuramon` pattern at four times
+  the previous largest scale. This tree shares twelve Digimon with the Digital Monster Color
+  trees — Botamon and Koromon, the whole Agumon → Greymon → MetalGreymon → WarGreymon thread and
+  Seadramon with `dmc-v1`, Leomon with `dmc-v4`, and Kabuterimon / Garurumon / WereGarurumon /
+  MetalGarurumon with `dmc-v2` — and `line` is single-valued, so a Digimon in two trees is two
+  nodes on one roster entry. Each alias needs its own `elements.json` and `moves.json` entry too,
+  and the move's `signatureName` is globally unique, so it cannot be copied from the node it
+  aliases.
+- **Betamon, the document's second Rookie, is idle-only** and may never sit on an edge. That is
+  the costliest absence in Phase E so far: dropping it would have stranded Seadramon, Tailmon and
+  the four Digimon above them, so its two Champions are rehomed — Seadramon onto Agumon (which is
+  where `dmc-v1` already hangs one) and Tailmon onto Angoramon.
+- **Its egg is `tento_digitama`, a real roster Digitama, not a scoped one.** `maps.json` grants a
+  Digitama by ROSTER id and an alias has no roster entry, so a line rooted at an alias egg could
+  never be started by a player however well it was wired. Tento Digitama belongs to Tentomon, one
+  of this tree's own Rookies, and was an orphan on `08_jungle` until this story.
+- **Its junk chain is this app's invention, not the document's.** The Pendulum Color V1 section
+  draws no junk branch at all, while every Child and Adult here needs an `isDefault` edge reachable
+  by inaction (US-061). PlatinumScumon → Pumpmon → NoblePumpmon were chosen off unused sheets, so
+  the neglect path costs the tree nothing it was already using.
+- **AtlurKabuterimon is the Blue sheet.** The document writes the name unqualified and the asset
+  pack has both Blue and Red; Wikimon gives Digimon Pendulum Ver.1 Nature Spirits as the Blue
+  form's debut and HerakleKabuterimon as its evolution, while Red is Digimon Adventure's.
+- **Its Mega row is half Jogress.** "WarGreymon / Omegamon (Jogress)" — Omegamon is the
+  WarGreymon + MetalGarurumon recipe in `Resources/jogress.json`, and this is the only line that
+  holds BOTH of that recipe's parents.

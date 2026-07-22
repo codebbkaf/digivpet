@@ -98,9 +98,20 @@ final class RosterTests: XCTestCase {
         // plain ids), and `dmcv4_palmon` is US-136's line-scoped Palmon (the palmon line owns
         // that one). All four are the piyo_yuramon pattern: one roster entry, two nodes, so the
         // second id is an alias with no entry of its own.
+        //
+        // The twelve `pencnsp_` ids are US-138's, and they are the same pattern at a scale no
+        // earlier story needed: the Pendulum Color V1 Nature Spirits tree shares twelve of its
+        // thirty Digimon with the Digital Monster Color trees — Botamon and Koromon with V1's
+        // Fresh and In-Training, the whole Agumon-to-WarGreymon thread with V1, Leomon with V4,
+        // and Kabuterimon/Garurumon/WereGarurumon/MetalGarurumon with V2. A node's `line` is
+        // single-valued, so a Digimon in two trees is two nodes on one roster entry.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
-                        "extyranomon", "piyo_tanemon", "piyo_yuramon"])
+                        "extyranomon", "pencnsp_agumon", "pencnsp_botamon", "pencnsp_garurumon",
+                        "pencnsp_greymon", "pencnsp_kabuterimon", "pencnsp_koromon",
+                        "pencnsp_leomon", "pencnsp_metalgarurumon", "pencnsp_metalgreymon",
+                        "pencnsp_seadramon", "pencnsp_wargreymon", "pencnsp_weregarurumon",
+                        "piyo_tanemon", "piyo_yuramon"])
 
         // The art tree really does hold BOTH `Hi-Andromon.png` and `HiAndromon.png`, so the
         // roster has an entry per file (`hi-andromon`, `hiandromon`) while the graph's

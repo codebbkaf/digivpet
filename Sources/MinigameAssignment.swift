@@ -59,7 +59,8 @@ enum MinigameKind: String, CaseIterable, Codable, Equatable {
 /// only caller is a round the user has ALREADY paid for (`TrainAction.begin` charges before the
 /// round opens) and "your Digimon has no training game" would be an unrefundable dead end.
 enum MinigameAssignment {
-    /// The six shipped lines, one game each.
+    /// The shipped lines, one game each. There were six of them and six games until US-138; there
+    /// are seven lines now and Phase E adds five more, so a game is shared rather than owned.
     ///
     /// The keys are `EvolutionNode.line` values; `testTheTableNamesExactlyTheShippedLines` pins them
     /// against the graph, so renaming a line in `evolutions.json` fails a test rather than silently
@@ -68,8 +69,9 @@ enum MinigameAssignment {
     /// The pairings are flavour, not mechanism: the Digital Monster Ver.1 line hits things (Button
     /// Masher), Ver.2's is about holding a charge (Power Meter), Palmon's is patient timing
     /// (Timing Bar), Ver.3's runs (Crown Sprint), Ver.4's is quick (Reflex Strike), Ver.5's
-    /// is the tricky one (Sequence Recall). Any permutation would satisfy the story; this one is a
-    /// first guess and safe to reshuffle after playtesting.
+    /// is the tricky one (Sequence Recall), and the Pendulum Nature Spirits line shares Palmon's
+    /// Timing Bar as the other nature-flavoured tree. Any permutation would satisfy the story; this
+    /// one is a first guess and safe to reshuffle after playtesting.
     static let byLine: [String: MinigameKind] = [
         "dmc-v1": .buttonMasher,
         "dmc-v2": .powerMeter,
@@ -77,6 +79,13 @@ enum MinigameAssignment {
         "dmc-v3": .crownSprint,
         "dmc-v4": .reflexStrike,
         "dmc-v5": .sequenceRecall,
+        // US-138 is where the lines outgrew the games: seven lines, six minigames. Nature Spirits
+        // doubles up with `palmon` because they are the two nature-flavoured trees, and the timing
+        // bar is the game whose line (10 nodes) was carrying the fewest Digimon. The invariant that
+        // survives is the one that matters — every shipped line is in this table, one game each,
+        // and all six games are still reached — rather than the bijection, which was only ever a
+        // coincidence of there having been exactly six lines.
+        "penc-nsp": .timingBar,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

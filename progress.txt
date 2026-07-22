@@ -208,6 +208,28 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   already wired and the only new node is an alias. Count it with Appendix B both ways — regenerate
   `roster.generated.json` AND re-run the count against `git show HEAD:Resources/evolutions.json` —
   and ASSERT the zero in a test, or the next reader reads it as a slip.
+- **A test that needs "something OUTSIDE the graph" must DERIVE it, never name it.** Phase E is
+  pulling the whole roster into `evolutions.json`, so every hard-coded "roster-only" example is on
+  a timer: US-138 ate `megaseadramon`, which three tests used as their keyword-tier/stage-tier
+  example. `roster.entries.first { graph.node(id: $0.id) == nil }` survives the next sweep.
+- **A story that ADDS a line, rather than renaming a seed, touches six whole-file facts the
+  rename stories never did**: `EvolutionGraphTests`' per-line count dict, `graph.nodes.count` in
+  `ElementCatalogTests` AND `EvolutionGraphValidatorTests`, `EggHatchingTests`' seeded-Digitama set
+  (a new line means a new starting egg), `SeedRosterTests.seedLines`, and `RosterTests`' exact
+  alias list. Budget for them before writing data. Relatedly: **a "this story added no nodes" test
+  must count its OWN LINE** — US-137's counted the file and US-138 broke it from another tree.
+- **A new line's Digitama must be a real ROSTER Digitama id, never a line-scoped alias.**
+  `maps.json` grants eggs by roster id and `Resources/roster.json` excludes alias ids, so an alias
+  egg can never drop and the line is unstartable however well it is wired. Prefer an orphan egg
+  belonging to one of the tree's own Rookies; it buys an orphan too.
+- **An alias node removes NO orphan** — it shares a roster entry that was already wired. Count
+  removals as "new nodes carrying a plain roster id", and assert the split.
+- **A dexOnly ROOKIE is far more expensive than a dexOnly leaf**: its whole subtree has to be
+  rehomed onto a sibling Rookie or it is stranded. Prefer a pairing the shipped file ALREADY
+  makes, which turns an invention into a precedent.
+- **`Resources/*.md` is bundled with the app**, so a test can read the source evolution-tree
+  markdown at run time and assert what the document does and does NOT say — that is how an
+  invented junk chain becomes an assertion instead of a comment.
 - **The app's bundle id for `simctl` is `com.digivpet.DigiVPet`** (`project.yml`). A wrong id fails
   `simctl launch` with an opaque FBSOpenApplicationServiceErrorDomain code=4 while
   `simctl io screenshot` still writes a plausible PNG of the watch face — which reads as the very
@@ -1999,4 +2021,81 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-138 onward (24/56 passing). US-138 is Pendulum Color V1 Nature Spirits — the first
   Phase E tree with NO seed line behind it, so read the paragraph above about that before
   estimating it against US-135/136/137's size.
+---
+
+## 2026-07-22 - US-138: Wire the Pendulum Color V1 Nature Spirits evolution tree
+- Authored `penc-nsp` from NOTHING — **30 new nodes**, the widest line in the file; 115 -> 145.
+  **Orphans 757 -> 739 (18 removed.)** Betamon is the section's one absent sprite and its two
+  Champions were rehomed. The tree renders in the Dex on both watch sizes.
+- Files: `Resources/evolutions.json` (+30 nodes), `Resources/elements.json`, `Resources/moves.json`
+  (+30 entries each plus a `penc-nsp` lineDefault), `Sources/MinigameAssignment.swift`,
+  `Sources/DexModel.swift`, `Tests/PendulumNatureSpiritsTreeTests.swift` (new, 24 tests),
+  `Tests/EvolutionGraphTests.swift`, `Tests/EvolutionGraphValidatorTests.swift`,
+  `Tests/ElementCatalogTests.swift`, `Tests/EvolutionCriteriaTests.swift`,
+  `Tests/SeedRosterTests.swift`, `Tests/RosterTests.swift`, `Tests/MinigameAssignmentTests.swift`,
+  `Tests/EggHatchingTests.swift`, `Tests/DexMoveRowTests.swift`, `Tests/DexTypeBadgeTests.swift`,
+  `Tests/DMCVersion5TreeTests.swift`, `docs/evolutions-schema.md`.
+- Build green, **1789 tests (1765 + 24), 0 failures.** Validator: zero findings over the whole file.
+
+- **Learnings for future iterations:**
+
+- **AUTHORING FROM NOTHING IS A DIFFERENT JOB FROM FINISHING A SEED, and the cost is in the
+  KNOCK-ON, not in the tree.** The 30 nodes were the easy half. What US-133..137 never had to touch,
+  because they renamed an existing line rather than adding one, was **six tests that hard-code a
+  fact about the WHOLE FILE**: `EvolutionGraphTests`' per-line count dict, `ElementCatalogTests`'
+  and `EvolutionGraphValidatorTests`' `graph.nodes.count == 115`, `EggHatchingTests`' set of
+  seeded Digitama (a seventh line means a seventh starting egg), `SeedRosterTests`' `seedLines`
+  junk-path literals, and `RosterTests`' exact alias list. Budget for those BEFORE writing data.
+- **Three tests used a roster-only Digimon BY NAME as their "not in the graph" example, and this
+  story ate it.** `megaseadramon` was that example in `ElementCatalogTests`, `DexMoveRowTests` and
+  `DexTypeBadgeTests`. Phase E is pulling the whole roster into the graph, so **every one of those
+  examples is on a timer** — all three now FIND one at run time (`roster.entries.first { graph.node(id:
+  $0.id) == nil }`) instead of naming one. If you write a test that needs "something outside the
+  graph", derive it; the next sweep will take whatever you hard-code.
+- **THE LINES OUTGREW THE MINIGAMES.** `MinigameAssignmentTests.testEachShippedLineGetsADifferentGame`
+  asserted a BIJECTION — six lines, six games — which held only because there happened to be six
+  lines. `penc-nsp` is the seventh and US-139..143 add five more, so it is now "every line is in
+  the table, all six games are reached", plus a test naming the one sharing pair
+  (`palmon`/`penc-nsp`, both nature-flavoured). **Do not re-tighten it.**
+- **A NEW LINE'S EGG MUST BE A REAL ROSTER DIGITAMA, NOT A LINE-SCOPED ALIAS — this is playability,
+  not taste.** `maps.json` grants a Digitama by ROSTER id (all 57 sprite ids are placed, one per
+  map), and a `pencnsp_digitama` alias has NO roster entry, so no map could ever drop it and the
+  line would be unstartable however well it was wired. `Resources/roster.json` excludes alias ids
+  even though `roster.generated.json` carries them. Pick from the 50 orphan Digitama, and prefer
+  one belonging to a Rookie of the tree — this one took `tento_digitama` (Tentomon's, on
+  08_jungle). It also buys an orphan.
+- **An alias node removes NO orphan.** 30 nodes, 18 orphans. The 12 `pencnsp_` aliases share a
+  roster entry that was already wired, so the arithmetic is "new nodes with a plain roster id",
+  not "new nodes". Assert the split or the notes read as a miscount.
+- **Twelve aliases is the new high-water mark and each one costs THREE entries** (node,
+  `elements.json`, `moves.json`) **plus a signature name that must be globally unique** — so it
+  cannot be copied from the Digimon it aliases. A Pendulum tree overlaps the Digital Monster trees
+  heavily by design; expect US-139..143 to be the same shape. A quick way to price a tree before
+  starting: how many of its names already have a node?
+- **A DEXONLY ROOKIE COSTS MORE THAN A DEXONLY CHAMPION.** Every earlier Phase E absence was a
+  leaf (Flymon, Kokatorimon, Nanimon) and was simply dropped. Betamon is a ROOKIE with two
+  Champions and four Digimon above them: dropping it would have stranded six. **Rehome the
+  orphaned subtree onto a sibling Rookie and prefer a pairing the FILE already makes** — Seadramon
+  went to Agumon because `dmc-v1` already hangs a Seadramon off Agumon, which turns an invention
+  into a precedent. Watch the Rookie's out-degree and the distinct-energy rule while you do it.
+- **When a document draws no junk branch, you have to invent one, and it should come off ORPHAN
+  sheets.** The five `dmc-v*` trees each name their own junk Champion; the Pendulum ones name
+  none. PlatinumScumon -> Pumpmon -> NoblePumpmon were all unused, so the neglect path paid for
+  itself in orphans instead of costing three more aliases. **Assert the invention** — a test greps
+  the tree markdown for all three names and fails if any turns out to be in it after all — and add
+  the Child-rung and Adult-rung ones to `EvolutionCriteriaTests.junkIds` or the junk-fallback test
+  fails.
+- **A "this story added no nodes" test must count ITS OWN LINE, never the file.**
+  `DMCVersion5TreeTests` asserted `graph.nodes.count == 115` to say US-137 added nothing, and this
+  story broke it by adding a tree somewhere else entirely. A global total cannot say anything
+  about what one story did once another lands beside it.
+- **`Resources/*.md` IS in the app bundle** (project.yml bundles the whole folder), so a test can
+  read the source tree markdown at run time and assert what the document does and does not say.
+  That is how "the junk chain is not from the document" became an assertion rather than a comment.
+- **`-dexLineDemo=<line>` needs `-dexDemo`** (still true, US-137's note) and the Dex heading is a
+  `navigationTitle` that truncates near fifteen characters on 41mm: "Pendulum NSp" fits, a longer
+  "Pendulum Nature Spirits" would not have.
+- REMAINS: US-139 onward (25/56 passing). US-139..143 are the other five Pendulum trees and are
+  the same shape as this one — no seed line, heavy overlap with the Digital Monster trees, no junk
+  branch in the document, and a Digitama to choose from the roster.
 ---

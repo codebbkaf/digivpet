@@ -42,14 +42,19 @@ final class DexMoveRowTests: XCTestCase {
 
     /// A roster-only Digimon with no graph node, so the row is proved to reach the STAGE tier of
     /// the same lookup the battle uses — not just the authored per-id table.
+    ///
+    /// The example is taken from the roster at RUN TIME. It was `megaseadramon` until US-138 wired
+    /// that one into the Pendulum Nature Spirits tree, and Phase E will keep claiming ids: what
+    /// this test needs is ANY entry the graph does not have.
     func testARosterOnlyEntryIsResolvedByTheSameLookup() throws {
-        XCTAssertNil(graph.node(id: "megaseadramon"), "test assumes megaseadramon has no node")
+        let entry = try XCTUnwrap(
+            roster.entries.first { graph.node(id: $0.id) == nil && !$0.dexOnly },
+            "the whole roster is in the graph — this tier no longer has anything to prove")
 
-        let move = try XCTUnwrap(DexMoveRow.move(for: row("megaseadramon", discovered: true),
+        let move = try XCTUnwrap(DexMoveRow.move(for: row(entry.id, discovered: true),
                                                  in: graph, roster: roster, catalog: catalog))
-        let entry = try XCTUnwrap(roster.entry(id: "megaseadramon"))
 
-        XCTAssertEqual(move, catalog.move(forId: "megaseadramon", line: nil, stage: entry.stage))
+        XCTAssertEqual(move, catalog.move(forId: entry.id, line: nil, stage: entry.stage))
     }
 
     // MARK: - AC: an undiscovered entry shows no row at all

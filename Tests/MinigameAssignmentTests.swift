@@ -9,14 +9,32 @@ final class MinigameAssignmentTests: XCTestCase {
     /// Every `line` key the shipped graph actually uses.
     private var shippedLines: Set<String> { Set(graph.nodes.map(\.line)) }
 
-    // MARK: - The six lines
+    // MARK: - The lines, of which there are now more than there are games
 
-    func testEachShippedLineGetsADifferentGame() {
+    /// Every shipped line resolves to a game and all six games are reached.
+    ///
+    /// This asserted a BIJECTION until US-138 — six lines, six games, none shared — which held only
+    /// because the roster happened to have exactly six lines. US-138's `penc-nsp` is the seventh,
+    /// and Phase E adds five more Pendulum trees after it, so from here on lines share games and the
+    /// claim worth making is the one that still means something: no line falls through to the stage
+    /// floor (which would change a Digimon's game as it evolved), and no game is stranded with
+    /// nobody who plays it.
+    func testEveryShippedLineGetsAGameAndAllSixGamesAreReached() {
         let assigned = shippedLines.map { MinigameAssignment.game(line: $0, stage: nil) }
-        XCTAssertEqual(assigned.count, 6, "the shipped roster is six lines")
-        XCTAssertEqual(Set(assigned).count, 6, "two lines share a game: \(assigned)")
+        XCTAssertGreaterThan(assigned.count, 6, "the shipped roster has outgrown one line per game")
         XCTAssertEqual(Set(assigned), Set(MinigameKind.allCases),
-                       "the six lines must cover all six games")
+                       "a game no shipped line plays: \(Set(MinigameKind.allCases).subtracting(assigned))")
+    }
+
+    /// The one pair that shares a game, named so that a third line landing on `timingBar` by
+    /// accident reads as a slip rather than as the pattern.
+    func testTheOnlySharedGameIsTheTwoNatureLines() {
+        let sharers = Dictionary(grouping: MinigameAssignment.byLine.keys,
+                                 by: { MinigameAssignment.byLine[$0]! })
+            .filter { $0.value.count > 1 }
+            .mapValues { $0.sorted() }
+
+        XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp"]])
     }
 
     /// The table is keyed on strings the JSON owns, so a renamed line would silently drop that whole

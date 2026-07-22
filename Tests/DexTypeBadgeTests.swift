@@ -30,10 +30,16 @@ final class DexTypeBadgeTests: XCTestCase {
 
     /// A roster-only Digimon typed by the keyword tier, so the row is proved to read the same
     /// lookup the battle will — not just the authored `types` table.
+    ///
+    /// The Seadramon-family example is found in the roster at RUN TIME. It was `megaseadramon`
+    /// until US-138 wired that one into the Pendulum Nature Spirits tree; Phase E keeps claiming
+    /// ids, and what this test needs is ANY entry the graph does not have.
     func testARosterOnlyEntryIsTypedByTheSameLookup() throws {
-        XCTAssertNil(graph.node(id: "megaseadramon"), "test assumes megaseadramon has no node")
+        let entry = try XCTUnwrap(
+            roster.entries.first { $0.id.contains("seadra") && graph.node(id: $0.id) == nil },
+            "every Seadramon is now a graph node — pick another keyword rule to exercise")
 
-        let type = try XCTUnwrap(DexTypeBadges.type(for: row("megaseadramon", discovered: true),
+        let type = try XCTUnwrap(DexTypeBadges.type(for: row(entry.id, discovered: true),
                                                     in: graph, catalog: catalog))
 
         XCTAssertEqual(type.element, .water)
