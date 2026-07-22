@@ -893,8 +893,8 @@
         "Typecheck passes"
       ],
       "priority": 43,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the last FIVE orphaned Champions (V-dramon Black, WezenGammamon, XV-mon Black, Xiquemon, Youkomon); the Adult rung now holds ZERO orphans. Orphans 294 -> 286 by Appendix B over a regenerated roster.generated.json: Adult 5 -> 0 AND Perfect 107 -> 104. 635 -> 643 nodes (5 Champions + 3 new Perfects: Canoweissmon, Huankunmon, BlackRapidmon). Both Black V-dramon cost nothing above - AeroV-dramon already had parents. Corrected US-153's inherited 'Gammamon is full' claim: vitality was free, so WezenGammamon took its bolded Wikimon parent rather than the Gabumon stand-in. Validator zero findings; full suite 2185 tests green, build green."
     },
     {
       "id": "US-157",

@@ -2540,6 +2540,38 @@
     "metalgreymon_x": {
       "element": "machine",
       "attribute": "vaccine"
+    },
+    "v-dramon_black": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "xv-mon_black": {
+      "element": "electric",
+      "attribute": "virus"
+    },
+    "wezengammamon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "canoweissmon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "xiquemon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "huankunmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "youkomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "blackrapidmon": {
+      "element": "machine",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

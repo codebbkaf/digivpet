@@ -377,9 +377,9 @@ final class AdultSweepSToTTests: XCTestCase {
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["dmc-v1"], 30, "Tyrannomon")
         XCTAssertEqual(sizes["dmc-v3"], 48, "Tyrannomon X and MetalGreymon X")
-        XCTAssertEqual(sizes["dmc-v4"], 27, "Saberdramon")
+        XCTAssertEqual(sizes["dmc-v4"], 29, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
         XCTAssertEqual(sizes["penc-nso"], 44, "ShimaUnimon")
-        XCTAssertEqual(sizes["tamers"], 80, "Siesamon X")
+        XCTAssertEqual(sizes["tamers"], 82, "Siesamon X, plus US-156's Youkomon and BlackRapidmon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -486,21 +486,28 @@ final class AdultSweepSToTTests: XCTestCase {
                       "Tyrannomon X's rejected `penc-vb` reading is not named")
     }
 
-    /// **The handover to US-156, in the shape US-151 through US-154 established: a claim, not a
-    /// note.** The last five orphaned Champions are all U-Z, and two of them carry advice that has
-    /// now been passed along twice — WezenGammamon cannot hang off Gammamon, which is full, so
-    /// US-156 has to take the Gabumon citation US-153 found. Pinned rather than written in prose so
-    /// that the day Gammamon grows a fifth branch this test says so.
-    func testTheFiveChampionsLeftForUS156AreStillUnwired() throws {
+    /// **The handover to US-156, FLIPPED now that US-156 has honoured it** — the shape US-152
+    /// established when it wired US-151's FlareLizamon: the same fact, from the other side, still
+    /// failing if anybody moves it. The five Champions this story handed on are all wired, and the
+    /// piece of advice that came with them was taken as given: Gammamon was full, so WezenGammamon
+    /// hangs off `pencvb_gabumon`, the second parent US-153 found on the same line.
+    func testTheFiveChampionsHandedToUS156AreWiredOnTheAdviceThisStoryGave() throws {
         for id in ["v-dramon_black", "wezengammamon", "xv-mon_black", "xiquemon", "youkomon"] {
-            XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it is owed")
-            XCTAssertNil(graph.node(id: id),
-                         "\(id) is wired now — it was US-156's, so say which story took it")
+            XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it was owed")
+            let node = try XCTUnwrap(graph.node(id: id), "\(id) is US-156's and is still unwired")
+            XCTAssertFalse(graph.parents(of: id).isEmpty, "\(id) has no in-edge")
+            XCTAssertFalse(node.evolutions.isEmpty, "\(id) leads nowhere")
         }
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "gammamon")).evolutions.count, 4,
-                       "Gammamon grew a branch; US-156 was told it is full and must use Gabumon")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "pencvb_gabumon")).line, "penc-vb",
-                       "the parent US-156 was handed has moved line")
+        // The advice was that Gammamon was full and Gabumon had to carry WezenGammamon. US-156
+        // checked it rather than inheriting it: Gammamon had vitality free all along, so the
+        // bolded arrow was drawn and Gabumon kept its energy. Both halves are pinned.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "gammamon")).evolutions.count, 5,
+                       "Gammamon is at the ceiling since US-156 spent its vitality")
+        XCTAssertEqual(graph.parents(of: "wezengammamon").map(\.id), ["gammamon"],
+                       "WezenGammamon moved off the bolded parent US-156 found free")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "pencvb_gabumon"))
+                        .evolutions.filter { !$0.isDefault }.count, 2,
+                       "Gabumon spent an energy after all — it was left free on purpose")
     }
 
     // MARK: - AC: the orphan count, and the whole file still validates
@@ -521,7 +528,7 @@ final class AdultSweepSToTTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 635, "629 before this story")
+        XCTAssertEqual(graph.nodes.count, 643, "629 before this story, 635 after it")
     }
 
     func testTheGraphValidatesWithNoFindings() {

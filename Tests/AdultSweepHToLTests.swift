@@ -192,12 +192,16 @@ final class AdultSweepHToLTests: XCTestCase {
         }
     }
 
-    /// **Gammamon is now FULL, and this is where that is written down.** `EvolutionEngine` picks on
-    /// the dominant energy first, so two branches out of one node sharing an energy would make the
-    /// second dead data — which means four energy types is a hard ceiling on earned branches.
-    /// Gammamon carries BetelGammamon (spirit, US-149), GulusGammamon (strength, US-152) and now
-    /// KausGammamon (stamina), plus its junk fallback. A fourth earned branch cannot be told apart
-    /// from one of those three, so no later sweep can hang one here: it must find another parent.
+    /// **This story said Gammamon was FULL. It was one branch short, and US-156 spent the branch.**
+    /// `EvolutionEngine` picks on the dominant energy first, so two branches out of one node sharing
+    /// an energy would make the second dead data — four energy types is the hard ceiling on earned
+    /// branches, and after KausGammamon this node carried only THREE of them: BetelGammamon
+    /// (spirit, US-149), GulusGammamon (strength, US-152) and KausGammamon (stamina). Vitality was
+    /// free, and the junk edge to Turuiemon sharing spirit with BetelGammamon is what made the count
+    /// of DISTINCT energies read as full when the count of EARNED branches did not. The wrong half
+    /// of that claim travelled through US-154 and US-155 as advice, and US-156 checked it instead of
+    /// inheriting it — WezenGammamon now hangs here on vitality, which is its bolded Wikimon arrow,
+    /// rather than on the Gabumon stand-in this story found. NOW the node is full.
     func testEveryChildThisStoryBranchedStillUsesDistinctEnergiesAndGammamonIsFull() throws {
         for parent in Set(swept.map(\.parent)) {
             let earned = try XCTUnwrap(graph.node(id: parent)).evolutions.filter { !$0.isDefault }
@@ -209,15 +213,19 @@ final class AdultSweepHToLTests: XCTestCase {
 
         let gammamon = try XCTUnwrap(graph.node(id: "gammamon"))
         XCTAssertEqual(Set(gammamon.evolutions.filter { !$0.isDefault }.map(\.to)),
-                       ["betelgammamon", "gulusgammamon", "kausgammamon"])
-        XCTAssertEqual(Set(gammamon.evolutions.compactMap(\.requiredEnergy)).count, 3,
+                       ["betelgammamon", "gulusgammamon", "kausgammamon", "wezengammamon"],
+                       "US-156 spent the vitality this story mistook for spent")
+        XCTAssertEqual(Set(gammamon.evolutions.filter { !$0.isDefault }.compactMap(\.requiredEnergy)),
+                       Set(EnergyType.allCases), "Gammamon has an energy left after all")
+        XCTAssertEqual(Set(gammamon.evolutions.compactMap(\.requiredEnergy)).count, 4,
                        "the junk fallback shares an energy with an earned branch, as it should")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "gammamon")).evolutions.count, 4)
+        XCTAssertEqual(gammamon.evolutions.count, 5, "five is the ceiling, and it is reached now")
 
-        // Mushmon is at three earned branches too. Jellymon, the tree's unlockable sixth Rookie, is
-        // at two — said out loud so the next sweep prices a third honestly.
+        // Mushmon was at three earned branches when this story ran and US-156's XV-mon Black filled
+        // it. Jellymon, the tree's unlockable sixth Rookie, is still at two — said out loud so the
+        // next sweep prices a third honestly.
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "mushmon"))
-                           .evolutions.filter { !$0.isDefault }.count, 3)
+                           .evolutions.filter { !$0.isDefault }.count, 4)
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "jellymon"))
                            .evolutions.filter { !$0.isDefault }.count, 2)
     }
@@ -297,9 +305,9 @@ final class AdultSweepHToLTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-vb"], 47, "US-153 added KausGammamon, US-154 two more")
+        XCTAssertEqual(sizes["penc-vb"], 49, "US-153 added KausGammamon, US-154 two more, US-156 two more")
         XCTAssertEqual(sizes["penc-ds"], 38, "US-153 added Kinkakumon, US-154 MoriShellmon")
-        XCTAssertEqual(sizes["penc-wg"], 35, "US-153 added Kougamon, US-154 RedV-dramon")
+        XCTAssertEqual(sizes["penc-wg"], 37, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 3)
     }
@@ -392,19 +400,21 @@ final class AdultSweepHToLTests: XCTestCase {
         }
     }
 
-    /// **The handover to US-154, in the shape US-151 and US-152 established: a claim, not a note.**
-    /// KausGammamon's bolded Evolves To is Canoweissmon, which has a full Perfect sheet on disk and
-    /// no node — this story took WereGarurumon, the cited alternative that already existed, rather
-    /// than spend a Perfect. WezenGammamon, the last of the four Gammamon Champions, is an M-R
-    /// orphan and so is US-154's. When either is wired this test fails, and whoever wires them has
-    /// to say here which arrow they drew.
-    func testTheGammamonThreadsLeftForTheLaterSweepsAreStillOpen() throws {
-        XCTAssertNil(graph.node(id: "canoweissmon"),
-                     "Canoweissmon is wired now — say which of KausGammamon's arrows it is")
-        XCTAssertNotNil(roster.entry(id: "canoweissmon"), "it is on disk, which is why it is owed")
-
-        XCTAssertNil(graph.node(id: "wezengammamon"),
-                     "WezenGammamon is US-154's M-R orphan; wiring it belongs in that story")
+    /// **The handover this story wrote, now CLOSED — the same fact from the other side.**
+    /// KausGammamon's bolded Evolves To is Canoweissmon, which had a full Perfect sheet on disk and
+    /// no node; this story took WereGarurumon, the cited alternative that already existed, rather
+    /// than spend a Perfect, and left the thread open. US-156 spent it — but on WezenGammamon, not
+    /// on KausGammamon, so the arrow this story declined is STILL not drawn and the reason it was
+    /// declined still holds. Both halves are pinned: Canoweissmon exists and KausGammamon does not
+    /// reach it.
+    func testTheGammamonThreadThisStoryLeftOpenWasSpentOnWezenGammamonInstead() throws {
+        let canoweissmon = try XCTUnwrap(graph.node(id: "canoweissmon"),
+                                         "US-156 wired it; it cannot have gone away")
+        XCTAssertEqual(canoweissmon.line, "penc-vb")
+        XCTAssertEqual(graph.parents(of: "canoweissmon").map(\.id), ["wezengammamon"],
+                       "KausGammamon's declined arrow was drawn after all — say which story did it")
+        XCTAssertNotNil(graph.node(id: "wezengammamon"),
+                        "WezenGammamon is US-156's U-Z orphan and should be wired")
         XCTAssertTrue(try authoredComment(on: "kausgammamon").contains("Canoweissmon"),
                       "the arrow that was NOT taken is not written down")
     }
@@ -425,7 +435,8 @@ final class AdultSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 635, "615 before this story, 618 after it, 629 after US-154")
+        XCTAssertEqual(graph.nodes.count, 643,
+                       "615 before this story, 618 after it, 629 after US-154, 635 after US-155")
     }
 
     func testTheGraphValidatesWithNoFindings() {

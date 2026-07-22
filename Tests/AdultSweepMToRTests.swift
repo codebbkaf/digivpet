@@ -262,7 +262,7 @@ final class AdultSweepMToRTests: XCTestCase {
         XCTAssertEqual(earnedCounts["monodramon"], 3)
         XCTAssertEqual(earnedCounts["picodevimon"], 4)
         XCTAssertEqual(earnedCounts["ganimon"], 3)
-        XCTAssertEqual(earnedCounts["pencwg_piyomon"], 3)
+        XCTAssertEqual(earnedCounts["pencwg_piyomon"], 4, "US-156 filled it with V-dramon Black")
         for id in ["blucomon", "guilmon_x", "lopmon_x", "plotmon_x"] {
             XCTAssertEqual(earnedCounts[id], 2, "\(id) is not the two branches this story left it")
         }
@@ -372,11 +372,11 @@ final class AdultSweepMToRTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 80, "four Champions and both new Perfects")
-        XCTAssertEqual(sizes["penc-vb"], 47, "Mikemon and Nefertimon X")
+        XCTAssertEqual(sizes["tamers"], 82, "four Champions and both new Perfects, plus US-156's two")
+        XCTAssertEqual(sizes["penc-vb"], 49, "Mikemon and Nefertimon X, plus US-156's two")
         XCTAssertEqual(sizes["penc-ds"], 38, "MoriShellmon")
         XCTAssertEqual(sizes["penc-nso"], 44, "Musyamon")
-        XCTAssertEqual(sizes["penc-wg"], 35, "RedV-dramon")
+        XCTAssertEqual(sizes["penc-wg"], 37, "RedV-dramon, plus US-156's two Black V-dramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -487,9 +487,10 @@ final class AdultSweepMToRTests: XCTestCase {
     /// rather than spent here. When one is wired this test fails, and whoever wires it has to say
     /// which arrow they drew.
     ///
-    /// WezenGammamon is the other half: US-153 expected it in THIS story's range, but its display
-    /// name starts with W, so it is US-156's. Gammamon is full, so US-156 has to take the Gabumon
-    /// citation US-153 found — the claim that Gammamon is untouched is what keeps that honest.
+    /// WezenGammamon was the other half: US-153 expected it in THIS story's range, but its display
+    /// name starts with W, so it went to US-156 — which wired it, and found that the advice attached
+    /// to it was wrong. Gammamon was NOT full; vitality was free, so the bolded arrow was drawn and
+    /// the Gabumon stand-in was not needed. The claim here is now the corrected one.
     func testThePerfectSheetsLeftForTheLaterSweepsAreStillUnwired() throws {
         for id in ["cyberdramon_x", "mamemon_x", "omegashoutmon_x",
                    "angewomon_x", "hisyaryumon", "monzaemon_x"] {
@@ -501,10 +502,12 @@ final class AdultSweepMToRTests: XCTestCase {
                       "the arrows that were NOT taken are not written down")
         XCTAssertTrue(try authoredComment(on: "pegasmon_x").contains("Hisyaryumon"))
 
-        XCTAssertNil(graph.node(id: "wezengammamon"),
-                     "WezenGammamon is a W, so it is US-156's rather than this story's")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "gammamon")).evolutions.count, 4,
-                       "Gammamon grew a branch; US-156 was told it is full and must use Gabumon")
+        XCTAssertNotNil(graph.node(id: "wezengammamon"),
+                        "WezenGammamon is a W, so US-156 owns it and should have wired it")
+        XCTAssertEqual(graph.parents(of: "wezengammamon").map(\.id), ["gammamon"],
+                       "US-156 found Gammamon had vitality free; if that changed, say which story")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "gammamon")).evolutions.count, 5,
+                       "Gammamon is at the ceiling now — four earned branches plus the fallback")
     }
 
     // MARK: - AC: the orphan count, and the whole file still validates
@@ -525,7 +528,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 635, "618 before this story")
+        XCTAssertEqual(graph.nodes.count, 643, "618 before this story, 635 after US-155")
     }
 
     func testTheGraphValidatesWithNoFindings() {

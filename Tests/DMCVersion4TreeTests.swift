@@ -104,7 +104,10 @@ final class DMCVersion4TreeTests: XCTestCase {
         // Monochromon / Kokatorimon / Leomon / Kuwagamon / Nanimon; Palmon's adds Coelamon and
         // Mojyamon. GoldNumemon is US-061's junk fallback and is in no source tree.
         XCTAssertEqual(try targets(of: "piyomon"),
-                       ["monochromon", "leomon", "kuwagamon", "goldnumemon"])
+                       ["monochromon", "leomon", "kuwagamon", "goldnumemon",
+                        // US-156's, on the spirit the document's five Champions left free:
+                        // Wikimon draws Piyomon into Xiquemon to `Digimon New Century`.
+                        "xiquemon"])
         XCTAssertEqual(try targets(of: "dmcv4_palmon"),
                        ["leomon", "kuwagamon", "coelamon", "mojyamon", "goldnumemon"])
 

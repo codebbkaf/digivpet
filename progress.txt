@@ -29,6 +29,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   time, and US-155 drew it. Wikimon's spelling and the sprite pack's differ often enough (Tyranomon/
   Tyrannomon, Ex-Tyranomon/extyranomon) that "no entry for `<wikimon spelling>`" proves nothing.
   Resolve a name through `roster.entries` by DISPLAY NAME normalised, never by guessing the id.
+- **PHASE E: "this parent is FULL" IS A CLAIM ABOUT ENERGIES, AND IT CAN BE OFF BY ONE — RE-COUNT
+  THE EARNED BRANCHES BEFORE INHERITING IT.** US-153 wrote that Gammamon was full and handed
+  WezenGammamon a Gabumon stand-in; US-154 and US-155 both passed that advice on unchecked, and it
+  was wrong for three stories. Gammamon carried BetelGammamon (spirit), GulusGammamon (strength) and
+  KausGammamon (stamina) plus a junk edge to Turuiemon that SHARES spirit with the first — so
+  `Set(node.evolutions.compactMap(\.requiredEnergy)).count` read 3-of-4-looking-closed while the
+  count that actually matters, `evolutions.filter { !$0.isDefault }.count`, was 3 with vitality free.
+  **Count EARNED branches against `EnergyType.allCases`, never distinct energies over ALL edges** —
+  the junk fallback is allowed to share, which is exactly what makes the two counts disagree. US-156
+  drew the bolded arrow it was told was impossible and left Gabumon its energy. Same shape as
+  US-155's Tyranomon spelling: an inherited "cannot" is worth ten minutes of checking.
+
 - **PHASE E ADULT SWEEPS: the four-Rookie ceiling is reached from BELOW, and a sweep can spend three
   of them at once.** US-155 filled Agumon, Bakumon and Muchomon — each took its LAST free energy —
   because the cheap placements all hung off Rookies that already had three earned branches. That is
@@ -3843,4 +3855,105 @@ The five, with the citation each rests on:
   102 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge by whichever story
   claims them. Greymon X is one of them and is the obvious second parent for this story's new
   MetalGreymon X.
+---
+
+## 2026-07-22 - US-156 - Orphan sweep: Adult U-Z (the Adult rung is finished)
+Wired the LAST FIVE playable Champions with no edge at all: V-dramon Black, WezenGammamon, XV-mon
+Black, Xiquemon and Youkomon. Each gained one earned in-edge from a Child of its own line and one
+earned out-edge to a Perfect of that line, plus the line's unconditioned junk fallback. THREE new
+Perfects were opened, one each on `penc-vb`, `dmc-v4` and `tamers`. Orphans 294 -> 286 (Appendix B
+over a regenerated `roster.generated.json`): **Adult 5 -> 0 — the bucket is empty, the first rung
+above Child to be finished** — AND Perfect 107 -> 104. 635 -> 643 nodes.
+
+Files: `Resources/evolutions.json` (5 new Champions, 5 new Child branches, 3 new Perfects),
+`Resources/elements.json` and `Resources/moves.json` (8 entries each), new
+`Tests/AdultSweepUToZTests.swift` (26 tests), and the knock-on edits listed below.
+Full suite 2185 tests green (2159 before), build green, validator zero findings.
+
+The five, with the citation each rests on:
+  v-dramon_black  penc-wg  pencwg_piyomon -> aerov-dramon   (out-edge cited 8 cards incl. Bo-1113;
+                                                             in-edge is a LINE argument, said so)
+  xv-mon_black    penc-wg  mushmon        -> aerov-dramon   (St-768 in, Bo-935/Bo-1113 out)
+  wezengammamon   penc-vb  gammamon       -> canoweissmon   (Ghost Game 12 + Pendulum COLOR ZERO
+                                                             Virus Busters in, GG26/VB/BT10-011 out)
+  xiquemon        dmc-v4   piyomon        -> huankunmon     (Digimon New Century, BOTH arrows)
+  youkomon        tamers   renamon        -> blackrapidmon  (nine citations in, Digimon
+                                                             Championship out)
+
+**Learnings for future iterations:**
+
+- **"GAMMAMON IS FULL" WAS WRONG FOR THREE STORIES, AND THE BUG IS IN WHICH COUNT YOU READ.** US-153
+  recorded Gammamon as full at "three earned branches plus the junk fallback"; US-154 and US-155
+  both forwarded that as advice, and `AdultSweepHToLTests` pinned it as
+  `Set(gammamon.evolutions.compactMap(\.requiredEnergy)).count == 3`. The node had spirit, strength
+  and stamina earned and a junk edge on spirit — so vitality was free the whole time. The ceiling is
+  FOUR EARNED BRANCHES (one per `EnergyType`) plus the fallback, five edges, which is exactly what
+  Plotmon has carried since US-154. **`evolutions.filter { !$0.isDefault }.compactMap(\.requiredEnergy)`
+  compared against `Set(EnergyType.allCases)` is the only honest test of fullness**; distinct
+  energies over ALL edges under-counts by one whenever the junk edge shares, which it usually does.
+  US-156 drew the bolded Ghost Game arrow instead of the stand-in, corrected the claim in US-153's
+  own test file rather than deleting it, and left `pencvb_gabumon` the vitality it was told to spend.
+  Cost: one test run to notice, ten minutes to fix, and a better citation than the handover offered.
+
+- **THE AC'S "A VARIANT HANGS OFF ITS BASE FORM'S LINE" CAN OUTRANK THE ONLY CITATION THERE IS, AND
+  IT IS THE RIGHT CALL WHEN THE OTHER END PAYS FOR IT.** V-dramon Black's whole Wikimon `Evolves
+  From` is Guilmon and Guilmon X, both `tamers` — and `tamers` holds NOT ONE of its cited children,
+  so US-152's intersection is empty there and taking the citation costs a Perfect on a line with no
+  claim on the Digimon. `penc-wg` is the opposite: no source draws Piyomon into it, but AeroV-dramon
+  is cited eight cards over, is already a Perfect there, and the base V-dramon and RedV-dramon both
+  hang off the same Rookie. **Price both readings before taking the cited one**, and when the
+  in-edge ends up resting on a line argument, WRITE "LINE argument" into the comment and grep for it
+  in a test — this story does, so the day someone finds a real citation they know what they are
+  replacing.
+
+- **TWO ORPHANS OF ONE STORY SHARING A TARGET IS US-154'S PAIRWISE TRICK, AND IT LANDS ON A CARD.**
+  Bo-1113 draws AeroV-dramon out of V-dramon (Black) *with or without* XV-mon (Black): one card,
+  both of this story's variants, one existing Perfect, zero nodes above. That is two of five
+  placements free. Different ENERGIES are what keep them from being the same branch twice (spirit
+  off Piyomon, stamina off Mushmon), and a test asserts the pair is distinct rather than assuming it.
+
+- **A REJECTED READING THAT IS THE BETTER THEME IS THE ONE MOST WORTH PINNING.** Xiquemon belongs on
+  `penc-sw` — Fujamon and Kamemon are cited to *Pendulum COLOR 6 Saiyu Warriors*, which IS that
+  line, and Huankunmon/Sagomon/Sanzomon are the same device's Perfects. It lost only on cost:
+  `penc-sw` has no Perfect rung, so that reading is three nodes plus a `junkIds` entry against
+  `dmc-v4`'s two. US-153's Kinkakumon set this precedent and this story kept it — the rejected
+  reading is in the node `comment` AND pinned four ways
+  (`testThePencSwReadingOfXiquemonIsStillTheCheaperOneNotTaken`: `penc-sw` still has no Perfect,
+  Fujamon is still on it, Kamemon and Falcomon 2006 are still idle-only). Whoever opens `penc-sw`'s
+  Perfect rung is TOLD Xiquemon is a rehome candidate.
+
+- **BOTH OF A DIGIMON'S BOLDED PERFECTS CAN BE IDLE-ONLY, AND THEN THE CITED ALTERNATIVE IS THE
+  ANSWER, NOT A CLASS CITATION.** Youkomon's canonical thread is Doumon and Taomon; both exist only
+  in `Idle Frame Only/` and `edgeToDexOnlyNode` forbids either edge. BlackRapidmon is cited to
+  *Digimon Championship* — the same game that draws three of Youkomon's parents — and `tamers`
+  already carries Terriermon, Terriermon X and Galgomon, so the new Perfect lands on a line with a
+  claim on it beyond the single arrow. A test asserts both bolded names are STILL idle-only, so the
+  day either gains an animated sheet the placement is re-opened.
+
+- **The knock-on list for this rung, all nineteen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, all six `AdultSweep*Tests` and all three `ChildSweep*Tests`
+  (635 -> 643); the per-line dict in `EvolutionGraphTests` (`penc-wg` 35->37, `penc-vb` 47->49,
+  `dmc-v4` 27->29, `tamers` 80->82) and the same lines' `sizes[...]` rows in `AdultSweepAToDTests`,
+  `AdultSweepEToGTests`, `AdultSweepHToLTests`, `AdultSweepMToRTests`, `AdultSweepSToTTests`,
+  `BabyIISweepTests`, `ChildSweepAToFTests`, `ChildSweepGToLTests`, `ChildSweepMToZTests` and
+  `DigitamaSweepTests`; `branchedByALaterSweep` in `ChildSweepGToLTests` (`gammamon` 4->5) and
+  `ChildSweepMToZTests` (`renamon` 3); `earnedCounts["pencwg_piyomon"]` 3->4 and `mushmon` 3->4 in
+  `AdultSweepMToRTests`/`AdultSweepHToLTests`; `sweepEggs` AND `inLine.count` in
+  `PendulumWindGuardiansTreeTests` (35->37) and `PendulumVirusBustersTreeTests` (47->49);
+  `targets(of: "piyomon")` in `DMCVersion4TreeTests`; `piyomonLineVerifiedSet` AND the line's
+  `champions.sorted()` in `SeedRosterTests`; the dead-end ledger in `ChildSweepAToFTests`
+  (102 -> 105, the three new Perfects); and THREE handover tests flipped rather than deleted —
+  `AdultSweepHToLTests`' Gammamon claim (corrected), `AdultSweepMToRTests`' and `AdultSweepSToTTests`'
+  "still unwired" pins (now "wired, and on this parent"). `EvolutionCriteriaTests.junkIds`, its
+  stranded lists, `MinigameAssignmentTests`, `EggHatchingTests`, `DexModel.lineTitles` and both
+  `lineDefaults` did NOT move: no new line, and all three new Perfects are leaves.
+
+- REMAINS: US-157 onward (43/56 passing). **The Adult rung is DONE — no story after this one needs
+  to touch it.** Twelve Perfect and Ultimate sweeps and the Armor-Hybrid one hold the remaining 286
+  orphans: 104 Perfect, 166 Ultimate, 16 Armor-Hybrid. The seven lines still with no Perfect rung —
+  `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`, `penc-sw` — are untouched
+  and are pinned as a set in `AdultSweepUToZTests.testWhatTheAdultRungHandsToThePerfectSweeps`. The
+  105 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge by whichever story
+  claims them; Galgomon (BlackRapidmon's obvious second parent), Greymon X and now Canoweissmon,
+  Huankunmon and BlackRapidmon are among them.
 ---

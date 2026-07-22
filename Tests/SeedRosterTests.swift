@@ -458,6 +458,10 @@ final class SeedRosterTests: XCTestCase {
         // US-155's one, on the same terms: Muchomon is another Child the document never drew, and
         // Wikimon draws Saberdramon out of it and into Megadramon, which this line already had.
         "Saberdramon",
+        // US-156's two, verified the same way — both are animated sheets, `Adult/Xiquemon.png` and
+        // `Perfect/Huankunmon.png`. This pair is the first the sweeps hung off the DOCUMENT's own
+        // Rookie rather than off an invented one, and it is the last energy Piyomon had.
+        "Xiquemon", "Huankunmon",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -569,7 +573,7 @@ final class SeedRosterTests: XCTestCase {
         // are still exactly five, and the extras are named rather than the equality dropped.
         XCTAssertEqual(champions.sorted(),
                        ["burgermon_mama", "burgermon_papa", "coelamon", "kuwagamon", "leomon",
-                        "mojyamon", "monochromon", "saberdramon"])
+                        "mojyamon", "monochromon", "saberdramon", "xiquemon"])
         // `contains` rather than `==` since US-147: Hyokomon and Muchomon each gained a second
         // Baby II parent from the Baby II sweep. Piyo's Tanemon is still one of them, which is
         // what "reachable" needs.

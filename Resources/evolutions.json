@@ -2697,6 +2697,28 @@
           ]
         },
         {
+          "to": "xiquemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Take the little bird up where the air goes thin"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And leave it to its rest; a wandering monk keeps its own hours"
+            }
+          ]
+        },
+        {
           "to": "goldnumemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -6758,6 +6780,28 @@
           ]
         },
         {
+          "to": "v-dramon_black",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 22000,
+              "hint": "Let it sleep through the daylight until the dark suits it"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And never wake it; the black one keeps its own hours"
+            }
+          ]
+        },
+        {
           "to": "zassoumon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -6920,6 +6964,28 @@
               "comparison": "atMost",
               "value": 1,
               "hint": "And never once give it away by waking it"
+            }
+          ]
+        },
+        {
+          "to": "xv-mon_black",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90000,
+              "hint": "Walk the mushroom out of its wood and then keep walking"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "And drill it until the X on its chest means something"
             }
           ]
         },
@@ -12875,6 +12941,28 @@
           ]
         },
         {
+          "to": "youkomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 45000,
+              "hint": "Run the fox until the fields blur past it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "And drill it; a shrine fox earns the post it keeps"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "spirit",
           "minEnergy": 0,
@@ -15168,6 +15256,28 @@
               "comparison": "atLeast",
               "value": 7,
               "hint": "And drill the glide until the landing comes out calm"
+            }
+          ]
+        },
+        {
+          "to": "wezengammamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Take it a long way from the house it was born in"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "And let it find out what those teeth are for"
             }
           ]
         },
@@ -18178,6 +18288,228 @@
       "line": "dmc-v3",
       "spriteFile": "MetalGreymon_X",
       "comment": "The one Perfect this story had to open, and it exists because every OTHER Perfect Wikimon names in Tyranomon (X-Antibody)'s Evolves To is either on a line `dmc-v3` cannot reach or has no sheet at all. Metal Greymon (X-Antibody) is cited to Digital Monster X, the same device that draws Agumon X into Tyranomon X, so the whole thread is one drawing. It cost one node rather than two: US-133 put Etemon under this line as its junk floor long before this story. Wikimon also draws it from Greymon (X-Antibody), which is already a Champion here and a dead end - that arrow is left to the Perfect sweeps rather than drawn now, so this node has exactly one parent. A leaf until the Ultimate sweeps.",
+      "evolutions": []
+    },
+    {
+      "id": "v-dramon_black",
+      "displayName": "V-dramon Black",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "V-dramon_Black",
+      "comment": "Wikimon gives V-dramon (Black) exactly two cited parents - Guilmon and Guilmon (X-Antibody), both to Bo-552 - and both are on `tamers`, which holds not one of its cited children. So the US-152 intersection is EMPTY on the parent's line, and taking it would have bought a Perfect on a line with no other claim on this Digimon. The other end is the opposite: Aero V-dramon is cited eight times over (St-730, Bo-88, Bo-216, Bo-476, Bo-935, Bo-1113, Bo-2v, Vj-7), and Bo-1113 draws it from V-dramon (Black) with or without XV-mon (Black), so the arrow stands alone. AeroV-dramon is already a Perfect on `penc-wg`, which is where the base V-dramon and RedV-dramon both live under this same Rookie - the criteria's own rule that a variant hangs off its base form's line, and the reading that costs nothing one rung up. The in-edge is therefore a LINE argument rather than a citation, and it is said here rather than dressed up: no source draws Piyomon into V-dramon (Black). Spirit is the last energy Pyocomon's Piyomon had, after Birdramon took vitality, V-dramon strength and RedV-dramon stamina, and the black one of three dragons is the one that comes of a quiet, dark-hours upbringing. This fills `pencwg_piyomon`.",
+      "evolutions": [
+        {
+          "to": "aerov-dramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 800,
+              "hint": "Climb until the ground stops being the point"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "And let the black dragon settle things the way a dragon does"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "xv-mon_black",
+      "displayName": "XV-mon Black",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "XV-mon_Black",
+      "comment": "Both ends cited to a source that names a node already on one line, which is the whole US-152 rule in one Digimon. Wikimon draws XV-mon (Black) from Flamon, Mushmon and V-mon, all three to St-768; Flamon has no sheet in this pack and V-mon is on `adventure02`, which has no Perfect rung at all and would have cost two nodes, while Mushmon is on `penc-wg` - where AeroV-dramon, cited in this same page's Evolves To to Bo-935 and drawn by Bo-1113 with or without V-dramon (Black), is already the Perfect. So the variant followed its cited Rookie rather than its base form, which is US-155's Tyranomon X reading a second time: the base XV-mon stays where US-150 left it on `adventure02` and is deliberately not moved. Stamina is the energy Mushmon had left after Woodmon took vitality, RedVegimon strength and US-153's Kougamon spirit, and the armoured one of the four is the one that comes of endurance. This fills Mushmon.",
+      "evolutions": [
+        {
+          "to": "aerov-dramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Keep it moving long past the point a dragon would land"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "And drill it until the V-Laser is one motion, not two"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "wezengammamon",
+      "displayName": "WezenGammamon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "WezenGammamon",
+      "comment": "The handover US-153 wrote and US-154 and US-155 both passed on, taken up and then CORRECTED. The advice was that Gammamon - which Wikimon bolds at the head of Wezen Gammamon's Evolves From, citing Ghost Game 12 'Chain Letter', Vital Bracelet Digital Monster, Vital Bracelet BE, BT10-050 and Pendulum COLOR ZERO Virus Busters - was FULL, so this Champion had to take the Gabumon citation on the same line instead. It is not full. Gammamon carries BetelGammamon on spirit, GulusGammamon on strength and KausGammamon on stamina, and its junk edge to Turuiemon shares spirit with the first, so VITALITY was free the whole time and the three-earned-branch reading US-153 wrote down was one branch short of the four-energy ceiling. So the bolded arrow is drawn after all, and Gabumon keeps its vitality for a later story. The out-edge is Canoweissmon, bolded in Evolves To and cited to the same Pendulum COLOR ZERO Virus Busters plus Vital Bracelet Digital Monster, BT10-011, RB1-009 and Ghost Game 26 - drawn with OR WITHOUT any Vaccine Adult, so it is an evolution and not only a fusion, and the whole Ghost Game thread Gammamon -> Wezen Gammamon -> Canoweissmon is one drawing. Metal Greymon was rejected precisely there: it is already a Perfect on this line and would have cost nothing at all, but Wikimon draws it only WITH any Data Adult Digimon, a strict Jogress, and this file does not spend Jogress arrows as edges. Regulusmon has a sheet and no node, so it cost the same one node as Canoweissmon while being cited less; Bombermon, Dorbickmon, Fumamon, Ghilliedhumon, Tankdramon and Zanmetsumon have no sheet at all. This fills Gammamon for good.",
+      "evolutions": [
+        {
+          "to": "canoweissmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 200000,
+              "hint": "Walk it until the white knight is the last thing standing"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "And never let it gorge; Canoweissmon is all edge and no weight"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "xiquemon",
+      "displayName": "Xiquemon",
+      "stage": "Adult",
+      "line": "dmc-v4",
+      "spriteFile": "Xiquemon",
+      "comment": "One game draws both arrows: Wikimon cites Piyomon -> Xiquemon to Digimon New Century, and Huankunmon - bolded - to Digimon New Century as well as Vital Bracelet BE and Pendulum COLOR 6 Saiyu Warriors. `dmc-v4` is Piyomon's own line and had spirit free, so the bill is this Champion plus one Perfect. THE REJECTED READING IS THE BETTER THEME AND IS WRITTEN DOWN HERE ON PURPOSE, as US-153's Kinkakumon was: Fujamon and Kamemon are both cited to Pendulum COLOR 6 Saiyu Warriors, which is literally the line `penc-sw`, and Huankunmon, Sagomon and Sanzomon are that same device's Perfects - the whole Journey to the West thread under one roof. It lost on cost. `penc-sw` has NO Perfect rung at all, so that reading is three nodes (this Champion, an earned Perfect and a junk floor beneath every Champion of the line) and a new `EvolutionCriteriaTests.junkIds` entry, against two here. Kamemon is idle-only in this pack in any case, and so is Falcomon 2006, so neither could have carried the in-edge; Luxmon has no sheet. When a later story opens `penc-sw`'s Perfect rung, Xiquemon is the first rehome candidate on it. Spirit is the last energy Piyomon had, after Leomon took strength, Monochromon vitality and Kuwagamon stamina, and a pilgrim bird is the quiet one of the four. This fills the `dmc-v4` seed Rookie.",
+      "evolutions": [
+        {
+          "to": "huankunmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Let it dream the long dream a pilgrimage is made of"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "And drill the staff work until the road ahead is safe"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "youkomon",
+      "displayName": "Youkomon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Youkomon",
+      "comment": "Wikimon bolds Renamon in Youkomon's Evolves From and cites it nine ways over (St-421, St-989, Bo-507, Da-507, Vital Bracelet Digital Monster, Digimon Championship, Digimon New Century, EX4-026 and Digimon Super Rumble), and it is on `tamers` with three energies still free, so the in-edge cost nothing. The out-edge is the expensive half and the reason is the one worth recording: BOTH of Youkomon's bolded children are idle-only in this pack - Doumon and Taomon exist in `Idle Frame Only/` alone, and `edgeToDexOnlyNode` forbids an edge to either - so the canonical fox thread cannot be drawn at all. Of what remains, BlackRapidmon is cited to Digimon Championship, the same game that draws Alraumon, Floramon and Psychemon into Youkomon, and it is the black Perfect of the Terriermon family that `tamers` already carries three ways as Terriermon, Terriermon X and Galgomon - so the new node lands on a line with a claim on it beyond this single arrow, and Galgomon is the obvious second parent for whichever Perfect sweep reaches it. Rejected: Atlur Kabuterimon (Blue) is on `penc-nsp` and Death Meramon on `penc-nso`, and no cited parent of Youkomon reaches either line, so `testNoEdgeCrossesALine` rules both out; LadyDevimon, Caturamon, Karatenmon and SkullBaluchimon have sheets but no node and no better citation than BlackRapidmon's. Stamina is what Renamon had free beside Kyubimon's spirit, and a courier fox with nine tails is the one that comes of running.",
+      "evolutions": [
+        {
+          "to": "blackrapidmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180000,
+              "hint": "Keep the fox running long after the tails have caught up"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "And let it finish its arguments in a single pass"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "canoweissmon",
+      "displayName": "Canoweissmon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "Canoweissmon",
+      "comment": "Wezen Gammamon's own bolded Evolves To on Wikimon, cited to Pendulum COLOR ZERO Virus Busters - the device this line is - as well as Vital Bracelet Digital Monster, BT10-011, RB1-009 and Ghost Game 26 'Cannibal Mansion', and drawn WITH OR WITHOUT any Vaccine Adult, so the solo arrow is the source's own. Opened for exactly one Champion. Wikimon also draws it straight out of Gammamon, which US-156 has just filled, so that second arrow can never be drawn and this node has one parent for good rather than for now. A leaf until the Ultimate sweeps, and on the dead-end ledger in `ChildSweepAToFTests` until one of them claims it.",
+      "evolutions": []
+    },
+    {
+      "id": "huankunmon",
+      "displayName": "Huankunmon",
+      "stage": "Perfect",
+      "line": "dmc-v4",
+      "spriteFile": "Huankunmon",
+      "comment": "Xiquemon's bolded Evolves To on Wikimon, cited to Digimon New Century - the same game that draws Piyomon into Xiquemon, so both halves of the thread are one drawing - and to Vital Bracelet BE and Pendulum COLOR 6 Saiyu Warriors besides. It sits on `dmc-v4` because its only parent here does, not because the Journey to the West cast belongs on Piyomon's device; `penc-sw` is where the theme points and where a later story may rehome the pair once that line has a Perfect rung, which is argued in full on the Xiquemon node. Sagomon and Sanzomon, the other two Perfects the same page names, are drawn only WITH a partner Adult and are left to a Jogress recipe rather than spent as edges. A leaf until the Ultimate sweeps.",
+      "evolutions": []
+    },
+    {
+      "id": "blackrapidmon",
+      "displayName": "BlackRapidmon",
+      "stage": "Perfect",
+      "line": "tamers",
+      "spriteFile": "BlackRapidmon",
+      "comment": "Opened for Youkomon because Wikimon's two bolded alternatives, Doumon and Taomon, are both idle-only in this pack and cannot take an edge. It is cited from Youkomon to Digimon Championship, and it belongs on `tamers` twice over: that is the line Renamon is on, and it is also the line that already carries Terriermon, Terriermon X and Galgomon, whose Perfect BlackRapidmon is. Galgomon is deliberately NOT drawn into it here - Galgomon is a dead end on the ledger and the Perfect sweeps own it - so this node has exactly one parent for now. It cost one node rather than two because US-151 put CatchMamemon under this line as its junk floor. A leaf until the Ultimate sweeps.",
       "evolutions": []
     }
   ]

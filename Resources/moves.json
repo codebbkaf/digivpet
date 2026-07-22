@@ -3810,6 +3810,54 @@
       "tint": "red",
       "signatureName": "Trident Arm Ver.9.9",
       "signatureSymbol": "bolt.fill"
+    },
+    "v-dramon_black": {
+      "projectileSymbol": "moon.fill",
+      "tint": "indigo",
+      "signatureName": "Dark V-Breath Arrow",
+      "signatureSymbol": "moon.fill"
+    },
+    "xv-mon_black": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "gray",
+      "signatureName": "Black X-Laser",
+      "signatureSymbol": "bolt.fill"
+    },
+    "wezengammamon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "green",
+      "signatureName": "Sedna",
+      "signatureSymbol": "bolt.fill"
+    },
+    "canoweissmon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "cyan",
+      "signatureName": "Gallia Fissure",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "xiquemon": {
+      "projectileSymbol": "snowflake",
+      "tint": "cyan",
+      "signatureName": "Ice Vice",
+      "signatureSymbol": "snowflake"
+    },
+    "huankunmon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "cyan",
+      "signatureName": "Lonely Bubble",
+      "signatureSymbol": "circle.fill"
+    },
+    "youkomon": {
+      "projectileSymbol": "sparkles",
+      "tint": "red",
+      "signatureName": "Blazing Spheres",
+      "signatureSymbol": "sparkles"
+    },
+    "blackrapidmon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "purple",
+      "signatureName": "Rapid Fire",
+      "signatureSymbol": "bolt.fill"
     }
   },
   "lineDefaults": {
