@@ -713,8 +713,8 @@
         "Typecheck passes"
       ],
       "priority": 34,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the WHOLE Baby II rung: 51 new nodes (12 Baby II nobody had wired + 39 Children), 12 new branch edges at Baby I and 38 Baby II out-edges. evolutions.json 403 -> 454, no new lines. ORPHAN COUNT FOR THE STAGE: Baby II 12 BEFORE, 0 AFTER (whole file 525 -> 475; Child fell 88 -> 50 as a side effect). Build green, 1986 tests, 0 failures, validator zero findings. ONE AC IS MET ON THE PHASE-E READING, NOT LITERALLY: 'no edge is unconditional' cannot hold for an isDefault edge, because US-020's fallback ignores an edge's gates - so every EARNED branch is conditioned and hinted (20 of them) and every fallback is not, the same reading US-144/145/146 recorded. Nine Baby I gained a second edge, which is the only mechanism that can give a Baby II an in-edge; the eight Baby II whose parent is a stranded Baby I still cannot be reached, and the 9 Children above them inherit that - pinned by name in EvolutionCriteriaTests, 21 -> 30."
     },
     {
       "id": "US-148",

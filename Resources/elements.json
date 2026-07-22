@@ -1612,6 +1612,210 @@
     "puyomon": {
       "element": "water",
       "attribute": "free"
+    },
+    "budmon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "cupimon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "tokomon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "upamon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "chicchimon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "torikaraballmon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "hiyarimon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "sunmon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "kozenimon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "pokomon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "arkadimon_baby": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "meicoobaby": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "guilmon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "blackguilmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "impmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "blucomon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "lopmon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "lunamon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "monodramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dorumon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "renamon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "terriermon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "gaomon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "bearmon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "koemon": {
+      "element": "wind",
+      "attribute": "virus"
+    },
+    "algomon_child": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "ghostmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "labramon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "v-mon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "wormmon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "tinkermon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "commandramon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "ryudamon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "keramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "arkadimon_child": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "meicoochild": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "morphomon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "pulsemon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "sunarizamon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "ludomon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "xros_hagurumon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "shoutmon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "gumdramon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "fujamon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "kakamon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "takinmon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "lalamon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "sistermon_blanc": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "penmon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "coronamon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "zenimon": {
+      "element": "steel",
+      "attribute": "free"
     }
   },
   "lineDefaults": {

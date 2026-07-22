@@ -268,7 +268,7 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// No authored Digimon is stranded. An orphan is invisible in play and shows up in the Dex tree
     /// as a node floating beside the ladder, which reads as a rendering bug rather than as content.
     ///
-    /// **This was a zero until US-146, and the twenty-one below are the price of a fixed budget of
+    /// **This was a zero until US-146, and the thirty below are the price of a fixed budget of
     /// eggs — not an oversight, and not something a later story can author away.** A Baby I's only
     /// possible parent is a Digitama; `EggHatcher.hatchTarget` reads `node.evolutions.first`, so an
     /// egg carries exactly ONE hatch edge; and there are 57 playable Digitama for 45 Baby I nodes
@@ -276,11 +276,14 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// sits on. US-144 and US-145 spent all 57 and proved (`DigitamaSweepLToZTests`) that twelve
     /// was the most the last twenty-three could open, leaving THIRTEEN Baby I no egg can reach.
     /// US-146 authored them anyway, for their out-edges: a Digimon that evolves into something is a
-    /// Dex entry with a tree, while one that does neither is a dead sprite. The other eight are the
-    /// Baby II those thirteen open, unreachable for exactly the same reason and no other.
+    /// Dex entry with a tree, while one that does neither is a dead sprite. The next eight are the
+    /// Baby II those thirteen open, unreachable for exactly the same reason and no other, and the
+    /// last nine are the Children US-147 hung off those eight — the same thread, one rung further.
     ///
-    /// The list is pinned rather than the check being relaxed, so a TWENTY-SECOND stranded node —
+    /// The list is pinned rather than the check being relaxed, so a THIRTY-FIRST stranded node —
     /// which would be a real bug, at a rung where eggs are not the constraint — still fails here.
+    /// Each of the two derived groups is also checked to be stranded ONLY through its parent, so
+    /// the list cannot quietly absorb a node nobody bothered to wire.
     func testEveryNonEggNodeIsReachableFromSomeDigitama() {
         var reached = Set(graph.nodes(at: .digitama).map(\.id))
         var frontier = Array(reached)
@@ -297,15 +300,22 @@ final class EvolutionCriteriaTests: XCTestCase {
                              "pyonmon"]
         let strandedBabyII = ["babydmon", "mococomon", "monimon", "pickmon", "poromon",
                               "puroromon", "pusurimon", "xiaomon"]
+        let strandedChild = ["fujamon", "gumdramon", "kakamon", "labramon", "ryudamon",
+                             "shoutmon", "takinmon", "tinkermon", "xros_hagurumon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
-        XCTAssertEqual(stranded, (strandedBabyI + strandedBabyII).sorted(),
+        XCTAssertEqual(stranded, (strandedBabyI + strandedBabyII + strandedChild).sorted(),
                        "unreachable nodes: \(stranded)")
 
-        // Every stranded Baby II is stranded ONLY because its single parent is one of the thirteen.
-        // Without this the list above could absorb a Baby II that was simply never wired.
+        // Every stranded Baby II is stranded ONLY because its single parent is one of the thirteen,
+        // and every stranded Child ONLY because ITS parents are all among those eight. Without this
+        // the list above could absorb a node that was simply never wired.
         for id in strandedBabyII {
             XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedBabyI.contains($0) }, [],
+                           "\(id) has a reachable parent and should not be stranded")
+        }
+        for id in strandedChild {
+            XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedBabyII.contains($0) }, [],
                            "\(id) has a reachable parent and should not be stranded")
         }
     }

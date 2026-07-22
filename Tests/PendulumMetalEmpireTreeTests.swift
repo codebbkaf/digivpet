@@ -301,7 +301,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 34)
+        XCTAssertEqual(inLine.count, 36, "US-147 hung Kozenimon and Zenimon here")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -366,7 +366,9 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         // US-144 hung `espi_digitama` on this line. That egg is not one of this story's nodes, so it is
         // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
         // story's notes made, and a total quietly one higher would no longer be that claim.
-        let sweepEggs: Set<String> = ["espi_digitama", "phasco_digitama"]
+        // `kozenimon` and `zenimon` are US-147's, excluded the same way.
+        let sweepEggs: Set<String> = ["espi_digitama", "phasco_digitama",
+                                      "kozenimon", "zenimon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
@@ -675,7 +677,9 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
     /// condition in the whole file has a hint with visible text, and every junk edge is
     /// unconditioned.
     func testEveryEarnedBranchIsConditionedAndNoHintInTheFileIsBlank() throws {
-        for node in graph.nodes where node.line == line && (node.stage == .child || node.stage == .adult) {
+        for node in graph.nodes
+        where node.line == line && !node.evolutions.isEmpty
+            && (node.stage == .child || node.stage == .adult) {
             for edge in node.evolutions where !edge.isDefault {
                 XCTAssertFalse(edge.conditions.isEmpty,
                                "\(node.id) -> \(edge.to) is earned but gated on nothing")

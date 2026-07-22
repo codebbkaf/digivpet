@@ -154,17 +154,25 @@ final class DigitamaSweepBabyITests: XCTestCase {
 
     // MARK: - AC: the edges themselves
 
-    /// Every authored edge is really in the file, at the rungs it claims, and is the node's only
-    /// way out. That last part is the shape the twelve device-tree Baby I already had — branching
-    /// starts at Baby II in this graph — and matching it is what keeps the rung readable.
-    func testEachAuthoredEdgeIsTheBabyIsOnlyWayUpOneRung() throws {
+    /// Every authored edge is really in the file, at the rungs it claims, and is the node's FIRST
+    /// way out — the `isDefault` one.
+    ///
+    /// **This said "only way out" until US-147, and the change is a real one rather than a
+    /// loosening.** US-146 could say it because a Baby I's one edge was the shape the twelve
+    /// device-tree Baby I already had. US-147 then had twelve Baby II with no parent and nothing
+    /// but a Baby I able to give them one, so nine Baby I gained a SECOND (Puttimon, Kuramon and
+    /// Piyo's Yuramon a third). Those branches are conditional and this one is not, which is what
+    /// keeps `testEachAuthoredEdgeIsTakenByTheEngineOnItsOwnEnergy` below honest: under
+    /// `.unknown` conditions no branch can qualify, so the edge asserted here is still what a
+    /// Baby I takes on its own energy.
+    func testEachAuthoredEdgeIsTheBabyIsDefaultWayUpOneRung() throws {
         for (babyI, babyII) in authoredEdges {
             let node = try XCTUnwrap(graph.node(id: babyI), "no node \(babyI)")
             XCTAssertEqual(node.stage, .babyI)
             let target = try XCTUnwrap(graph.node(id: babyII), "no node \(babyII)")
             XCTAssertEqual(target.stage, .babyII, "\(babyII) is not a Baby II")
-            XCTAssertEqual(node.evolutions.map(\.to), [babyII],
-                           "\(babyI) does not lead to \(babyII), or leads somewhere else too")
+            XCTAssertEqual(node.evolutions.filter(\.isDefault).map(\.to), [babyII],
+                           "\(babyI)'s fallback is no longer \(babyII)")
         }
     }
 
@@ -175,7 +183,7 @@ final class DigitamaSweepBabyITests: XCTestCase {
     func testEachAuthoredEdgeIsTakenByTheEngineOnItsOwnEnergy() throws {
         for (babyI, babyII) in authoredEdges {
             let node = try XCTUnwrap(graph.node(id: babyI))
-            let edge = try XCTUnwrap(node.evolutions.first)
+            let edge = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             let energy = try XCTUnwrap(edge.requiredEnergy, "\(babyI) has no requiredEnergy")
             var totals = EnergyTotals()
             totals[energy] = edge.minEnergy
@@ -187,41 +195,40 @@ final class DigitamaSweepBabyITests: XCTestCase {
         }
     }
 
-    /// A Baby I edge carries no `conditions`, and that is a decision rather than an omission — the
-    /// same one US-144 recorded for the hatch edges, for the same reason one rung up. Every Baby I
-    /// in the file has exactly ONE way out and it is the `isDefault` one, so US-020 takes it once
-    /// the stage's time gate opens no matter what any condition said. A condition here could
-    /// therefore never decide anything; it would be a hint describing a gate that does not gate.
-    /// The four energy gates still do real work — they are what
-    /// `testEachAuthoredEdgeIsTakenByTheEngineOnItsOwnEnergy` reads — and conditions return at Baby
-    /// II, where branches appear.
-    func testBabyIEdgesAreTheDefaultAndUnconditional() throws {
+    /// A Baby I's FALLBACK edge carries no `conditions`, and that is a decision rather than an
+    /// omission — the same one US-144 recorded for the hatch edges, for the same reason one rung
+    /// up. US-020 takes the `isDefault` edge once the stage's time gate opens and nothing else
+    /// qualifies, so a condition on it could never decide anything; it would be a hint describing a
+    /// gate that does not gate. The four energy gates still do real work — they are what
+    /// `testEachAuthoredEdgeIsTakenByTheEngineOnItsOwnEnergy` reads.
+    ///
+    /// **US-146 could also say every Baby I had exactly ONE edge; US-147 spent nine of them on a
+    /// second.** That half moved to `BabyIISweepTests.testEveryBabyIThatBranchesDoesSoForAnOrphan`,
+    /// which names the nine and proves each branch buys a Baby II that had no other possible
+    /// parent — so a tenth branch authored for convenience still fails somewhere.
+    func testEveryBabyIsFallbackEdgeIsUnconditional() throws {
         for node in babyINodes {
-            XCTAssertEqual(node.evolutions.count, 1, "\(node.id) branches at Baby I")
-            let edge = try XCTUnwrap(node.evolutions.first)
-            XCTAssertTrue(edge.isDefault, "\(node.id)'s only edge is not the fallback")
-            XCTAssertTrue(edge.conditions.isEmpty, "\(node.id) gates its only edge on a condition")
+            let defaults = node.evolutions.filter(\.isDefault)
+            XCTAssertEqual(defaults.count, 1, "\(node.id) has no single fallback")
+            let edge = try XCTUnwrap(defaults.first)
+            XCTAssertTrue(edge.conditions.isEmpty, "\(node.id) gates its fallback on a condition")
         }
     }
 
     // MARK: - The dead-end ledger, moved up one rung
 
-    /// **The handover to US-147, and the list it should edit.** Before US-144 the file had ZERO
-    /// nodes below Ultimate with no way onward; a sweep that authors one rung at a time cannot keep
-    /// that, because a rung has to exist before the rung above it does. US-146 empties the Baby I
-    /// half of that ledger and refills it at Baby II, so the ledger moves here — the newest sweep,
-    /// which is where the next one will look.
+    /// US-146's half of the dead-end ledger, flipped in place now that US-147 has wired it: the
+    /// twenty-five Baby II this sweep opened all lead somewhere. The whole-file ledger moved up a
+    /// rung with the sweep, to
+    /// `BabyIISweepTests.testTheOnlyDeadEndsBelowUltimateAreTheChildrenThisSweepOpened`.
     ///
-    /// It fails in BOTH directions on purpose: a twenty-sixth dead end fails it, and so does wiring
-    /// one of the twenty-five onward. US-147 is meant to edit this list down and is told to rather
-    /// than having to notice.
-    func testTheOnlyDeadEndsBelowUltimateAreTheBabyIIThisSweepOpened() {
-        let deadEnds = graph.nodes
-            .filter { $0.evolutions.isEmpty && $0.stage != .ultimate }
-            .map(\.id)
-            .sorted()
-        XCTAssertEqual(deadEnds, authoredBabyII.sorted(),
-                       "the dead-end ledger has drifted; US-147 should be shrinking it")
+    /// Wiring one of the twenty-five back into a leaf fails here, which is the direction this copy
+    /// still guards.
+    func testTheBabyIIThisSweepOpenedAllLeadSomewhereNow() {
+        for id in authoredBabyII {
+            XCTAssertFalse(graph.node(id: id)?.evolutions.isEmpty ?? true,
+                           "\(id) is a dead end again — US-147 gave it a Child")
+        }
     }
 
     // MARK: - AC: lines are grouped coherently
@@ -243,14 +250,14 @@ final class DigitamaSweepBabyITests: XCTestCase {
     /// is TWO new lines for 38 new nodes — 30 of them went onto lines that already exist. Sizes are
     /// asserted as well as membership, since a line of one would satisfy "only two new lines" and
     /// still be the thing the rule forbids.
+    /// The sizes moved when US-147 wired the Child rung above these eight (`xros` 6 -> 9,
+    /// `penc-sw` 2 -> 5), so the claim is stated as MEMBERSHIP rather than as a count: these eight
+    /// of the thirty-eight are the ones that opened a line, and the other thirty went onto lines
+    /// that already existed. A ninth US-146 node appearing on a new line still fails it.
     func testTheSweepOpenedTwoLinesAndPutTheRestOntoExistingOnes() {
-        let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["xros"], 6)
-        XCTAssertEqual(sizes["penc-sw"], 2)
-
         let authored = Set(authoredBabyI + authoredBabyII)
         XCTAssertEqual(authored.count, 38)
-        let onNewLines = Set(graph.nodes.filter { newLines.contains($0.line) }.map(\.id))
+        let onNewLines = authored.filter { newLines.contains(graph.node(id: $0)?.line ?? "") }
         XCTAssertEqual(onNewLines, ["bombmon", "monimon", "chibickmon", "pickmon",
                                     "petitmon", "babydmon", "fukamon", "mococomon"])
         XCTAssertEqual(authored.subtracting(onNewLines).count, 30)

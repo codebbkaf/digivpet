@@ -538,9 +538,12 @@ final class SeedRosterTests: XCTestCase {
 
         XCTAssertEqual(champions.sorted(),
                        ["coelamon", "kuwagamon", "leomon", "mojyamon", "monochromon"])
+        // `contains` rather than `==` since US-147: Hyokomon and Muchomon each gained a second
+        // Baby II parent from the Baby II sweep. Piyo's Tanemon is still one of them, which is
+        // what "reachable" needs.
         for id in ["dmcv4_palmon", "hyokomon", "muchomon"] {
-            XCTAssertEqual(graph.parents(of: id).map(\.id), ["piyo_tanemon"],
-                           "\(id) must hang off the Baby II or it is unreachable")
+            XCTAssertTrue(graph.parents(of: id).map(\.id).contains("piyo_tanemon"),
+                          "\(id) must hang off the Baby II or it is unreachable")
         }
     }
 

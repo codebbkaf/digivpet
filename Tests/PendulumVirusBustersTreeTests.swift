@@ -288,7 +288,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 35)
+        XCTAssertEqual(inLine.count, 37, "US-147 hung Hiyarimon and Penmon here")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }.sorted(), ["pusumon", "pusurimon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -363,8 +363,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
         // story's notes made, and a total quietly one higher would no longer be that claim.
         // `pusumon` and `pusurimon` are US-146's and excluded for the same reason.
+        // `hiyarimon` and `penmon` are US-147's, excluded for the same reason.
         let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama",
-                                      "pusumon", "pusurimon"]
+                                      "pusumon", "pusurimon", "hiyarimon", "penmon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
@@ -658,7 +659,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
     /// condition in the whole file has a hint with visible text, and every junk edge is
     /// unconditioned.
     func testEveryEarnedBranchIsConditionedAndNoHintInTheFileIsBlank() throws {
-        for node in graph.nodes where node.line == line && (node.stage == .child || node.stage == .adult) {
+        for node in graph.nodes
+        where node.line == line && !node.evolutions.isEmpty
+            && (node.stage == .child || node.stage == .adult) {
             for edge in node.evolutions where !edge.isDefault {
                 XCTAssertFalse(edge.conditions.isEmpty,
                                "\(node.id) -> \(edge.to) is earned but gated on nothing")

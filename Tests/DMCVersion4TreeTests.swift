@@ -211,9 +211,14 @@ final class DMCVersion4TreeTests: XCTestCase {
         XCTAssertEqual(try targets(of: "hyokomon"), ["mojyamon", "coelamon", "goldnumemon"])
         XCTAssertEqual(try targets(of: "muchomon"), ["kuwagamon", "goldnumemon"])
 
+        // US-147 gave both a SECOND parent — Chicchimon and Torikara Ballmon, two Baby II with
+        // no Evolves From anywhere on Wikimon, put on the bird line beside Piyo's Tanemon. Neither
+        // displaces it, which is the half that matters here: the Baby II the document draws is
+        // still a way in.
         for id in ["hyokomon", "muchomon"] {
             XCTAssertEqual(try node(id).line, line)
-            XCTAssertEqual(graph.parents(of: id).map(\.id), ["piyo_tanemon"])
+            XCTAssertTrue(graph.parents(of: id).map(\.id).contains("piyo_tanemon"),
+                          "\(id) no longer hangs off the Baby II the document draws")
         }
     }
 

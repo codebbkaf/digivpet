@@ -75,6 +75,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   the check — US-146 turned the global one into a 21-name list that still fails on a 22nd, and
   proved separately that each stranded Baby II has no reachable parent so the list cannot absorb a
   node nobody bothered to wire.
+- **PHASE E SWEEPS: A BABY II'S ONLY POSSIBLE PARENT IS A BABY I, AND A CHILD'S IS A BABY II.**
+  US-147 spent the "every Baby I has exactly one edge" invariant to give twelve parentless Baby II
+  an in-edge: nine Baby I gained a conditional second edge beside their unconditional fallback.
+  The same move is the only one available at every rung above, so expect to branch the rung below
+  and to edit the newest sweep's "who branches, and for which orphan" test rather than adding a
+  branch quietly. An in-edge also FORCES THE LINE — `testNoEdgeCrossesALine` — so the parent, not
+  flavour, is what decides where a sweep node lives.
+- **PHASE E SWEEPS: an egg's promise is a BFS, and it is worth running before you author.**
+  US-144/145 hung 57 eggs on threads; a thread that never arrives at the egg's own species is a
+  promise the file does not keep, and `BabyIISweepTests.testTheEggsWhoseSpeciesThisRungReachesNowArriveAtIt`
+  caught exactly that on `lala_digitama`. Decide which parent gets a Child by asking which egg is
+  owed it.
 - **PHASE E SWEEPS: a rung's scope is the RUNG, not the names still orphaned when you start.** A
   sweep AC asks for an in-edge AND an out-edge; an earlier sweep may have met only one of them for
   most of the range. US-144/US-145 de-orphaned 25 Baby I with in-edges alone, so US-146's real job
@@ -2860,4 +2872,82 @@ Orphan count for the stage: **Baby I 13 BEFORE, 0 AFTER.** Whole file 563 -> 525
   their Children will be unreachable too; that is expected and must NOT be authored away by
   inventing an in-edge. Orphans by stage now: Ultimate 166, Adult 129, Perfect 114, Child 88,
   Armor-Hybrid 16, Baby II 12, Baby I 0.
+---
+
+## 2026-07-22 - US-147 (Orphan sweep: Baby II)
+
+Wired the WHOLE Baby II rung. 51 new nodes (the 12 Baby II nobody had wired + the 39 Children the
+rung now evolves into), 12 new branch edges at Baby I, 38 Baby II out-edges; `Resources/evolutions.json`
+403 -> 454, plus the matching rows in `elements.json`/`moves.json`, a new `Tests/BabyIISweepTests.swift`
+(19 tests) and TEN existing test files. NO new lines. Build green, 1986 tests, 0 failures, validator
+zero findings.
+
+Orphan count for the stage: **Baby II 12 BEFORE, 0 AFTER.** Whole file 525 -> 475; Child fell
+88 -> 50 as a side effect of authoring the rung above.
+
+**Learnings for future iterations:**
+
+- **THE ONLY WAY TO GIVE A BABY II AN IN-EDGE IS TO BRANCH A BABY I, and that spends an invariant
+  three stories old.** Every Baby I had exactly ONE edge from US-008 to US-146, and US-146 pinned
+  that as a claim. Twelve Baby II had no parent and no Digitama is left to open a thread, so nine
+  Baby I gained a second edge (Puttimon, Kuramon and Piyo's Yuramon a third). US-146's
+  `testBabyIEdgesAreTheDefaultAndUnconditional` was rewritten into
+  `testEveryBabyIsFallbackEdgeIsUnconditional` and the "exactly one edge" half MOVED to
+  `BabyIISweepTests.testEveryBabyIThatBranchesDoesSoForAnOrphan`, which names the nine and fails if
+  a tenth branch is authored for convenience. **The Child sweeps face the same shape one rung up** —
+  a Child's only possible parent is a Baby II — so expect to branch a Baby II and to edit that test.
+- **AN IN-EDGE FORCES THE LINE, and that is what decides where a sweep node lives — not flavour.**
+  `testNoEdgeCrossesALine` means a Baby II sits on its parent's line and a Child on its Baby II's.
+  Cupimon, Tokomon X and Upamon went onto `dmc-v3` because Puttimon and Tsubumon are the only
+  parents Wikimon gives them, and Hiyarimon onto `penc-vb` for the same reason. **Touching a device
+  line is the US-146 precedent and it costs four test edits every time:** the line's node count in
+  `EvolutionGraphTests`, the `inLine.count` in that tree's
+  `testEveryNodeInTheLineIsReachableFromItsDigitama`, and the `sweepEggs` exclusion set plus the
+  `mine.count`/`plain.count` totals in its "N of the M nodes carry a plain roster id" test. That
+  exclusion-by-name set is the mechanism those files already provide for exactly this — add the new
+  ids to it rather than bumping the totals, or the story's own claim stops being the claim.
+- **A SWEEP THAT OPENS A RUNG AS LEAVES BREAKS "EVERY CHILD HAS A JUNK FALLBACK".** Two device tree
+  files (`PendulumMetalEmpireTreeTests`, `PendulumVirusBustersTreeTests`) run
+  `XCTUnwrap(node.evolutions.first(where: \.isDefault))` over every Child on their line, and a
+  brand-new leaf Child has no edges at all. Add `&& !node.evolutions.isEmpty` to the `where`. The
+  Child sweeps will hit the mirror image at Adult.
+- **AN EGG'S PROMISE IS A TEST, AND IT IS THE ONE THAT CAUGHT A REAL GAP.** US-144/145 hung 57 eggs
+  on threads; a thread that never arrives at the egg's own species is a promise the file does not
+  keep. `testTheEggsWhoseSpeciesThisRungReachesNowArriveAtIt` BFSes from twenty eggs to the Child
+  they name and failed on `lala_digitama`, because Lalamon had been hung off Budmon and the egg
+  opens Pipimon -> Tanemon. The fix was a second, cited parent (Tanemon -> Lalamon), not a smaller
+  list. Run that BFS BEFORE choosing which parent gets a Child; the egg allocation is the constraint.
+- **THE LINE-SCOPED ALIAS IS THE ANSWER WHEN A CITED TARGET BELONGS TO ANOTHER LINE.** Monimon's
+  only Wikimon Child is Hagurumon, which is already `penc-me`'s, and `line` is single-valued — so
+  `xros_hagurumon` is a second node on the same art, the `pencnsp_koromon`/`dmcv4_palmon` pattern.
+  Cost: one entry in `RosterTests`' alias list (it asserts the EXACT set of graph ids with no roster
+  entry) and a note that `Roster.bundled.entry(id:)` returns nil for it. The first attempt used
+  Solarmon as a rehome instead and had to be undone: Wikimon's Virtual Pets section proved Solarmon
+  is on no Xros device at all, which would have made the line's name a lie. **Check the device
+  before the arrow.**
+- **`Roster.bundled` (Resources/roster.json, sprite-derived) AND `roster.generated.json` ARE
+  DIFFERENT SETS.** The generated file mirrors graph ids, so an alias appears in it; roster.json
+  does not. Appendix B's orphan count reads the generated one; a test asserting a rung's roster
+  count must use the bundled one (Baby II: 49 graph nodes, 47 roster entries).
+- **Wikimon's `Evolves From` is EMPTY for more Digimon than you expect, and that is the honest
+  FLAVOUR case.** Chicchimon, Kozenimon, Arkadimon (Baby) and Torikara Ballmon have no parent
+  anywhere; Torikara Ballmon has neither direction. Each says FLAVOUR in capitals and a test greps
+  for the word. What made the pairings defensible was a checkable fact from the page itself rather
+  than a resemblance: Chicchimon's own `Evolves To` are already Children of the bird line, and
+  Torikara Ballmon's Reference Book profile says it FLIES.
+- **The knock-on list for this rung, all ten files:** node count in `ElementCatalogTests` AND
+  `EvolutionGraphValidatorTests`; line sizes in `EvolutionGraphTests` AND `DigitamaSweepTests`
+  (the older sweep pins `tamers`/`wanyamon` because that is where those lines were opened); the
+  stranded list in `EvolutionCriteriaTests`; three of US-146's claims in `DigitamaSweepBabyITests`;
+  the three Pendulum tree files above; and `graph.parents(of:) == [x]` assertions in
+  `DMCVersion4TreeTests` and `SeedRosterTests`, which become `.contains(x)` the moment a node gains
+  a second parent. `MinigameAssignmentTests` and `EggHatchingTests` did NOT move: no new line, and
+  no thread newly reached an Ultimate.
+- REMAINS: US-148 onward (34/56 passing). US-148..150 are the Child rung, and it is 39/89 done:
+  every Child this story opened has its in-edge and needs an Adult, and the 49 still orphaned need
+  both. Nine of the 39 are on the stranded list, so their Adults will be unreachable too; that is
+  expected and must NOT be authored away by inventing an in-edge. The dead-end ledger is now
+  `BabyIISweepTests.testTheOnlyDeadEndsBelowUltimateAreTheChildrenThisSweepOpened`, 39 entries, and
+  the Child sweeps are meant to edit it down. Orphans by stage now: Ultimate 166, Adult 129,
+  Perfect 114, Child 50, Armor-Hybrid 16, Baby II 0.
 ---

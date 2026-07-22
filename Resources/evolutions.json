@@ -1385,6 +1385,28 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "budmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4000,
+              "hint": "Walk it to where things grow"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2,
+              "hint": "Train it before it buds"
+            }
+          ]
         }
       ]
     },
@@ -1401,6 +1423,28 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "lalamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Keep it in the sun and moving"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Train it into something that flies"
+            }
+          ]
         }
       ]
     },
@@ -1593,6 +1637,43 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "cupimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 250,
+              "hint": "Keep it warm and busy"
+            }
+          ]
+        },
+        {
+          "to": "tokomon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6000,
+              "hint": "Walk it far enough to change it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3,
+              "hint": "Drill it until the antibody takes"
+            }
+          ]
         }
       ]
     },
@@ -2290,6 +2371,43 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "chicchimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4000,
+              "hint": "Let it scratch about all day"
+            }
+          ]
+        },
+        {
+          "to": "torikaraballmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Work up an appetite with it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not let it eat its fill"
+            }
+          ]
         }
       ]
     },
@@ -5216,6 +5334,21 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "sunmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 250,
+              "hint": "Burn bright while the sun is up"
+            }
+          ]
         }
       ]
     },
@@ -6874,6 +7007,21 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "kozenimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Put in the minutes it is worth"
+            }
+          ]
         }
       ]
     },
@@ -7797,6 +7945,21 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "hiyarimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4000,
+              "hint": "Walk it through the cold"
+            }
+          ]
         }
       ]
     },
@@ -9018,6 +9181,50 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "arkadimon_baby",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5000,
+              "hint": "Feed it distance and nothing else"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 0,
+              "hint": "Never once overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "meicoobaby",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 250,
+              "hint": "Keep it playing"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Let it sleep undisturbed"
+            }
+          ]
         }
       ]
     },
@@ -9486,6 +9693,21 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "upamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 250,
+              "hint": "Burn energy in the shallows"
+            }
+          ]
         }
       ]
     },
@@ -9503,6 +9725,21 @@
           "minEnergy": 20,
           "maxCareMistakes": 5,
           "isDefault": true
+        },
+        {
+          "to": "pokomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4000,
+              "hint": "Keep it on the move"
+            }
+          ]
         }
       ]
     },
@@ -9666,7 +9903,37 @@
       "line": "algomon",
       "spriteFile": "Algomon_BabyII",
       "comment": "Algomon's Baby II, the rung above US-144's algomon_babyi. Wikimon's Labramon page lists 'Algomon (Baby II)' among its Evolves From, which is also where Xiaomon goes - the two threads of this line converge on Labramon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "algomon_child",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "ghostmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let the signal sleep"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Never wake it"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "chocomon",
@@ -9675,7 +9942,15 @@
       "line": "tamers",
       "spriteFile": "Chocomon",
       "comment": "Lopmon's Baby II (Wikimon: Chocomon Evolves From Cocomon), the rung above US-144's cocomon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "blucomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "wanyamon",
@@ -9684,7 +9959,59 @@
       "line": "wanyamon",
       "spriteFile": "Wanyamon",
       "comment": "The line's namesake, and the Baby II Wikimon puts above BOTH of US-144's dead ends here (Wanyamon Evolves From Botamon, Dodomon, Popomon). Curimon joins it too - see that node.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "gaomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "bearmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180,
+              "hint": "Put the hours in with it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Train it like a boxer"
+            }
+          ]
+        },
+        {
+          "to": "koemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it doze in the branches"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 3,
+              "hint": "Let it snack, but not endlessly"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "gigimon",
@@ -9693,7 +10020,37 @@
       "line": "tamers",
       "spriteFile": "Gigimon",
       "comment": "Guilmon's Baby II (Wikimon: Gigimon Evolves From Jyarimon), the rung above US-144's jyarimon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "guilmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "blackguilmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Let it sleep through the daylight"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Give it fight after fight"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "yaamon",
@@ -9702,7 +10059,15 @@
       "line": "tamers",
       "spriteFile": "Yaamon",
       "comment": "Impmon's Baby II (Wikimon: Yaamon Evolves From Keemon, Mokumon), the rung above US-144's kiimon. Pafumon joins it too - see that node.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "impmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "tsumemon",
@@ -9711,7 +10076,15 @@
       "line": "diablomon",
       "spriteFile": "Tsumemon",
       "comment": "Keramon's Baby II (Wikimon: Tsumemon Evolves From Kuramon), the rung above US-144's kuramon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "keramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "mochimon",
@@ -9720,7 +10093,15 @@
       "line": "vital",
       "spriteFile": "Mochimon",
       "comment": "Wikimon puts Mochimon above Bubbmon, which is US-145's bubbmon on this line. Pyonmon joins it too - see that node.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "morphomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "chibimon",
@@ -9729,7 +10110,15 @@
       "line": "adventure02",
       "spriteFile": "Chibimon",
       "comment": "V-mon's Baby II (Wikimon: Chibimon Evolves From Chicomon), the rung above US-145's chicomon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "v-mon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "kakkinmon",
@@ -9738,7 +10127,15 @@
       "line": "vital",
       "spriteFile": "Kakkinmon",
       "comment": "Wikimon: Kakkinmon Evolves From Cotsucomon, and Evolves To Ludomon and Zubamon - the two species whose eggs US-145 spent on cotsucomon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "ludomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "bibimon",
@@ -9747,7 +10144,15 @@
       "line": "vital",
       "spriteFile": "Bibimon",
       "comment": "Wikimon: Bibimon Evolves From Dokimon and Evolves To Pulsemon, which is the species US-145's pulse_digitama is named for.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "pulsemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "dorimon",
@@ -9756,7 +10161,37 @@
       "line": "tamers",
       "spriteFile": "Dorimon",
       "comment": "Ketomon's stand-in Baby II. Ketomon's own is Hopmon, one of the 157 idle-only Digimon, so no edge may name it; Wikimon gives Dorimon as the ONLY Baby II on disk that evolves into Monodramon, which is what Hopmon evolves into and what monodra_digitama is named for.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "monodramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "dorumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180,
+              "hint": "Work it until the metal shows"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Train it hard"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "minomon",
@@ -9765,7 +10200,15 @@
       "line": "adventure02",
       "spriteFile": "Minomon",
       "comment": "Wormmon's Baby II (Wikimon: Minomon Evolves From Leafmon, Evolves To Wormmon), the rung above US-145's leafmon and the reason worm_digitama was paired with it.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "wormmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "moonmon",
@@ -9774,7 +10217,37 @@
       "line": "tamers",
       "spriteFile": "Moonmon",
       "comment": "Wikimon: Moonmon Evolves From Relemon - the pairing US-145's lop_digitama rests on.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "lopmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "lunamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Keep it lively after dark"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Do not overfeed it"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "goromon",
@@ -9783,7 +10256,15 @@
       "line": "vital",
       "spriteFile": "Goromon",
       "comment": "Wikimon: Goromon Evolves From Sunamon and Evolves To Sunarizamon, which is the species US-145's sunariza_digitama is named for.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "sunarizamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "onibimon",
@@ -9792,7 +10273,15 @@
       "line": "tamers",
       "spriteFile": "Onibimon",
       "comment": "Renamon's Baby II by Wikimon's arrows: Onibimon Evolves From Tomorimon and Evolves To Renamon, which is the species US-145's rena_digitama is named for.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "renamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "gummymon",
@@ -9801,7 +10290,15 @@
       "line": "tamers",
       "spriteFile": "Gummymon",
       "comment": "Terriermon's Baby II (Wikimon: Gummymon Evolves From Zerimon), the rung above US-145's zerimon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "terriermon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "monimon",
@@ -9810,7 +10307,15 @@
       "line": "xros",
       "spriteFile": "Monimon",
       "comment": "Bombmon's Baby II by FLAVOUR, not by citation, and said plainly: Wikimon gives Bombmon no ordinary evolution at all - its Evolves To is three DigiXros fusions and nothing else - so there is no arrow to follow. Monimon is the pairing that costs least: both are Xros Wars Digimon that appear in the Digimon Xros Loader virtual pet, which is what this line is.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "xros_hagurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "pickmon",
@@ -9819,7 +10324,15 @@
       "line": "xros",
       "spriteFile": "Pickmon",
       "comment": "Wikimon: Pickmon Evolves From Chibickmon. Both appear in the Digimon Xros Loader virtual pet, which is what this line is.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "shoutmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "babydmon",
@@ -9828,7 +10341,15 @@
       "line": "xros",
       "spriteFile": "Babydmon",
       "comment": "Wikimon: Babydmon Evolves From Petitmon, and Evolves To Gumdramon - the Xros Wars Hunters partner - as well as Dracomon, itself a Digimon Xros Loader pet.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "gumdramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "puroromon",
@@ -9837,7 +10358,15 @@
       "line": "commandramon",
       "spriteFile": "Puroromon",
       "comment": "Wikimon: Puroromon Evolves From Pupumon, and Evolves To Ryudamon, which is also where Kyokyomon on this line goes.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "ryudamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "mococomon",
@@ -9846,7 +10375,59 @@
       "line": "penc-sw",
       "spriteFile": "Mococomon",
       "comment": "Wikimon: Mococomon Evolves From Fukamon. Both appear in the Pendulum COLOR 6 Saiyu Warriors virtual pet, which is what this line is.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "fujamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "kakamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "March it the whole road"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Let it settle things with its fists"
+            }
+          ]
+        },
+        {
+          "to": "takinmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180,
+              "hint": "Carry the load with it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Train its shoulders"
+            }
+          ]
+        }
+      ]
     },
     {
       "id": "xiaomon",
@@ -9855,7 +10436,15 @@
       "line": "algomon",
       "spriteFile": "Xiaomon",
       "comment": "Wikimon: Xiaomon Evolves From Paomon and Evolves To Labramon, which is also where Algomon (Baby II) on this line goes.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "labramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "poromon",
@@ -9864,7 +10453,15 @@
       "line": "adventure02",
       "spriteFile": "Poromon",
       "comment": "Hawkmon's Baby II (Wikimon: Poromon Evolves From Pururumon, Evolves To Hawkmon), which is what puts it on the Adventure 02 line.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "tinkermon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "pusurimon",
@@ -9873,7 +10470,15 @@
       "line": "penc-vb",
       "spriteFile": "Pusurimon",
       "comment": "Wikimon: Pusurimon Evolves From Pusumon, and Evolves To Herissmon and nothing else - and herissmon is already a node on this line, so this is the only line it can sit on.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "herissmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "kyokyomon",
@@ -9882,7 +10487,15 @@
       "line": "commandramon",
       "spriteFile": "Kyokyomon",
       "comment": "Wikimon: Kyokyomon Evolves From Fufumon, and Evolves To Commandramon - the species this line is named for and aiming at. That second arrow is also why Bommon evolves here.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "commandramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "bombmon",
@@ -10104,6 +10717,561 @@
           "isDefault": true
         }
       ]
+    },
+    {
+      "id": "budmon",
+      "displayName": "Budmon",
+      "stage": "Baby II",
+      "line": "palmon",
+      "spriteFile": "Budmon",
+      "comment": "Wikimon: Budmon Evolves From Yuramon (also Botamon and Nyokimon, both on device lines), and Evolves To Lalamon - so it hangs off this line's own Baby I and opens the Child that lala_digitama has been promising since US-145.",
+      "evolutions": [
+        {
+          "to": "lalamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "cupimon",
+      "displayName": "Cupimon",
+      "stage": "Baby II",
+      "line": "dmc-v3",
+      "spriteFile": "Cupimon",
+      "comment": "Wikimon: Cupimon Evolves From Puttimon and nothing else, and Evolves To Patamon - both of which are already this line, so the V3 tree is the only place it can sit. It adds no Child: Patamon is US-044's node.",
+      "evolutions": [
+        {
+          "to": "patamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tokomon_x",
+      "displayName": "Tokomon X",
+      "stage": "Baby II",
+      "line": "dmc-v3",
+      "spriteFile": "Tokomon_X",
+      "comment": "Tokomon's X-Antibody variant, on its base form's line as the sweep rule asks. Wikimon: Tokomon (X-Antibody) Evolves From Puttimon (its same-stage arrow from Tokomon is not an edge here - the validator requires an edge to advance exactly one rung), and Evolves To Sistermon Blanc.",
+      "evolutions": [
+        {
+          "to": "sistermon_blanc",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "upamon",
+      "displayName": "Upamon",
+      "stage": "Baby II",
+      "line": "dmc-v3",
+      "spriteFile": "Upamon",
+      "comment": "Wikimon: Upamon Evolves From Tsubumon and nothing else, and Evolves To Patamon among others - so like Cupimon it can only sit on the V3 line, and it reaches a Child that is already there. Armadimon, its Adventure 02 Child, stays orphaned for the Child sweeps: it has no thread to this line.",
+      "evolutions": [
+        {
+          "to": "patamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "chicchimon",
+      "displayName": "Chicchimon",
+      "stage": "Baby II",
+      "line": "dmc-v4",
+      "spriteFile": "Chicchimon",
+      "comment": "FLAVOUR pairing upward: Wikimon gives Chicchimon NO Evolves From at all, so no parent can be cited. It is a chick, and the V4 line is the bird line - its own Evolves To (Hyokomon, Muchomon) are both already Children here, which is what picks the line rather than a resemblance. The Hyokomon edge IS cited.",
+      "evolutions": [
+        {
+          "to": "hyokomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "torikaraballmon",
+      "displayName": "TorikaraBallmon",
+      "stage": "Baby II",
+      "line": "dmc-v4",
+      "spriteFile": "TorikaraBallmon",
+      "comment": "FLAVOUR pairing in BOTH directions: Wikimon gives Torikara Ballmon no Evolves From and no Evolves To - the page has both headings and both are empty. Its Reference Book profile says it FLIES and is born from deep-fried recipe data, so it joins the bird line beside Chicchimon and leads to Muchomon, the line's other bird Child. No citation is claimed.",
+      "evolutions": [
+        {
+          "to": "muchomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hiyarimon",
+      "displayName": "Hiyarimon",
+      "stage": "Baby II",
+      "line": "penc-vb",
+      "spriteFile": "Hiyarimon",
+      "comment": "Wikimon: Hiyarimon Evolves From Yukimi Botamon and nothing else, which is this line's Baby I, and Evolves To Penmon among others. Bearmon and Blucomon, its other two Children, belong to the lines their own Digitama opened (wanyamon, tamers), so Penmon is the one that can sit here.",
+      "evolutions": [
+        {
+          "to": "penmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "sunmon",
+      "displayName": "Sunmon",
+      "stage": "Baby II",
+      "line": "penc-nso",
+      "spriteFile": "Sunmon",
+      "comment": "Wikimon: Sunmon Evolves From Mokumon and nothing else, which is this line's Baby I, and Evolves To Coronamon among others.",
+      "evolutions": [
+        {
+          "to": "coronamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kozenimon",
+      "displayName": "Kozenimon",
+      "stage": "Baby II",
+      "line": "penc-me",
+      "spriteFile": "Kozenimon",
+      "comment": "FLAVOUR pairing upward: Wikimon gives Kozenimon NO Evolves From. It is a coin (Wikimon files it Mutation Type) and the Metal Empire line is where the machine and mineral threads live, so it hangs off Choromon. Downward it is not flavour at all: Zenimon is the same Digimon grown up, which is what the Ko- prefix means, and nothing else on disk claims it.",
+      "evolutions": [
+        {
+          "to": "zenimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pokomon",
+      "displayName": "Pokomon",
+      "stage": "Baby II",
+      "line": "tamers",
+      "spriteFile": "Pokomon",
+      "comment": "Wikimon: Pokomon Evolves From Relemon and nothing else, and Evolves To Renamon and nothing else - both already on this line, so it adds a second Baby II under Relemon and no new Child.",
+      "evolutions": [
+        {
+          "to": "renamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "arkadimon_baby",
+      "displayName": "Arkadimon",
+      "stage": "Baby II",
+      "line": "diablomon",
+      "spriteFile": "Arkadimon_Baby",
+      "comment": "FLAVOUR pairing upward: Wikimon gives Arkadimon (Baby) NO Evolves From - it is an artificial Digimon with no parent anywhere. It is put on the Network Virus line beside Kuramon because both are engineered data-eaters, and that is a resemblance, not a citation. Its own chain upward (Arkadimon Child) is cited by name on the same page.",
+      "evolutions": [
+        {
+          "to": "arkadimon_child",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "meicoobaby",
+      "displayName": "MeicooBaby",
+      "stage": "Baby II",
+      "line": "diablomon",
+      "spriteFile": "MeicooBaby",
+      "comment": "REHOME. Meicoomon's own Baby I is idle-only, which is why US-145 doubled meicoo_digitama onto Kuramon rather than opening a thread for it; this puts Meicoomon's Baby II on the line that egg already hatches into, so the egg leads somewhere. Wikimon gives Meicoomon (Baby) no Evolves From or Evolves To, so the arrow up to MeicooChild is the species' own chain and not a citation.",
+      "evolutions": [
+        {
+          "to": "meicoochild",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "guilmon",
+      "displayName": "Guilmon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Guilmon",
+      "comment": "Wikimon: Guilmon Evolves From Gigimon. guil_digitama has been pointing at this thread since US-144.",
+      "evolutions": []
+    },
+    {
+      "id": "blackguilmon",
+      "displayName": "BlackGuilmon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "BlackGuilmon",
+      "comment": "Guilmon's black variant, on its base form's line as the sweep rule asks, and the Child blackguil_digitama has been promising since US-144. Wikimon has no Evolves From for BlackGuilmon, so the Gigimon edge is FLAVOUR by variant rather than a citation.",
+      "evolutions": []
+    },
+    {
+      "id": "impmon",
+      "displayName": "Impmon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Impmon",
+      "comment": "Wikimon: Impmon Evolves From Yaamon. imp_digitama opens Kiimon, which is Yaamon's Baby I.",
+      "evolutions": []
+    },
+    {
+      "id": "blucomon",
+      "displayName": "Blucomon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Blucomon",
+      "comment": "Wikimon: Blucomon Evolves From Chocomon. bluco_digitama opens Cocomon, which is Chocomon's Baby I, so this is the Child that egg promised.",
+      "evolutions": []
+    },
+    {
+      "id": "lopmon",
+      "displayName": "Lopmon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Lopmon",
+      "comment": "Wikimon: Lopmon Evolves From Moonmon (and from Chocomon). Moonmon is the one taken, because lop_digitama hatches into Relemon and Relemon leads to Moonmon - so the egg reaches its own species.",
+      "evolutions": []
+    },
+    {
+      "id": "lunamon",
+      "displayName": "Lunamon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Lunamon",
+      "comment": "Wikimon: Lunamon Evolves From Moonmon. It is Moonmon's earned branch rather than its default, because Lopmon is what this line's egg owes.",
+      "evolutions": []
+    },
+    {
+      "id": "monodramon",
+      "displayName": "Monodramon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Monodramon",
+      "comment": "Wikimon: Monodramon Evolves From Dorimon. monodra_digitama opens Ketomon, which leads to Dorimon, so this is the Child that egg promised - which is why it is the default and DORUmon is earned.",
+      "evolutions": []
+    },
+    {
+      "id": "dorumon",
+      "displayName": "DORUmon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "DORUmon",
+      "comment": "Wikimon: DORUmon Evolves From Dorimon.",
+      "evolutions": []
+    },
+    {
+      "id": "renamon",
+      "displayName": "Renamon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Renamon",
+      "comment": "Wikimon: Renamon Evolves From Onibimon and from Pokomon - both of them on this line, so it has two parents rather than two nodes. rena_digitama opens Tomorimon, which is Onibimon's Baby I.",
+      "evolutions": []
+    },
+    {
+      "id": "terriermon",
+      "displayName": "Terriermon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Terriermon",
+      "comment": "Wikimon: Terriermon Evolves From Gummymon. terrier_digitama opens Zerimon, which is Gummymon's Baby I.",
+      "evolutions": []
+    },
+    {
+      "id": "gaomon",
+      "displayName": "Gaomon",
+      "stage": "Child",
+      "line": "wanyamon",
+      "spriteFile": "Gaomon",
+      "comment": "Wikimon: Gaomon Evolves From Wanyamon. gao_digitama opens Dodomon, which leads to Wanyamon, so this is the Child that egg promised.",
+      "evolutions": []
+    },
+    {
+      "id": "bearmon",
+      "displayName": "Bearmon",
+      "stage": "Child",
+      "line": "wanyamon",
+      "spriteFile": "Bearmon",
+      "comment": "Wikimon: Bearmon Evolves From Wanyamon. bear_digitama opens Popomon, which leads to Wanyamon.",
+      "evolutions": []
+    },
+    {
+      "id": "koemon",
+      "displayName": "Koemon",
+      "stage": "Child",
+      "line": "wanyamon",
+      "spriteFile": "Koemon",
+      "comment": "Wikimon: Koemon Evolves From Wanyamon. koe_digitama opens Popomon, which leads to Wanyamon.",
+      "evolutions": []
+    },
+    {
+      "id": "algomon_child",
+      "displayName": "Algomon",
+      "stage": "Child",
+      "line": "algomon",
+      "spriteFile": "Algomon_Child",
+      "comment": "Wikimon: Algomon (Child) Evolves From Algomon (Baby II) - the line's own next rung, under its own name.",
+      "evolutions": []
+    },
+    {
+      "id": "ghostmon",
+      "displayName": "Ghostmon",
+      "stage": "Child",
+      "line": "algomon",
+      "spriteFile": "Ghostmon",
+      "comment": "Wikimon: Ghostmon Evolves From Algomon (Baby II). ghost_digitama is what opens this line's Baby I, so this is the Child that egg promised, and it is the earned branch beside Algomon's own rung.",
+      "evolutions": []
+    },
+    {
+      "id": "labramon",
+      "displayName": "Labramon",
+      "stage": "Child",
+      "line": "algomon",
+      "spriteFile": "Labramon",
+      "comment": "Wikimon: Labramon Evolves From Xiaomon and nothing else on disk. Xiaomon can never be reached (its Baby I, Paomon, is one of the thirteen no egg can hatch - see EvolutionCriteriaTests), so Labramon is authored as a Dex tree rather than as something a player meets.",
+      "evolutions": []
+    },
+    {
+      "id": "v-mon",
+      "displayName": "V-mon",
+      "stage": "Child",
+      "line": "adventure02",
+      "spriteFile": "V-mon",
+      "comment": "Wikimon: V-mon Evolves From Chibimon. v_digitama opens Chicomon, which is Chibimon's Baby I.",
+      "evolutions": []
+    },
+    {
+      "id": "wormmon",
+      "displayName": "Wormmon",
+      "stage": "Child",
+      "line": "adventure02",
+      "spriteFile": "Wormmon",
+      "comment": "Wikimon: Wormmon Evolves From Minomon. worm_digitama opens Leafmon, which is Minomon's Baby I.",
+      "evolutions": []
+    },
+    {
+      "id": "tinkermon",
+      "displayName": "Tinkermon",
+      "stage": "Child",
+      "line": "adventure02",
+      "spriteFile": "Tinkermon",
+      "comment": "REHOME. Poromon's Adventure 02 Child is Hawkmon, which is one of the 157 idle-only Digimon and may not sit on an edge. Wikimon's Evolves To for Poromon lists Tinkermon, which is on disk and playable, so it stands in - the same shape US-146 used for Gurimon and Kyaromon.",
+      "evolutions": []
+    },
+    {
+      "id": "commandramon",
+      "displayName": "Commandramon",
+      "stage": "Child",
+      "line": "commandramon",
+      "spriteFile": "Commandramon",
+      "comment": "Wikimon: Commandramon Evolves From Kyokyomon. commandra_digitama opens Bommon, which leads to Kyokyomon, so this is the Child that egg promised and the line's namesake.",
+      "evolutions": []
+    },
+    {
+      "id": "ryudamon",
+      "displayName": "Ryudamon",
+      "stage": "Child",
+      "line": "commandramon",
+      "spriteFile": "Ryudamon",
+      "comment": "Wikimon: Ryudamon Evolves From Puroromon (and from Kyokyomon). Puroromon is the one taken, so each of the line's two Baby II leads somewhere of its own.",
+      "evolutions": []
+    },
+    {
+      "id": "keramon",
+      "displayName": "Keramon",
+      "stage": "Child",
+      "line": "diablomon",
+      "spriteFile": "Keramon",
+      "comment": "Wikimon: Keramon Evolves From Tsumemon. kera_digitama opens Kuramon, which leads to Tsumemon, so this is the Child that egg promised.",
+      "evolutions": []
+    },
+    {
+      "id": "arkadimon_child",
+      "displayName": "Arkadimon",
+      "stage": "Child",
+      "line": "diablomon",
+      "spriteFile": "Arkadimon_Child",
+      "comment": "Wikimon: the Arkadimon chain runs Baby - Child - Adult - Perfect - Ultimate under its own name; the three rungs above Child are all idle-only, so this is where it stops for now.",
+      "evolutions": []
+    },
+    {
+      "id": "meicoochild",
+      "displayName": "MeicooChild",
+      "stage": "Child",
+      "line": "diablomon",
+      "spriteFile": "MeicooChild",
+      "comment": "Meicoomon's Child rung. meicoo_digitama has pointed at this thread since US-145; Wikimon gives Meicoomon (Child) no Evolves From, so this is the species' own chain rather than a citation. The idle-only `meicoo_child` entry is a second sprite of the same Digimon and may not sit on an edge.",
+      "evolutions": []
+    },
+    {
+      "id": "morphomon",
+      "displayName": "Morphomon",
+      "stage": "Child",
+      "line": "vital",
+      "spriteFile": "Morphomon",
+      "comment": "Wikimon: Morphomon Evolves From Mochimon. morpho_digitama opens Bubbmon, which leads to Mochimon, so this is the Child that egg promised.",
+      "evolutions": []
+    },
+    {
+      "id": "pulsemon",
+      "displayName": "Pulsemon",
+      "stage": "Child",
+      "line": "vital",
+      "spriteFile": "Pulsemon",
+      "comment": "Wikimon: Pulsemon Evolves From Bibimon. pulse_digitama opens Dokimon, which leads to Bibimon.",
+      "evolutions": []
+    },
+    {
+      "id": "sunarizamon",
+      "displayName": "Sunarizamon",
+      "stage": "Child",
+      "line": "vital",
+      "spriteFile": "Sunarizamon",
+      "comment": "Wikimon: Sunarizamon Evolves From Goromon and nothing else on disk. sunariza_digitama opens Sunamon, which leads to Goromon.",
+      "evolutions": []
+    },
+    {
+      "id": "ludomon",
+      "displayName": "Ludomon",
+      "stage": "Child",
+      "line": "vital",
+      "spriteFile": "Ludomon",
+      "comment": "Wikimon: Ludomon Evolves From Kakkinmon. ludo_digitama opens Cotsucomon, which leads to Kakkinmon.",
+      "evolutions": []
+    },
+    {
+      "id": "xros_hagurumon",
+      "displayName": "Hagurumon",
+      "stage": "Child",
+      "line": "xros",
+      "spriteFile": "Hagurumon",
+      "comment": "Wikimon: Monimon Evolves To Hagurumon and to nothing else below Perfect - but `hagurumon` is already the Metal Empire line's Child and `line` is single-valued, so this is a second node on the same art: the pencnsp_koromon / dmcv4_palmon pattern. Hagurumon appears in the Digimon Xros Loader virtual pet, which is what this line is, so the alias does not stretch the line's meaning.",
+      "evolutions": []
+    },
+    {
+      "id": "shoutmon",
+      "displayName": "Shoutmon",
+      "stage": "Child",
+      "line": "xros",
+      "spriteFile": "Shoutmon",
+      "comment": "Wikimon: Shoutmon Evolves From Pickmon, and Pickmon's own page names it in return. It appears in the Digimon Xros Loader virtual pet, which is what this line is.",
+      "evolutions": []
+    },
+    {
+      "id": "gumdramon",
+      "displayName": "Gumdramon",
+      "stage": "Child",
+      "line": "xros",
+      "spriteFile": "Gumdramon",
+      "comment": "Wikimon: Gumdramon Evolves From Babydmon. It is the Xros Wars Hunters partner US-146's Babydmon comment already points at; its own Virtual Pets section lists the Digital Monster COLOR Xros Wars 15th Edition rather than the Xros Loader itself, which is stated rather than smoothed over.",
+      "evolutions": []
+    },
+    {
+      "id": "fujamon",
+      "displayName": "Fujamon",
+      "stage": "Child",
+      "line": "penc-sw",
+      "spriteFile": "Fujamon",
+      "comment": "Wikimon: Fujamon Evolves From Mococomon and nothing else, and it appears in the Pendulum COLOR 6 Saiyu Warriors virtual pet, which is what this line is. Mococomon's three Children - Fujamon, Kakamon, Takinmon - are all on that device, which is what makes this a line rather than a chain.",
+      "evolutions": []
+    },
+    {
+      "id": "kakamon",
+      "displayName": "Kakamon",
+      "stage": "Child",
+      "line": "penc-sw",
+      "spriteFile": "Kakamon",
+      "comment": "Wikimon: Kakamon Evolves From Mococomon and nothing else, and it appears in the Pendulum COLOR 6 Saiyu Warriors virtual pet, which is what this line is.",
+      "evolutions": []
+    },
+    {
+      "id": "takinmon",
+      "displayName": "Takinmon",
+      "stage": "Child",
+      "line": "penc-sw",
+      "spriteFile": "Takinmon",
+      "comment": "Wikimon: Takinmon Evolves From Mococomon and nothing else, and it appears in the Pendulum COLOR 6 Saiyu Warriors virtual pet, which is what this line is.",
+      "evolutions": []
+    },
+    {
+      "id": "lalamon",
+      "displayName": "Lalamon",
+      "stage": "Child",
+      "line": "palmon",
+      "spriteFile": "Lalamon",
+      "comment": "Wikimon: Lalamon Evolves From Budmon AND from Tanemon, and both are on this line, so it has two parents rather than two nodes. The Tanemon edge is what makes lala_digitama keep its promise: that egg opens Pipimon, Pipimon leads to Tanemon, and US-145 flagged Lalamon as what the egg still owed.",
+      "evolutions": []
+    },
+    {
+      "id": "sistermon_blanc",
+      "displayName": "Sistermon Blanc",
+      "stage": "Child",
+      "line": "dmc-v3",
+      "spriteFile": "Sistermon_Blanc",
+      "comment": "Wikimon: Sistermon Blanc Evolves From Tokomon (X-Antibody).",
+      "evolutions": []
+    },
+    {
+      "id": "penmon",
+      "displayName": "Penmon",
+      "stage": "Child",
+      "line": "penc-vb",
+      "spriteFile": "Penmon",
+      "comment": "Wikimon: Penmon Evolves From Hiyarimon (among others).",
+      "evolutions": []
+    },
+    {
+      "id": "coronamon",
+      "displayName": "Coronamon",
+      "stage": "Child",
+      "line": "penc-nso",
+      "spriteFile": "Coronamon",
+      "comment": "Wikimon: Coronamon Evolves From Sunmon (among others).",
+      "evolutions": []
+    },
+    {
+      "id": "zenimon",
+      "displayName": "Zenimon",
+      "stage": "Child",
+      "line": "penc-me",
+      "spriteFile": "Zenimon",
+      "comment": "FLAVOUR, in the sense that there is nothing to cite: Wikimon gives Zenimon no Evolves From and Kozenimon no Evolves To. Zenimon is Kozenimon grown up - the Ko- prefix is the whole relationship. Both are Mutation Type coins, and the Metal Empire line is where the mineral thread lives.",
+      "evolutions": []
     }
   ]
 }

@@ -157,7 +157,7 @@ final class RosterTests: XCTestCase {
                         "pencvb_wargreymon", "pencvb_weregarurumon", "pencvb_wizarmon",
                         "pencwg_birdramon", "pencwg_gerbemon", "pencwg_lilimon",
                         "pencwg_piyomon", "pencwg_rosemon", "pencwg_togemon",
-                        "piyo_tanemon", "piyo_yuramon"])
+                        "piyo_tanemon", "piyo_yuramon", "xros_hagurumon"])
 
         // The art tree really does hold BOTH `Hi-Andromon.png` and `HiAndromon.png`, so the
         // roster has an entry per file (`hi-andromon`, `hiandromon`) while the graph's
