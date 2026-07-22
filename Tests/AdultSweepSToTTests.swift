@@ -123,7 +123,7 @@ final class AdultSweepSToTTests: XCTestCase {
         XCTAssertEqual(leaves,
                        ["sandyanmamon", "sangloupmon", "seadramon_x", "shoutmon_king", "siesamon",
                         // Tailmon X left this list in US-157, which gave it Angewomon X.
-                        "sorcerymon", "soulmon", "starmon", "sunflowmon", "targetmon",
+                        "sorcerymon", "soulmon", "sunflowmon", "targetmon",
                         "tenkomon", "tialudomon", "tobiumon", "tobucatmon", "togemon_x", "tortamon",
                         "troopmon", "tsuchidarumon", "tylomon_x"].sorted(),
                        "the S-T leaves have moved without the ledger moving with them")
@@ -379,8 +379,8 @@ final class AdultSweepSToTTests: XCTestCase {
         XCTAssertEqual(sizes["dmc-v1"], 32, "Tyrannomon, plus US-157's Chimairamon and Millenniumon")
         XCTAssertEqual(sizes["dmc-v3"], 48, "Tyrannomon X and MetalGreymon X")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-nso"], 46, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon")
-        XCTAssertEqual(sizes["tamers"], 90, "Siesamon X, plus US-156's two and US-157's eight")
+        XCTAssertEqual(sizes["penc-nso"], 49, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three")
+        XCTAssertEqual(sizes["tamers"], 94, "Siesamon X, plus US-156's two and US-157's eight, plus US-158's four")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -425,7 +425,7 @@ final class AdultSweepSToTTests: XCTestCase {
 
         // Tyranomon X is the fifth, and the one where the intersection really was empty: every
         // other Perfect its page names is on a line Agumon X cannot reach, or has no sheet.
-        for id in ["mametyramon", "metaltyranomon", "extyranomon"] {
+        for id in ["mametyramon", "metaltyranomon", "ex-tyranomon"] {
             XCTAssertNotEqual(try XCTUnwrap(graph.node(id: id)).line, "dmc-v3",
                               "\(id) is on Tyrannomon X's line now, so the new Perfect was avoidable")
         }
@@ -529,7 +529,8 @@ final class AdultSweepSToTTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 672, "629 before this story, 635 after it, 672 after US-157")
+        XCTAssertEqual(graph.nodes.count, 693,
+                       "629 before this story, 635 after it, 672 after US-157, 693 after US-158")
     }
 
     func testTheGraphValidatesWithNoFindings() {

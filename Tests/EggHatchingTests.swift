@@ -178,7 +178,14 @@ final class EggHatchingTests: XCTestCase {
                         // its first Mega, so every `tamers` egg whose thread already ran to a
                         // Perfect now runs all the way and is a legal starting egg.
                         "guil_digitama", "blackguil_digitama", "imp_digitama", "lop_digitama",
-                        "bluco_digitama"],
+                        "bluco_digitama",
+                        // US-158's five. Four are `wanyamon`'s whole egg list at once — that line
+                        // was the LAST with a Perfect rung and no Mega above it, and opening it
+                        // over Gogmamon and Grappleomon promoted every egg on the line in one
+                        // edit. The fifth is Monodra, whose DORUmon thread reached only as far as
+                        // DORUgamon until this story wired DORUguremon and DORUgoramon over it.
+                        "gao_digitama", "bear_digitama", "koe_digitama", "lioll_digitama",
+                        "monodra_digitama"],
                        "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate — and US-157 promoted five `tamers` eggs by giving that line an Ultimate rung at last")
 
         // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
@@ -203,12 +210,18 @@ final class EggHatchingTests: XCTestCase {
         // at all until this story opened four, so every egg on that line stopped one rung short.
         // Rena, Terrier, Monodra and V Digitama stay, because their own threads still stop below
         // the Perfect rung.
+        //
+        // US-158 takes FIVE more, and four of them are one line: `wanyamon` was the last line in
+        // the file with Perfects and no Mega, so Gao, Bear, Koe and Lioll Digitama all stopped one
+        // rung short exactly as the `tamers` eggs had, and Ancient Volcamon and Dinotigermon
+        // promoted all four at once. Monodra is the fifth and is the ordinary middle-of-the-thread
+        // kind: DORUgamon was a leaf until DORUguremon and DORUgoramon went over it. Rena, Terrier
+        // and V Digitama stay — their threads still stop below the Perfect rung.
         XCTAssertEqual(unraisable,
-                       ["bear_digitama", "commandra_digitama",
-                        "gao_digitama", "ghost_digitama",
-                        "kera_digitama", "koe_digitama", "lioll_digitama",
+                       ["commandra_digitama", "ghost_digitama",
+                        "kera_digitama",
                         "ludo_digitama", "meicoo_digitama",
-                        "monodra_digitama", "morpho_digitama", "pulse_digitama", "rena_digitama",
+                        "morpho_digitama", "pulse_digitama", "rena_digitama",
                         "sunariza_digitama", "terrier_digitama", "v_digitama", "worm_digitama",
                         "zuba_digitama"])
 

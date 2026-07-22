@@ -261,10 +261,11 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 37,
+        XCTAssertEqual(inLine.count, 39,
                        "US-151 hung Akatorimon on Floramon, US-153 Kougamon on Mushmon, "
                            + "US-154 RedV-dramon on Piyomon, US-156 V-dramon Black on Piyomon "
-                           + "and XV-mon Black on Mushmon")
+                           + "and XV-mon Black on Mushmon, US-158 Delumon on Kiwimon and "
+                           + "Garudamon X on Birdramon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -665,7 +666,9 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         // `mush_digitama` is US-144's, `akatorimon` US-151's and `kougamon` US-153's, so the count
         // below stays the claim THIS story's notes made about its own nodes.
         let sweepEggs: Set<String> = ["mush_digitama", "akatorimon", "kougamon", "redv-dramon",
-                                      "v-dramon_black", "xv-mon_black"]
+                                      "v-dramon_black", "xv-mon_black",
+                                      // US-158's two, both on Perfects this tree already reached.
+                                      "delumon", "garudamon_x"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31,
                        "the thirty-one nodes this story authored")
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,

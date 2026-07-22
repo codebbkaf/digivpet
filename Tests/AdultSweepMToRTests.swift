@@ -374,11 +374,11 @@ final class AdultSweepMToRTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 90, "four Champions and both new Perfects, plus US-156's two and US-157's eight")
-        XCTAssertEqual(sizes["penc-vb"], 53, "Mikemon and Nefertimon X, plus US-156's two and US-157's four")
-        XCTAssertEqual(sizes["penc-ds"], 39, "MoriShellmon, plus US-157's Anomalocarimon X")
-        XCTAssertEqual(sizes["penc-nso"], 46, "Musyamon, plus US-157's Archnemon and BlueMeramon")
-        XCTAssertEqual(sizes["penc-wg"], 37, "RedV-dramon, plus US-156's two Black V-dramon")
+        XCTAssertEqual(sizes["tamers"], 94, "four Champions and both new Perfects, plus US-156's two and US-157's eight, plus US-158's four")
+        XCTAssertEqual(sizes["penc-vb"], 54, "Mikemon and Nefertimon X, plus US-156's two and US-157's four, plus US-158's Entmon")
+        XCTAssertEqual(sizes["penc-ds"], 40, "MoriShellmon, plus US-157's Anomalocarimon X, plus US-158's Gusokumon")
+        XCTAssertEqual(sizes["penc-nso"], 49, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three")
+        XCTAssertEqual(sizes["penc-wg"], 39, "RedV-dramon, plus US-156's two Black V-dramon, plus US-158's two")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -547,7 +547,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 672, "618 before this story, 635 after US-155, 643 after US-156")
+        XCTAssertEqual(graph.nodes.count, 693, "618 before this story, 635 after US-155, 643 after US-156")
     }
 
     func testTheGraphValidatesWithNoFindings() {

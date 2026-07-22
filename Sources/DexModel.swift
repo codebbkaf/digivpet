@@ -70,8 +70,9 @@ extension DexRow {
     /// Resolved against a pool of already-built rows rather than straight from the graph, because a
     /// candidate is drawn as a Dex cell and a cell needs a discovery date — which only a row
     /// carries. A target the pool does not hold falls back to its node, drawn undiscovered: the
-    /// tree screen's pool is one line, and three shipped ids (`extyranomon`, `piyo_tanemon`,
-    /// `piyo_yuramon`) are in the graph but not the roster, so a miss is ordinary data.
+    /// tree screen's pool is one line, and two shipped ids (`piyo_tanemon`, `piyo_yuramon`) are
+    /// in the graph but not the roster, so a miss is ordinary data. (`extyranomon` was a third
+    /// until US-158 renamed it to the roster's `ex-tyranomon`.)
     ///
     /// Empty when the id names no node at all, which since US-063 is the common case: the grid is
     /// the 1,022-entry roster and only ~88 of those have a node. The detail view says so out loud

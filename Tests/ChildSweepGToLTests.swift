@@ -344,7 +344,7 @@ final class ChildSweepGToLTests: XCTestCase {
         // them too: twelve more on `tamers`, three on `dmc-v3` and on `xros`, eleven on `vital`,
         // and two on `palmon`, which this story did not touch at all.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 90, "US-152 hung two more Champions under it, US-154 six, US-156 two, US-157 eight")
+        XCTAssertEqual(sizes["tamers"], 94, "US-152 hung two more Champions under it, US-154 six, US-156 two, US-157 eight, plus US-158's four")
         XCTAssertEqual(sizes["dmc-v3"], 48)
         XCTAssertEqual(sizes["xros"], 17)
         XCTAssertEqual(sizes["vital"], 33)
@@ -547,9 +547,10 @@ final class ChildSweepGToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 672,
+        XCTAssertEqual(graph.nodes.count, 693,
                        "497 before this story, 548 after it, 599 after US-150, 610 after US-151, "
-                           + "615 after US-152, 618 after US-153, 635 after US-155, 672 after US-157")
+                           + "615 after US-152, 618 after US-153, 635 after US-155, "
+                           + "672 after US-157, 693 after US-158")
     }
 
     /// The one Child in range whose Champion is NOT a new node. Lalamon's canonical Champion,

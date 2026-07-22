@@ -46,7 +46,7 @@ final class DMCVersion5TreeTests: XCTestCase {
         ("deltamon", .adult),
         ("raremon", .adult),
         ("metaltyranomon", .perfect),
-        ("extyranomon", .perfect),
+        ("ex-tyranomon", .perfect),
         ("nanomon", .perfect),
         ("mugendramon", .ultimate),
         ("gaioumon", .ultimate),
@@ -117,14 +117,14 @@ final class DMCVersion5TreeTests: XCTestCase {
                           "\(parent) must reach MetalTyranomon")
         }
         for parent in ["devidramon", "tuskmon", "deltamon"] {
-            XCTAssertTrue(try targets(of: parent).contains("extyranomon"),
+            XCTAssertTrue(try targets(of: parent).contains("ex-tyranomon"),
                           "\(parent) must reach Ex-Tyranomon")
         }
         XCTAssertTrue(try targets(of: "raremon").contains("nanomon"))
 
         // Ultimate -> Mega.
         XCTAssertTrue(try targets(of: "metaltyranomon").contains("mugendramon"))
-        XCTAssertTrue(try targets(of: "extyranomon").contains("gaioumon"))
+        XCTAssertTrue(try targets(of: "ex-tyranomon").contains("gaioumon"))
         XCTAssertTrue(try targets(of: "nanomon").contains("raidenmon"))
     }
 
@@ -334,9 +334,13 @@ final class DMCVersion5TreeTests: XCTestCase {
     /// Version 3. It is the line that OWNS the plain `vademon` and `ebemon` ids that US-134 had to
     /// scope for the Version 2 tree, so the collision runs the other way here.
     ///
-    /// `extyranomon` is NOT such an alias, and the distinction matters because `RosterTests` lists
-    /// it beside the four real ones: it is the roster's `ex-tyranomon` with the hyphen dropped, one
-    /// Digimon under two spellings of one id, not one Digimon in two trees.
+    /// `extyranomon` WAS listed beside the four real ones and was never an alias at all — it was
+    /// the roster's `ex-tyranomon` with the hyphen dropped, one Digimon under two spellings of one
+    /// id. **US-158 RETIRED THE DRIFT**: the Perfect D-G sweep found `ex-tyranomon` counted as an
+    /// orphan by Appendix B, because the sheet id had nothing pointing at it while the graph's
+    /// hyphen-less id carried all three in-edges, and renaming the node cleared the orphan without
+    /// adding one. So the claim is now the stronger one — the graph and the roster spell it the
+    /// same way, and the old spelling is nowhere.
     func testTheLineNeedsNoLineScopedAlias() throws {
         XCTAssertEqual(graph.nodes.filter { $0.id.hasPrefix("dmcv5_") }.map(\.id), [],
                        "the day a dmcv5_ alias is needed, write the reason down here")
@@ -346,10 +350,12 @@ final class DMCVersion5TreeTests: XCTestCase {
             XCTAssertEqual(try node("dmcv2_\(id)").line, "dmc-v2", "and US-134 scoped the V2 copy")
         }
 
+        XCTAssertNil(graph.node(id: "extyranomon"),
+                     "the hyphen-less spelling is back — US-158 retired it, say why it returned")
         XCTAssertNil(Roster.bundled.entry(id: "extyranomon"))
         let hyphenated = try XCTUnwrap(Roster.bundled.entry(id: "ex-tyranomon"))
-        XCTAssertEqual(hyphenated.displayName, try node("extyranomon").displayName)
-        XCTAssertEqual(hyphenated.spriteFile, try node("extyranomon").spriteFile)
+        XCTAssertEqual(hyphenated.displayName, try node("ex-tyranomon").displayName)
+        XCTAssertEqual(hyphenated.spriteFile, try node("ex-tyranomon").spriteFile)
     }
 
     // MARK: - AC5/AC6: divergences are written into the data file, sprites are real
@@ -476,7 +482,7 @@ final class DMCVersion5TreeTests: XCTestCase {
     /// Champion. Bumping the total to 22 would have quietly turned "US-137 added nothing" into
     /// "US-137 added nothing that US-149 did not", which is a different claim.
     func testTheStoryAddedNoNodesAndSoRemovedNoOrphans() throws {
-        let laterSweeps: Set<String> = ["gazimon_x", "leomon_x"]
+        let laterSweeps: Set<String> = ["gazimon_x", "leomon_x", "gigadramon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !laterSweeps.contains($0.id) }.count,
                        20, "US-137 adds no node to the Version 5 line")
 

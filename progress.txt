@@ -608,6 +608,31 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   within a line, no repeated `signatureName` globally, no digit in any hint. It caught three
   duplicate signature names before a byte hit the repo. Splice `evolutions.json` textually (US-136);
   a leaf node authored by the previous sweep is matched on its literal `"evolutions": []` line.
+- **PHASE E: AN APPENDIX B "ORPHAN" CAN BE A DIGIMON ALREADY ON SCREEN — GREP THE GRAPH FOR ITS
+  `spriteFile` BEFORE AUTHORING A NODE.** `roster.generated.json` carries the SHEET id from disk
+  AND the graph's id, so a node whose id does not match its own sheet leaves the sheet counting as
+  an orphan while its art renders. US-158 found `ex-tyranomon` that way: `dmc-v5` had drawn it
+  since US-137 as `extyranomon`, and the fix was a RENAME (node id, three in-edges, the
+  `elements.json` and `moves.json` rows) rather than a node. Careful — `hiandromon`/`hi-andromon`
+  is the opposite case and is DELIBERATE: two real sheets, one node, pinned by `RosterTests`.
+- **PHASE E, PERFECT RUNG: `projectileSymbol|tint` COLLISIONS ARE THE NORMAL CASE NOW, AND THE
+  CHECK BELONGS BEFORE THE EDIT.** Eight of US-158's twenty-one first-draft moves collided — the
+  pair is unique PER LINE and a big line already holds 49 rows, so `flame.fill` on `penc-nso` had
+  two free tints left. Changing the SYMBOL beats reaching for an odd tint. `signatureName` is the
+  global one and still bites on variants named after their base form.
+- **PHASE E: `linesWithAPerfect.subtracting(linesWithAnUltimate)` IS EMPTY AS OF US-158, AND EGG
+  PROMOTIONS NOW COME FROM THE MIDDLE OF A THREAD.** `wanyamon` was the last line with Perfects and
+  no Mega; opening it promoted all four of its Digitama at once, because
+  `MainScreenModel.startingDigitamaId` filters on `graph.reachesUltimate`. Any sweep that opens a
+  Perfect rung on one of the six lines that still have none — `xros`, `vital`, `adventure02`,
+  `algomon`, `commandramon`, `diablomon` — owes an Ultimate over it in the same story or it
+  re-opens the gap, and should grep `reachesUltimate` before assuming `EggHatchingTests` is inert.
+- **PHASE E: ONE DIGIMON WITH TWO SHEETS IS TWO NODES; ONE SHEET WITH TWO NAMES IS ONE NODE.**
+  US-143 merged HolyAngemon and MagnaAngemon because one sheet served both; US-158 gave Fantomon
+  and Phantomon a node each because the pack ships both PNGs and the roster is one entry per SHEET.
+  The rule that keeps it honest either way: no single Champion may reach the same Digimon twice
+  under two spellings, so hang the second sheet off a DIFFERENT parent of the same line and pin
+  that the two parent sets are disjoint.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -4110,4 +4135,123 @@ The nineteen, with the citation each rests on:
   rungs opens, as are Kinkakumon and Xiquemon for `penc-sw`. The 97 leaves in `ChildSweepAToFTests`'
   dead-end ledger are still owed an out-edge; nine of this story's own Ultimates are NOT on it, since
   the ledger stops below the top rung.
+---
+
+## 2026-07-23 - US-158: Orphan sweep: Perfect D-G
+
+Wired the fifteen playable Perfect whose display name begins D-G that were still orphans, for
+FOURTEEN new nodes plus seven new Ultimates plus one rename. Second story at the Perfect rung.
+
+**Orphan count, Appendix B over a regenerated `roster.generated.json`: 257 BEFORE -> 235 AFTER.**
+Perfect bucket 84 -> 69 (the D-G band 15 -> 0), Ultimate bucket 157 -> 150. Files changed:
+`Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`scripts/us158_author.py` (new, the record of what was authored), `Tests/PerfectSweepDToGTests.swift`
+(new), `Sources/DexModel.swift` (one doc comment), and twenty-two existing test files.
+
+The fourteen, each `Champion -> Perfect -> Ultimate`:
+  DarkKnightmon      tailmon(penc-nsp)        -> darkknightmon_x  NEW
+  DarkSuperstarmon   starmon(tamers)          -> titamon          NEW
+  Delumon            kiwimon(penc-wg)         -> griffomon
+  DORUguremon        dorugamon(tamers)        -> dorugoramon      NEW
+  Duramon            raptordramon(penc-me)    -> pencme_wargreymon
+  Entmon             cockatrimon(penc-vb)     -> cherubimon_virtue
+  Fantomon           wizarmon(penc-nso)       -> piemon
+  Flaremon           firamon(penc-nso)        -> apollomon        NEW
+  Garudamon X        pencwg_birdramon(penc-wg)-> hououmon
+  Gigadramon         devidramon(dmc-v5)       -> mugendramon
+  Gogmamon           gaogamon(wanyamon)       -> ancientvolcamon  NEW
+  Gokuwmon           ginkakumon(penc-sw)      -> seitengokuwmon   NEW
+  Grappleomon        gryzmon(wanyamon)        -> dinotigermon     NEW
+  Gusokumon          ebidramon(penc-ds)       -> plesiomon
+
+**Learnings for future iterations:**
+
+- **AN "ORPHAN" IN APPENDIX B'S COUNT CAN BE A DIGIMON THAT IS ALREADY ON SCREEN — CHECK THE
+  SPRITE FILE, NOT ONLY THE ID.** `ex-tyranomon` was the fifteenth orphan in this band and needed
+  no node at all: `dmc-v5` had drawn it since US-137 under `extyranomon`, the same `spriteFile`
+  with the hyphen dropped. Appendix B reads `roster.generated.json`, which carries the SHEET id
+  from disk AND the graph's id, so a graph node whose id does not match its own sheet leaves the
+  sheet looking unwired. The fix was a rename — node id, three in-edges, the `elements.json` and
+  `moves.json` rows — and it cleared the orphan, retired the drift `DMCVersion5TreeTests` had
+  pinned since US-137, and took `extyranomon` off `RosterTests`' alias list where it never
+  belonged. **Before authoring a node for an orphan, grep the graph for its `spriteFile`.** One
+  more of these may be hiding: `hiandromon`/`hi-andromon` is a KNOWN and deliberate divergence
+  (two real sheets, one node) and must NOT be "fixed" the same way — `RosterTests` pins it.
+
+- **A PERFECT SWEEP THAT PICKS ITS PARENTS OFF THE DEAD-END LEDGER PAYS FOR ITSELF TWICE, AND THE
+  SECOND SWEEP CAN DO IT WITHOUT AUTHORING A FLOOR.** US-157 cleared nine leaves but had to invent
+  Pandamon for `penc-sw`; this story cleared seven and every floor it needed
+  (`catchmamemon`, `andiramon_virus`, `darumamon`, `karakurumon`, `pandamon`) already existed, so
+  `EvolutionCriteriaTests.junkIds` did not move at all. Ledger 105 -> 97 -> 90. Expect the H-Z
+  sweeps to keep this shape: after seven Adult sweeps the cheap parent is nearly always a leaf.
+
+- **`wanyamon` WAS THE LAST LINE WITH PERFECTS AND NO MEGA, AND OPENING IT PROMOTED THE WHOLE
+  LINE'S EGGS AT ONCE.** All four `wanyamon` Digitama (Gao, Bear, Koe, Lioll) went from unraisable
+  to legal starting eggs in one edit, because `MainScreenModel.startingDigitamaId` filters on
+  `graph.reachesUltimate`. That is a bigger jump than US-157's five and it is the LAST of its kind
+  — `linesWithAPerfect.subtracting(linesWithAnUltimate)` is now empty, and `PerfectSweepAToCTests`'
+  claim about it was flipped rather than deleted. The remaining promotions have to come from the
+  MIDDLE of a thread, like Monodra Digitama did here (DORUgamon was a leaf until DORUguremon and
+  DORUgoramon went over it). Six lines still have no Perfect rung at all: `xros`, `vital`,
+  `adventure02`, `algomon`, `commandramon`, `diablomon` — open one of those and the same egg
+  arithmetic applies again.
+
+- **THE MOVES-TABLE COLLISION CHECK MUST RUN BEFORE THE EDIT, NOT AFTER: EIGHT OF THIS STORY'S
+  TWENTY-ONE FIRST-DRAFT MOVES COLLIDED.** `signatureName` is unique GLOBALLY and
+  `projectileSymbol|tint` is unique PER LINE, and the second is the one that bites at this rung —
+  a story adding three nodes to one line is competing with 49 rows already on it, and `flame.fill`
+  on `penc-nso` had only two free tints left. Script the check against the real JSON and re-run it
+  after every edit to the table; changing the SYMBOL is usually better than reaching for an odd
+  tint (Flaremon became `hand.raised.fill`, Apollomon `star.fill`).
+
+- **THE VARIANT RULE READS FROM THE TOP AS WELL AS THE BOTTOM.** DarkKnightmon X hangs off the
+  DarkKnightmon this story authored, so "a variant sits on its base form's line" was satisfied by
+  authoring the base form first and letting the X follow it — the same shape as US-157's Angewomon
+  X but with the base form new. And when a variant's base form has NO node yet (DarkSuperstarmon;
+  Superstarmon is an S-Z orphan), say in the node `comment` and in a test where the base form is
+  going to have to go, so the later sweep is told rather than free to disagree.
+
+- **A LINE ARGUMENT CAN BE THE CHEAP HALF OF A REHOME, AND SAYING SO IS WHAT MAKES IT DEFENSIBLE.**
+  Gokuwmon's three cited parents (Hanumon `penc-nso`, Kinkakumon `penc-ds`, Turuiemon `penc-vb`)
+  are all off `penc-sw`, the Saiyu Warriors line it obviously belongs to, so the in-edge rests on
+  Ginkakumon — the twin of the Kinkakumon that US-153 and US-157 both pinned as this line's rehome
+  candidate. Rehome Kinkakumon and the arrow becomes a citation. Entmon is the other one and is the
+  first LINE argument this series has had to make about a CLIMB rather than an in-edge: all three
+  of its cited `Evolves To` are undrawable (Ancient Troiamon idle-only, Ornismon and Xuanwumon no
+  sheet at all).
+
+- **TWO SHEETS OF ONE DIGIMON ARE TWO NODES — THE OPPOSITE OF US-143's ANSWER, AND FOR THE SAME
+  REASON.** `Perfect/Fantomon.png` and `Perfect/Phantomon.png` are both on disk, so the roster has
+  two entries and the graph now has two nodes; US-143 merged HolyAngemon and MagnaAngemon because
+  ONE sheet served two names. The rule is the roster's: **one entry per sheet.** What must not
+  happen is one Champion offering the same Digimon twice under two spellings, so Fantomon hangs off
+  Wizarmon while Phantomon keeps Bakemon, and a test pins that the two parent sets are disjoint.
+
+- **The knock-on list for this rung, all twenty-two files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, all six `AdultSweep*Tests`, all three `ChildSweep*Tests` and
+  `PerfectSweepAToCTests` (672 -> 693); the per-line dict in `EvolutionGraphTests` (`dmc-v5` 22->23,
+  `penc-nsp` 34->36, `penc-ds` 39->40, `penc-nso` 46->49, `penc-wg` 37->39, `penc-me` 50->51,
+  `penc-vb` 53->54, `tamers` 90->94, `wanyamon` 20->24, `penc-sw` 12->14) and the same lines'
+  `sizes[...]` rows in every `*Sweep*Tests` and `DigitamaSweepTests`; `inLine.count` AND `sweepEggs`
+  in ALL SIX `Pendulum*TreeTests`; the dead-end ledger in `ChildSweepAToFTests` (97 -> 90) and its
+  twin in `PerfectSweepAToCTests`; BOTH egg lists in `EggHatchingTests`; `strandedPerfect` and
+  `strandedUltimate` in `EvolutionCriteriaTests` (Gokuwmon and Seiten Gokuwmon inherit Ginkakumon's
+  strandedness — `penc-sw` still has no Digitama); the `gazimonLineVerifiedSet` in `SeedRosterTests`
+  (Gigadramon appended, per the "append, never widen" rule); the alias list in `RosterTests` and the
+  matching comment in `Sources/DexModel.swift` (both lost `extyranomon`); `DMCVersion5TreeTests`
+  throughout, plus its `laterSweeps` set; `AdultSweepSToTTests`' leaf list (Starmon left) and its
+  `extyranomon` pin; the `penc-sw` Perfect-rung pins in `AdultSweepHToLTests` and
+  `AdultSweepUToZTests`; `AdultSweepAToDTests`' `wanyamon` Perfect set, relaxed to a superset;
+  `PerfectSweepAToCTests`' "raptordramon has exactly two edges", relaxed to "exactly one fallback";
+  and the "names its device" tests in `BabyIISweepTests`, `ChildSweepAToFTests` and
+  `DigitamaSweepBabyITests`, which is why Seiten Gokuwmon's comment says "Saiyu Warriors".
+  `MinigameAssignmentTests`, `DexModel.lineTitles` and both `lineDefaults` did NOT move: no new line.
+
+- REMAINS: US-159 onward (45/56 passing). Ten Perfect and Ultimate sweeps and the Armor-Hybrid one
+  hold the remaining 235 orphans: 69 Perfect, 150 Ultimate, 16 Armor-Hybrid. Ebidramon is now one
+  earned branch off the ceiling (only spirit free) and is pinned as such. Kinkakumon and Xiquemon
+  are still `penc-sw` rehome candidates, Cargodramon still `commandramon`'s and Boutmon still
+  `vital`'s. Sagomon, Sanzomon and Shawujinmon are the three Saiyu Warriors Perfects still owed.
+  The 90 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge; the seven
+  Ultimates this story opened are NOT on it, since the ledger stops below the top rung.
 ---

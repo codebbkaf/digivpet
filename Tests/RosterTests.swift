@@ -137,7 +137,7 @@ final class RosterTests: XCTestCase {
         // `penc-nso` and this tree.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
-                        "extyranomon", "pencds_coelamon", "pencds_megaseadramon",
+                        "pencds_coelamon", "pencds_megaseadramon",
                         "pencds_metalseadramon", "pencds_seadramon", "pencds_whamon",
                         "pencme_andromon", "pencme_greymon", "pencme_hiandromon",
                         "pencme_metalgreymon", "pencme_mugendramon", "pencme_raremon",

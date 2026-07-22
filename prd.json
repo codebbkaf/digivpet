@@ -933,8 +933,8 @@
         "Typecheck passes"
       ],
       "priority": 45,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Fifteen orphaned Perfect D-G cleared for FOURTEEN new nodes plus seven new Ultimates: the fifteenth, Ex-Tyranomon, was already drawn on `dmc-v5` under the hyphen-less id `extyranomon` (spelling drift `DMCVersion5TreeTests` has recorded since US-137), so it cost a RENAME, not a node — which also took it off `RosterTests`' alias list. Orphan count with Appendix B over a regenerated roster.generated.json: 257 -> 235; Perfect bucket 84 -> 69 (D-G band 15 -> 0), Ultimate bucket 157 -> 150. US-152's intersection closed on 7 of the 14 free. Seven in-edges came off LEAF Champions and every junk floor they needed already existed, so the dead-end ledger falls 97 -> 90 with nothing added back. `wanyamon` — the last line with Perfects and no Mega — got Ancient Volcamon and Dinotigermon over Gogmamon and Grappleomon, promoting all four of its Digitama to legal starting eggs; Monodra Digitama was promoted too by the DORUmon thread. Two edges rest on a stated LINE argument: Gokuwmon's in-edge (all three cited parents are off `penc-sw`) and Entmon's climb (all three cited climbs are undrawable). Validator reports zero findings; 2237 tests pass; build green."
     },
     {
       "id": "US-159",

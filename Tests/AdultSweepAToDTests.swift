@@ -223,19 +223,20 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 90, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
+        XCTAssertEqual(sizes["tamers"], 94, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
                            + "US-152 added FlareLizamon and Growmon Orange; "
-                           + "US-156 added Youkomon and BlackRapidmon")
-        XCTAssertEqual(sizes["wanyamon"], 20,
-                       "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon")
+                           + "US-156 added Youkomon and BlackRapidmon, plus US-158's four")
+        XCTAssertEqual(sizes["wanyamon"], 24,
+                       "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon, "
+                           + "plus US-158's four")
         XCTAssertEqual(sizes["dmc-v4"], 29, "US-151 added the two Burgermon, US-156 Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-wg"], 37,
+        XCTAssertEqual(sizes["penc-wg"], 39,
                        "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon, "
-                           + "US-156 the two Black V-dramon")
-        XCTAssertEqual(sizes["penc-vb"], 53,
+                           + "US-156 the two Black V-dramon, plus US-158's two")
+        XCTAssertEqual(sizes["penc-vb"], 54,
                        "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon, "
-                           + "US-156 WezenGammamon and Canoweissmon")
-        XCTAssertEqual(sizes["penc-me"], 50, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon")
+                           + "US-156 WezenGammamon and Canoweissmon, plus US-158's Entmon")
+        XCTAssertEqual(sizes["penc-me"], 51, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon")
     }
 
     /// **The variant rule.** Four of the seven are variants — Black, and nothing else at this rung —
@@ -285,8 +286,12 @@ final class AdultSweepAToDTests: XCTestCase {
         // have failed on work that did nothing wrong. What stays true is that the four this story
         // authored are still here and are still the only ones IT authored, so the claim is now the
         // pair by name plus the floor's exclusivity.
-        XCTAssertEqual(Set(graph.nodes.filter { $0.line == "wanyamon" && $0.stage == .perfect }
-                               .map(\.id)), ["blackmachgaogamon", "karakurumon"])
+        // **Scoped the same way again in US-158**, which hung Gogmamon and Grappleomon on this
+        // line's two remaining leaf Champions and gave `wanyamon` its first Ultimates. Neither
+        // touched this story's pair, so the claim stays "the two US-151 authored are still here and
+        // the floor is still the only fallback" rather than a count that a later sweep must edit.
+        XCTAssertTrue(Set(graph.nodes.filter { $0.line == "wanyamon" && $0.stage == .perfect }
+                              .map(\.id)).isSuperset(of: ["blackmachgaogamon", "karakurumon"]))
         XCTAssertTrue(Set(graph.nodes.filter { $0.line == "tamers" && $0.stage == .perfect }
                               .map(\.id)).isSuperset(of: ["megalogrowmon", "catchmamemon"]))
         XCTAssertTrue(Set(graph.nodes.map(\.id)).isSuperset(of: authoredPerfects))
@@ -396,9 +401,10 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 672,
+        XCTAssertEqual(graph.nodes.count, 693,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154, "
-                           + "635 after US-155, 643 after US-156, 672 after US-157")
+                           + "635 after US-155, 643 after US-156, 672 after US-157, "
+                           + "693 after US-158")
     }
 
     func testTheGraphValidatesWithNoFindings() {

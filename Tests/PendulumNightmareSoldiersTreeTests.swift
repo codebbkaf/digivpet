@@ -241,10 +241,11 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 46,
+        XCTAssertEqual(inLine.count, 49,
                        "US-147 hung Sunmon and Coronamon here, US-148 Firamon, US-149 Gotsumon and "
                            + "Icemon, US-150 PetitMamon, Vorvomon and Lavorvomon, US-154 Musyamon, "
-                           + "US-155 ShimaUnimon, US-157 Archnemon and BlueMeramon")
+                           + "US-155 ShimaUnimon, US-157 Archnemon and BlueMeramon, US-158 "
+                           + "Fantomon, Flaremon and Apollomon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -649,7 +650,10 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
                                       "petitmamon", "vorvomon", "lavorvomon",
                                       "musyamon", "shimaunimon",
                                       // US-157's, hung off Dokugumon and Meramon.
-                                      "archnemon", "bluemeramon"]
+                                      "archnemon", "bluemeramon",
+                                      // US-158's, hung off Wizarmon and the leaf Firamon US-148
+                                      // left, plus the Apollomon that finished Coronamon's thread.
+                                      "fantomon", "flaremon", "apollomon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")

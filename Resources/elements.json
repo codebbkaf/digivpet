@@ -433,7 +433,7 @@
       "element": "machine",
       "attribute": "virus"
     },
-    "extyranomon": {
+    "ex-tyranomon": {
       "element": "fire",
       "attribute": "virus"
     },
@@ -2687,6 +2687,90 @@
     },
     "hexeblaumon": {
       "element": "ice",
+      "attribute": "vaccine"
+    },
+    "darkknightmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "darksuperstarmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "delumon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "doruguremon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "duramon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "entmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "fantomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "flaremon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "garudamon_x": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "gigadramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "gogmamon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "gokuwmon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "grappleomon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "gusokumon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "darkknightmon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "titamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dorugoramon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "apollomon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "ancientvolcamon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "dinotigermon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "seitengokuwmon": {
+      "element": "light",
       "attribute": "vaccine"
     }
   },

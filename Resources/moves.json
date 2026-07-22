@@ -649,7 +649,7 @@
       "signatureName": "Nuclear Laser",
       "signatureSymbol": "bolt.fill"
     },
-    "extyranomon": {
+    "ex-tyranomon": {
       "projectileSymbol": "flame.fill",
       "tint": "orange",
       "signatureName": "Blaze Blast",
@@ -4032,6 +4032,132 @@
       "tint": "blue",
       "signatureName": "Blaue Sturm",
       "signatureSymbol": "shield.fill"
+    },
+    "darkknightmon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "purple",
+      "signatureName": "Twin Spear",
+      "signatureSymbol": "triangle.fill"
+    },
+    "darksuperstarmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "purple",
+      "signatureName": "Black Nova",
+      "signatureSymbol": "star.fill"
+    },
+    "delumon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "teal",
+      "signatureName": "Feather Bloom",
+      "signatureSymbol": "leaf.fill"
+    },
+    "doruguremon": {
+      "projectileSymbol": "wind",
+      "tint": "gray",
+      "signatureName": "Metal Cast",
+      "signatureSymbol": "wind"
+    },
+    "duramon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "gray",
+      "signatureName": "Blade Vow",
+      "signatureSymbol": "shield.fill"
+    },
+    "entmon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "brown",
+      "signatureName": "Root Bind",
+      "signatureSymbol": "leaf.fill"
+    },
+    "fantomon": {
+      "projectileSymbol": "scissors",
+      "tint": "purple",
+      "signatureName": "Soul Chopper",
+      "signatureSymbol": "scissors"
+    },
+    "flaremon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "orange",
+      "signatureName": "Lion King Advance",
+      "signatureSymbol": "flame.fill"
+    },
+    "garudamon_x": {
+      "projectileSymbol": "wind",
+      "tint": "red",
+      "signatureName": "Shadow Wing Cross",
+      "signatureSymbol": "wind"
+    },
+    "gigadramon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "indigo",
+      "signatureName": "Giga Stick Bomb",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "gogmamon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "gray",
+      "signatureName": "Ore Crusher",
+      "signatureSymbol": "hammer.fill"
+    },
+    "gokuwmon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "yellow",
+      "signatureName": "Nyoi Staff",
+      "signatureSymbol": "hammer.fill"
+    },
+    "grappleomon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "cyan",
+      "signatureName": "Rapid Fist",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "gusokumon": {
+      "projectileSymbol": "scissors",
+      "tint": "cyan",
+      "signatureName": "Trench Shear",
+      "signatureSymbol": "scissors"
+    },
+    "darkknightmon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "indigo",
+      "signatureName": "Demon's Disaster Cross",
+      "signatureSymbol": "triangle.fill"
+    },
+    "titamon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "purple",
+      "signatureName": "Titan Bringer",
+      "signatureSymbol": "hammer.fill"
+    },
+    "dorugoramon": {
+      "projectileSymbol": "wind",
+      "tint": "indigo",
+      "signatureName": "Brave Metal",
+      "signatureSymbol": "wind"
+    },
+    "apollomon": {
+      "projectileSymbol": "star.fill",
+      "tint": "orange",
+      "signatureName": "Solblaster",
+      "signatureSymbol": "flame.fill"
+    },
+    "ancientvolcamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "brown",
+      "signatureName": "Plasma Pillar",
+      "signatureSymbol": "flame.fill"
+    },
+    "dinotigermon": {
+      "projectileSymbol": "scissors",
+      "tint": "orange",
+      "signatureName": "Tiger Ripper",
+      "signatureSymbol": "scissors"
+    },
+    "seitengokuwmon": {
+      "projectileSymbol": "sparkles",
+      "tint": "orange",
+      "signatureName": "Ruyi Jingu Bang",
+      "signatureSymbol": "sparkles"
     }
   },
   "lineDefaults": {

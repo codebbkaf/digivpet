@@ -363,8 +363,8 @@ final class AdultSweepUToZTests: XCTestCase {
     func testThePencSwReadingOfXiquemonIsStillTheCheaperOneNotTaken() throws {
         XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }
                         .map(\.id).sorted(),
-                       ["chohakkaimon", "pandamon"],
-                       "`penc-sw`'s Perfect rung has moved since US-157 opened it")
+                       ["chohakkaimon", "gokuwmon", "pandamon"],
+                       "`penc-sw`'s Perfect rung has moved since US-158 added Gokuwmon to it")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "fujamon")).line, "penc-sw",
                        "the cited Rookie of the rejected reading has moved line")
         XCTAssertEqual(roster.entry(id: "kamemon")?.dexOnly, true,
@@ -457,10 +457,10 @@ final class AdultSweepUToZTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-wg"], 37, "V-dramon Black and XV-mon Black")
-        XCTAssertEqual(sizes["penc-vb"], 53, "WezenGammamon and Canoweissmon, plus US-157's four")
+        XCTAssertEqual(sizes["penc-wg"], 39, "V-dramon Black and XV-mon Black, plus US-158's two")
+        XCTAssertEqual(sizes["penc-vb"], 54, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 90, "Youkomon and BlackRapidmon, plus US-157's eight")
+        XCTAssertEqual(sizes["tamers"], 94, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -610,7 +610,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 672, "635 before this story, 643 after it, 672 after US-157")
+        XCTAssertEqual(graph.nodes.count, 693, "635 before this story, 643 after it, 693 after US-158")
     }
 
     func testTheGraphValidatesWithNoFindings() {

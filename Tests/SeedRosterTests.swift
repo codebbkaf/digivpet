@@ -657,6 +657,10 @@ final class SeedRosterTests: XCTestCase {
         // US-149's one: Gazimon X hangs off Pagumon, its base form's own In-Training, so its
         // Champion is on this line as well.
         "Leomon X",
+        // US-158's one: Wikimon bolds Devidramon among Gigadramon's parents and Mugendramon among
+        // its children, and both were already on this line, so the Perfect sweep landed it here.
+        // The sheet was eyeballed at `Perfect/Gigadramon.png`, 48x64 like every other name above.
+        "Gigadramon",
     ]
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

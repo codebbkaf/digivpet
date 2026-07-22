@@ -322,9 +322,9 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 90,
+        XCTAssertEqual(sizes["tamers"], 94,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
-                           + "US-156 Youkomon and BlackRapidmon")
+                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four")
         XCTAssertEqual(sizes["dmc-v3"], 48)
         XCTAssertEqual(sizes["palmon"], 26)
     }
@@ -586,16 +586,26 @@ final class ChildSweepAToFTests: XCTestCase {
                               "porcupamon", "raptordramon", "tailmon_x", "waspmon"]
         let perfectsFromUS157 = ["pandamon"]
 
+        // **US-158 MOVES IT DOWN AGAIN AND ADDS NOTHING BACK**, which US-157 could not manage: it
+        // needed a junk floor for `penc-sw` and this story needed none, because all seven of its
+        // leaf Champions fall to a junk Perfect that already existed. Seven more of the Champion
+        // sweeps' debts paid off, net 97 -> 90. Two of the seven are `wanyamon`'s last leaf
+        // Champions, which is what let that line's first Ultimates be authored over them.
+        let clearedByUS158 = ["cockatrimon", "dorugamon", "firamon", "gaogamon", "ginkakumon",
+                              "gryzmon", "starmon"]
+        let cleared = clearedByUS157 + clearedByUS158
+
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
                            + championsFromUS150 + perfectsFromUS151 + perfectsFromUS154
                            + perfectsFromUS155 + perfectsFromUS156 + perfectsFromUS157)
-                           .filter { !clearedByUS157.contains($0) }.sorted(),
+                           .filter { !cleared.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 97)
+        XCTAssertEqual(deadEnds.count, 90)
 
-        // And the nine really did leave because they lead somewhere now, not because they vanished.
-        for id in clearedByUS157 {
+        // And the sixteen really did leave because they lead somewhere now, not because they
+        // vanished.
+        for id in cleared {
             XCTAssertFalse(try XCTUnwrap(graph.node(id: id)).evolutions.isEmpty,
                            "\(id) is a dead end again — then it belongs back on the ledger")
         }
@@ -621,10 +631,11 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 672,
+        XCTAssertEqual(graph.nodes.count, 693,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
-                           + "635 after US-155, 643 after US-156, 672 after US-157")
+                           + "635 after US-155, 643 after US-156, 672 after US-157, "
+                           + "693 after US-158")
     }
 
     // MARK: - The whole file still validates

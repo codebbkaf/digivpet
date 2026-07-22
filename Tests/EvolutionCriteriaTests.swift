@@ -366,8 +366,11 @@ final class EvolutionCriteriaTests: XCTestCase {
         // story at this rung or any rung above it can fix that, and the parent loops below prove
         // this is inheritance rather than three nodes nobody bothered to wire. Every OTHER Perfect
         // US-157 authored sits on a line an egg reaches, which is what makes the list a claim.
-        let strandedPerfect = ["chohakkaimon", "pandamon"]
-        let strandedUltimate = ["shakamon"]
+        // US-158's two are the same inheritance again, one thread over: it hung Gokuwmon on
+        // Ginkakumon — ALREADY on the Champion list above — and Seiten Gokuwmon over that, so both
+        // inherit Ginkakumon's strandedness exactly and the parent loops below prove it.
+        let strandedPerfect = ["chohakkaimon", "gokuwmon", "pandamon"]
+        let strandedUltimate = ["seitengokuwmon", "shakamon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,
