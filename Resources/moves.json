@@ -128,7 +128,7 @@
     "palmon": { "projectileSymbol": "leaf.fill", "tint": "green", "signatureName": "Root Lash", "signatureSymbol": "leaf.fill" },
     "dmc-v3": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Gust", "signatureSymbol": "wind" },
     "dmc-v4": { "projectileSymbol": "flame.fill", "tint": "pink", "signatureName": "Wing Flare", "signatureSymbol": "flame.fill" },
-    "gazimon": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Shock", "signatureSymbol": "bolt.fill" }
+    "dmc-v5": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Shock", "signatureSymbol": "bolt.fill" }
   },
   "stageDefaults": {
     "Digitama": { "projectileSymbol": "sparkles", "tint": "white", "signatureName": "Wobble", "signatureSymbol": "sparkles" },

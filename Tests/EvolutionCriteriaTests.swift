@@ -44,10 +44,17 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// the document draws all five arrows out of Gabumon.
     ///
     /// US-133's note that "four is what the whole source document fits in" was simply wrong — V4's
-    /// Palmon and V5's Gizamon are SIX wide, so US-136 and US-137 will raise this again. It is
-    /// raised one step at a time on purpose: the ceiling should never be looser than the file it
-    /// guards. The Dex agrees at five — `DexRow.evolutionCandidates` draws a three-column grid, so
-    /// five candidates are still two rows inside a sheet that scrolls.
+    /// Palmon and V5's Gizamon are SIX wide in the document, and both US-134 and US-135 expected
+    /// US-136 and US-137 to raise this again. NEITHER DID, and the reason is the same both times:
+    /// each of those rows contains names with no animated sheet — Kokatorimon and Nanimon in
+    /// Palmon's, Flymon in Gizamon's — so the DRAWABLE row is four earned branches plus the junk
+    /// fallback. Price a ceiling raise off the drawable row, never off the document's. Five is also
+    /// where this stops on its own: `SeedRosterTests`' distinct-energy rule allows four earned
+    /// branches and there are only four energy types.
+    ///
+    /// It is raised one step at a time on purpose: the ceiling should never be looser than the file
+    /// it guards. The Dex agrees at five — `DexRow.evolutionCandidates` draws a three-column grid,
+    /// so five candidates are still two rows inside a sheet that scrolls.
     func testEveryNonTerminalChildAndAdultHasTwoToFiveOutgoingEdges() {
         XCTAssertFalse(branchingNodes.isEmpty)
         for node in branchingNodes {

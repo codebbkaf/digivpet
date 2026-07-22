@@ -1323,7 +1323,7 @@
       "stage": "Perfect",
       "line": "dmc-v2",
       "spriteFile": "Vademon",
-      "comment": "NOT a duplicate of the `vademon` node in the gazimon line - it is the same Digimon in a second tree, the dmcv1_shinmonzaemon pattern. The V2 tree ends Vegimon -> Vademon -> Ebemon, and the gazimon line (US-061's junk Perfect, and the V5 tree when US-137 wires it) already took the plain id. `line` is single-valued and EvolutionTreeLayout drops any connector leaving its line, so sharing the node would have left Vegimon pointing out of its own tree with nothing drawn.",
+      "comment": "NOT a duplicate of the `vademon` node in the gazimon line - it is the same Digimon in a second tree, the dmcv1_shinmonzaemon pattern. The V2 tree ends Vegimon -> Vademon -> Ebemon, and the dmc-v5 line (US-061's junk Perfect, kept by US-137 when it finished that tree) already took the plain id. `line` is single-valued and EvolutionTreeLayout drops any connector leaving its line, so sharing the node would have left Vegimon pointing out of its own tree with nothing drawn.",
       "evolutions": [
         {
           "to": "dmcv2_ebemon",
@@ -1355,7 +1355,7 @@
       "stage": "Ultimate-Super Ultimate",
       "line": "dmc-v2",
       "spriteFile": "Ebemon",
-      "comment": "The line-scoped Ebemon, for the same reason as dmcv2_vademon: the gazimon line already owns the plain id, and the V2 tree's junk chain has to end inside its own tree to be drawn."
+      "comment": "The line-scoped Ebemon, for the same reason as dmcv2_vademon: the dmc-v5 line already owns the plain id, and the V2 tree's junk chain has to end inside its own tree to be drawn."
     },
     {
       "id": "pal_digitama",
@@ -2964,7 +2964,7 @@
       "id": "gazi_digitama",
       "displayName": "Gazi Digitama",
       "stage": "Digitama",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Gazi_Digitama",
       "evolutions": [
         {
@@ -2979,7 +2979,7 @@
       "id": "zurumon",
       "displayName": "Zurumon",
       "stage": "Baby I",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Zurumon",
       "evolutions": [
         {
@@ -2995,7 +2995,7 @@
       "id": "pagumon",
       "displayName": "Pagumon",
       "stage": "Baby II",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Pagumon",
       "comment": "The first Baby II in this file that BRANCHES. The V5 tree hangs two Rookies off Pagumon, and unlike V3's Kunemon and V4's Palmon, this line seeds both: Gizamon is the only tree parent of Deltamon, so dropping it would take Deltamon down too. Gizamon is also the one Rookie in V3/V4/V5 with no Digitama of its own (docs/sprite-availability.md), which is exactly why it hangs off Pagumon rather than rooting a line: reached through Gazimon's egg, it needs none.",
       "evolutions": [
@@ -3024,9 +3024,9 @@
       "id": "gazimon",
       "displayName": "Gazimon",
       "stage": "Child",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Gazimon",
-      "comment": "Five Champions and four energy types, the same squeeze as Patamon and Piyomon. Unlike Piyomon this line HAS a natural occupant for the isDefault slot: Raremon, a heap of rotting scrap, is the V5 tree's junk Champion in the way Scumon is V3's. It shares DarkTyranomon's strength gate from below on minEnergy and maxCareMistakes, so a well-raised strength Gazimon still reaches DarkTyranomon and only a neglected one lands on Raremon.",
+      "comment": "Five Champions and four energy types, the same squeeze as Patamon and Piyomon. Unlike Piyomon this line HAS a natural occupant for the isDefault slot: Raremon, a heap of rotting scrap, is the V5 tree's junk Champion in the way Scumon is V3's. It shares DarkTyranomon's strength gate from below on minEnergy and maxCareMistakes, so a well-raised strength Gazimon still reaches DarkTyranomon and only a neglected one lands on Raremon. US-137 finished the row the document draws — DarkTyranomon / Cyclomon / Devidramon / Tuskmon / Raremon — by adding Devidramon on spirit and Tuskmon on stamina. Every one of the five is drawable, so the row is four earned branches plus the junk fallback: one per energy type, which is the widest a Child can be, and no ceiling had to move.",
       "evolutions": [
         {
           "to": "darktyranomon",
@@ -3073,6 +3073,50 @@
           ]
         },
         {
+          "to": "devidramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it keep late hours"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Give it a taste for fighting"
+            }
+          ]
+        },
+        {
+          "to": "tuskmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 220,
+              "hint": "Exercise alongside it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not overfeed it"
+            }
+          ]
+        },
+        {
           "to": "raremon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -3085,9 +3129,9 @@
       "id": "gizamon",
       "displayName": "Gizamon",
       "stage": "Child",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Gizamon",
-      "comment": "DIVERGENCE FROM THE SOURCE TREE (US-046). Gizamon has six Champions in the V5 tree; Flymon is dropped because it exists only as a single idle frame in 'Idle Frame Only/' with no 48x64 sheet, so it is dexOnly and may never be named by an edge (docs/sprite-availability.md). Flymon is this line's ONLY omission. The five that remain are the tree as written, and four of them (Cyclomon, Devidramon, Tuskmon, Raremon) are shared with Gazimon, which is the tree's shape rather than a shortcut. Deltamon is Gizamon's alone. Raremon is the isDefault here too, for the reason given on the gazimon node.",
+      "comment": "DIVERGENCE FROM THE SOURCE TREE (US-046). Gizamon has six Champions in the V5 tree; Flymon is dropped because it exists only as a single idle frame in 'Idle Frame Only/' with no 48x64 sheet, so it is dexOnly and may never be named by an edge (docs/sprite-availability.md). Flymon is this line's ONLY omission. The five that remain are the tree as written, and four of them (Cyclomon, Devidramon, Tuskmon, Raremon) are shared with Gazimon, which is the tree's shape rather than a shortcut. Deltamon is Gizamon's alone. Raremon is the isDefault here too, for the reason given on the gazimon node. US-137 finished the row by adding Cyclomon on vitality and Devidramon on spirit. THIS IS THE SIX-WIDE ROOKIE US-134 and US-135 expected to force the out-degree ceiling past five, and it did not have to: dropping Flymon takes the drawable row to five, which is four earned branches plus the junk fallback — and four is the hard ceiling anyway, one per energy type. If a Flymon sheet ever lands, this row genuinely cannot hold it and one of the six must move to another Child.",
       "evolutions": [
         {
           "to": "deltamon",
@@ -3134,6 +3178,50 @@
           ]
         },
         {
+          "to": "cyclomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1600,
+              "hint": "Let it sleep soundly"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Seldom wake it"
+            }
+          ]
+        },
+        {
+          "to": "devidramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it keep late hours"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Give it a taste for fighting"
+            }
+          ]
+        },
+        {
           "to": "raremon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -3146,8 +3234,9 @@
       "id": "psychemon",
       "displayName": "Psychemon",
       "stage": "Child",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Psychemon",
+      "comment": "Psychemon is in NO source tree — US-061 invented it as a third Rookie back when a Child could carry only two earned branches and the V5 tree's five Champions would not otherwise fit. US-137 gave Gazimon and Gizamon the full rows the document draws, which makes Psychemon's Devidramon redundant; it keeps it anyway, because emptying the node would leave a shipped Child that evolves into nothing — a new orphan made by the story whose job is to remove them. The same call US-134 made for Geremon, US-135 for Tsukaimon and US-136 for Hyokomon and Muchomon.",
       "evolutions": [
         {
           "to": "devidramon",
@@ -3184,7 +3273,7 @@
       "id": "darktyranomon",
       "displayName": "DarkTyranomon",
       "stage": "Adult",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "DarkTyranomon",
       "evolutions": [
         {
@@ -3222,7 +3311,7 @@
       "id": "cyclomon",
       "displayName": "Cyclomon",
       "stage": "Adult",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Cyclomon",
       "evolutions": [
         {
@@ -3260,7 +3349,7 @@
       "id": "devidramon",
       "displayName": "Devidramon",
       "stage": "Adult",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Devidramon",
       "evolutions": [
         {
@@ -3298,7 +3387,7 @@
       "id": "tuskmon",
       "displayName": "Tuskmon",
       "stage": "Adult",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Tuskmon",
       "evolutions": [
         {
@@ -3336,7 +3425,7 @@
       "id": "deltamon",
       "displayName": "Deltamon",
       "stage": "Adult",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Deltamon",
       "evolutions": [
         {
@@ -3374,7 +3463,7 @@
       "id": "raremon",
       "displayName": "Raremon",
       "stage": "Adult",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Raremon",
       "evolutions": [
         {
@@ -3412,7 +3501,7 @@
       "id": "metaltyranomon",
       "displayName": "MetalTyranomon",
       "stage": "Perfect",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "MetalTyranomon",
       "comment": "The V5 tree's Ultra, Chaosdramon, hangs off Mugendramon but is a Jogress with Darkdramon \u2014 a two-parent edge the schema cannot express (docs/sprite-availability.md), the same reason V4's Chaosmon is absent. This line ends at its three Ultimates.",
       "evolutions": [
@@ -3429,7 +3518,7 @@
       "id": "extyranomon",
       "displayName": "Ex-Tyranomon",
       "stage": "Perfect",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Ex-Tyranomon",
       "evolutions": [
         {
@@ -3445,7 +3534,7 @@
       "id": "nanomon",
       "displayName": "Nanomon",
       "stage": "Perfect",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Nanomon",
       "evolutions": [
         {
@@ -3461,7 +3550,7 @@
       "id": "vademon",
       "displayName": "Vademon",
       "stage": "Perfect",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Vademon",
       "evolutions": [
         {
@@ -3477,28 +3566,29 @@
       "id": "mugendramon",
       "displayName": "Mugendramon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "gazimon",
-      "spriteFile": "Mugendramon"
+      "line": "dmc-v5",
+      "spriteFile": "Mugendramon",
+      "comment": "The Version 5 section's last row is a Jogress, not an evolution: 'Mugendramon -> Ultra: Chaosdramon (Jogress with Darkdramon)'. It lives in Resources/jogress.json (US-131), which is why this node is terminal — the same shape as Versions 1, 2 and 4. Darkdramon is the dmc-v4 tree's Mega, so like V4's own Ultra row this recipe reaches across two device trees."
     },
     {
       "id": "gaioumon",
       "displayName": "Gaioumon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Gaioumon"
     },
     {
       "id": "raidenmon",
       "displayName": "Raidenmon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Raidenmon"
     },
     {
       "id": "ebemon",
       "displayName": "Ebemon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "gazimon",
+      "line": "dmc-v5",
       "spriteFile": "Ebemon"
     }
   ]

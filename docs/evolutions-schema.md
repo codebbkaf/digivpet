@@ -218,13 +218,13 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — twenty-eight nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4` and
-`gazimon` lines.
+prose — thirty nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4` and
+`dmc-v5` lines.
 
 ## Current contents
 
 `Resources/evolutions.json` holds 115 nodes across six `line` values — `dmc-v1` (21 nodes),
-`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `palmon` (10) and `gazimon` (20) — each a complete
+`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20) and `palmon` (10) — each a complete
 line from Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
@@ -314,8 +314,11 @@ Champions. Six things about it:
   `Resources/jogress.json`, which is why Darkdramon is terminal here. BanchoLeomon is the Version 3
   tree's Mega, so this recipe reaches across two device trees.
 
-`gazimon` is US-046's Digital Monster Color V5 line and is the widest of the six, because it is
-the only one that seeds **both** of its tree's Rookies:
+`dmc-v5` is the last of the same story: US-046 authored it as `gazimon`, a pruned Digital Monster
+Color Version 5 tree, and US-137 renamed it and filled that tree in. It is the widest of the six,
+because it is the only one that seeds **both** of its tree's Rookies — and completing it took no
+new node at all, only four edges, because US-046 had already seeded every name in the section.
+Seven things about it:
 
 - **Pagumon branches.** It is the first Baby II in the file with two outgoing edges — Gazimon on
   strength (the `isDefault`) and Gizamon on stamina. V3 and V4 dropped their second Rookies;
@@ -326,6 +329,17 @@ the only one that seeds **both** of its tree's Rookies:
 - **Flymon is the line's only omission** — idle-only, so it may not be named by an edge. That
   leaves both Rookies with five Champions apiece, four of them shared, converging into
   MetalTyranomon / Ex-Tyranomon / Nanomon and then Mugendramon / Gaioumon / Raidenmon.
-- **Raremon is the `isDefault` on both Rookies**, sharing each one's strength gate from below. It
+- **The second six-wide Rookie needed no ceiling raise either.** The document gives Gizamon six
+  Champions, and US-136 predicted this one really would force the out-degree ceiling past five
+  because Flymon is the section's only art-absent name. It does not: five drawable Champions is
+  four earned branches plus the junk fallback, which is exactly five edges.
+- **Psychemon is in no source tree.** US-061 invented it as a third Rookie while a Child could
+  carry only two earned branches. US-137 gave Gazimon and Gizamon their full rows, which makes
+  Psychemon's Devidramon redundant, but it keeps its branches rather than becoming a shipped Child
+  that evolves into nothing — the Geremon / Tsukaimon / Hyokomon call, made a fourth time.
+- **Raremon is the `isDefault` on all three Rookies**, sharing each one's gate from below. It
   is the V5 tree's junk Champion in the way Scumon is V3's, so unlike Piyomon's Kuwagamon the
   fallback slot has a natural occupant here.
+- **Its last row is a Jogress, not an edge.** Mugendramon → Chaosdramon with Darkdramon lives in
+  `Resources/jogress.json`, which is why Mugendramon is terminal here. Darkdramon is the Version 4
+  tree's Mega, so this recipe reaches across two device trees, as V4's own Ultra row does.

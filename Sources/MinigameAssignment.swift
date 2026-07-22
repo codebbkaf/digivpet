@@ -67,7 +67,7 @@ enum MinigameAssignment {
     ///
     /// The pairings are flavour, not mechanism: the Digital Monster Ver.1 line hits things (Button
     /// Masher), Ver.2's is about holding a charge (Power Meter), Palmon's is patient timing
-    /// (Timing Bar), Ver.3's runs (Crown Sprint), Ver.4's is quick (Reflex Strike), Gazimon's
+    /// (Timing Bar), Ver.3's runs (Crown Sprint), Ver.4's is quick (Reflex Strike), Ver.5's
     /// is the tricky one (Sequence Recall). Any permutation would satisfy the story; this one is a
     /// first guess and safe to reshuffle after playtesting.
     static let byLine: [String: MinigameKind] = [
@@ -76,7 +76,7 @@ enum MinigameAssignment {
         "palmon": .timingBar,
         "dmc-v3": .crownSprint,
         "dmc-v4": .reflexStrike,
-        "gazimon": .sequenceRecall,
+        "dmc-v5": .sequenceRecall,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

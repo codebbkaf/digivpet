@@ -178,7 +178,28 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - **Price a ceiling raise off the DRAWABLE row, not the document's row.** US-136's Palmon was
   billed by two earlier stories as six-wide and needing a raise; both of that section's
   art-absent names were in that very row, so the real row was four and no ceiling moved. `ls`
-  first, then decide.
+  first, then decide. US-137's Gizamon went the same way even though US-136 HAD run `ls`
+  and still predicted a raise: **in every device tree the junk Champion is itself a name in the
+  row**, so a Rookie's edge count simply IS its drawable count — six named minus one absent is
+  five edges, not six. Four earned is the hard limit regardless (distinct energies, four types).
+  No ceiling has moved since US-134.
+- **A device-slug rename touches a seventh place the six-place list misses: OTHER stories' tree
+  tests.** US-134 scoped `dmcv2_vademon`/`dmcv2_ebemon` AROUND the `gazimon` line, so
+  `DMCVersion2TreeTests` asserted `shared.line == "gazimon"` and that two node `comment`s contained
+  that word. `grep -rn '<old-slug>' Sources Tests docs Resources scripts` and read every hit — and
+  remember the slug is usually also a real node id, so most hits must NOT change.
+- **AC9 of every Phase E story ("every edge has at least one condition with a non-empty hint")
+  cannot be met literally — say which reading you took.** `EvolutionCriteriaTests`
+  requires the `isDefault` junk edge to carry NO criteria (US-020's fallback ignores an edge's
+  gates, so a gated junk edge lies about how it is taken), and the Digitama/Baby rungs are
+  unconditioned for the same reason. The reading that IS true and worth asserting, as three
+  claims: every EARNED edge at Child-and-up is conditioned, every condition in the whole file has
+  a non-blank hint, every junk edge is unconditioned.
+- **Prose in `docs/` is not a test, and it drifts ahead of the data.** The schema doc had described
+  the V5 line's Rookies as "five Champions apiece, four of them shared" since US-046 — true of the
+  source document, false of `evolutions.json`, where both had three, until US-137. If a claim about
+  shipped data matters, put it in an assertion; a doc bullet will be read as fact and cost a story
+  its estimate.
 - **A line-scoped alias node (`piyo_yuramon`, `dmcv4_palmon`) needs THREE data entries**: a node in
   `evolutions.json`, an `elements.json` entry and a `moves.json` entry — and the move's
   `signatureName` must be globally UNIQUE (`MoveCatalogTests`), so it cannot be copied from the
@@ -1895,4 +1916,87 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   line renamed to `dmc-v5`. It is the only seed line that already holds BOTH of its Rookies, so
   expect the tree to be near-complete like this one; read the Gizamon paragraph above before
   assuming a ceiling raise, and check `Flymon` with `ls` rather than trusting US-046's note.
+---
+
+## 2026-07-22 - US-137: Wire the Digital Monster Color Version 5 evolution tree
+- Renamed the `gazimon` seed line (US-046's pruned V5 tree) to `dmc-v5` and finished it: **ZERO new
+  nodes and FOUR new edges.** 20 nodes in the line, 115 in the file, unchanged.
+- Files: `Resources/evolutions.json` (line rename x20, 4 new edges, 4 comments), `Resources/elements.json`,
+  `Resources/moves.json`, `Sources/MinigameAssignment.swift`, `Sources/DexModel.swift` (lineTitles +
+  a stale doc-comment example), `Tests/DMCVersion5TreeTests.swift` (new, 21 tests),
+  `Tests/SeedRosterTests.swift`, `Tests/EvolutionGraphTests.swift`, `Tests/EvolutionCriteriaTests.swift`,
+  `Tests/DMCVersion2TreeTests.swift`, `Tests/RosterTests.swift`, `docs/evolutions-schema.md`.
+- Build green, **1766 tests (1745 + 21), 0 failures.** Screenshotted on 41mm and 46mm.
+
+- **Learnings for future iterations:**
+
+- **THE SECOND SIX-WIDE ROOKIE ALSO NEEDED NO CEILING RAISE — and this time the previous story had
+  already run `ls` and STILL got it wrong.** US-136 correctly caught that V4's Palmon was not really
+  six wide, then wrote that "US-137's Gizamon is a DIFFERENT case: US-046's notes say V5's only
+  omission is Flymon, so Gizamon's drawable row really is five earned + junk = six edges, and that
+  one probably WILL need the raise." The premise was right and the arithmetic was off by one:
+  **six names minus one absent is FIVE drawable, which is four earned plus the junk fallback** —
+  the five edges the `2...5` ceiling already allowed. Neither ceiling has moved in Phase E since
+  US-134. The general lesson is sharper than "run `ls` first": **a row's edge count is
+  `drawable − 1 + 1` only if the junk Champion is IN the row**, and in all five device trees it is
+  (Numemon, Vegimon, Scumon, Nanimon, Raremon are each a Champion the document itself lists). So
+  the edge count IS the drawable count, and the ceiling question is just "how many of the row have
+  sheets?" Four earned is the hard limit anyway — `SeedRosterTests` wants distinct dominant
+  energies and there are only four.
+
+- **A Phase E story can add NO node at all.** US-133 added 10, US-134 13, US-135 3, US-136 1, this
+  one 0. Every playable name in the Version 5 section was already a node (US-046) and the junk
+  branches already existed (US-061); what was missing was four ARROWS the document draws. Orphans
+  757 → 757 for the second story running. Counted with Appendix B over a regenerated
+  `roster.generated.json` AND cross-checked by recomputing the count against
+  `git show HEAD:Resources/evolutions.json` joined to the same roster — identical stage by stage.
+  `DMCVersion5TreeTests.testTheStoryAddedNoNodesAndSoRemovedNoOrphans` pins it.
+  **Expect the remaining Pendulum trees (US-138..143) to be the opposite shape**: none of them has a
+  seed line at all, so every one of them is authoring from an empty start rather than finishing
+  someone's pruned tree. US-137 is where the "rename and finish" pattern runs out.
+
+- **The schema doc was already describing the tree this story built.** `docs/evolutions-schema.md`
+  said the V5 line "leaves both Rookies with five Champions apiece, four of them shared" — which
+  was true of the DOCUMENT and false of the DATA, where both Rookies had three. Prose in a doc is
+  not a test. If a claim about the shipped data matters, it belongs in an assertion; the doc line
+  had been wrong since US-046 and nothing caught it.
+
+- **AC9 ("every edge has at least one condition with a non-empty hint") cannot be met literally,
+  and every Phase E story has quietly re-read it.** `EvolutionCriteriaTests.testEveryJunkFallbackIsReachableByInaction`
+  requires the `isDefault` edge to carry NO criteria — US-020's fallback ignores an edge's gates, so
+  a gated junk edge is data that lies about how it is taken — and the Digitama/Baby rungs are
+  unconditioned for the same reason. The honest reading, asserted here as three separate claims:
+  every EARNED edge at Child-and-up is conditioned, every condition in the WHOLE file has a
+  non-blank hint, and every junk edge is unconditioned. Say which reading you took in `notes`.
+
+- **A line rename is still exactly six places, four trees running** (`elements.json` lineDefaults,
+  `moves.json` lineDefaults, `MinigameAssignment.byLine`, `DexModel.lineTitles`,
+  `EvolutionGraphTests`' per-line count dict, `SeedRosterTests`' `$0.line ==` filters) — **plus one
+  this tree had that the others did not: OTHER stories' tests asserting on the old slug.**
+  `DMCVersion2TreeTests` asserted `shared.line == "gazimon"` and that two `dmcv2_*` node comments
+  contained the word "gazimon", because US-134 scoped Vademon and Ebemon AROUND this line. A
+  `grep -rn '<old-slug>' Sources Tests docs Resources scripts` and reading every hit is what caught
+  it; the node id `gazimon` is also a real id, so most hits must NOT change.
+
+- **`extyranomon` is in `RosterTests`' alias list but is NOT a line-scoped alias.** It is the
+  roster's `ex-tyranomon` with the hyphen dropped — one id in two spellings, not one Digimon in two
+  trees like `dmcv2_vademon`. A test now pins the difference, because the list reads as though V5
+  needed a scoped id when it is in fact the line that OWNS the plain `vademon`/`ebemon` ids US-134
+  had to scope for V2. Phase E's alias tally is still four: `dmcv1_shinmonzaemon`, `dmcv2_ebemon`,
+  `dmcv2_vademon`, `dmcv4_palmon`.
+
+- **The Tsukaimon call, a fourth time, and it should stop being called a judgement.** Psychemon is
+  in no source tree (US-061 invented it while a Child could carry two earned branches); giving
+  Gazimon and Gizamon their full rows made its Devidramon redundant, and emptying it would have
+  left a shipped Child that evolves into nothing. It keeps its branches. That is US-134's Geremon,
+  US-135's Tsukaimon, US-136's Hyokomon/Muchomon and now this — **treat "the node keeps what it
+  has" as the default and only deviate with a reason in the data file.**
+
+- **"Mugendramon (Machinedramon)" is one Digimon.** The document writes the dub name in
+  parentheses; `Machinedramon` matches nothing in the pack or the roster. A test pins that, because
+  a parenthetical in a source tree reads exactly like a second name to wire.
+
+- REMAINS: US-138 onward (24/56 passing). US-138 is Pendulum Color V1 Nature Spirits — the first
+  Phase E tree with NO seed line behind it, so read the paragraph above about that before
+  estimating it against US-135/136/137's size.
 ---

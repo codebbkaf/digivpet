@@ -335,10 +335,11 @@ final class DexModel: ObservableObject {
         "dmc-v2": "Color Ver.2",
         "dmc-v3": "Color Ver.3",
         "dmc-v4": "Color Ver.4",
+        "dmc-v5": "Color Ver.5",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id
-    /// (`palmon`, `gazimon`), in which case the line is named after its namesake's display name,
+    /// (`palmon`, the last one left), in which case the line is named after its namesake's display name,
     /// keeping the casing and any punctuation the roster already chose. A key that is neither
     /// falls back to itself rather than failing: a heading reading `patamon` is a cosmetic slip,
     /// a missing line is a lost tree.

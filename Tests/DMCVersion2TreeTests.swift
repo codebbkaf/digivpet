@@ -189,7 +189,7 @@ final class DMCVersion2TreeTests: XCTestCase {
         XCTAssertTrue(ids.contains("dmcv2_ebemon"))
     }
 
-    /// The scoped Vademon and Ebemon are the same Digimon on the same art as the gazimon line's,
+    /// The scoped Vademon and Ebemon are the same Digimon on the same art as the dmc-v5 line's,
     /// not copies of the sprite and not invented Digimon — the dmcv1_shinmonzaemon pattern exactly.
     func testTheScopedVademonAndEbemonShareTheArtOfTheOnesInTheGazimonLine() throws {
         for (scopedId, sharedId) in [("dmcv2_vademon", "vademon"), ("dmcv2_ebemon", "ebemon")] {
@@ -199,7 +199,7 @@ final class DMCVersion2TreeTests: XCTestCase {
             XCTAssertEqual(scoped.displayName, shared.displayName)
             XCTAssertEqual(scoped.spriteFile, shared.spriteFile)
             XCTAssertEqual(scoped.stage, shared.stage)
-            XCTAssertEqual(shared.line, "gazimon")
+            XCTAssertEqual(shared.line, "dmc-v5")
             XCTAssertEqual(scoped.line, line)
         }
     }
@@ -238,9 +238,9 @@ final class DMCVersion2TreeTests: XCTestCase {
 
         XCTAssertTrue(try comment(on: "whamon").contains("Perfect"),
                       "the relocated Digimon must say which rung its art forced it onto")
-        XCTAssertTrue(try comment(on: "dmcv2_vademon").contains("gazimon"),
+        XCTAssertTrue(try comment(on: "dmcv2_vademon").contains("dmc-v5"),
                       "a scoped id must say which line already took the plain one")
-        XCTAssertTrue(try comment(on: "dmcv2_ebemon").contains("gazimon"))
+        XCTAssertTrue(try comment(on: "dmcv2_ebemon").contains("dmc-v5"))
         XCTAssertTrue(try comment(on: "elecmon").contains("Geremon"),
                       "the Rookie that adopted Geremon must say so")
         XCTAssertTrue(try comment(on: "vegimon").contains("SkullGreymon"),

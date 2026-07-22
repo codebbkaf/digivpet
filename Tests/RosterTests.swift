@@ -94,7 +94,7 @@ final class RosterTests: XCTestCase {
             }
         }
         // `dmcv1_shinmonzaemon` is US-133's line-scoped ShinMonzaemon, `dmcv2_vademon` /
-        // `dmcv2_ebemon` are US-134's line-scoped Vademon and Ebemon (the gazimon line owns the
+        // `dmcv2_ebemon` are US-134's line-scoped Vademon and Ebemon (the dmc-v5 line owns the
         // plain ids), and `dmcv4_palmon` is US-136's line-scoped Palmon (the palmon line owns
         // that one). All four are the piyo_yuramon pattern: one roster entry, two nodes, so the
         // second id is an alias with no entry of its own.

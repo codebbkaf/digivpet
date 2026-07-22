@@ -575,7 +575,7 @@ final class SeedRosterTests: XCTestCase {
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
         let adult = Stage.adult.ladderIndex!
-        let above = graph.nodes.filter { $0.line == "gazimon" && ($0.stage.ladderIndex ?? -1) >= adult }
+        let above = graph.nodes.filter { $0.line == "dmc-v5" && ($0.stage.ladderIndex ?? -1) >= adult }
 
         XCTAssertFalse(above.isEmpty, "the Gazimon line has no Adult-or-later nodes at all")
         for node in above {
@@ -622,10 +622,10 @@ final class SeedRosterTests: XCTestCase {
     func testGizamonIsReachedThroughPagumonRatherThanItsOwnEgg() throws {
         let gizamon = try XCTUnwrap(graph.node(id: "gizamon"))
         XCTAssertEqual(gizamon.stage, .child)
-        XCTAssertEqual(gizamon.line, "gazimon")
+        XCTAssertEqual(gizamon.line, "dmc-v5")
         XCTAssertEqual(graph.parents(of: "gizamon").map(\.id), ["pagumon"])
 
-        let eggs = graph.nodes(at: .digitama).filter { $0.line == "gazimon" }
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == "dmc-v5" }
         XCTAssertEqual(eggs.map(\.id), ["gazi_digitama"],
                        "this line has exactly one egg — Gizamon has no Giza_Digitama on disk")
     }
