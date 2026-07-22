@@ -337,6 +337,7 @@ final class DexModel: ObservableObject {
         "dmc-v4": "Color Ver.4",
         "dmc-v5": "Color Ver.5",
         "penc-nsp": "Pendulum NSp",
+        "penc-ds": "Pendulum DS",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id

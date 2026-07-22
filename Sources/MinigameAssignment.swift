@@ -60,7 +60,7 @@ enum MinigameKind: String, CaseIterable, Codable, Equatable {
 /// round opens) and "your Digimon has no training game" would be an unrefundable dead end.
 enum MinigameAssignment {
     /// The shipped lines, one game each. There were six of them and six games until US-138; there
-    /// are seven lines now and Phase E adds five more, so a game is shared rather than owned.
+    /// are eight lines now and Phase E adds four more, so a game is shared rather than owned.
     ///
     /// The keys are `EvolutionNode.line` values; `testTheTableNamesExactlyTheShippedLines` pins them
     /// against the graph, so renaming a line in `evolutions.json` fails a test rather than silently
@@ -86,6 +86,10 @@ enum MinigameAssignment {
         // and all six games are still reached — rather than the bijection, which was only ever a
         // coincidence of there having been exactly six lines.
         "penc-nsp": .timingBar,
+        // US-139's Deep Savers is the eighth line and the second sharer. Crown Sprint is a race,
+        // which is the closest a land-bound minigame gets to a swim, and its line (`dmc-v3`, 20
+        // nodes) was tied for the fewest Digimon with `dmc-v5`'s — so flavour broke the tie.
+        "penc-ds": .crownSprint,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

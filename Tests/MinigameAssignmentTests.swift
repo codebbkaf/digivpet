@@ -26,15 +26,17 @@ final class MinigameAssignmentTests: XCTestCase {
                        "a game no shipped line plays: \(Set(MinigameKind.allCases).subtracting(assigned))")
     }
 
-    /// The one pair that shares a game, named so that a third line landing on `timingBar` by
-    /// accident reads as a slip rather than as the pattern.
-    func testTheOnlySharedGameIsTheTwoNatureLines() {
+    /// Exactly which lines share a game, spelled out so that a line landing on a shared game by
+    /// accident reads as a slip rather than as the pattern. Two pairs since US-139: the two
+    /// nature-flavoured trees on the timing bar, and Deep Savers beside Ver.3 on the sprint.
+    func testTheSharedGamesAreExactlyTheTwoAuthoredPairs() {
         let sharers = Dictionary(grouping: MinigameAssignment.byLine.keys,
                                  by: { MinigameAssignment.byLine[$0]! })
             .filter { $0.value.count > 1 }
             .mapValues { $0.sorted() }
 
-        XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp"]])
+        XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp"],
+                                 .crownSprint: ["dmc-v3", "penc-ds"]])
     }
 
     /// The table is keyed on strings the JSON owns, so a renamed line would silently drop that whole

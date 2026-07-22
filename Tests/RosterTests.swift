@@ -105,9 +105,16 @@ final class RosterTests: XCTestCase {
         // Fresh and In-Training, the whole Agumon-to-WarGreymon thread with V1, Leomon with V4,
         // and Kabuterimon/Garurumon/WereGarurumon/MetalGarurumon with V2. A node's `line` is
         // single-valued, so a Digimon in two trees is two nodes on one roster entry.
+        //
+        // The five `pencds_` ids are US-139's, and two of them are the first aliases in the file
+        // whose PLAIN id belongs to another Pendulum tree rather than to a Digital Monster one:
+        // Deep Savers draws MegaSeadramon and MetalSeadramon over Coelamon, and US-138 had already
+        // given both plain ids to Nature Spirits.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
-                        "extyranomon", "pencnsp_agumon", "pencnsp_botamon", "pencnsp_garurumon",
+                        "extyranomon", "pencds_coelamon", "pencds_megaseadramon",
+                        "pencds_metalseadramon", "pencds_seadramon", "pencds_whamon",
+                        "pencnsp_agumon", "pencnsp_botamon", "pencnsp_garurumon",
                         "pencnsp_greymon", "pencnsp_kabuterimon", "pencnsp_koromon",
                         "pencnsp_leomon", "pencnsp_metalgarurumon", "pencnsp_metalgreymon",
                         "pencnsp_seadramon", "pencnsp_wargreymon", "pencnsp_weregarurumon",

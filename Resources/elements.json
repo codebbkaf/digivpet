@@ -151,7 +151,38 @@
     "heraklekabuterimon": { "element": "electric", "attribute": "vaccine" },
     "pencnsp_metalgarurumon": { "element": "ice", "attribute": "data" },
     "diarbbitmon": { "element": "wind", "attribute": "vaccine" },
-    "noblepumpmon": { "element": "plant", "attribute": "virus" }
+    "noblepumpmon": { "element": "plant", "attribute": "virus" },
+    "goma_digitama": { "element": "water", "attribute": "free" },
+    "pitchmon": { "element": "water", "attribute": "free" },
+    "pukamon": { "element": "water", "attribute": "free" },
+    "gomamon": { "element": "water", "attribute": "vaccine" },
+    "ganimon": { "element": "earth", "attribute": "virus" },
+    "shakomon": { "element": "water", "attribute": "virus" },
+    "jellymon": { "element": "electric", "attribute": "data" },
+    "ikkakumon": { "element": "ice", "attribute": "vaccine" },
+    "rukamon": { "element": "water", "attribute": "data" },
+    "pencds_coelamon": { "element": "water", "attribute": "data" },
+    "gesomon": { "element": "water", "attribute": "virus" },
+    "octmon": { "element": "water", "attribute": "virus" },
+    "pencds_seadramon": { "element": "water", "attribute": "data" },
+    "teslajellymon": { "element": "electric", "attribute": "data" },
+    "diginorimon": { "element": "plant", "attribute": "virus" },
+    "zudomon": { "element": "ice", "attribute": "vaccine" },
+    "pencds_whamon": { "element": "water", "attribute": "vaccine" },
+    "pencds_megaseadramon": { "element": "water", "attribute": "data" },
+    "marindevimon": { "element": "dark", "attribute": "virus" },
+    "dagomon": { "element": "dark", "attribute": "virus" },
+    "anomalocarimon": { "element": "water", "attribute": "virus" },
+    "thetismon": { "element": "electric", "attribute": "vaccine" },
+    "piranimon": { "element": "water", "attribute": "virus" },
+    "vikemon": { "element": "ice", "attribute": "vaccine" },
+    "plesiomon": { "element": "water", "attribute": "vaccine" },
+    "pencds_metalseadramon": { "element": "steel", "attribute": "data" },
+    "leviamon": { "element": "dark", "attribute": "virus" },
+    "pukumon": { "element": "water", "attribute": "virus" },
+    "aegisdramon": { "element": "light", "attribute": "vaccine" },
+    "amphimon": { "element": "electric", "attribute": "free" },
+    "metalpiranimon": { "element": "steel", "attribute": "virus" }
   },
 
   "lineDefaults": {
@@ -161,7 +192,8 @@
     "dmc-v3": { "element": "wind", "attribute": "free" },
     "dmc-v4": { "element": "wind", "attribute": "free" },
     "dmc-v5": { "element": "dark", "attribute": "free" },
-    "penc-nsp": { "element": "wind", "attribute": "free" }
+    "penc-nsp": { "element": "wind", "attribute": "free" },
+    "penc-ds": { "element": "water", "attribute": "free" }
   },
 
   "keywordRules": [

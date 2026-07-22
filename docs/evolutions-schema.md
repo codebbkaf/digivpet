@@ -218,14 +218,14 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — fifty-three nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
-`dmc-v5` and `penc-nsp` lines.
+prose — seventy-two nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
+`dmc-v5`, `penc-nsp` and `penc-ds` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 145 nodes across seven `line` values — `dmc-v1` (21 nodes),
-`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10) and `penc-nsp` (30) —
-each a complete line from Digitama through Ultimate.
+`Resources/evolutions.json` holds 176 nodes across eight `line` values — `dmc-v1` (21 nodes),
+`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10), `penc-nsp` (30) and
+`penc-ds` (31) — each a complete line from Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
@@ -347,7 +347,7 @@ Seven things about it:
 `penc-nsp` is the Pendulum Color V1 Nature Spirits tree (US-138), and it is the first line in the
 file that was authored from **nothing**: the five `dmc-v*` lines each renamed a pruned seed line
 that US-008/US-044/US-045/US-046 had already written, and there was no Pendulum seed to rename. At
-30 nodes it is the widest line here. Six things about it:
+30 nodes it was the widest line here until `penc-ds` overtook it by one. Six things about it:
 
 - **Twelve of its thirty nodes are line-scoped aliases**, the `piyo_yuramon` pattern at four times
   the previous largest scale. This tree shares twelve Digimon with the Digital Monster Color
@@ -375,3 +375,31 @@ that US-008/US-044/US-045/US-046 had already written, and there was no Pendulum 
 - **Its Mega row is half Jogress.** "WarGreymon / Omegamon (Jogress)" — Omegamon is the
   WarGreymon + MetalGarurumon recipe in `Resources/jogress.json`, and this is the only line that
   holds BOTH of that recipe's parents.
+
+`penc-ds` is the Pendulum Color V2 Deep Savers tree (US-139), the second line authored from
+nothing and, at 31 nodes, the widest in the file. It is also the first Phase E tree with **no
+absent name**: every one of the twenty-seven Digimon the section draws has a playable 48x64 sheet.
+Five things about it:
+
+- **Six of the document's names are not the names the art is filed under**, and that is the whole
+  reason the tree is complete. Four have nothing at all under the document's spelling and a real
+  sheet under another — Pichimon/`Pitchmon`, Bukamon/`Pukamon`, Syakomon/`Shakomon` and
+  Dragomon/`Dagomon` (the Dragomon–Dagomon identification is Wikimon's; the rest are alternate
+  romanizations the pack itself uses). Two more have a **dexOnly twin under the document's
+  spelling**: `octomon` and `marinedevimon` are idle-only, while `Adult/Octmon.png` and
+  `Perfect/MarinDevimon.png` are the animated sheets of the same two Digimon. Taking the document
+  at face value would have called four names absent and stranded Pukumon and Leviamon behind two
+  dexOnly Champions.
+- **Five of its thirty-one nodes are line-scoped aliases** — Coelamon (from `dmc-v4`), Seadramon
+  (`dmc-v1`), Whamon (`dmc-v2`), and MegaSeadramon and MetalSeadramon (`penc-nsp`). The last two
+  are the first aliases in the file whose plain id belongs to another **Pendulum** tree rather than
+  to a Digital Monster one.
+- **Its Baby rungs are its own Digimon, not aliases.** Pitchmon and Pukamon belong to no other
+  line, which is why this is the first Phase E story to remove an orphan at Baby I or Baby II.
+- **Its egg is `goma_digitama`, a real roster Digitama**, for the same reason `penc-nsp`'s is:
+  `maps.json` grants a Digitama by ROSTER id and an alias has no roster entry. Goma Digitama is
+  Gomamon's, and Gomamon is the Rookie the In-Training falls to by inaction.
+- **Its junk chain is this app's invention, not the document's** — the Pendulum sections draw no
+  junk branch at all. Diginorimon → Piranimon → MetalPiranimon were chosen off unused sheets, so
+  the neglect path pays for itself in orphans; Diginorimon keeps one earned edge back up to
+  Zudomon, the way `penc-nsp`'s PlatinumScumon does.

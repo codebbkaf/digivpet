@@ -230,6 +230,27 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - **`Resources/*.md` is bundled with the app**, so a test can read the source evolution-tree
   markdown at run time and assert what the document does and does NOT say — that is how an
   invented junk chain becomes an assertion instead of a comment.
+- **A source-document name with "no sprite" usually has ANOTHER SPELLING — searching the document's
+  spelling is half a search.** US-139 found six in one section: four with nothing at all under the
+  document's name and a real 48x64 sheet under a romanization or dub name the pack uses
+  (Pichimon/`Pitchmon`, Bukamon/`Pukamon`, Syakomon/`Shakomon`, Dragomon/`Dagomon`), and two with a
+  **dexOnly TWIN** — the roster holds BOTH `octomon` (idle-only) and `octmon` (animated), and both
+  `marinedevimon` and `marindevimon`. The twin is the nastier shape: the file exists and the roster
+  entry exists, and only `dexOnly` says it is unusable. **Search the roster by SUBSTRING of the
+  display name and check every hit's `dexOnly` before calling a name absent** — otherwise a story
+  rehomes or drops a subtree it never needed to.
+- **Adding a LINE is an eight-place knock-on**, in the order they fail: `EvolutionGraphTests`'
+  per-line count dict; `graph.nodes.count` in `ElementCatalogTests` AND
+  `EvolutionGraphValidatorTests`; `EggHatchingTests`' seeded-Digitama set; `SeedRosterTests`'
+  `seedLines`; `RosterTests`' exact alias list; `EvolutionCriteriaTests.junkIds` (the new tree's
+  invented Child-rung and Adult-rung junk targets); and `MinigameAssignmentTests`' sharer map.
+  Budget for all eight before writing data.
+- **`json.dump` cannot rewrite `Resources/evolutions.json` — the file is mixed-encoding.** Comments
+  written before US-136 hold `—` escapes and later ones hold literal em dashes, so neither
+  `ensure_ascii` setting round-trips and any dump reformats ~30 unrelated lines. Append new nodes
+  TEXTUALLY: `json.dumps` each node with `indent=2`, indent every line four spaces, splice before
+  the final `\n  ]\n}`. Do `elements.json` / `moves.json` by string insertion too — their entries
+  are one-line objects a dump would explode. Keep non-ASCII out of new comments.
 - **The app's bundle id for `simctl` is `com.digivpet.DigiVPet`** (`project.yml`). A wrong id fails
   `simctl launch` with an opaque FBSOpenApplicationServiceErrorDomain code=4 while
   `simctl io screenshot` still writes a plausible PNG of the watch face — which reads as the very
@@ -2098,4 +2119,72 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-139 onward (25/56 passing). US-139..143 are the other five Pendulum trees and are
   the same shape as this one — no seed line, heavy overlap with the Digital Monster trees, no junk
   branch in the document, and a Digitama to choose from the roster.
+---
+
+## 2026-07-22 - US-139: Wire the Pendulum Color V2 Deep Savers evolution tree
+- Authored `penc-ds` from NOTHING — **31 new nodes**, now the widest line in the file; 145 -> 176.
+  **Orphans 739 -> 713 (26 removed.)** The first Phase E tree with NO absent name. The tree renders
+  in the Dex on both watch sizes.
+- Files: `Resources/evolutions.json` (+31 nodes), `Resources/elements.json`, `Resources/moves.json`
+  (+31 entries each plus a `penc-ds` lineDefault), `Sources/MinigameAssignment.swift`,
+  `Sources/DexModel.swift`, `Tests/PendulumDeepSaversTreeTests.swift` (new, 24 tests),
+  `Tests/EvolutionGraphTests.swift`, `Tests/EvolutionGraphValidatorTests.swift`,
+  `Tests/ElementCatalogTests.swift`, `Tests/EvolutionCriteriaTests.swift`,
+  `Tests/SeedRosterTests.swift`, `Tests/RosterTests.swift`, `Tests/EggHatchingTests.swift`,
+  `Tests/MinigameAssignmentTests.swift`, `Tests/PendulumNatureSpiritsTreeTests.swift`,
+  `docs/evolutions-schema.md`.
+- Build green, **1813 tests (1789 + 24), 0 failures** — and 1813 is exactly
+  `grep -cE '^\s+func test' Tests/*.swift`, so the summary is not a crashed-host undercount.
+  Validator: zero findings over the whole file.
+
+- **Learnings for future iterations:**
+
+- **A NAME WITH NO SPRITE IS USUALLY A NAME WITH ANOTHER SPELLING. `find -iname` ON THE DOCUMENT'S
+  SPELLING IS HALF A SEARCH.** Six of this section's twenty-seven names would have been reported
+  absent or dexOnly by the search every earlier Phase E story ran, and all six are playable:
+  - **Nothing under the document's spelling, a real sheet under another** — Pichimon/`Pitchmon`,
+    Bukamon/`Pukamon`, Syakomon/`Shakomon`, Dragomon/`Dagomon`. The first three are alternate
+    romanizations the pack itself uses; the fourth is a dub name (Wikimon's Dagomon page gives
+    Dragomon as the Japanese one).
+  - **A dexOnly TWIN under the document's spelling** — the roster holds BOTH `octomon` (idle-only)
+    and `octmon` (a real 48x64 sheet), and both `marinedevimon` (idle-only) and `marindevimon`.
+    This is the nastier shape: `find -iname '*octomon*'` finds a file and the roster finds an
+    entry, so the name looks present, and it is only the `dexOnly` flag that says otherwise.
+  **Before calling a name absent, search the roster by SUBSTRING of the display name and check
+  every hit's `dexOnly`, not just the exact spelling.** US-138 spent its story rehoming Betamon's
+  subtree; this one would have had to do that twice (Dagomon → Pukumon behind Octmon, Leviamon
+  behind MarinDevimon) and drop four more, for nothing.
+- **Adding a line is now an EIGHT-place knock-on, not six.** US-138 listed six whole-file facts;
+  two more surfaced here: `EvolutionCriteriaTests.junkIds` (a new tree invents a junk chain, and
+  the Child-rung and Adult-rung targets must be named there or the junk-fallback test fails) and
+  `MinigameAssignmentTests`' shared-game assertion. The full list, in the order they fail:
+  `EvolutionGraphTests`' per-line count dict; `graph.nodes.count` in `ElementCatalogTests` AND
+  `EvolutionGraphValidatorTests`; `EggHatchingTests`' seeded-Digitama set; `SeedRosterTests`'
+  `seedLines`; `RosterTests`' exact alias list; `EvolutionCriteriaTests.junkIds`;
+  `MinigameAssignmentTests`' sharer map.
+- **US-138's own tree test asserted the GLOBAL node count and this story broke it** — the exact
+  mistake US-138's notes had already named for US-137's. A story's "I added N nodes" claim must be
+  `graph.nodes.filter { $0.line == line }.count`, never `graph.nodes.count`, however obviously
+  true the global number is on the day it is written. Rewritten in place here.
+- **The lines have outgrown the games AGAIN, and the shared-game test needs a MAP, not a pair.**
+  `testTheOnlySharedGameIsTheTwoNatureLines` was written for exactly one sharing pair; `penc-ds` is
+  the eighth line and the second sharer (Crown Sprint, beside `dmc-v3`). It is now
+  `testTheSharedGamesAreExactlyTheTwoAuthoredPairs` and asserts the whole
+  game -> [lines] dictionary, which scales to US-140..143 by adding a line to a literal.
+- **An alias's plain id need not belong to a Digital Monster tree any more.**
+  `pencds_megaseadramon` and `pencds_metalseadramon` shadow ids US-138 gave to `penc-nsp`. The
+  Pendulum trees overlap EACH OTHER as well as the dmc-v* ones, so from US-140 on, price a tree by
+  checking the plain id against the WHOLE file rather than against the five device trees.
+- **`json.dump` cannot rewrite `evolutions.json`: the file is mixed-encoding.** Older comments hold
+  `—` escapes and the US-136-and-later ones hold literal em dashes, so neither
+  `ensure_ascii=True` nor `False` round-trips — a dump reformats ~30 unrelated lines either way.
+  Append the new nodes TEXTUALLY (`json.dumps` each node, indent it four spaces, splice before the
+  final `\n  ]\n}`), and do `elements.json` / `moves.json` by string insertion too, since their
+  entries are one-line objects that any dump would explode. Keep non-ASCII out of new comments.
+- **The notification alert ate the first screenshot pass again** — it survives uninstall, exactly
+  as the pattern above says, and `simctl erase` is still the only fix. Budget the erase into the
+  FIRST run rather than discovering it on the shot.
+- REMAINS: US-140 onward (26/56 passing). US-140..143 are the last four Pendulum trees, the same
+  shape as this one — no seed line, no junk branch in the document, a Digitama to choose from the
+  roster, and now overlap with the other Pendulum trees as well as the Digital Monster ones.
 ---

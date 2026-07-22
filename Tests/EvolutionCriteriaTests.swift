@@ -22,13 +22,16 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// document names: the Pendulum Color V1 Nature Spirits section draws no junk branch at all,
     /// while every Child and Adult here needs one. US-138 chose them off the unused sheets — see
     /// their `comment`s in `evolutions.json`.
+    /// `diginorimon` and `piranimon` joined in US-139 for the same reason as US-138's pair: the
+    /// Pendulum Color V2 Deep Savers section draws no junk branch either, so this app chose a
+    /// water-flavoured one off unused sheets — digital seaweed under a shoal of piranha.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
-        "platinumscumon",
+        "platinumscumon", "diginorimon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
-        "etemon", "pumpmon",
+        "etemon", "pumpmon", "piranimon",
         // Ultimate
         "kingetemon",
     ]

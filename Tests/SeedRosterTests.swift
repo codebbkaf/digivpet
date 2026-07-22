@@ -45,6 +45,12 @@ final class SeedRosterTests: XCTestCase {
         // grants a Digitama by ROSTER id and an alias has no roster entry.
         ["tento_digitama", "pencnsp_botamon", "pencnsp_koromon", "pencnsp_agumon",
          "platinumscumon", "pumpmon", "noblepumpmon"],
+        // US-139's Pendulum Color V2 Deep Savers line, the same shape: no junk branch in the
+        // document, so Diginorimon, Piranimon and MetalPiranimon were chosen off unused sheets,
+        // and its egg is `goma_digitama` — Gomamon's own, Gomamon being the Rookie its
+        // In-Training falls to.
+        ["goma_digitama", "pitchmon", "pukamon", "gomamon",
+         "diginorimon", "piranimon", "metalpiranimon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.

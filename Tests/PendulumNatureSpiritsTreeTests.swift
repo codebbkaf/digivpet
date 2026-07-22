@@ -494,7 +494,9 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 145, "115 before US-138, plus this tree's 30")
+        // Counted over THIS LINE, never over the file: the global total was 145 when US-138 landed
+        // and US-139 moved it to 176 without touching a node here. A whole-file count cannot say
+        // anything about what one story did once another tree lands beside it.
         XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 30)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        12, "the twelve aliases, which remove no orphan")
