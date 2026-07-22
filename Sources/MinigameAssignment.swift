@@ -90,6 +90,11 @@ enum MinigameAssignment {
         // which is the closest a land-bound minigame gets to a swim, and its line (`dmc-v3`, 20
         // nodes) was tied for the fewest Digimon with `dmc-v5`'s — so flavour broke the tie.
         "penc-ds": .crownSprint,
+        // US-140's Nightmare Soldiers is the ninth line and the third sharer. Sequence Recall is
+        // the tricky one — remembering a pattern in the dark is what a tree of ghosts, wizards and
+        // vampires trains at — and its line (`dmc-v5`, 20 nodes) was tied with `dmc-v3`'s for the
+        // fewest Digimon, so flavour broke the tie the same way it did in US-139.
+        "penc-nso": .sequenceRecall,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

@@ -51,6 +51,12 @@ final class SeedRosterTests: XCTestCase {
         // In-Training falls to.
         ["goma_digitama", "pitchmon", "pukamon", "gomamon",
          "diginorimon", "piranimon", "metalpiranimon"],
+        // US-140's Pendulum Color V3 Nightmare Soldiers line, the same shape again: no junk branch
+        // in the document, so Gokimon, Darumamon and Deathmon were chosen off unused sheets,
+        // and its egg is `baku_digitama` — Bakumon's own, Bakumon being the Rookie its In-Training
+        // falls to.
+        ["baku_digitama", "mokumon", "petimeramon", "bakumon",
+         "gokimon", "darumamon", "deathmon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.

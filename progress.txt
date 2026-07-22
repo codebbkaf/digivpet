@@ -21,6 +21,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E: grep the WHOLE tree markdown before spending an orphan on an invented junk node.** A
+  later device section may draw it as an earned branch (US-140 lost WaruMonzaemon to US-142's V5
+  section this way). The same grep is what the story's own "this name is not in the document" test
+  does — write it before authoring, not after.
+- **PHASE E: a document name with no `find -iname` hit is usually a DUB name, not an absent
+  Digimon.** Try the Japanese one: Mammothmon/`Mammon`, Wizardmon/`Wizarmon`, Pumpkinmon/`Pumpmon`,
+  Piedmon/`Piemon`, Myotismon/`Vamdemon`, Candlemon/`Candmon`, Apemon/`Hanumon`. Also check the
+  roster by SUBSTRING and read every hit's `dexOnly` — a playable twin can hide behind an
+  idle-only one under the document's own spelling (Octomon/`Octmon`).
+- **`care.battleWinRatio` must not gate a CHILD's earned edge.** The shared reachability fixture
+  (`ConditionContext` with `battlesLifetime:`) cannot express a win ratio, so the branch is
+  unreachable in tests. Fine at Adult, where nothing walks it.
 - SIMULATOR SCREENSHOTS: `export DEVELOPER_DIR=/Applications/Xcode_26_4_1.app/Contents/Developer`,
   build once against Series 11 (46mm, watchOS 26.4), then `simctl install` the SAME .app onto the
   41mm Series 9 (watchOS 10.4) — deployment target is 10.0 and Series 9 is not a usable
@@ -2187,4 +2199,83 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-140 onward (26/56 passing). US-140..143 are the last four Pendulum trees, the same
   shape as this one — no seed line, no junk branch in the document, a Digitama to choose from the
   roster, and now overlap with the other Pendulum trees as well as the Digital Monster ones.
+---
+
+## 2026-07-22 - US-140 (Wire the Pendulum Color V3 Nightmare Soldiers evolution tree)
+
+Authored `penc-nso` from nothing, the third Phase E device tree with no seed line to rename.
+**31 nodes, 176 -> 207**, tying `penc-ds` as the widest line in the file.
+**ORPHANS 713 -> 692, 21 removed**, counted with Appendix B over a regenerated
+`roster.generated.json` (Digitama 49->48, Baby I 37->36, Baby II 41->40, Child 100->97,
+Adult 149->144, Perfect 135->129, Ultimate 186->182; Armor-Hybrid unchanged at 16). The other 10
+new nodes are line-scoped `pencnso_` aliases and remove nothing.
+
+The tree, from `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` line 124:
+Baku Digitama -> Mokumon -> PetiMeramon, forking to Bakumon / Candmon / PicoDevimon, seven
+Champion-to-Mega threads above them, and Gokimon -> Darumamon -> Deathmon as the invented junk
+chain. Egg is `baku_digitama` (Bakumon's own, already dropped by `03_ocean`, so maps.json was not
+touched).
+
+Files: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`Sources/DexModel.swift`, `Sources/MinigameAssignment.swift`,
+`Tests/PendulumNightmareSoldiersTreeTests.swift` (new, 25 tests),
+`Tests/EvolutionGraphTests.swift`, `Tests/EvolutionGraphValidatorTests.swift`,
+`Tests/ElementCatalogTests.swift`, `Tests/EvolutionCriteriaTests.swift`,
+`Tests/SeedRosterTests.swift`, `Tests/RosterTests.swift`, `Tests/EggHatchingTests.swift`,
+`Tests/MinigameAssignmentTests.swift`, `docs/evolutions-schema.md`.
+
+Build green, **1838 tests (1813 + 25), 0 failures** - and 1838 is exactly
+`grep -cE '^\s+func test' Tests/*.swift`, so the summary is not a crashed-host undercount.
+Validator: zero findings over the whole file.
+
+- **Learnings for future iterations:**
+
+- **GREP THE WHOLE DOCUMENT BEFORE CHOOSING A JUNK NODE.** The junk chain is invented off orphan
+  sheets, and the only thing that makes an orphan safe to spend is that no LATER tree needs it.
+  US-140's first choice for the junk Perfect was WaruMonzaemon; the story's own
+  "none of these three is in the markdown" grep caught it in the **Version 5** Metal Empire
+  section (line 162, `Champion: Mekanorimon -> Ultimate: WaruMonzaemon -> Mega: VenomMyotismon`),
+  which is US-142's. Taking it would have forced US-142 into an alias for its own earned Ultimate
+  AND made a junk node an earned one two stories later. Darumamon replaced it. Write that grep
+  FIRST, not as a closing assertion.
+- **The same section also spends VenomVamdemon**, which this story wired as an earned Mega. US-142
+  will need `pencv5_venomvamdemon`. The Pendulum sections overlap each other more than they overlap
+  the dmc-v* ones, so from here on price a tree against the whole file AND against the remaining
+  document sections.
+- **A dub name can differ from the sprite name by a whole word, not just a letter.** US-138/139's
+  lesson was romanization drift (Pichimon/Pitchmon); this section is worse - `Mammothmon` is
+  `Mammon`, `Wizardmon` is `Wizarmon`, `Pumpkinmon` is `Pumpmon`, `Piedmon` is `Piemon`,
+  `Myotismon` is `Vamdemon`, `Candlemon` is `Candmon`. **A `find -iname '*<documentname>*'` that
+  returns nothing is not evidence of absence; try the JAPANESE name.** Nine of this section's
+  twenty-eight names would have been called absent by the search every earlier story ran, which
+  would have cost the tree a third of its nodes.
+- **A tree can be missing a whole RUNG, not just a leaf.** The unlockable slot 6 here has no
+  Rookie and no Champion with a sheet, but its Ultimate and Mega both do. The move that saved it
+  was checking Wikimon for what actually sits between the surviving rungs (Loogarmon), then
+  re-homing that Champion under a Rookie the same page links it to. **Do not drop a thread because
+  its bottom is missing** - price the rehome first, and record the reference in the node comment
+  (a test greps for "Wikimon").
+- **`ConditionContext` in the reachability fixture cannot express a battle win RATIO.** It has
+  `battlesLifetime` and no wins, so `care.battleWinRatio` on a CHILD's earned edge makes
+  `testEachRookiesEarnedBranchesAreAllReachable` fail with a bare `nil`. Earlier trees only ever
+  used that metric at Adult, where no test walks it. Keep `care.battleWinRatio` off Child edges, or
+  extend the fixture.
+- **The knock-on list is stable at eight places** (US-139's list, unchanged, all eight fired):
+  `EvolutionGraphTests`' per-line count dict; `graph.nodes.count` in `ElementCatalogTests` AND
+  `EvolutionGraphValidatorTests`; `EggHatchingTests`' seeded-Digitama set; `SeedRosterTests`'
+  `seedLines`; `RosterTests`' exact alias list; `EvolutionCriteriaTests.junkIds`;
+  `MinigameAssignmentTests`' sharer map. US-139's rewrite of that last one into a
+  game -> [lines] dictionary paid off exactly as intended: one literal.
+- **`json.dump` still cannot rewrite `evolutions.json`** - mixed encoding, as US-139 recorded.
+  Splice new nodes TEXTUALLY (`json.dumps` each node, indent four spaces, insert before the final
+  `\n  ]\n}`), and do `elements.json` / `moves.json` by string insertion. Keep new comments ASCII.
+- **A generator script is worth writing, and worth re-running rather than patching.** The whole
+  31-node tree came out of one `/tmp` python script; when the junk Perfect had to change, reverting
+  the three JSON files with `git checkout` and re-running was cleaner than hand-editing 31 nodes.
+  But CHECK EVERY `str.replace` LANDS - two of the fix-up replacements silently matched nothing
+  because of line wrapping, and the resulting node (PetiMeramon with no edges at all) passed the
+  validator and only failed on reachability.
+- REMAINS: US-141 onward (27/56 passing). US-141..143 are the last three Pendulum trees, same
+  shape - no seed line, no junk branch in the document, a Digitama to choose from the roster, and
+  now overlap with the other Pendulum trees as well as the Digital Monster ones.
 ---

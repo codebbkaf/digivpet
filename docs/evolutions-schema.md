@@ -218,14 +218,14 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — seventy-two nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
-`dmc-v5`, `penc-nsp` and `penc-ds` lines.
+prose — 103 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
+`dmc-v5`, `penc-nsp`, `penc-ds` and `penc-nso` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 176 nodes across eight `line` values — `dmc-v1` (21 nodes),
-`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10), `penc-nsp` (30) and
-`penc-ds` (31) — each a complete line from Digitama through Ultimate.
+`Resources/evolutions.json` holds 207 nodes across nine `line` values — `dmc-v1` (21 nodes),
+`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10), `penc-nsp` (30),
+`penc-ds` (31) and `penc-nso` (31) — each a complete line from Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
@@ -347,7 +347,8 @@ Seven things about it:
 `penc-nsp` is the Pendulum Color V1 Nature Spirits tree (US-138), and it is the first line in the
 file that was authored from **nothing**: the five `dmc-v*` lines each renamed a pruned seed line
 that US-008/US-044/US-045/US-046 had already written, and there was no Pendulum seed to rename. At
-30 nodes it was the widest line here until `penc-ds` overtook it by one. Six things about it:
+30 nodes it was the widest line here until `penc-ds` and `penc-nso` overtook it by one each.
+Six things about it:
 
 - **Twelve of its thirty nodes are line-scoped aliases**, the `piyo_yuramon` pattern at four times
   the previous largest scale. This tree shares twelve Digimon with the Digital Monster Color
@@ -377,7 +378,7 @@ that US-008/US-044/US-045/US-046 had already written, and there was no Pendulum 
   holds BOTH of that recipe's parents.
 
 `penc-ds` is the Pendulum Color V2 Deep Savers tree (US-139), the second line authored from
-nothing and, at 31 nodes, the widest in the file. It is also the first Phase E tree with **no
+nothing and, at 31 nodes, tied with `penc-nso` as the widest in the file. It is also the first Phase E tree with **no
 absent name**: every one of the twenty-seven Digimon the section draws has a playable 48x64 sheet.
 Five things about it:
 
@@ -403,3 +404,40 @@ Five things about it:
   junk branch at all. Diginorimon → Piranimon → MetalPiranimon were chosen off unused sheets, so
   the neglect path pays for itself in orphans; Diginorimon keeps one earned edge back up to
   Zudomon, the way `penc-nsp`'s PlatinumScumon does.
+
+`penc-nso` is the Pendulum Color V3 Nightmare Soldiers tree (US-140), the third line authored from
+nothing and the third at 31 nodes. It is the tree where the **respelling** problem is worst and the
+first Phase E tree since US-138 with names that are genuinely absent. Five things about it:
+
+- **Fifteen of the section's twenty-eight names are filed under a spelling the document does not
+  use.** Six of those the document disambiguates itself, in brackets — Tapirmon (`Bakumon`),
+  DemiDevimon (`PicoDevimon`), Apemon (`Hanumon`), SkullMeramon (`DeathMeramon`), Myotismon
+  (`Vamdemon`) and PetitMeramon (`PetiMeramon`). The other **nine** it does not, and every one of
+  them would have been reported absent by a `find` on the document's spelling alone:
+  Candlemon/`Candmon`, Wizardmon/`Wizarmon`, Mammothmon/`Mammon`, SkullMammothmon/`SkullMammon`,
+  Pumpkinmon/`Pumpmon`, NoblePumpkinmon/`NoblePumpmon`, VenomMyotismon/`VenomVamdemon`,
+  Piedmon/`Piemon` and Soloogamon/`Soloogarmon`. Unlike US-139's, none of them is a dexOnly-twin
+  case — they are dub names and romanizations, nothing more.
+- **Two names really are absent, and both are on the unlockable sixth slot's thread.** `Loogamon`
+  (the Rookie) and `Helloogamon` (the Champion) have no sheet anywhere: `find -iname '*loog*'`
+  returns exactly three files — `Adult/Loogarmon.png`, `Perfect/Soloogarmon.png` and
+  `Ultimate-Super Ultimate/Fenriloogamon.png` — and `find -iname '*hell*'` returns only Shellmon.
+  Wikimon's Loogarmon page puts Loogarmon directly above Loogamon and lists both Soloogarmon and
+  Helloogarmon among its evolutions, so `loogarmon` is wired as the rung of that line the art pack
+  actually ships and hung under Bakumon beside Garurumon. Without it the thread would have lost
+  Soloogarmon and Fenriloogamon too.
+- **Ten of its thirty-one nodes are line-scoped aliases**, the worst ratio of any tree, and three
+  of them are the file's first **triples**: V2's whole Garurumon → WereGarurumon → MetalGarurumon
+  thread is drawn by `dmc-v2`, `penc-nsp` and `penc-nso` alike, so each of those three Digimon is
+  three nodes on one roster entry. `pencnso_pumpmon` and `pencnso_noblepumpmon` are the sharpest
+  case of why an alias is not merely tidiness: US-138 chose Pumpmon as Nature Spirits' invented
+  **junk** Perfect, and the V3 document draws the same Digimon as an **earned** branch above
+  Wizardmon. One node could not be both.
+- **Its egg is `baku_digitama`, a real roster Digitama** — Bakumon's own, Bakumon being the Rookie
+  the In-Training falls to by inaction, and `03_ocean` already drops it, so the line is startable
+  without touching `maps.json`.
+- **Its junk chain is this app's invention** — Gokimon → Darumamon → Deathmon, all three off
+  orphan sheets, with Gokimon keeping one earned edge back up to Phantomon. WaruMonzaemon was the
+  first choice for the Perfect rung and had to be dropped: the **Version 5** Metal Empire section
+  draws it as an earned Ultimate over Mekanorimon, so it belongs to US-142. Grep the document
+  before choosing a junk node.

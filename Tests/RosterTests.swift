@@ -110,10 +110,21 @@ final class RosterTests: XCTestCase {
         // whose PLAIN id belongs to another Pendulum tree rather than to a Digital Monster one:
         // Deep Savers draws MegaSeadramon and MetalSeadramon over Coelamon, and US-138 had already
         // given both plain ids to Nature Spirits.
+        //
+        // The ten `pencnso_` ids are US-140's Nightmare Soldiers tree, and they include the first
+        // TRIPLE in the file: Garurumon, WereGarurumon and MetalGarurumon are drawn by the V2, V1
+        // Pendulum and V3 Pendulum sections alike, so each of those three Digimon is now three
+        // nodes on one roster entry. `pencnso_pumpmon` and `pencnso_noblepumpmon` are the second
+        // pair whose plain id belongs to another Pendulum tree: US-138 chose Pumpmon as Nature
+        // Spirits' invented JUNK Perfect and the V3 document draws it as an earned branch.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
                         "extyranomon", "pencds_coelamon", "pencds_megaseadramon",
                         "pencds_metalseadramon", "pencds_seadramon", "pencds_whamon",
+                        "pencnso_bakemon", "pencnso_boltmon", "pencnso_devimon",
+                        "pencnso_garurumon", "pencnso_meramon", "pencnso_metalgarurumon",
+                        "pencnso_noblepumpmon", "pencnso_pumpmon", "pencnso_skullmammon",
+                        "pencnso_weregarurumon",
                         "pencnsp_agumon", "pencnsp_botamon", "pencnsp_garurumon",
                         "pencnsp_greymon", "pencnsp_kabuterimon", "pencnsp_koromon",
                         "pencnsp_leomon", "pencnsp_metalgarurumon", "pencnsp_metalgreymon",

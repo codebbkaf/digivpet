@@ -182,7 +182,38 @@
     "pukumon": { "element": "water", "attribute": "virus" },
     "aegisdramon": { "element": "light", "attribute": "vaccine" },
     "amphimon": { "element": "electric", "attribute": "free" },
-    "metalpiranimon": { "element": "steel", "attribute": "virus" }
+    "metalpiranimon": { "element": "steel", "attribute": "virus" },
+    "baku_digitama": { "element": "dark", "attribute": "free" },
+    "mokumon": { "element": "fire", "attribute": "free" },
+    "petimeramon": { "element": "fire", "attribute": "free" },
+    "bakumon": { "element": "dark", "attribute": "data" },
+    "candmon": { "element": "fire", "attribute": "data" },
+    "picodevimon": { "element": "dark", "attribute": "virus" },
+    "hanumon": { "element": "earth", "attribute": "vaccine" },
+    "pencnso_garurumon": { "element": "ice", "attribute": "vaccine" },
+    "loogarmon": { "element": "dark", "attribute": "data" },
+    "pencnso_meramon": { "element": "fire", "attribute": "data" },
+    "wizarmon": { "element": "dark", "attribute": "data" },
+    "pencnso_devimon": { "element": "dark", "attribute": "virus" },
+    "pencnso_bakemon": { "element": "dark", "attribute": "virus" },
+    "dokugumon": { "element": "dark", "attribute": "virus" },
+    "gokimon": { "element": "dark", "attribute": "virus" },
+    "mammon": { "element": "ice", "attribute": "virus" },
+    "pencnso_weregarurumon": { "element": "ice", "attribute": "vaccine" },
+    "soloogarmon": { "element": "dark", "attribute": "data" },
+    "deathmeramon": { "element": "fire", "attribute": "virus" },
+    "pencnso_pumpmon": { "element": "plant", "attribute": "virus" },
+    "vamdemon": { "element": "dark", "attribute": "virus" },
+    "phantomon": { "element": "dark", "attribute": "virus" },
+    "darumamon": { "element": "wind", "attribute": "virus" },
+    "pencnso_skullmammon": { "element": "steel", "attribute": "virus" },
+    "pencnso_metalgarurumon": { "element": "ice", "attribute": "data" },
+    "fenriloogamon": { "element": "dark", "attribute": "vaccine" },
+    "pencnso_boltmon": { "element": "steel", "attribute": "virus" },
+    "pencnso_noblepumpmon": { "element": "plant", "attribute": "virus" },
+    "venomvamdemon": { "element": "dark", "attribute": "virus" },
+    "piemon": { "element": "dark", "attribute": "virus" },
+    "deathmon": { "element": "dark", "attribute": "virus" }
   },
 
   "lineDefaults": {
@@ -193,7 +224,8 @@
     "dmc-v4": { "element": "wind", "attribute": "free" },
     "dmc-v5": { "element": "dark", "attribute": "free" },
     "penc-nsp": { "element": "wind", "attribute": "free" },
-    "penc-ds": { "element": "water", "attribute": "free" }
+    "penc-ds": { "element": "water", "attribute": "free" },
+    "penc-nso": { "element": "dark", "attribute": "free" }
   },
 
   "keywordRules": [

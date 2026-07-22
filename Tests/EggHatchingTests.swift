@@ -162,8 +162,8 @@ final class EggHatchingTests: XCTestCase {
         let candidates = EvolutionGraph.bundled.nodes(at: .digitama).filter { !$0.dexOnly }
         XCTAssertEqual(Set(candidates.map(\.id)),
                        ["agu_digitama", "gabu_digitama", "pal_digitama", "pata_digitama", "piyo_digitama",
-                        "gazi_digitama", "tento_digitama", "goma_digitama"],
-                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, and US-138's Tento and US-139's Goma Digitama root the first two Pendulum trees")
+                        "gazi_digitama", "tento_digitama", "goma_digitama", "baku_digitama"],
+                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, and US-138's Tento, US-139's Goma and US-140's Baku Digitama root the first three Pendulum trees")
 
         var seen: Set<String> = []
         for _ in 0..<200 {

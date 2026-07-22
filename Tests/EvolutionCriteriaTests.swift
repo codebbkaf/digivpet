@@ -25,13 +25,17 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// `diginorimon` and `piranimon` joined in US-139 for the same reason as US-138's pair: the
     /// Pendulum Color V2 Deep Savers section draws no junk branch either, so this app chose a
     /// water-flavoured one off unused sheets — digital seaweed under a shoal of piranha.
+    /// `gokimon` and `darumamon` joined in US-140, third time the same way: the Pendulum Color V3
+    /// Nightmare Soldiers section draws no junk branch either. WaruMonzaemon was the first choice
+    /// for the Perfect rung and had to be dropped — the Version 5 Metal Empire section draws it as
+    /// an earned Ultimate, so it belongs to US-142. Grep the document before choosing a junk node.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
-        "platinumscumon", "diginorimon",
+        "platinumscumon", "diginorimon", "gokimon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
-        "etemon", "pumpmon", "piranimon",
+        "etemon", "pumpmon", "piranimon", "darumamon",
         // Ultimate
         "kingetemon",
     ]

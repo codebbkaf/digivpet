@@ -5185,6 +5185,846 @@
       "line": "penc-ds",
       "spriteFile": "MetalPiranimon",
       "comment": "The junk Ultimate — the top of this tree's neglect path. Every line carries one so that neglect changes WHICH Digimon you get, never whether you get one (US-061)."
-    }
+    },
+  {
+    "id": "baku_digitama",
+    "displayName": "Baku Digitama",
+    "stage": "Digitama",
+    "line": "penc-nso",
+    "spriteFile": "Baku_Digitama",
+    "comment": "The Pendulum Color V3 Nightmare Soldiers tree's egg. The source document starts at \"Fresh: Mokumon\" and names no Digitama at all, so the choice is this app's: it has to be one of the 57 Digitama ids the ROSTER holds, because maps.json grants a Digitama by roster id (US-126) and an id the roster does not have could never be dropped. Baku Digitama is Bakumon's, Bakumon is this tree's first Rookie and the one its In-Training falls to by default, and 03_ocean already drops the egg - so the line is startable without touching maps.json. Same reasoning as US-138's tento_digitama and US-139's goma_digitama.",
+    "evolutions": [
+      {
+        "to": "mokumon",
+        "minEnergy": 50,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "mokumon",
+    "displayName": "Mokumon",
+    "stage": "Baby I",
+    "line": "penc-nso",
+    "spriteFile": "Mokumon",
+    "comment": "The document's \"Fresh: Mokumon\", wired under its own spelling - the only rung of this section whose name needed no lookup at all.",
+    "evolutions": [
+      {
+        "to": "petimeramon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 20,
+        "maxCareMistakes": 5,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "petimeramon",
+    "displayName": "PetiMeramon",
+    "stage": "Baby II",
+    "line": "penc-nso",
+    "spriteFile": "PetiMeramon",
+    "comment": "The document's \"In-Training: DemiMeramon (PetitMeramon)\". Neither of the document's two spellings is on disk - `find -iname '*demimeramon*'` and `'*petitmeramon*'` return nothing at all - while `Baby II/PetiMeramon.png` is a real 48x64 sheet of the same Digimon under a third romanization. The Pichimon/Pitchmon case of US-139 again. It branches three ways, one per Rookie this tree can draw, and every edge is gated on dominant energy alone: the document's \"Rookie (Unlockable Slot 6): Loogamon\" has NO sheet anywhere in the pack, so unlike US-138's Angoramon and US-139's Jellymon there is no earned fourth Rookie to condition.",
+    "evolutions": [
+      {
+        "to": "bakumon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 30,
+        "maxCareMistakes": 4,
+        "isDefault": true
+      },
+      {
+        "to": "candmon",
+        "requiredEnergy": "strength",
+        "minEnergy": 30,
+        "maxCareMistakes": 4
+      },
+      {
+        "to": "picodevimon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 30,
+        "maxCareMistakes": 4
+      }
+    ]
+  },
+  {
+    "id": "bakumon",
+    "displayName": "Bakumon",
+    "stage": "Child",
+    "line": "penc-nso",
+    "spriteFile": "Bakumon",
+    "comment": "The document's \"Rookie: Tapirmon (Bakumon)\" - it supplies both names itself, so no lookup was needed: Tapirmon is the dub name (`find -iname '*tapir*'` has no hits) and the art is `Child/Bakumon.png`. Its two Champions are the document's; Loogarmon is a third, rehomed here because its own Rookie is undrawable - see loogarmon's comment.",
+    "evolutions": [
+      {
+        "to": "hanumon",
+        "requiredEnergy": "strength",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 8,
+            "hint": "Drill it until the staff swings true"
+          },
+          {
+            "metric": "health.exerciseMinutes",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 240,
+            "hint": "Work up a sweat beside it"
+          }
+        ]
+      },
+      {
+        "to": "pencnso_garurumon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "health.activeEnergy",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 1200,
+            "hint": "Burn real energy running with it"
+          },
+          {
+            "metric": "care.overfeeds",
+            "window": "stage",
+            "comparison": "atMost",
+            "value": 2,
+            "hint": "Keep it lean enough to run"
+          }
+        ]
+      },
+      {
+        "to": "loogarmon",
+        "requiredEnergy": "stamina",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "health.steps",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 60000,
+            "hint": "Walk it through the long dark"
+          },
+          {
+            "metric": "health.sleep",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 1200,
+            "hint": "Let it dream between the hunts"
+          }
+        ]
+      },
+      {
+        "to": "gokimon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "candmon",
+    "displayName": "Candmon",
+    "stage": "Child",
+    "line": "penc-nso",
+    "spriteFile": "Candmon",
+    "comment": "The document's \"Rookie: Candlemon\". Candlemon is the dub name of the same Digimon; `find -iname '*candle*'` returns nothing and `Child/Candmon.png` is the real sheet, so it is wired under the spelling the art uses. Both of its Champions are the document's.",
+    "evolutions": [
+      {
+        "to": "pencnso_meramon",
+        "requiredEnergy": "strength",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 7,
+            "hint": "Fan the flame with steady practice"
+          },
+          {
+            "metric": "health.activeEnergy",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 1000,
+            "hint": "Give the fire something to burn"
+          }
+        ]
+      },
+      {
+        "to": "wizarmon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "health.sleep",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 1500,
+            "hint": "Let it study the long night through"
+          },
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 6,
+            "hint": "Rehearse the words with it"
+          }
+        ]
+      },
+      {
+        "to": "gokimon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "picodevimon",
+    "displayName": "PicoDevimon",
+    "stage": "Child",
+    "line": "penc-nso",
+    "spriteFile": "PicoDevimon",
+    "comment": "The document's \"Rookie: DemiDevimon (PicoDevimon)\" - it supplies both names, and `Child/PicoDevimon.png` is the sheet. The document writes its second thread \"Champion: Bakemon / Dokugumon -> Ultimate: Phantomon\": one thread with two Champions on it, which is why both of them reach Phantomon here rather than one of them being dropped.",
+    "evolutions": [
+      {
+        "to": "pencnso_devimon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "health.sleep",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 1600,
+            "hint": "Give it the whole night to itself"
+          },
+          {
+            "metric": "care.sleepDisturbances",
+            "window": "stage",
+            "comparison": "atMost",
+            "value": 2,
+            "hint": "Never wake what sleeps in the dark"
+          }
+        ]
+      },
+      {
+        "to": "pencnso_bakemon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "health.activeEnergy",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 1100,
+            "hint": "Keep it moving after dusk"
+          },
+          {
+            "metric": "health.standHours",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 50,
+            "hint": "Stay on your feet while it drifts"
+          }
+        ]
+      },
+      {
+        "to": "dokugumon",
+        "requiredEnergy": "stamina",
+        "minEnergy": 60,
+        "maxCareMistakes": 3,
+        "conditions": [
+          {
+            "metric": "health.steps",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 70000,
+            "hint": "Walk until the web is wide"
+          },
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 9,
+            "hint": "Practise the ambush until it never misses"
+          }
+        ]
+      },
+      {
+        "to": "gokimon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "hanumon",
+    "displayName": "Hanumon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Hanumon",
+    "comment": "The document's \"Champion: Apemon (Hanumon)\" - both names supplied, Apemon being the dub one (`find -iname '*apemon*'` has no hits) and `Adult/Hanumon.png` the sheet.",
+    "evolutions": [
+      {
+        "to": "mammon",
+        "requiredEnergy": "strength",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 12,
+            "hint": "Train it until the swing is a blur"
+          },
+          {
+            "metric": "care.battleCount",
+            "window": "lifetime",
+            "comparison": "atLeast",
+            "value": 10,
+            "hint": "Take it into fight after fight"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_garurumon",
+    "displayName": "Garurumon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Garurumon",
+    "comment": "NOT a duplicate of the `garurumon` node in the dmc-v2 line - it is the same Digimon in a third tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. This is the third Garurumon node in the file: dmc-v2 owns the plain id and penc-nsp already took `pencnsp_garurumon`.",
+    "evolutions": [
+      {
+        "to": "pencnso_weregarurumon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "health.activeEnergy",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 2200,
+            "hint": "Run the cold out of it"
+          },
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 9,
+            "hint": "Train it in long, patient lengths"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "loogarmon",
+    "displayName": "Loogarmon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Loogarmon",
+    "comment": "This app's substitution for the document's \"Champion: Helloogamon\", and the only rehomed node in the section. The document's unlockable sixth slot reads \"Rookie (Unlockable Slot 6): Loogamon / Champion: Helloogamon -> Ultimate: Soloogamon -> Mega: Fenriloogamon\", and NEITHER of its first two names has a sheet: `find -iname '*loog*'` over the whole pack returns exactly three files - `Adult/Loogarmon.png`, `Perfect/Soloogarmon.png` and `Ultimate-Super Ultimate/Fenriloogamon.png` - and `find -iname '*hell*'` returns only Shellmon and MoriShellmon. Wikimon's Loogarmon page is the reference: it gives Loogarmon as an Adult whose primary Evolves From is Loogamon and whose Evolves To list holds both Soloogarmon and Helloogarmon, so Loogarmon is the rung of that same line the art pack actually ships, one step below the Champion the document named. With no Rookie to hang it on it goes under Bakumon, beside Garurumon: the same Wikimon page lists WereGarurumon among Loogarmon's evolutions, which is exactly the Perfect above Bakumon's other Champion. Without this the thread would have lost Soloogarmon and Fenriloogamon too, for two absent names.",
+    "evolutions": [
+      {
+        "to": "soloogarmon",
+        "requiredEnergy": "stamina",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "health.steps",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 140000,
+            "hint": "Cover ground the way a wolf does"
+          },
+          {
+            "metric": "health.sleep",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 2600,
+            "hint": "Give it the long dark to grow in"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_meramon",
+    "displayName": "Meramon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Meramon",
+    "comment": "NOT a duplicate of the `meramon` node in the dmc-v1 line - it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The document's Champion above Candlemon.",
+    "evolutions": [
+      {
+        "to": "deathmeramon",
+        "requiredEnergy": "strength",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 14,
+            "hint": "Stoke it until the flame turns white"
+          },
+          {
+            "metric": "care.battleCount",
+            "window": "lifetime",
+            "comparison": "atLeast",
+            "value": 12,
+            "hint": "Let it burn through fight after fight"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "wizarmon",
+    "displayName": "Wizarmon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Wizarmon",
+    "comment": "The document's \"Champion: Wizardmon\". Wizardmon is the dub name of the same Digimon: `find -iname '*wizard*'` returns nothing and `Adult/Wizarmon.png` is a real 48x64 sheet, so it is wired under the spelling the art uses.",
+    "evolutions": [
+      {
+        "to": "pencnso_pumpmon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "health.sleep",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 2400,
+            "hint": "Let it read the night away"
+          },
+          {
+            "metric": "care.trainingSessions",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 8,
+            "hint": "Practise the trick until it lands"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_devimon",
+    "displayName": "Devimon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Devimon",
+    "comment": "NOT a duplicate of the `devimon` node in the dmc-v1 line - it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The document's Champion above DemiDevimon, and the spine of this tree.",
+    "evolutions": [
+      {
+        "to": "vamdemon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "health.sleep",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 3000,
+            "hint": "Give it night after uninterrupted night"
+          },
+          {
+            "metric": "care.sleepDisturbances",
+            "window": "stage",
+            "comparison": "atMost",
+            "value": 1,
+            "hint": "Never disturb what feeds in the dark"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_bakemon",
+    "displayName": "Bakemon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Bakemon",
+    "comment": "NOT a duplicate of the `bakemon` node in the dmc-v3 line - it is the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. One of the two Champions the document puts on the Phantomon thread.",
+    "evolutions": [
+      {
+        "to": "phantomon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "health.activeEnergy",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 2000,
+            "hint": "Keep it drifting through the small hours"
+          },
+          {
+            "metric": "health.standHours",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 60,
+            "hint": "Stay upright while it haunts"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "dokugumon",
+    "displayName": "Dokugumon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Dokugumon",
+    "comment": "The other half of the document's \"Champion: Bakemon / Dokugumon -> Ultimate: Phantomon\", so it reaches the same Perfect that Bakemon does. Wired under the document's own spelling; `Adult/Dokugumon.png` is a real sheet.",
+    "evolutions": [
+      {
+        "to": "phantomon",
+        "requiredEnergy": "stamina",
+        "minEnergy": 100,
+        "maxCareMistakes": 2,
+        "conditions": [
+          {
+            "metric": "health.steps",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 150000,
+            "hint": "Walk the whole web, strand by strand"
+          },
+          {
+            "metric": "care.battleWinRatio",
+            "window": "lifetime",
+            "comparison": "atLeast",
+            "value": 0.5,
+            "hint": "Win more of its ambushes than it loses"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "gokimon",
+    "displayName": "Gokimon",
+    "stage": "Adult",
+    "line": "penc-nso",
+    "spriteFile": "Gokimon",
+    "comment": "The junk Champion, and it is this app's invention rather than the document's: the Pendulum Color sections draw only the earned tree and name no neglect branch at all, while US-061 requires every Child and Adult to carry an isDefault edge reachable by doing nothing. Chosen off an ORPHAN sheet so the neglect path pays for itself in orphans instead of costing another alias - Gokimon is a cockroach, which is the Nightmare Soldiers answer to Numemon. Gokimon, Darumamon and Deathmon appear nowhere in the tree markdown, and a test greps the bundled document to keep that true. WaruMonzaemon, the first choice for the Perfect rung, IS in it - the Version 5 Metal Empire section draws it over Mekanorimon - so that one belongs to US-142 rather than to this story, and the grep is what caught it. Like US-138's PlatinumScumon and US-139's Diginorimon it keeps one way back up, so a player who neglects a Rookie and then works has somewhere to go.",
+    "evolutions": [
+      {
+        "to": "phantomon",
+        "requiredEnergy": "strength",
+        "minEnergy": 120,
+        "maxCareMistakes": 1,
+        "conditions": [
+          {
+            "metric": "health.steps",
+            "window": "stage",
+            "comparison": "atLeast",
+            "value": 180000,
+            "hint": "Walk it out of the cellar and keep walking"
+          },
+          {
+            "metric": "care.battleCount",
+            "window": "lifetime",
+            "comparison": "atLeast",
+            "value": 18,
+            "hint": "Fight until nobody remembers the vermin"
+          }
+        ]
+      },
+      {
+        "to": "darumamon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "mammon",
+    "displayName": "Mammon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "Mammon",
+    "comment": "The document's \"Ultimate: Mammothmon\". Mammothmon is the dub name of the same Digimon: `find -iname '*mammoth*'` returns NOTHING anywhere in the pack, while `Perfect/Mammon.png` and `Ultimate-Super Ultimate/SkullMammon.png` are real sheets of it and of its Mega. Wired under the spelling the art uses; taking the document's at face value would have called both rungs absent.",
+    "evolutions": [
+      {
+        "to": "pencnso_skullmammon",
+        "requiredEnergy": "strength",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_weregarurumon",
+    "displayName": "WereGarurumon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "WereGarurumon",
+    "comment": "NOT a duplicate of the `weregarurumon` node in the dmc-v2 line - the same Digimon in a third tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. See pencnso_garurumon's comment for why a shared node would break the Dex's layout.",
+    "evolutions": [
+      {
+        "to": "pencnso_metalgarurumon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "soloogarmon",
+    "displayName": "Soloogarmon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "Soloogarmon",
+    "comment": "The document's \"Ultimate: Soloogamon\", filed by the art pack with the extra r that Loogarmon carries too: `Perfect/Soloogarmon.png` is the real sheet and `find -iname '*soloogamon*'` has no hits. Reached from Loogarmon rather than from the document's Helloogamon, which has no sheet - see loogarmon's comment.",
+    "evolutions": [
+      {
+        "to": "fenriloogamon",
+        "requiredEnergy": "stamina",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "deathmeramon",
+    "displayName": "DeathMeramon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "DeathMeramon",
+    "comment": "The document's \"Ultimate: SkullMeramon (DeathMeramon)\" - it supplies both names, SkullMeramon being the dub one (`find -iname '*skullmeramon*'` has no hits) and `Perfect/DeathMeramon.png` the sheet.",
+    "evolutions": [
+      {
+        "to": "pencnso_boltmon",
+        "requiredEnergy": "strength",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_pumpmon",
+    "displayName": "Pumpmon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "Pumpmon",
+    "comment": "The document's \"Ultimate: Pumpkinmon\", which is the dub name of Pumpmon (`find -iname '*pumpkin*'` has no hits). An alias because US-138 had already given the plain `pumpmon` id to penc-nsp, where it is that tree's JUNK Perfect - so the same Digimon is a neglect branch in Nature Spirits and an earned one here. That is the document's arrangement, not a slip: the V3 section draws Wizardmon -> Pumpkinmon -> NoblePumpkinmon as a real thread, while the V1 section draws no junk branch at all and US-138 had to invent one.",
+    "evolutions": [
+      {
+        "to": "pencnso_noblepumpmon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "vamdemon",
+    "displayName": "Vamdemon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "Vamdemon",
+    "comment": "The document's \"Ultimate: Myotismon (Vamdemon)\" - both names supplied, Myotismon being the dub one (`find -iname '*myoti*'` has no hits) and `Perfect/Vamdemon.png` the sheet. Its Mega is the same substitution one rung up: VenomMyotismon is `VenomVamdemon` on disk.",
+    "evolutions": [
+      {
+        "to": "venomvamdemon",
+        "requiredEnergy": "spirit",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "phantomon",
+    "displayName": "Phantomon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "Phantomon",
+    "comment": "The document's \"Ultimate: Phantomon\", reached from both Bakemon and Dokugumon because the document puts both Champions on this one thread. Wired under the document's own spelling, which needed checking rather than assuming: the pack ALSO ships `Perfect/Fantomon.png` and the roster holds both `phantomon` and `fantomon` as playable entries. Phantomon is the spelling the document uses and its sheet is real, so no substitution was needed; Fantomon is left an orphan for the Perfect sweep (US-158).",
+    "evolutions": [
+      {
+        "to": "piemon",
+        "requiredEnergy": "vitality",
+        "minEnergy": 150,
+        "maxCareMistakes": 2,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "darumamon",
+    "displayName": "Darumamon",
+    "stage": "Perfect",
+    "line": "penc-nso",
+    "spriteFile": "Darumamon",
+    "comment": "The junk Ultimate rung - every Champion in this tree falls to it. Chosen off an orphan sheet with Gokimon below it and Deathmon above; see Gokimon's comment for why this tree had to invent a neglect path at all. Darumamon is a wooden tumbling doll that spends its life being knocked over, which is the neglect the fallback models.",
+    "evolutions": [
+      {
+        "to": "deathmon",
+        "requiredEnergy": "strength",
+        "minEnergy": 0,
+        "maxCareMistakes": 99,
+        "isDefault": true
+      }
+    ]
+  },
+  {
+    "id": "pencnso_skullmammon",
+    "displayName": "SkullMammon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "SkullMammon",
+    "comment": "NOT a duplicate of the `skullmammon` node in the dmc-v2 line - the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. The document's \"Mega: SkullMammothmon\"; see mammon's comment for the spelling."
+  },
+  {
+    "id": "pencnso_metalgarurumon",
+    "displayName": "MetalGarurumon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "MetalGarurumon",
+    "comment": "NOT a duplicate of the `metalgarurumon` node in the dmc-v2 line, nor of penc-nsp's `pencnsp_metalgarurumon` - the same Digimon in a THIRD tree, on the same art. The whole Garurumon thread is drawn by V1, V2 and V3 alike."
+  },
+  {
+    "id": "fenriloogamon",
+    "displayName": "Fenriloogamon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "Fenriloogamon",
+    "comment": "The document's \"Mega: Fenriloogamon\", wired under its own spelling and the only rung of the unlockable slot's thread the pack files under the name the document uses."
+  },
+  {
+    "id": "pencnso_boltmon",
+    "displayName": "Boltmon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "Boltmon",
+    "comment": "NOT a duplicate of the `boltmon` node in the dmc-v4 line - the same Digimon in a second tree, on the same art, the piyo_yuramon/dmcv4_palmon pattern. dmc-v4 uses Boltmon as its junk Ultimate; here the document draws it as SkullMeramon's earned Mega."
+  },
+  {
+    "id": "pencnso_noblepumpmon",
+    "displayName": "NoblePumpmon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "NoblePumpmon",
+    "comment": "NOT a duplicate of the `noblepumpmon` node in the penc-nsp line - the same Digimon in a second tree, on the same art. The document's \"Mega: NoblePumpkinmon\"; see pencnso_pumpmon's comment for why both rungs of this thread are aliases."
+  },
+  {
+    "id": "venomvamdemon",
+    "displayName": "VenomVamdemon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "VenomVamdemon",
+    "comment": "The document's \"Mega: VenomMyotismon\", filed by the pack under the Japanese name the way Vamdemon below it is: `find -iname '*venommyoti*'` has no hits and `Ultimate-Super Ultimate/VenomVamdemon.png` is a real sheet."
+  },
+  {
+    "id": "piemon",
+    "displayName": "Piemon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "Piemon",
+    "comment": "The document's \"Mega: Piedmon\". Piedmon is the dub name of the same Digimon: `find -iname '*piedmon*'` returns nothing and `Ultimate-Super Ultimate/Piemon.png` is the sheet."
+  },
+  {
+    "id": "deathmon",
+    "displayName": "Deathmon",
+    "stage": "Ultimate-Super Ultimate",
+    "line": "penc-nso",
+    "spriteFile": "Deathmon",
+    "comment": "The junk Ultimate - the top of this tree's neglect path. Every line carries one so that neglect changes WHICH Digimon you get, never whether you get one (US-061)."
+  }
   ]
 }
