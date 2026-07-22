@@ -456,6 +456,27 @@ final class DexModelTests: XCTestCase {
         }
     }
 
+    // MARK: - Line headings
+
+    /// Every line the graph ships gets a real heading. `DexModel.title(ofLine:)` falls back to the
+    /// raw key when neither an authored title nor a node of that name exists, which is a heading
+    /// reading `penc-me` — cosmetic, so it would never fail a build, and so it needs a test of its
+    /// own. Derived from the graph rather than listed, so the next Phase E tree is told to add its
+    /// title instead of shipping its slug.
+    ///
+    /// `palmon` is the one exception, and by the older convention rather than by omission: it is a
+    /// node id, so the line is named after its namesake's display name.
+    func testEveryShippedLineHasAHeadingThatIsNotItsRawKey() {
+        let graph = EvolutionGraph.bundled
+        for line in Set(graph.nodes.map(\.line)) {
+            let title = DexModel.lineTitles[line] ?? graph.node(id: line)?.displayName
+            XCTAssertNotNil(title, "line '\(line)' would head its section with its own key")
+            XCTAssertNotEqual(title, line, "line '\(line)' heads its section with its own key")
+        }
+        XCTAssertEqual(DexModel.lineTitles["penc-me"], "Pendulum ME")
+        XCTAssertNil(DexModel.lineTitles["palmon"], "palmon is titled by its namesake node")
+    }
+
     // MARK: - Degradation
 
     /// A Dex that cannot be read still shows the roster: it is a side screen, and losing it must
@@ -579,11 +600,17 @@ final class DexEvolutionCandidateTests: XCTestCase {
 
     /// A real roster entry, to prove the empty case is reached by ordinary data rather than only by
     /// a made-up id. Most of the roster is exactly this.
+    ///
+    /// Stated as a PROPORTION rather than as a count on purpose. The literal was `> 800` and Phase E
+    /// is wiring the roster into the graph a tree at a time, so it fell to exactly 800 in US-142 and
+    /// would have had to be edited by every sweep after it. What the test is really claiming — that
+    /// the roster still dwarfs the graph, so the empty case is the common one — survives as a
+    /// fraction of whatever the roster happens to hold.
     func testMostOfTheShippedRosterHasNoCandidates() throws {
         let withoutNodes = Roster.bundled.entries.filter {
             EvolutionGraph.bundled.node(id: $0.id) == nil
         }
-        XCTAssertGreaterThan(withoutNodes.count, 800,
+        XCTAssertGreaterThan(withoutNodes.count, Roster.bundled.entries.count / 2,
                              "The roster dwarfs the graph; that is why the empty case needs a message.")
 
         let entry = try XCTUnwrap(withoutNodes.first)

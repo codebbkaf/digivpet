@@ -244,7 +244,40 @@
     "pinochimon": { "element": "plant", "attribute": "virus" },
     "rafflesimon": { "element": "plant", "attribute": "virus" },
     "zephagamon": { "element": "wind", "attribute": "data" },
-    "eldoradimon": { "element": "earth", "attribute": "data" }
+    "eldoradimon": { "element": "earth", "attribute": "data" },
+    "funbee_digitama": { "element": "machine", "attribute": "free" },
+    "choromon": { "element": "machine", "attribute": "free" },
+    "caprimon": { "element": "machine", "attribute": "free" },
+    "toyagumon": { "element": "machine", "attribute": "virus" },
+    "kokuwamon": { "element": "electric", "attribute": "data" },
+    "hagurumon": { "element": "machine", "attribute": "virus" },
+    "junkmon": { "element": "steel", "attribute": "virus" },
+    "pencme_greymon": { "element": "fire", "attribute": "vaccine" },
+    "revolmon": { "element": "machine", "attribute": "data" },
+    "tankmon": { "element": "steel", "attribute": "data" },
+    "thunderballmon": { "element": "electric", "attribute": "data" },
+    "clockmon": { "element": "machine", "attribute": "data" },
+    "guardromon": { "element": "steel", "attribute": "vaccine" },
+    "mechanorimon": { "element": "machine", "attribute": "virus" },
+    "minotaurmon": { "element": "earth", "attribute": "virus" },
+    "pencme_raremon": { "element": "dark", "attribute": "virus" },
+    "pencme_metalgreymon": { "element": "machine", "attribute": "vaccine" },
+    "pencme_andromon": { "element": "machine", "attribute": "vaccine" },
+    "cyberdramon": { "element": "machine", "attribute": "virus" },
+    "knightmon": { "element": "steel", "attribute": "data" },
+    "bigmamemon": { "element": "machine", "attribute": "data" },
+    "warumonzaemon": { "element": "dark", "attribute": "virus" },
+    "rebellimon": { "element": "fire", "attribute": "virus" },
+    "locomon": { "element": "steel", "attribute": "data" },
+    "pencme_wargreymon": { "element": "fire", "attribute": "vaccine" },
+    "pencme_mugendramon": { "element": "machine", "attribute": "virus" },
+    "craniummon": { "element": "steel", "attribute": "vaccine" },
+    "princemamemon": { "element": "steel", "attribute": "data" },
+    "pencme_hiandromon": { "element": "machine", "attribute": "vaccine" },
+    "pencme_venomvamdemon": { "element": "dark", "attribute": "virus" },
+    "gundramon": { "element": "machine", "attribute": "virus" },
+    "grandlocomon": { "element": "steel", "attribute": "data" }
+
   },
 
   "lineDefaults": {
@@ -257,7 +290,8 @@
     "penc-nsp": { "element": "wind", "attribute": "free" },
     "penc-ds": { "element": "water", "attribute": "free" },
     "penc-nso": { "element": "dark", "attribute": "free" },
-    "penc-wg": { "element": "wind", "attribute": "free" }
+    "penc-wg": { "element": "wind", "attribute": "free" },
+    "penc-me": { "element": "machine", "attribute": "free" }
   },
 
   "keywordRules": [

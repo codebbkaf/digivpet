@@ -6843,6 +6843,929 @@
       "line": "penc-wg",
       "spriteFile": "ElDoradimon",
       "comment": "The top of this tree's invented junk chain, chosen off an orphan sheet the way US-140's Deathmon was. Wikimon lists it as something TonosamaGekomon really evolves into. It is named nowhere in the tree markdown, which is what makes it safe to spend - the grep US-140's notes insist on was run over the whole document before it was chosen, and over Zassoumon and TonosamaGekomon with it."
+    },
+    {
+      "id": "funbee_digitama",
+      "displayName": "Funbee Digitama",
+      "stage": "Digitama",
+      "line": "penc-me",
+      "spriteFile": "Funbee_Digitama",
+      "comment": "The Pendulum Color V5 Metal Empire tree's egg. The source document starts at \"Fresh: Choromon\" and names no Digitama at all, so the choice is this app's, and it has to be one of the 57 Digitama ids the ROSTER holds: maps.json grants a Digitama by roster id (US-126), and an id the roster does not have could never be dropped. None of this tree's four Rookies has an egg on disk - ToyAgumon, Kokuwamon, Hagurumon and Junkmon are all eggless - so the rule that remains is US-141's: a real roster Digitama that some map actually drops. Funbee Digitama is Funbeemon's, Funbeemon being a Machine Digimon, and 06_industrial drops it beside elec_digitama and pulse_digitama - the industrial map is where a Metal Empire line should start. Same reasoning as US-138's tento_digitama, US-139's goma_digitama, US-140's baku_digitama and US-141's flora_digitama.",
+      "evolutions": [
+        {
+          "to": "choromon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "choromon",
+      "displayName": "Choromon",
+      "stage": "Baby I",
+      "line": "penc-me",
+      "spriteFile": "Choromon",
+      "comment": "The document's \"Fresh: Choromon\", wired under its own spelling. `Baby I/Choromon.png` is a real 48x64 sheet; the roster also holds an idle-only copy, and the playable one is the one wired here.",
+      "evolutions": [
+        {
+          "to": "caprimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "caprimon",
+      "displayName": "Caprimon",
+      "stage": "Baby II",
+      "line": "penc-me",
+      "spriteFile": "Caprimon",
+      "comment": "The document's \"In-Training: Kapurimon\". `find -iname '*kapurimon*'` returns nothing at all; `Baby II/Caprimon.png` is the same Digimon under the spelling the art uses, which is the US-140/US-141 name-drift lesson applied before the name was called absent. It forks four ways, one per Rookie the section draws, and all four have sheets. The Junkmon edge is the one that is CONDITIONED, because the document marks it \"Rookie (Unlockable Slot)\": the same shape US-138 gave Angoramon, US-139 gave Jellymon and US-141 gave Pteromon.",
+      "evolutions": [
+        {
+          "to": "toyagumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "kokuwamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "hagurumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "junkmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it before the spare slot opens"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20000,
+              "hint": "Walk the scrapyard end to end"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "toyagumon",
+      "displayName": "ToyAgumon",
+      "stage": "Child",
+      "line": "penc-me",
+      "spriteFile": "ToyAgumon",
+      "comment": "The document's \"Rookie: ToyAgumon\", wired under its own spelling. The pack also holds ToyAgumon_Black, a separate roster entry this tree does not draw.",
+      "evolutions": [
+        {
+          "to": "pencme_greymon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Burn energy until the blocks fuse"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Drill the horn"
+            }
+          ]
+        },
+        {
+          "to": "revolmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Let it draw in real fights"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240,
+              "hint": "Keep its trigger hand quick"
+            }
+          ]
+        },
+        {
+          "to": "pencme_raremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kokuwamon",
+      "displayName": "Kokuwamon",
+      "stage": "Child",
+      "line": "penc-me",
+      "spriteFile": "Kokuwamon",
+      "comment": "The document's \"Rookie: Kokuwamon\", wired under its own spelling. The pack also holds Kokuwamon_X, a separate roster entry this tree does not draw. It is the widest Rookie in the section: the document gives it three Champions, Tankmon and Thunderballmon over one thread and Clockmon over the other.",
+      "evolutions": [
+        {
+          "to": "tankmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Train it until the plating thickens"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Work it hard enough to armour up"
+            }
+          ]
+        },
+        {
+          "to": "thunderballmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Roll it a long way"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Climb until it holds a charge"
+            }
+          ]
+        },
+        {
+          "to": "clockmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it keep time through the night"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Never stop the pendulum"
+            }
+          ]
+        },
+        {
+          "to": "pencme_raremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hagurumon",
+      "displayName": "Hagurumon",
+      "stage": "Child",
+      "line": "penc-me",
+      "spriteFile": "Hagurumon",
+      "comment": "The document's \"Rookie: Hagurumon\", wired under its own spelling. `elements.json` already had to name it: the keyword tier orders `haguru` before `agu` so a gear is not typed as a fire lizard, which is why it reads machine rather than fire here.",
+      "evolutions": [
+        {
+          "to": "guardromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Stand a proper watch beside it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep its gears clean"
+            }
+          ]
+        },
+        {
+          "to": "mechanorimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Put it in the field again and again"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Train the pilot as well as the frame"
+            }
+          ]
+        },
+        {
+          "to": "pencme_raremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "junkmon",
+      "displayName": "Junkmon",
+      "stage": "Child",
+      "line": "penc-me",
+      "spriteFile": "Junkmon",
+      "comment": "The document's \"Rookie (Unlockable Slot): Junkmon\", wired under its own spelling - the fourth slot of this section and the one behind the conditioned In-Training edge. Its thread is the one the pack cannot draw whole: see minotaurmon and gundramon.",
+      "evolutions": [
+        {
+          "to": "minotaurmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "March the scrapheap into shape"
+            },
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Cover ground under the weight"
+            }
+          ]
+        },
+        {
+          "to": "pencme_raremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencme_greymon",
+      "displayName": "Greymon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Greymon",
+      "comment": "The document's \"Champion: Greymon\". Line-scoped because the plain `greymon` has belonged to `dmc-v1` since US-008 and US-138 already made a second copy for `pencnsp`, so this is the third tree in the file to draw it - the Garurumon triple of US-140 in a second family.",
+      "evolutions": [
+        {
+          "to": "pencme_metalgreymon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2500,
+              "hint": "Burn enough to forge the plating"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Hammer it into a weapon"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "revolmon",
+      "displayName": "Revolmon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Revolmon",
+      "comment": "The document's \"Champion: Revolmon (Deputymon)\" - it supplies both names, and Revolmon is the one the art uses (`find -iname '*deputymon*'` returns nothing). It is the only Champion in the section with TWO Ultimates, Andromon and Cyberdramon, and the document takes both of them on to Machinedramon.",
+      "evolutions": [
+        {
+          "to": "pencme_andromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 100,
+              "hint": "Stand still enough to be rebuilt"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep the mechanism light"
+            }
+          ]
+        },
+        {
+          "to": "cyberdramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Let it earn a gunfighter's name"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Push the pace beside it"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tankmon",
+      "displayName": "Tankmon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Tankmon",
+      "comment": "The document's \"Champion: Tankmon\", the first of the two Champions it draws over Kokuwamon on one thread. Both of them go on to Knightmon.",
+      "evolutions": [
+        {
+          "to": "knightmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Drill the gun crew"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "Take the field until the armour is earned"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "thunderballmon",
+      "displayName": "Thunderballmon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Thunderballmon",
+      "comment": "The document's \"Champion: Thunderballmon\", the second Champion of the Knightmon thread - the document writes the pair as \"Tankmon / Thunderballmon\", so both carry an arrow to the same Ultimate rather than one being an alternative to the other.",
+      "evolutions": [
+        {
+          "to": "knightmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80000,
+              "hint": "Roll it far enough to be trusted"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "Climb until the charge holds"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "clockmon",
+      "displayName": "Clockmon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Clockmon",
+      "comment": "The document's \"Champion: Clockmon\", wired under its own spelling.",
+      "evolutions": [
+        {
+          "to": "bigmamemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2400,
+              "hint": "Let it run a full night's worth of time"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Never wind it backwards"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "guardromon",
+      "displayName": "Guardromon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Guardromon",
+      "comment": "The document's \"Champion: Guardromon\", wired under its own spelling. The pack also holds Guardromon_Gold, a separate roster entry this tree does not draw. Its Ultimate is the same Andromon Revolmon reaches, which is what makes `pencme_andromon` the one node in this tree with two parents AND two children.",
+      "evolutions": [
+        {
+          "to": "pencme_andromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "Keep the watch it was built for"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Train the guard, not just the gun"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "mechanorimon",
+      "displayName": "Mechanorimon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Mechanorimon",
+      "comment": "The document's \"Champion: Mekanorimon\". `find -iname '*mekanorimon*'` returns nothing; `Adult/Mechanorimon.png` is the same Digimon under the spelling the art uses - one more of the name drifts US-140 and US-141 recorded.",
+      "evolutions": [
+        {
+          "to": "warumonzaemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Fight until something inside it sours"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not spoil the pilot"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "minotaurmon",
+      "displayName": "Minotaurmon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Minotaurmon",
+      "comment": "NOT the document's name. The document draws \"Champion: Machmon -> Ultimate: Rebellimon\", and Machmon exists ONLY in `Idle Frame Only/` - the roster's `machmon` is dexOnly, so it can be in the Dex but never on an edge. Rather than drop the unlockable slot's thread (US-140's lesson: price the rehome first), Wikimon was read for what really sits between the two rungs that DO have art: Minotaurmon is listed both as something Junkmon evolves into and as something Rebellimon evolves from, so it stands in for Machmon on the same thread.",
+      "evolutions": [
+        {
+          "to": "rebellimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120000,
+              "hint": "Walk the whole scrapyard down"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Break it to the bridle"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencme_raremon",
+      "displayName": "Raremon",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Raremon",
+      "comment": "This tree's junk Champion, and NOT the document's: the Pendulum Color sections draw only the earned tree and name no junk branch at all, while US-061 requires every Child and Adult to have an isDefault edge reachable by doing nothing. Raremon is a heap of scrapped cyborg, which is what a Metal Empire tree's rubbish rung should be, and it is canon twice over: Wikimon lists Raremon as something Junkmon really evolves into and Rebellimon as something Raremon really evolves into, so the fall and the one way back up are both real arrows. Line-scoped because US-137 already made the plain `raremon` the Digital Monster Ver.5 tree's junk Champion - the same Digimon is junk in two trees, and a node's line is single-valued.",
+      "evolutions": [
+        {
+          "to": "rebellimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 100000,
+              "hint": "Walk the rust off it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Rebuild it a piece at a time"
+            }
+          ]
+        },
+        {
+          "to": "locomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencme_metalgreymon",
+      "displayName": "MetalGreymon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "MetalGreymon",
+      "comment": "The document's \"Ultimate: MetalGreymon\". Line-scoped for the same reason as pencme_greymon: the plain id is `dmc-v1`'s and `pencnsp` already holds the second copy.",
+      "evolutions": [
+        {
+          "to": "pencme_wargreymon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencme_andromon",
+      "displayName": "Andromon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "Andromon",
+      "comment": "The document's \"Ultimate: Andromon\", which this section draws TWICE - once over Revolmon on the way to Machinedramon and once over Guardromon on the way to HiAndromon. One node carries both, so it is the only Perfect in the file with two parents and two children, and the only one whose second edge had to be earned rather than default. Line-scoped because the plain `andromon` has belonged to `dmc-v3` since US-044.",
+      "evolutions": [
+        {
+          "to": "pencme_hiandromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        },
+        {
+          "to": "pencme_mugendramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 24,
+              "hint": "Fight it all the way to the machine city"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4000,
+              "hint": "Feed the reactor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "cyberdramon",
+      "displayName": "Cyberdramon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "Cyberdramon",
+      "comment": "The document's \"Ultimate: Cyberdramon\", the second of the two Ultimates it draws over Revolmon. The pack also holds Cyberdramon_X, a separate roster entry this tree does not draw.",
+      "evolutions": [
+        {
+          "to": "pencme_mugendramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "knightmon",
+      "displayName": "Knightmon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "Knightmon",
+      "comment": "The document's \"Ultimate: Knightmon\", wired under its own spelling. Both Champions of that thread reach it, so it has two parents.",
+      "evolutions": [
+        {
+          "to": "craniummon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "bigmamemon",
+      "displayName": "BigMamemon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "BigMamemon",
+      "comment": "The document's \"Ultimate: BigMamemon\", wired under its own spelling.",
+      "evolutions": [
+        {
+          "to": "princemamemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "warumonzaemon",
+      "displayName": "WaruMonzaemon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "WaruMonzaemon",
+      "comment": "The document's \"Ultimate: WaruMonzaemon\", wired under its own spelling - flagged by US-140's notes as a name this story would need, because that story nearly spent it on `penc-nso`.",
+      "evolutions": [
+        {
+          "to": "pencme_venomvamdemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "rebellimon",
+      "displayName": "Rebellimon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "Rebellimon",
+      "comment": "The document's \"Ultimate: Rebellimon\", wired under its own spelling. It is the surviving middle of the unlockable slot's thread - the Champion below it and the Mega above it are both undrawable, so both are stand-ins (see minotaurmon and gundramon).",
+      "evolutions": [
+        {
+          "to": "gundramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "locomon",
+      "displayName": "Locomon",
+      "stage": "Perfect",
+      "line": "penc-me",
+      "spriteFile": "Locomon",
+      "comment": "This tree's junk Perfect, invented for the same reason as pencme_raremon. It is the best-supported junk rung of any Pendulum tree so far: Wikimon lists Locomon's prior forms as Raremon, Guardromon, Mechanorimon, Tankmon, Minotaurmon and Machmon - six of this tree's nine Champions - so \"every Champion falls to Locomon\" is an arrow the source material already draws, and GrandLocomon above it is its own canonical Mega.",
+      "evolutions": [
+        {
+          "to": "grandlocomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencme_wargreymon",
+      "displayName": "WarGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "WarGreymon",
+      "comment": "The document's \"Mega: WarGreymon\". Line-scoped like the rest of its thread; the plain id is `dmc-v1`'s and `pencnsp_wargreymon` is the second copy."
+    },
+    {
+      "id": "pencme_mugendramon",
+      "displayName": "Mugendramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "Mugendramon",
+      "comment": "The document's \"Mega: Machinedramon (Mugendramon)\" - it supplies both names, and Mugendramon is the one the art uses (`find -iname '*machinedramon*'` returns nothing). Line-scoped because the plain `mugendramon` is `dmc-v5`'s, where `jogress.json` also spends it as a Chaosdramon parent. Two Ultimates of this tree reach it, Andromon and Cyberdramon, exactly as the document draws them."
+    },
+    {
+      "id": "craniummon",
+      "displayName": "Craniummon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "Craniummon",
+      "comment": "The document's \"Mega: Craniummon\", wired under its own spelling. The pack also holds Craniummon_X, a separate roster entry this tree does not draw."
+    },
+    {
+      "id": "princemamemon",
+      "displayName": "PrinceMamemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "PrinceMamemon",
+      "comment": "The document's \"Mega: PrinceMamemon\", wired under its own spelling. The pack also holds PrinceMamemon_X, a separate roster entry this tree does not draw."
+    },
+    {
+      "id": "pencme_hiandromon",
+      "displayName": "HiAndromon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "Hi-Andromon",
+      "comment": "The document's \"Mega: HiAndromon\". Line-scoped because the plain `hiandromon` is `dmc-v3`'s. The art tree holds BOTH `Hi-Andromon.png` and `HiAndromon.png`; this node points at the hyphenated sheet, which is the one the plain node has used since US-044 and the divergence `RosterTests` pins."
+    },
+    {
+      "id": "pencme_venomvamdemon",
+      "displayName": "VenomVamdemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "VenomVamdemon",
+      "comment": "The document's \"Mega: VenomMyotismon\". `find -iname '*venommyotismon*'` returns nothing; VenomVamdemon is the Japanese name and the one the art uses - the Myotismon/Vamdemon drift US-140 recorded. Line-scoped because US-140 spent the plain `venomvamdemon` on `penc-nso`, which its own notes flagged for this story."
+    },
+    {
+      "id": "gundramon",
+      "displayName": "Gundramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "Gundramon",
+      "comment": "NOT the document's name. The document tops this thread with \"Mega: HeavyMetaldramon\", and there is no HeavyMetaldramon anywhere: `find -iname '*heavymetal*'`, `'*metaldramon*'` and `'*heavy*'` over the whole pack return only HeavyLeomon, and the roster holds no such entry under any spelling. Wikimon lists Gundramon as something Rebellimon really evolves into, and it is a Machine Mega, so it stands in at the top of the unlockable slot's thread rather than leaving that thread stopped at Perfect. Chaosdramon, the other candidate on the same list, was NOT taken: line 90 of the tree document draws it as the Ver.5 Jogress Ultra and `jogress.json` already spends it."
+    },
+    {
+      "id": "grandlocomon",
+      "displayName": "GrandLocomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "GrandLocomon",
+      "comment": "The top of this tree's invented junk chain, chosen off an orphan sheet the way US-140's Deathmon and US-141's ElDoradimon were. Wikimon lists it as something Locomon really evolves into. It is named nowhere in the tree markdown, which is what makes it safe to spend - the grep US-140's notes insist on was run over the whole document before it was chosen, and over Locomon, Minotaurmon and Gundramon with it."
     }
   ]
 }

@@ -122,10 +122,19 @@ final class RosterTests: XCTestCase {
         // three-rung THREAD to be scoped whole: Togemon, Lilimon and Rosemon have belonged to the
         // `palmon` line since US-008 and the V4 Pendulum draws all three over Floramon.
         // `pencwg_gerbemon` is the second Pumpmon case — junk in `dmc-v2`, earned here.
+        //
+        // The eight `pencme_` ids are US-142's Metal Empire tree. `pencme_greymon`,
+        // `pencme_metalgreymon` and `pencme_wargreymon` make that thread the second TRIPLE in the
+        // file, after US-140's Garurumon one — three trees draw Agumon's Champion and up.
+        // `pencme_raremon` is the third Pumpmon case and the first where the plain id is junk in
+        // BOTH lines: Raremon is `dmc-v5`'s junk Champion and this tree's too.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
                         "extyranomon", "pencds_coelamon", "pencds_megaseadramon",
                         "pencds_metalseadramon", "pencds_seadramon", "pencds_whamon",
+                        "pencme_andromon", "pencme_greymon", "pencme_hiandromon",
+                        "pencme_metalgreymon", "pencme_mugendramon", "pencme_raremon",
+                        "pencme_venomvamdemon", "pencme_wargreymon",
                         "pencnso_bakemon", "pencnso_boltmon", "pencnso_devimon",
                         "pencnso_garurumon", "pencnso_meramon", "pencnso_metalgarurumon",
                         "pencnso_noblepumpmon", "pencnso_pumpmon", "pencnso_skullmammon",

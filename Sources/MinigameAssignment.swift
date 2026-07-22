@@ -101,6 +101,12 @@ enum MinigameAssignment {
         // are Piyomon's, which is why `pencwg_piyomon` and `pencwg_birdramon` exist at all. That
         // is a stronger tie-break than the node count, which put `dmc-v1` level with `dmc-v4`.
         "penc-wg": .reflexStrike,
+        // US-142's Metal Empire is the eleventh line and the fifth sharer, which leaves exactly one
+        // game unshared. Button Masher is the one whose line (`dmc-v1`, 21 nodes) carries the fewest
+        // Digimon of the two that were still alone, and flavour agrees rather than merely not
+        // objecting: mashing a button is working a piston, which is what a tree of tanks, gears and
+        // locomotives should be made to do.
+        "penc-me": .buttonMasher,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

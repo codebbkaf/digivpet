@@ -64,6 +64,15 @@ final class SeedRosterTests: XCTestCase {
         // dmc-v4 in US-136, so the egg is the next Rookie of this tree that has one.
         ["flora_digitama", "nyokimon", "pyocomon", "pencwg_piyomon",
          "zassoumon", "tonosamagekomon", "eldoradimon"],
+        // US-142's Pendulum Color V5 Metal Empire line, the same shape a fifth time: no junk branch
+        // in the document, so Raremon, Locomon and GrandLocomon were chosen off sheets that were
+        // orphans — the best-supported junk chain so far, since Wikimon draws every one of its
+        // arrows. Its egg is `funbee_digitama`, and it is the first Pendulum egg belonging to no
+        // rung of its own tree at all: none of ToyAgumon, Kokuwamon, Hagurumon and Junkmon has an
+        // egg on disk, so the rule that survives is only "a real roster Digitama that a map drops"
+        // — 06_industrial drops this one.
+        ["funbee_digitama", "choromon", "caprimon", "toyagumon",
+         "pencme_raremon", "locomon", "grandlocomon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.

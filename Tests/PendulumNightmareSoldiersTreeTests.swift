@@ -355,8 +355,21 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         // And the one that WAS: WaruMonzaemon was the first choice for the Perfect rung, and the
         // grep above is what caught it. The Version 5 Metal Empire section draws it over
         // Mekanorimon, so it is US-142's earned Ultimate and cannot be this tree's junk.
+        //
+        // This assertion was written as `XCTAssertNil(graph.node(id: "warumonzaemon"))` and was
+        // MEANT to fail the day that story landed — the marker-test shape US-130 recorded. US-142
+        // landed it, so it now states the thing it was always guarding: WaruMonzaemon is a node,
+        // it belongs to the Metal Empire tree, and it is EARNED there rather than junk anywhere.
         XCTAssertTrue(text.contains("Ultimate: WaruMonzaemon"))
-        XCTAssertNil(graph.node(id: "warumonzaemon"))
+        let warumonzaemon = try XCTUnwrap(graph.node(id: "warumonzaemon"))
+        XCTAssertEqual(warumonzaemon.line, "penc-me")
+        XCTAssertNotEqual(warumonzaemon.line, line, "it must not have landed in this tree after all")
+        let intoIt = graph.parents(of: "warumonzaemon").flatMap { parent in
+            parent.evolutions.filter { $0.to == "warumonzaemon" }
+        }
+        XCTAssertFalse(intoIt.isEmpty)
+        XCTAssertTrue(intoIt.allSatisfy { !$0.isDefault },
+                      "WaruMonzaemon is somebody's junk fallback after all")
     }
 
     /// Stated through the engine rather than by reading the file: a Digimon of this tree whose owner

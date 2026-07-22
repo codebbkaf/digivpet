@@ -27,12 +27,15 @@ final class MinigameAssignmentTests: XCTestCase {
     }
 
     /// Exactly which lines share a game, spelled out so that a line landing on a shared game by
-    /// accident reads as a slip rather than as the pattern. Four pairs since US-141: the two
+    /// accident reads as a slip rather than as the pattern. Five pairs since US-142, which leaves
+    /// Power Meter the only game a single line still has to itself. The other four: the two
     /// nature-flavoured trees on the timing bar, Deep Savers beside Ver.3 on the sprint,
     /// Nightmare Soldiers beside Ver.5 on sequence recall, and Wind Guardians beside Ver.4 on
     /// reflex strike — the last of those the only pair that shares Digimon as well as a game, both
-    /// trees being Piyomon's. Written as the whole game -> [lines] dictionary rather than as a list
-    /// of pairs, so the next Pendulum tree costs one literal.
+    /// trees being Piyomon's. Metal Empire joins `dmc-v1` on the button masher, the last game that
+    /// was still alone alongside the power meter and the one with fewer Digimon behind it. Written
+    /// as the whole game -> [lines] dictionary rather than as a list of pairs, so the next Pendulum
+    /// tree costs one literal.
     func testTheSharedGamesAreExactlyTheAuthoredPairs() {
         let sharers = Dictionary(grouping: MinigameAssignment.byLine.keys,
                                  by: { MinigameAssignment.byLine[$0]! })
@@ -42,7 +45,8 @@ final class MinigameAssignmentTests: XCTestCase {
         XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp"],
                                  .crownSprint: ["dmc-v3", "penc-ds"],
                                  .sequenceRecall: ["dmc-v5", "penc-nso"],
-                                 .reflexStrike: ["dmc-v4", "penc-wg"]])
+                                 .reflexStrike: ["dmc-v4", "penc-wg"],
+                                 .buttonMasher: ["dmc-v1", "penc-me"]])
     }
 
     /// The table is keyed on strings the JSON owns, so a renamed line would silently drop that whole

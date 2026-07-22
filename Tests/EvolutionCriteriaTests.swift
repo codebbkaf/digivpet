@@ -32,10 +32,10 @@ final class EvolutionCriteriaTests: XCTestCase {
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
-        "platinumscumon", "diginorimon", "gokimon", "zassoumon",
+        "platinumscumon", "diginorimon", "gokimon", "zassoumon", "pencme_raremon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
-        "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon",
+        "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
         // Ultimate
         "kingetemon",
     ]

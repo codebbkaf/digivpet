@@ -163,8 +163,8 @@ final class EggHatchingTests: XCTestCase {
         XCTAssertEqual(Set(candidates.map(\.id)),
                        ["agu_digitama", "gabu_digitama", "pal_digitama", "pata_digitama", "piyo_digitama",
                         "gazi_digitama", "tento_digitama", "goma_digitama", "baku_digitama",
-                        "flora_digitama"],
-                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, and US-138's Tento, US-139's Goma, US-140's Baku and US-141's Flora Digitama root the first four Pendulum trees")
+                        "flora_digitama", "funbee_digitama"],
+                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, and US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora and US-142's Funbee Digitama root the five Pendulum trees")
 
         var seen: Set<String> = []
         for _ in 0..<200 {

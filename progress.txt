@@ -248,6 +248,25 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - **A dexOnly ROOKIE is far more expensive than a dexOnly leaf**: its whole subtree has to be
   rehomed onto a sibling Rookie or it is stranded. Prefer a pairing the shipped file ALREADY
   makes, which turns an invention into a precedent.
+- **PHASE E: a name can be BOTH present and unusable, and `find` alone gets it wrong.** US-142's
+  Machmon is in the roster AND on disk - under `Idle Frame Only/`, so `dexOnly`. Run both checks on
+  every name: does a 48x64 sheet exist, and is the roster entry playable. Either alone is half a
+  search (US-139's Octomon/Octmon, US-141's garbamon, US-142's Machmon).
+- **PHASE E: grep a junk pick against the SECTION and against the WHOLE FILE - they answer
+  different questions.** A name an EARLIER section drew may still be fine (it is just an alias:
+  US-142's `pencme_raremon`). A name a LATER section draws must not be spent (US-142 left
+  Chaosdramon alone; `jogress.json` was the second reason). Doing only the whole-file grep rejects
+  good picks; doing only the section grep steals a later tree's node.
+- **PHASE E: a hard-coded COUNT is on the same timer as a hard-coded example.** Phase E moves the
+  orphan total every story, so `> 800` in `DexScreenTests` became exactly 800 in US-142. Assert a
+  PROPORTION of whatever the roster holds, not a literal.
+- **PHASE E: leave a marker test that FAILS the day the next story lands.** US-140 left
+  `XCTAssertNil(graph.node(id: "warumonzaemon"))` with a comment naming US-142. It fired on the
+  first run, explained itself, and was rewritten into the claim it was guarding. Cheaper and
+  louder than a note.
+- **A Perfect MAY branch.** The 2..5 out-degree rule and the junk-fallback rule are both scoped to
+  Child and Adult; above that all a node needs is exactly one `isDefault` edge. US-142's
+  `pencme_andromon` has two parents and two children because the document draws Andromon twice.
 - **`Resources/*.md` is bundled with the app**, so a test can read the source evolution-tree
   markdown at run time and assert what the document does and does NOT say — that is how an
   invented junk chain becomes an assertion instead of a comment.
@@ -2374,4 +2393,115 @@ Validator: zero findings over the whole file.
   are the last two Pendulum trees. US-140's notes already flag two names US-142 must handle:
   WaruMonzaemon is its earned Ultimate over Mekanorimon, and VenomVamdemon is already spent by
   `penc-nso`, so US-142 needs `pencv5_venomvamdemon`.
+---
+
+## 2026-07-22 - US-142 (Wire the Pendulum Color V5 Metal Empire evolution tree)
+
+Authored `penc-me` from nothing, the fifth Phase E device tree with no seed line to rename.
+**32 nodes, 238 -> 270 - the widest line in the file on its own**, past the three-way tie at 31.
+**ORPHANS 667 -> 643, 24 removed**, counted with Appendix B over a regenerated
+`roster.generated.json`, with the pre-story 667 REPRODUCED in a `git worktree` at HEAD rather than
+trusted from US-141's notes (Digitama 47->46, Baby I 35->34, Baby II 39->38, Child 94->90,
+Adult 138->131, Perfect 123->117, Ultimate 175->171; Armor-Hybrid unchanged at 16). The other 8 new
+nodes are line-scoped `pencme_` aliases and remove nothing - the WORST alias ratio of any Pendulum
+tree, because this section shares Agumon's whole thread with two other trees.
+
+The tree, from `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` line 152:
+Funbee Digitama -> Choromon -> Caprimon, forking four ways to ToyAgumon / Kokuwamon / Hagurumon /
+Junkmon, nine Champion-to-Mega threads above them, and Raremon -> Locomon -> GrandLocomon as the
+invented junk chain. Egg is `funbee_digitama`, dropped by `06_industrial`, so maps.json was not
+touched.
+
+Files: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`Sources/DexModel.swift`, `Sources/MinigameAssignment.swift`,
+`Tests/PendulumMetalEmpireTreeTests.swift` (new, 28 tests),
+`Tests/EvolutionGraphTests.swift`, `Tests/EvolutionGraphValidatorTests.swift`,
+`Tests/ElementCatalogTests.swift`, `Tests/EvolutionCriteriaTests.swift`,
+`Tests/SeedRosterTests.swift`, `Tests/RosterTests.swift`, `Tests/EggHatchingTests.swift`,
+`Tests/MinigameAssignmentTests.swift`, `Tests/DexScreenTests.swift`,
+`Tests/PendulumNightmareSoldiersTreeTests.swift`, `docs/evolutions-schema.md`.
+
+Build green, **1894 tests (1865 + 28 new + 1 backfilled), 0 failures** - and 1894 is exactly
+`grep -cE '^\s+func test' Tests/*.swift`, so the summary is not a crashed-host undercount.
+Validator: zero findings over the whole file. The app was also installed and launched on the 46mm
+Simulator and drew its Dex, which is the cheap proof that no `bundled` catalog traps at launch.
+
+- **Learnings for future iterations:**
+
+- **A tree can be broken at BOTH ends of one thread, and the two breaks fail DIFFERENTLY.** The
+  unlockable slot here is Junkmon -> Machmon -> Rebellimon -> HeavyMetaldramon. `Machmon` is
+  US-139's twin trap - it IS in the roster and its PNG IS on disk, so `find` and a substring search
+  both say "present", and only `dexOnly` says it can never sit on an edge. `HeavyMetaldramon` is
+  the other shape: absent from the pack under every spelling tried (`heavymetal*`, `metaldra*`,
+  `heavy*` -> only HeavyLeomon). **Run BOTH checks on every name: does a sheet exist, and is the
+  roster entry playable.** Either one alone gets one of these two names wrong.
+- **The rehome-by-intersection move works on a thread broken twice.** Wikimon lists Minotaurmon in
+  Junkmon's *Evolves To* AND in Rebellimon's *Evolves From*, and Gundramon in Rebellimon's
+  *Evolves To*: two pages, four lists, and the whole thread survives with the document's arrows
+  intact. US-140 did this for a missing bottom, US-141 for a missing middle and a missing top;
+  this is both ends of one thread at once. Fetching the page for the rung above the gap and the
+  rung below it remains a five-minute lookup that saves a subtree.
+- **A junk pick must be grepped against the SECTION, not the whole document - and the whole
+  document, not just the section.** Both greps matter and they answer different questions.
+  `Raremon` is drawn three times by the Digital Monster Ver.5 tree fourteen lines further up the
+  same file, so a whole-file grep would have rejected a pick that is completely fine here (it is
+  simply `pencme_raremon`, an alias). `Locomon` and `GrandLocomon` had to clear the whole-file
+  grep, because a name a LATER section draws cannot be spent on junk. The test in this story does
+  both, and says which is which.
+- **US-140's marker test fired exactly as designed and cost nothing.** It asserted
+  `XCTAssertNil(graph.node(id: "warumonzaemon"))` with a comment saying US-142 would break it. It
+  broke on the first run of this story, pointed straight at the reason, and was rewritten into the
+  claim it was always guarding (WaruMonzaemon is a node, it is `penc-me`'s, and it is nobody's junk
+  fallback). **Leave the marker; it is worth more than a note in a file nobody greps.**
+- **A hard-coded "the roster dwarfs the graph" threshold is on the same timer as a hard-coded
+  roster-only example.** `DexScreenTests.testMostOfTheShippedRosterHasNoCandidates` asserted
+  `> 800` and this story took it to exactly 800. Fixed by making it a PROPORTION
+  (`> Roster.bundled.entries.count / 2`), which survives every remaining sweep. US-138's lesson
+  about derived examples applies to derived COUNTS too - Phase E moves both numbers every story.
+- **`DexModel.lineTitles` had no test at all, and a missing entry is invisible.** The fallback
+  heads the section with the raw slug (`penc-me`), which is cosmetic and would never fail a build.
+  Backfilled as a derived test over `EvolutionGraph.bundled`'s lines, so the next tree is TOLD to
+  add its title. The eight-place knock-on list has always included this file; it just had nothing
+  enforcing it.
+- **This tree's threads MERGE, which no earlier one did, and it is the graph shape to expect from
+  here on.** Tankmon and Thunderballmon both climb to Knightmon, and the document draws Andromon
+  twice - over Revolmon toward Machinedramon and over Guardromon toward HiAndromon. One node
+  carries both, so `pencme_andromon` is the file's only Perfect with two parents AND two children,
+  and the only one whose second outgoing edge had to be EARNED rather than the usual single
+  `isDefault` climb. Nothing in the suite objected: the 2..5 out-degree rule and the junk-fallback
+  rule are both scoped to Child and Adult, so a Perfect may branch freely as long as exactly one
+  edge is `isDefault`.
+- **An egg need not belong to the tree at all.** US-141 found the egg was not the DEFAULT Rookie's;
+  here not one of the four Rookies has a Digitama on disk, so all that survives of the rule is "a
+  real roster Digitama that a map drops". `funbee_digitama` was chosen off `06_industrial`, the
+  machine map, and the comment names that map - a wrong map id in a comment is a lie a later story
+  acts on (US-141 shipped `02_forest`, which is not a map in this app).
+- **Nine of this section's twenty-eight names are the ONLY one of a pair that exists**, and five
+  need the drift rules: Kapurimon/`Caprimon`, Deputymon/`Revolmon`, Mekanorimon/`Mechanorimon`,
+  Machinedramon/`Mugendramon`, VenomMyotismon/`VenomVamdemon`. Nothing new in kind - but the count
+  has not dropped in five trees running, so budget for it.
+- **The knock-on list is stable at eight places for the fourth tree running** (US-139's list, all
+  eight fired): `EvolutionGraphTests`' per-line count dict; `graph.nodes.count` in
+  `ElementCatalogTests` AND `EvolutionGraphValidatorTests`; `EggHatchingTests`' seeded-Digitama set;
+  `SeedRosterTests`' `seedLines`; `RosterTests`' exact alias list; `EvolutionCriteriaTests.junkIds`
+  (BOTH the Adult and the Perfect junk node); `MinigameAssignmentTests`' sharer map. Add TWO more
+  this story found: `DexScreenTests`' roster-vs-graph threshold, and any earlier tree's marker test.
+  Watch the SORT ORDER in `RosterTests`: `pencme_` sorts after `pencds_` and before `pencnso_`.
+- **`penc-me` takes the last unshared-but-one minigame.** Button Masher now has `dmc-v1` beside it;
+  Power Meter (`dmc-v2`) is the only game a single line still holds. The next tree has no
+  unshared game left to take, so US-143 will be picking a SECOND sharer for some game - the
+  tie-break to use is the one every story since US-138 has used: fewest Digimon behind the game,
+  flavour breaks ties.
+- **`json.dump` still cannot rewrite `evolutions.json`** - mixed encoding, as US-139 recorded.
+  Splice new nodes TEXTUALLY, and do `elements.json` / `moves.json` by string insertion; the diff
+  for those two was 34 added lines each and nothing reformatted. The whole 32-node tree came out of
+  one `/tmp` python script with a PRE-FLIGHT CHECKER beside it (sprite on disk, roster stage and
+  spriteFile agree, not dexOnly, rung transitions, out-degree, junk-edge shape, distinct earned
+  energies, signature names unique against the whole file). The checker caught three signature
+  collisions before a 23-second test run did, which is the right place to catch them.
+- REMAINS: US-143 onward (29/56 passing). US-143 (Virus Busters / ZERO) is the LAST Pendulum tree
+  and the last of the eleven device trees; US-144..169 are the 26 orphan sweeps over the remaining
+  643. Two names US-143 must handle are already spent: `greymon`/`metalgreymon`/`wargreymon` are
+  now THREE nodes each (dmc-v1, penc-nsp, penc-me), so its Agumon thread needs a fourth copy, and
+  Garurumon's thread is already a triple.
 ---

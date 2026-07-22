@@ -609,8 +609,8 @@
         "Typecheck passes"
       ],
       "priority": 29,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Authored `penc-me` from nothing: 32 nodes, 238 -> 270, the widest line in the file. ORPHANS 667 -> 643, 24 removed (Appendix B, regenerated roster.generated.json, pre-story count reproduced in a git worktree at HEAD): Digitama 47->46, Baby I 35->34, Baby II 39->38, Child 94->90, Adult 138->131, Perfect 123->117, Ultimate 175->171; Armor-Hybrid unchanged at 16. The other 8 new nodes are line-scoped `pencme_` aliases and remove nothing. TWO NAMES IN THE SECTION HAVE NO PLAYABLE SPRITE, both on the unlockable slot's thread: `Machmon` (searched Machmon, mach*, mecha* - it IS in the roster and on disk, but only under Idle Frame Only/, so dexOnly and unusable) and `HeavyMetaldramon` (searched HeavyMetaldramon, heavy*, metaldra* - absent from the pack entirely; only HeavyLeomon matches). Wikimon supplied a stand-in on the same thread for each: Minotaurmon (in Junkmon's Evolves To AND Rebellimon's Evolves From) and Gundramon (in Rebellimon's Evolves To). Chaosdramon, the other candidate, was left alone - the document draws it as the Ver.5 Jogress Ultra and jogress.json already makes it. REFERENCE for everything the document is silent on: wikimon.net (pages for Junkmon, Rebellimon, Raremon and Locomon), cited in the node comments. Junk chain, invented as in every Pendulum tree: Raremon -> Locomon -> GrandLocomon, every arrow of it drawn by Wikimon. Egg is `funbee_digitama`, dropped by 06_industrial; no Rookie of this tree has an egg, so maps.json was not touched. Validator: zero findings over the whole file. Build green, 1894 tests, 0 failures - and 1894 is exactly `grep -cE '^\\s+func test' Tests/*.swift`, so not a crashed-host undercount."
     },
     {
       "id": "US-143",

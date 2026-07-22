@@ -218,15 +218,15 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — 134 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
-`dmc-v5`, `penc-nsp`, `penc-ds`, `penc-nso` and `penc-wg` lines.
+prose — 166 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
+`dmc-v5`, `penc-nsp`, `penc-ds`, `penc-nso`, `penc-wg` and `penc-me` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 238 nodes across ten `line` values — `dmc-v1` (21 nodes),
+`Resources/evolutions.json` holds 270 nodes across eleven `line` values — `dmc-v1` (21 nodes),
 `dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10), `penc-nsp` (30),
-`penc-ds` (31), `penc-nso` (31) and `penc-wg` (31) — each a complete line from Digitama through
-Ultimate.
+`penc-ds` (31), `penc-nso` (31), `penc-wg` (31) and `penc-me` (32) — each a complete line from
+Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
@@ -478,3 +478,36 @@ Five things about it:
   not touched. Its junk chain is this app's invention as ever: Zassoumon → TonosamaGekomon →
   ElDoradimon, all three off orphan sheets and all three linked to each other on Wikimon, with
   Zassoumon keeping one earned edge back up to Blossomon.
+
+`penc-me` is the Pendulum Color V5 Metal Empire tree (US-142), the fifth line authored from
+nothing and, at 32 nodes, the widest in the file. It is the first tree whose threads MERGE rather
+than only fork: Tankmon and Thunderballmon both climb to Knightmon, and Andromon is drawn twice by
+the document — once over Revolmon on the way to Machinedramon and once over Guardromon on the way
+to HiAndromon — so `pencme_andromon` is the only Perfect in the file with two parents AND two
+children. Five things about it:
+
+- **Five of the section's twenty-eight names are filed under a spelling the document does not
+  use**: Kapurimon/`Caprimon`, Deputymon/`Revolmon`, Mekanorimon/`Mechanorimon`,
+  Machinedramon/`Mugendramon` and VenomMyotismon/`VenomVamdemon`. The dub-name lesson of US-140,
+  unchanged.
+- **One thread is broken at BOTH ends, and in the two different ways Phase E has met.** `Machmon`
+  (the Champion over Rebellimon) IS in the roster and IS on disk — but only under
+  `Idle Frame Only/`, so it is `dexOnly` and may never sit on an edge, which is US-139's twin trap.
+  `HeavyMetaldramon` (the Mega above it) does not exist in the pack at all. Wikimon supplied a
+  stand-in for each on the same thread: `Minotaurmon`, which it lists in Junkmon's *Evolves To* and
+  in Rebellimon's *Evolves From*, and `Gundramon`, which it lists in Rebellimon's *Evolves To*.
+- **`Chaosdramon` was the other candidate for that Mega and was deliberately left alone.** Line 90
+  of the tree document draws it as the Ver.5 Jogress Ultra and `jogress.json` already makes it
+  twice. That is the grep US-140's notes demand, run before authoring rather than after.
+- **Eight of its thirty-two nodes are line-scoped aliases**, the most of any tree.
+  `pencme_greymon` / `pencme_metalgreymon` / `pencme_wargreymon` make Agumon's Champion-and-up the
+  file's second whole thread drawn by THREE trees, after US-140's Garurumon one. `pencme_raremon`
+  is the third Pumpmon case and the first where the plain id is junk in *both* lines: Raremon is
+  `dmc-v5`'s junk Champion and this tree's too.
+- **Its egg is `funbee_digitama`, and it belongs to no rung of its own tree.** None of ToyAgumon,
+  Kokuwamon, Hagurumon and Junkmon has a Digitama on disk, so all that survives of the rule is "a
+  real roster Digitama that a map drops" — `06_industrial`, the machine map, drops this one, so
+  `maps.json` was not touched. Its junk chain is this app's invention as ever, and the
+  best-supported one yet: Raremon → Locomon → GrandLocomon, every arrow of it drawn by Wikimon,
+  which lists Raremon in Junkmon's *Evolves To* and gives Locomon six of this tree's nine
+  Champions as prior forms. Raremon keeps one earned edge back up to Rebellimon.
