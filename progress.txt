@@ -175,6 +175,22 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   then re-add the trailing newline.** It round-trips the existing formatting exactly — the diff for
   a `passes`/`notes` update is 2 lines — so a 1,000-line JSON file never has to be hand-edited.
   Check with `git diff --stat prd.json` before committing.
+- **Price a ceiling raise off the DRAWABLE row, not the document's row.** US-136's Palmon was
+  billed by two earlier stories as six-wide and needing a raise; both of that section's
+  art-absent names were in that very row, so the real row was four and no ceiling moved. `ls`
+  first, then decide.
+- **A line-scoped alias node (`piyo_yuramon`, `dmcv4_palmon`) needs THREE data entries**: a node in
+  `evolutions.json`, an `elements.json` entry and a `moves.json` entry — and the move's
+  `signatureName` must be globally UNIQUE (`MoveCatalogTests`), so it cannot be copied from the
+  Digimon it aliases. Give it a second real attack of that Digimon's.
+- **A Phase E story may legitimately remove ZERO orphans**, when everything in its section was
+  already wired and the only new node is an alias. Count it with Appendix B both ways — regenerate
+  `roster.generated.json` AND re-run the count against `git show HEAD:Resources/evolutions.json` —
+  and ASSERT the zero in a test, or the next reader reads it as a slip.
+- **The app's bundle id for `simctl` is `com.digivpet.DigiVPet`** (`project.yml`). A wrong id fails
+  `simctl launch` with an opaque FBSOpenApplicationServiceErrorDomain code=4 while
+  `simctl io screenshot` still writes a plausible PNG of the watch face — which reads as the very
+  black-screen bug the Phase E screenshot exists to catch.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -1808,4 +1824,75 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-136 onward (22/56 passing). US-136 is Digital Monster Color Version 4 — the `piyomon`
   line renamed to `dmc-v4`. Read the two paragraphs above about the six-wide Rookie and the
   four-energy limit before starting it; that is the one thing this story did not have to solve.
+---
+
+## 2026-07-22 - US-136: Wire the Digital Monster Color Version 4 evolution tree
+- Renamed the `piyomon` seed line (US-045's pruned V4 tree) to `dmc-v4` and finished it: ONE new
+  node, `dmcv4_palmon`, the document's second Rookie. 21 nodes in the line, 115 in the file.
+- Files: `Resources/evolutions.json` (line rename, new node, two new edges, four comments),
+  `Resources/elements.json`, `Resources/moves.json`, `Sources/MinigameAssignment.swift`,
+  `Sources/DexModel.swift` (lineTitles + a stale doc-comment example), `Tests/DMCVersion4TreeTests.swift`
+  (new, 16 tests), `Tests/SeedRosterTests.swift`, `Tests/EvolutionGraphTests.swift`,
+  `Tests/EvolutionGraphValidatorTests.swift`, `Tests/ElementCatalogTests.swift`,
+  `Tests/RosterTests.swift`, `docs/evolutions-schema.md`.
+- Build green, 1745 tests (1729 + 16), 0 failures. Screenshotted on 41mm and 46mm.
+
+- **Learnings for future iterations:**
+
+- **THE SIX-WIDE ROOKIE WAS NEVER SIX WIDE. No ceiling moved.** US-134 and US-135 both wrote that
+  US-136 would have to raise the 2...5 out-degree ceiling and the five-candidate Dex ceiling,
+  because the document gives V4's Palmon six Champions. It does not need to: **BOTH of AC11's
+  absent names are in that same row.** Kokatorimon is absent from the pack entirely
+  (`find "16x16 Digimon Sprites" -iname '*okatorimon*'` returns nothing — no colour sheet, no
+  monochrome one, no roster entry) and Nanimon is idle-only. Six minus two is four, which plus the
+  junk fallback is exactly the five edges the ceiling already allowed. **Count the DRAWABLE row
+  before pricing a ceiling raise off the document's row** — a previous story's estimate of the work
+  is made without having run `ls`, and Phase E prunes a tree by art more often than not.
+  **US-137's Gizamon is the remaining six-wide claim and it is a DIFFERENT case**: US-046's notes
+  say V5's only omission is Flymon, so Gizamon's drawable row really is five earned + junk = six
+  edges, and that one probably WILL need the raise. Check it against `ls` first anyway.
+
+- **A line-scoped alias needs THREE data-file entries, not two, and the third has a uniqueness
+  rule.** `dmcv4_palmon` needed `elements.json` and `moves.json` entries like any node — but
+  `MoveCatalogTests.testSignatureNamesAreAuthoredRatherThanTemplated` requires every node's
+  `signatureName` to be **globally distinct**, so copying the aliased Digimon's move entry verbatim
+  fails: `dmcv4_palmon` and `palmon` both claiming "Poison Ivy" was the one red test in this story.
+  Give the alias a second real attack from the same Digimon ("Allergy Shower"). US-045 already knew
+  this — `piyo_yuramon` is "Dew Spray" where `yuramon` is "Dew Drop" — but nothing wrote it down.
+
+- **A Phase E story can legitimately remove ZERO orphans, and that has to be asserted or it reads
+  as a slip.** 757 -> 757, counted with Appendix B over a regenerated `roster.generated.json` and
+  cross-checked by running the same count against `git show HEAD:Resources/evolutions.json`. The
+  whole V4 section was already wired by US-045/US-061 except its second Rookie, and that Rookie is
+  an ALIAS — a second node on a Digimon the `palmon` line has connected since US-008, so it is not
+  a roster id and never counted as an orphan. What the story bought is tree CORRECTNESS: Palmon
+  sits where the document draws it, and Piyomon gained the Kuwagamon its row always had.
+  `DMCVersion4TreeTests.testTheStoryAddedNoNewlyConnectedRosterDigimon` pins the zero.
+  **Expect the same shape from any remaining device tree whose seed line was already near-complete.**
+
+- **The Tsukaimon call again, in its purest form.** Hyokomon and Muchomon are in NO source tree —
+  US-045 invented them to hold Coelamon, Mojyamon and Kuwagamon while the plain `palmon` id belonged
+  to another line. Giving those Champions to `dmcv4_palmon` made both redundant, and emptying them
+  would have left two shipped Children that evolve into nothing. **They keep their branches.** That
+  is now three stories running (US-134 Geremon, US-135 Tsukaimon, US-136 here); treat it as the
+  default, not a judgement call.
+
+- **The same Champion under two parents with different energies keeps paying off** (US-135's
+  finding). Leomon is `strength` from both Rookies but Kuwagamon is `stamina` from Piyomon and
+  `dmcv4_palmon` while being `strength` from Muchomon. `requiredEnergy` is a property of the EDGE.
+
+- **V4's Ultra row needed no new data.** "Darkdramon -> Ultra: Chaosmon (Jogress with BanchoLeomon)"
+  was already a recipe in `Resources/jogress.json` from US-131, so Darkdramon is terminal and a
+  comment on the node says where the row went (the V1/V2 pattern, which a test now enforces).
+  Worth knowing: that recipe reaches across two device trees — BanchoLeomon is `dmc-v3`'s Mega.
+
+- **A `-dexLineDemo` screenshot needs the right bundle id.** It is `com.digivpet.DigiVPet`
+  (`project.yml` line 82), not `com.example.DigiVPet`. `simctl launch` fails with an opaque
+  FBSOpenApplicationServiceErrorDomain code=4 and `simctl io screenshot` still writes a plausible
+  PNG of the watch face, so a wrong id produces a screenshot that looks like a black-screen bug.
+
+- REMAINS: US-137 onward (23/56 passing). US-137 is Digital Monster Color Version 5 — the `gazimon`
+  line renamed to `dmc-v5`. It is the only seed line that already holds BOTH of its Rookies, so
+  expect the tree to be near-complete like this one; read the Gizamon paragraph above before
+  assuming a ceiling raise, and check `Flymon` with `ls` rather than trusting US-046's note.
 ---

@@ -83,6 +83,7 @@
     "piyo_yuramon": { "projectileSymbol": "drop.fill", "tint": "mint", "signatureName": "Dew Spray", "signatureSymbol": "drop.fill" },
     "piyo_tanemon": { "projectileSymbol": "leaf.fill", "tint": "mint", "signatureName": "Petal Puff", "signatureSymbol": "leaf.fill" },
     "piyomon": { "projectileSymbol": "flame.fill", "tint": "pink", "signatureName": "Magical Fire", "signatureSymbol": "sparkles" },
+    "dmcv4_palmon": { "projectileSymbol": "leaf.fill", "tint": "green", "signatureName": "Allergy Shower", "signatureSymbol": "leaf.fill" },
     "hyokomon": { "projectileSymbol": "wind", "tint": "yellow", "signatureName": "Tsuyagake", "signatureSymbol": "wind" },
     "muchomon": { "projectileSymbol": "flame.fill", "tint": "red", "signatureName": "Tropical Beak", "signatureSymbol": "flame.fill" },
     "leomon": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Fist of the Beast King", "signatureSymbol": "flame.fill" },
@@ -126,7 +127,7 @@
     "dmc-v2": { "projectileSymbol": "snowflake", "tint": "blue", "signatureName": "Ice Fang", "signatureSymbol": "snowflake" },
     "palmon": { "projectileSymbol": "leaf.fill", "tint": "green", "signatureName": "Root Lash", "signatureSymbol": "leaf.fill" },
     "dmc-v3": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Gust", "signatureSymbol": "wind" },
-    "piyomon": { "projectileSymbol": "flame.fill", "tint": "pink", "signatureName": "Wing Flare", "signatureSymbol": "flame.fill" },
+    "dmc-v4": { "projectileSymbol": "flame.fill", "tint": "pink", "signatureName": "Wing Flare", "signatureSymbol": "flame.fill" },
     "gazimon": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Shock", "signatureSymbol": "bolt.fill" }
   },
   "stageDefaults": {

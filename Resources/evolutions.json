@@ -2265,7 +2265,7 @@
       "id": "piyo_digitama",
       "displayName": "Piyo Digitama",
       "stage": "Digitama",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Piyo_Digitama",
       "evolutions": [
         {
@@ -2280,7 +2280,7 @@
       "id": "piyo_yuramon",
       "displayName": "Yuramon",
       "stage": "Baby I",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Yuramon",
       "comment": "NOT a duplicate of the `yuramon` node in the palmon line \u2014 it is the same Digimon in a second tree. The V4 tree roots both Piyomon and Palmon at Fresh: Yuramon -> In-Training: Tanemon, and both ids were already taken by the palmon line (US-008). US-045 gave this line its own ids rather than sharing the existing nodes, because `line` is single-valued and the Dex draws one tree per line: a shared node can sit in only one tree, which would leave piyo_digitama's edge pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. Same art, same displayName, distinct id \u2014 which is exactly what the id/spriteFile split in docs/evolutions-schema.md is for.",
       "evolutions": [
@@ -2297,7 +2297,7 @@
       "id": "piyo_tanemon",
       "displayName": "Tanemon",
       "stage": "Baby II",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Tanemon",
       "comment": "The palmon line's `tanemon` under a piyomon-scoped id \u2014 see the comment on piyo_yuramon for why this line does not share those nodes.",
       "evolutions": [
@@ -2319,6 +2319,12 @@
           "requiredEnergy": "stamina",
           "minEnergy": 30,
           "maxCareMistakes": 4
+        },
+        {
+          "to": "dmcv4_palmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
         }
       ]
     },
@@ -2326,9 +2332,9 @@
       "id": "piyomon",
       "displayName": "Piyomon",
       "stage": "Child",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Piyomon",
-      "comment": "DIVERGENCES FROM THE SOURCE TREE (US-045). (1) Two of Piyomon's six Champions are dropped for want of art: Kokatorimon is absent from the asset pack entirely, and Nanimon exists only as a single idle frame, so neither may be named by an edge (docs/sprite-availability.md). (2) Coelamon and Mojyamon belong to the V4 tree's OTHER rookie, Palmon, but the existing palmon line in this file is the classic Palmon -> Togemon -> Lilimon line, not V4's, so they are attached here instead of going unseeded. (3) That leaves five Champions and four energy types, as with Patamon. The tree's unearned Champion is Nanimon, which cannot be seeded, so the isDefault slot has no natural occupant: Kuwagamon takes it, sharing Leomon's strength gate from below on minEnergy and maxCareMistakes. A well-raised strength Piyomon still reaches Leomon.",
+      "comment": "DIVERGENCES FROM THE SOURCE TREE (US-045, revised by US-136). (1) Two of Piyomon's five Champions are dropped for want of art: Kokatorimon is absent from the asset pack entirely, and Nanimon exists only as a single idle frame, so neither may be named by an edge (docs/sprite-availability.md). What is left of the document's row is Monochromon / Leomon / Kuwagamon, and that is exactly what this node offers. (2) Coelamon and Mojyamon are NOT Piyomon's in the source tree — they are the other Rookie's, Palmon's. US-045 hung them off the invented Hyokomon because the plain `palmon` id already belonged to the classic Palmon -> Togemon -> Lilimon line; US-136 added `dmcv4_palmon` and gave that Rookie its four drawable Champions, leaving Hyokomon its two rather than emptying it into a Child that evolves into nothing. (3) The tree's unearned Champion is Nanimon, which cannot be seeded, so the isDefault slot has no natural occupant: US-061's GoldNumemon takes it, sharing Leomon's strength gate from below on minEnergy and maxCareMistakes. A well-raised strength Piyomon still reaches Leomon.",
       "evolutions": [
         {
           "to": "leomon",
@@ -2375,8 +2381,135 @@
           ]
         },
         {
+          "to": "kuwagamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240,
+              "hint": "Keep it moving for long stretches"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Let it pick some fights"
+            }
+          ]
+        },
+        {
           "to": "goldnumemon",
           "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "dmcv4_palmon",
+      "displayName": "Palmon",
+      "stage": "Child",
+      "line": "dmc-v4",
+      "spriteFile": "Palmon",
+      "comment": "The Version 4 tree's SECOND Rookie, added by US-136. NOT a duplicate of the `palmon` node in the palmon line — it is the same Digimon in a second tree, on the same art, exactly the piyo_yuramon pattern: `line` is single-valued and the Dex draws one tree per line, so sharing the node would leave every edge here pointing outside its own tree and EvolutionTreeLayout would silently drop the connector. The document gives this Rookie six Champions — Kokatorimon / Leomon / Kuwagamon / Coelamon / Mojyamon / Nanimon — but Kokatorimon has no sprite anywhere in the asset pack and Nanimon is idle-only, so the drawable four are what is here. That is why this six-wide Rookie needed no raise of the five-edge out-degree ceiling: four earned branches, one per energy type, plus GoldNumemon's junk fallback. The junk edge shares Mojyamon's spirit gate from below on minEnergy, so a well-raised spirit Palmon still reaches Mojyamon.",
+      "evolutions": [
+        {
+          "to": "leomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 62000,
+              "hint": "Walk with it most days"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Train it often"
+            }
+          ]
+        },
+        {
+          "to": "kuwagamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90,
+              "hint": "Stand up through the day"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Give it some fights"
+            }
+          ]
+        },
+        {
+          "to": "coelamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1400,
+              "hint": "Burn active calories together"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 3,
+              "hint": "Do not overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "mojyamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1600,
+              "hint": "Let it sleep its fill"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Rarely wake it"
+            }
+          ]
+        },
+        {
+          "to": "goldnumemon",
+          "requiredEnergy": "spirit",
           "minEnergy": 0,
           "maxCareMistakes": 99,
           "isDefault": true
@@ -2387,8 +2520,9 @@
       "id": "hyokomon",
       "displayName": "Hyokomon",
       "stage": "Child",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Hyokomon",
+      "comment": "Hyokomon is in NO source tree — US-045 invented it as a second Child to carry Coelamon and Mojyamon, which the document draws out of Palmon, back when the plain `palmon` id belonged to another line and a Child could offer only two earned branches. US-136 added `dmcv4_palmon` and gave those two Champions back to it, but this node KEEPS them: emptying it would leave a shipped Child that evolves into nothing, which is a new orphan made by the story whose job is to remove them. Same call US-135 made for Tsukaimon in the Version 3 tree.",
       "evolutions": [
         {
           "to": "mojyamon",
@@ -2447,7 +2581,7 @@
       "id": "muchomon",
       "displayName": "Muchomon",
       "stage": "Child",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Muchomon",
       "evolutions": [
         {
@@ -2485,7 +2619,7 @@
       "id": "leomon",
       "displayName": "Leomon",
       "stage": "Adult",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Leomon",
       "evolutions": [
         {
@@ -2523,7 +2657,7 @@
       "id": "monochromon",
       "displayName": "Monochromon",
       "stage": "Adult",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Monochromon",
       "evolutions": [
         {
@@ -2561,7 +2695,7 @@
       "id": "mojyamon",
       "displayName": "Mojyamon",
       "stage": "Adult",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Mojyamon",
       "evolutions": [
         {
@@ -2599,7 +2733,7 @@
       "id": "coelamon",
       "displayName": "Coelamon",
       "stage": "Adult",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Coelamon",
       "evolutions": [
         {
@@ -2637,7 +2771,7 @@
       "id": "kuwagamon",
       "displayName": "Kuwagamon",
       "stage": "Adult",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Kuwagamon",
       "comment": "DIVERGENCE FROM THE SOURCE TREE (US-045). The tree's only parent of Digitamamon is Nanimon, which is dexOnly and cannot be seeded, so Digitamamon and its Ultimate Gankoomon would be unreachable. Kuwagamon carries the second edge instead: it is already this line's isDefault Champion, so the neglect path stays one thread end to end \u2014 a Piyomon that earns nothing lands on Kuwagamon, and a Kuwagamon that earns nothing lands on Digitamamon. Its earned edge to Piccolomon is the tree as written.",
       "evolutions": [
@@ -2698,7 +2832,7 @@
       "id": "goldnumemon",
       "displayName": "GoldNumemon",
       "stage": "Adult",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "GoldNumemon",
       "evolutions": [
         {
@@ -2736,7 +2870,7 @@
       "id": "megadramon",
       "displayName": "Megadramon",
       "stage": "Perfect",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Megadramon",
       "comment": "The V4 tree's Ultra, Chaosmon, hangs off Darkdramon but is a Jogress with BanchoLeomon \u2014 a two-parent edge the schema cannot express (docs/sprite-availability.md). This line ends at its three Ultimates.",
       "evolutions": [
@@ -2753,7 +2887,7 @@
       "id": "piccolomon",
       "displayName": "Piccolomon",
       "stage": "Perfect",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Piccolomon",
       "evolutions": [
         {
@@ -2769,7 +2903,7 @@
       "id": "digitamamon",
       "displayName": "Digitamamon",
       "stage": "Perfect",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Digitamamon",
       "evolutions": [
         {
@@ -2785,7 +2919,7 @@
       "id": "greatkingscumon",
       "displayName": "GreatKingScumon",
       "stage": "Perfect",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "GreatKingScumon",
       "evolutions": [
         {
@@ -2801,28 +2935,29 @@
       "id": "darkdramon",
       "displayName": "Darkdramon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "piyomon",
-      "spriteFile": "Darkdramon"
+      "line": "dmc-v4",
+      "spriteFile": "Darkdramon",
+      "comment": "Terminal on purpose. The Version 4 section's last row is \"Darkdramon -> Ultra: Chaosmon (Jogress with BanchoLeomon)\", and a Jogress is not an evolution edge: the recipe lives in Resources/jogress.json (US-131), which is why nothing leaves this node. Same shape as blitzgreymon in the Ver.1 tree and cresgarurumon in Ver.2."
     },
     {
       "id": "bloomlordmon",
       "displayName": "BloomLordmon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "BloomLordmon"
     },
     {
       "id": "gankoomon",
       "displayName": "Gankoomon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Gankoomon"
     },
     {
       "id": "boltmon",
       "displayName": "Boltmon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "piyomon",
+      "line": "dmc-v4",
       "spriteFile": "Boltmon"
     },
     {

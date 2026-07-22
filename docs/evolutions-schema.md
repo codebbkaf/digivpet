@@ -218,13 +218,13 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — twenty-five nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `piyomon` and
+prose — twenty-eight nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4` and
 `gazimon` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 114 nodes across six `line` values — `dmc-v1` (21 nodes),
-`dmc-v2` (23), `dmc-v3` (20), `palmon` (10), `piyomon` (20) and `gazimon` (20) — each a complete
+`Resources/evolutions.json` holds 115 nodes across six `line` values — `dmc-v1` (21 nodes),
+`dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `palmon` (10) and `gazimon` (20) — each a complete
 line from Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
@@ -253,8 +253,9 @@ idle-only Betamon and a missing Tyranomon pruned Version 1. Four things about it
 
 - **Gabumon and Elecmon are five-wide.** The document gives each Rookie five Champions and they
   all exist, so US-134 raised the out-degree ceiling in `EvolutionCriteriaTests` from four to five
-  and the Dex candidate ceiling with it. V4's Palmon and V5's Gizamon are SIX wide, so expect to
-  raise it again.
+  and the Dex candidate ceiling with it. V4's Palmon and V5's Gizamon are SIX wide in the document,
+  but US-136 found V4's needed no raise — two of Palmon's six have no animated sheet, so its
+  drawable row is four. V5's Gizamon is still ahead.
 - **Vegimon replaced Geremon as the junk fallback.** A device tree's junk Champion is the one BOTH
   Rookies fall to — Numemon in V1, Vegimon in V2. Geremon is still reachable and still junk: it is
   Elecmon's overfeeding branch now, and it keeps its own Perfect and Ultimate underneath it.
@@ -285,21 +286,33 @@ things about it:
 - **It has no Ultra row at all**, unlike Versions 1, 2 and 4, so all three of its Megas are
   terminal and none of them appears in `Resources/jogress.json`.
 
-`piyomon` is US-045's Digital Monster Color V4 line and has the same five-wide shape: Piyomon
-branches into Monochromon / Leomon / Kuwagamon / Coelamon / Mojyamon, converging into Megadramon /
-Piccolomon / Digitamamon and then Darkdramon / BloomLordmon / Gankoomon. Three things about it:
+`dmc-v4` is the fourth of the same story: US-045 authored it as `piyomon`, a pruned Digital
+Monster Color Version 4 tree, and US-136 renamed it and filled that tree in. Completing it took a
+single new node — the document's second Rookie — because US-045 had already borrowed that Rookie's
+Champions. Six things about it:
 
-- **Its Baby I and Baby II are `piyo_yuramon` and `piyo_tanemon`, not `yuramon` and `tanemon`.**
-  The V4 tree roots both this line and Palmon's at Yuramon → Tanemon, and the `palmon` line
-  already owned those ids. They are the same Digimon on the same art with line-scoped ids, not
+- **Three of its names carry line-scoped ids**: `piyo_yuramon`, `piyo_tanemon` and `dmcv4_palmon`.
+  The V4 tree roots at Yuramon → Tanemon and its second Rookie IS Palmon, and the `palmon` line
+  already owned all three ids. They are the same Digimon on the same art with line-scoped ids, not
   copies. Sharing the nodes was the alternative and was rejected: `line` is single-valued and the
   Dex draws one tree per line, so a shared node sits in one tree and `EvolutionTreeLayout` drops
   every connector crossing into the other. See the `comment` on `piyo_yuramon`.
-- **Two Champions are omitted for want of art** — Kokatorimon (absent entirely) and Nanimon
-  (idle-only). Coelamon and Mojyamon, which the V4 tree hangs off its Palmon rookie, fill the gap.
+- **Two Champions are omitted for want of art** — Kokatorimon (absent entirely, not even a
+  monochrome sheet) and Nanimon (idle-only). They are the only two names in the Version 4 section
+  with no animated sheet.
+- **The six-wide Rookie needed no ceiling raise.** The document gives Palmon six Champions, which
+  US-134 and US-135 both expected to force the out-degree ceiling past five. It did not: those two
+  omissions take the drawable row down to four, which plus the junk fallback is exactly five edges
+  — and four earned branches is the hard ceiling anyway, one per energy type.
+- **Hyokomon and Muchomon are in no source tree.** US-045 invented them to carry Coelamon,
+  Mojyamon and Kuwagamon while the plain `palmon` id was another line's. US-136 gave those
+  Champions to `dmcv4_palmon` where the document draws them but left the two invented Children
+  their branches, rather than turning them into shipped Digimon that evolve into nothing.
 - **Digitamamon is rehomed onto Kuwagamon.** Its only tree parent is Nanimon, which cannot be
-  seeded, so it and Gankoomon would be unreachable. Kuwagamon is also this line's `isDefault`
-  Champion, so the neglect path is one thread: Piyomon → Kuwagamon → Digitamamon → Gankoomon.
+  seeded, so it and Gankoomon would be unreachable. It is Kuwagamon's overfeeding branch instead.
+- **Its last row is a Jogress, not an edge.** Darkdramon → Chaosmon with BanchoLeomon lives in
+  `Resources/jogress.json`, which is why Darkdramon is terminal here. BanchoLeomon is the Version 3
+  tree's Mega, so this recipe reaches across two device trees.
 
 `gazimon` is US-046's Digital Monster Color V5 line and is the widest of the six, because it is
 the only one that seeds **both** of its tree's Rookies:

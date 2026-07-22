@@ -84,6 +84,7 @@
     "piyo_yuramon": { "element": "plant", "attribute": "free" },
     "piyo_tanemon": { "element": "plant", "attribute": "free" },
     "piyomon": { "element": "wind", "attribute": "vaccine" },
+    "dmcv4_palmon": { "element": "plant", "attribute": "data" },
     "hyokomon": { "element": "wind", "attribute": "data" },
     "muchomon": { "element": "fire", "attribute": "data" },
     "leomon": { "element": "fire", "attribute": "vaccine" },
@@ -128,7 +129,7 @@
     "dmc-v2": { "element": "ice", "attribute": "free" },
     "palmon": { "element": "plant", "attribute": "free" },
     "dmc-v3": { "element": "wind", "attribute": "free" },
-    "piyomon": { "element": "wind", "attribute": "free" },
+    "dmc-v4": { "element": "wind", "attribute": "free" },
     "gazimon": { "element": "dark", "attribute": "free" }
   },
 

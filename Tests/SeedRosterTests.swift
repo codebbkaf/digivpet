@@ -390,7 +390,7 @@ final class SeedRosterTests: XCTestCase {
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
         let adult = Stage.adult.ladderIndex!
-        let above = graph.nodes.filter { $0.line == "piyomon" && ($0.stage.ladderIndex ?? -1) >= adult }
+        let above = graph.nodes.filter { $0.line == "dmc-v4" && ($0.stage.ladderIndex ?? -1) >= adult }
 
         XCTAssertFalse(above.isEmpty, "the Piyomon line has no Adult-or-later nodes at all")
         for node in above {
@@ -413,16 +413,18 @@ final class SeedRosterTests: XCTestCase {
         }
     }
 
-    /// The V4 tree roots this line at Yuramon -> Tanemon, ids the palmon line already owns. This
-    /// line was given its own ids rather than sharing those nodes, so assert BOTH survive: the two
-    /// pairs are distinct nodes on the same art, and each sits in its own line.
+    /// The V4 tree roots this line at Yuramon -> Tanemon, ids the palmon line already owns, and
+    /// US-136 added its second Rookie, Palmon, which collides the same way. This line was given its
+    /// own ids rather than sharing those nodes, so assert BOTH survive: the three pairs are
+    /// distinct nodes on the same art, and each sits in its own line.
     func testTheYuramonCollisionIsResolvedWithLineScopedIds() throws {
-        for (shared, scoped) in [("yuramon", "piyo_yuramon"), ("tanemon", "piyo_tanemon")] {
+        for (shared, scoped) in [("yuramon", "piyo_yuramon"), ("tanemon", "piyo_tanemon"),
+                                 ("palmon", "dmcv4_palmon")] {
             let palmonNode = try XCTUnwrap(graph.node(id: shared))
             let piyomonNode = try XCTUnwrap(graph.node(id: scoped))
 
             XCTAssertEqual(palmonNode.line, "palmon")
-            XCTAssertEqual(piyomonNode.line, "piyomon")
+            XCTAssertEqual(piyomonNode.line, "dmc-v4")
             XCTAssertEqual(piyomonNode.displayName, palmonNode.displayName, "same Digimon in two trees")
             XCTAssertEqual(piyomonNode.spriteFile, palmonNode.spriteFile, "and the same art, not a copy")
             XCTAssertEqual(piyomonNode.stage, palmonNode.stage)
@@ -434,7 +436,7 @@ final class SeedRosterTests: XCTestCase {
     /// every connector crossing into the other. Prove no edge in either line leaves its own line —
     /// which is what sharing the nodes would have broken.
     func testEveryEdgeInBothLinesStaysInsideItsOwnLine() throws {
-        for line in ["palmon", "piyomon"] {
+        for line in ["palmon", "dmc-v4"] {
             for node in graph.nodes where node.line == line {
                 for edge in node.evolutions {
                     let target = try XCTUnwrap(graph.node(id: edge.to))
@@ -468,12 +470,13 @@ final class SeedRosterTests: XCTestCase {
                       "rehoming Digitamamon off Nanimon must be explained where it happens")
     }
 
-    /// Piyomon's five Champions, and every one of them leads to an Ultimate rather than
+    /// The line's five drawable Champions, and every one of them leads to an Ultimate rather than
     /// dead-ending partway up the ladder. US-061 split them across three Children — two earned
-    /// branches is a Child's maximum once its junk fallback takes the third slot — with Hyokomon
-    /// and Muchomon carrying the rest. All three fall back to GoldNumemon.
-    func testThePiyomonLinesFiveChampionsAreSplitAcrossThreeChildren() throws {
-        let children = ["piyomon", "hyokomon", "muchomon"]
+    /// branches was a Child's maximum once its junk fallback took the third slot — with Hyokomon
+    /// and Muchomon carrying the rest. US-136 added `dmcv4_palmon`, the document's second Rookie,
+    /// as a fourth; the invented two keep their branches. All four fall back to GoldNumemon.
+    func testThePiyomonLinesFiveChampionsAreSplitAcrossItsChildren() throws {
+        let children = ["piyomon", "dmcv4_palmon", "hyokomon", "muchomon"]
         var champions: Set<String> = []
 
         for id in children {
@@ -491,7 +494,7 @@ final class SeedRosterTests: XCTestCase {
 
         XCTAssertEqual(champions.sorted(),
                        ["coelamon", "kuwagamon", "leomon", "mojyamon", "monochromon"])
-        for id in ["hyokomon", "muchomon"] {
+        for id in ["dmcv4_palmon", "hyokomon", "muchomon"] {
             XCTAssertEqual(graph.parents(of: id).map(\.id), ["piyo_tanemon"],
                            "\(id) must hang off the Baby II or it is unreachable")
         }
@@ -500,9 +503,13 @@ final class SeedRosterTests: XCTestCase {
     /// Each Child's earned branches need distinct dominant types, or one of them is unreachable.
     /// GoldNumemon is deliberately excluded: it shares an earned branch's gate and wins only when
     /// that branch is shut out.
+    ///
+    /// `dmcv4_palmon` is the widest Child in the file — four earned branches, one per energy type,
+    /// which is the hard ceiling US-135 named. It fits only because two of the document's six
+    /// Champions for this Rookie have no animated sheet.
     func testThePiyomonChildrensEarnedBranchesUseDistinctEnergies() throws {
-        for (child, shadowed) in [("piyomon", "leomon"), ("hyokomon", "mojyamon"),
-                                  ("muchomon", "kuwagamon")] {
+        for (child, shadowed) in [("piyomon", "leomon"), ("dmcv4_palmon", "mojyamon"),
+                                  ("hyokomon", "mojyamon"), ("muchomon", "kuwagamon")] {
             let node = try XCTUnwrap(graph.node(id: child))
             let earned = node.evolutions.filter { !$0.isDefault }
 
