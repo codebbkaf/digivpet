@@ -241,7 +241,8 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 37, "US-147 hung Sunmon and Coronamon here, US-148 Firamon")
+        XCTAssertEqual(inLine.count, 39,
+                       "US-147 hung Sunmon and Coronamon here, US-148 Firamon, US-149 Gotsumon and Icemon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -474,10 +475,16 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
     /// Loogamon, which has no sheet — so there is no fourth Rookie and every edge out of the
     /// In-Training rung is gated on dominant energy alone. Asserted so that adding a Loogamon sheet
     /// later shows up as a decision to revisit rather than as silence.
+    /// US-149 hung a FOURTH edge here — Gotsumon, whose only free cited In-Training was Peti
+    /// Meramon — and that edge IS conditioned, because an orphan sweep's branches are earned. So
+    /// the claim is scoped to the three Rookies the tree itself draws rather than to the rung: the
+    /// TREE conditions nothing, and a later sweep adding to the same node does not change that.
     func testTheInTrainingRungIsUnconditionedBecauseTheUnlockableRookieHasNoSheet() throws {
         let petimeramon = try node("petimeramon")
-        XCTAssertEqual(petimeramon.evolutions.count, 3, "one edge per Rookie this tree can draw")
-        for edge in petimeramon.evolutions {
+        let drawnByTheTree = ["bakumon", "candmon", "picodevimon"]
+        let treeEdges = petimeramon.evolutions.filter { drawnByTheTree.contains($0.to) }
+        XCTAssertEqual(treeEdges.count, 3, "one edge per Rookie this tree can draw")
+        for edge in treeEdges {
             XCTAssertTrue(edge.conditions.isEmpty,
                           "\(edge.to) is conditioned, but this tree has no unlockable slot")
             XCTAssertNotNil(edge.requiredEnergy)
@@ -634,7 +641,8 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         // `cand_digitama` is US-144's, not this story's, so it is excluded rather than counted.
         // `sunmon` and `coronamon` are US-147's and `firamon` is US-148's, excluded the same way.
         let sweepEggs: Set<String> = ["cand_digitama", "picodevi_digitama", "vorvo_digitama",
-                                      "sunmon", "coronamon", "firamon"]
+                                      "sunmon", "coronamon", "firamon",
+                                      "gotsumon", "icemon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")

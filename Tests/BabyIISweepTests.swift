@@ -235,7 +235,8 @@ final class BabyIISweepTests: XCTestCase {
             }
             XCTAssertNotNil(try? XCTUnwrap(node.evolutions.first?.requiredEnergy))
         }
-        XCTAssertEqual(earned, 20, "the number of earned Baby II branches has drifted")
+        XCTAssertEqual(earned, 34,
+                       "the number of earned Baby II branches has drifted — US-149 added fourteen")
     }
 
     /// Each Baby II's branches are told apart by dominant energy, or one of them is unreachable:
@@ -284,29 +285,27 @@ final class BabyIISweepTests: XCTestCase {
     /// **The half of US-147's ledger US-148 has paid off.** The whole-file dead-end ledger now
     /// lives in `ChildSweepAToFTests`, the newest sweep, which is where the next one will look;
     /// what stays here is the claim this story can still own — of the thirty-nine Children it
-    /// opened as leaves, exactly the nine whose display name begins A-F have been wired onward,
-    /// and the other thirty are still waiting for US-149 and US-150.
+    /// opened as leaves, exactly those whose display name begins A-L have been wired onward, and
+    /// the other sixteen are still waiting for US-150.
     ///
-    /// It fails in BOTH directions on purpose: a tenth wired here without its range being right
-    /// fails it, and so does one of the nine being left a leaf.
+    /// It fails in BOTH directions on purpose: one wired here out of range fails it, and so does
+    /// one of the twenty-three being left a leaf.
     func testTheChildrenThisSweepOpenedAreBeingWiredOnwardInAlphabeticalOrder() throws {
         let stillLeaves = authoredChild
             .filter { graph.node(id: $0)?.evolutions.isEmpty ?? true }
             .sorted()
         XCTAssertEqual(stillLeaves,
-                       ["gaomon", "ghostmon", "guilmon", "gumdramon", "impmon", "kakamon",
-                        "keramon", "koemon", "labramon", "lalamon", "lopmon", "ludomon", "lunamon",
-                        "meicoochild", "monodramon", "morphomon", "penmon", "pulsemon", "renamon",
+                       ["meicoochild", "monodramon", "morphomon", "penmon", "pulsemon", "renamon",
                         "ryudamon", "shoutmon", "sistermon_blanc", "sunarizamon", "takinmon",
-                        "terriermon", "tinkermon", "v-mon", "wormmon", "xros_hagurumon", "zenimon"],
-                       "US-149 (G-L) and US-150 (M-Z) should be shrinking this")
+                        "terriermon", "tinkermon", "v-mon", "wormmon", "zenimon"],
+                       "US-150 (M-Z) should be emptying this")
 
-        // The nine US-148 took are exactly the A-F ones, read off the display name rather than
-        // listed, so a Child renamed into or out of the range moves with it.
+        // The twenty-three taken so far are exactly the A-L ones, read off the display name rather
+        // than listed, so a Child renamed into or out of the range moves with it.
         for id in authoredChild where !stillLeaves.contains(id) {
             let name = try XCTUnwrap(graph.node(id: id)?.displayName)
-            XCTAssertTrue(("A"..."F").contains(String(name.prefix(1)).uppercased()),
-                          "\(id) (\(name)) was wired by the A-F sweep but is not in A-F")
+            XCTAssertTrue(("A"..."L").contains(String(name.prefix(1)).uppercased()),
+                          "\(id) (\(name)) was wired by the A-L sweeps but is not in A-L")
         }
     }
 
@@ -339,9 +338,9 @@ final class BabyIISweepTests: XCTestCase {
         // Nine of the twenty-one grew by more than the four nodes a chain would add, which is the
         // shape of grouping rather than of a chain per Digimon.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 40)
-        XCTAssertEqual(sizes["vital"], 18)
-        XCTAssertEqual(sizes["wanyamon"], 15)
+        XCTAssertEqual(sizes["tamers"], 56)
+        XCTAssertEqual(sizes["vital"], 22)
+        XCTAssertEqual(sizes["wanyamon"], 17)
     }
 
     /// The line-scoped alias, called out because it is the one node here that is not its own

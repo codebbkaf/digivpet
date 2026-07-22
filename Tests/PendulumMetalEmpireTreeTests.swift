@@ -301,7 +301,8 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 36, "US-147 hung Kozenimon and Zenimon here")
+        XCTAssertEqual(inLine.count, 38,
+                       "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -368,7 +369,8 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         // story's notes made, and a total quietly one higher would no longer be that claim.
         // `kozenimon` and `zenimon` are US-147's, excluded the same way.
         let sweepEggs: Set<String> = ["espi_digitama", "phasco_digitama",
-                                      "kozenimon", "zenimon"]
+                                      "kozenimon", "zenimon",
+                                      "kokuwamon_x", "kuwagamon_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
@@ -437,8 +439,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
             XCTAssertEqual(try node(rookie).evolutions.first(where: \.isDefault)?.to,
                            "pencme_raremon")
         }
-        // And every Champion falls to the same Perfect.
-        for champion in graph.nodes.filter({ $0.line == line && $0.stage == .adult }) {
+        // And every Champion falls to the same Perfect — every one that has an out-edge at all.
+        // US-149 hung Kuwagamon X over Kokuwamon X and left it a leaf until the Adult sweeps.
+        for champion in graph.nodes.filter({ $0.line == line && $0.stage == .adult
+                                             && !$0.evolutions.isEmpty }) {
             XCTAssertEqual(champion.evolutions.first(where: \.isDefault)?.to, "locomon",
                            "\(champion.id) does not fall to this tree's junk Perfect")
         }

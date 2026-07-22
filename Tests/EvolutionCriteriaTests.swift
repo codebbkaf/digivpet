@@ -43,11 +43,16 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// Champion under its X-Antibody name (`numemon` is dmc-v1's), Manekimon a beckoning-cat
     /// figurine, Mimicmon a chest that pretends to be treasure, Troopmon a faceless mook, Damemon
     /// the washout its name says it is, and Tsuchidarumon a mud daruma. See their `comment`s.
+    /// US-149 added the last TWO of that kind: `xros` and `vital` were the only lines still without
+    /// a Champion rung when the Child G-L sweep reached them. Targetmon is a Xros Wars gag Digimon
+    /// shaped like a shooting-gallery target and Kokeshimon a limbless painted doll; both are plain
+    /// roster ids off unused sheets, so both remove an orphan rather than being aliases.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
         "platinumscumon", "diginorimon", "gokimon", "zassoumon", "pencme_raremon", "turuiemon",
         "numemon_x", "manekimon", "mimicmon", "troopmon", "damemon", "tsuchidarumon",
+        "targetmon", "kokeshimon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
@@ -290,7 +295,11 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// Baby II those thirteen open, unreachable for exactly the same reason and no other, and the
     /// last nine are the Children US-147 hung off those eight — the same thread, one rung further.
     ///
-    /// The list is pinned rather than the check being relaxed, so a THIRTY-FIRST stranded node —
+    /// US-148 added two Champions above those Children and US-149 seven more nodes for the same
+    /// reason, so the list is now thirty-nine — but not one of them is a node nobody wired: every
+    /// addition hangs off something already on the list, which is what the parent loops below check.
+    ///
+    /// The list is pinned rather than the check being relaxed, so a FORTIETH stranded node —
     /// which would be a real bug, at a rung where eggs are not the constraint — still fails here.
     /// Each of the two derived groups is also checked to be stranded ONLY through its parent, so
     /// the list cannot quietly absorb a node nobody bothered to wire.
@@ -310,14 +319,24 @@ final class EvolutionCriteriaTests: XCTestCase {
                              "pyonmon"]
         let strandedBabyII = ["babydmon", "mococomon", "monimon", "pickmon", "poromon",
                               "puroromon", "pusurimon", "xiaomon"]
-        let strandedChild = ["fujamon", "gumdramon", "kakamon", "labramon", "ryudamon",
+        // Gaossmon is US-149's one addition, and it is inherited rather than chosen: Wikimon gives
+        // it exactly one parent, Chibickmon, whose Baby II is Pickmon — and all three Baby II of
+        // the `xros` line are already stranded, because that line has no Digitama and no egg is
+        // left to give it one.
+        let strandedChild = ["fujamon", "gaossmon", "gumdramon", "kakamon", "labramon", "ryudamon",
                              "shoutmon", "takinmon", "tinkermon", "xros_hagurumon"]
         // US-148's two: the Champions it hung over Fujamon, which is itself stranded. `penc-sw` has
         // no Digitama at all, so the whole Saiyu Warriors line is unreachable from the top of the
         // ladder down and always was — wiring the rung above Fujamon inherits that and cannot fix
         // it. Every other Child US-148 wired sits on a thread an egg reaches, which is why the list
         // grows by exactly two rather than by the twenty-three Champions the story authored.
-        let strandedAdult = ["ginkakumon", "tsuchidarumon"]
+        //
+        // US-149's six are the same arithmetic one rung up, and the parent list below proves it:
+        // every one hangs off a Child that was ALREADY on the list before this story, or off
+        // Gaossmon. The Champion sweeps could not have chosen otherwise — a Child's Champion has to
+        // sit on the Child's own line, and `xros` and `penc-sw` have no reachable Child at all.
+        let strandedAdult = ["arresterdramon", "dobermon", "ginkakumon", "greymon_2010",
+                             "lianpumon", "siesamon", "targetmon", "tsuchidarumon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,

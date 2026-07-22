@@ -750,6 +750,28 @@
               "hint": "Coax the spark out of it"
             }
           ]
+        },
+        {
+          "to": "gabumon_black",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Let it sleep where the dark is thickest"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Never wake it once it has gone under"
+            }
+          ]
         }
       ]
     },
@@ -1812,6 +1834,28 @@
           "requiredEnergy": "stamina",
           "minEnergy": 30,
           "maxCareMistakes": 4
+        },
+        {
+          "to": "gabumon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Drill it until the pelt hardens"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 150,
+              "hint": "Keep moving beside it every day"
+            }
+          ]
         }
       ]
     },
@@ -3245,6 +3289,28 @@
           "requiredEnergy": "spirit",
           "minEnergy": 30,
           "maxCareMistakes": 4
+        },
+        {
+          "to": "gazimon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it rest through the daylight"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Let it scrap in the dark"
+            }
+          ]
         }
       ]
     },
@@ -5488,6 +5554,28 @@
           "requiredEnergy": "spirit",
           "minEnergy": 30,
           "maxCareMistakes": 4
+        },
+        {
+          "to": "gotsumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Walk it over hard ground"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Harden it against the anvil"
+            }
+          ]
         }
       ]
     },
@@ -10059,6 +10147,50 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "jazamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 200,
+              "hint": "Run it until the scales rattle"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7,
+              "hint": "Teach it to strike from a crouch"
+            }
+          ]
+        },
+        {
+          "to": "lopmon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2400,
+              "hint": "Let it curl up and sleep long"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Do not startle it awake"
+            }
+          ]
         }
       ]
     },
@@ -10181,6 +10313,28 @@
               "hint": "Give it fight after fight"
             }
           ]
+        },
+        {
+          "to": "guilmon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Give it battle after battle"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Burn until the mark on its snout glows"
+            }
+          ]
         }
       ]
     },
@@ -10198,6 +10352,28 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "impmon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Let it torment everything it meets"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 3,
+              "hint": "Even a little devil needs its night"
+            }
+          ]
         }
       ]
     },
@@ -10237,6 +10413,28 @@
               "hint": "Let it taste a real fight"
             }
           ]
+        },
+        {
+          "to": "keramon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Feed it on other Digimon's data"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Let it crawl a long way for its meal"
+            }
+          ]
         }
       ]
     },
@@ -10254,6 +10452,28 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "kokabuterimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Work the little horn against something solid"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Keep the wings beating"
+            }
+          ]
         }
       ]
     },
@@ -10434,6 +10654,50 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "gasamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Walk it far enough to raise dust"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep its belly light"
+            }
+          ]
+        },
+        {
+          "to": "hanimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2100,
+              "hint": "Let it doze in the sun"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 3,
+              "hint": "Do not stuff the pot-bellied thing"
+            }
+          ]
         }
       ]
     },
@@ -10507,6 +10771,28 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "gaossmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Train it until the jaw snaps shut"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Burn hard beside it"
+            }
+          ]
         }
       ]
     },
@@ -10969,6 +11255,50 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "hackmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Drill the sword arm until it is quick"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "A knight does not overeat"
+            }
+          ]
+        },
+        {
+          "to": "lucemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2700,
+              "hint": "Let the light rest as long as it wants"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 0,
+              "hint": "Never let it want for nothing"
+            }
+          ]
         }
       ]
     },
@@ -11091,6 +11421,28 @@
               "hint": "Harden the shell with drills"
             }
           ]
+        },
+        {
+          "to": "gomamon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180,
+              "hint": "Keep it swimming hard"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Teach it to hold a breath"
+            }
+          ]
         }
       ]
     },
@@ -11142,6 +11494,28 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "gammamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Let it pick fight after fight"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Never let its appetite run the day"
+            }
+          ]
         }
       ]
     },
@@ -11176,6 +11550,28 @@
           "minEnergy": 30,
           "maxCareMistakes": 4,
           "isDefault": true
+        },
+        {
+          "to": "kokuwamon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "Grind the mandibles sharp"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "Keep the motor running"
+            }
+          ]
         }
       ]
     },
@@ -11237,7 +11633,37 @@
       "line": "tamers",
       "spriteFile": "Guilmon",
       "comment": "Wikimon: Guilmon Evolves From Gigimon. guil_digitama has been pointing at this thread since US-144.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "growmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "Let it fight until the hazard sign burns"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Drill it out of its own temper"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "blackguilmon",
@@ -11285,7 +11711,37 @@
       "line": "tamers",
       "spriteFile": "Impmon",
       "comment": "Wikimon: Impmon Evolves From Yaamon. imp_digitama opens Kiimon, which is Yaamon's Baby I.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "icedevimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Let it dream something cold"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Let the mischief turn to malice"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "blucomon",
@@ -11333,7 +11789,37 @@
       "line": "tamers",
       "spriteFile": "Lopmon",
       "comment": "Wikimon: Lopmon Evolves From Moonmon (and from Chocomon). Moonmon is the one taken, because lop_digitama hatches into Relemon and Relemon leads to Moonmon - so the egg reaches its own species.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "galgomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Teach the ears to aim"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 160,
+              "hint": "Keep it bounding all day"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "lunamon",
@@ -11342,7 +11828,37 @@
       "line": "tamers",
       "spriteFile": "Lunamon",
       "comment": "Wikimon: Lunamon Evolves From Moonmon. It is Moonmon's earned branch rather than its default, because Lopmon is what this line's egg owes.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "lekismon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2600,
+              "hint": "Let it sleep under the moon"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep it light enough to leap"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "monodramon",
@@ -11417,7 +11933,37 @@
       "line": "wanyamon",
       "spriteFile": "Gaomon",
       "comment": "Wikimon: Gaomon Evolves From Wanyamon. gao_digitama opens Dodomon, which leads to Wanyamon, so this is the Child that egg promised.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "gaogamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Work the gloves every day"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1400,
+              "hint": "Burn hard enough to steam"
+            }
+          ]
+        },
+        {
+          "to": "manekimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "bearmon",
@@ -11465,7 +12011,37 @@
       "line": "wanyamon",
       "spriteFile": "Koemon",
       "comment": "Wikimon: Koemon Evolves From Wanyamon. koe_digitama opens Popomon, which leads to Wanyamon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "igamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Let it brawl its way up"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 45000,
+              "hint": "Keep it roaming the rooftops"
+            }
+          ]
+        },
+        {
+          "to": "manekimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "algomon_child",
@@ -11513,7 +12089,37 @@
       "line": "algomon",
       "spriteFile": "Ghostmon",
       "comment": "Wikimon: Ghostmon Evolves From Algomon (Baby II). ghost_digitama is what opens this line's Baby I, so this is the Child that egg promised, and it is the earned branch beside Algomon's own rung.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "witchmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Let it haunt the long nights"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Never disturb what is already restless"
+            }
+          ]
+        },
+        {
+          "to": "mimicmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "labramon",
@@ -11522,7 +12128,37 @@
       "line": "algomon",
       "spriteFile": "Labramon",
       "comment": "Wikimon: Labramon Evolves From Xiaomon and nothing else on disk. Xiaomon can never be reached (its Baby I, Paomon, is one of the thirteen no egg can hatch - see EvolutionCriteriaTests), so Labramon is authored as a Dex tree rather than as something a player meets.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "siesamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Teach it to sit, and then to strike"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50000,
+              "hint": "Take it on the long walk daily"
+            }
+          ]
+        },
+        {
+          "to": "mimicmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "v-mon",
@@ -11606,7 +12242,37 @@
       "line": "diablomon",
       "spriteFile": "Keramon",
       "comment": "Wikimon: Keramon Evolves From Tsumemon. kera_digitama opens Kuramon, which leads to Tsumemon, so this is the Child that egg promised.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "soulmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2800,
+              "hint": "Let it feed in the small hours"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Let it strip the data off others"
+            }
+          ]
+        },
+        {
+          "to": "troopmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "arkadimon_child",
@@ -11690,7 +12356,37 @@
       "line": "vital",
       "spriteFile": "Ludomon",
       "comment": "Wikimon: Ludomon Evolves From Kakkinmon. ludo_digitama opens Cotsucomon, which leads to Kakkinmon.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "tialudomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Practise the ribbon until it sings"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1900,
+              "hint": "Let it rest between rehearsals"
+            }
+          ]
+        },
+        {
+          "to": "kokeshimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "xros_hagurumon",
@@ -11699,7 +12395,37 @@
       "line": "xros",
       "spriteFile": "Hagurumon",
       "comment": "Wikimon: Monimon Evolves To Hagurumon and to nothing else below Perfect - but `hagurumon` is already the Metal Empire line's Child and `line` is single-valued, so this is a second node on the same art: the pencnsp_koromon / dmcv4_palmon pattern. Hagurumon appears in the Digimon Xros Loader virtual pet, which is what this line is, so the alias does not stretch the line's meaning.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "dobermon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "Keep the gears meshed and turning"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Let it test its bite"
+            }
+          ]
+        },
+        {
+          "to": "targetmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "shoutmon",
@@ -11717,7 +12443,37 @@
       "line": "xros",
       "spriteFile": "Gumdramon",
       "comment": "Wikimon: Gumdramon Evolves From Babydmon. It is the Xros Wars Hunters partner US-146's Babydmon comment already points at; its own Virtual Pets section lists the Digital Monster COLOR Xros Wars 15th Edition rather than the Xros Loader itself, which is stated rather than smoothed over.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "arresterdramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 190,
+              "hint": "Keep the tail whipping"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Drill it until it lands upright"
+            }
+          ]
+        },
+        {
+          "to": "targetmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "fujamon",
@@ -11765,7 +12521,37 @@
       "line": "penc-sw",
       "spriteFile": "Kakamon",
       "comment": "Wikimon: Kakamon Evolves From Mococomon and nothing else, and it appears in the Pendulum COLOR 6 Saiyu Warriors virtual pet, which is what this line is.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "lianpumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 13,
+              "hint": "Work the open palm a thousand times"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 35000,
+              "hint": "Walk the mountain road with it"
+            }
+          ]
+        },
+        {
+          "to": "tsuchidarumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "takinmon",
@@ -11783,7 +12569,37 @@
       "line": "palmon",
       "spriteFile": "Lalamon",
       "comment": "Wikimon: Lalamon Evolves From Budmon AND from Tanemon, and both are on this line, so it has two parents rather than two nodes. The Tanemon edge is what makes lala_digitama keep its promise: that egg opens Pipimon, Pipimon leads to Tanemon, and US-145 flagged Lalamon as what the egg still owed.",
-      "evolutions": []
+      "evolutions": [
+        {
+          "to": "sunflowmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 42000,
+              "hint": "Walk it out into the light"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Water it, do not drown it"
+            }
+          ]
+        },
+        {
+          "to": "karatsukinumemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
     },
     {
       "id": "sistermon_blanc",
@@ -12656,6 +13472,1005 @@
       "line": "penc-sw",
       "spriteFile": "Tsuchidarumon",
       "comment": "FLAVOUR. The Saiyu Warriors line had no junk Champion and every branching Child needs one (EvolutionCriteriaTests). Tsuchidarumon is a mud daruma off an unused sheet - a Japanese folk figure beside a Journey to the West line, chosen the way US-140 chose Darumamon.",
+      "evolutions": []
+    },
+    {
+      "id": "gabumon_x",
+      "displayName": "Gabumon X",
+      "stage": "Child",
+      "line": "dmc-v3",
+      "spriteFile": "Gabumon_X",
+      "comment": "Wikimon: Gabumon (X-Antibody) Evolves From Tunomon and Tokomon (X-Antibody). Tokomon X carries all four energies after US-148, and a Baby II can hold no fifth, so the X-Antibody Child hangs off plain Tokomon - the SAME line, dmc-v3, which is where US-148 opened the X-Antibody thread. Its base form Gabumon is dmc-v2's; the variant sits with the thread rather than with the base.",
+      "evolutions": [
+        {
+          "to": "gururumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Drill the fangs until they set"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 48000,
+              "hint": "Range it over cold ground"
+            }
+          ]
+        },
+        {
+          "to": "scumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gabumon_black",
+      "displayName": "Gabumon Black",
+      "stage": "Child",
+      "line": "dmc-v2",
+      "spriteFile": "Gabumon_Black",
+      "comment": "Wikimon: BlackGabumon Evolves From Tunomon and Tsumemon. Tsunomon is Gabumon's own In-Training and this line's, so the Black variant sits on its base form's line exactly as the criteria ask; Tsunomon's last free energy is stamina and this is what it is spent on.",
+      "evolutions": [
+        {
+          "to": "garurumon_black",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 170,
+              "hint": "Run it through the night"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Let the pelt take a few scars"
+            }
+          ]
+        },
+        {
+          "to": "vegimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gammamon",
+      "displayName": "Gammamon",
+      "stage": "Child",
+      "line": "penc-vb",
+      "spriteFile": "Gammamon",
+      "comment": "Wikimon: Gammamon Evolves From Gurimon and Nyaromon. Gurimon has no sheet in this pack at all and Nyaromon carries all four energies, so Gammamon hangs off Hiyarimon - the SAME line as Nyaromon, penc-vb, and the only In-Training on it with room left.",
+      "evolutions": [
+        {
+          "to": "betelgammamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "Teach it to hold the flame in"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Feed the fire under its skin"
+            }
+          ]
+        },
+        {
+          "to": "turuiemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gaossmon",
+      "displayName": "Gaossmon",
+      "stage": "Child",
+      "line": "xros",
+      "spriteFile": "Gaossmon",
+      "comment": "Wikimon: Gaossmon Evolves From Chibickmon, which is a Baby I here - a Child's parent has to be a Baby II, so the rung between them is Pickmon, the Baby II Chibickmon already becomes on this Xros Loader line. REHOME of one rung, not of a thread.",
+      "evolutions": [
+        {
+          "to": "greymon_2010",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Burn until the jaw grows heavy"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Drill the bite until it closes clean"
+            }
+          ]
+        },
+        {
+          "to": "targetmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gasamon",
+      "displayName": "Gasamon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Gasamon",
+      "comment": "Wikimon: Gasamon Evolves From Onibimon and nothing else, so the parent is not a choice.",
+      "evolutions": [
+        {
+          "to": "peckmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 210,
+              "hint": "Run it until the legs lengthen"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7,
+              "hint": "Teach it to sprint on the turn"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gazimon_x",
+      "displayName": "Gazimon X",
+      "stage": "Child",
+      "line": "dmc-v5",
+      "spriteFile": "Gazimon_X",
+      "comment": "Wikimon: Gazimon (X-Antibody) Evolves From Gazimon. Pagumon is Gazimon's own In-Training and this line's, so the X-Antibody variant sits on its base form's line with its base form; vitality was Pagumon's last free energy.",
+      "evolutions": [
+        {
+          "to": "leomon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "Let it fight until the mane comes in"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1700,
+              "hint": "Burn it into something bigger"
+            }
+          ]
+        },
+        {
+          "to": "raremon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gomamon_x",
+      "displayName": "Gomamon X",
+      "stage": "Child",
+      "line": "dmc-v3",
+      "spriteFile": "Gomamon_X",
+      "comment": "Wikimon: Gomamon (X-Antibody) Evolves From Gomamon and Yarmon. Yarmon has no sheet, and Pukamon - the only In-Training on Gomamon's own penc-ds line - carries all four energies, so this joins the X-Antibody thread US-148 opened on dmc-v3, under Upamon, the amphibian In-Training there.",
+      "evolutions": [
+        {
+          "to": "tylomon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 220,
+              "hint": "Keep it swimming past tiring"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "A swimmer stays lean"
+            }
+          ]
+        },
+        {
+          "to": "scumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gotsumon",
+      "displayName": "Gotsumon",
+      "stage": "Child",
+      "line": "penc-nso",
+      "spriteFile": "Gotsumon",
+      "comment": "Wikimon: Gotsumon Evolves From Peti Meramon, among others - Caprimon, Nyaromon and Pagumon are the ones already spent, and Pinamon is idle-only. Peti Meramon is on this line and had stamina free.",
+      "evolutions": [
+        {
+          "to": "icemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1700,
+              "hint": "Let it settle until it is cold through"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 38000,
+              "hint": "Walk it up where the air bites"
+            }
+          ]
+        },
+        {
+          "to": "gokimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "guilmon_x",
+      "displayName": "Guilmon X",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Guilmon_X",
+      "comment": "Wikimon: Guilmon (X-Antibody) Evolves From Guilmon, Gigimon and Kyokyomon. Gigimon is Guilmon's own In-Training and this line's, so the variant sits with its base form.",
+      "evolutions": [
+        {
+          "to": "allomon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 55000,
+              "hint": "Range it far from home"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "Drill the charge until it lands"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hackmon",
+      "displayName": "Hackmon",
+      "stage": "Child",
+      "line": "dmc-v3",
+      "spriteFile": "Hackmon",
+      "comment": "FLAVOUR. Wikimon's Evolves From for Hackmon is Digimon Card Game colour text only - 'Any Lv.2 Appmon', 'Any Purple Lv.2 Digimon' - so no In-Training is named anywhere. It is placed beside Sistermon Blanc, its partner in the source material, which US-148 put on dmc-v3; Cupimon is the In-Training on that line with room.",
+      "evolutions": [
+        {
+          "to": "dinohumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Drill the blade work daily"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Send it out to duel"
+            }
+          ]
+        },
+        {
+          "to": "scumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hanimon",
+      "displayName": "Hanimon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Hanimon",
+      "comment": "Wikimon: Hanimon Evolves From Onibimon and Kyaromon. Kyaromon is one of the idle-only Digimon here, so Onibimon is the only parent it can have.",
+      "evolutions": [
+        {
+          "to": "fugamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Let it swing at everything"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1100,
+              "hint": "Work the arms until they thicken"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "impmon_x",
+      "displayName": "Impmon X",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Impmon_X",
+      "comment": "Wikimon: Impmon (X-Antibody) Evolves From Impmon and Yarmon. Yarmon has no sheet; Yaamon is Impmon's own In-Training and this line's, so the variant sits with its base form.",
+      "evolutions": [
+        {
+          "to": "ogremon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 13,
+              "hint": "Let it earn its club the hard way"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "A brawler carries no weight"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "jazamon",
+      "displayName": "Jazamon",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Jazamon",
+      "comment": "Wikimon: Jazamon Evolves From Chocomon, Gummymon, Hopmon, Koromon and Pyocomon. Koromon and Pyocomon are full and Hopmon is idle-only; Chocomon is on this line and had room.",
+      "evolutions": [
+        {
+          "to": "jazardmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1600,
+              "hint": "Keep the charge building"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Teach it to hold the current"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "keramon_x",
+      "displayName": "Keramon X",
+      "stage": "Child",
+      "line": "diablomon",
+      "spriteFile": "Keramon_X",
+      "comment": "Wikimon: Keramon (X-Antibody) Evolves From Keramon and Tsumemon. Tsumemon is Keramon's own In-Training and this line's, so the variant sits with its base form.",
+      "evolutions": [
+        {
+          "to": "wizarmon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Leave the ritual undisturbed"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2500,
+              "hint": "Let it read the dark through"
+            }
+          ]
+        },
+        {
+          "to": "troopmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kokabuterimon",
+      "displayName": "Kokabuterimon",
+      "stage": "Child",
+      "line": "vital",
+      "spriteFile": "Kokabuterimon",
+      "comment": "Wikimon: Kokabuterimon Evolves From Caprimon, Frimon and Mochimon. Caprimon carries all four energies and Frimon has no sheet, so Mochimon takes it - and Mochimon is a Vital Bracelet In-Training, which is what this line is.",
+      "evolutions": [
+        {
+          "to": "sandyanmamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1300,
+              "hint": "Keep the wings working"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Butt it against something that gives"
+            }
+          ]
+        },
+        {
+          "to": "kokeshimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kokuwamon_x",
+      "displayName": "Kokuwamon X",
+      "stage": "Child",
+      "line": "penc-me",
+      "spriteFile": "Kokuwamon_X",
+      "comment": "Wikimon: Kokuwamon (X-Antibody) Evolves From Kokuwamon and Yarmon. Yarmon has no sheet and Caprimon - Kokuwamon's own In-Training - carries all four energies, so this hangs off Kozenimon, the other In-Training on the SAME Metal Empire line.",
+      "evolutions": [
+        {
+          "to": "kuwagamon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Let the pincers close on something"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Grind them sharper still"
+            }
+          ]
+        },
+        {
+          "to": "pencme_raremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "lopmon_x",
+      "displayName": "Lopmon X",
+      "stage": "Child",
+      "line": "tamers",
+      "spriteFile": "Lopmon_X",
+      "comment": "Wikimon: Lopmon (X-Antibody) Evolves From Lopmon and Chocomon. Chocomon is Lopmon's own In-Training in the source material and is already on this line, so the variant sits with its base form - Lopmon is on tamers too, under Moonmon.",
+      "evolutions": [
+        {
+          "to": "blackgalgomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Let the shadow settle over it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 7,
+              "hint": "Let it learn what the guns are for"
+            }
+          ]
+        },
+        {
+          "to": "numemon_x",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "lucemon",
+      "displayName": "Lucemon",
+      "stage": "Child",
+      "line": "dmc-v3",
+      "spriteFile": "Lucemon",
+      "comment": "Wikimon: Lucemon Evolves From Cupimon, Koromon, Nyaromon, Plotmon and Tokomon. Koromon and Nyaromon are full and Tokomon's last energy goes to Gabumon X here, so Cupimon takes it - the angelic In-Training of the angelic Child, and both on dmc-v3.",
+      "evolutions": [
+        {
+          "to": "pidmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 0,
+              "hint": "Keep it above appetite"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3200,
+              "hint": "Let the light gather while it sleeps"
+            }
+          ]
+        },
+        {
+          "to": "scumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gaogamon",
+      "displayName": "Gaogamon",
+      "stage": "Adult",
+      "line": "wanyamon",
+      "spriteFile": "Gaogamon",
+      "comment": "Wikimon: Gaomon Evolves To Gaogamon.",
+      "evolutions": []
+    },
+    {
+      "id": "igamon",
+      "displayName": "Igamon",
+      "stage": "Adult",
+      "line": "wanyamon",
+      "spriteFile": "Igamon",
+      "comment": "Wikimon: Koemon Evolves To Igamon.",
+      "evolutions": []
+    },
+    {
+      "id": "witchmon",
+      "displayName": "Witchmon",
+      "stage": "Adult",
+      "line": "algomon",
+      "spriteFile": "Witchmon",
+      "comment": "Wikimon: Ghostmon Evolves To Witchmon. Bakemon and Devimon, the other two it names that have sheets, are both already spoken for on other lines.",
+      "evolutions": []
+    },
+    {
+      "id": "siesamon",
+      "displayName": "Siesamon",
+      "stage": "Adult",
+      "line": "algomon",
+      "spriteFile": "Siesamon",
+      "comment": "Wikimon: Labramon Evolves To Siesamon.",
+      "evolutions": []
+    },
+    {
+      "id": "growmon",
+      "displayName": "Growmon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Growmon",
+      "comment": "Wikimon: Guilmon Evolves To Growmon.",
+      "evolutions": []
+    },
+    {
+      "id": "icedevimon",
+      "displayName": "IceDevimon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "IceDevimon",
+      "comment": "Wikimon: Impmon Evolves To Ice Devimon.",
+      "evolutions": []
+    },
+    {
+      "id": "galgomon",
+      "displayName": "Galgomon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Galgomon",
+      "comment": "Wikimon: Lopmon Evolves To Galgomon.",
+      "evolutions": []
+    },
+    {
+      "id": "lekismon",
+      "displayName": "Lekismon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Lekismon",
+      "comment": "Wikimon: Lunamon Evolves To Lekismon.",
+      "evolutions": []
+    },
+    {
+      "id": "peckmon",
+      "displayName": "Peckmon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Peckmon",
+      "comment": "Wikimon: Gasamon Evolves To Peckmon. Its other two drawable targets are Manekimon and Musyamon; Manekimon is the wanyamon line's junk floor and cannot cross.",
+      "evolutions": []
+    },
+    {
+      "id": "fugamon",
+      "displayName": "Fugamon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Fugamon",
+      "comment": "Wikimon: Hanimon Evolves To Fugamon.",
+      "evolutions": []
+    },
+    {
+      "id": "allomon_x",
+      "displayName": "Allomon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Allomon_X",
+      "comment": "Wikimon: Guilmon (X-Antibody) Evolves To Allomon (X-Antibody). Its Growmon (X-Antibody) is US-148's, hung over Dracomon X on dmc-v3, so the X-Antibody Champion it can still reach is the Allomon.",
+      "evolutions": []
+    },
+    {
+      "id": "ogremon_x",
+      "displayName": "Ogremon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Ogremon_X",
+      "comment": "Wikimon: Impmon (X-Antibody) Evolves To Orgemon (X-Antibody), which is this sheet under its dub spelling.",
+      "evolutions": []
+    },
+    {
+      "id": "jazardmon",
+      "displayName": "Jazardmon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Jazardmon",
+      "comment": "Wikimon: Jazamon Evolves To Jazardmon.",
+      "evolutions": []
+    },
+    {
+      "id": "blackgalgomon",
+      "displayName": "BlackGalgomon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "BlackGalgomon",
+      "comment": "Wikimon: Lopmon (X-Antibody) Evolves To Black Galgomon.",
+      "evolutions": []
+    },
+    {
+      "id": "arresterdramon",
+      "displayName": "Arresterdramon",
+      "stage": "Adult",
+      "line": "xros",
+      "spriteFile": "Arresterdramon",
+      "comment": "Wikimon: Gumdramon Evolves To Arresterdramon, and both appear in the Digimon Xros Loader, which is what this line is.",
+      "evolutions": []
+    },
+    {
+      "id": "dobermon",
+      "displayName": "Dobermon",
+      "stage": "Adult",
+      "line": "xros",
+      "spriteFile": "Dobermon",
+      "comment": "Wikimon: Hagurumon Evolves To Dobermon. This is the Xros Loader line's Hagurumon, the line-scoped node US-146 opened.",
+      "evolutions": []
+    },
+    {
+      "id": "greymon_2010",
+      "displayName": "Greymon 2010",
+      "stage": "Adult",
+      "line": "xros",
+      "spriteFile": "Greymon_2010",
+      "comment": "Wikimon: Gaossmon Evolves To Greymon (2010 Anime Version), which is this sheet. Both sit on the Xros Loader line under Pickmon.",
+      "evolutions": []
+    },
+    {
+      "id": "targetmon",
+      "displayName": "Targetmon",
+      "stage": "Adult",
+      "line": "xros",
+      "spriteFile": "Targetmon",
+      "comment": "THE XROS LOADER LINE'S JUNK CHAMPION, and a FLAVOUR pick rather than a cited arrow: the line had no Adult rung at all, and EvolutionCriteriaTests requires every branching Child to fall to a junk Champion of its own line. Targetmon is a Xros Wars gag Digimon - a walking shooting-gallery target - which is what makes it read as junk, and it takes an orphan out of the pool instead of being an alias.",
+      "evolutions": []
+    },
+    {
+      "id": "lianpumon",
+      "displayName": "Lianpumon",
+      "stage": "Adult",
+      "line": "penc-sw",
+      "spriteFile": "Lianpumon",
+      "comment": "Wikimon: Kakamon Evolves To Lianpumon, and both appear in the Pendulum COLOR 6 Saiyu Warriors, which is what this line is.",
+      "evolutions": []
+    },
+    {
+      "id": "soulmon",
+      "displayName": "Soulmon",
+      "stage": "Adult",
+      "line": "diablomon",
+      "spriteFile": "Soulmon",
+      "comment": "Wikimon: Keramon Evolves To Soulmon. Chrysalimon, the Champion the Keramon thread really takes, is one of the idle-only Digimon here and cannot be a node, so the Champion rung comes off the rest of Keramon's own list.",
+      "evolutions": []
+    },
+    {
+      "id": "wizarmon_x",
+      "displayName": "Wizarmon X",
+      "stage": "Adult",
+      "line": "diablomon",
+      "spriteFile": "Wizarmon_X",
+      "comment": "REHOME. Wikimon gives Keramon (X-Antibody) exactly one Evolves To - Diablomon (X-Antibody), by WARP EVOLUTION - so the document skips the Champion rung entirely, and the rung the base thread would use, Chrysalimon, is idle-only. Wizarmon X keeps an X-Antibody Child on an X-Antibody Champion and stays inside this line's dark flavour.",
+      "evolutions": []
+    },
+    {
+      "id": "tialudomon",
+      "displayName": "TiaLudomon",
+      "stage": "Adult",
+      "line": "vital",
+      "spriteFile": "TiaLudomon",
+      "comment": "Wikimon: Ludomon Evolves To Tia Ludomon, and both are Vital Bracelet Digimon, which is what this line is.",
+      "evolutions": []
+    },
+    {
+      "id": "sandyanmamon",
+      "displayName": "SandYanmamon",
+      "stage": "Adult",
+      "line": "vital",
+      "spriteFile": "SandYanmamon",
+      "comment": "REHOME. Wikimon gives Kokabuterimon nine Evolves To and every one of them is already spent on another line or has no sheet - Kabuterimon, Kuwagamon, Greymon X, Hanumon, Revolmon and Thunderballmon are all authored elsewhere, Aquilamon is idle-only, and Blade Kuwagamon and Blitzmon are absent from the pack. SandYanmamon keeps an insect Child on an insect Champion of its own line.",
+      "evolutions": []
+    },
+    {
+      "id": "kokeshimon",
+      "displayName": "Kokeshimon",
+      "stage": "Adult",
+      "line": "vital",
+      "spriteFile": "Kokeshimon",
+      "comment": "THE VITAL BRACELET LINE'S JUNK CHAMPION, and a FLAVOUR pick rather than a cited arrow: the line had no Adult rung at all, and EvolutionCriteriaTests requires every branching Child to fall to a junk Champion of its own line. Kokeshimon is a painted wooden doll with no limbs - a gag sheet, which is what makes it read as junk - and it takes an orphan out of the pool rather than being an alias.",
+      "evolutions": []
+    },
+    {
+      "id": "garurumon_black",
+      "displayName": "Garurumon Black",
+      "stage": "Adult",
+      "line": "dmc-v2",
+      "spriteFile": "Garurumon_Black",
+      "comment": "Wikimon: BlackGabumon Evolves To Garurumon (Black), which is this sheet.",
+      "evolutions": []
+    },
+    {
+      "id": "gururumon",
+      "displayName": "Gururumon",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Gururumon",
+      "comment": "Wikimon: Gabumon (X-Antibody) Evolves To Gururumon. Its Garurumon (X-Antibody) has no sheet in this pack at any rung below Perfect, so Gururumon is the Garurumon-family Champion it can actually reach.",
+      "evolutions": []
+    },
+    {
+      "id": "tylomon_x",
+      "displayName": "Tylomon X",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Tylomon_X",
+      "comment": "Wikimon: Gomamon (X-Antibody) Evolves To Tylomon (X-Antibody), which keeps the X-Antibody Child on an X-Antibody Champion.",
+      "evolutions": []
+    },
+    {
+      "id": "dinohumon",
+      "displayName": "Dinohumon",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Dinohumon",
+      "comment": "FLAVOUR. Hackmon's Wikimon Evolves To is Appmon fusion text - Hadesmon, Logamon, Raidramon, Revivemon, Sukasimon, all of them Appliarise or DigiXros results rather than evolutions - and its own thread's Champion, Baohackmon, is absent from the pack. Dinohumon is the sword-carrying dinosaur humanoid the Hackmon design line runs through, so it stands in.",
+      "evolutions": []
+    },
+    {
+      "id": "pidmon",
+      "displayName": "Pidmon",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Pidmon",
+      "comment": "Wikimon: Lucemon Evolves To Pidmon.",
+      "evolutions": []
+    },
+    {
+      "id": "leomon_x",
+      "displayName": "Leomon X",
+      "stage": "Adult",
+      "line": "dmc-v5",
+      "spriteFile": "Leomon_X",
+      "comment": "Wikimon: Gazimon (X-Antibody) Evolves To Leomon (X-Antibody), which keeps the X-Antibody Child on an X-Antibody Champion.",
+      "evolutions": []
+    },
+    {
+      "id": "betelgammamon",
+      "displayName": "BetelGammamon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "BetelGammamon",
+      "comment": "Wikimon: Gammamon Evolves To Betel Gammamon.",
+      "evolutions": []
+    },
+    {
+      "id": "icemon",
+      "displayName": "Icemon",
+      "stage": "Adult",
+      "line": "penc-nso",
+      "spriteFile": "Icemon",
+      "comment": "Wikimon: Gotsumon Evolves To Icemon, the most heavily cited of its Evolves To list. Golemon, the other classic, is one of the idle-only Digimon here.",
+      "evolutions": []
+    },
+    {
+      "id": "kuwagamon_x",
+      "displayName": "Kuwagamon X",
+      "stage": "Adult",
+      "line": "penc-me",
+      "spriteFile": "Kuwagamon_X",
+      "comment": "Wikimon: Kokuwamon (X-Antibody) Evolves To Kuwagamon (X-Antibody), which keeps the X-Antibody Child on an X-Antibody Champion of its own line.",
       "evolutions": []
     }
   ]

@@ -1988,6 +1988,210 @@
     "tsuchidarumon": {
       "element": "earth",
       "attribute": "virus"
+    },
+    "gabumon_x": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "gabumon_black": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "gammamon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "gaossmon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "gasamon": {
+      "element": "wind",
+      "attribute": "virus"
+    },
+    "gazimon_x": {
+      "element": "electric",
+      "attribute": "virus"
+    },
+    "gomamon_x": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "gotsumon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "guilmon_x": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "hackmon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "hanimon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "impmon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "jazamon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "keramon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "kokabuterimon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "kokuwamon_x": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "lopmon_x": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "lucemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "gaogamon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "igamon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "witchmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "siesamon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "growmon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "icedevimon": {
+      "element": "ice",
+      "attribute": "virus"
+    },
+    "galgomon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "lekismon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "peckmon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "fugamon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "allomon_x": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "ogremon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "jazardmon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "blackgalgomon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "arresterdramon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "dobermon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "greymon_2010": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "targetmon": {
+      "element": "neutral",
+      "attribute": "data"
+    },
+    "lianpumon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "soulmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "wizarmon_x": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "tialudomon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "sandyanmamon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "kokeshimon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "garurumon_black": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "gururumon": {
+      "element": "ice",
+      "attribute": "virus"
+    },
+    "tylomon_x": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "dinohumon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "pidmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "leomon_x": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "betelgammamon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "icemon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "kuwagamon_x": {
+      "element": "steel",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

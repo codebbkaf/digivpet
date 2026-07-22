@@ -192,8 +192,8 @@ final class DigitamaSweepTests: XCTestCase {
     // which put a Champion above every Child whose name begins A-F. The numbers are the
         // file's, not this story's, and are pinned here rather than in the newer sweep because
         // this is where the lines were opened.
-        XCTAssertEqual(sizes["tamers"], 40)
-        XCTAssertEqual(sizes["wanyamon"], 15)
+        XCTAssertEqual(sizes["tamers"], 56)
+        XCTAssertEqual(sizes["wanyamon"], 17)
     }
 
     /// Twelve of the twenty-two eggs added no rung at all, because their species is already wired.

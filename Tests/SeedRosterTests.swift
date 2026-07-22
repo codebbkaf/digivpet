@@ -309,6 +309,9 @@ final class SeedRosterTests: XCTestCase {
         "Unimon", "Centalmon", "Ogremon", "Bakemon", "Shellmon", "Drimogemon", "Scumon",
         "Andromon", "Giromon", "Etemon", "HiAndromon", "Gokumon", "BanchoLeomon", "KingEtemon",
         "Greymon X", "DarkTyranomon X", "Growmon X", "Tortamon",
+        // US-149's four. The X-Antibody thread US-148 opened on this line took Gabumon X and
+        // Gomamon X, and Cupimon took Lucemon and Hackmon, so their Champions land here too.
+        "Gururumon", "Tylomon X", "Dinohumon", "Pidmon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -624,6 +627,9 @@ final class SeedRosterTests: XCTestCase {
         "DarkTyranomon", "Cyclomon", "Devidramon", "Tuskmon", "Raremon", "Deltamon",
         "MetalTyranomon", "Ex-Tyranomon", "Nanomon", "Mugendramon", "Gaioumon", "Raidenmon",
         "Vademon", "Ebemon",
+        // US-149's one: Gazimon X hangs off Pagumon, its base form's own In-Training, so its
+        // Champion is on this line as well.
+        "Leomon X",
     ]
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -689,8 +695,11 @@ final class SeedRosterTests: XCTestCase {
     func testPagumonBranchesToBothRookiesAndEachReachesUltimate() throws {
         let pagumon = try XCTUnwrap(graph.node(id: "pagumon"))
 
-        XCTAssertEqual(pagumon.evolutions.map(\.to).sorted(), ["gazimon", "gizamon", "psychemon"])
-        XCTAssertEqual(Set(pagumon.evolutions.compactMap(\.requiredEnergy)).count, 3,
+        // US-149 spent Pagumon's last free energy on Gazimon X, the X-Antibody variant of the
+        // Rookie it already carried, so the branch is four wide and full.
+        XCTAssertEqual(pagumon.evolutions.map(\.to).sorted(),
+                       ["gazimon", "gazimon_x", "gizamon", "psychemon"])
+        XCTAssertEqual(Set(pagumon.evolutions.compactMap(\.requiredEnergy)).count, 4,
                        "the Rookie edges must require DIFFERENT energies or the branch is fake")
 
         for edge in pagumon.evolutions {

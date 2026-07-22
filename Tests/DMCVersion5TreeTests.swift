@@ -470,9 +470,15 @@ final class DMCVersion5TreeTests: XCTestCase {
     /// The claim is about THIS LINE, so it is stated as this line's node count. It was written as
     /// the whole file's count (115) until US-138 added a thirty-node tree of its own — a global
     /// total cannot say anything about what one story did once another story lands beside it.
+    ///
+    /// US-149 is the first story to add to this line since, and it is excluded by NAME rather than
+    /// counted: Gazimon X hangs off Pagumon, its base form's own In-Training, and Leomon X is its
+    /// Champion. Bumping the total to 22 would have quietly turned "US-137 added nothing" into
+    /// "US-137 added nothing that US-149 did not", which is a different claim.
     func testTheStoryAddedNoNodesAndSoRemovedNoOrphans() throws {
-        XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 20,
-                       "US-137 adds no node to the Version 5 line")
+        let laterSweeps: Set<String> = ["gazimon_x", "leomon_x"]
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && !laterSweeps.contains($0.id) }.count,
+                       20, "US-137 adds no node to the Version 5 line")
 
         // Every Champion this story wired was already connected in both directions beforehand.
         for id in ["devidramon", "tuskmon", "cyclomon"] {

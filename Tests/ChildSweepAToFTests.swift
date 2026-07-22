@@ -306,10 +306,11 @@ final class ChildSweepAToFTests: XCTestCase {
                           "\(id) is on a line of its own")
         }
         // Eleven of the twenty-one grew, and the two biggest by six and eight — the shape of
-        // grouping rather than of a chain per Digimon.
+        // grouping rather than of a chain per Digimon. The sizes are the FILE's, not this story's,
+        // so US-149's sixteen new `tamers` nodes and eight new `dmc-v3` ones are in them.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 40)
-        XCTAssertEqual(sizes["dmc-v3"], 35)
+        XCTAssertEqual(sizes["tamers"], 56)
+        XCTAssertEqual(sizes["dmc-v3"], 43)
         XCTAssertEqual(sizes["palmon"], 22)
     }
 
@@ -375,12 +376,17 @@ final class ChildSweepAToFTests: XCTestCase {
             }
         }
         // Before this story none of the six lines had a single Champion; that is why each needed
-        // one, and it is checkable from the shipped file rather than only from the notes.
+        // one. That claim WAS checkable from the shipped file — every Adult on each of the six was
+        // one this story authored — and it stopped being so in US-149, which hung sixteen more
+        // Champions on `tamers` and more on four of the other five. A historical claim cannot be
+        // re-derived from a file a later story has written to, so what is asserted now is the half
+        // that stays true of the data: each floor is one THIS story authored, and it is an Adult of
+        // the line it serves. The "there was nothing here before" half lives in the notes.
         for (line, junk) in junkFloors {
             let adults = graph.nodes.filter { $0.line == line && $0.stage == .adult }.map(\.id)
             XCTAssertTrue(adults.contains(junk))
-            XCTAssertTrue(Set(adults).isSubset(of: Set(authoredAdults)),
-                          "\(line) already had a Champion, so it did not need a new floor")
+            XCTAssertTrue(authoredAdults.contains(junk),
+                          "\(line)'s junk floor is not one this story authored")
         }
     }
 
@@ -480,25 +486,34 @@ final class ChildSweepAToFTests: XCTestCase {
     /// that, because a rung has to exist before the rung above it does. US-147 left the ledger at
     /// Child; US-148 pays off the A-F ninth of it and refills it at Adult, so the ledger moves here.
     ///
-    /// It fails in BOTH directions on purpose: a sixtieth dead end fails it, and so does wiring one
-    /// of the fifty-nine onward. US-149 and US-150 shrink the Child half, US-151..US-153 the Adult
-    /// half, and each is told to edit this rather than having to notice.
+    /// It fails in BOTH directions on purpose: a seventy-ninth dead end fails it, and so does wiring
+    /// one of the seventy-eight onward. US-149 paid off its fourteen Children and refilled the Adult
+    /// half with thirty-three more; US-150 shrinks the Child half to nothing and US-151..US-153 the
+    /// Adult half, and each is told to edit this rather than having to notice.
     func testTheOnlyDeadEndsBelowUltimateAreTheOnesTheSweepsHaveOpened() {
         let deadEnds = graph.nodes
             .filter { $0.evolutions.isEmpty && $0.stage != .ultimate }
             .map(\.id)
             .sorted()
 
-        let childrenLeftForUS149AndUS150 =
-            ["gaomon", "ghostmon", "guilmon", "gumdramon", "impmon", "kakamon", "keramon", "koemon",
-             "labramon", "lalamon", "lopmon", "ludomon", "lunamon", "meicoochild", "monodramon",
-             "morphomon", "penmon", "pulsemon", "renamon", "ryudamon", "shoutmon",
-             "sistermon_blanc", "sunarizamon", "takinmon", "terriermon", "tinkermon", "v-mon",
-             "wormmon", "xros_hagurumon", "zenimon"]
+        let childrenLeftForUS150 =
+            ["meicoochild", "monodramon", "morphomon", "penmon", "pulsemon", "renamon", "ryudamon",
+             "shoutmon", "sistermon_blanc", "sunarizamon", "takinmon", "terriermon", "tinkermon",
+             "v-mon", "wormmon", "zenimon"]
 
-        XCTAssertEqual(deadEnds, (childrenLeftForUS149AndUS150 + authoredAdults).sorted(),
+        // The thirty-three Champions US-149 authored, all leaves until the Adult sweeps.
+        let championsFromUS149 =
+            ["allomon_x", "arresterdramon", "betelgammamon", "blackgalgomon", "dinohumon",
+             "dobermon", "fugamon", "galgomon", "gaogamon", "garurumon_black", "greymon_2010",
+             "growmon", "gururumon", "icedevimon", "icemon", "igamon", "jazardmon", "kokeshimon",
+             "kuwagamon_x", "lekismon", "leomon_x", "lianpumon", "ogremon_x", "peckmon", "pidmon",
+             "sandyanmamon", "siesamon", "soulmon", "targetmon", "tialudomon", "tylomon_x",
+             "witchmon", "wizarmon_x"]
+
+        XCTAssertEqual(deadEnds,
+                       (childrenLeftForUS150 + authoredAdults + championsFromUS149).sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 59)
+        XCTAssertEqual(deadEnds.count, 78)
     }
 
     // MARK: - AC: the orphans this story removed
@@ -521,7 +536,7 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 497, "454 before this story")
+        XCTAssertEqual(graph.nodes.count, 548, "454 before this story, 497 after it, 548 after US-149")
     }
 
     // MARK: - The whole file still validates

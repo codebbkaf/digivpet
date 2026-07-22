@@ -288,7 +288,8 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 37, "US-147 hung Hiyarimon and Penmon here")
+        XCTAssertEqual(inLine.count, 39,
+                       "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }.sorted(), ["pusumon", "pusurimon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -365,7 +366,8 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // `pusumon` and `pusurimon` are US-146's and excluded for the same reason.
         // `hiyarimon` and `penmon` are US-147's, excluded for the same reason.
         let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama",
-                                      "pusumon", "pusurimon", "hiyarimon", "penmon"]
+                                      "pusumon", "pusurimon", "hiyarimon", "penmon",
+                                      "gammamon", "betelgammamon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
@@ -426,8 +428,12 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         for rookie in ["pencvb_agumon", "pencvb_gabumon", "plotmon", "herissmon"] {
             XCTAssertEqual(try node(rookie).evolutions.first(where: \.isDefault)?.to, "turuiemon")
         }
-        // And every Champion falls to the same Perfect.
-        for champion in graph.nodes.filter({ $0.line == line && $0.stage == .adult }) {
+        // And every Champion falls to the same Perfect — every one that has an out-edge at all.
+        // US-149 hung BetelGammamon over Gammamon and left it a leaf until the Adult sweeps; a
+        // rung-at-a-time sweep always opens the rung above as leaves, which is the same guard
+        // US-148 had to add to the Nightmare Soldiers tree.
+        for champion in graph.nodes.filter({ $0.line == line && $0.stage == .adult
+                                             && !$0.evolutions.isEmpty }) {
             XCTAssertEqual(champion.evolutions.first(where: \.isDefault)?.to, "andiramon_virus",
                            "\(champion.id) does not fall to this tree's junk Perfect")
         }
