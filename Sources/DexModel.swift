@@ -321,12 +321,26 @@ final class DexModel: ObservableObject {
         return sections
     }
 
-    /// A line's heading. The key is a node id by convention (`agumon`, `patamon`), so the line is
-    /// named after its namesake's display name — which keeps the casing and any punctuation the
-    /// roster already chose. A key naming no node falls back to itself rather than failing: a
-    /// heading reading `patamon` is a cosmetic slip, a missing line is a lost tree.
+    /// Headings for the lines named after a DEVICE rather than after a Digimon (US-133 onward).
+    /// `dmc-v1` is a key, not a title, and the raw key on a section header would read as a bug.
+    ///
+    /// Short on purpose. These are `navigationTitle`s on a 41mm watch, which truncates at about
+    /// fifteen characters: "Digital Monster Ver.1" was screenshotted there and came back as
+    /// "Digital Monster…", losing the one part of the name that says WHICH tree this is.
+    ///
+    /// Only the device lines need an entry: a line still keyed on a node id resolves through that
+    /// node below, which is the older and larger half of the file.
+    static let lineTitles: [String: String] = [
+        "dmc-v1": "Color Ver.1",
+    ]
+
+    /// A line's heading. Either an authored title above, or — by the older convention — a node id
+    /// (`patamon`, `piyomon`), in which case the line is named after its namesake's display name,
+    /// keeping the casing and any punctuation the roster already chose. A key that is neither
+    /// falls back to itself rather than failing: a heading reading `patamon` is a cosmetic slip,
+    /// a missing line is a lost tree.
     private static func title(ofLine line: String, in graph: EvolutionGraph) -> String {
-        graph.node(id: line)?.displayName ?? line
+        lineTitles[line] ?? graph.node(id: line)?.displayName ?? line
     }
 
     #if DEBUG

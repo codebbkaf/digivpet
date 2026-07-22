@@ -303,8 +303,8 @@ final class DexModelTests: XCTestCase {
 
         model.load()
 
-        let agumon = try XCTUnwrap(model.sections.first { $0.id == "agumon" })
-        XCTAssertEqual(agumon.title, "Agumon")
+        let ver1 = try XCTUnwrap(model.sections.first { $0.id == "dmc-v1" })
+        XCTAssertEqual(ver1.title, "Color Ver.1")
     }
 
     /// The tree's columns must read as the JSON lists them. `rows` is sorted discovered-first for
@@ -320,9 +320,9 @@ final class DexModelTests: XCTestCase {
 
         XCTAssertEqual(model.rows.first?.id, "wargreymon", "The flat grid still sorts met-first.")
 
-        let agumon = try XCTUnwrap(model.sections.first { $0.id == "agumon" })
-        let authored = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }.map(\.id)
-        XCTAssertEqual(agumon.rows.map(\.id), authored)
+        let ver1 = try XCTUnwrap(model.sections.first { $0.id == "dmc-v1" })
+        let authored = EvolutionGraph.bundled.nodes.filter { $0.line == "dmc-v1" }.map(\.id)
+        XCTAssertEqual(ver1.rows.map(\.id), authored)
     }
 
     /// The sections partition the GRAPH, not the roster — since US-063 those are different sizes,
@@ -395,7 +395,7 @@ final class DexModelTests: XCTestCase {
 
         let section = try XCTUnwrap(DexSection.line(containing: "greymon", in: model.sections))
 
-        XCTAssertEqual(section.id, "agumon", "Greymon is on the Agumon line.")
+        XCTAssertEqual(section.id, "dmc-v1", "Greymon is on the Digital Monster Ver.1 line.")
         XCTAssertTrue(section.isLine, "A grid section has no tree to push to.")
         XCTAssertTrue(section.rows.contains { $0.id == "greymon" },
                       "The section handed to the tree must contain the Digimon it was opened from.")
@@ -507,11 +507,12 @@ final class DexEvolutionCandidateTests: XCTestCase {
     }
 
     /// The shipped graph, not a fixture: the real Agumon branch is the screen this story is for.
-    func testTheShippedAgumonBranchListsItsThreeTargets() {
+    /// US-133 gave it a fourth candidate, Devimon, so this is also the two-row case.
+    func testTheShippedAgumonBranchListsItsFourTargets() {
         let candidates = DexRow.evolutionCandidates(
             of: "agumon", in: .bundled, resolvedAgainst: [:])
 
-        XCTAssertEqual(candidates.map(\.id), ["greymon", "meramon", "numemon"])
+        XCTAssertEqual(candidates.map(\.id), ["greymon", "meramon", "devimon", "numemon"])
     }
 
     // MARK: - AC: discovered candidates show art and name; undiscovered are withheld
@@ -606,14 +607,15 @@ final class DexEvolutionCandidateTests: XCTestCase {
     // MARK: - AC: one to three candidates fit 41mm without scrolling
 
     /// The section is a three-column grid, so one to three candidates are a single line and a
-    /// fourth wraps onto a second. This pins the data half of that claim: no shipped Digimon has
-    /// more than three edges, so every real detail sheet is the one-line case. The layout half was
-    /// verified by screenshot on a 41mm simulator.
-    func testNoShippedDigimonHasMoreThanThreeCandidates() {
+    /// fourth wraps onto a second. US-133 raised the ceiling from three to four — the V1 tree gives
+    /// Agumon a third earned Champion — so the widest sheet is now two rows rather than one. That
+    /// is still inside the sheet's `ScrollView`; both cases were verified by screenshot on a 41mm
+    /// simulator. This pins the data half: a fifth candidate would be a third row nobody has seen.
+    func testNoShippedDigimonHasMoreThanFourCandidates() {
         for node in EvolutionGraph.bundled.nodes {
             let candidates = DexRow.evolutionCandidates(
                 of: node.id, in: .bundled, resolvedAgainst: [:])
-            XCTAssertLessThanOrEqual(candidates.count, 3, "\(node.id) would wrap to a second line.")
+            XCTAssertLessThanOrEqual(candidates.count, 4, "\(node.id) would wrap to a third line.")
         }
     }
 }

@@ -119,7 +119,13 @@ struct EvolutionTreeView: View {
 
     var body: some View {
         ScrollViewReader { scroller in
-            ScrollView(.horizontal) {
+            // BOTH axes since US-133. Horizontal alone was right while the tallest line was three
+            // rows (~110pt) and fit a 41mm screen outright, but the Digital Monster Ver.1 tree has
+            // six Adults, and a 234pt grid inside a horizontally-scrolling viewport does not
+            // overflow — it draws NOTHING AT ALL. Screenshotted on 41mm: the whole tree was a black
+            // screen under its own navigation title, with the ten-node Gabumon line drawing
+            // normally from the same build. Every remaining Phase E device tree is this size.
+            ScrollView([.horizontal, .vertical]) {
                 ZStack(alignment: .topLeading) {
                     // Under the cells, so a line never crosses a sprite it happens to pass near.
                     connectors
@@ -241,24 +247,25 @@ private struct EvolutionTreeCell: View {
 /// It seeds its own discoveries rather than reading the store for the usual reason: the Simulator
 /// has no HealthKit data, so a real game there never evolves far enough to discover anything past
 /// its egg, and a tree of nothing but "?" would not show that a discovered node draws its sprite.
-/// The Agumon line is the one that branches (Greymon / Meramon, converging at MetalGreymon).
+/// The Digital Monster Ver.1 line is the one that branches (Greymon / Meramon, converging at
+/// MetalGreymon).
 struct EvolutionTreeDemoView: View {
     private static let discovered: Set<String> = ["agu_digitama", "botamon", "koromon", "agumon", "greymon"]
 
     var body: some View {
-        let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }
+        let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "dmc-v1" }
         EvolutionTreeView(
             nodes: nodes,
             rows: nodes.map {
                 DexRow(node: $0, firstDiscovered: Self.discovered.contains($0.id) ? .now : nil)
             })
-            .navigationTitle("Agumon")
+            .navigationTitle(DexModel.lineTitles["dmc-v1"] ?? "Color Ver.1")
     }
 }
 #endif
 
 #Preview {
-    let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }
+    let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "dmc-v1" }
     EvolutionTreeView(
         nodes: nodes,
         rows: nodes.map { DexRow(node: $0, firstDiscovered: $0.stage.ladderIndex ?? 0 < 4 ? .now : nil) })

@@ -336,16 +336,17 @@ final class EnergyFractionTests: XCTestCase {
 // MARK: - Against the shipped roster
 
 final class SeedEnergyBarsTests: XCTestCase {
-    /// The bars against the REAL graph, not a fixture: the seed's one branching node aims two bars
-    /// at two different types, and leaves the other two with nothing to reach for.
-    func testTheShippedAgumonAimsItsBarsAtItsTwoRealBranches() throws {
+    /// The bars against the REAL graph, not a fixture: the seed's branching node aims a bar at each
+    /// type it can actually earn, and leaves the type no branch asks for with nothing to reach for.
+    /// US-133 added the spirit branch, Devimon.
+    func testTheShippedAgumonAimsItsBarsAtItsRealBranches() throws {
         let agumon = try XCTUnwrap(EvolutionGraph.bundled.node(id: "agumon"))
         let progress = agumon.energyProgress(for: energy(strength: 30))
 
         XCTAssertEqual(progress.goal(.strength).target, 60, "-> Greymon")
         XCTAssertEqual(progress.goal(.stamina).target, 60, "-> Meramon")
+        XCTAssertEqual(progress.goal(.spirit).target, 60, "-> Devimon")
         XCTAssertNil(progress.goal(.vitality).target)
-        XCTAssertNil(progress.goal(.spirit).target)
         XCTAssertNil(progress.totalGate, "a Child hatches from nothing")
         XCTAssertEqual(progress.fraction(.strength), 0.5, accuracy: 0.001)
     }

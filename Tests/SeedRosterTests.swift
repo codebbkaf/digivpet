@@ -118,13 +118,17 @@ final class SeedRosterTests: XCTestCase {
         XCTAssertEqual(try earnedPath(from: "palmon").map(\.displayName),
                        ["Palmon", "Togemon", "Lilimon", "Rosemon"])
 
-        // Agumon branches two ways at Child, so it is walked from Greymon and its fork asserted
-        // separately rather than forced through `earnedPath`.
-        XCTAssertEqual(try earnedPath(from: "greymon").map(\.displayName),
-                       ["Greymon", "MetalGreymon", "WarGreymon"])
+        // Agumon branches three ways at Child, and since US-133 Greymon forks too — the V1 tree's
+        // Ultimate is MetalGreymon (Virus), which sits beside US-043's Vaccine one. Both are
+        // asserted as forks rather than forced through `earnedPath`, which walks a single thread.
         XCTAssertEqual(
             try XCTUnwrap(graph.node(id: "agumon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
-            ["greymon", "meramon"])
+            ["devimon", "greymon", "meramon"])
+        XCTAssertEqual(
+            try XCTUnwrap(graph.node(id: "greymon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
+            ["metalgreymon", "metalgreymon_virus"])
+        XCTAssertEqual(try earnedPath(from: "metalgreymon").map(\.displayName),
+                       ["MetalGreymon", "WarGreymon"])
 
         // The AC calls out Palmon's Baby forms by name.
         XCTAssertEqual(graph.node(id: "yuramon")?.stage, .babyI)
@@ -173,24 +177,24 @@ final class SeedRosterTests: XCTestCase {
     }
 
     /// The branch above, pinned: Agumon is where dominant energy first changes the outcome. Since
-    /// US-061 it is a three-way — two earned branches plus the Numemon fallback — and the fallback
-    /// shares Greymon's strength gate, sitting below it on `minEnergy` so it only wins when Greymon
-    /// is shut out.
+    /// US-061 it is earned branches plus the Numemon fallback, and the fallback shares Greymon's
+    /// strength gate, sitting below it on `minEnergy` so it only wins when Greymon is shut out.
+    /// US-133 added the V1 tree's third earned Champion, Devimon, on the spirit branch.
     func testAgumonBranchesOnStrengthOrStamina() throws {
         let agumon = try XCTUnwrap(graph.node(id: "agumon"))
-        XCTAssertEqual(agumon.evolutions.count, 3)
+        XCTAssertEqual(agumon.evolutions.count, 4)
 
         let earned = agumon.evolutions.filter { !$0.isDefault }
         // Deliberately NOT Dictionary(uniqueKeysWithValues:) keyed on requiredEnergy: two edges
         // sharing an energy would TRAP there, killing the test host so the rest of the suite
         // never reports (see EvolutionGraph.bundled). Collapsed branches must fail, not crash.
-        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, 2,
-                       "Agumon's two earned edges must require DIFFERENT energies or the branch is fake")
+        XCTAssertEqual(Set(earned.compactMap(\.requiredEnergy)).count, earned.count,
+                       "Agumon's earned edges must require DIFFERENT energies or a branch is fake")
 
-        let toGreymon = try XCTUnwrap(earned.first { $0.requiredEnergy == .strength })
-        let toMeramon = try XCTUnwrap(earned.first { $0.requiredEnergy == .stamina })
-        XCTAssertEqual(toGreymon.to, "greymon")
-        XCTAssertEqual(toMeramon.to, "meramon")
+        let toGreymon = try XCTUnwrap(earned.first { $0.to == "greymon" })
+        let toMeramon = try XCTUnwrap(earned.first { $0.to == "meramon" })
+        XCTAssertEqual(toGreymon.requiredEnergy, .strength)
+        XCTAssertEqual(toMeramon.requiredEnergy, .stamina)
 
         let toNumemon = try XCTUnwrap(agumon.evolutions.first(where: \.isDefault))
         XCTAssertEqual(toNumemon.to, "numemon")

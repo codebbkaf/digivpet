@@ -37,9 +37,9 @@ final class MinigameAssignmentTests: XCTestCase {
     }
 
     func testTheLineTierWinsOverTheStageFloor() {
-        // agumon's line is Button Masher; a Child would fall back to Power Meter without the line.
+        // The Ver.1 line is Button Masher; a Child would fall back to Power Meter without the line.
         XCTAssertEqual(MinigameAssignment.fallback(for: .child), .powerMeter)
-        XCTAssertEqual(MinigameAssignment.game(line: "agumon", stage: .child), .buttonMasher)
+        XCTAssertEqual(MinigameAssignment.game(line: "dmc-v1", stage: .child), .buttonMasher)
     }
 
     // MARK: - Fallback

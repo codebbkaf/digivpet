@@ -13,6 +13,16 @@
     "blackkingnumemon": { "element": "dark", "attribute": "virus" },
     "wargreymon": { "element": "fire", "attribute": "vaccine" },
     "platinumnumemon": { "element": "steel", "attribute": "virus" },
+    "swimmon": { "element": "water", "attribute": "data" },
+    "devimon": { "element": "dark", "attribute": "virus" },
+    "airdramon": { "element": "wind", "attribute": "vaccine" },
+    "seadramon": { "element": "water", "attribute": "data" },
+    "metalgreymon_virus": { "element": "machine", "attribute": "virus" },
+    "mamemon": { "element": "steel", "attribute": "data" },
+    "monzaemon": { "element": "light", "attribute": "vaccine" },
+    "blitzgreymon": { "element": "machine", "attribute": "vaccine" },
+    "banchomamemon": { "element": "steel", "attribute": "data" },
+    "dmcv1_shinmonzaemon": { "element": "dark", "attribute": "virus" },
 
     "gabu_digitama": { "element": "ice", "attribute": "free" },
     "punimon": { "element": "ice", "attribute": "free" },
@@ -98,7 +108,7 @@
   },
 
   "lineDefaults": {
-    "agumon": { "element": "fire", "attribute": "free" },
+    "dmc-v1": { "element": "fire", "attribute": "free" },
     "gabumon": { "element": "ice", "attribute": "free" },
     "palmon": { "element": "plant", "attribute": "free" },
     "patamon": { "element": "wind", "attribute": "free" },

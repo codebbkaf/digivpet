@@ -20,8 +20,8 @@ final class MoveCatalogTests: XCTestCase {
         // LATER rather than a live path — exercised here with an id the graph does not yet contain.
         XCTAssertNil(catalog.moves["greymon_x"], "test assumes greymon_x is unauthored")
         XCTAssertNil(graph.node(id: "greymon_x"), "test assumes greymon_x is not yet a node")
-        let move = catalog.move(forId: "greymon_x", line: "agumon", stage: .adult)
-        XCTAssertEqual(move, catalog.lineDefaults["agumon"])
+        let move = catalog.move(forId: "greymon_x", line: "dmc-v1", stage: .adult)
+        XCTAssertEqual(move, catalog.lineDefaults["dmc-v1"])
         XCTAssertNotEqual(move, catalog.stageDefaults[Stage.adult.rawValue],
                           "line tier must win over the stage floor")
     }

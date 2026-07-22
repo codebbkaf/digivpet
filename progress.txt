@@ -1536,3 +1536,91 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `CGPDFDocument` render/crop tooling are in US-131's entry above. Note for it: the roster fallback
   this story added means a newly wired orphan already draws correctly before its edge exists.
 ---
+
+## 2026-07-22 - US-133 (Wire the Digital Monster Color Version 1 evolution tree)
+- **The V1 tree is now complete and playable end to end.** The seed line US-008 called `agumon`
+  WAS this tree, authored pruned; this story **renamed it to `dmc-v1`** and filled in the ten nodes
+  it never carried. Build green, **1702 tests (1690 + 12 new), 0 failures. Orphans 780 -> 771.**
+- Files changed: `Resources/evolutions.json` (11 nodes re-lined, 10 new, 5 new edges on existing
+  nodes), `Resources/elements.json`, `Resources/moves.json`, `Sources/DexModel.swift` (new
+  `lineTitles`), `Sources/DexView.swift`, `Sources/EvolutionTreeView.swift`,
+  `Sources/MinigameAssignment.swift`, `Sources/Notifications.swift`, `docs/evolutions-schema.md`,
+  `Tests/DMCVersion1TreeTests.swift` (new, 12 tests) and eleven existing test files.
+
+- **THE STORY IS A RENAME, AND THAT IS THE WHOLE DECISION.** AC2 wants every V1 Digimon on line
+  `dmc-v1`, but Botamon/Koromon/Agumon/Greymon/Meramon/Numemon/MetalGreymon were already nodes on
+  line `agumon` and `line` is single-valued. Three options, and the third is right:
+  1. *Re-line only the new nodes.* Every arrow into them would cross a line boundary, and
+     `EvolutionTreeLayout` **drops any connector whose target it did not place** — the Dex would
+     draw the V1 tree as six parentless Digimon floating beside the ladder.
+  2. *Duplicate the seven into scoped ids.* ~7 more nodes per tree × 11 trees, each needing a
+     unique move signature name, and Agumon drawn in four Dex trees.
+  3. *Rename the line.* Six keys move (elements/moves `lineDefaults`, `MinigameAssignment.byLine`,
+     `-dexLineDemo`, the tree preview host) plus a new `DexModel.lineTitles`, and the tree is one
+     closed tree with no crossing edge at all.
+  **The other five seed lines map onto the other four DMC versions the same way** — gabumon=V2,
+  patamon=V3, piyomon+palmon=V4, gazimon=V5 — so US-134..US-137 should each be the same rename.
+
+- **`DexModel.lineTitles` is new and required, not decoration.** `title(ofLine:)` was
+  `graph.node(id: line)?.displayName ?? line`; a device slug names no node, so without a title the
+  Dex section header reads `dmc-v1`. **Keep the titles under ~15 characters**: "Digital Monster
+  Ver.1" was screenshotted on 41mm and came back as "Digital Monster…", losing the one word that
+  says which tree it is. Shipped as **"Color Ver.1"**, which fits untruncated.
+
+- **A REGRESSION NO TEST COULD HAVE CAUGHT, found only because the screenshot was taken.** At 21
+  nodes the Adult column is six deep, so the tree grid is 234pt tall. `EvolutionTreeView` was a
+  **horizontal-only** `ScrollView`, and a grid taller than the viewport inside one does not
+  overflow or clip — **it draws NOTHING**. The V1 tree was a black screen under its own navigation
+  title on 41mm. Isolated it by pointing the same build's tree demo at the untouched 10-node
+  `gabumon` line, which drew normally, so it was the SIZE and not the new data. Fixed with
+  `ScrollView([.horizontal, .vertical])`. **Every remaining Phase E tree is this size**, so this
+  had to be fixed once, here.
+
+- **Two prior invariants deliberately relaxed**, each with the reason in the test that pins it:
+  - `testEveryNonTerminalChildAndAdultHasTwoToFourOutgoingEdges` (was `...TwoOrThree`). US-061's
+    shape is "two earned branches plus the junk fallback", and a device tree gives a Rookie five or
+    six Champions. Even split across two Children (US-044's pattern) that needs three earned on
+    one of them. **Four is what the whole source document fits in** — check V4's Palmon and V5's
+    Gizamon, both six-wide — so this ceiling should hold for all of Phase E.
+  - `DexScreenTests.testNoShippedDigimonHasMoreThanFourCandidates` (was `...Three`), to match.
+    Measured on 41mm: four candidates draw as 3 + 1 with **both rows on screen at once**.
+
+- **AC11's two absent names, searched with `find -iname` over the whole asset pack, and asserted
+  absent by a test rather than only noted:**
+  - **Betamon** — only `Idle Frame Only/Betamon.png`, so the roster marks it `dexOnly`.
+  - **Tyranomon** — no colour sheet anywhere. The only match is `Black and White Sprites/Adult/
+    Tyranomon.png`, and `scripts/import_roster.py` does not index that folder, so there is not even
+    a roster entry to point at. **`Black and White Sprites/` is invisible to the roster** — worth
+    remembering before declaring a later tree's Digimon present.
+
+- **Choosing a substitute Rookie: pick one NO tree in the document names.** Betamon carries
+  Airdramon and Seadramon alone, so without a stand-in they could not be seeded. The obvious
+  choices are all spoken for — Otamamon and Gomamon and Syakomon are Pendulum Color rookies (and
+  US-131 already warned that the `.md`'s Pendulum half is wrong; the PDF's Ver.1 NSp rookies are
+  Tentomon/Gotsumon/Otamamon/Angoramon). **Swimmon appears in neither Part of the document at all**,
+  so taking it costs no later story a Rookie. Grep the whole `.md` before choosing one.
+
+- **TRUST THE CODEBASE PATTERNS SECTION ABOVE OVER YOUR OWN GREP.** It already names
+  `-noNotificationPrompt`; I grepped `Sources/Notifications.swift`, found nothing, concluded the
+  flag did not exist and wrote a second one — it lives in `MainScreenModel.requestNotificationAuthorization`,
+  because the ASK is the model's, not the deliverer's. Reverted. **Grep `Sources/` whole**, or just
+  read the pattern above. Cost ~20 minutes. Confirmed working sequence, unchanged from what was
+  already written down: `-healthAnswered -noNotificationPrompt <demo flag>`, and `simctl privacy`
+  has neither a `health` nor a `notifications` service, so an alert already on screen can only be
+  cleared by `shutdown` → `erase` → `boot`.
+
+- **Line-scoped ids are the answer to "another line already owns this Digimon".** The V1 tree ends
+  Numemon → Monzaemon → ShinMonzaemon, and `shinmonzaemon` is the palmon line's junk Ultimate. Same
+  art, same displayName, id `dmcv1_shinmonzaemon` — exactly `piyo_yuramon` from US-045. It needs
+  its own `elements.json` and `moves.json` entries with a signature name unique across the file,
+  and it is **not** an orphan removed: it is not a roster id, so it never counted as one.
+
+- **What the V1 tree's last row actually is.** "BlitzGreymon -> Ultra: Omegamon Alter-S (Jogress
+  with CresGarurumon)" is not an evolution edge — `Resources/jogress.json` already carried exactly
+  that pair from US-131. BlitzGreymon is terminal here and a test asserts the recipe instead, so
+  the row is covered rather than missing. Expect the same for V2/V4/V5's Ultra rows.
+
+- REMAINS: US-134 onward (20/56 passing). US-134 is Digital Monster Color Version 2 — the
+  `gabumon` line renamed to `dmc-v2` and completed, the same shape as this story. Its Ultra row is
+  the other half of this one's (CresGarurumon + BlitzGreymon), already in `jogress.json`.
+---

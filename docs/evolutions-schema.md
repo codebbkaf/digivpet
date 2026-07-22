@@ -33,7 +33,7 @@ without breaking every decoder.
 | `id` | string | yes | Unique key that edges point at. Separate from `spriteFile` so art can be renamed or shared without rewriting edges. Convention: the sprite basename, lowercased. |
 | `displayName` | string | yes | Shown to the user. Stage-disambiguating suffixes (`_Child`, `_Adult`) are stripped here but kept in `spriteFile`. |
 | `stage` | string | yes | One of `Digitama`, `Baby I`, `Baby II`, `Child`, `Adult`, `Perfect`, `Ultimate-Super Ultimate`, `Armor-Hybrid`. These are the `Stage` raw values, which are also the sprite subfolder names. |
-| `line` | string | yes | Which evolution line the node belongs to, e.g. `agumon`, `patamon`. The Dex draws one tree per line. Convention: the `id` of the line's Child-stage Digimon. Required and never blank — a node with no line appears in no tree, and nothing at runtime would say so. Unlike `dexOnly` and `evolutions` this has **no default**: omitting the key fails the whole load. |
+| `line` | string | yes | Which evolution line the node belongs to, e.g. `dmc-v1`, `patamon`. The Dex draws one tree per line. Two conventions: the `id` of the line's Child-stage Digimon (the older lines), or a device slug for a line that is a whole shipped device tree (`dmc-v1` = Digital Monster Color Version 1, US-133 onward). A device slug names no node, so its heading comes from `DexModel.lineTitles` — add an entry there or the section header shows the raw key. Keep those titles short: a 41mm `navigationTitle` truncates at about fifteen characters. Required and never blank — a node with no line appears in no tree, and nothing at runtime would say so. Unlike `dexOnly` and `evolutions` this has **no default**: omitting the key fails the whole load. |
 | `spriteFile` | string | yes | Filename **without** `.png`, under `16x16 Digimon Sprites/<stage>/`. Must exist on disk — US-009 checks. Never blank: `Bundle.url(forResource:)` treats an empty name like nil and returns an arbitrary PNG. |
 | `variant` | string | no | Variant suffix parsed off the filename: `X`, `Black`, `Blue`, `Virus`, `2006`, `2010`, `YnK`. Omitted for the base form. Variants are separate nodes, not skins. |
 | `dexOnly` | bool | no, default `false` | True for the 157 Digimon that exist only in `Idle Frame Only/` with no animated 48×64 sheet. They may appear in the Dex but must never be playable or named by an edge — animating one means slicing a sheet that does not exist. |
@@ -174,8 +174,14 @@ Both fall out of the shape rather than needing special support:
   stored on the parent, so `EvolutionGraph.parents(of:)` scans for them.
 
 `line` is display grouping only; no validator rule ties it to edges. A branch that stays in the
-family keeps the family's line (Meramon is `agumon`, not its own line), so the Dex draws it as a
+family keeps the family's line (Meramon is `dmc-v1`, not its own line), so the Dex draws it as a
 branch of that tree rather than a one-node tree of its own.
+
+In practice a line IS a closed tree, even though nothing enforces it: `EvolutionTreeLayout` drops
+any connector whose target it did not place, so an edge leaving its line is an arrow the Dex
+simply does not draw. When a tree needs a Digimon another line already owns, give it a
+line-scoped id on the same art rather than pointing across — `piyo_yuramon` (US-045) and
+`dmcv1_shinmonzaemon` (US-133) are the two shipped examples.
 
 ## Digitama hatch edges
 
@@ -211,16 +217,32 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — ten nodes have one today, in the `patamon`, `piyomon` and `gazimon` lines.
+prose — sixteen nodes have one today, in the `dmc-v1`, `patamon`, `piyomon` and `gazimon` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 69 nodes across six `line` values — `agumon` (8 nodes),
-`gabumon` (7), `palmon` (7), `patamon` (15), `piyomon` (15) and `gazimon` (17) — each a complete
+`Resources/evolutions.json` holds 98 nodes across six `line` values — `dmc-v1` (21 nodes),
+`gabumon` (10), `palmon` (10), `patamon` (17), `piyomon` (20) and `gazimon` (20) — each a complete
 line from Digitama through Ultimate.
 
-The first three are US-008's seed. `agumon` includes Meramon as the target of its one branching
-node (Agumon → Greymon on strength, or → Meramon on stamina, converging back at MetalGreymon).
+`gabumon` and `palmon` are what is left of US-008's seed. `dmc-v1` was the third of them: US-008
+authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
+filled the rest of that tree in. Renaming rather than opening a second line beside it is the
+point — Botamon, Koromon, Agumon, Greymon, Meramon, Numemon and MetalGreymon were already here,
+and a `dmc-v1` line holding only the new nodes would have been a tree whose every arrow crossed a
+line boundary and so was never drawn. Three things about it:
+
+- **Its second Rookie is Swimmon, not the V1 tree's Betamon.** Betamon is one of the 157
+  idle-only Digimon. Airdramon and Seadramon hang off Betamon alone in the tree, so without a
+  stand-in they could not be seeded at all. See the `comment` on the `swimmon` node.
+- **Tyranomon is absent entirely**, the one V1 name with no colour sheet anywhere in the asset
+  pack — only a monochrome `Black and White Sprites/Adult/Tyranomon.png`, which the roster does
+  not index. Mamemon, its Ultimate in the tree, is reached through Meramon and Seadramon instead.
+- **Both MetalGreymon are here.** The V1 tree's Ultimate is MetalGreymon (Virus), a separate
+  sprite and a separate id; the Vaccine one US-008 authored out of Greymon stays beside it, so
+  Greymon forks.
+- **Its last row is a Jogress, not an edge.** BlitzGreymon → Omegamon Alter-S with CresGarurumon
+  lives in `Resources/jogress.json` (US-130), which is why BlitzGreymon is terminal here.
 
 `patamon` is US-044's Digital Monster Color V3 line and is much wider: Patamon branches five ways
 into Unimon / Centalmon / Ogremon / Bakemon / Scumon, which converge into three Perfects

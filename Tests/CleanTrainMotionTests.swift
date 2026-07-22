@@ -293,10 +293,10 @@ final class CleanTrainMotionTests: XCTestCase {
     /// `start()` resolves a starting Digitama before it loads, and throws `.noDigitama` without one.
     private func fixtureGraph() -> EvolutionGraph {
         EvolutionGraph(nodes: [
-            EvolutionNode(id: "egg", displayName: "Egg", stage: .digitama, line: "agumon",
+            EvolutionNode(id: "egg", displayName: "Egg", stage: .digitama, line: "dmc-v1",
                           spriteFile: "Agu_Digitama",
                           evolutions: [EvolutionEdge(to: "hero", minEnergy: 50, maxCareMistakes: 99)]),
-            EvolutionNode(id: "hero", displayName: "Hero", stage: .child, line: "agumon",
+            EvolutionNode(id: "hero", displayName: "Hero", stage: .child, line: "dmc-v1",
                           spriteFile: "Agumon")
         ])
     }

@@ -208,11 +208,12 @@ final class ConditionRevealTests: XCTestCase {
         let graph = EvolutionGraph.bundled
         let candidates = DexRow.candidates(of: "agumon", in: graph, resolvedAgainst: [:])
 
-        XCTAssertEqual(candidates.map(\.row.id), ["greymon", "meramon", "numemon"])
-        // Agumon's two gated branches each carry criteria; the junk default carries none.
+        XCTAssertEqual(candidates.map(\.row.id), ["greymon", "meramon", "devimon", "numemon"])
+        // Agumon's gated branches each carry criteria; the junk default, last, carries none.
         XCTAssertFalse(candidates[0].conditions.isEmpty)
         XCTAssertFalse(candidates[1].conditions.isEmpty)
-        XCTAssertTrue(candidates[2].conditions.isEmpty)
+        XCTAssertFalse(candidates[2].conditions.isEmpty)
+        XCTAssertTrue(candidates[3].conditions.isEmpty)
         // Unchanged for every caller that only wanted the rows.
         XCTAssertEqual(
             DexRow.evolutionCandidates(of: "agumon", in: graph, resolvedAgainst: [:]).map(\.id),

@@ -12,6 +12,16 @@
     "blackkingnumemon": { "projectileSymbol": "drop.fill", "tint": "brown", "signatureName": "Royal Sludge", "signatureSymbol": "drop.fill" },
     "wargreymon": { "projectileSymbol": "star.fill", "tint": "orange", "signatureName": "Gaia Force", "signatureSymbol": "star.fill" },
     "platinumnumemon": { "projectileSymbol": "drop.fill", "tint": "gray", "signatureName": "Platinum Slime", "signatureSymbol": "sparkles" },
+    "swimmon": { "projectileSymbol": "drop.fill", "tint": "cyan", "signatureName": "Marine Snipe", "signatureSymbol": "drop.fill" },
+    "devimon": { "projectileSymbol": "hand.raised.fill", "tint": "indigo", "signatureName": "Touch of Evil", "signatureSymbol": "hand.raised.fill" },
+    "airdramon": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Spinning Needle", "signatureSymbol": "wind" },
+    "seadramon": { "projectileSymbol": "snowflake", "tint": "blue", "signatureName": "Ice Blast", "signatureSymbol": "snowflake" },
+    "metalgreymon_virus": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Giga Destroyer", "signatureSymbol": "bolt.fill" },
+    "mamemon": { "projectileSymbol": "circle.fill", "tint": "pink", "signatureName": "Smiley Bomb", "signatureSymbol": "circle.fill" },
+    "monzaemon": { "projectileSymbol": "heart.fill", "tint": "yellow", "signatureName": "Lovely Attack", "signatureSymbol": "heart.fill" },
+    "blitzgreymon": { "projectileSymbol": "star.fill", "tint": "blue", "signatureName": "Break Volcano", "signatureSymbol": "star.fill" },
+    "banchomamemon": { "projectileSymbol": "circle.fill", "tint": "gray", "signatureName": "Mame Rocket", "signatureSymbol": "circle.fill" },
+    "dmcv1_shinmonzaemon": { "projectileSymbol": "heart.fill", "tint": "purple", "signatureName": "Rampage Hug", "signatureSymbol": "heart.fill" },
 
     "gabu_digitama": { "projectileSymbol": "circle.fill", "tint": "white", "signatureName": "Fuzz Shiver", "signatureSymbol": "circle.fill" },
     "punimon": { "projectileSymbol": "drop.fill", "tint": "pink", "signatureName": "Puni Bubbles", "signatureSymbol": "drop.fill" },
@@ -96,7 +106,7 @@
     "ebemon": { "projectileSymbol": "sparkles", "tint": "purple", "signatureName": "Brain Rupture", "signatureSymbol": "sparkles" }
   },
   "lineDefaults": {
-    "agumon": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Fire Blast", "signatureSymbol": "flame.fill" },
+    "dmc-v1": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Fire Blast", "signatureSymbol": "flame.fill" },
     "gabumon": { "projectileSymbol": "snowflake", "tint": "blue", "signatureName": "Ice Fang", "signatureSymbol": "snowflake" },
     "palmon": { "projectileSymbol": "leaf.fill", "tint": "green", "signatureName": "Root Lash", "signatureSymbol": "leaf.fill" },
     "patamon": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Gust", "signatureSymbol": "wind" },

@@ -59,11 +59,12 @@ struct DexView: View {
     }
 
     #if DEBUG
-    /// The line `-dexLineDemo` opens: Agumon's, because it is the one shipped line that branches,
-    /// so a screenshot of it shows a fork and its converging connectors rather than a straight
-    /// ladder. Falls back to the first line so the arg still lands somewhere if that changes.
+    /// The line `-dexLineDemo` opens: the Digital Monster Ver.1 tree (Agumon's), because it is the
+    /// one shipped line that branches, so a screenshot of it shows a fork and its converging
+    /// connectors rather than a straight ladder. Falls back to the first line so the arg still
+    /// lands somewhere if that changes.
     private var demoSection: DexSection? {
-        model.sections.first { $0.id == "agumon" } ?? model.sections.first
+        model.sections.first { $0.id == "dmc-v1" } ?? model.sections.first
     }
     #endif
 }

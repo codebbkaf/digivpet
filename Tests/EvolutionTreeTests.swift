@@ -105,27 +105,29 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         XCTAssertEqual(layout.connectors.first?.to, .init(column: 1, row: 0))
     }
 
-    // MARK: - The shipped Agumon line, end to end
+    // MARK: - The shipped Digital Monster Ver.1 line, end to end
 
-    /// The bundled line is what the screenshot shows, so its shape is worth pinning: eleven nodes,
-    /// seven columns, and the three-row branch at Adult that makes it a tree rather than a row.
+    /// The bundled line is what the screenshot shows, so its shape is worth pinning: seven columns,
+    /// and the branch at Adult that makes it a tree rather than a row.
     ///
     /// US-061 grew it from eight nodes by adding the junk branch — Numemon at Adult, reached by
     /// inaction out of Agumon, then BlackKingNumemon and PlatinumNumemon, the Perfect and Ultimate
-    /// every Adult on the line falls to.
-    func testTheBundledAgumonLineIsABranchingTree() {
-        let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "agumon" }
+    /// every Adult on the line falls to. US-133 completed the V1 tree on top of that, taking it to
+    /// twenty-one nodes and six Adults.
+    func testTheBundledVersionOneLineIsABranchingTree() {
+        let nodes = EvolutionGraph.bundled.nodes.filter { $0.line == "dmc-v1" }
         let layout = EvolutionTreeLayout(nodes: nodes)
 
-        XCTAssertEqual(nodes.count, 11)
+        XCTAssertEqual(nodes.count, 21)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
-                       ["greymon", "meramon", "numemon"])
-        XCTAssertEqual(layout.rowCount, 3)
-        // Fourteen edges: three on the spine up to Agumon, three branches out of it, two out of
-        // each of the three Adults, and one from each Perfect — MetalGreymon to WarGreymon and
-        // BlackKingNumemon to PlatinumNumemon, so the junk branch also covers all seven rungs.
-        XCTAssertEqual(layout.connectors.count, 14)
+                       ["greymon", "meramon", "numemon", "devimon", "airdramon", "seadramon"])
+        XCTAssertEqual(layout.rowCount, 6)
+        // Every one of the line's edges is drawn, because none of them leaves the line — which is
+        // the whole reason US-133 renamed this line rather than adding a second one beside it.
+        let edges = nodes.flatMap(\.evolutions).count
+        XCTAssertEqual(layout.connectors.count, edges)
+        XCTAssertEqual(layout.connectors.count, 31)
     }
 }

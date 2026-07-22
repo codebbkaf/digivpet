@@ -93,7 +93,10 @@ final class RosterTests: XCTestCase {
                 differentArt.append(node.id)
             }
         }
-        XCTAssertEqual(aliases.sorted(), ["extyranomon", "piyo_tanemon", "piyo_yuramon"])
+        // `dmcv1_shinmonzaemon` is US-133's line-scoped ShinMonzaemon, the piyo_yuramon pattern:
+        // one roster entry, two nodes, so the second id is an alias with no entry of its own.
+        XCTAssertEqual(aliases.sorted(),
+                       ["dmcv1_shinmonzaemon", "extyranomon", "piyo_tanemon", "piyo_yuramon"])
 
         // The art tree really does hold BOTH `Hi-Andromon.png` and `HiAndromon.png`, so the
         // roster has an entry per file (`hi-andromon`, `hiandromon`) while the graph's

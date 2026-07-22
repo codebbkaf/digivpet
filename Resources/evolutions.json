@@ -4,7 +4,7 @@
       "id": "agu_digitama",
       "displayName": "Agu Digitama",
       "stage": "Digitama",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Agu_Digitama",
       "evolutions": [
         {
@@ -19,7 +19,7 @@
       "id": "botamon",
       "displayName": "Botamon",
       "stage": "Baby I",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Botamon",
       "evolutions": [
         {
@@ -35,9 +35,24 @@
       "id": "koromon",
       "displayName": "Koromon",
       "stage": "Baby II",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Koromon",
       "evolutions": [
+        {
+          "to": "swimmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it lively all day long"
+            }
+          ]
+        },
         {
           "to": "agumon",
           "requiredEnergy": "strength",
@@ -51,7 +66,7 @@
       "id": "agumon",
       "displayName": "Agumon",
       "stage": "Child",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Agumon",
       "evolutions": [
         {
@@ -99,6 +114,28 @@
           ]
         },
         {
+          "to": "devimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Let it pick fight after fight"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 600,
+              "hint": "Keep it up long past its bedtime"
+            }
+          ]
+        },
+        {
           "to": "numemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -111,7 +148,7 @@
       "id": "greymon",
       "displayName": "Greymon",
       "stage": "Adult",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Greymon",
       "evolutions": [
         {
@@ -144,6 +181,28 @@
           ]
         },
         {
+          "to": "metalgreymon_virus",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Blood it in battle after battle"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 900,
+              "hint": "Give it little rest between fights"
+            }
+          ]
+        },
+        {
           "to": "blackkingnumemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -156,7 +215,7 @@
       "id": "meramon",
       "displayName": "Meramon",
       "stage": "Adult",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Meramon",
       "evolutions": [
         {
@@ -182,6 +241,28 @@
           ]
         },
         {
+          "to": "mamemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Drill it until its punches land clean"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep it lean"
+            }
+          ]
+        },
+        {
           "to": "blackkingnumemon",
           "requiredEnergy": "stamina",
           "minEnergy": 0,
@@ -194,7 +275,7 @@
       "id": "numemon",
       "displayName": "Numemon",
       "stage": "Adult",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "Numemon",
       "evolutions": [
         {
@@ -220,6 +301,28 @@
           ]
         },
         {
+          "to": "monzaemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80000,
+              "hint": "Walk it up out of the sewer"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 3,
+              "hint": "Feed it kindly, never carelessly"
+            }
+          ]
+        },
+        {
           "to": "blackkingnumemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -232,7 +335,7 @@
       "id": "metalgreymon",
       "displayName": "MetalGreymon",
       "stage": "Perfect",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "MetalGreymon",
       "evolutions": [
         {
@@ -248,7 +351,7 @@
       "id": "blackkingnumemon",
       "displayName": "BlackKingNumemon",
       "stage": "Perfect",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "BlackKingNumemon",
       "evolutions": [
         {
@@ -264,15 +367,263 @@
       "id": "wargreymon",
       "displayName": "WarGreymon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "WarGreymon"
     },
     {
       "id": "platinumnumemon",
       "displayName": "PlatinumNumemon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "agumon",
+      "line": "dmc-v1",
       "spriteFile": "PlatinumNumemon"
+    },
+    {
+      "id": "swimmon",
+      "displayName": "Swimmon",
+      "stage": "Child",
+      "line": "dmc-v1",
+      "spriteFile": "Swimmon",
+      "comment": "SUBSTITUTE FOR BETAMON (US-133). The V1 tree's second Rookie under Koromon is Betamon, which is one of the 157 idle-only Digimon: no 48x64 sheet, so it cannot be playable and cannot sit on an edge. Its two Champions that Agumon does not also reach - Airdramon and Seadramon - would then be unreachable, so this line carries them under Swimmon, a playable Water Rookie that neither Part of Digimon_Color_And_Pendulum_Color_Evolution_Trees.md names, so no later device tree loses a Rookie to it. Betamon's other three Champions (Devimon, Meramon, Numemon) are on Agumon's side of the tree already.",
+      "evolutions": [
+        {
+          "to": "airdramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240,
+              "hint": "Take it high and keep it moving"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 5,
+              "hint": "Train it to hold its own in the air"
+            }
+          ]
+        },
+        {
+          "to": "seadramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it rest deep and undisturbed"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "numemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "devimon",
+      "displayName": "Devimon",
+      "stage": "Adult",
+      "line": "dmc-v1",
+      "spriteFile": "Devimon",
+      "evolutions": [
+        {
+          "to": "metalgreymon_virus",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "Keep throwing it into battle"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "Win far more than it loses"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "airdramon",
+      "displayName": "Airdramon",
+      "stage": "Adult",
+      "line": "dmc-v1",
+      "spriteFile": "Airdramon",
+      "evolutions": [
+        {
+          "to": "metalgreymon_virus",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 420,
+              "hint": "Spend long minutes on your feet with it"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Let it sleep once it has landed"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "seadramon",
+      "displayName": "Seadramon",
+      "stage": "Adult",
+      "line": "dmc-v1",
+      "spriteFile": "Seadramon",
+      "evolutions": [
+        {
+          "to": "mamemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Burn energy until the water gives way"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Train it in long, steady sets"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "metalgreymon_virus",
+      "displayName": "MetalGreymon Virus",
+      "stage": "Perfect",
+      "line": "dmc-v1",
+      "spriteFile": "MetalGreymon_Virus",
+      "variant": "Virus",
+      "comment": "The V1 tree's Ultimate for Greymon, Devimon and Airdramon is MetalGreymon (Virus), which is its own sprite and its own roster id - NOT the Vaccine MetalGreymon the pruned line already reached out of Greymon. Both stay: the Vaccine branch is US-043's, the Virus one is the tree's.",
+      "evolutions": [
+        {
+          "to": "blitzgreymon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "mamemon",
+      "displayName": "Mamemon",
+      "stage": "Perfect",
+      "line": "dmc-v1",
+      "spriteFile": "Mamemon",
+      "evolutions": [
+        {
+          "to": "banchomamemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "monzaemon",
+      "displayName": "Monzaemon",
+      "stage": "Perfect",
+      "line": "dmc-v1",
+      "spriteFile": "Monzaemon",
+      "evolutions": [
+        {
+          "to": "dmcv1_shinmonzaemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "blitzgreymon",
+      "displayName": "BlitzGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v1",
+      "spriteFile": "BlitzGreymon",
+      "comment": "Terminal here on purpose. The tree's last row is BlitzGreymon -> Ultra: Omegamon Alter-S by Jogress with CresGarurumon, and a Jogress is not an evolution edge - US-130/US-131 ship it as a recipe in Resources/jogress.json, which already carries exactly this pair."
+    },
+    {
+      "id": "banchomamemon",
+      "displayName": "BanchoMamemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v1",
+      "spriteFile": "BanchoMamemon"
+    },
+    {
+      "id": "dmcv1_shinmonzaemon",
+      "displayName": "ShinMonzaemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v1",
+      "spriteFile": "ShinMonzaemon",
+      "comment": "NOT a duplicate of the `shinmonzaemon` node in the palmon line - it is the same Digimon in a second tree, exactly as piyo_yuramon is. The V1 tree ends Numemon -> Monzaemon -> ShinMonzaemon, and the palmon line already took the id for its own junk Ultimate. `line` is single-valued and EvolutionTreeLayout drops any connector leaving its line, so sharing the node would have left Monzaemon pointing out of its own tree with nothing drawn."
     },
     {
       "id": "gabu_digitama",

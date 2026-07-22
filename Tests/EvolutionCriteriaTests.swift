@@ -27,11 +27,18 @@ final class EvolutionCriteriaTests: XCTestCase {
 
     // MARK: - AC1/AC2: a real choice, with a junk floor under it
 
-    func testEveryNonTerminalChildAndAdultHasTwoOrThreeOutgoingEdges() {
+    /// Two is the half that matters: a single outgoing edge is not a choice at all.
+    ///
+    /// The ceiling was three until US-133 — two earned branches plus the junk fallback. The device
+    /// trees of Phase E give a Rookie five or six Champions, and even split across two Children
+    /// (the US-044 pattern) that needs three earned branches on one of them. Four is the ceiling
+    /// the whole source document fits in, and it is the Dex's too: `DexRow.evolutionCandidates`
+    /// draws a three-column grid, so four candidates are two rows inside a sheet that scrolls.
+    func testEveryNonTerminalChildAndAdultHasTwoToFourOutgoingEdges() {
         XCTAssertFalse(branchingNodes.isEmpty)
         for node in branchingNodes {
-            XCTAssertTrue((2...3).contains(node.evolutions.count),
-                          "\(node.id) has \(node.evolutions.count) outgoing edges, not two or three")
+            XCTAssertTrue((2...4).contains(node.evolutions.count),
+                          "\(node.id) has \(node.evolutions.count) outgoing edges, not two to four")
         }
     }
 

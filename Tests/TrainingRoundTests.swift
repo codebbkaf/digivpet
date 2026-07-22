@@ -69,10 +69,10 @@ final class TrainingRoundTests: XCTestCase {
     /// before it loads, and throws `.noDigitama` without one.
     private func fixtureGraph() -> EvolutionGraph {
         EvolutionGraph(nodes: [
-            EvolutionNode(id: "egg", displayName: "Egg", stage: .digitama, line: "agumon",
+            EvolutionNode(id: "egg", displayName: "Egg", stage: .digitama, line: "dmc-v1",
                           spriteFile: "Agu_Digitama",
                           evolutions: [EvolutionEdge(to: "hero", minEnergy: 50, maxCareMistakes: 99)]),
-            EvolutionNode(id: "hero", displayName: "Hero", stage: .child, line: "agumon",
+            EvolutionNode(id: "hero", displayName: "Hero", stage: .child, line: "dmc-v1",
                           spriteFile: "Agumon")
         ])
     }
@@ -132,7 +132,7 @@ final class TrainingRoundTests: XCTestCase {
         XCTAssertNil(model.pendingTraining, "no round before the button")
         model.train()
 
-        let expected = MinigameAssignment.game(line: "agumon", stage: .child)
+        let expected = MinigameAssignment.game(line: "dmc-v1", stage: .child)
         XCTAssertEqual(model.pendingTraining?.kind, expected)
         XCTAssertNotEqual(expected, MinigameAssignment.fallback(for: .child),
                           "the LINE decided this, not the stage floor")

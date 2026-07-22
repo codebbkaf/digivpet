@@ -21,7 +21,7 @@ final class ElementCatalogTests: XCTestCase {
         // LATER rather than a live path — exercised here with an id the graph does not yet contain.
         XCTAssertNil(catalog.types["greymon_x"], "test assumes greymon_x is unauthored")
         XCTAssertNil(graph.node(id: "greymon_x"), "test assumes greymon_x is not yet a node")
-        XCTAssertEqual(catalog.type(forId: "greymon_x", line: "agumon"), catalog.lineDefaults["agumon"])
+        XCTAssertEqual(catalog.type(forId: "greymon_x", line: "dmc-v1"), catalog.lineDefaults["dmc-v1"])
     }
 
     /// The tier that has no counterpart in `MoveCatalog`: a roster-only Digimon in no line is typed
@@ -71,7 +71,7 @@ final class ElementCatalogTests: XCTestCase {
     /// AC2. Counted off the graph rather than a literal, so adding a node to `evolutions.json`
     /// without typing it fails HERE instead of shipping a playable Digimon with no matchup.
     func testEveryGraphNodeHasAnExplicitTypesEntry() {
-        XCTAssertEqual(graph.nodes.count, 88)
+        XCTAssertEqual(graph.nodes.count, 98)
         for node in graph.nodes {
             XCTAssertNotNil(catalog.types[node.id],
                             "\(node.id) (\(node.displayName)) has no explicit elements.json entry")
