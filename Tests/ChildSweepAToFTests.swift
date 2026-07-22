@@ -224,10 +224,20 @@ final class ChildSweepAToFTests: XCTestCase {
     /// when nothing else qualifies, so its own criteria are never consulted. That is why "no edge is
     /// unconditional" is read here as "no edge a player has to EARN is unconditional", the same
     /// reading US-144, US-146 and US-147 recorded for the rungs below.
+    ///
+    /// **Scoped rather than relaxed in US-152**, the way US-151 scoped the same claim in the G-L and
+    /// M-Z files: "exactly two edges" was a claim about what THIS story authored, and a later sweep
+    /// hanging a second Champion off one of these Children falsifies it without doing anything
+    /// wrong — US-152 hung FlareLizamon off ClearAgumon, an arrow Wikimon draws. So the count is a
+    /// named exception list: a Child of this story that grows a third earned branch nobody wrote
+    /// down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
+        let branchedByALaterSweep = ["clearagumon": 3]
+
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
-            XCTAssertEqual(node.evolutions.count, 2, "\(node.id) is not a branch plus a fallback")
+            XCTAssertEqual(node.evolutions.count, branchedByALaterSweep[id] ?? 2,
+                           "\(node.id) is not a branch plus a fallback")
             XCTAssertEqual(node.evolutions.filter(\.isDefault).count, 1,
                            "\(node.id) has no single fallback")
 
@@ -312,7 +322,8 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 71, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`")
+        XCTAssertEqual(sizes["tamers"], 73,
+                       "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung")
         XCTAssertEqual(sizes["dmc-v3"], 46)
         XCTAssertEqual(sizes["palmon"], 24)
     }
@@ -535,6 +546,10 @@ final class ChildSweepAToFTests: XCTestCase {
         // and `tamers` needed before any Champion of either could branch at all. They are held
         // here rather than in a list of their own so that the ledger stays the file's single
         // answer to "what leads nowhere", and so that wiring one of them onward fails here.
+        //
+        // US-152 moved this ledger not at all, and that is the check rather than a footnote: its
+        // five Champions were orphans rather than leaves, and every one of them landed on a Perfect
+        // that already existed, so it neither cleared a dead end nor opened one.
         let perfectsFromUS151 =
             ["blackmachgaogamon", "catchmamemon", "karakurumon", "megalogrowmon"]
 
@@ -565,9 +580,9 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 610,
+        XCTAssertEqual(graph.nodes.count, 615,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
-                           + "610 after US-151")
+                           + "610 after US-151, 615 after US-152")
     }
 
     // MARK: - The whole file still validates

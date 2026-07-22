@@ -223,12 +223,14 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 71, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon")
+        XCTAssertEqual(sizes["tamers"], 73, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
+                           + "US-152 added FlareLizamon and Growmon Orange")
         XCTAssertEqual(sizes["wanyamon"], 20,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon")
         XCTAssertEqual(sizes["dmc-v4"], 26, "US-151 added the two Burgermon")
         XCTAssertEqual(sizes["penc-wg"], 33, "US-151 added Akatorimon")
-        XCTAssertEqual(sizes["penc-vb"], 43, "US-151 added BlackTailmon")
+        XCTAssertEqual(sizes["penc-vb"], 44,
+                       "US-151 added BlackTailmon, US-152 GulusGammamon")
         XCTAssertEqual(sizes["penc-me"], 44, "US-151 added Deckerdramon")
     }
 
@@ -348,14 +350,18 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertTrue(graph.parents(of: "pencme_andromon").map(\.id).contains("guardromon"))
     }
 
-    /// MegaloGrowmon has two cited parents and only one of them could be wired, because the other is
-    /// still an orphan this story does not own. Written down so US-152 finds it rather than
-    /// rediscovering it.
-    func testMegaloGrowmonsOtherCitedParentIsLeftForTheEToGSweep() throws {
+    /// MegaloGrowmon has two cited parents and only one of them could be wired here, because the
+    /// other was still an orphan this story did not own. It was written down so US-152 would find it
+    /// rather than rediscover it, and US-152 DID: the claim flipped from "FlareLizamon has no node"
+    /// to "FlareLizamon is the second parent", which is the same fact from the other side and is
+    /// what a handover claim is supposed to do rather than rot. See
+    /// `AdultSweepEToGTests.testFlareLizamonClosesTheArrowUS151CouldOnlyDrawOneEndOf`.
+    func testMegaloGrowmonsOtherCitedParentWasPickedUpByTheEToGSweep() throws {
         XCTAssertTrue(try authoredComment(on: "megalogrowmon").contains("Flare Lizamon"))
-        XCTAssertNil(graph.node(id: "flarelizamon"),
-                     "FlareLizamon has a node now, so this claim is stale")
         XCTAssertEqual(roster.entry(id: "flarelizamon")?.stage, .adult)
+        XCTAssertEqual(Set(graph.parents(of: "megalogrowmon").map(\.id)),
+                       ["darklizamon", "flarelizamon", "growmon_orange"],
+                       "US-152 wired FlareLizamon and Growmon Orange onto this Perfect")
     }
 
     // MARK: - AC: the orphan count, and the whole file still validates
@@ -378,7 +384,7 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 610, "599 before this story")
+        XCTAssertEqual(graph.nodes.count, 615, "599 before this story, 615 after US-152")
     }
 
     func testTheGraphValidatesWithNoFindings() {

@@ -53,6 +53,28 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   (`DigitamaSweepTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened`) that fails in
   BOTH directions: a ninth dead end fails it, and so does wiring one of the eight onward. The next
   sweep is meant to edit that list down and is told to rather than having to notice.
+- **PHASE E ADULT SWEEPS: intersect the orphan's Wikimon `Evolves From` AND `Evolves To` against the
+  graph BEFORE choosing its line.** Choosing the line off the parent alone is what forces a new
+  Perfect rung later; choosing it off both ends at once is why US-152 wired five Champions for five
+  nodes while US-151 needed eleven for seven. Seven lines still owe a Perfect rung, so the saving is
+  real every time it lands.
+- **PHASE E: when the BOLDED Wikimon parent is `dexOnly`, read further down the SAME Evolves From
+  before calling the rung unwireable.** `edgeToDexOnlyNode` forbids the edge, but the next cited
+  parent is usually already on a line the file holds - US-152's Gawappamon took Gomamon three
+  bullets below the idle-only Kamemon and kept its citation, where US-151's Burgamon had to be
+  rehomed on a line argument because every one of its parents was unusable.
+- **PHASE E: a handover claim written as a test FLIPS when the next story honours it; it does not
+  die.** US-151 asserted `graph.node(id: "flarelizamon") == nil` to hand FlareLizamon to US-152.
+  US-152 wired it and rewrote the same test as MegaloGrowmon's exact parent set. Same fact, other
+  side, still fails on a parent nobody wrote down. Leave the next sweep a claim of that shape.
+- **PHASE E: `Set(graph.parents(of:))` EQUALITY is the assertion an Adult sweep breaks.** Three exist
+  - HolyAngemon (two -> three -> four parents over US-143/151/152), Andromon in
+  `PendulumMetalEmpireTreeTests`, MegaloGrowmon in `AdultSweepAToDTests`. Fix by NAMING the new
+  parent and which arrow it is, never by loosening to a superset. `grep -rn 'Set(graph.parents'
+  Tests` before choosing an out-edge target.
+- **PHASE E: a device tree's closing "the N orphans this story removed" test has a `sweepEggs`
+  escape hatch, and that - not the count - is where a later story's node goes.** It keeps the tree's
+  claim about its OWN nodes true. Every device line touched by a sweep wants an entry.
 - **PHASE E ADULT SWEEPS: an Adult's out-edge must land on a Perfect of its OWN line, and NINE
   lines have no Perfect rung at all.** `testNoEdgeCrossesALine` plus a per-line boundary test in
   every device-tree file make a cross-line edge impossible, and `EvolutionCriteriaTests` demands a
@@ -3403,4 +3425,84 @@ Files: `Resources/evolutions.json` (7 new Champions, 4 new Perfects, 7 new Child
 - REMAINS: US-152 onward (38/56 passing). Six Adult sweeps are left and they hold the 27 orphaned
   Champions E-Z; the 95 leaves in the dead-end ledger are theirs too, and the seven lines still
   without a Perfect rung are the cost they have to budget for.
+---
+
+## 2026-07-22 - US-152 - Orphan sweep: Adult E-G
+Wired the five playable Champions whose display name begins E-G that had NO edge at all: Ebidramon,
+FlareLizamon, Gawappamon, Growmon Orange, GulusGammamon. Each gained one earned in-edge from a Child
+of its own line and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk
+fallback. Orphans 319 -> 314 (Appendix B over a regenerated `roster.generated.json`): Adult 27 -> 22,
+and NO other bucket moved. 610 -> 615 nodes.
+
+Files: `Resources/evolutions.json` (5 new Champions, 5 new Child branches, 0 new Perfects),
+`Resources/elements.json` and `Resources/moves.json` (5 entries each), new
+`Tests/AdultSweepEToGTests.swift` (20 tests), and the knock-on edits listed below.
+Full suite 2095 tests green (2075 before), build green.
+
+The five, with the citation each rests on:
+  ebidramon      penc-ds  shakomon    -> anomalocarimon        (Pendulum COLOR 2 Deep Savers)
+  gawappamon     penc-ds  gomamon     -> pencds_megaseadramon  (Wikimon Da-199 + plain Evolves To)
+  flarelizamon   tamers   clearagumon -> megalogrowmon         (closes US-151's half-drawn arrow)
+  growmon_orange tamers   guilmon     -> megalogrowmon         (both edges cited; variant, no rehome)
+  gulusgammamon  penc-vb  gammamon    -> holyangemon           (Pendulum COLOR ZERO Virus Busters)
+
+**Learnings for future iterations:**
+
+- **AN ADULT SWEEP CAN COST NOTHING AT THE PERFECT RUNG, and checking that FIRST is what makes it a
+  five-node story instead of a nine-node one.** US-151 had to open two Perfect rungs; this story
+  opened none, because every one of the five had a cited Perfect that was ALREADY on the line the
+  citation put it on. The order that produced that: fetch the orphan's Wikimon `Evolves From` AND
+  `Evolves To` together, intersect BOTH against the graph, and only then choose the line. Choosing
+  the line off the parent alone is what forces a new Perfect later.
+
+- **A HANDOVER CLAIM IS A TEST, AND WHEN THE NEXT STORY HONOURS IT THE TEST FLIPS RATHER THAN DIES.**
+  US-151 wrote `testMegaloGrowmonsOtherCitedParentIsLeftForTheEToGSweep`, asserting
+  `graph.node(id: "flarelizamon") == nil`. Wiring FlareLizamon necessarily broke it. The fix is not
+  to delete it: it became `...WasPickedUpByTheEToGSweep`, asserting MegaloGrowmon's exact parent set
+  is now `[darklizamon, flarelizamon, growmon_orange]`. Same fact, other side, still fails if a later
+  story quietly hangs a fourth parent there. Leave the next sweep a claim of the same shape.
+
+- **WHEN THE BOLDED WIKIMON PARENT IS idle-only, TAKE THE NEXT CITED PARENT, NOT A REHOME.** Kamemon
+  is the bolded name in Gawappamon's `Evolves From` and is `dexOnly` in this pack, which
+  `edgeToDexOnlyNode` forbids - the identical trap US-151 hit with Burgamon and had to rehome out
+  of. Here Gomamon was three bullets further down the SAME list and is already `penc-ds`'s own
+  Rookie, so the citation survived intact and the line argument never had to be made. Read the whole
+  Evolves From before deciding a rung is unwireable.
+
+- **`Set(graph.parents(of:))` EQUALITY IS THE FRAGILE ASSERTION AT THIS RUNG, and there are now
+  three of them.** `PendulumVirusBustersTreeTests.testHolyAngemonCarriesBothOfTheDocumentsDrawingsOf
+  It` went two -> three (US-151) -> four (US-152) parents; `PendulumMetalEmpireTreeTests`' Andromon
+  one and US-151's own MegaloGrowmon one are the others. Each time the fix is to NAME the new parent
+  and say which arrow it is in the comment, since the claim is about the document's own drawings and
+  not about a count. `grep -rn 'Set(graph.parents' Tests` before choosing an out-edge target.
+
+- **THE `sweepEggs` ESCAPE HATCH IS THE STANDARD WAY TO ADD A NODE TO A DEVICE LINE.** Every device
+  tree file ends with a "the N orphans this story removed" test whose `mine.count` is the line minus
+  a `sweepEggs` set of ids later stories parked there. Adding to that set (rather than bumping the
+  count) keeps the tree's own claim about its own thirty-one nodes true. Both files touched here
+  wanted it: `penc-ds` took `ebidramon`/`gawappamon`, `penc-vb` took `gulusgammamon`.
+
+- **A Child at THREE earned branches is one short of the ceiling, and that is worth asserting rather
+  than remembering.** Shakomon and Gomamon now carry three apiece (four energy types is the hard
+  ceiling, per `SeedRosterTests`' distinct-energy rule). `AdultSweepEToGTests.testEveryChildThisStory
+  BranchedStillUsesDistinctEnergies` pins the 3 so the next sweep prices a fourth honestly instead of
+  discovering the ceiling by failing.
+
+- **The knock-on list for this rung, all thirteen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, `AdultSweepAToDTests`, `ChildSweepAToFTests`, `ChildSweepGToLTests`
+  and `ChildSweepMToZTests` (610 -> 615); the per-line dict in `EvolutionGraphTests`; line sizes in
+  `DigitamaSweepTests`, `BabyIISweepTests`, `ChildSweepAToFTests`, `ChildSweepGToLTests`,
+  `ChildSweepMToZTests` and `AdultSweepAToDTests` (`tamers` 71->73, `penc-ds` 34->36, `penc-vb`
+  43->44); the "exactly two edges" exception dict in `ChildSweepAToFTests` (new, `clearagumon`) and
+  `ChildSweepGToLTests` (`gammamon`, `guilmon`); `inLine.count` plus `sweepEggs` in
+  `PendulumDeepSaversTreeTests` and `PendulumVirusBustersTreeTests`; and HolyAngemon's exact parent
+  set. `EvolutionCriteriaTests.junkIds`, the dead-end ledger, `MinigameAssignmentTests`,
+  `EggHatchingTests`, `DexScreenTests`, `DexModel.lineTitles` and both `lineDefaults` did NOT move:
+  no new line, no new node at Perfect or above, and no thread newly reached an Ultimate.
+
+- REMAINS: US-153 onward (39/56 passing). Four Adult sweeps hold the 22 orphaned Champions H-Z, then
+  twelve Perfect and Ultimate sweeps and the Armor-Hybrid one. The seven lines still with no Perfect
+  rung - `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`, `penc-sw` - are
+  untouched, and the 99 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge
+  by whichever story claims them.
 ---

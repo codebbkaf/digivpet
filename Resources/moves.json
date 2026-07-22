@@ -3660,6 +3660,36 @@
       "tint": "gray",
       "signatureName": "Deck Driver",
       "signatureSymbol": "flame.fill"
+    },
+    "ebidramon": {
+      "projectileSymbol": "scissors",
+      "tint": "blue",
+      "signatureName": "Shrimp Pincer",
+      "signatureSymbol": "scissors"
+    },
+    "gawappamon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "orange",
+      "signatureName": "Kappa Beat",
+      "signatureSymbol": "drop.fill"
+    },
+    "flarelizamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "orange",
+      "signatureName": "Flare Tail",
+      "signatureSymbol": "sparkles"
+    },
+    "growmon_orange": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "orange",
+      "signatureName": "Orange Blaze",
+      "signatureSymbol": "triangle.fill"
+    },
+    "gulusgammamon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "gray",
+      "signatureName": "Gulus Fang",
+      "signatureSymbol": "moon.fill"
     }
   },
   "lineDefaults": {

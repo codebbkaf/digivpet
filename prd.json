@@ -813,8 +813,8 @@
         "Typecheck passes"
       ],
       "priority": 39,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Orphan count 319 -> 314 (Appendix B, regenerated roster.generated.json); the Adult bucket 27 -> 22 and no other bucket moved, because this story spent no Perfect. All five playable Adults E-G that were orphaned - Ebidramon, FlareLizamon, Gawappamon, Growmon Orange, GulusGammamon - now have one earned in-edge and one earned out-edge plus their line's junk fallback. Every one landed on a line that already had a Perfect rung (`penc-ds`, `tamers`, `penc-vb`), so 610 -> 615 nodes with no new Perfect, no new line and no change to the dead-end ledger. FlareLizamon closes the MegaloGrowmon arrow US-151 could only draw one end of. Gawappamon's bolded Wikimon parent Kamemon is idle-only, so it took the next CITED parent (Gomamon) rather than a rehome. New Tests/AdultSweepEToGTests.swift (20 tests). Full suite 2095 tests green, build green."
     },
     {
       "id": "US-153",

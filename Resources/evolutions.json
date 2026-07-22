@@ -4877,6 +4877,28 @@
           ]
         },
         {
+          "to": "gawappamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90,
+              "hint": "Stand with it while the drum keeps time"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "And drill the beat into it"
+            }
+          ]
+        },
+        {
           "to": "diginorimon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -4995,6 +5017,28 @@
               "comparison": "atMost",
               "value": 2,
               "hint": "Feed it sparingly before a long swim"
+            }
+          ]
+        },
+        {
+          "to": "ebidramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Range far from the shallows with it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "And let the shell learn to fight back"
             }
           ]
         },
@@ -12211,6 +12255,28 @@
           ]
         },
         {
+          "to": "growmon_orange",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Walk the hazard sign until it changes colour"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And keep it hungry enough to want to"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -14280,6 +14346,28 @@
           ]
         },
         {
+          "to": "flarelizamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Let it burn hot enough to fog the glass"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "And take it into real fights"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "stamina",
           "minEnergy": 0,
@@ -14750,6 +14838,28 @@
               "comparison": "atLeast",
               "value": 1500,
               "hint": "Feed the fire under its skin"
+            }
+          ]
+        },
+        {
+          "to": "gulusgammamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Let it dream in the dark far too long"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "And wake it with a fight every time"
             }
           ]
         },
@@ -16805,6 +16915,201 @@
         {
           "to": "locomon",
           "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "ebidramon",
+      "displayName": "Ebidramon",
+      "stage": "Adult",
+      "line": "penc-ds",
+      "spriteFile": "Ebidramon",
+      "comment": "Wikimon: Ebidramon Evolves From Shakomon (bolded, the arrow the page treats as primary) and Evolves To Anomalocarimon (with certain Digimon of the Pendulum series, or any Data Adult Digimon from the Digimon Pendulum COLOR, cited to Pendulum COLOR 2 Deep Savers). Both ends are already on `penc-ds`: Shakomon is the Deep Savers Rookie US-139 wired and Anomalocarimon is the Perfect over its Seadramon branch, so the line follows from the citation rather than from flavour. Vitality is the energy Shakomon had left.",
+      "evolutions": [
+        {
+          "to": "anomalocarimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90000,
+              "hint": "Carry it the length of a trench"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "And let the claws win more than they lose"
+            }
+          ]
+        },
+        {
+          "to": "piranimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gawappamon",
+      "displayName": "Gawappamon",
+      "stage": "Adult",
+      "line": "penc-ds",
+      "spriteFile": "Gawappamon",
+      "comment": "Wikimon: Gawappamon Evolves From Gomamon (Da-199) and Evolves To Mega Seadramon. Kamemon is the bolded parent and would have been first choice, but `kamemon` is idle-only in this pack and `edgeToDexOnlyNode` forbids an edge to an idle-only Digimon - the same trap US-151 hit with Burgamon. Gomamon is the next cited parent and is this line's own Rookie, so no rehome was needed and the citation survives intact. Stamina is the energy Gomamon had left.",
+      "evolutions": [
+        {
+          "to": "pencds_megaseadramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 200,
+              "hint": "A DJ works a long set on its feet"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 600,
+              "hint": "And never lets the tempo drop"
+            }
+          ]
+        },
+        {
+          "to": "piranimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "flarelizamon",
+      "displayName": "FlareLizamon",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "FlareLizamon",
+      "comment": "The other half of the pairing US-151 could only wire one end of. Wikimon: Flare Lizamon Evolves To Megalo Growmon (with Dark Lizamon), and DarkLizamon has been pointing at MegaloGrowmon from this line since US-151 - so the arrow the file already draws is completed rather than a second one invented. The in-edge is cited too: Clear Agumon is in Flare Lizamon's Evolves From, and it is on `tamers`. Strength is the energy ClearAgumon had left.",
+      "evolutions": [
+        {
+          "to": "megalogrowmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7000,
+              "hint": "Keep the mane burning past exhaustion"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "And win the fights it starts"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "growmon_orange",
+      "displayName": "Growmon Orange",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Growmon_Orange",
+      "comment": "THE VARIANT RULE, and it needed no rehome: Wikimon draws Growmon (Orange) out of Guilmon and into Megalo Growmon, which is the plain Growmon's own thread and is already on `tamers`. So the variant sits with its base form under the same parent, and both of its edges are cited. Vitality is the energy Guilmon had left after Growmon took strength.",
+      "evolutions": [
+        {
+          "to": "megalogrowmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 140000,
+              "hint": "Wear the claws down on open ground"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "And drill it until the blades come out clean"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gulusgammamon",
+      "displayName": "GulusGammamon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "GulusGammamon",
+      "comment": "Wikimon: Gulus Gammamon Evolves From Gammamon (bolded, and cited to Pendulum COLOR ZERO Virus Busters among others) and Evolves To Holy Angemon (with any Data or Vaccine Adult Digimon from the Digimon Pendulum COLOR). Both are on `penc-vb` already - Gammamon since US-149, HolyAngemon since US-143 - so this is Gammamon's dark second branch beside BetelGammamon, which is exactly what the pair is in Ghost Game. Strength is the energy Gammamon had left.",
+      "evolutions": [
+        {
+          "to": "holyangemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12000,
+              "hint": "A thing of the dark needs its long nights"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "And has to win its way back to the light"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
           "minEnergy": 0,
           "maxCareMistakes": 99,
           "isDefault": true

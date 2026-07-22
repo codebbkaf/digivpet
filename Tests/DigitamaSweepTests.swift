@@ -196,7 +196,7 @@ final class DigitamaSweepTests: XCTestCase {
         // is where the last twelve `tamers` nodes came from.
         // US-151 opened the Perfect rung on both, three nodes each: the Champion it swept, the
         // Perfect above it and the junk floor under that.
-        XCTAssertEqual(sizes["tamers"], 71)
+        XCTAssertEqual(sizes["tamers"], 73)
         XCTAssertEqual(sizes["wanyamon"], 20)
     }
 

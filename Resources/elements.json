@@ -2440,6 +2440,26 @@
     "deckerdramon": {
       "element": "machine",
       "attribute": "data"
+    },
+    "ebidramon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "gawappamon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "flarelizamon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "growmon_orange": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "gulusgammamon": {
+      "element": "dark",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {
