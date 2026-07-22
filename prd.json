@@ -993,8 +993,8 @@
         "Typecheck passes"
       ],
       "priority": 48,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Perfect orphans 37 BEFORE -> 22 AFTER (Appendix B, over a regenerated roster.generated.json); total playable orphans 193 -> 171, Ultimate 140 -> 133 because the sweep opened 7 new Ultimate nodes. Authored 24 nodes (736 -> 760): the 15 orphaned Perfect N-R, the 7 Ultimates they climb into, and 2 junk Perfect floors (vital_darumamon, xros_etemon) — line-scoped aliases, since no remaining orphaned Perfect sheet is junk-flavoured, so those two removed no orphan. Opens the Perfect rung on `vital` and `xros`, leaving adventure02/algomon/commandramon as the only lines without one. Every new sprite ls-verified in an animated stage folder; no dexOnly node on any edge. 2322 tests pass, build green, EvolutionGraphValidator reports zero findings on the shipped evolutions.json."
     },
     {
       "id": "US-162",

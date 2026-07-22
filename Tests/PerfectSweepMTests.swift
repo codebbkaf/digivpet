@@ -283,7 +283,8 @@ final class PerfectSweepMTests: XCTestCase {
         let linesWithAnUltimate = Set(graph.nodes.filter { $0.stage == .ultimate }.map(\.line))
         XCTAssertFalse(linesWithAPerfect.subtracting(linesWithAnUltimate).contains("diablomon"))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["xros", "vital", "adventure02", "algomon", "commandramon"])
+                       ["adventure02", "algomon", "commandramon"],
+                       "US-161 took `vital` and `xros` off this list, for the same bill")
     }
 
     /// **MEICOOMON IS THE ONLY PARENT THIS PACK CAN DRAW FOR EITHER MEICRACKMON**, which is what
@@ -416,18 +417,18 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 103, "Manticoremon, both MegaloGrowmon and Dukemon")
-        XCTAssertEqual(sizes["penc-nso"], 58,
-                       "Mammon X, both Mephismon, Mummymon and Dinorexmon")
+        XCTAssertEqual(sizes["tamers"], 105, "Manticoremon, both MegaloGrowmon and Dukemon, plus US-161's Rapidmon and SaintGalgomon")
+        XCTAssertEqual(sizes["penc-nso"], 59,
+                       "Mammon X, both Mephismon, Mummymon and Dinorexmon, plus US-161's Orochimon")
         XCTAssertEqual(sizes["diablomon"], 22,
                        "both Meicrackmon, the Gerbemon floor, Rasielmon and Raguelmon")
-        XCTAssertEqual(sizes["dmc-v1"], 35, "Mamemon X, MetalGreymon Virus X and Monzaemon X")
+        XCTAssertEqual(sizes["dmc-v1"], 36, "Mamemon X, MetalGreymon Virus X and Monzaemon X, plus US-161's NeoDevimon")
         XCTAssertEqual(sizes["dmc-v3"], 51, "MarinBullmon, Ryugumon and MetalPhantomon")
         XCTAssertEqual(sizes["penc-ds"], 43, "MarinChimairamon and Mermaimon")
         XCTAssertEqual(sizes["dmc-v5"], 25, "MetalTyranomon V2 and MetalTyranomon X")
-        XCTAssertEqual(sizes["wanyamon"], 27, "MachGaogamon")
-        XCTAssertEqual(sizes["penc-nsp"], 37, "MegaSeadramon X")
-        XCTAssertEqual(sizes["penc-me"], 54, "MetalMamemon X")
+        XCTAssertEqual(sizes["wanyamon"], 29, "MachGaogamon, plus US-161's RizeGreymon and Ravmon")
+        XCTAssertEqual(sizes["penc-nsp"], 39, "MegaSeadramon X, plus US-161's both Panjyamon")
+        XCTAssertEqual(sizes["penc-me"], 59, "MetalMamemon X, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 10)
     }
@@ -522,12 +523,20 @@ final class PerfectSweepMTests: XCTestCase {
                        Set(graph.parents(of: "growmon_orange").map(\.id)),
                        "the two Growmon no longer share a parent set, so US-152's pairing moved")
 
-        // The rejected readings really would each have opened a rung.
-        for id in ["mimicmon", "reppamon", "tialudomon"] {
-            let line = try XCTUnwrap(graph.node(id: id)).line
-            XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.stage == .perfect }, [],
-                           "\(line) has a Perfect rung now, so Manticoremon had a cheaper reading")
+        // The rejected readings really would each have opened a rung — `algomon` still has none.
+        // US-161 opened `vital`'s, over Tia Ludomon among others, so that half of the claim is
+        // restated as what it was: at the time this story ran, taking Reppamon or Tia Ludomon
+        // meant paying for a Perfect rung, a junk floor and a Mega. Manticoremon has NOT moved.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "mimicmon")).line, "algomon")
+        XCTAssertEqual(graph.nodes.filter { $0.line == "algomon" && $0.stage == .perfect }, [],
+                       "`algomon` has a Perfect rung now, so Manticoremon had a cheaper reading")
+        for id in ["reppamon", "tialudomon"] {
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).line, "vital")
+            XCTAssertFalse(try XCTUnwrap(graph.node(id: id)).evolutions.map(\.to)
+                .contains("manticoremon"),
+                           "Manticoremon was rehomed onto \(id) — then this story overpaid")
         }
+        XCTAssertEqual(graph.parents(of: "manticoremon").map(\.id), ["growmon"])
         XCTAssertTrue(try authoredComment(on: "manticoremon").contains("Mimicmon"),
                       "the rejected `algomon` reading is not named")
     }
@@ -669,7 +678,7 @@ final class PerfectSweepMTests: XCTestCase {
 
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["xros", "vital", "adventure02", "algomon", "commandramon"],
+                       ["adventure02", "algomon", "commandramon"],
                        "a line gained or lost its Perfect rung; the remaining sweeps' bill changed")
 
         let linesWithAnUltimate = Set(graph.nodes.filter { $0.stage == .ultimate }.map(\.line))
@@ -677,12 +686,16 @@ final class PerfectSweepMTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       77, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       73, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
-        // `vital` is still all leaves, which is the claim behind "cheapest rung left to open".
+        // `vital` was all leaves when this story ran, which was the claim behind "cheapest rung
+        // left to open" — and US-161 took the advice: it branched Kokeshimon and Tia Ludomon and
+        // left the other eight untouched. The claim FLIPS to that rather than dying.
         let vitalAdults = graph.nodes.filter { $0.line == "vital" && $0.stage == .adult }
         XCTAssertEqual(vitalAdults.count, 10)
-        XCTAssertTrue(vitalAdults.allSatisfy { $0.evolutions.isEmpty })
+        XCTAssertEqual(vitalAdults.filter { !$0.evolutions.isEmpty }.map(\.id).sorted(),
+                       ["kokeshimon", "tialudomon"],
+                       "`vital`'s branching Champions moved without this claim moving with them")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -707,11 +720,11 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertNil(roster.entry(id: "diablomon_gerbemon"),
                      "the junk floor gained a roster entry, so it removes an orphan after all")
 
-        XCTAssertEqual(graph.nodes.count, 736, "709 before this story")
+        XCTAssertEqual(graph.nodes.count, 760, "709 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
-        XCTAssertEqual(graph.nodes(at: .perfect).count, 148, "126 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 98, "93 before this story")
+        XCTAssertEqual(graph.nodes(at: .perfect).count, 165, "126 before this story")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 105, "93 before this story")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

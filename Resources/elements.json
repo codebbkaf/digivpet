@@ -2944,6 +2944,102 @@
     "diablomon_gerbemon": {
       "element": "dark",
       "attribute": "virus"
+    },
+    "neodevimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "oboromon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "okuwamon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "okuwamon_x": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "omegashoutmon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "omegashoutmon_x": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "orochimon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "paildramon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "panjyamon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "panjyamon_x": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "raijiludomon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "rapidmon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "regulusmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "rizegreymon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "rizegreymon_x": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "zanbamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "bryweludramon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "grankuwagamon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "grandiskuwagamon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "zekegreymon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "saintgalgomon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "ravmon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "vital_darumamon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "xros_etemon": {
+      "element": "earth",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

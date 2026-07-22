@@ -153,7 +153,11 @@ final class AdultSweepUToZTests: XCTestCase {
     func testEverySweptChampionIsOneEarnedBranchAndOneUnconditionedFallback() throws {
         for (adult, _, perfect) in swept {
             let node = try XCTUnwrap(graph.node(id: adult))
-            XCTAssertEqual(node.evolutions.count, 2, "\(adult) is not a branch plus a fallback")
+            // XV-mon Black carries THREE since US-161, which hung Paildramon on it — a cited
+            // parent for that Digimon, and the variant of the very XV-mon its page names. Named
+            // rather than the claim being loosened to `>=`, the shape US-160 established.
+            XCTAssertEqual(node.evolutions.count, adult == "xv-mon_black" ? 3 : 2,
+                           "\(adult) is not a branch plus a fallback")
 
             let fallback = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             XCTAssertEqual(fallback.conditions, [], "\(adult)'s fallback carries criteria")
@@ -206,8 +210,12 @@ final class AdultSweepUToZTests: XCTestCase {
                            "\(perfect)'s parents changed without this claim changing with them")
         }
 
-        XCTAssertTrue(try XCTUnwrap(graph.node(id: "galgomon")).evolutions.isEmpty,
-                      "Galgomon was wired onward — say which arrow, and move the ledger")
+        // Galgomon was still a leaf when this story ran and was pinned here as one; US-161 gave it
+        // its bolded Rapidmon, and Saint Galgomon over that — the Terriermon ladder drawn at last —
+        // so the pin is FLIPPED rather than deleted, and the dead-end ledger moved with it.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "galgomon")).evolutions.map(\.to),
+                       ["rapidmon", "catchmamemon"],
+                       "Galgomon's out-edges moved without this claim moving with them")
 
         // And the two that cost nothing: both landed on AeroV-dramon, which had two parents before
         // this story and now has four.
@@ -457,10 +465,10 @@ final class AdultSweepUToZTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-wg"], 39, "V-dramon Black and XV-mon Black, plus US-158's two")
-        XCTAssertEqual(sizes["penc-vb"], 54, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon")
+        XCTAssertEqual(sizes["penc-wg"], 40, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
+        XCTAssertEqual(sizes["penc-vb"], 55, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 103, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four")
+        XCTAssertEqual(sizes["tamers"], 105, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -509,8 +517,18 @@ final class AdultSweepUToZTests: XCTestCase {
         // on a line the Champion's cited Rookie cannot reach, has no sheet, or is idle-only. Spot
         // checked on the cheapest-looking alternative for each, so the day one becomes usable the
         // story is told to revisit rather than left to rot.
-        XCTAssertNil(graph.node(id: "regulusmon"), "WezenGammamon had a cheaper arrow after all")
         XCTAssertNil(graph.node(id: "sagomon"), "Xiquemon had a cheaper arrow after all")
+
+        // Regulusmon is the second of the three a later story authored, and the claim flips rather
+        // than dies for the same reason LadyDevimon's did below: US-161 wired it on this same
+        // `penc-vb` line — but off Gulus Gammamon, which is the page's BOLDED parent, not off the
+        // WezenGammamon this story had to hand Canoweissmon. So WezenGammamon's arrow really was
+        // the expensive one, and the cheap one was on a sibling Champion all along.
+        XCTAssertEqual(graph.parents(of: "regulusmon").map(\.id), ["gulusgammamon"],
+                       "Regulusmon moved — say which Champion has it now")
+        XCTAssertFalse(try XCTUnwrap(graph.node(id: "wezengammamon")).evolutions.map(\.to)
+            .contains("regulusmon"),
+                       "WezenGammamon took Regulusmon after all — then this story overpaid")
 
         // LadyDevimon is the one of the three that a later story DID author, and the claim flips
         // rather than dies: US-159 wired it on this same `tamers` line — but off Kyubimon, which
@@ -597,9 +615,9 @@ final class AdultSweepUToZTests: XCTestCase {
         // next one worth opening.
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["xros", "vital", "adventure02", "algomon", "commandramon"],
+                       ["adventure02", "algomon", "commandramon"],
                        "a line gained or lost its Perfect rung; the sweeps' bill has changed — "
-                           + "US-160 took `diablomon` off this list")
+                           + "US-160 took `diablomon` off this list, US-161 `vital` and `xros`")
     }
 
     // MARK: - AC: the orphan count, and the whole file still validates
@@ -620,7 +638,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 736, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160")
+        XCTAssertEqual(graph.nodes.count, 760, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
     }
 
     func testTheGraphValidatesWithNoFindings() {

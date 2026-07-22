@@ -68,6 +68,13 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// sheet under a line-scoped id, the `dmcv2_vademon` pattern, and so removes no orphan; a bag
     /// of rubbish is the right floor under Troopmon, the faceless mook US-148 chose as this line's
     /// junk CHAMPION. It is in no tree markdown either.
+    /// US-161 added TWO more of exactly that kind, for exactly that reason: it opened the Perfect
+    /// rung on `vital` (for Oboromon and RaijiLudomon) and on `xros` (for both OmegaShoutmon), and
+    /// not one of the thirty-seven Perfect still orphaned when THAT story ran is junk-flavoured
+    /// either — so `vital_darumamon` draws the Darumamon sheet and `xros_etemon` the Etemon sheet,
+    /// both line-scoped, and neither removes an orphan. Both are cited rather than picked: Wikimon
+    /// gives Darumamon on Kokeshimon's own `Evolves To` (a kokeshi doll falling into a daruma doll)
+    /// and Etemon on Targetmon's, `xros`'s own junk CHAMPION. Neither is in any tree markdown.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
@@ -78,6 +85,7 @@ final class EvolutionCriteriaTests: XCTestCase {
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
         "andiramon_virus", "karakurumon", "catchmamemon", "pandamon", "diablomon_gerbemon",
+        "vital_darumamon", "xros_etemon",
         // Ultimate
         "kingetemon",
     ]
@@ -377,8 +385,17 @@ final class EvolutionCriteriaTests: XCTestCase {
         // US-158's two are the same inheritance again, one thread over: it hung Gokuwmon on
         // Ginkakumon — ALREADY on the Champion list above — and Seiten Gokuwmon over that, so both
         // inherit Ginkakumon's strandedness exactly and the parent loops below prove it.
-        let strandedPerfect = ["chohakkaimon", "gokuwmon", "pandamon"]
-        let strandedUltimate = ["seitengokuwmon", "shakamon"]
+        // US-161's FOUR are the same inheritance on the OTHER egg-less line: it opened `xros`'s
+        // Perfect rung over Shoutmon King, which is ALREADY on the Champion list above, so both
+        // OmegaShoutmon, the Etemon floor under them and ZekeGreymon over them inherit Shoutmon
+        // King's strandedness exactly. `xros` has no Digitama — US-144 and US-145 spent all 57 —
+        // so no story at this rung or above can fix it, and the parent loops below prove this is
+        // inheritance rather than four nodes nobody wired. The other eleven Perfects that story
+        // authored, INCLUDING the five that opened `vital`, all sit on lines an egg reaches, which
+        // is what keeps this list a claim rather than a dumping ground.
+        let strandedPerfect = ["chohakkaimon", "gokuwmon", "omegashoutmon", "omegashoutmon_x",
+                               "pandamon", "xros_etemon"]
+        let strandedUltimate = ["seitengokuwmon", "shakamon", "zekegreymon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,

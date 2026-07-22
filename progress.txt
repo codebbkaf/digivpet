@@ -21,6 +21,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E: A JUNK FLOOR IS PER-LINE, NOT PER-CHAMPION, AND A FLOOR THAT ALREADY CLIMBS IS THE
+  ONLY FREE ONE.** US-161 opened `vital` with ten leaf Champions and bought ONE alias
+  (`vital_darumamon`) that served every one of them — do not multiply the alias cost by the number
+  of leaf parents when pricing a rung. Among floors that already exist, prefer one with an
+  out-edge: `locomon` (-> GrandLocomon) cost `penc-me` nothing, while CatchMamemon and Karakurumon
+  are terminal and each adds a dead end to `ChildSweepAToFTests`' ledger. Check `junkIds` in
+  `EvolutionCriteriaTests` and the candidate's own `evolutions` before choosing.
+- **PHASE E: WRITE A SWEEP TEST'S `intersection`/`subtracting` LEDGERS FROM THE FINISHED TABLES,
+  LAST.** Every sweep since US-157 carries a pair of lines partitioning "authored by me" from
+  "already there". US-161's was written from the plan (two pre-existing floors) and not re-counted
+  after a third was chosen during authoring — the only failure in 2322 tests. When a sweep's own
+  new test fails on a set-difference of its own tables, suspect the TABLE, not `evolutions.json`.
 - **PHASE E: THE JUNK-FLAVOURED SHEETS RAN OUT AT US-160 — A NEW JUNK FLOOR IS NOW A LINE-SCOPED
   ALIAS AND REMOVES NO ORPHAN.** US-148/151/157 each spent an unused gag sheet (Numemon X,
   CatchMamemon, Karakurumon, Pandamon); by US-160 not one of the 58 Perfect still orphaned was a
@@ -4558,4 +4570,63 @@ plus the junk floor `diablomon_gerbemon` under Meicoomon.
   Falldown's comment. The 77 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an
   out-edge; the five Ultimates this story opened are NOT on it, since the ledger stops below the
   top rung.
+---
+
+## 2026-07-23 - US-161: Orphan sweep: Perfect N-R
+
+Authored the fifteen orphaned Perfect whose displayName starts N-R, the seven Ultimates they climb
+into, and the two junk Perfect floors the two lines this story OPENS needed first — 24 nodes,
+736 -> 760. Perfect orphans 37 -> 22; total playable orphans 193 -> 171 (Ultimate 140 -> 133,
+Armor-Hybrid still 16).
+
+Files: `Resources/evolutions.json` (+24 nodes, +6 junk-floor edges on former leaf Champions),
+`Resources/elements.json`, `Resources/moves.json`, new `Tests/PerfectSweepNToRTests.swift`,
+new `scripts/us161_author.py`, and the 26-file knock-on set the US-160 note predicted.
+
+Build green, 2322 tests pass, `testShippedEvolutionsJsonIsValid` reports zero validator findings.
+
+**Learnings for future iterations:**
+
+- **THE TWO CHEAPEST REMAINING RUNGS ARE NOW OPEN, AND `vital` COST EXACTLY WHAT US-160 PRICED IT
+  AT.** US-160 called `vital` "the cheapest rung left to open — 33 nodes, ten Champions, every one
+  of them a leaf". It was: Kokeshimon and Tia Ludomon each needed a floor before either could
+  branch, and one alias (`vital_darumamon`) served BOTH, because the floor is per-LINE and not
+  per-Champion. `xros` paid the same bill with one alias for one Champion. **A line that opens with
+  N leaf Champions still buys only ONE junk floor** — price the alias once per line, not once per
+  parent, or you will over-estimate the next rung by a factor of N.
+
+- **A PRE-EXISTING JUNK FLOOR THAT IS NOT ITSELF A LEAF IS THE ONLY FREE ONE.** Four of the six
+  floors here pre-dated the story, but they are not equivalent: CatchMamemon and Karakurumon are
+  terminal, so leaning on them adds a dead end to the ledger, while `locomon` already climbs to
+  GrandLocomon and cost `penc-me` nothing at all. **Prefer a junk Perfect that already has an
+  out-edge when the line offers a choice** — `grep -n '"'"'junkIds'"'"' Tests/EvolutionCriteriaTests.swift`
+  and check each candidate's `evolutions` before picking.
+
+- **THE COUNT-THE-FLOORS ASSERTION IS THE ONE A REUSED FLOOR BREAKS, AND IT FAILS AS "test wrong",
+  NOT "data wrong".** The only red in the whole 2322 was
+  `testTheSixLeafChampionsGainedTheirLinesJunkFloor`, whose bookkeeping line said two floors
+  pre-dated the story when three did — it had been written from the two aliases and never
+  re-counted after `locomon` was chosen for Kuwagamon X. **When a sweep's own new test fails on a
+  set-difference of its own tables, check the TABLE against `evolutions.json` before touching the
+  data**; here the data was right and the assertion was stale.
+
+- **WRITE THE `subtracting(...)`/`intersection(...)` LEDGERS LAST.** Every sweep since US-157 has
+  had a pair of these lines partitioning "authored by me" from "already there". They are derived
+  from choices made while authoring, so authoring them from the plan rather than from the finished
+  `JUNK_FLOORS` dict is how this failure happens. Generate them from the script's own tables at the
+  end of the run.
+
+- **THE KNOCK-ON SET IS NOW STABLE AT THE 26 FILES US-160 LISTED** — node count 736 -> 760 in
+  `ElementCatalogTests`, `EvolutionGraphValidatorTests`, all six `AdultSweep*Tests`, all three
+  `ChildSweep*Tests` and all four `PerfectSweep*Tests`; the per-line dict in `EvolutionGraphTests`
+  and the same lines' `sizes[...]` rows everywhere; `inLine.count` AND `sweepEggs` in the four
+  Pendulum tree tests; `EvolutionCriteriaTests.junkIds` (two scoped names) and `RosterTests`' alias
+  list. **The list in the US-160 note is still accurate — read it before starting a Perfect or
+  Ultimate sweep rather than rediscovering it.**
+
+- REMAINS: US-162 onward (48/56 passing). 171 orphans — 22 Perfect, 133 Ultimate, 16 Armor-Hybrid.
+  Only `adventure02`, `algomon` and `commandramon` still lack a Perfect rung, and each will pay the
+  line-scoped-alias price. Sagomon, Sanzomon and Shawujinmon are still the three Saiyu Warriors
+  Perfects owed; Ogudomon is still pinned in Lucemon Falldown's comment. The Ultimate rung is now
+  the bulk of the work: 133 orphans against seven remaining sweeps.
 ---

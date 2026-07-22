@@ -200,7 +200,14 @@ final class EggHatchingTests: XCTestCase {
                         // put the two Meicrackmon over Meicoomon and Rasielmon and Raguelmon over
                         // them. Kera and Meicoo Digitama both hatch onto Kuramon, so opening the
                         // top of that one thread promoted both at once.
-                        "kera_digitama", "meicoo_digitama"],
+                        "kera_digitama", "meicoo_digitama",
+                        // US-161's five, and they are `vital`'s WHOLE egg list — the third time a
+                        // Perfect sweep has promoted a line's eggs by opening the rung rather than
+                        // by lengthening a thread, after US-158's `wanyamon` four and US-160's
+                        // `diablomon` two. Every `vital` Child falls to Kokeshimon, which now
+                        // carries Oboromon and Zanbamon, so all five arrive together.
+                        "ludo_digitama", "morpho_digitama", "pulse_digitama",
+                        "sunariza_digitama", "zuba_digitama"],
                        "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate — and US-157 promoted five `tamers` eggs by giving that line an Ultimate rung at last")
 
         // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
@@ -244,12 +251,20 @@ final class EggHatchingTests: XCTestCase {
         // by opening a whole rung: `diablomon` had neither a Perfect nor an Ultimate rung, and the
         // M sweep authored both over Meicoomon. Four lines are left here — `commandramon`,
         // `algomon`, `vital` and `adventure02` — and every one still stops at the Champion rung.
+        //
+        // US-161 takes FIVE more, and they are `vital`'s WHOLE egg list — Ludo, Morpho, Pulse,
+        // Sunariza and Zuba. Same shape as US-160's two: the line had neither a Perfect nor an
+        // Ultimate rung, and the N-R sweep authored both, twice over (Oboromon and Zanbamon over
+        // Kokeshimon, RaijiLudomon and Bryweludramon over Tia Ludomon). Every `vital` Child falls
+        // to Kokeshimon when neglected, so ONE of the two threads promotes all five at once and
+        // the other is the earned route. Four eggs are left, on three lines: `commandramon`,
+        // `algomon` and `adventure02`. The last of those is the interesting one — US-161 could
+        // have opened it with Paildramon over XV-mon, and did not, precisely because Worm Digitama
+        // descends through Wormmon to Sorcerymon and would have been left unraisable on a line
+        // that HAS a Perfect rung. `adventure02` is a whole-line job, not a one-node one.
         XCTAssertEqual(unraisable,
                        ["commandra_digitama", "ghost_digitama",
-                        "ludo_digitama",
-                        "morpho_digitama", "pulse_digitama",
-                        "sunariza_digitama", "v_digitama", "worm_digitama",
-                        "zuba_digitama"])
+                        "v_digitama", "worm_digitama"])
 
         var seen: Set<String> = []
         for _ in 0..<200 {

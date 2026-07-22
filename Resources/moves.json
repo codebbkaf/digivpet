@@ -4416,6 +4416,150 @@
       "tint": "gray",
       "signatureName": "Refuse Bag",
       "signatureSymbol": "drop.fill"
+    },
+    "neodevimon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "gray",
+      "signatureName": "Guilty Claw",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "oboromon": {
+      "projectileSymbol": "scissors",
+      "tint": "gray",
+      "signatureName": "Kagerou Blade",
+      "signatureSymbol": "scissors"
+    },
+    "okuwamon": {
+      "projectileSymbol": "scissors",
+      "tint": "green",
+      "signatureName": "Double Scissor Claw",
+      "signatureSymbol": "scissors"
+    },
+    "okuwamon_x": {
+      "projectileSymbol": "scissors",
+      "tint": "gray",
+      "signatureName": "Destruction Pincer",
+      "signatureSymbol": "scissors"
+    },
+    "omegashoutmon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "white",
+      "signatureName": "Heavy Metal Vulcan",
+      "signatureSymbol": "flame.fill"
+    },
+    "omegashoutmon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "gray",
+      "signatureName": "Hard Rock Soul",
+      "signatureSymbol": "flame.fill"
+    },
+    "orochimon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "green",
+      "signatureName": "Sake Breath",
+      "signatureSymbol": "drop.fill"
+    },
+    "paildramon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "green",
+      "signatureName": "Desperado Blaster",
+      "signatureSymbol": "bolt.fill"
+    },
+    "panjyamon": {
+      "projectileSymbol": "snowflake",
+      "tint": "cyan",
+      "signatureName": "Zetsu Ei Ken",
+      "signatureSymbol": "snowflake"
+    },
+    "panjyamon_x": {
+      "projectileSymbol": "snowflake",
+      "tint": "blue",
+      "signatureName": "Frozen Fang Cross",
+      "signatureSymbol": "snowflake"
+    },
+    "raijiludomon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "indigo",
+      "signatureName": "Thunder Fang",
+      "signatureSymbol": "bolt.fill"
+    },
+    "rapidmon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "green",
+      "signatureName": "Golden Triangle",
+      "signatureSymbol": "triangle.fill"
+    },
+    "regulusmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "indigo",
+      "signatureName": "Regulus Impact",
+      "signatureSymbol": "star.fill"
+    },
+    "rizegreymon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "red",
+      "signatureName": "Trident Revolver",
+      "signatureSymbol": "circle.fill"
+    },
+    "rizegreymon_x": {
+      "projectileSymbol": "circle.fill",
+      "tint": "teal",
+      "signatureName": "Rising Destroyer Cross",
+      "signatureSymbol": "circle.fill"
+    },
+    "zanbamon": {
+      "projectileSymbol": "scissors",
+      "tint": "red",
+      "signatureName": "Hell Slash",
+      "signatureSymbol": "scissors"
+    },
+    "bryweludramon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "white",
+      "signatureName": "Brave Snarl",
+      "signatureSymbol": "bolt.fill"
+    },
+    "grankuwagamon": {
+      "projectileSymbol": "scissors",
+      "tint": "teal",
+      "signatureName": "Dimension Scissor",
+      "signatureSymbol": "scissors"
+    },
+    "grandiskuwagamon": {
+      "projectileSymbol": "scissors",
+      "tint": "brown",
+      "signatureName": "Grandis Cutter",
+      "signatureSymbol": "scissors"
+    },
+    "zekegreymon": {
+      "projectileSymbol": "star.fill",
+      "tint": "orange",
+      "signatureName": "Zeke Flame",
+      "signatureSymbol": "star.fill"
+    },
+    "saintgalgomon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "white",
+      "signatureName": "Giant Missile",
+      "signatureSymbol": "triangle.fill"
+    },
+    "ravmon": {
+      "projectileSymbol": "wind",
+      "tint": "white",
+      "signatureName": "Celestial Blade",
+      "signatureSymbol": "wind"
+    },
+    "vital_darumamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "red",
+      "signatureName": "Daruma Roll",
+      "signatureSymbol": "flame.fill"
+    },
+    "xros_etemon": {
+      "projectileSymbol": "music.note",
+      "tint": "brown",
+      "signatureName": "Dark Network",
+      "signatureSymbol": "music.note"
     }
   },
   "lineDefaults": {

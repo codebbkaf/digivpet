@@ -119,9 +119,12 @@ final class AdultSweepHToLTests: XCTestCase {
                        // the CHEAP parent for its Perfect precisely because it was on this list.
                        // US-160 took ONE more, Hyougamon (MegaSeadramon X) — `penc-nsp`'s last
                        // leaf Champion, and the arrow that put the X form beside its base.
+                       // US-161 took TWO more: Kokeshimon (Oboromon, which opened `vital`'s
+                       // Perfect rung) and Kuwagamon X, which carries BOTH Okuwamon because it is
+                       // the one Champion cited on both of their pages.
                        ["hi-commandramon", "hookmon",
-                        "junglemojyamon", "kokeshimon",
-                        "kuwagamon_x", "kyubimon_silver",
+                        "junglemojyamon",
+                        "kyubimon_silver",
                         "leomon_x", "lianpumon"].sorted(),
                        "the H-L leaves have moved without the ledger moving with them")
 
@@ -314,9 +317,9 @@ final class AdultSweepHToLTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-vb"], 54, "US-153 added KausGammamon, US-154 two more, US-156 two more, US-157 four, plus US-158's Entmon")
+        XCTAssertEqual(sizes["penc-vb"], 55, "US-153 added KausGammamon, US-154 two more, US-156 two more, US-157 four, plus US-158's Entmon, plus US-161's Regulusmon")
         XCTAssertEqual(sizes["penc-ds"], 43, "US-153 added Kinkakumon, US-154 MoriShellmon, US-157 Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
-        XCTAssertEqual(sizes["penc-wg"], 39, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more, plus US-158's two")
+        XCTAssertEqual(sizes["penc-wg"], 40, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more, plus US-158's two, plus US-161's Paildramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 3)
     }
@@ -451,9 +454,9 @@ final class AdultSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 736,
+        XCTAssertEqual(graph.nodes.count, 760,
                        "615 before this story, 618 after it, 629 after US-154, 635 after US-155, "
-                           + "643 after US-156, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160")
+                           + "643 after US-156, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
     }
 
     func testTheGraphValidatesWithNoFindings() {

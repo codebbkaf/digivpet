@@ -140,6 +140,12 @@ final class RosterTests: XCTestCase {
         // than for a shared thread: `diablomon` needed a junk Perfect before Meicoomon could
         // branch, and every unused Perfect sheet left in the pack is a real Digimon rather than a
         // gag one — so the floor draws Gerbemon, which `dmc-v2` already owns as `gerbemon`.
+        //
+        // `vital_darumamon` and `xros_etemon` are US-161's, and they are the same junk-floor case
+        // twice over: that story opened the Perfect rung on `vital` and on `xros`, the pack still
+        // has no unused junk-flavoured Perfect sheet, and each floor is cited from its own line's
+        // Champions — Darumamon from Kokeshimon, Etemon from Targetmon. `penc-nso` already owns
+        // `darumamon` and `dmc-v3` already owns `etemon`.
         XCTAssertEqual(aliases.sorted(),
                        ["diablomon_gerbemon",
                         "dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
@@ -163,7 +169,8 @@ final class RosterTests: XCTestCase {
                         "pencvb_wargreymon", "pencvb_weregarurumon", "pencvb_wizarmon",
                         "pencwg_birdramon", "pencwg_gerbemon", "pencwg_lilimon",
                         "pencwg_piyomon", "pencwg_rosemon", "pencwg_togemon",
-                        "piyo_tanemon", "piyo_yuramon", "xros_hagurumon"])
+                        "piyo_tanemon", "piyo_yuramon",
+                        "vital_darumamon", "xros_etemon", "xros_hagurumon"])
 
         // The art tree really does hold BOTH `Hi-Andromon.png` and `HiAndromon.png`, so the
         // roster has an entry per file (`hi-andromon`, `hiandromon`) while the graph's

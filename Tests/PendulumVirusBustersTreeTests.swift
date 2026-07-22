@@ -292,7 +292,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 54,
+        XCTAssertEqual(inLine.count, 55,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
                            + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon, "
                            + "US-152 GulusGammamon, US-153 KausGammamon, US-154 Mikemon and "
@@ -384,7 +384,10 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
                                       // US-157's four, hung off Turuiemon, Tailmon X and Leomon,
                                       // and US-158's Entmon, hung off Cockatrimon.
                                       "andiramon_data", "angewomon_x", "caturamon", "ophanimon_x",
-                                      "entmon"]
+                                      "entmon",
+                                      // US-161's one: Regulusmon over the bolded GulusGammamon,
+                                      // climbing this line's own MetalGarurumon.
+                                      "regulusmon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

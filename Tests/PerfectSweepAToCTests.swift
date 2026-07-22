@@ -361,15 +361,15 @@ final class PerfectSweepAToCTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 103, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five" + ", plus US-160's four")
-        XCTAssertEqual(sizes["penc-me"], 54, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one")
-        XCTAssertEqual(sizes["penc-vb"], 54, "three Perfects and Ophanimon X, plus US-158's Entmon")
-        XCTAssertEqual(sizes["penc-nso"], 58, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five")
-        XCTAssertEqual(sizes["dmc-v1"], 35, "Chimairamon and Millenniumon" + ", plus US-160's three")
+        XCTAssertEqual(sizes["tamers"], 105, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
+        XCTAssertEqual(sizes["penc-me"], 59, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
+        XCTAssertEqual(sizes["penc-vb"], 55, "three Perfects and Ophanimon X, plus US-158's Entmon, plus US-161's Regulusmon")
+        XCTAssertEqual(sizes["penc-nso"], 59, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
+        XCTAssertEqual(sizes["dmc-v1"], 36, "Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon")
         XCTAssertEqual(sizes["palmon"], 28, "Cannonbeemon and TigerVespamon, plus US-159's two")
         XCTAssertEqual(sizes["penc-sw"], 14, "Cho-Hakkaimon, Pandamon and Shakamon, plus US-158's two")
         XCTAssertEqual(sizes["penc-ds"], 43, "Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
-        XCTAssertEqual(sizes["penc-nsp"], 37, "AtlurKabuterimon Red, plus US-158's two" + ", plus US-160's one")
+        XCTAssertEqual(sizes["penc-nsp"], 39, "AtlurKabuterimon Red, plus US-158's two" + ", plus US-160's one, plus US-161's both Panjyamon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 9)
     }
@@ -593,10 +593,14 @@ final class PerfectSweepAToCTests: XCTestCase {
     /// Xiquemon did. Boutmon belongs on `vital` for the same shape of reason. Whoever opens either
     /// line's Perfect rung is TOLD here that these two are the rehome candidates on it.
     func testTheTwoRejectedLineReadingsAreStillTheCheaperOnesNotTaken() throws {
-        for line in ["commandramon", "vital"] {
-            XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.stage == .perfect }, [],
-                           "`\(line)` has a Perfect rung now — its rehome candidate is waiting")
-        }
+        // `commandramon` still has none. `vital` gained one in US-161 — Oboromon and RaijiLudomon,
+        // both over its own leaf Champions — so THAT half of the claim flips rather than dies: the
+        // rehome candidate this story pinned for `vital` is now a live job for a later sweep, and
+        // the check is that Cargodramon and Boutmon did NOT quietly move there with it.
+        XCTAssertEqual(graph.nodes.filter { $0.line == "commandramon" && $0.stage == .perfect }, [],
+                       "`commandramon` has a Perfect rung now — its rehome candidate is waiting")
+        XCTAssertFalse(graph.nodes.filter { $0.line == "vital" && $0.stage == .perfect }.isEmpty,
+                       "`vital` lost the Perfect rung US-161 opened")
 
         for id in ["ginryumon", "hi-commandramon"] {
             XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).line, "commandramon",
@@ -627,7 +631,7 @@ final class PerfectSweepAToCTests: XCTestCase {
 
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["xros", "vital", "adventure02", "algomon", "commandramon"],
+                       ["adventure02", "algomon", "commandramon"],
                        "a line gained or lost its Perfect rung; the remaining sweeps' bill changed — "
                            + "US-160 took `diablomon` off this list by putting the two Meicrackmon "
                            + "over Meicoomon, and gave it Rasielmon and Raguelmon in the same edit")
@@ -644,7 +648,7 @@ final class PerfectSweepAToCTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       77, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       73, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -665,14 +669,14 @@ final class PerfectSweepAToCTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 736,
-                       "643 before this story, 672 after it, 693 after US-158, 709 after US-159, 736 after US-160")
+        XCTAssertEqual(graph.nodes.count, 760,
+                       "643 before this story, 672 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
-        XCTAssertEqual(graph.nodes(at: .perfect).count, 148,
-                       "81 before this story, 101 after it, 115 after US-158, 126 after US-159, 148 after US-160")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 98,
-                       "72 before this story, 81 after it, 88 after US-158, 93 after US-159, 98 after US-160")
+        XCTAssertEqual(graph.nodes(at: .perfect).count, 165,
+                       "81 before this story, 101 after it, 115 after US-158, 126 after US-159, 148 after US-160, 165 after US-161, 165 after US-161")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 105,
+                       "72 before this story, 81 after it, 88 after US-158, 93 after US-159, 98 after US-160, 105 after US-161, 105 after US-161")
     }
 
     /// Every Ultimate this story opened served exactly one Perfect when it was written, so a second

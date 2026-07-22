@@ -121,13 +121,17 @@ final class AdultSweepSToTTests: XCTestCase {
             .sorted()
 
         XCTAssertEqual(leaves,
-                       ["sandyanmamon", "sangloupmon", "seadramon_x", "shoutmon_king", "siesamon",
+                       ["sandyanmamon", "sangloupmon", "seadramon_x", "siesamon",
                         // Tailmon X left this list in US-157, which gave it Angewomon X.
                         // Starmon left in US-158 (DarkSuperstarmon), and Sunflowmon and Togemon X
                         // in US-159 — the first for Lilamon, the second for Lilimon X, which are
                         // the two `palmon` flowers that sweep put on one line and two energies.
+                        // US-161 took TWO more, and both opened a line's Perfect rung: Shoutmon
+                        // King carries both OmegaShoutmon on `xros`, and Tia Ludomon carries
+                        // RaijiLudomon on `vital` — its bolded parent, and the only line either
+                        // of that Digimon's drawable parents sits on.
                         "sorcerymon", "soulmon", "targetmon",
-                        "tenkomon", "tialudomon", "tobiumon", "tobucatmon", "tortamon",
+                        "tenkomon", "tobiumon", "tobucatmon", "tortamon",
                         "troopmon", "tsuchidarumon", "tylomon_x"].sorted(),
                        "the S-T leaves have moved without the ledger moving with them")
 
@@ -383,11 +387,11 @@ final class AdultSweepSToTTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["dmc-v1"], 35, "Tyrannomon, plus US-157's Chimairamon and Millenniumon" + ", plus US-160's three")
+        XCTAssertEqual(sizes["dmc-v1"], 36, "Tyrannomon, plus US-157's Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon")
         XCTAssertEqual(sizes["dmc-v3"], 51, "Tyrannomon X and MetalGreymon X" + ", plus US-160's three")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-nso"], 58, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five")
-        XCTAssertEqual(sizes["tamers"], 103, "Siesamon X, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four")
+        XCTAssertEqual(sizes["penc-nso"], 59, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
+        XCTAssertEqual(sizes["tamers"], 105, "Siesamon X, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -542,8 +546,8 @@ final class AdultSweepSToTTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 736,
-                       "629 before this story, 635 after it, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160")
+        XCTAssertEqual(graph.nodes.count, 760,
+                       "629 before this story, 635 after it, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
     }
 
     func testTheGraphValidatesWithNoFindings() {
