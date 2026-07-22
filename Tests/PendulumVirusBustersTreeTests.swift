@@ -292,10 +292,11 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 45,
+        XCTAssertEqual(inLine.count, 47,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
                            + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon, "
-                           + "US-152 GulusGammamon, US-153 KausGammamon")
+                           + "US-152 GulusGammamon, US-153 KausGammamon, US-154 Mikemon and "
+                           + "Nefertimon X")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }.sorted(), ["pusumon", "pusurimon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -376,7 +377,8 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
                                       "pusumon", "pusurimon", "hiyarimon", "penmon",
                                       "gammamon", "betelgammamon",
                                       "plotmon_x", "tailmon_x", "cockatrimon",
-                                      "blacktailmon", "gulusgammamon", "kausgammamon"]
+                                      "blacktailmon", "gulusgammamon", "kausgammamon",
+                                      "mikemon", "nefertimon_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

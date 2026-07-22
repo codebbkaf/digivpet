@@ -232,7 +232,7 @@ final class ChildSweepAToFTests: XCTestCase {
     /// named exception list: a Child of this story that grows a third earned branch nobody wrote
     /// down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
-        let branchedByALaterSweep = ["clearagumon": 3]
+        let branchedByALaterSweep = ["blucomon": 3, "clearagumon": 3]
 
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -322,7 +322,7 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 73,
+        XCTAssertEqual(sizes["tamers"], 79,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung")
         XCTAssertEqual(sizes["dmc-v3"], 46)
         XCTAssertEqual(sizes["palmon"], 24)
@@ -553,11 +553,19 @@ final class ChildSweepAToFTests: XCTestCase {
         let perfectsFromUS151 =
             ["blackmachgaogamon", "catchmamemon", "karakurumon", "megalogrowmon"]
 
+        // US-154 is the first Adult sweep since US-151 to move it, and it moves it UP: four of its
+        // nine Champions are X-Antibody Digimon whose every cited Perfect was a sheet with no node,
+        // so two had to be opened — and each serves TWO of the four, which is why the bill is two
+        // rather than four. Grademon is cited by Meramon X and Pegasmon X off Digital Monster X
+        // Ver.3; Mametyramon by Monochromon X and Pteranomon X off the two sides of Bx-43. Neither
+        // needed a junk floor: US-151 already put CatchMamemon under `tamers`.
+        let perfectsFromUS154 = ["grademon", "mametyramon"]
+
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
-                           + championsFromUS150 + perfectsFromUS151).sorted(),
+                           + championsFromUS150 + perfectsFromUS151 + perfectsFromUS154).sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 99)
+        XCTAssertEqual(deadEnds.count, 101)
     }
 
     // MARK: - AC: the orphans this story removed
@@ -580,7 +588,7 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 618,
+        XCTAssertEqual(graph.nodes.count, 629,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153")
     }

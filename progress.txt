@@ -58,6 +58,28 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   Perfect rung later; choosing it off both ends at once is why US-152 wired five Champions for five
   nodes while US-151 needed eleven for seven. Seven lines still owe a Perfect rung, so the saving is
   real every time it lands.
+- **PHASE E SWEEPS: intersect the story's OWN orphans' `Evolves To` lists WITH EACH OTHER before
+  opening a rung above.** When every cited target of a range is a sheet with no node — which is the
+  normal case for the `tamers` X-Antibody thread — the orphan-by-orphan intersection against the
+  graph finds nothing and the rung above HAS to open. US-154 paid two nodes for four Champions
+  instead of four, because Grademon is in both Meramon X's and Pegasmon X's `Evolves To` (Digital
+  Monster X Ver.3) and Mametyramon is Bx-43, the card that fuses Monochromon X and Pteranomon X.
+  And a line that ALREADY has a junk Perfect makes each new one cost ONE node, not the two US-151
+  paid: no floor, and `EvolutionCriteriaTests.junkIds` does not move.
+- **PHASE E SWEEPS: an energy shared with the JUNK fallback is legal; one shared with another EARNED
+  branch is not.** US-154's Musyamon took the only energy Pico Devimon had left, strength, which its
+  junk edge to Gokimon is also gated on. That is the Scumon arrangement US-133 recorded — the earned
+  edge asks 60 and the junk one 0, so each wins exactly when it should. Prove it through the engine
+  in both directions rather than reasoning about it; `AdultSweepMToRTests.testMusyamonSharesStrength
+  WithPicoDevimonsJunkEdgeAndStillWins` is the shape.
+- **PHASE E SWEEPS: `testEveryNodeInTheLineIsReachableFromItsDigitama` CARRIES ITS OWN
+  `inLine.count`, and it is NOT the `sweepEggs` test.** Four device-tree files failed on this second,
+  separate count after US-154's data landed. `grep -n 'inLine.count' Tests` alongside
+  `grep -n sweepEggs Tests` — the knock-on list needs both.
+- **PHASE E: derive a handover's RANGE from the roster, not from the letter band you remember.**
+  US-153 handed WezenGammamon to US-154 as an "M-R orphan"; its display name starts with W, so it is
+  US-156's. The advice attached to it was still right and still needed — re-pin it in the new story
+  rather than letting it fall between two ranges.
 - **PHASE E ADULT SWEEPS: when TWO lines are both cited, the tiebreak is which one already has the
   rung above.** US-153's Kinkakumon had a Saiyu Warriors reading (Fujamon/Takinmon, `penc-sw`) and a
   Vital Bracelet BE one (Jellymon -> Zudomon, `penc-ds`); both are real citations, the first is the
@@ -3603,4 +3625,109 @@ The three, with the citation each rests on:
   Perfect rung - `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`, `penc-sw` -
   are untouched, and the 99 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an
   out-edge by whichever story claims them.
+---
+
+## 2026-07-22 - US-154 - Orphan sweep: Adult M-R
+Wired the NINE playable Champions whose display name begins M-R that had no edge at all: Meramon X,
+Mikemon, Monochromon X, MoriShellmon, Musyamon, Nefertimon X, Pegasmon X, Pteranomon X and
+RedV-dramon. Each gained one earned in-edge from a Child of its own line and one earned out-edge to a
+Perfect of that line, plus the line's unconditioned junk fallback. TWO new Perfects were opened on
+`tamers`. Orphans 311 -> 300 (Appendix B over a regenerated `roster.generated.json`): Adult 19 -> 10
+AND Perfect 110 -> 108 - the first sweep since US-151 to move a second bucket. 618 -> 629 nodes.
+
+Files: `Resources/evolutions.json` (9 new Champions, 9 new Child branches, 2 new Perfects),
+`Resources/elements.json` and `Resources/moves.json` (11 entries each), new
+`Tests/AdultSweepMToRTests.swift` (22 tests), and the knock-on edits listed below.
+Full suite 2137 tests green (2115 before), build green.
+
+The nine, with the citation each rests on:
+  meramon_x      tamers   blucomon       -> grademon         (Digital Monster X Ver.3, both arrows)
+  monochromon_x  tamers   guilmon_x      -> mametyramon      (Sx-45/Pendulum X 2.0 in, Bx-43 out)
+  pegasmon_x     tamers   lopmon_x       -> grademon         (Digital Monster X Ver.3, both arrows)
+  pteranomon_x   tamers   monodramon     -> mametyramon      (Bx-42/Da-484 in, Bx-43 out)
+  mikemon        penc-vb  plotmon        -> pencvb_angewomon (Plotmon named; out-edge is the DCG
+                                                              "Any Yellow Lv.5" CLASS citation)
+  nefertimon_x   penc-vb  plotmon_x      -> pencvb_angewomon (Bx-98/DMX Ver.2 in, St-445 out)
+  morishellmon   penc-ds  ganimon        -> anomalocarimon   (Digimon World 2, BOTH arrows)
+  musyamon       penc-nso picodevimon    -> vamdemon         (DSSM in, Bo-214 out)
+  redv-dramon    penc-wg  pencwg_piyomon -> aerov-dramon     (DWNO in, D1 Tamers/D-Project out)
+
+**Learnings for future iterations:**
+
+- **AN ADULT SWEEP CAN COST TWO PERFECTS AND STILL BE CHEAP, IF THE CITATIONS PAIR UP.** Four of the
+  nine are X-Antibody Champions of the `tamers` X thread, and EVERY Perfect any of them cites is a
+  sheet on disk with no node - Cyberdramon X, Mamemon X, OmegaShoutmon X, Angewomon X, Hisyaryumon,
+  Monzaemon X, Triceramon X, MegaloGrowmon X, Andromon, Blossomon. US-152's "intersect both ends"
+  rule finds nothing there, so the rung above HAD to open. The move that made it two nodes instead
+  of four was to intersect the four orphans' `Evolves To` lists **with each other** before choosing:
+  Grademon is in Meramon X's AND Pegasmon X's, both to Digital Monster X Ver.3; Mametyramon is
+  Bx-43, the card that fuses Monochromon X and Pteranomon X, so both pages cite it from their own
+  side. **Do the pairwise intersection across the story's own range, not just orphan-by-orphan
+  against the graph.** US-157 onward have twelve Perfect and Ultimate sweeps where the same trick
+  applies, and the X thread is where it pays.
+
+- **A LINE THAT ALREADY HAS A JUNK FLOOR MAKES A NEW PERFECT COST ONE NODE, NOT TWO.** The two-node
+  bill US-151 paid twice (earned Perfect + junk floor + the floor into `junkIds`) is only owed by a
+  line with NO Perfect rung. `tamers` got CatchMamemon in US-151, so Grademon and Mametyramon cost a
+  node each and `EvolutionCriteriaTests.junkIds` did not move. Check for the floor before pricing.
+
+- **PLOTMON IS FULL, AND PICO DEVIMON WAS ALREADY FULL WHEN THIS STORY USED IT.** Plotmon now carries
+  Tailmon (vitality), Wizarmon (spirit), BlackTailmon (strength) and Mikemon (stamina) plus junk:
+  five edges, the ceiling `EvolutionCriteriaTests` sets, and all four energies spent. Pico Devimon
+  had only strength left and its junk edge to Gokimon is ALSO gated on strength - that is the Scumon
+  arrangement US-133 recorded, not a collision, because the earned edge asks 60 and the junk one 0.
+  `AdultSweepMToRTests.testMusyamonSharesStrengthWithPicoDevimonsJunkEdgeAndStillWins` proves both
+  halves through the engine. **An energy shared with the junk fallback is legal; an energy shared
+  with another EARNED branch is not.**
+
+- **A CLASS CITATION IS THE ANSWER WHEN EVERY NAMED ARROW IS UNUSABLE, AND IT IS PINNABLE FOUR WAYS.**
+  Mikemon's whole `Evolves To` is unreachable in this pack: Bastemon and Betsumon have no sheet,
+  Majiramon is idle-only (`edgeToDexOnlyNode` forbids it), Zudomon is on `penc-ds` where no cited
+  parent of Mikemon lives. The same page's "Any Yellow Lv.5 Digimon from the Digimon Card Game" is
+  a real citation - US-151's Deckerdramon reading - and Plotmon is a Yellow Lv.3 with Angewomon a
+  Yellow Lv.5 above it, so ONE line satisfies both halves of the clause. The test asserts the two
+  absent sheets are still absent, Majiramon is still `dexOnly` and Zudomon is still `penc-ds`, so
+  the day any of those changes the story is told to revisit.
+
+- **A HISTORICAL "this line has exactly N Perfects" COUNT ROTS; SCOPE IT TO THE NAMES.**
+  `AdultSweepAToDTests.testTheTwoLinesWithoutAPerfectRungGainedAJunkFloor` asserted `tamers` had
+  exactly two Perfects. US-154 opened two more without touching US-151's pair, so a count failed on
+  work that did nothing wrong. Replaced with `wanyamon`'s exact pair plus a superset check on
+  `tamers` - the half that stays true - which is the same repair US-149 made to
+  `ChildSweepAToFTests`' "this line had no Champion before".
+
+- **`testEveryNodeInTheLineIsReachableFromItsDigitama` CARRIES ITS OWN `inLine.count`, SEPARATE FROM
+  THE `sweepEggs` TEST.** Four device-tree files failed on it after the data landed, and it is NOT
+  the closing "the N orphans this story removed" assertion the notes list - it is a second count in
+  a different test in the same file. `grep -n 'inLine.count' Tests` alongside `grep -n sweepEggs`.
+
+- **WEZENGAMMAMON IS US-156's, NOT US-154's.** US-153's handover note said it was an M-R orphan; its
+  display name starts with W, so it is U-Z. The advice it carried is still right and still needed:
+  Gammamon is full at four energies, so WezenGammamon cannot hang there and must take the Gabumon
+  citation (`pencvb_gabumon`, same line). `AdultSweepMToRTests.testThePerfectSheetsLeftForTheLater
+  SweepsAreStillUnwired` re-pins Gammamon's edge count at 4 so that stays true until US-156 acts.
+  **Derive a handover's range from the roster, not from memory of the letter bands.**
+
+- **The knock-on list for this rung, all seventeen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, `AdultSweepAToDTests`, `AdultSweepEToGTests`, `AdultSweepHToLTests`,
+  `ChildSweepAToFTests`, `ChildSweepGToLTests` and `ChildSweepMToZTests` (618 -> 629); the per-line
+  dict in `EvolutionGraphTests` (`tamers` 73->79, `penc-vb` 45->47, `penc-ds` 37->38, `penc-nso`
+  42->43, `penc-wg` 34->35) and the same lines' `sizes[...]` rows in `AdultSweepAToDTests`,
+  `AdultSweepEToGTests`, `AdultSweepHToLTests`, `BabyIISweepTests`, `ChildSweepAToFTests`,
+  `ChildSweepGToLTests`, `ChildSweepMToZTests` and `DigitamaSweepTests`; `branchedByALaterSweep` in
+  all three Child sweeps (`blucomon` 3, `guilmon_x` 3, `lopmon_x` 3, `monodramon` 3->4,
+  `plotmon_x` 3); `sweepEggs` AND `inLine.count` in `PendulumDeepSaversTreeTests`,
+  `PendulumNightmareSoldiersTreeTests`, `PendulumVirusBustersTreeTests` and
+  `PendulumWindGuardiansTreeTests`; the dead-end ledger in `ChildSweepAToFTests` (99 -> 101, the two
+  new Perfects); and `AdultSweepAToDTests`' Perfect-count claim, rescoped. `EvolutionCriteriaTests.
+  junkIds`, its stranded lists, `MinigameAssignmentTests`, `EggHatchingTests`, `DexScreenTests`,
+  `DexModel.lineTitles` and both `lineDefaults` did NOT move: no new line, and no thread newly
+  reached an Ultimate because both new Perfects are leaves.
+
+- REMAINS: US-155 onward (41/56 passing). Two Adult sweeps hold the last 10 orphaned Champions
+  (S-T: Saberdramon, ShimaUnimon, Siesamon X, Tyrannomon, Tyrannomon X; U-Z: V-dramon Black,
+  WezenGammamon, XV-mon Black, Xiquemon, Youkomon), then twelve Perfect and Ultimate sweeps and the
+  Armor-Hybrid one. The seven lines still with no Perfect rung - `xros`, `vital`, `adventure02`,
+  `algomon`, `commandramon`, `diablomon`, `penc-sw` - are untouched, and the 101 leaves in
+  `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge by whichever story claims them.
 ---

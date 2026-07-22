@@ -3708,6 +3708,72 @@
       "tint": "purple",
       "signatureName": "Kouga Shadow Clone",
       "signatureSymbol": "triangle.fill"
+    },
+    "meramon_x": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "orange",
+      "signatureName": "Prometheus Fist",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "mikemon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "orange",
+      "signatureName": "Calico Claw Rush",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "monochromon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "gray",
+      "signatureName": "Obsidian Charge",
+      "signatureSymbol": "triangle.fill"
+    },
+    "morishellmon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "green",
+      "signatureName": "Fungus Cruncher",
+      "signatureSymbol": "leaf.fill"
+    },
+    "musyamon": {
+      "projectileSymbol": "scissors",
+      "tint": "red",
+      "signatureName": "Shurabuki Cut",
+      "signatureSymbol": "scissors"
+    },
+    "nefertimon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "white",
+      "signatureName": "Rosetta Stone",
+      "signatureSymbol": "star.fill"
+    },
+    "pegasmon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "white",
+      "signatureName": "Silver Blaze",
+      "signatureSymbol": "star.fill"
+    },
+    "pteranomon_x": {
+      "projectileSymbol": "wind",
+      "tint": "blue",
+      "signatureName": "Sonic Voice",
+      "signatureSymbol": "wind"
+    },
+    "redv-dramon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "red",
+      "signatureName": "Crimson Breath Arrow",
+      "signatureSymbol": "bolt.fill"
+    },
+    "grademon": {
+      "projectileSymbol": "scissors",
+      "tint": "white",
+      "signatureName": "Solar Blade",
+      "signatureSymbol": "scissors"
+    },
+    "mametyramon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "brown",
+      "signatureName": "Bean Bomber",
+      "signatureSymbol": "gearshape.fill"
     }
   },
   "lineDefaults": {

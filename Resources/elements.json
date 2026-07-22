@@ -2472,6 +2472,50 @@
     "kougamon": {
       "element": "dark",
       "attribute": "data"
+    },
+    "meramon_x": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "mikemon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "monochromon_x": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "morishellmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "musyamon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "nefertimon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pegasmon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pteranomon_x": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "redv-dramon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "grademon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "mametyramon": {
+      "element": "earth",
+      "attribute": "data"
     }
   },
   "lineDefaults": {

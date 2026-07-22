@@ -4960,6 +4960,28 @@
           ]
         },
         {
+          "to": "morishellmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20000,
+              "hint": "Leave it still and shaded for a long while"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And never let the shell get overfed"
+            }
+          ]
+        },
+        {
           "to": "diginorimon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -5930,6 +5952,28 @@
           ]
         },
         {
+          "to": "musyamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 13,
+              "hint": "Put a blade in the little devil's hands and drill"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "And keep the arm strong enough to swing it"
+            }
+          ]
+        },
+        {
           "to": "gokimon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -6622,6 +6666,28 @@
               "comparison": "atLeast",
               "value": 240,
               "hint": "Work up a sweat beside it"
+            }
+          ]
+        },
+        {
+          "to": "redv-dramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50000,
+              "hint": "Range far enough that the feathers turn to scale"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "And find it enough fights to redden its temper"
             }
           ]
         },
@@ -8603,6 +8669,28 @@
               "comparison": "atLeast",
               "value": 400,
               "hint": "Keep it hunting rather than sitting"
+            }
+          ]
+        },
+        {
+          "to": "mikemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 18000,
+              "hint": "Let the cat sleep as much as a cat wants"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "And still get ten honest practice sessions out of it"
             }
           ]
         },
@@ -12438,6 +12526,28 @@
           ]
         },
         {
+          "to": "meramon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Feed a fire it has no business carrying"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "And train the little blue one until it burns"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "vitality",
           "minEnergy": 0,
@@ -12573,6 +12683,28 @@
               "comparison": "atLeast",
               "value": 4500,
               "hint": "And spend everything it has in them"
+            }
+          ]
+        },
+        {
+          "to": "pteranomon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 70,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 45000,
+              "hint": "Cover open country with it every day"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "And drill the leap until it stays airborne"
             }
           ]
         },
@@ -15164,6 +15296,28 @@
           ]
         },
         {
+          "to": "monochromon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 500,
+              "hint": "Make it climb until the hide thickens"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "And let it take a few hits on the way up"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "stamina",
           "minEnergy": 0,
@@ -15472,6 +15626,28 @@
               "comparison": "atLeast",
               "value": 7,
               "hint": "Let it learn what the guns are for"
+            }
+          ]
+        },
+        {
+          "to": "pegasmon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90000,
+              "hint": "Walk it far enough that it wants wings"
+            },
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 200,
+              "hint": "And keep it up on its feet while it grows them"
             }
           ]
         },
@@ -16442,6 +16618,28 @@
           ]
         },
         {
+          "to": "nefertimon_x",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Work it in daylight until the stone catches"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.5,
+              "hint": "And let it hold its own in a fight"
+            }
+          ]
+        },
+        {
           "to": "turuiemon",
           "requiredEnergy": "vitality",
           "minEnergy": 0,
@@ -17298,6 +17496,375 @@
           "isDefault": true
         }
       ]
+    },
+    {
+      "id": "meramon_x",
+      "displayName": "Meramon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Meramon_X",
+      "comment": "US-152's rule first: intersect BOTH ends against the graph before choosing a line. Wikimon draws Meramon (X-Antibody) out of Blucomon and into Grademon, and BOTH arrows are cited to Digital Monster X Ver.3 - the device that gave this file every X-Antibody Rookie it has, all of which sit on `tamers`. The other cited parents are DORUmon and Terriermon (X-Antibody), also `tamers`, so no reading of this page puts it anywhere else. Its three other cited Evolves To - Cyberdramon (X-Antibody), Mamemon (X-Antibody) and Omega Shoutmon (X-Antibody) - all have Perfect sheets on disk and no node, and are left to the Perfect sweeps; Grademon was chosen because Pegasmon X cites the same Perfect off the same device, so one new node serves two Champions. Strength is the energy Blucomon had left after PaleDramon took vitality, and a walking pillar of flame earns it.",
+      "evolutions": [
+        {
+          "to": "grademon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7000,
+              "hint": "Let the fire burn hot enough to hurt"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "And walk it into fight after fight without cooling"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "mikemon",
+      "displayName": "Mikemon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Mikemon",
+      "comment": "The one Champion in this range whose two ends could NOT both be named, and the honest reading is written here rather than dressed up. Wikimon's Evolves From cites Plotmon outright (Digimon Masters, Digimon Soul Chaser: \"Evolves from Plotmon at level 11\"), and Plotmon is this line's Salamon, so the in-edge is a plain citation. Every named Evolves To is unusable in this pack: Bastemon and Betsumon have no sheet at all, Majiramon is idle-only and `edgeToDexOnlyNode` forbids the edge, and Zudomon is on `penc-ds` where no cited parent of Mikemon lives. What is left is the CLASS citation the same page carries - Mikemon is entered from \"Any Yellow Lv.3 Digimon from the Digimon Card Game\" (BT12-036) and leaves to \"Any Yellow Lv.5 Digimon\" - and Plotmon is a Yellow Lv.3 and Angewomon a Yellow Lv.5, so both ends of the class clause are satisfied by one line. That is the Deckerdramon reading US-151 recorded: a class-level Wikimon citation is a real citation. Stamina is the last energy Plotmon had, after Tailmon took vitality, Wizarmon spirit and BlackTailmon strength - Plotmon is FULL now.",
+      "evolutions": [
+        {
+          "to": "pencvb_angewomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Keep the cat on its feet instead of curled up"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "And drill the claws until they land clean"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "monochromon_x",
+      "displayName": "Monochromon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Monochromon_X",
+      "comment": "Both arrows off one device. Wikimon draws Monochromon (X-Antibody) out of Guilmon (X-Antibody) (Sx-45, Pendulum X 2.0 and 2.5) and into Mametyramon (Bx-43, \"Jogress with or without Pteranomon or Pteranomon (X-Antibody)\"), and Guilmon X has been this line's since US-149. Mametyramon is the ONE Perfect this story authored twice over: Pteranomon X's own page cites the same card from the other side, so the two Champions Bx-43 fuses are the two parents of the node. The base Monochromon is on `dmc-v4` and stays there - the variant follows its X-Antibody Rookie, which is the rule the whole `tamers` X thread was built on. Strength is the energy Guilmon X had left after Allomon X took stamina.",
+      "evolutions": [
+        {
+          "to": "mametyramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Push the armoured bulk uphill until it stops complaining"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "And let the charge win more often than it misses"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "morishellmon",
+      "displayName": "MoriShellmon",
+      "stage": "Adult",
+      "line": "penc-ds",
+      "spriteFile": "MoriShellmon",
+      "comment": "Both ends cited to the SAME source, which is as clean as this rung gets: Wikimon has Mori Shellmon evolving from Ganimon and to Anomalocarimon, both to Digimon World 2, and both were already on `penc-ds` - Ganimon is the tree's third Rookie and Anomalocarimon the Perfect over Seadramon and Ebidramon. Its other cited parents are Betamon (idle-only here), Dokunemon (`palmon`) and Palmon; the Digimon World 2 reading is the only one whose other end was already on the same line, which is why it decided the placement. Spirit is the energy Ganimon had left after Coelamon took stamina and Gesomon vitality, and a shell with a forest growing out of its back earns the quiet one.",
+      "evolutions": [
+        {
+          "to": "anomalocarimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 22000,
+              "hint": "Let it lie still long enough for the moss to take"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "And still make it heave that shell around"
+            }
+          ]
+        },
+        {
+          "to": "piranimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "musyamon",
+      "displayName": "Musyamon",
+      "stage": "Adult",
+      "line": "penc-nso",
+      "spriteFile": "Musyamon",
+      "comment": "Wikimon gives Musyamon twenty-odd cited parents and as many children; the pair that matters is the one whose BOTH ends were already on a line - Pico Devimon below (Digimon Story: Sunburst & Moonlight) and Vamdemon above (Bo-214), and this tree holds both. Its own family field reads Virus / Demon Man, which is what Nightmare Soldiers is, so the cheap reading and the thematic one agree here for once. Kotemon, Goburimon, Shamamon and Zubamon are the parents Wikimon bolds hardest and NONE of them is playable in this pack - Shamamon and Zubamon are idle-only, the other two have no sheet - which is why the choice fell to Pico Devimon rather than to a rehome. Strength is the only energy Pico Devimon had left after Devimon took spirit, Bakemon vitality and Dokugumon stamina; it shares that energy with the junk fallback to Gokimon, which is the Scumon arrangement US-133 recorded - the earned edge wins whenever its own 120 gate is cleared.",
+      "evolutions": [
+        {
+          "to": "vamdemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Drill the sword arm until the cut is one motion"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "And test it on something that fights back"
+            }
+          ]
+        },
+        {
+          "to": "darumamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "nefertimon_x",
+      "displayName": "Nefertimon X",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Nefertimon_X",
+      "comment": "Wikimon draws Nefertimon (X-Antibody) out of Plotmon (X-Antibody) (Bx-98 and Digital Monster X Ver.2) and into Angewomon (St-445), and both were already on `penc-vb` - Plotmon X since US-150 and Angewomon since US-143. Nefertimon is Plotmon's own armour form, so the variant sits over the variant Rookie rather than over the base, and the holy end of this tree is where an Armor Digimon of the Angewomon thread belongs. Herissmon is the other cited parent on this same line and was left free. Spirit is the energy Plotmon X had after Tailmon X took vitality.",
+      "evolutions": [
+        {
+          "to": "pencvb_angewomon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Work it in the open until the stone wings warm"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "And let the holy beast win the fights it takes"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pegasmon_x",
+      "displayName": "Pegasmon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Pegasmon_X",
+      "comment": "Wikimon gives Pegasmon (X-Antibody) exactly four cited parents and four cited children, all to Digital Monster X Ver.3: in from Jazamon, Lopmon (X-Antibody) and Ryudamon, out to Angewomon (X-Antibody), Grademon, Hisyaryumon and Monzaemon (X-Antibody). Ryudamon is on `commandramon`, which is stranded and has no Perfect rung; Jazamon and Lopmon X are both `tamers`, so that is the line. Grademon is the one of the four cited Perfects Meramon X ALSO cites off the same device, which is why one new node covers both Champions and the other three - all of them sheets on disk with no node - are left to the Perfect sweeps. Vitality is the energy Lopmon X had left after BlackGalgomon took spirit.",
+      "evolutions": [
+        {
+          "to": "grademon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90000,
+              "hint": "Let the wings carry it a very long way"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 15,
+              "hint": "And school the gallop until it lands square"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pteranomon_x",
+      "displayName": "Pteranomon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Pteranomon_X",
+      "comment": "The other half of Bx-43. Wikimon draws Pteranomon (X-Antibody) out of Monodramon (Bx-42, Da-484) and into Mametyramon (\"with Monochromon or Monochromon (X-Antibody)\", Bx-43) - the same card Monochromon X's page cites from the other side, so the two Champions the card fuses are the two parents this story gives the node. Its bolder Evolves To, Andromon, is on `dmc-v3`, and Patamon - the only cited parent on that line - carries all five edges it can hold, so the dmc-v3 reading was closed before it was priced. Vitality is the energy Monodramon had left after Coredramon Blue took strength and DarkLizamon spirit.",
+      "evolutions": [
+        {
+          "to": "mametyramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 150000,
+              "hint": "Keep it in the air over open ground"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "And make it climb for every thermal it rides"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "redv-dramon",
+      "displayName": "RedV-dramon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "RedV-dramon",
+      "comment": "The variant on its base form's line, and both ends cited. Wikimon draws Red V-dramon out of Piyomon (Digimon World -next 0rder-) and into Aero V-dramon (Digimon Adventure 02: D1 Tamers, Digital Monster: D-Project), and `penc-wg` already holds all three of Piyomon, V-dramon and AeroV-dramon - V-dramon is Piyomon's strength branch and AeroV-dramon the Perfect above it, so the red one hangs beside its own base form rather than across the file from it. The Guilmon and Shoutmon readings were rejected on the same test US-153 used: both are cited too, but `tamers` and `xros` would each have cost more, and neither holds AeroV-dramon. Stamina is the energy Piyomon had left after Birdramon took vitality and V-dramon strength.",
+      "evolutions": [
+        {
+          "to": "aerov-dramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1100,
+              "hint": "Keep the wings beating long past comfortable"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "And blood the V-Breath on real opponents"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "grademon",
+      "displayName": "Grademon",
+      "stage": "Perfect",
+      "line": "tamers",
+      "spriteFile": "Grademon",
+      "comment": "The second earned Perfect this line has ever had, and it exists because TWO of this story's Champions cite it off the same device: Wikimon lists Grademon in the Evolves To of both Meramon (X-Antibody) and Pegasmon (X-Antibody), each to Digital Monster X Ver.3. Opening it cost one node rather than two, because US-151 already put CatchMamemon under this line as its junk floor. A leaf until the Ultimate sweeps.",
+      "evolutions": []
+    },
+    {
+      "id": "mametyramon",
+      "displayName": "Mametyramon",
+      "stage": "Perfect",
+      "line": "tamers",
+      "spriteFile": "Mametyramon",
+      "comment": "The third earned Perfect on this line, and like Grademon it serves two of this story's Champions at once - but here the two parents are the card's own Jogress pair. Wikimon's Bx-43 draws Mametyramon out of Monochromon (X-Antibody) \"with or without Pteranomon or Pteranomon (X-Antibody)\", and Pteranomon X's page cites the same card from its side, so both arrows are one drawing. A leaf until the Ultimate sweeps.",
+      "evolutions": []
     }
   ]
 }

@@ -853,8 +853,8 @@
         "Typecheck passes"
       ],
       "priority": 41,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the NINE playable Champions whose display name begins M-R that had no edge at all: Meramon X, Mikemon, Monochromon X, MoriShellmon, Musyamon, Nefertimon X, Pegasmon X, Pteranomon X, RedV-dramon. Each gained one earned in-edge from a Child of its own line and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk fallback. TWO new Perfects were opened on `tamers` because every Perfect the four X-Antibody Champions cite is a sheet with no node: Grademon (cited by Meramon X and Pegasmon X off Digital Monster X Ver.3) and Mametyramon (the two sides of Bx-43, which fuses Monochromon X and Pteranomon X). Neither needed a junk floor - US-151 already put CatchMamemon under the line. Orphans 311 -> 300 (Appendix B over a regenerated roster.generated.json): Adult 19 -> 10 and Perfect 110 -> 108; no other bucket moved. 618 -> 629 nodes. Full suite 2137 tests green (2115 before), build green."
     },
     {
       "id": "US-155",

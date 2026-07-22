@@ -256,7 +256,8 @@ final class ChildSweepGToLTests: XCTestCase {
     /// three earned branches on distinct energies plus the junk fallback. A fifth cannot be told
     /// apart from one of them, so this entry can never move again.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
-        let branchedByALaterSweep = ["gaomon": 3, "gammamon": 4, "guilmon": 3]
+        let branchedByALaterSweep = ["gaomon": 3, "gammamon": 4, "guilmon": 3,
+                                    "guilmon_x": 3, "lopmon_x": 3]
 
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -343,7 +344,7 @@ final class ChildSweepGToLTests: XCTestCase {
         // them too: twelve more on `tamers`, three on `dmc-v3` and on `xros`, eleven on `vital`,
         // and two on `palmon`, which this story did not touch at all.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 73, "US-152 hung two more Champions under it")
+        XCTAssertEqual(sizes["tamers"], 79, "US-152 hung two more Champions under it, US-154 six")
         XCTAssertEqual(sizes["dmc-v3"], 46)
         XCTAssertEqual(sizes["xros"], 17)
         XCTAssertEqual(sizes["vital"], 33)
@@ -546,7 +547,7 @@ final class ChildSweepGToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 618,
+        XCTAssertEqual(graph.nodes.count, 629,
                        "497 before this story, 548 after it, 599 after US-150, 610 after US-151, "
                            + "615 after US-152, 618 after US-153")
     }

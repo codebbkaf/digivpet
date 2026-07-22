@@ -223,13 +223,14 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 73, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
+        XCTAssertEqual(sizes["tamers"], 79, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
                            + "US-152 added FlareLizamon and Growmon Orange")
         XCTAssertEqual(sizes["wanyamon"], 20,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon")
         XCTAssertEqual(sizes["dmc-v4"], 26, "US-151 added the two Burgermon")
-        XCTAssertEqual(sizes["penc-wg"], 34, "US-151 added Akatorimon, US-153 Kougamon")
-        XCTAssertEqual(sizes["penc-vb"], 45,
+        XCTAssertEqual(sizes["penc-wg"], 35,
+                       "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon")
+        XCTAssertEqual(sizes["penc-vb"], 47,
                        "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon")
         XCTAssertEqual(sizes["penc-me"], 44, "US-151 added Deckerdramon")
     }
@@ -272,12 +273,20 @@ final class AdultSweepAToDTests: XCTestCase {
             }
         }
 
-        // Before this story neither line had a Perfect at all; now each has exactly two, the earned
+        // Before this story neither line had a Perfect at all; each gained exactly two, the earned
         // branch and the floor under it.
-        for (line, _) in junkFloors {
-            XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.stage == .perfect }
-                               .map(\.id).sorted().count, 2)
-        }
+        //
+        // **Scoped rather than relaxed in US-154.** A count was the wrong claim: US-154 opened two
+        // MORE Perfects on `tamers` — Grademon and Mametyramon, each cited by two of its four
+        // X-Antibody Champions — without touching this story's pair, and a bare count of two would
+        // have failed on work that did nothing wrong. What stays true is that the four this story
+        // authored are still here and are still the only ones IT authored, so the claim is now the
+        // pair by name plus the floor's exclusivity.
+        XCTAssertEqual(Set(graph.nodes.filter { $0.line == "wanyamon" && $0.stage == .perfect }
+                               .map(\.id)), ["blackmachgaogamon", "karakurumon"])
+        XCTAssertTrue(Set(graph.nodes.filter { $0.line == "tamers" && $0.stage == .perfect }
+                              .map(\.id)).isSuperset(of: ["megalogrowmon", "catchmamemon"]))
+        XCTAssertTrue(Set(graph.nodes.map(\.id)).isSuperset(of: authoredPerfects))
     }
 
     /// The junk floors are inventions, so the whole-file grep US-140's notes insist on writing
@@ -384,8 +393,8 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 618,
-                       "599 before this story, 615 after US-152, 618 after US-153")
+        XCTAssertEqual(graph.nodes.count, 629,
+                       "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154")
     }
 
     func testTheGraphValidatesWithNoFindings() {

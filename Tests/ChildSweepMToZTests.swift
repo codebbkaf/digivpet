@@ -290,7 +290,7 @@ final class ChildSweepMToZTests: XCTestCase {
     /// count is now a named exception list: a Child of this story that grows a third earned branch
     /// nobody wrote down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
-        let branchedByALaterSweep = ["monodramon": 3]
+        let branchedByALaterSweep = ["monodramon": 4, "plotmon_x": 3]
 
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -375,7 +375,7 @@ final class ChildSweepMToZTests: XCTestCase {
         // Thirteen of the twenty-one grew, `tamers` and `vital` by a dozen and eleven. These are
         // the FILE's sizes rather than this story's, so US-148's and US-149's nodes are in them.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 73,
+        XCTAssertEqual(sizes["tamers"], 79,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung")
         XCTAssertEqual(sizes["vital"], 33)
         XCTAssertEqual(sizes["penc-me"], 44, "US-151 hung Deckerdramon on Hagurumon")
@@ -591,7 +591,7 @@ final class ChildSweepMToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 618,
+        XCTAssertEqual(graph.nodes.count, 629,
                        "548 before this story, 599 after it, 610 after US-151, 615 after US-152, "
                            + "618 after US-153")
     }

@@ -308,9 +308,9 @@ final class EvolutionGraphTests: XCTestCase {
 
         XCTAssertEqual(byLine,
                        ["dmc-v1": 29, "dmc-v2": 29, "dmc-v3": 46, "dmc-v4": 26, "dmc-v5": 22,
-                        "palmon": 24, "penc-nsp": 33, "penc-ds": 37, "penc-nso": 42,
-                        "penc-wg": 34, "penc-me": 44, "penc-vb": 45,
-                        "tamers": 73, "wanyamon": 20, "diablomon": 17, "commandramon": 11,
+                        "palmon": 24, "penc-nsp": 33, "penc-ds": 38, "penc-nso": 43,
+                        "penc-wg": 35, "penc-me": 44, "penc-vb": 47,
+                        "tamers": 79, "wanyamon": 20, "diablomon": 17, "commandramon": 11,
                         "algomon": 12, "adventure02": 15, "vital": 33,
                         "xros": 17, "penc-sw": 9])
         XCTAssertEqual(graph_lineOf(nodes, "meramon"), "dmc-v1")

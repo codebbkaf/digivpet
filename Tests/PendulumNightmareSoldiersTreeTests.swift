@@ -241,9 +241,9 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 42,
+        XCTAssertEqual(inLine.count, 43,
                        "US-147 hung Sunmon and Coronamon here, US-148 Firamon, US-149 Gotsumon and "
-                           + "Icemon, US-150 PetitMamon, Vorvomon and Lavorvomon")
+                           + "Icemon, US-150 PetitMamon, Vorvomon and Lavorvomon, US-154 Musyamon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -645,7 +645,8 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         let sweepEggs: Set<String> = ["cand_digitama", "picodevi_digitama", "vorvo_digitama",
                                       "sunmon", "coronamon", "firamon",
                                       "gotsumon", "icemon",
-                                      "petitmamon", "vorvomon", "lavorvomon"]
+                                      "petitmamon", "vorvomon", "lavorvomon",
+                                      "musyamon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")
