@@ -307,10 +307,10 @@ final class EvolutionGraphTests: XCTestCase {
         let byLine = Dictionary(grouping: nodes, by: \.line).mapValues(\.count)
 
         XCTAssertEqual(byLine,
-                       ["dmc-v1": 32, "dmc-v2": 29, "dmc-v3": 48, "dmc-v4": 29, "dmc-v5": 23,
-                        "palmon": 28, "penc-nsp": 36, "penc-ds": 41, "penc-nso": 53,
-                        "penc-wg": 39, "penc-me": 53, "penc-vb": 54,
-                        "tamers": 99, "wanyamon": 26, "diablomon": 17, "commandramon": 11,
+                       ["dmc-v1": 35, "dmc-v2": 29, "dmc-v3": 51, "dmc-v4": 29, "dmc-v5": 25,
+                        "palmon": 28, "penc-nsp": 37, "penc-ds": 43, "penc-nso": 58,
+                        "penc-wg": 39, "penc-me": 54, "penc-vb": 54,
+                        "tamers": 103, "wanyamon": 27, "diablomon": 22, "commandramon": 11,
                         "algomon": 12, "adventure02": 15, "vital": 33,
                         "xros": 17, "penc-sw": 14])
         XCTAssertEqual(graph_lineOf(nodes, "meramon"), "dmc-v1")

@@ -133,7 +133,10 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // Thirty-two since US-157, which hung Chimairamon off Airdramon and Millenniumon over
         // it: two more nodes and two more connectors, in the Perfect and Ultimate columns, so the
         // Adult column and the row count are untouched.
-        XCTAssertEqual(nodes.count, 32)
+        // Thirty-five since US-160, which hung three more Perfects on Champions this line already
+        // had — Mamemon X off the leaf Greymon (Blue), MetalGreymon Virus X off Devimon and
+        // Monzaemon X off the junk Numemon — so again only the Perfect column grew.
+        XCTAssertEqual(nodes.count, 35)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
@@ -144,6 +147,6 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 46)
+        XCTAssertEqual(layout.connectors.count, 53)
     }
 }

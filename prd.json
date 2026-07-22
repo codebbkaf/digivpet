@@ -973,8 +973,8 @@
         "Typecheck passes"
       ],
       "priority": 47,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired all 21 orphaned Perfect whose displayName begins with M: 21 Perfect nodes, 5 new Ultimates (Dukemon/tamers, Ryugumon/dmc-v3, Rasielmon and Raguelmon/diablomon, Dinorexmon/penc-nso) and 1 junk Perfect floor (diablomon_gerbemon, the first junk floor authored as a line-scoped alias). ORPHAN COUNT, Appendix B over a regenerated roster.generated.json: 219 BEFORE -> 193 AFTER; Perfect bucket 58 -> 37 (the M band 21 -> 0), Ultimate bucket 145 -> 140. Graph 709 -> 736 nodes across the same 21 lines - no new line. `diablomon` gained its Perfect AND Ultimate rungs in one edit, promoting Kera and Meicoo Digitama to legal starting eggs. Dead-end ledger 81 -> 77 (five leaf Champions cleared, one node added back). EvolutionGraphValidator reports ZERO findings. Build green; 2292 tests green (2264 before, 28 new in Tests/PerfectSweepMTests.swift)."
     },
     {
       "id": "US-161",

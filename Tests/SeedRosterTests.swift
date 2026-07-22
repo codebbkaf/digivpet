@@ -324,6 +324,13 @@ final class SeedRosterTests: XCTestCase {
         // every other Perfect Tyranomon X's page cites is on a line dmc-v3 cannot reach. Both are
         // animated sheets under `Adult/` and `Perfect/`.
         "Tyrannomon X", "MetalGreymon X",
+        // US-160's three, and the first ULTIMATE this set has taken from a sweep. Wikimon bolds
+        // Shellmon among MarinBullmon's parents and Ryugumon among its children, and bolds Bakemon
+        // and Gokumon on MetalPhantomon's page — all four ends were already on this line, so the M
+        // sweep landed the pair here without arguing. Each of the three was eyeballed as a 48x64
+        // sheet, `Perfect/MarinBullmon.png`, `Perfect/MetalPhantomon.png` and
+        // `Ultimate-Super Ultimate/Ryugumon.png`.
+        "MarinBullmon", "MetalPhantomon", "Ryugumon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -661,6 +668,10 @@ final class SeedRosterTests: XCTestCase {
         // its children, and both were already on this line, so the Perfect sweep landed it here.
         // The sheet was eyeballed at `Perfect/Gigadramon.png`, 48x64 like every other name above.
         "Gigadramon",
+        // US-160's two, both of them MetalTyranomon variants placed by the variant rule: V2 hangs
+        // off DarkTyranomon and X off Cyclomon, which are the two Champions the plain
+        // MetalTyranomon already hangs off on this line. Both are 48x64 sheets under `Perfect/`.
+        "MetalTyranomon V2", "MetalTyranomon X",
     ]
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

@@ -4254,6 +4254,168 @@
       "tint": "red",
       "signatureName": "Volcanic Napalm",
       "signatureSymbol": "flame.fill"
+    },
+    "machgaogamon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "purple",
+      "signatureName": "Winning Knuckle",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "mamemon_x": {
+      "projectileSymbol": "circle.fill",
+      "tint": "red",
+      "signatureName": "Smiley Bomb Cross",
+      "signatureSymbol": "circle.fill"
+    },
+    "mammon_x": {
+      "projectileSymbol": "snowflake",
+      "tint": "red",
+      "signatureName": "Tundra Press",
+      "signatureSymbol": "snowflake"
+    },
+    "manticoremon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "yellow",
+      "signatureName": "Sting Tail",
+      "signatureSymbol": "flame.fill"
+    },
+    "marinbullmon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "purple",
+      "signatureName": "Coral Charge",
+      "signatureSymbol": "drop.fill"
+    },
+    "marinchimairamon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "teal",
+      "signatureName": "Deep Chimera",
+      "signatureSymbol": "bolt.fill"
+    },
+    "megaseadramon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "orange",
+      "signatureName": "Thunder Javelin Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "megalogrowmon_orange": {
+      "projectileSymbol": "circle.fill",
+      "tint": "pink",
+      "signatureName": "Atomic Blaster Orange",
+      "signatureSymbol": "flame.fill"
+    },
+    "megalogrowmon_x": {
+      "projectileSymbol": "scissors",
+      "tint": "gray",
+      "signatureName": "Double Edge Cross",
+      "signatureSymbol": "scissors"
+    },
+    "meicrackmon": {
+      "projectileSymbol": "scissors",
+      "tint": "purple",
+      "signatureName": "Hollow Eyes",
+      "signatureSymbol": "scissors"
+    },
+    "meicrackmon_vicious": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "indigo",
+      "signatureName": "Vicious Claw",
+      "signatureSymbol": "triangle.fill"
+    },
+    "mephismon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "indigo",
+      "signatureName": "Black Sabbath",
+      "signatureSymbol": "flame.fill"
+    },
+    "mephismon_x": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "red",
+      "signatureName": "Death Cloud Cross",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "mermaimon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "cyan",
+      "signatureName": "Anchor Swing",
+      "signatureSymbol": "triangle.fill"
+    },
+    "metalgreymon_virus_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "gray",
+      "signatureName": "Giga Destroyer Cross",
+      "signatureSymbol": "triangle.fill"
+    },
+    "metalmamemon_x": {
+      "projectileSymbol": "circle.fill",
+      "tint": "mint",
+      "signatureName": "Magnetic Bomb",
+      "signatureSymbol": "circle.fill"
+    },
+    "metalphantomon": {
+      "projectileSymbol": "scissors",
+      "tint": "indigo",
+      "signatureName": "Soul Predator",
+      "signatureSymbol": "scissors"
+    },
+    "metaltyranomon_v2": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "brown",
+      "signatureName": "Nuclear Laser V2",
+      "signatureSymbol": "bolt.fill"
+    },
+    "metaltyranomon_x": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "brown",
+      "signatureName": "Nuclear Laser Cross",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "monzaemon_x": {
+      "projectileSymbol": "heart.fill",
+      "tint": "red",
+      "signatureName": "Heart Attack Cross",
+      "signatureSymbol": "heart.fill"
+    },
+    "mummymon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "purple",
+      "signatureName": "Necro Bandage",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "dukemon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "brown",
+      "signatureName": "Royal Saber",
+      "signatureSymbol": "bolt.fill"
+    },
+    "ryugumon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "mint",
+      "signatureName": "Palace Tide",
+      "signatureSymbol": "drop.fill"
+    },
+    "rasielmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "white",
+      "signatureName": "Prayer of Light",
+      "signatureSymbol": "star.fill"
+    },
+    "raguelmon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "gray",
+      "signatureName": "Chaos Degradation",
+      "signatureSymbol": "circle.fill"
+    },
+    "dinorexmon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "brown",
+      "signatureName": "Dino Rex Fang",
+      "signatureSymbol": "triangle.fill"
+    },
+    "diablomon_gerbemon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "gray",
+      "signatureName": "Refuse Bag",
+      "signatureSymbol": "drop.fill"
     }
   },
   "lineDefaults": {

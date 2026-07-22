@@ -2836,6 +2836,114 @@
     "volcanicdramon": {
       "element": "fire",
       "attribute": "virus"
+    },
+    "machgaogamon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "mamemon_x": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "mammon_x": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "manticoremon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "marinbullmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "marinchimairamon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "megaseadramon_x": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "megalogrowmon_orange": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "megalogrowmon_x": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "meicrackmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "meicrackmon_vicious": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "mephismon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "mephismon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "mermaimon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "metalgreymon_virus_x": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "metalmamemon_x": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "metalphantomon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "metaltyranomon_v2": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "metaltyranomon_x": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "monzaemon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "mummymon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dukemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ryugumon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "rasielmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "raguelmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dinorexmon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "diablomon_gerbemon": {
+      "element": "dark",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

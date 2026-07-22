@@ -311,11 +311,12 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 53,
+        XCTAssertEqual(inLine.count, 54,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
                            + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon, "
-                           + "US-158 Duramon, US-159 Hisyaryumon and Ouryumon")
+                           + "US-158 Duramon, US-159 Hisyaryumon and Ouryumon, "
+                           + "US-160 MetalMamemon X")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -394,7 +395,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       "cyberdramon_x", "kazuchimon", "duramon",
                                       // US-159's two, hung off this line's own Omekamon — which
                                       // was a leaf until then, so the arrow cleared a dead end.
-                                      "hisyaryumon", "ouryumon"]
+                                      "hisyaryumon", "ouryumon",
+                                      // US-160's one, hung off this line's own Thunderballmon —
+                                      // a cited parent, with the cited Prince Mamemon above it.
+                                      "metalmamemon_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

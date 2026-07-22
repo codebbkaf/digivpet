@@ -460,7 +460,7 @@ final class AdultSweepUToZTests: XCTestCase {
         XCTAssertEqual(sizes["penc-wg"], 39, "V-dramon Black and XV-mon Black, plus US-158's two")
         XCTAssertEqual(sizes["penc-vb"], 54, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 99, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five")
+        XCTAssertEqual(sizes["tamers"], 103, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -597,8 +597,9 @@ final class AdultSweepUToZTests: XCTestCase {
         // next one worth opening.
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["xros", "vital", "adventure02", "algomon", "commandramon", "diablomon"],
-                       "a line gained or lost its Perfect rung; the sweeps' bill has changed")
+                       ["xros", "vital", "adventure02", "algomon", "commandramon"],
+                       "a line gained or lost its Perfect rung; the sweeps' bill has changed — "
+                           + "US-160 took `diablomon` off this list")
     }
 
     // MARK: - AC: the orphan count, and the whole file still validates
@@ -619,7 +620,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 709, "635 before this story, 643 after it, 693 after US-158, 709 after US-159")
+        XCTAssertEqual(graph.nodes.count, 736, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160")
     }
 
     func testTheGraphValidatesWithNoFindings() {

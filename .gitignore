@@ -24,3 +24,7 @@ sprites_cut/
 # Roster boilerplate from scripts/import_roster.py. Regenerate it; do not commit it. The shipped
 # graph is Resources/evolutions.json, which is hand-curated — see README.md.
 roster.generated.json
+
+# Python bytecode from scripts/
+__pycache__/
+*.pyc

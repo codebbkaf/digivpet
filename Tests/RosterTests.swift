@@ -135,8 +135,14 @@ final class RosterTests: XCTestCase {
         // MetalGreymon / WarGreymon are now drawn by `dmc-v1`, `penc-nsp`, `penc-me` and this
         // tree, and Garurumon / WereGarurumon / MetalGarurumon by `dmc-v2`, `penc-nsp`,
         // `penc-nso` and this tree.
+        //
+        // `diablomon_gerbemon` is US-160's and the first alias authored for a JUNK floor rather
+        // than for a shared thread: `diablomon` needed a junk Perfect before Meicoomon could
+        // branch, and every unused Perfect sheet left in the pack is a real Digimon rather than a
+        // gag one — so the floor draws Gerbemon, which `dmc-v2` already owns as `gerbemon`.
         XCTAssertEqual(aliases.sorted(),
-                       ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
+                       ["diablomon_gerbemon",
+                        "dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
                         "pencds_coelamon", "pencds_megaseadramon",
                         "pencds_metalseadramon", "pencds_seadramon", "pencds_whamon",
                         "pencme_andromon", "pencme_greymon", "pencme_hiandromon",

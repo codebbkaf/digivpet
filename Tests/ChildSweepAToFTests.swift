@@ -322,10 +322,10 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 99,
+        XCTAssertEqual(sizes["tamers"], 103,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
-                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five")
-        XCTAssertEqual(sizes["dmc-v3"], 48)
+                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four")
+        XCTAssertEqual(sizes["dmc-v3"], 51)
         XCTAssertEqual(sizes["palmon"], 28, "US-159's Lilamon and Lilimon X")
     }
 
@@ -603,15 +603,26 @@ final class ChildSweepAToFTests: XCTestCase {
         // Digitama reach a Mega at last.
         let clearedByUS159 = ["icemon", "igamon", "jazardmon", "kyubimon", "lavorvomon",
                               "numemon_x", "omekamon", "sunflowmon", "togemon_x"]
-        let cleared = clearedByUS157 + clearedByUS158 + clearedByUS159
+
+        // **US-160 IS THE FIRST PERFECT SWEEP TO ADD A NODE BACK SINCE US-157**, and the reason is
+        // the same one: it opened a Perfect rung on a line that had none. `diablomon` needed a junk
+        // floor before Meicoomon could branch, and every unused Perfect sheet left in the pack is a
+        // real Digimon rather than a gag one — so the floor is a line-scoped ALIAS on the Gerbemon
+        // sheet, which is why it removes no orphan either. Five leaf Champions cleared against it:
+        // Greymon (Blue) for Mamemon X, Growmon for Manticoremon, BlackGalgomon for MegaloGrowmon X,
+        // Hyougamon for MegaSeadramon X and Meicoomon for both Meicrackmon. Net 81 -> 77.
+        let clearedByUS160 = ["blackgalgomon", "greymon_blue", "growmon", "hyougamon", "meicoomon"]
+        let perfectsFromUS160 = ["diablomon_gerbemon"]
+        let cleared = clearedByUS157 + clearedByUS158 + clearedByUS159 + clearedByUS160
 
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
                            + championsFromUS150 + perfectsFromUS151 + perfectsFromUS154
-                           + perfectsFromUS155 + perfectsFromUS156 + perfectsFromUS157)
+                           + perfectsFromUS155 + perfectsFromUS156 + perfectsFromUS157
+                           + perfectsFromUS160)
                            .filter { !cleared.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 81)
+        XCTAssertEqual(deadEnds.count, 77)
 
         // And the twenty-five really did leave because they lead somewhere now, not because they
         // vanished.
@@ -641,11 +652,11 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 709,
+        XCTAssertEqual(graph.nodes.count, 736,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
-                           + "693 after US-158, 709 after US-159")
+                           + "693 after US-158, 709 after US-159, 736 after US-160")
     }
 
     // MARK: - The whole file still validates

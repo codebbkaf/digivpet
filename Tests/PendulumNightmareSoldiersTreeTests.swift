@@ -241,12 +241,13 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 53,
+        XCTAssertEqual(inLine.count, 58,
                        "US-147 hung Sunmon and Coronamon here, US-148 Firamon, US-149 Gotsumon and "
                            + "Icemon, US-150 PetitMamon, Vorvomon and Lavorvomon, US-154 Musyamon, "
                            + "US-155 ShimaUnimon, US-157 Archnemon and BlueMeramon, US-158 "
                            + "Fantomon, Flaremon and Apollomon, US-159 Insekimon, Lavogaritamon, "
-                           + "Volcanicdramon and Lucemon Falldown")
+                           + "Volcanicdramon and Lucemon Falldown, US-160 Mammon X, Mephismon, "
+                           + "Mephismon X, Mummymon and Dinorexmon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -661,7 +662,13 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
                                       // Devimon — the fallen angel this line was always going to
                                       // take, since the canonical parent is a Child.
                                       "insekimon", "lavogaritamon", "volcanicdramon",
-                                      "lucemon_falldown"]
+                                      "lucemon_falldown",
+                                      // US-160's five: Mephismon over the bolded Wizarmon,
+                                      // Mephismon X and its Dinorexmon over Devimon, Mummymon over
+                                      // THIS line's own Bakemon, and Mammon X beside the Mammon
+                                      // ShimaUnimon already carried.
+                                      "mammon_x", "mephismon", "mephismon_x", "mummymon",
+                                      "dinorexmon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")

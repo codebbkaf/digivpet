@@ -140,7 +140,10 @@ final class AdultSweepMToRTests: XCTestCase {
                        // parent for that variant anywhere in this graph) and Omekamon
                        // (Hisyaryumon). Numemon X is `tamers`' JUNK Champion, so it is the third
                        // junk node in the file with an earned branch, after Raremon and Scumon.
-                       ["madleomon", "manekimon", "mantaraymon_x", "meicoomon", "mimicmon",
+                       // US-160 took ONE more, Meicoomon (both Meicrackmon) — the arrow that
+                       // opened `diablomon`'s Perfect rung, and the only parent this pack can
+                       // draw for either of them.
+                       ["madleomon", "manekimon", "mantaraymon_x", "mimicmon",
                         "nisedrimogemon", "ogremon_x",
                         "parasaurmon", "peckmon", "pidmon",
                         "reppamon", "rhinomon_x"].sorted(),
@@ -378,10 +381,10 @@ final class AdultSweepMToRTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 99, "four Champions and both new Perfects, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five")
+        XCTAssertEqual(sizes["tamers"], 103, "four Champions and both new Perfects, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four")
         XCTAssertEqual(sizes["penc-vb"], 54, "Mikemon and Nefertimon X, plus US-156's two and US-157's four, plus US-158's Entmon")
-        XCTAssertEqual(sizes["penc-ds"], 41, "MoriShellmon, plus US-157's Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon")
-        XCTAssertEqual(sizes["penc-nso"], 53, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four")
+        XCTAssertEqual(sizes["penc-ds"], 43, "MoriShellmon, plus US-157's Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
+        XCTAssertEqual(sizes["penc-nso"], 58, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five")
         XCTAssertEqual(sizes["penc-wg"], 39, "RedV-dramon, plus US-156's two Black V-dramon, plus US-158's two")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
@@ -511,14 +514,20 @@ final class AdultSweepMToRTests: XCTestCase {
     /// Ginryumon, the page's bolded parent, is on `commandramon`, which still has no Perfect rung
     /// at all; Hisyaryumon's own node comment pins it as that line's rehome candidate.
     func testThePerfectSheetsLeftForTheLaterSweepsAreStillUnwired() throws {
-        for id in ["mamemon_x", "omegashoutmon_x", "monzaemon_x"] {
+        for id in ["omegashoutmon_x"] {
             XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it is owed")
             XCTAssertNil(graph.node(id: id),
                          "\(id) is wired now — say which of this story's arrows it is")
         }
 
+        // **US-160 WIRED THE OTHER TWO, AND NEITHER TOOK THE ARROW THIS STORY LEFT.** Mamemon X
+        // and Monzaemon X are Perfects whose display names begin with M, so the M sweep owned
+        // them — and it put both on `dmc-v1` by the variant rule, beside the plain Mamemon and the
+        // plain Monzaemon, rather than on the `tamers` Meramon X / Pegasmon X this story nominated.
+        // Both of those Champions are still full, which is the same answer US-157 and US-159 gave.
         for (perfect, parent) in [("cyberdramon_x", "revolmon"), ("angewomon_x", "tailmon_x"),
-                                  ("hisyaryumon", "omekamon")] {
+                                  ("hisyaryumon", "omekamon"),
+                                  ("mamemon_x", "greymon_blue"), ("monzaemon_x", "numemon")] {
             XCTAssertEqual(graph.parents(of: perfect).map(\.id), [parent],
                            "\(perfect) was wired off a different Champion than the sweep recorded")
         }
@@ -558,7 +567,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 709, "618 before this story, 635 after US-155, 643 after US-156, 709 after US-159")
+        XCTAssertEqual(graph.nodes.count, 736, "618 before this story, 635 after US-155, 643 after US-156, 709 after US-159, 736 after US-160")
     }
 
     func testTheGraphValidatesWithNoFindings() {

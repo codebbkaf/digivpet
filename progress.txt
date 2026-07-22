@@ -21,6 +21,36 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E: THE JUNK-FLAVOURED SHEETS RAN OUT AT US-160 — A NEW JUNK FLOOR IS NOW A LINE-SCOPED
+  ALIAS AND REMOVES NO ORPHAN.** US-148/151/157 each spent an unused gag sheet (Numemon X,
+  CatchMamemon, Karakurumon, Pandamon); by US-160 not one of the 58 Perfect still orphaned was a
+  gag Digimon, so `diablomon`'s floor draws the Gerbemon sheet under `diablomon_gerbemon`, the
+  `dmcv2_vademon` pattern. Price the consequences BEFORE authoring: no orphan removed, `RosterTests`'
+  alias list moves, and `EvolutionCriteriaTests.junkIds` gains a scoped name. The five lines still
+  without a Perfect rung — `xros`, `vital`, `adventure02`, `algomon`, `commandramon` — all pay this.
+- **PHASE E: THE VARIANT RULE HAS A STRONGER FORM — SAME PARENT, NOT JUST SAME LINE — AND AT THE
+  PERFECT RUNG IT IS USUALLY FREE.** Six of US-160's nine variants hang off the very Champion their
+  base form hangs off, which costs no argument and makes the climb the base form's own Mega for
+  nothing. **Read `graph.parents(of: base)` BEFORE the variant's own `Evolves From`.** The limit:
+  a base form's line can hold the cited CLIMB and no cited PARENT (MetalMamemon on `dmc-v2`), and
+  then the variant follows a cited parent elsewhere — `ChildSweepMToZTests.
+  testEveryVariantSitsWithItsBaseFormOrFollowsACitedParent`'s escape hatch. Check BOTH ends.
+- **PHASE E: WIKIMON'S X-ANTIBODY PAGE TITLES ARE SPACED, AND THE UNSPACED GUESS RETURNS AN EMPTY
+  BODY RATHER THAN A REDIRECT.** `MegaSeadramon (X-Antibody)` is 0 bytes; `Mega Seadramon
+  (X-Antibody)` is the page. Same for Megalo Growmon, Metal Greymon (Virus), Metal Mamemon, Metal
+  Tyranomon. Treat a zero-length body as "try the other spacing", never as "no page" — plain forms
+  redirect, parenthesised ones do not.
+- **PHASE E: AN EARLIER SWEEP'S `evolutions.count == 2` CLAIM BREAKS THE MOMENT YOU BRANCH THAT
+  CHAMPION AGAIN, AND SO DOES ITS `authoredUltimates` PARENT SET.** US-160 broke three of the first
+  (Gaogamon, ShimaUnimon, its own Meicoomon) and two of the second (ChaosDukemon, AncientVolcamon).
+  Fix with a NAMED exception (`parent == "gaogamon" ? 3 : 2`) or a named extra parent, never by
+  loosening to `>=` or to a superset. Add `grep -n "evolutions.count, 2" Tests` and
+  `grep -n authoredUltimates Tests` to the pre-flight list beside `inLine.count` and `sweepEggs`.
+- **PHASE E: A BOLDED PARENT IS WORTH SPENDING ON THE CLAIMANT WHOSE ALTERNATIVES COST A WHOLE
+  RUNG.** US-160 gave `tamers`' last leaf Growmon to Manticoremon rather than to its own bolded
+  child MegaloGrowmon Orange: the Orange form was pinned to Growmon (Orange) by the variant rule
+  anyway, and every other reading of Manticoremon opened a Perfect rung, a junk floor and a Mega on
+  a line that had none. One leaf bought two nodes and Dukemon with it. Say so in the node comment.
 - **PHASE E: A BOLDED PARENT CAN BE UNDRAWABLE FOR A REASON OF SHAPE, NOT OF ART — CHECK ITS STAGE.**
   Lucemon Falldown's sole bolded `Evolves From` is Lucemon, a CHILD, and
   `GraphValidationError.invalidStageTransition` refuses a Child -> Perfect edge. Every earlier
@@ -4383,4 +4413,149 @@ The eleven, each `Champion -> Perfect -> Ultimate`:
   Lucemon Falldown's comment as belonging over whichever Demon Lord line a later sweep opens. The 81
   leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge; the five Ultimates
   this story opened are NOT on it, since the ledger stops below the top rung.
+---
+
+## 2026-07-23 - US-160: Orphan sweep: Perfect M
+
+Wired the TWENTY-ONE playable Perfect whose display name begins with M that were still orphans —
+the biggest band the Perfect rung has — for 21 Perfect nodes, FIVE new Ultimates and ONE junk
+Perfect floor. Fourth story at the Perfect rung.
+
+**Orphan count, Appendix B over a regenerated `roster.generated.json`: 219 BEFORE -> 193 AFTER.**
+Perfect bucket 58 -> 37 (the M band 21 -> 0), Ultimate bucket 145 -> 140. Graph 709 -> 736.
+Files changed: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`scripts/us160_author.py` (new, the record of what was authored), `Tests/PerfectSweepMTests.swift`
+(new, 28 tests), and twenty-six existing test files. Full suite 2292 green (2264 before), build
+green, validator zero findings.
+
+The twenty-one, each `Champion -> Perfect -> Ultimate`:
+  MachGaogamon          gaogamon(wanyamon)          -> ancientvolcamon
+  Mamemon X             greymon_blue(dmc-v1)        -> banchomamemon
+  Mammon X              shimaunimon(penc-nso)       -> pencnso_skullmammon
+  Manticoremon          growmon(tamers)             -> dukemon             NEW
+  MarinBullmon          shellmon(dmc-v3)            -> ryugumon            NEW
+  MarinChimairamon      octmon(penc-ds)             -> plesiomon
+  MegaSeadramon X       hyougamon(penc-nsp)         -> metalseadramon
+  MegaloGrowmon Orange  growmon_orange(tamers)      -> dukemon             NEW
+  MegaloGrowmon X       blackgalgomon(tamers)       -> chaosdukemon
+  Meicrackmon           meicoomon(diablomon)        -> rasielmon           NEW
+  Meicrackmon Vicious   meicoomon(diablomon)        -> raguelmon           NEW
+  Mephismon             wizarmon(penc-nso)          -> piemon
+  Mephismon X           pencnso_devimon(penc-nso)   -> dinorexmon          NEW
+  Mermaimon             ikkakumon(penc-ds)          -> vikemon
+  MetalGreymon Virus X  devimon(dmc-v1)             -> blitzgreymon
+  MetalMamemon X        thunderballmon(penc-me)     -> princemamemon
+  MetalPhantomon        bakemon(dmc-v3)             -> gokumon
+  MetalTyranomon V2     darktyranomon(dmc-v5)       -> mugendramon
+  MetalTyranomon X      cyclomon(dmc-v5)            -> mugendramon
+  Monzaemon X           numemon(dmc-v1)             -> dmcv1_shinmonzaemon
+  Mummymon              pencnso_bakemon(penc-nso)   -> deathmon
+plus the junk floor `diablomon_gerbemon` under Meicoomon.
+
+**Learnings for future iterations:**
+
+- **A JUNK FLOOR CAN HAVE TO BE A LINE-SCOPED ALIAS, BECAUSE THE JUNK-FLAVOURED SHEETS ARE GONE.**
+  US-148/151/157 each spent an unused sheet — Numemon X, CatchMamemon, Karakurumon, Pandamon — so
+  each floor also removed an orphan. By this story not ONE of the 58 Perfect still orphaned is a gag
+  Digimon (they are Okuwamon, Paildramon, Rapidmon, Vamdemon X…), so `diablomon`'s floor draws the
+  Gerbemon sheet under a scoped id, the `dmcv2_vademon` pattern. **Consequences to price in
+  advance:** it removes NO orphan, `RosterTests`' alias list moves, and `EvolutionCriteriaTests.
+  junkIds` gains its first scoped name. Every remaining line without a Perfect rung — `xros`,
+  `vital`, `adventure02`, `algomon`, `commandramon` — will pay the same way.
+
+- **FIFTEEN OF TWENTY-ONE PLACEMENTS WERE FREE, AND THE RATIO IS CUMULATIVE RATHER THAN LUCKY.**
+  US-157 managed 10/19, US-158 7/14, US-159 6/11, this one 15/21 — because three sweeps' worth of
+  Megas are now in place, so US-152's "intersect `Evolves From` against `Evolves To`" closes on a
+  line that already has both ends far more often. **Price an M-Z or Ultimate sweep off that**: the
+  expensive node is now the one whose whole family is on a line with no Mega, not the average one.
+
+- **THE VARIANT RULE HAS A STRONGER FORM THAN "same line": SAME PARENT — AND AT THE PERFECT RUNG IT
+  IS USUALLY AVAILABLE AND ALWAYS CHEAPER.** Six of this story's nine variants hang off the very
+  Champion their base form hangs off (Mammon X off ShimaUnimon, MetalGreymon Virus X off Devimon,
+  MetalTyranomon V2 off DarkTyranomon and X off Cyclomon, Monzaemon X off Numemon, MegaloGrowmon
+  Orange off Growmon (Orange)), which costs no new argument at all and makes the climb the base
+  form's own Mega for free. Look up `graph.parents(of: base)` BEFORE reading the variant's own
+  `Evolves From` — it is often a better answer than the citation list, and it is what
+  `AdultSweepEToGTests.testTheOneVariantSitsWithItsBaseForm` already asserts.
+
+- **AND THE RULE HAS A LIMIT: A BASE FORM'S LINE CAN HOLD THE CLIMB AND NO CITED PARENT.**
+  MetalMamemon is `dmc-v2`, whose Metal Garurumon IS cited — but `dmc-v2` has no Champion on
+  MetalMamemon X's page, so honouring the line meant inventing an arrow at BOTH ends. It followed
+  Thunderballmon on `penc-me` to the cited Prince Mamemon instead, which is
+  `ChildSweepMToZTests.testEveryVariantSitsWithItsBaseFormOrFollowsACitedParent`'s escape hatch.
+  **Check both ends of the base form's line before promising the variant to it.**
+
+- **A BOLDED PARENT CAN BE WORTH SPENDING ON SOMETHING ELSE — SAY SO IN THE COMMENT.** Growmon is
+  MegaloGrowmon Orange's bolded parent AND `tamers`' last leaf Champion. The Orange form is pinned
+  to Growmon (Orange) by the variant rule anyway, while Manticoremon's only other readings were
+  Mimicmon (`algomon`), Reppamon and Tia Ludomon (`vital`) — each of which would have opened a
+  Perfect rung, a junk floor and a Mega for one node. So the leaf went to Manticoremon and bought
+  Dukemon, the Mega `tamers` had been owed since US-151. **When a leaf is contested, give it to the
+  claimant whose alternatives cost a whole rung.**
+
+- **`diablomon` COST THREE EXTRA NODES AND PROMOTED TWO EGGS, AND FOUR LINES ARE LEFT.** Meicoomon is
+  the only parent this pack can draw for either Meicrackmon, so the rung had to open; US-158's rule
+  ("owe a Mega in the same story") made it Perfect + Ultimate + junk floor at once, and
+  `MainScreenModel.startingDigitamaId` then promoted Kera and Meicoo Digitama — `EggHatchingTests`
+  moved in BOTH directions. US-159 said no Perfect sweep could promote another egg; that was right
+  about lines that HAVE a Perfect rung and wrong about opening one. The nine eggs still unraisable
+  sit on `commandramon`, `algomon`, `vital` and `adventure02`. **`vital` is the cheapest rung left
+  to open — 33 nodes, ten Champions, every one of them a leaf — and it already has three pinned
+  rehome candidates (Boutmon, Cargodramon, LadyDevimon X).**
+
+- **AN ORPHAN'S "no drawable parent" CAN BE TOTAL, NOT JUST INCONVENIENT.** Mephismon X's whole
+  `Evolves From` is Mephismon (a Perfect) and Velgrmon (Armor-Hybrid, and not a node at all) — one
+  worse than US-159's LadyDevimon X, which at least had Numemon X. The answer is the variant rule
+  plus a flavour argument among the chosen line's Champions, and the comment has to ADMIT it; the
+  new test greps for "NO DRAWABLE CITED PARENT". Same for MachGaogamon's climb: both its bolded
+  `Evolves To` (Mirage Gaogamon, Z'd Garurumon) are idle-only, so `edgeToDexOnlyNode` forbids the
+  canonical top of that thread forever.
+
+- **WIKIMON PAGE TITLES FOR X-ANTIBODY FORMS ARE SPACED, AND THE UNSPACED GUESS RETURNS AN EMPTY
+  BODY RATHER THAN A REDIRECT.** `MegaSeadramon (X-Antibody)` is 0 bytes; `Mega Seadramon
+  (X-Antibody)` is the page. Same for Megalo Growmon, Metal Greymon (Virus), Metal Mamemon, Metal
+  Tyranomon. **Fetch with the spaced spelling first and treat a zero-length body as "try the other
+  spacing", not as "no page".** Plain forms redirect (`MachGaogamon` -> `Mach Gaogamon`); the
+  parenthesised ones do not.
+
+- **`Set(graph.parents(of:))` EQUALITY ON AN EARLIER STORY'S ULTIMATE IS THE ASSERTION A PERFECT
+  SWEEP BREAKS, AND THERE ARE THREE SUCH FILES NOW.** This story hung MegaloGrowmon X under
+  US-157's ChaosDukemon and MachGaogamon under US-158's AncientVolcamon. Fix by NAMING the new
+  parent in that story's `authoredUltimates` table, never by loosening to a superset — and grep
+  `authoredUltimates` across `PerfectSweep*Tests` BEFORE choosing a climb, the same way US-151 said
+  to grep `Set(graph.parents`.
+
+- **A `junkFloors` / `swept` table in an earlier sweep asserts `evolutions.count == 2`, and that
+  breaks the moment you branch that Champion again.** Three did here: Gaogamon in
+  `PerfectSweepDToGTests`, ShimaUnimon in `AdultSweepSToTTests`, and this story's own Meicoomon
+  (which carries two Perfects). The fix that keeps the claim is a NAMED exception
+  (`parent == "gaogamon" ? 3 : 2`), not a `>=`. Add `grep -n "evolutions.count, 2" Tests` to the
+  pre-flight list beside `inLine.count` and `sweepEggs`.
+
+- **The knock-on list for this rung, all twenty-six files:** node count 709 -> 736 in
+  `ElementCatalogTests`, `EvolutionGraphValidatorTests`, all six `AdultSweep*Tests`, all three
+  `ChildSweep*Tests` and all three `PerfectSweep*Tests`; the per-line dict in `EvolutionGraphTests`
+  (`dmc-v1` 32->35, `dmc-v3` 48->51, `dmc-v5` 23->25, `diablomon` 17->22, `penc-ds` 41->43,
+  `penc-me` 53->54, `penc-nso` 53->58, `penc-nsp` 36->37, `tamers` 99->103, `wanyamon` 26->27) and
+  the same lines' `sizes[...]` rows in every `*Sweep*Tests`, `BabyIISweepTests` and
+  `DigitamaSweepTests`; `inLine.count` AND `sweepEggs` in `PendulumDeepSaversTreeTests`,
+  `PendulumMetalEmpireTreeTests`, `PendulumNatureSpiritsTreeTests` and
+  `PendulumNightmareSoldiersTreeTests`; `laterSweeps` in `DMCVersion5TreeTests`; `nodes.count` and
+  `connectors.count` for `dmc-v1` in `EvolutionTreeTests`; the dead-end ledger in
+  `ChildSweepAToFTests` (81 -> 77) and its twin in all three `PerfectSweep*Tests`; the leaf lists in
+  `AdultSweepHToLTests` (Hyougamon) and `AdultSweepMToRTests` (Meicoomon); `AdultSweepMToRTests`'
+  still-unwired list (Mamemon X and Monzaemon X left it, re-pinned with the parents they took) and
+  `AdultSweepSToTTests`' MetalTyranomon X claim, FLIPPED to name Cyclomon; the "lines with no
+  Perfect rung" set in `AdultSweepUToZTests` and all three `PerfectSweep*Tests` (`diablomon` gone);
+  `EvolutionCriteriaTests.junkIds`; `RosterTests`' alias list; `SeedRosterTests`' `patamonLine`
+  and `gazimonLine` verified sets; BOTH lists in `EggHatchingTests`. `MinigameAssignmentTests`,
+  `DexModel.lineTitles` and both `lineDefaults` did not move: no new line.
+
+- REMAINS: US-161 onward (47/56 passing). Eight Perfect and Ultimate sweeps and the Armor-Hybrid one
+  hold the remaining 193 orphans: 37 Perfect, 140 Ultimate, 16 Armor-Hybrid. Five lines still have
+  no Perfect rung — `xros`, `vital`, `adventure02`, `algomon`, `commandramon`. Sagomon, Sanzomon and
+  Shawujinmon are still the three Saiyu Warriors Perfects owed. Ogudomon is still pinned in Lucemon
+  Falldown's comment. The 77 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an
+  out-edge; the five Ultimates this story opened are NOT on it, since the ledger stops below the
+  top rung.
 ---

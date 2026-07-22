@@ -193,7 +193,14 @@ final class EggHatchingTests: XCTestCase {
                         // an earned branch to LadyDevimon X and on to BeelStarmon X. So the Terrier
                         // egg reaches a Mega only by being neglected first, which is a strange
                         // thread and a legal one.
-                        "rena_digitama", "terrier_digitama"],
+                        "rena_digitama", "terrier_digitama",
+                        // US-160's two, and they are `diablomon`'s WHOLE egg list — the same shape
+                        // US-158's four `wanyamon` eggs had, one rung lower down the bill: that
+                        // line had no Perfect rung AND no Ultimate rung at all until the M sweep
+                        // put the two Meicrackmon over Meicoomon and Rasielmon and Raguelmon over
+                        // them. Kera and Meicoo Digitama both hatch onto Kuramon, so opening the
+                        // top of that one thread promoted both at once.
+                        "kera_digitama", "meicoo_digitama"],
                        "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate — and US-157 promoted five `tamers` eggs by giving that line an Ultimate rung at last")
 
         // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
@@ -232,10 +239,14 @@ final class EggHatchingTests: XCTestCase {
         // here sit on `commandramon`, `algomon`, `diablomon`, `vital` or `adventure02`, and not one
         // of those five lines has a Perfect rung at all — so promoting any of them means opening a
         // whole rung, not adding a node to one.
+        //
+        // US-160 takes TWO more, Kera and Meicoo, and it is the case US-159 said could only happen
+        // by opening a whole rung: `diablomon` had neither a Perfect nor an Ultimate rung, and the
+        // M sweep authored both over Meicoomon. Four lines are left here — `commandramon`,
+        // `algomon`, `vital` and `adventure02` — and every one still stops at the Champion rung.
         XCTAssertEqual(unraisable,
                        ["commandra_digitama", "ghost_digitama",
-                        "kera_digitama",
-                        "ludo_digitama", "meicoo_digitama",
+                        "ludo_digitama",
                         "morpho_digitama", "pulse_digitama",
                         "sunariza_digitama", "v_digitama", "worm_digitama",
                         "zuba_digitama"])

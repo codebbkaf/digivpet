@@ -223,12 +223,12 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 99, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
+        XCTAssertEqual(sizes["tamers"], 103, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
                            + "US-152 added FlareLizamon and Growmon Orange; "
-                           + "US-156 added Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five")
-        XCTAssertEqual(sizes["wanyamon"], 26,
+                           + "US-156 added Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four")
+        XCTAssertEqual(sizes["wanyamon"], 27,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon, "
-                           + "plus US-158's four, plus US-159's two")
+                           + "plus US-158's four, plus US-159's two" + ", plus US-160's one")
         XCTAssertEqual(sizes["dmc-v4"], 29, "US-151 added the two Burgermon, US-156 Xiquemon and Huankunmon")
         XCTAssertEqual(sizes["penc-wg"], 39,
                        "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon, "
@@ -236,7 +236,7 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(sizes["penc-vb"], 54,
                        "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon, "
                            + "US-156 WezenGammamon and Canoweissmon, plus US-158's Entmon")
-        XCTAssertEqual(sizes["penc-me"], 53, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two")
+        XCTAssertEqual(sizes["penc-me"], 54, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one")
     }
 
     /// **The variant rule.** Four of the seven are variants — Black, and nothing else at this rung —
@@ -401,10 +401,10 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 709,
+        XCTAssertEqual(graph.nodes.count, 736,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
-                           + "693 after US-158, 709 after US-159")
+                           + "693 after US-158, 709 after US-159, 736 after US-160")
     }
 
     func testTheGraphValidatesWithNoFindings() {

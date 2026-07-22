@@ -60,6 +60,14 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// a Journey to the West line, following Tsuchidarumon the mud daruma, which US-148 chose as
     /// that same line's junk CHAMPION. It is a plain roster id, so it removes an orphan, and it is
     /// in no tree markdown — the grep US-140 insists on.
+    /// US-160 added ONE, and it is the first junk floor in this list that is a LINE-SCOPED ALIAS
+    /// rather than a plain roster id: `diablomon` had no Perfect rung at all when the M sweep put
+    /// the two Meicrackmon over Meicoomon, and not one of the fifty-eight Perfect still orphaned
+    /// when that story ran is junk-flavoured — so there was no unused sheet to spend the way
+    /// CatchMamemon, Karakurumon and Pandamon were spent. `diablomon_gerbemon` draws the Gerbemon
+    /// sheet under a line-scoped id, the `dmcv2_vademon` pattern, and so removes no orphan; a bag
+    /// of rubbish is the right floor under Troopmon, the faceless mook US-148 chose as this line's
+    /// junk CHAMPION. It is in no tree markdown either.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
@@ -69,7 +77,7 @@ final class EvolutionCriteriaTests: XCTestCase {
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
-        "andiramon_virus", "karakurumon", "catchmamemon", "pandamon",
+        "andiramon_virus", "karakurumon", "catchmamemon", "pandamon", "diablomon_gerbemon",
         // Ultimate
         "kingetemon",
     ]
