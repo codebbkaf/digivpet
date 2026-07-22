@@ -122,12 +122,20 @@ final class DMCVersion1TreeTests: XCTestCase {
 
     // MARK: - AC4: the tree is reachable from a Digitama, end to end
 
+    /// Since US-144 a line may have SEVERAL eggs — the first orphan sweep hangs an alternate
+    /// Digitama off the line whose species it belongs to, rather than opening a one-node line for
+    /// it — so the claim generalises from "reachable from THE egg" to "reachable from one of the
+    /// line's eggs". The original egg is still asserted to be among them, because an alternate that
+    /// had quietly replaced it would satisfy a bare reachability check.
     func testEveryNodeInTheLineIsReachableFromTheLinesDigitama() throws {
         let egg = try node("agu_digitama")
         XCTAssertEqual(egg.line, line)
 
-        var reached: Set<String> = [egg.id]
-        var frontier = [egg.id]
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
+        XCTAssertTrue(eggs.contains(egg.id), "the line's own egg is gone")
+
+        var reached = Set(eggs)
+        var frontier = eggs
         while let id = frontier.popLast() {
             for edge in graph.node(id: id)?.evolutions ?? [] where !reached.contains(edge.to) {
                 reached.insert(edge.to)
@@ -138,7 +146,7 @@ final class DMCVersion1TreeTests: XCTestCase {
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
         XCTAssertFalse(inLine.isEmpty)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
-                       "unreachable from Agu Digitama, so not playable end to end")
+                       "unreachable from any egg of the line, so not playable end to end")
     }
 
     /// Every stage from Digitama to Ultimate is occupied, which is what "end to end" means beyond

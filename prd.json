@@ -653,8 +653,8 @@
         "Typecheck passes"
       ],
       "priority": 31,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Digitama orphans 45 -> 23 (all 23 left are L-Z, US-145's); whole-file orphans 628 -> 598, the extra 8 being the Baby I this sweep opened. 30 nodes added, 300 -> 330: 22 Digitama plus 8 Baby I. Twelve eggs join a device line their species is already wired into and add no rung (agu2006/gabublack/elec/kune/hyoko/angora/cand/beta/kame/kuda/kuda2006/espi); ten open a thread and bring their own Baby I, in five new lines - tamers, wanyamon, diablomon, commandramon, algomon. Every Wikimon arrow is cited in the node's comment. Build green, 1936 tests 0 failures, validator zero findings. TWO DEVIATIONS, both deliberate and both pinned by a test. (1) The AC 'every edge has at least one condition with a non-empty hint' is NOT met for the 22 hatch edges, and cannot be at this stage: EggHatcher.hatchTarget reads minEnergy and ignores conditions entirely, so a condition would be data that lies - and since every egg has exactly one way out, a condition an engine DID honour could leave a player's only egg unable to hatch. All 12 previously-shipped hatch edges are unconditional for the same reason; DigitamaSweepTests.testHatchEdgesAreUnconditionalAndUngatedByType states it as a claim. (2) The AC 'every Digimon in the range gets at least one in-edge' is impossible at Digitama - nothing evolves into an egg. Every one of the 22 got an out-edge, which is what the Appendix B count measures. Two invariants had to be generalised, and six earlier stories' tests with them: a line may now have SEVERAL eggs (the 'one egg per line' assertion in all six Pendulum/DMC tree tests now pins the exact egg list instead), and a node below Ultimate may be a dead end (the 8 new Baby I; ledgered by testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened for US-146/US-147 to shrink). MainScreenModel.startingDigitamaId now filters a new game's egg through EvolutionGraph.reachesUltimate so nobody starts on an unfinished thread."
     },
     {
       "id": "US-145",

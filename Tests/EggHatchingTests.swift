@@ -159,12 +159,29 @@ final class EggHatchingTests: XCTestCase {
     /// `randomElement`, so over many picks it must land on more than one of the seed eggs —
     /// and never on anything that is not a candidate.
     func testTheDefaultChooserPicksARandomDigitama() {
-        let candidates = EvolutionGraph.bundled.nodes(at: .digitama).filter { !$0.dexOnly }
+        let graph = EvolutionGraph.bundled
+        let candidates = graph.nodes(at: .digitama)
+            .filter { !$0.dexOnly && graph.reachesUltimate(from: $0.id) }
         XCTAssertEqual(Set(candidates.map(\.id)),
                        ["agu_digitama", "gabu_digitama", "pal_digitama", "pata_digitama", "piyo_digitama",
                         "gazi_digitama", "tento_digitama", "goma_digitama", "baku_digitama",
-                        "flora_digitama", "funbee_digitama", "heriss_digitama"],
-                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, and US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees")
+                        "flora_digitama", "funbee_digitama", "heriss_digitama",
+                        "agu2006_digitama", "gabublack_digitama", "elec_digitama", "kune_digitama",
+                        "hyoko_digitama", "angora_digitama", "cand_digitama", "beta_digitama",
+                        "kame_digitama", "kuda_digitama", "kuda2006_digitama", "espi_digitama"],
+                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, and US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate")
+
+        // The other ten eggs US-144 authored are deliberately NOT candidates: each opens a thread
+        // whose Baby I is still the top of it, and a new game must not start on one. That filter
+        // lives in `MainScreenModel.startingDigitamaId` and is the reason `reachesUltimate` exists.
+        let unraisable = graph.nodes(at: .digitama)
+            .filter { !$0.dexOnly && !graph.reachesUltimate(from: $0.id) }
+            .map(\.id)
+            .sorted()
+        XCTAssertEqual(unraisable,
+                       ["bear_digitama", "blackguil_digitama", "bluco_digitama", "commandra_digitama",
+                        "gao_digitama", "ghost_digitama", "guil_digitama", "imp_digitama",
+                        "kera_digitama", "koe_digitama"])
 
         var seen: Set<String> = []
         for _ in 0..<200 {

@@ -402,8 +402,16 @@ final class MainScreenModel: ObservableObject {
     ///
     /// `dexOnly` Digitama are excluded — an egg that hatches has to animate, and a dexOnly node has
     /// no animated sheet to slice.
+    ///
+    /// Eggs whose thread does not yet reach an Ultimate are excluded too, which is US-144's doing:
+    /// an orphan sweep authors one rung of the ladder at a time, so the file now holds eggs that
+    /// hatch into a Baby I with nothing above it. Handing one of those to somebody who has just
+    /// installed the app is a game that stops after a day. The `isEmpty` fallback keeps this total
+    /// rather than correct-or-crash: if no thread were finished, a startable egg still beats none.
     private var startingDigitamaId: String? {
-        chooseStartingDigitama(graph.nodes(at: .digitama).filter { !$0.dexOnly })?.id
+        let playable = graph.nodes(at: .digitama).filter { !$0.dexOnly }
+        let raisable = playable.filter { graph.reachesUltimate(from: $0.id) }
+        return chooseStartingDigitama(raisable.isEmpty ? playable : raisable)?.id
     }
 
     /// Opens the saved game, starting a new one if there is none, then reads health data once so

@@ -27,27 +27,26 @@ final class MinigameAssignmentTests: XCTestCase {
     }
 
     /// Exactly which lines share a game, spelled out so that a line landing on a shared game by
-    /// accident reads as a slip rather than as the pattern. SIX pairs since US-143, and no line is
-    /// alone with a game any more: twelve lines, six games, two lines each. The two
-    /// nature-flavoured trees on the timing bar, Deep Savers beside Ver.3 on the sprint,
-    /// Nightmare Soldiers beside Ver.5 on sequence recall, Wind Guardians beside Ver.4 on
-    /// reflex strike — that one the only pair that shares Digimon as well as a game, both trees
-    /// being Piyomon's — Metal Empire beside Ver.1 on the button masher, and Virus Busters beside
-    /// Ver.2 on the power meter, which was the last game a single line still held. Written as the
-    /// whole game -> [lines] dictionary rather than as a list of pairs, so a new tree costs one
-    /// literal; from here the sharers are TRIPLES, and the tie-break is unchanged — fewest Digimon
-    /// behind the game, flavour breaks ties.
+    /// accident reads as a slip rather than as the pattern. It was six PAIRS at US-143 — twelve
+    /// lines, six games, two each — and US-144's five sweep lines make five of the six a TRIPLE,
+    /// leaving Power Meter the one game still on two because it was the game carrying the most
+    /// Digimon when the tie-break was run. Written as the whole game -> [lines] dictionary rather
+    /// than as a list of pairs, so a new line costs one literal; the tie-break is unchanged —
+    /// fewest Digimon behind the game, flavour breaks ties.
+    ///
+    /// The name still says "pairs" and no longer should; it is left alone because renaming a test
+    /// loses its history, and the literal below is the claim.
     func testTheSharedGamesAreExactlyTheAuthoredPairs() {
         let sharers = Dictionary(grouping: MinigameAssignment.byLine.keys,
                                  by: { MinigameAssignment.byLine[$0]! })
             .filter { $0.value.count > 1 }
             .mapValues { $0.sorted() }
 
-        XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp"],
-                                 .crownSprint: ["dmc-v3", "penc-ds"],
-                                 .sequenceRecall: ["dmc-v5", "penc-nso"],
-                                 .reflexStrike: ["dmc-v4", "penc-wg"],
-                                 .buttonMasher: ["dmc-v1", "penc-me"],
+        XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp", "tamers"],
+                                 .crownSprint: ["commandramon", "dmc-v3", "penc-ds"],
+                                 .sequenceRecall: ["diablomon", "dmc-v5", "penc-nso"],
+                                 .reflexStrike: ["algomon", "dmc-v4", "penc-wg"],
+                                 .buttonMasher: ["dmc-v1", "penc-me", "wanyamon"],
                                  .powerMeter: ["dmc-v2", "penc-vb"]])
     }
 

@@ -42,6 +42,43 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   only the per-id rows — `ElementCatalogTests.testEveryGraphLineHasALineDefault` and its moves
   twin. Missed by US-143's first pass; it is a ninth place on the knock-on list, and it only
   applies when the story opens a line rather than adding to one.
+- **PHASE E SWEEPS: a sweep authors ONE RUNG, so two invariants the device trees had are gone.**
+  US-144 broke both on purpose and pinned each as a claim rather than letting it rot:
+  (a) **a line may have SEVERAL Digitama** — an alternate egg hangs off the line whose species it
+  belongs to rather than opening a one-node line, so `dmc-v2` has three eggs; the "one egg per
+  line" assertion in ALL SIX tree-test files became a pinned egg LIST, and every
+  `...IsReachableFromItsDigitama` seeds its BFS from every egg of the line.
+  (b) **a node below Ultimate may be a dead end** — the Baby I an egg hatches into has to exist
+  before the Baby II above it does. The replacement for "zero dead ends" is a LEDGER
+  (`DigitamaSweepTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened`) that fails in
+  BOTH directions: a ninth dead end fails it, and so does wiring one of the eight onward. The next
+  sweep is meant to edit that list down and is told to rather than having to notice.
+- **PHASE E SWEEPS: 45 free Digitama and 33 free Baby I is the allocation the whole phase rests on.**
+  `EggHatcher.hatchTarget` reads `node.evolutions.first`, so an egg has exactly ONE hatch edge and a
+  later story CANNOT give a new Baby I an in-edge by adding a second edge to an already-spent egg.
+  So an egg either pairs 1:1 with a Baby I it opens, or doubles up onto an existing one — and
+  US-144/US-145 between them decide, for good, which Baby I ever get an in-edge. US-144 spent 22
+  eggs: 12 doubled up (their species was already wired, or is dexOnly/absent so no thread could
+  reach it), 10 opened a Baby I. That leaves US-145 23 eggs for 25 still-orphaned Baby I, so
+  **US-145 must double up as little as it can** or some Baby I can never be reached.
+- **PHASE E SWEEPS: a new game must not start on an unfinished thread.**
+  `MainScreenModel.startingDigitamaId` filters candidates through
+  `EvolutionGraph.reachesUltimate(from:)` (US-144). Without it a fresh install could land on
+  `guil_digitama`, hatch Jyarimon and stop there. A sweep that opens a thread does NOT need to do
+  anything for this; it is automatic. But a sweep that FINISHES one silently adds a starting egg,
+  and `EggHatchingTests.testTheDefaultChooserPicksARandomDigitama` pins both halves of the split.
+- **PHASE E SWEEPS: Wikimon two hops down is how you find a species' Baby I.** Fetch the CHILD's
+  page, read `Evolves From` for its Baby II, then that Baby II's `Evolves From`. Better still,
+  fetch every free Baby I and read its `Evolves To` once — 33 curl calls gave US-144 the whole
+  Baby I -> Baby II map in two minutes, and US-146/US-147 can reuse the same sweep. **`curl` works
+  and Python's `urllib` HANGS** in this sandbox; shell out. The parse is
+  `re.split(r'<h2[^>]*>', html)` then `<span class="mw-headline" id="...">` for the section name.
+- **PHASE E SWEEPS: a dexOnly or ABSENT species cannot be given a thread, so its egg doubles up.**
+  Betamon, Kamemon, Kudamon and Kudamon 2006 are idle-only; **Espimon has no sheet at all**, not
+  even an idle frame. Their eggs went onto the device line whose In-Training Wikimon draws that
+  species from (Betamon and Kamemon both from Pukamon -> `penc-ds`, Espimon from Caprimon ->
+  `penc-me`). Where even that is absent, say so in the comment and call it a flavour choice rather
+  than dressing it as a citation — `kuda_digitama`'s comment does exactly that.
 - **PHASE E: a substring search misses a letter INSIDE a name.** `Jureimon` is not a substring of
   `Jyureimon`, so the document's own bracketed spelling does not find its own sheet. Search a
   PREFIX, not the whole name, before calling anything absent.
@@ -2587,4 +2624,58 @@ Build green, 1921 tests, 0 failures, validator zero findings.
 - REMAINS: US-144 onward (30/56 passing). The eleven device trees are done; US-144..169 are the 26
   orphan sweeps over the remaining 628, which by stage are Ultimate 166, Adult 129, Perfect 114,
   Child 88, Digitama 45, Baby II 37, Baby I 33, Armor-Hybrid 16.
+---
+
+## 2026-07-22 - US-144 - Orphan sweep: Digitama A-K
+
+The first of Phase E's 26 sweeps, and the first story since US-008 to open a line that is not a
+device tree. 30 nodes, 300 -> 330. Digitama orphans 45 -> 23; whole-file orphans 628 -> 598 (the
+extra 8 are the Baby I this sweep opened, which the Appendix B rule counts as connected the moment
+they have an in-edge).
+
+Files: `Resources/evolutions.json` (+30 nodes), `Resources/elements.json` and `Resources/moves.json`
+(+30 entries and 5 `lineDefaults` each), `Sources/DexModel.swift` (5 line titles),
+`Sources/MinigameAssignment.swift` (5 assignments), `Sources/EvolutionGraph.swift`
+(`reachesUltimate(from:)`), `Sources/MainScreenModel.swift` (starting-egg filter), new
+`Tests/DigitamaSweepTests.swift` (15 tests), `docs/evolutions-schema.md`, and TEN existing test
+files. Build green, 1936 tests, 0 failures, validator zero findings.
+
+**Learnings for future iterations:**
+
+- **THE SWEEP'S RULE, and it is the one US-145..169 should reuse.** A sweep has no document, so
+  what stands in for one is: (1) an egg whose species is ALREADY a node hangs off that species'
+  line and hatches onto that line's Baby I, adding no rung at all; (2) an egg whose species is NOT
+  in the graph opens a thread and brings its own Baby I, taken from Wikimon two hops down. Twelve
+  of twenty-two went the first way and ten the second. The first way is what keeps the phase from
+  producing dozens of one-node lines, which is an explicit acceptance criterion.
+- **AUTHORING ONTO AN EXISTING LINE BREAKS SIX EARLIER STORIES' TESTS, and that is the real cost of
+  this story.** 32 failures on the first run, every one of them an assertion that a line has ONE
+  egg or has exactly N nodes. Budget for it: the fix is mechanical but it is ten files. The
+  generalisation to make is "reachable from ANY egg of the line", and for a count, EXCLUDE the
+  sweep's eggs by name (`$0.line == line && !sweepEggs.contains($0.id)`) rather than bumping the
+  total — bumping it silently changes what the earlier story's notes claimed.
+- **`EvolutionNode` has NO `comment` property.** The key is authored in `evolutions.json` and never
+  decoded; a test that wants to grep a comment loads the raw JSON out of `Bundle.main` and reads
+  `nodes[]["comment"]`, exactly as every Pendulum tree test already does. Cost one build.
+- **The two ACs a Digitama sweep cannot meet literally, with the reasons, so US-145 need not
+  re-derive them.** "Every Digimon in the range gets an in-edge" — nothing evolves INTO an egg.
+  "No edge is unconditional" — `EggHatcher` ignores `conditions`, and with one hatch edge per egg a
+  condition that WAS honoured could leave a player's only egg unable to hatch. Both are recorded in
+  `notes` and both are stated as a test rather than left as prose.
+- **Nine knock-on places, and the list is different from a device tree's.** `EvolutionGraphTests`'
+  per-line dict; `graph.nodes.count` in `ElementCatalogTests` AND `EvolutionGraphValidatorTests`;
+  `EggHatchingTests`' candidate set; `MinigameAssignmentTests`' sharer map; `DexModel.lineTitles`;
+  `MinigameAssignment.byLine`; `elements.json`/`moves.json` `lineDefaults`; `EvolutionTreeTests`'
+  `dmc-v1` layout counts; and every tree test of a line the sweep touched. NOT on the list this
+  time: `RosterTests`' alias list and `SeedRosterTests`' `seedLines` — a sweep authors PLAIN roster
+  ids only (that is the entire point of it), so no alias is created and no seed line changes.
+- **The pre-flight checker earned its keep for the fourth story running.** Roster stage vs authored
+  stage, sprite on disk, dexOnly, one-rung transitions, CROSS-LINE edges, symbol+tint uniqueness
+  within a line, signature-name uniqueness against the whole file, and `testElementsVaryWithinALine`
+  (>1 element per line — easy to trip with a 2-node line). It came back clean first try and the
+  only failures the build found were in OTHER stories' tests, which is where a checker cannot look.
+- REMAINS: US-145 onward (31/56 passing). US-145 is the other half of the Digitama, 23 eggs for 25
+  still-orphaned Baby I — read the allocation pattern at the top of this file BEFORE choosing
+  targets, because doubling up an egg there permanently strands a Baby I. Orphans by stage now:
+  Ultimate 166, Adult 129, Perfect 114, Child 88, Baby II 37, Baby I 25, Digitama 23, Armor-Hybrid 16.
 ---

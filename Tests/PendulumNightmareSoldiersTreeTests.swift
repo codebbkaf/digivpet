@@ -215,13 +215,24 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         let slots = MapCatalog.bundled.maps.flatMap { $0.digitamaSlots.map(\.digitamaId) }
         XCTAssertTrue(slots.contains(egg.id), "no map drops \(egg.id), so the line is unstartable")
 
+        // One egg per line until US-144, which hangs `cand_digitama` off this line rather than opening a
+        // one-node line for a species this tree already reaches. The line's OWN egg is still the
+        // first of them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id], "one egg per line")
+                       [egg.id, "cand_digitama"])
     }
 
+    /// Since US-144 the seed is every Digitama of the line, not just this tree's own: the first
+    /// orphan sweep gives a line a second egg where the species it belongs to is already wired
+    /// here. What the test still means is unchanged — nothing in the line is stranded above the
+    /// eggs — and `testTheLineIsRootedAtARealRosterDigitamaThatAMapCanActuallyGrant` is what pins
+    /// which eggs those are.
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
-        var reached: Set<String> = ["baku_digitama"]
-        var frontier = Array(reached)
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
+        XCTAssertTrue(eggs.contains("baku_digitama"), "the line's own egg is gone")
+
+        var reached = Set(eggs)
+        var frontier = eggs
         while let id = frontier.popLast() {
             for edge in graph.node(id: id)?.evolutions ?? [] where !reached.contains(edge.to) {
                 reached.insert(edge.to)
@@ -230,9 +241,9 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 31)
+        XCTAssertEqual(inLine.count, 32)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
-                       "unreachable from Baku Digitama, so not playable end to end")
+                       "unreachable from any egg of the line, so not playable end to end")
     }
 
     func testTheLineCoversEveryRungOfTheLadder() {
@@ -616,7 +627,8 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 31)
+        // `cand_digitama` is US-144's, not this story's, so it is excluded rather than counted.
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "cand_digitama" }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")
     }

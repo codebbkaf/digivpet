@@ -8598,6 +8598,430 @@
       "spriteFile": "Cherubimon_Vice",
       "comment": "The junk Mega - the top of the invented neglect chain, and the point of choosing that chain: a neglected Virus Buster ends as the Vice counterpart of the Virtue the document draws over Wizardmon. Named nowhere in the tree markdown; a test greps the bundled document to keep that true.",
       "evolutions": []
+    },
+    {
+      "id": "agu2006_digitama",
+      "displayName": "Agu2006 Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v1",
+      "spriteFile": "Agu2006_Digitama",
+      "comment": "Agumon (2006) is Agumon under a second sheet, so by the sweep's variant rule its egg hangs off Agumon's own line rather than opening one. Wikimon draws Agumon (2006 Anime Version) from Koromon, which is exactly what `botamon` leads to here, so the egg needs no new rung to be honest about where it goes. Second egg on this line beside agu_digitama; a line may have several, and EggHatcher reads one edge per egg.",
+      "evolutions": [
+        {
+          "to": "botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "gabublack_digitama",
+      "displayName": "GabuBlack Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v2",
+      "spriteFile": "GabuBlack_Digitama",
+      "comment": "Gabumon Black's egg, placed by the variant rule alone: Wikimon records no separate baby thread for the Black variant, so no citation is claimed for one. It hatches onto the base form's spine, Punimon -> Tsunomon -> Gabumon, which is this line.",
+      "evolutions": [
+        {
+          "to": "punimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "elec_digitama",
+      "displayName": "Elec Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v2",
+      "spriteFile": "Elec_Digitama",
+      "comment": "Elecmon's egg. Elecmon is already a Rookie of this line - `tsunomon` falls to it - so the egg belongs on the line that leads to it rather than opening a second Elecmon thread.",
+      "evolutions": [
+        {
+          "to": "punimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kune_digitama",
+      "displayName": "Kune Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v3",
+      "spriteFile": "Kune_Digitama",
+      "comment": "Kunemon's egg. Kunemon is already a Rookie of this line (`tokomon` -> `kunemon`), so its egg roots the line that reaches it.",
+      "evolutions": [
+        {
+          "to": "puttimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hyoko_digitama",
+      "displayName": "Hyoko Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v4",
+      "spriteFile": "Hyoko_Digitama",
+      "comment": "Hyokomon's egg. Hyokomon is already a Rookie of this line (`piyo_tanemon` -> `hyokomon`), so its egg roots the line that reaches it.",
+      "evolutions": [
+        {
+          "to": "piyo_yuramon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "angora_digitama",
+      "displayName": "Angora Digitama",
+      "stage": "Digitama",
+      "line": "penc-nsp",
+      "spriteFile": "Angora_Digitama",
+      "comment": "Angoramon's egg. Angoramon is already a Rookie of this line (`pencnsp_koromon` -> `angoramon`), so its egg roots the line that reaches it.",
+      "evolutions": [
+        {
+          "to": "pencnsp_botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "cand_digitama",
+      "displayName": "Cand Digitama",
+      "stage": "Digitama",
+      "line": "penc-nso",
+      "spriteFile": "Cand_Digitama",
+      "comment": "Candmon's egg. Candmon is already a Rookie of this line (`petimeramon` -> `candmon`), so its egg roots the line that reaches it.",
+      "evolutions": [
+        {
+          "to": "mokumon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "beta_digitama",
+      "displayName": "Beta Digitama",
+      "stage": "Digitama",
+      "line": "penc-ds",
+      "spriteFile": "Beta_Digitama",
+      "comment": "Betamon's egg. Betamon itself is one of the 157 idle-only Digimon and can never be on an edge, so this egg cannot be wired to its own species; it is placed where that species would go. Wikimon lists Betamon as evolving from Pukamon, and `pukamon` is this line's In-Training, so the Deep Savers line is the honest home.",
+      "evolutions": [
+        {
+          "to": "pitchmon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kame_digitama",
+      "displayName": "Kame Digitama",
+      "stage": "Digitama",
+      "line": "penc-ds",
+      "spriteFile": "Kame_Digitama",
+      "comment": "Kamemon's egg, and the same case as beta_digitama: Kamemon is idle-only and cannot be on an edge. Wikimon lists Kamemon as evolving from Pukamon, this line's In-Training, so it hatches here.",
+      "evolutions": [
+        {
+          "to": "pitchmon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kuda_digitama",
+      "displayName": "Kuda Digitama",
+      "stage": "Digitama",
+      "line": "penc-vb",
+      "spriteFile": "Kuda_Digitama",
+      "comment": "Kudamon's egg. Kudamon is idle-only, so no thread can be built to it and no canonical baby of it is claimed here: Wikimon draws Kudamon from Bibimon and Kyaromon, neither of which this line holds. It is placed on the Virus Busters line because Kudamon is a Holy Beast of that family, which is a flavour call and is recorded as one.",
+      "evolutions": [
+        {
+          "to": "yukimibotamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kuda2006_digitama",
+      "displayName": "Kuda2006 Digitama",
+      "stage": "Digitama",
+      "line": "penc-vb",
+      "spriteFile": "Kuda2006_Digitama",
+      "comment": "Kudamon (2006)'s egg - the same Digimon under the Savers sheet, and idle-only too. Placed beside kuda_digitama by the variant rule.",
+      "evolutions": [
+        {
+          "to": "yukimibotamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "espi_digitama",
+      "displayName": "Espi Digitama",
+      "stage": "Digitama",
+      "line": "penc-me",
+      "spriteFile": "Espi_Digitama",
+      "comment": "Espimon's egg. Espimon has NO sheet at all in `16x16 Digimon Sprites` - not even an idle-only one - so the species is unreachable in this app and the egg can only be placed by where that species belongs. Wikimon lists Espimon as evolving from Caprimon, and `caprimon` is this line's In-Training, so Metal Empire is where it goes.",
+      "evolutions": [
+        {
+          "to": "choromon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "guil_digitama",
+      "displayName": "Guil Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Guil_Digitama",
+      "comment": "Guilmon's egg, and the root of the Tamers partners' line. Wikimon: Jyarimon evolves to Gigimon, and Guilmon evolves from Gigimon, so Jyarimon is Guilmon's own Baby I and this is the whole thread's bottom rung.",
+      "evolutions": [
+        {
+          "to": "jyarimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "blackguil_digitama",
+      "displayName": "BlackGuil Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "BlackGuil_Digitama",
+      "comment": "BlackGuilmon's egg. Wikimon records no Evolves From for BlackGuilmon at all, so the variant rule decides: it hangs off the base form's line and hatches onto the base form's Baby I. Two eggs on one Baby I is deliberate - a Baby I may have several in-edges, and each egg still has exactly one hatch edge.",
+      "evolutions": [
+        {
+          "to": "jyarimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "imp_digitama",
+      "displayName": "Imp Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Imp_Digitama",
+      "comment": "Impmon's egg. Wikimon: Kiimon evolves to Yarmon (Yaamon), and Impmon evolves from Yarmon, so Kiimon is Impmon's own Baby I. Impmon is a Tamers partner, hence this line.",
+      "evolutions": [
+        {
+          "to": "kiimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "bluco_digitama",
+      "displayName": "Bluco Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Bluco_Digitama",
+      "comment": "Blucomon's egg. Wikimon: Cocomon evolves to Chocomon, and Blucomon evolves from Chocomon. Chocomon is also Lopmon's In-Training, which is why Blucomon rides the Tamers thread's baby rungs rather than opening a line of its own - US-145's lop_digitama hatches onto this same Cocomon.",
+      "evolutions": [
+        {
+          "to": "cocomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "jyarimon",
+      "displayName": "Jyarimon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Jyarimon",
+      "comment": "Guilmon's Baby I. A LEAF for now: its Baby II is Gigimon, which US-147 wires - see the dead-end ledger in DigitamaSweepTests. US-144 authors the Digitama rung only.",
+      "evolutions": []
+    },
+    {
+      "id": "kiimon",
+      "displayName": "Kiimon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Kiimon",
+      "comment": "Impmon's Baby I. A LEAF for now: its Baby II is Yaamon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "cocomon",
+      "displayName": "Cocomon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Cocomon",
+      "comment": "The Baby I under Chocomon, which is Lopmon's and Blucomon's In-Training. A LEAF for now: US-147 wires Chocomon.",
+      "evolutions": []
+    },
+    {
+      "id": "gao_digitama",
+      "displayName": "Gao Digitama",
+      "stage": "Digitama",
+      "line": "wanyamon",
+      "spriteFile": "Gao_Digitama",
+      "comment": "Gaomon's egg, and the root of the beast-cub line. Wikimon: Dodomon evolves to Wanyamon, and Gaomon evolves from Wanyamon. Dodomon is also Dorumon's Baby I, which costs nothing - a Baby I may carry several out-edges, so US-148 can hang Dorumon's thread off the same node.",
+      "evolutions": [
+        {
+          "to": "dodomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "bear_digitama",
+      "displayName": "Bear Digitama",
+      "stage": "Digitama",
+      "line": "wanyamon",
+      "spriteFile": "Bear_Digitama",
+      "comment": "Bearmon's egg. Wikimon: Popomon evolves to Wanyamon, and Bearmon evolves from Wanyamon. Popomon rather than Dodomon so the two cubs do not share a Baby I while their Baby II already does.",
+      "evolutions": [
+        {
+          "to": "popomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "koe_digitama",
+      "displayName": "Koe Digitama",
+      "stage": "Digitama",
+      "line": "wanyamon",
+      "spriteFile": "Koe_Digitama",
+      "comment": "Koemon's egg. Wikimon: Koemon evolves from Wanyamon, which is what Popomon leads to. Beside bear_digitama on the same Baby I.",
+      "evolutions": [
+        {
+          "to": "popomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "dodomon",
+      "displayName": "Dodomon",
+      "stage": "Baby I",
+      "line": "wanyamon",
+      "spriteFile": "Dodomon",
+      "comment": "Gaomon's Baby I. A LEAF for now: its Baby II is Wanyamon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "popomon",
+      "displayName": "Popomon",
+      "stage": "Baby I",
+      "line": "wanyamon",
+      "spriteFile": "Popomon",
+      "comment": "Bearmon's and Koemon's Baby I. A LEAF for now: its Baby II is Wanyamon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "kera_digitama",
+      "displayName": "Kera Digitama",
+      "stage": "Digitama",
+      "line": "diablomon",
+      "spriteFile": "Kera_Digitama",
+      "comment": "Keramon's egg, and the root of the network-virus line that ends at Diablomon. Wikimon: Kuramon evolves to Tsumemon, and Keramon evolves from both Kuramon and Tsumemon, so Kuramon is Keramon's own Baby I.",
+      "evolutions": [
+        {
+          "to": "kuramon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kuramon",
+      "displayName": "Kuramon",
+      "stage": "Baby I",
+      "line": "diablomon",
+      "spriteFile": "Kuramon",
+      "comment": "Keramon's Baby I. A LEAF for now: its Baby II is Tsumemon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "commandra_digitama",
+      "displayName": "Commandra Digitama",
+      "stage": "Digitama",
+      "line": "commandramon",
+      "spriteFile": "Commandra_Digitama",
+      "comment": "Commandramon's egg. Wikimon lists Commandramon as evolving from Bommon and from Missimon, so Bommon is its own Baby I. Missimon has no sheet in this app, so the Baby II above Bommon is US-147's call - Wikimon gives it Kyokyomon and Caprimon as alternatives.",
+      "evolutions": [
+        {
+          "to": "bommon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "bommon",
+      "displayName": "Bommon",
+      "stage": "Baby I",
+      "line": "commandramon",
+      "spriteFile": "Bommon",
+      "comment": "Commandramon's Baby I. A LEAF for now, and the one whose canonical Baby II (Missimon) has NO sheet on disk - US-147 has to pick a stand-in rather than a straight lookup.",
+      "evolutions": []
+    },
+    {
+      "id": "ghost_digitama",
+      "displayName": "Ghost Digitama",
+      "stage": "Digitama",
+      "line": "algomon",
+      "spriteFile": "Ghost_Digitama",
+      "comment": "Ghostmon's egg. Wikimon lists Ghostmon as evolving from Algomon (Baby II), and Algomon (Baby I) is that Digimon's own rung below, so the Algomon spine is the thread that reaches Ghostmon.",
+      "evolutions": [
+        {
+          "to": "algomon_babyi",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "algomon_babyi",
+      "displayName": "Algomon",
+      "stage": "Baby I",
+      "line": "algomon",
+      "spriteFile": "Algomon_BabyI",
+      "comment": "Algomon's Baby I, the bottom of the Algomon spine. A LEAF for now: Algomon (Baby II) is US-147's.",
+      "evolutions": []
     }
   ]
 }

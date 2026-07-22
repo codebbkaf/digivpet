@@ -266,8 +266,11 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         XCTAssertTrue(industrial.digitamaSlots.map(\.digitamaId).contains(egg.id),
                       "06_industrial does not drop \(egg.id), so the line is unstartable")
 
+        // One egg per line until US-144, which hangs `espi_digitama` off this line rather than opening a
+        // one-node line for a species this tree already reaches. The line's OWN egg is still the
+        // first of them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id], "one egg per line")
+                       [egg.id, "espi_digitama"])
 
         // No Rookie of this tree has an egg of its own, which is why the choice went outside it.
         for rookie in ["toyagumon", "kokuwamon", "hagurumon", "junkmon"] {
@@ -278,9 +281,17 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
     }
 
+    /// Since US-144 the seed is every Digitama of the line, not just this tree's own: the first
+    /// orphan sweep gives a line a second egg where the species it belongs to is already wired
+    /// here. What the test still means is unchanged — nothing in the line is stranded above the
+    /// eggs — and `testTheLineIsRootedAtARealRosterDigitamaThatAMapCanActuallyGrant` is what pins
+    /// which eggs those are.
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
-        var reached: Set<String> = ["funbee_digitama"]
-        var frontier = Array(reached)
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
+        XCTAssertTrue(eggs.contains("funbee_digitama"), "the line's own egg is gone")
+
+        var reached = Set(eggs)
+        var frontier = eggs
         while let id = frontier.popLast() {
             for edge in graph.node(id: id)?.evolutions ?? [] where !reached.contains(edge.to) {
                 reached.insert(edge.to)
@@ -289,9 +300,9 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 32)
+        XCTAssertEqual(inLine.count, 33)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
-                       "unreachable from Funbee Digitama, so not playable end to end")
+                       "unreachable from any egg of the line, so not playable end to end")
     }
 
     func testTheLineCoversEveryRungOfTheLadder() {
@@ -351,7 +362,11 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
     /// thirty-two nodes carry a plain roster id, and those twenty-four are the orphans this story
     /// really took off the pile.
     func testTwentyFourOfTheThirtyTwoNodesCarryAPlainRosterIdAndSoRemoveAnOrphan() throws {
-        let mine = graph.nodes.filter { $0.line == line }
+        // US-144 hung `espi_digitama` on this line. That egg is not one of this story's nodes, so it is
+        // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
+        // story's notes made, and a total quietly one higher would no longer be that claim.
+        let sweepEggs: Set<String> = ["espi_digitama"]
+        let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
 

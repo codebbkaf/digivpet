@@ -60,7 +60,8 @@ enum MinigameKind: String, CaseIterable, Codable, Equatable {
 /// round opens) and "your Digimon has no training game" would be an unrefundable dead end.
 enum MinigameAssignment {
     /// The shipped lines, one game each. There were six of them and six games until US-138; there
-    /// are eight lines now and Phase E adds four more, so a game is shared rather than owned.
+    /// are seventeen lines now and Phase E's sweeps may add more, so a game is shared rather than
+    /// owned.
     ///
     /// The keys are `EvolutionNode.line` values; `testTheTableNamesExactlyTheShippedLines` pins them
     /// against the graph, so renaming a line in `evolutions.json` fails a test rather than silently
@@ -114,6 +115,21 @@ enum MinigameAssignment {
         // flavour agrees anyway — the meter is about holding a charge until it is full, which is
         // what every holy Digimon in this tree does before it fires.
         "penc-vb": .powerMeter,
+        // US-144 opens the first five lines that are NOT a device tree since `palmon`, so five
+        // games gain a third line each and the shape above — two lines per game — lasts exactly one
+        // story. Power Meter is the one left at two: it was on 57 Digimon, the most of any game,
+        // and the tie-break has always been fewest Digimon behind the game. Where the count did not
+        // decide, flavour did. `tamers` takes Timing Bar, the game that was carrying the fewest
+        // (41) and the one that suits a line of precise strikers; `commandramon` takes Crown
+        // Sprint, because a soldier's line should have to run; `diablomon` takes Sequence Recall,
+        // remembering a pattern being what a network virus does; `algomon` takes Reflex Strike, a
+        // thing that appears out of nowhere being what you strike at; and `wanyamon` takes Button
+        // Masher, because Gaomon boxes.
+        "tamers": .timingBar,
+        "commandramon": .crownSprint,
+        "diablomon": .sequenceRecall,
+        "algomon": .reflexStrike,
+        "wanyamon": .buttonMasher,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

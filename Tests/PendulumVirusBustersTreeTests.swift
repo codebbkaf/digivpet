@@ -251,17 +251,28 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         XCTAssertTrue(farmland.digitamaSlots.map(\.digitamaId).contains(egg.id),
                       "14_farmland does not drop \(egg.id), so the line is unstartable")
 
+        // One egg per line until US-144, which hangs `kuda_digitama` and `kuda2006_digitama` off this line rather than opening a
+        // one-node line for a species this tree already reaches. The line's OWN egg is still the
+        // first of them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id], "one egg per line")
+                       [egg.id, "kuda_digitama", "kuda2006_digitama"])
 
         // The default Rookie's own egg was not available: it roots the Digital Monster Ver.1 tree.
         XCTAssertEqual(try node("agu_digitama").line, "dmc-v1")
         XCTAssertEqual(try node("heriss_digitama").evolutions.first?.to, "yukimibotamon")
     }
 
+    /// Since US-144 the seed is every Digitama of the line, not just this tree's own: the first
+    /// orphan sweep gives a line a second egg where the species it belongs to is already wired
+    /// here. What the test still means is unchanged — nothing in the line is stranded above the
+    /// eggs — and `testTheLineIsRootedAtARealRosterDigitamaThatAMapCanActuallyGrant` is what pins
+    /// which eggs those are.
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
-        var reached: Set<String> = ["heriss_digitama"]
-        var frontier = Array(reached)
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
+        XCTAssertTrue(eggs.contains("heriss_digitama"), "the line's own egg is gone")
+
+        var reached = Set(eggs)
+        var frontier = eggs
         while let id = frontier.popLast() {
             for edge in graph.node(id: id)?.evolutions ?? [] where !reached.contains(edge.to) {
                 reached.insert(edge.to)
@@ -270,9 +281,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 30)
+        XCTAssertEqual(inLine.count, 32)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
-                       "unreachable from Heriss Digitama, so not playable end to end")
+                       "unreachable from any egg of the line, so not playable end to end")
     }
 
     func testTheLineCoversEveryRungOfTheLadder() {
@@ -341,7 +352,11 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
     /// nodes carry a plain roster id, and those fifteen are the orphans this story really took off
     /// the pile.
     func testFifteenOfTheThirtyNodesCarryAPlainRosterIdAndSoRemoveAnOrphan() throws {
-        let mine = graph.nodes.filter { $0.line == line }
+        // US-144 hung `kuda_digitama` and `kuda2006_digitama` on this line. That egg is not one of this story's nodes, so it is
+        // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
+        // story's notes made, and a total quietly one higher would no longer be that claim.
+        let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama"]
+        let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
 
@@ -665,7 +680,16 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
     func testEveryDeviceSectionOfTheDocumentNowHasALine() throws {
         let sections = try document().components(separatedBy: "\n### ").dropFirst().count
         XCTAssertEqual(sections, 11, "the document draws eleven device trees")
-        XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 12,
-                       "eleven device lines plus `palmon`, what is left of the US-008 seed")
+
+        // Eleven device lines plus `palmon`, what is left of the US-008 seed. Asserted as a
+        // SUBSET rather than as a total since US-144: Phase E's orphan sweeps open lines that no
+        // device section draws, so a total would fail on every one of the twenty-six and say
+        // nothing about the eleven this test is for.
+        let deviceLines: Set<String> = ["dmc-v1", "dmc-v2", "dmc-v3", "dmc-v4", "dmc-v5",
+                                        "penc-nsp", "penc-ds", "penc-nso", "penc-wg", "penc-me",
+                                        "penc-vb"]
+        XCTAssertTrue(deviceLines.isSubset(of: Set(graph.nodes.map(\.line))),
+                      "a device section has lost its line")
+        XCTAssertNotNil(graph.nodes.first { $0.line == "palmon" })
     }
 }

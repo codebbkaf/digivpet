@@ -215,6 +215,28 @@ struct EvolutionGraph: Codable, Equatable {
         }
         return nil
     }
+
+    /// Whether following edges down from `id` ever reaches an Ultimate — that is, whether this is a
+    /// thread a player could raise all the way to the top.
+    ///
+    /// True of every node in the file until US-144. Phase E's orphan sweeps author ONE RUNG of the
+    /// ladder per story, so between US-144 and the sweeps above it the graph holds threads that
+    /// stop at Baby I: real Digimon, correctly wired as far as they go, with nothing above them
+    /// yet. This is what keeps a brand-new game off one of those (see
+    /// `MainScreenModel.startingDigitamaId`).
+    ///
+    /// Reachability rather than "the line contains an Ultimate", because a line may hold several
+    /// threads and only some of them be finished — `tamers` has four eggs and no Adult at all.
+    func reachesUltimate(from id: String) -> Bool {
+        var visited: Set<String> = []
+        var frontier = [id]
+        while let current = frontier.popLast() {
+            guard visited.insert(current).inserted, let node = node(id: current) else { continue }
+            if node.stage == .ultimate { return true }
+            frontier.append(contentsOf: node.evolutions.map(\.to))
+        }
+        return false
+    }
 }
 
 extension EvolutionGraph {

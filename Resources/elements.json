@@ -306,8 +306,38 @@
     "ophanimon": { "element": "light", "attribute": "vaccine" },
     "cherubimon_virtue": { "element": "light", "attribute": "vaccine" },
     "rasenmon": { "element": "wind", "attribute": "vaccine" },
-    "cherubimon_vice": { "element": "dark", "attribute": "virus" }
+    "cherubimon_vice": { "element": "dark", "attribute": "virus" },
 
+    "agu2006_digitama": { "element": "fire", "attribute": "free" },
+    "gabublack_digitama": { "element": "dark", "attribute": "free" },
+    "elec_digitama": { "element": "electric", "attribute": "free" },
+    "kune_digitama": { "element": "electric", "attribute": "free" },
+    "hyoko_digitama": { "element": "wind", "attribute": "free" },
+    "angora_digitama": { "element": "wind", "attribute": "free" },
+    "cand_digitama": { "element": "fire", "attribute": "free" },
+    "beta_digitama": { "element": "water", "attribute": "free" },
+    "kame_digitama": { "element": "water", "attribute": "free" },
+    "kuda_digitama": { "element": "light", "attribute": "free" },
+    "kuda2006_digitama": { "element": "light", "attribute": "free" },
+    "espi_digitama": { "element": "machine", "attribute": "free" },
+    "guil_digitama": { "element": "fire", "attribute": "free" },
+    "blackguil_digitama": { "element": "dark", "attribute": "free" },
+    "imp_digitama": { "element": "dark", "attribute": "free" },
+    "bluco_digitama": { "element": "ice", "attribute": "free" },
+    "jyarimon": { "element": "fire", "attribute": "free" },
+    "kiimon": { "element": "dark", "attribute": "free" },
+    "cocomon": { "element": "ice", "attribute": "free" },
+    "gao_digitama": { "element": "water", "attribute": "free" },
+    "bear_digitama": { "element": "earth", "attribute": "free" },
+    "koe_digitama": { "element": "plant", "attribute": "free" },
+    "dodomon": { "element": "water", "attribute": "free" },
+    "popomon": { "element": "earth", "attribute": "free" },
+    "kera_digitama": { "element": "machine", "attribute": "free" },
+    "kuramon": { "element": "dark", "attribute": "free" },
+    "commandra_digitama": { "element": "steel", "attribute": "free" },
+    "bommon": { "element": "machine", "attribute": "free" },
+    "ghost_digitama": { "element": "dark", "attribute": "free" },
+    "algomon_babyi": { "element": "machine", "attribute": "free" }
   },
 
   "lineDefaults": {
@@ -322,7 +352,12 @@
     "penc-nso": { "element": "dark", "attribute": "free" },
     "penc-wg": { "element": "wind", "attribute": "free" },
     "penc-me": { "element": "machine", "attribute": "free" },
-    "penc-vb": { "element": "light", "attribute": "free" }
+    "penc-vb": { "element": "light", "attribute": "free" },
+    "tamers": { "element": "fire", "attribute": "free" },
+    "wanyamon": { "element": "earth", "attribute": "free" },
+    "diablomon": { "element": "dark", "attribute": "free" },
+    "commandramon": { "element": "steel", "attribute": "free" },
+    "algomon": { "element": "machine", "attribute": "free" }
   },
 
   "keywordRules": [

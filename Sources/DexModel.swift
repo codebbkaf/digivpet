@@ -330,6 +330,13 @@ final class DexModel: ObservableObject {
     ///
     /// Only the device lines need an entry: a line still keyed on a node id resolves through that
     /// node below, which is the older and larger half of the file.
+    ///
+    /// US-144's five sweep lines are titled here too, even though three of their keys ARE Digimon
+    /// names, because none of those Digimon is a node yet: `diablomon`, `commandramon` and
+    /// `algomon` name where each thread is GOING, not what it currently holds, so the older
+    /// node-id convention would resolve them to nil and head the section with its own key. Titling
+    /// them explicitly also keeps the heading stable on the day a later sweep does add the
+    /// namesake node.
     static let lineTitles: [String: String] = [
         "dmc-v1": "Color Ver.1",
         "dmc-v2": "Color Ver.2",
@@ -342,6 +349,11 @@ final class DexModel: ObservableObject {
         "penc-wg": "Pendulum WG",
         "penc-me": "Pendulum ME",
         "penc-vb": "Pendulum VB",
+        "tamers": "Tamers Partners",
+        "wanyamon": "Beast Cubs",
+        "diablomon": "Network Virus",
+        "commandramon": "Special Forces",
+        "algomon": "Algomon Signal",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id

@@ -179,13 +179,24 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         let slots = MapCatalog.bundled.maps.flatMap { $0.digitamaSlots.map(\.digitamaId) }
         XCTAssertTrue(slots.contains(egg.id), "no map drops \(egg.id), so the line is unstartable")
 
+        // One egg per line until US-144, which hangs `beta_digitama` and `kame_digitama` off this line rather than opening a
+        // one-node line for a species this tree already reaches. The line's OWN egg is still the
+        // first of them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id], "one egg per line")
+                       [egg.id, "beta_digitama", "kame_digitama"])
     }
 
+    /// Since US-144 the seed is every Digitama of the line, not just this tree's own: the first
+    /// orphan sweep gives a line a second egg where the species it belongs to is already wired
+    /// here. What the test still means is unchanged — nothing in the line is stranded above the
+    /// eggs — and `testTheLineIsRootedAtARealRosterDigitamaThatAMapCanActuallyGrant` is what pins
+    /// which eggs those are.
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
-        var reached: Set<String> = ["goma_digitama"]
-        var frontier = Array(reached)
+        let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
+        XCTAssertTrue(eggs.contains("goma_digitama"), "the line's own egg is gone")
+
+        var reached = Set(eggs)
+        var frontier = eggs
         while let id = frontier.popLast() {
             for edge in graph.node(id: id)?.evolutions ?? [] where !reached.contains(edge.to) {
                 reached.insert(edge.to)
@@ -194,9 +205,9 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 31)
+        XCTAssertEqual(inLine.count, 33)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
-                       "unreachable from Goma Digitama, so not playable end to end")
+                       "unreachable from any egg of the line, so not playable end to end")
     }
 
     func testTheLineCoversEveryRungOfTheLadder() {
@@ -516,8 +527,12 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 31)
-        XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
+        // `beta_digitama` and `kame_digitama` are US-144's, not this story's, so they are excluded
+        // rather than counted — the totals here are what this story's notes claimed.
+        let sweepEggs: Set<String> = ["beta_digitama", "kame_digitama"]
+        let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
+        XCTAssertEqual(mine.count, 31)
+        XCTAssertEqual(mine.filter { Roster.bundled.entry(id: $0.id) == nil }.count,
                        5, "the five aliases, which remove no orphan")
     }
 
@@ -528,8 +543,14 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
     func testTheBabyRungsAreThisTreesOwnDigimonRatherThanAliases() throws {
         for id in ["pitchmon", "pukamon"] {
             XCTAssertNotNil(Roster.bundled.entry(id: id))
-            XCTAssertEqual(graph.parents(of: id).count, 1)
+            // Pitchmon had exactly one parent until US-144 gave this line two more eggs. What the
+            // claim needs is that every way IN is an egg of this line, not that there is one of them.
+            for parent in graph.parents(of: id) {
+                XCTAssertEqual(parent.line, line, "\(id) is fed from outside the line")
+            }
         }
+        XCTAssertTrue(graph.parents(of: "pitchmon").contains { $0.id == "goma_digitama" })
+        XCTAssertEqual(graph.parents(of: "pukamon").map(\.id), ["pitchmon"])
         XCTAssertEqual(try node("pitchmon").stage, .babyI)
         XCTAssertEqual(try node("pukamon").stage, .babyII)
     }
