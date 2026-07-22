@@ -34,6 +34,19 @@
     "gerbemon": { "element": "dark", "attribute": "virus" },
     "metalgarurumon": { "element": "ice", "attribute": "data" },
     "metaletemon": { "element": "steel", "attribute": "virus" },
+    "elecmon": { "element": "electric", "attribute": "data" },
+    "kabuterimon": { "element": "electric", "attribute": "vaccine" },
+    "angemon": { "element": "light", "attribute": "vaccine" },
+    "yukidarumon": { "element": "ice", "attribute": "data" },
+    "vegimon": { "element": "plant", "attribute": "virus" },
+    "birdramon": { "element": "fire", "attribute": "vaccine" },
+    "skullgreymon": { "element": "dark", "attribute": "virus" },
+    "metalmamemon": { "element": "steel", "attribute": "data" },
+    "whamon": { "element": "water", "attribute": "vaccine" },
+    "dmcv2_vademon": { "element": "dark", "attribute": "virus" },
+    "skullmammon": { "element": "dark", "attribute": "virus" },
+    "cresgarurumon": { "element": "ice", "attribute": "vaccine" },
+    "dmcv2_ebemon": { "element": "machine", "attribute": "virus" },
 
     "pal_digitama": { "element": "plant", "attribute": "free" },
     "yuramon": { "element": "plant", "attribute": "free" },
@@ -109,7 +122,7 @@
 
   "lineDefaults": {
     "dmc-v1": { "element": "fire", "attribute": "free" },
-    "gabumon": { "element": "ice", "attribute": "free" },
+    "dmc-v2": { "element": "ice", "attribute": "free" },
     "palmon": { "element": "plant", "attribute": "free" },
     "patamon": { "element": "wind", "attribute": "free" },
     "piyomon": { "element": "wind", "attribute": "free" },

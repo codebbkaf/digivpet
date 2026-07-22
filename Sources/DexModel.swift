@@ -332,6 +332,7 @@ final class DexModel: ObservableObject {
     /// node below, which is the older and larger half of the file.
     static let lineTitles: [String: String] = [
         "dmc-v1": "Color Ver.1",
+        "dmc-v2": "Color Ver.2",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id
@@ -355,6 +356,15 @@ final class DexModel: ObservableObject {
         // not steal `-dexDetailDemo`, which takes the alphabetically first discovered row.
         for id in ["botamon", "koromon", "agumon", "greymon", "aquilamon"] {
             store.recordDiscovery(id: id)
+        }
+        // `-dexWidestDetailDemo` opens Gabumon, whose five candidates are the widest evolution
+        // grid shipped. Seeded only under that flag so it cannot steal `-dexDetailDemo`, which
+        // takes the alphabetically first discovered row (Agumon, and Gabumon sorts after it —
+        // but the candidates have to be discovered too, and Angemon would not).
+        if CommandLine.arguments.contains("-dexWidestDetailDemo") {
+            for id in ["gabumon", "kabuterimon", "garurumon", "angemon", "yukidarumon", "vegimon"] {
+                store.recordDiscovery(id: id)
+            }
         }
         try? store.save()
     }

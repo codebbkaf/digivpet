@@ -134,6 +134,31 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   both used in US-130: decode a LITERAL in the authored shape through the real `JSONDecoder`, and
   leave an explicit `...UntilUS1NN` marker test that FAILS the day the data lands, so the next
   iteration is told rather than having to notice.
+- **A Digimon's RUNG comes from the sprite FOLDER, not from the source tree** — `import_roster.py`
+  reads the stage off `16x16 Digimon Sprites/<Stage>/`, and a graph node whose `stage` disagrees
+  resolves to no art and fails the validator's `missingSprite`. The device trees do NOT always
+  agree: US-134's Whamon is a Champion in the Digital Monster V2 document and a `Perfect/` sheet
+  here. So "the art exists" is only half the check — `find -iname` tells you the folder too, and
+  a name at the wrong rung has to be rehomed (US-134 put Whamon beside its Perfect rather than
+  beneath it) rather than authored where the document puts it.
+- **Before removing or repointing an edge, check whether it is the target's ONLY in-edge**
+  (`graph.parents(of:)`). US-134's V2 tree left no room for Gabumon's old junk fallback, and
+  deleting that edge would have left Geremon reachable from nothing — a shipped Digimon quietly
+  turned back into an orphan by the very story that removes them. Rehome it; a test should pin the
+  new parent.
+- **A device tree's junk Champion is the one BOTH of its Rookies fall to** — Numemon in Ver.1,
+  Vegimon in Ver.2, Scumon in Ver.3, Nanimon in Ver.4, Raremon in Ver.5. That is the `isDefault`
+  edge, and `EvolutionCriteriaTests.junkIds` has to name it or the junk-fallback test fails.
+- **Raise a ceiling ONE step, to what the file now holds, never to what a later story will need.**
+  US-133 raised the out-degree ceiling to four and wrote that four was what the whole document
+  fits in; US-134 found Gabumon five-wide, and V4's Palmon and V5's Gizamon are SIX. Read the
+  source document yourself rather than trusting the previous story's summary of it — and leave the
+  guard as tight as the data, since a ceiling looser than the file it guards catches nothing.
+- **To screenshot the MIDDLE of a scrolling sheet, shorten what is below it rather than hunting for
+  a scroll anchor.** `-dexTreeLinkDemo` lands at the very bottom and the candidate grid is then off
+  the top; `-dexWidestDetailDemo -dexBranchDemo` selects one branch, which cuts the hint list from
+  eight rows to two and brings the grid back onto the same screen. `simctl` has no scroll command,
+  so the demo flags ARE the scrollbar.
 - **Update `prd.json` with `python3` + `json.load`/`json.dump(..., indent=2, ensure_ascii=False)`,
   then re-add the trailing newline.** It round-trips the existing formatting exactly — the diff for
   a `passes`/`notes` update is 2 lines — so a 1,000-line JSON file never has to be hand-edited.
@@ -1623,4 +1648,78 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 - REMAINS: US-134 onward (20/56 passing). US-134 is Digital Monster Color Version 2 — the
   `gabumon` line renamed to `dmc-v2` and completed, the same shape as this story. Its Ultra row is
   the other half of this one's (CresGarurumon + BlitzGreymon), already in `jogress.json`.
+---
+
+## 2026-07-22 - US-134 (Wire the Digital Monster Color Version 2 evolution tree)
+- **The V2 tree is now complete and playable end to end.** The seed line US-008 called `gabumon`
+  WAS this tree, authored pruned; this story **renamed it to `dmc-v2`** and filled in the thirteen
+  nodes it never carried. Build green, **1716 tests (1702 + 14 new), 0 failures. Orphans 771 -> 760.**
+- Files changed: `Resources/evolutions.json` (10 nodes re-lined, 13 new, 6 new edges on existing
+  nodes), `Resources/elements.json`, `Resources/moves.json`, `Sources/DexModel.swift`,
+  `Sources/DexView.swift`, `Sources/MinigameAssignment.swift`, `docs/evolutions-schema.md`,
+  `Tests/DMCVersion2TreeTests.swift` (new, 14 tests) and seven existing test files.
+
+- **US-133's prediction held exactly: this story was the same rename.** Six keys move (elements /
+  moves `lineDefaults`, `MinigameAssignment.byLine`, `DexModel.lineTitles`, and
+  `EvolutionGraphTests`' per-line counts), and the tree is one closed tree with no crossing edge.
+  Nothing new was learned about the mechanism — **read US-133's entry below before starting V3.**
+
+- **WHERE V2 IS HARDER THAN V1, and it is the whole of this story: nothing prunes it.** V1 lost
+  Betamon (idle-only) and Tyranomon (no colour sheet), which quietly cut Agumon's five Champions to
+  four. **Every one of Version 2's seventeen names has a playable 48x64 sheet**, so all five arrows
+  out of Gabumon have to exist. Three consequences, and each one is a decision the next tree will
+  meet again:
+  - **The out-degree ceiling went 4 -> 5**, and the Dex candidate ceiling with it. US-133 wrote
+    that "four is what the whole source document fits in" — **that was wrong, and checking the
+    document rather than the previous story's note is the lesson**: V4's Palmon and V5's Gizamon are
+    SIX wide. Raised one step anyway, deliberately: a ceiling looser than the file it guards catches
+    nothing.
+  - **The junk fallback moved from Geremon to Vegimon.** A device tree's junk Champion is the one
+    BOTH Rookies fall to — Numemon in V1, Vegimon in V2, Scumon in V3 — and Gabumon's five arrows
+    end in Vegimon, so there is no room for Geremon beside them. `EvolutionCriteriaTests.junkIds`
+    gained `vegimon` and `dmcv2_vademon`, and `SeedRosterTests`' Ver.2 default path is now
+    Vegimon -> Vademon -> Ebemon.
+  - **A displaced node needs a new parent, not deleting.** Dropping Geremon would have left a
+    shipped Digimon reachable from nothing — an orphan re-created by the story whose job is to
+    remove them. It hangs off Elecmon as the overfeeding branch (`care.overfeeds atLeast 6`), which
+    also keeps WereGarurumon and Gerbemon under it. **Before removing an edge, check whether it is
+    the target's only in-edge** (`graph.parents(of:)`), and a test now pins that one.
+
+- **A NAME CAN EXIST AND STILL BE ON THE WRONG RUNG.** Whamon is a Champion in the V2 document and
+  a **Perfect** in this asset pack — `Perfect/Whamon.png` is its only animated sheet, and the
+  roster's stage comes from the folder. An Adult node would have resolved to no art and failed the
+  validator's `missingSprite`. It stands BESIDE MetalMamemon instead of beneath it, off the same
+  two Champions the document puts on its row, and shares MetalMamemon's Mega (the one invented
+  arrow — no Perfect in the file is terminal, and a terminal Perfect is a Digimon that can never
+  evolve again). **Check the sprite's FOLDER, not just that the file exists**; V1's checklist was
+  "does the art exist", and that is only half the question. Pendulum Color V2 puts Whamon at
+  Perfect too, so US-139 will need a line-scoped id for it.
+
+- **Line-scoped ids again, and they will keep coming.** `dmcv2_vademon` / `dmcv2_ebemon`, because
+  the `gazimon` line (US-137's V5) already owns the plain ids. Each needs its own `elements.json`
+  and `moves.json` entry with a signature name unique across the file, and neither counts as an
+  orphan removed — they are not roster ids. Running tally of aliases in `RosterTests`:
+  `dmcv1_shinmonzaemon`, `dmcv2_ebemon`, `dmcv2_vademon`, `extyranomon`, `piyo_tanemon`,
+  `piyo_yuramon`.
+
+- **MEASURED on the Simulator, because a raised ceiling is a claim about a screen.** On 41mm
+  Gabumon's five candidates draw as **3 + 2**, both rows AND the hint list on one screen: row 1
+  tiles at x16-108 / x126-224 / x248-328, row 2 at x35-81 / x135-216, the second band ending at
+  y276 of a 430-row screen. Nothing clipped, no name truncated. US-133's black-screen regression
+  was re-checked at 23 nodes (one more than the tree that caused it) — the V2 tree draws on both
+  watch sizes, and `-dexTreeScrollDemo` reaches the Adult column.
+  - New DEBUG flags: **`-dexWidestDetailDemo`** (opens the widest evolution grid the file holds,
+    seeding its candidates so the tiles are real art) and **`-dexLineDemo=<line>`**, US-133's flag
+    generalised — every Phase E tree needs looking at exactly once, and the bare flag hard-coded
+    `dmc-v1`. Both write discoveries to the save; both simulators were erased afterwards.
+  - **Getting a mid-sheet screenshot is a two-flag trick worth remembering:**
+    `-dexWidestDetailDemo -dexBranchDemo`. `-dexTreeLinkDemo` scrolls to the very bottom and the
+    candidate grid is then above the fold; selecting a branch shortens the hint list from eight
+    rows to two, which brings the grid back onto the same screen.
+
+- REMAINS: US-135 onward (21/56 passing). US-135 is Digital Monster Color Version 3 — the
+  `patamon` line renamed to `dmc-v3` and completed. Note before starting it: `patamon` is ALREADY
+  five-wide (Unimon / Centalmon / Ogremon / Bakemon / Scumon), which is the whole of that tree's
+  Rookie row, so the ceiling raised here should be enough for it. Its Kunemon side is the new work,
+  and V3 has no Ultra/Jogress row at all.
 ---

@@ -29,7 +29,11 @@ final class SeedRosterTests: XCTestCase {
     /// edges rather than the fallbacks.
     private let seedLines: [[String]] = [
         ["agu_digitama", "botamon", "koromon", "agumon", "numemon", "blackkingnumemon", "platinumnumemon"],
-        ["gabu_digitama", "punimon", "tsunomon", "gabumon", "geremon", "gerbemon", "metaletemon"],
+        // Since US-134 the Ver.2 junk path is Vegimon's, not Geremon's: a device tree's junk
+        // Champion is the one BOTH of its Rookies fall to, and the document hangs Vegimon off
+        // Gabumon and Elecmon alike. Geremon is still reachable and still junk — it is Elecmon's
+        // overfeeding branch now, so this line moved rather than losing anything.
+        ["gabu_digitama", "punimon", "tsunomon", "gabumon", "vegimon", "dmcv2_vademon", "dmcv2_ebemon"],
         ["pal_digitama", "yuramon", "tanemon", "palmon", "karatsukinumemon", "jyagamon", "shinmonzaemon"],
         ["pata_digitama", "puttimon", "tokomon", "patamon", "scumon", "etemon", "kingetemon"],
         ["piyo_digitama", "piyo_yuramon", "piyo_tanemon", "piyomon", "goldnumemon", "greatkingscumon", "boltmon"],
@@ -113,10 +117,22 @@ final class SeedRosterTests: XCTestCase {
     /// the EARNED paths now — US-061 moved the fallbacks onto the junk branches — which is exactly
     /// the claim worth making: raise it well and you still get WarGreymon.
     func testTheThreeNamedLinesAreTheOnesShipped() throws {
-        XCTAssertEqual(try earnedPath(from: "gabumon").map(\.displayName),
-                       ["Gabumon", "Garurumon", "WereGarurumon", "MetalGarurumon"])
         XCTAssertEqual(try earnedPath(from: "palmon").map(\.displayName),
                        ["Palmon", "Togemon", "Lilimon", "Rosemon"])
+
+        // Gabumon to MetalGarurumon is still the whole way up, but since US-134 it is one thread
+        // through a tree rather than the only one: the V2 document gives Gabumon four earned
+        // Champions and Garurumon three earned Perfects, so `earnedPath` — which insists on a
+        // single earned edge per rung — can no longer walk it. Asserted as forks plus the thread
+        // above them, the same shape US-133 gave the Agumon line below.
+        XCTAssertEqual(
+            try XCTUnwrap(graph.node(id: "gabumon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
+            ["angemon", "garurumon", "kabuterimon", "yukidarumon"])
+        XCTAssertEqual(
+            try XCTUnwrap(graph.node(id: "garurumon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
+            ["metalmamemon", "weregarurumon", "whamon"])
+        XCTAssertEqual(try earnedPath(from: "weregarurumon").map(\.displayName),
+                       ["WereGarurumon", "MetalGarurumon"])
 
         // Agumon branches three ways at Child, and since US-133 Greymon forks too — the V1 tree's
         // Ultimate is MetalGreymon (Virus), which sits beside US-043's Vaccine one. Both are

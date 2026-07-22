@@ -608,14 +608,17 @@ final class DexEvolutionCandidateTests: XCTestCase {
 
     /// The section is a three-column grid, so one to three candidates are a single line and a
     /// fourth wraps onto a second. US-133 raised the ceiling from three to four — the V1 tree gives
-    /// Agumon a third earned Champion — so the widest sheet is now two rows rather than one. That
-    /// is still inside the sheet's `ScrollView`; both cases were verified by screenshot on a 41mm
-    /// simulator. This pins the data half: a fifth candidate would be a third row nobody has seen.
-    func testNoShippedDigimonHasMoreThanFourCandidates() {
+    /// Agumon a third earned Champion — and US-134 raised it to five: the V2 tree gives Gabumon and
+    /// Elecmon five Champions each, all of them drawable, so five is what the shipped file holds.
+    /// Three and four rows have been screenshotted on 41mm and five was measured there for US-134;
+    /// all of them are two rows at most and inside the sheet's `ScrollView`. This pins the data
+    /// half: a SIXTH candidate is the first that nobody has seen — and V4's Palmon and V5's
+    /// Gizamon are six-wide in the source document, so US-136/US-137 will meet this again.
+    func testNoShippedDigimonHasMoreThanFiveCandidates() {
         for node in EvolutionGraph.bundled.nodes {
             let candidates = DexRow.evolutionCandidates(
                 of: node.id, in: .bundled, resolvedAgainst: [:])
-            XCTAssertLessThanOrEqual(candidates.count, 4, "\(node.id) would wrap to a third line.")
+            XCTAssertLessThanOrEqual(candidates.count, 5, "\(node.id) would wrap to a third line.")
         }
     }
 }

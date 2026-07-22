@@ -66,13 +66,13 @@ enum MinigameAssignment {
     /// dropping that line to the stage floor.
     ///
     /// The pairings are flavour, not mechanism: the Digital Monster Ver.1 line hits things (Button
-    /// Masher), Gabumon's is about holding a charge (Power Meter), Palmon's is patient timing
+    /// Masher), Ver.2's is about holding a charge (Power Meter), Palmon's is patient timing
     /// (Timing Bar), Patamon's runs (Crown Sprint), Piyomon's is quick (Reflex Strike), Gazimon's
     /// is the tricky one (Sequence Recall). Any permutation would satisfy the story; this one is a
     /// first guess and safe to reshuffle after playtesting.
     static let byLine: [String: MinigameKind] = [
         "dmc-v1": .buttonMasher,
-        "gabumon": .powerMeter,
+        "dmc-v2": .powerMeter,
         "palmon": .timingBar,
         "patamon": .crownSprint,
         "piyomon": .reflexStrike,

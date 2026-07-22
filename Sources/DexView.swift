@@ -21,6 +21,7 @@ struct DexView: View {
 
     #if DEBUG
     @State private var showsLineDemo = CommandLine.arguments.contains("-dexLineDemo")
+        || CommandLine.arguments.contains { $0.hasPrefix("-dexLineDemo=") }
     #endif
 
     /// As in `ContentView`: passed in rather than defaulted, because building one is a
@@ -59,12 +60,17 @@ struct DexView: View {
     }
 
     #if DEBUG
-    /// The line `-dexLineDemo` opens: the Digital Monster Ver.1 tree (Agumon's), because it is the
-    /// one shipped line that branches, so a screenshot of it shows a fork and its converging
-    /// connectors rather than a straight ladder. Falls back to the first line so the arg still
-    /// lands somewhere if that changes.
+    /// The line `-dexLineDemo` opens: by default the Digital Monster Ver.1 tree, because it was the
+    /// first shipped line that branches, so a screenshot of it shows a fork and its converging
+    /// connectors rather than a straight ladder. `-dexLineDemo=<line>` opens another — every Phase E
+    /// story adds a tree that has to be looked at at least once, and US-133 found a whole-tree
+    /// black screen that only a screenshot could catch. Falls back to the first line so the arg
+    /// still lands somewhere if the id is wrong.
     private var demoSection: DexSection? {
-        model.sections.first { $0.id == "dmc-v1" } ?? model.sections.first
+        let requested = CommandLine.arguments
+            .first { $0.hasPrefix("-dexLineDemo=") }?
+            .replacingOccurrences(of: "-dexLineDemo=", with: "") ?? "dmc-v1"
+        return model.sections.first { $0.id == requested } ?? model.sections.first
     }
     #endif
 }
@@ -161,6 +167,12 @@ struct DexGridView: View {
             // the "No evolutions recorded." branch, since `-dexDetailDemo` lands on Agumon and
             // Agumon branches three ways.
             selected = rows.first { $0.id == "aquilamon" }
+        } else if CommandLine.arguments.contains("-dexWidestDetailDemo") {
+            // The widest evolution grid the shipped file holds — five candidates since US-134,
+            // which is the case `DexEvolutionCandidateTests` claims still fits two rows of the
+            // three-column grid. The ceiling has been raised twice now and each raise is a claim
+            // about this screen, so there has to be a way to photograph it.
+            selected = rows.first { $0.id == "gabumon" }
         } else if CommandLine.arguments.contains("-dexUnmetDetailDemo") {
             // The sheet of an entry that has NEVER been met, which no tap can reach — the grid
             // disables undiscovered cells. US-088 withholds the type badges here, and "shows

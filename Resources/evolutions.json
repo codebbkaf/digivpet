@@ -629,7 +629,7 @@
       "id": "gabu_digitama",
       "displayName": "Gabu Digitama",
       "stage": "Digitama",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Gabu_Digitama",
       "evolutions": [
         {
@@ -644,7 +644,7 @@
       "id": "punimon",
       "displayName": "Punimon",
       "stage": "Baby I",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Punimon",
       "evolutions": [
         {
@@ -660,9 +660,24 @@
       "id": "tsunomon",
       "displayName": "Tsunomon",
       "stage": "Baby II",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Tsunomon",
       "evolutions": [
+        {
+          "to": "elecmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6000,
+              "hint": "Keep it on its feet while it is small"
+            }
+          ]
+        },
         {
           "to": "gabumon",
           "requiredEnergy": "vitality",
@@ -676,7 +691,7 @@
       "id": "gabumon",
       "displayName": "Gabumon",
       "stage": "Child",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Gabumon",
       "evolutions": [
         {
@@ -702,7 +717,73 @@
           ]
         },
         {
-          "to": "geremon",
+          "to": "kabuterimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it until its shell hardens"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40,
+              "hint": "Climb with it, floor after floor"
+            }
+          ]
+        },
+        {
+          "to": "angemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Let it sleep long and undisturbed"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Never wake it in the night"
+            }
+          ]
+        },
+        {
+          "to": "yukidarumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180,
+              "hint": "Work up a sweat with it in the cold"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep its belly light"
+            }
+          ]
+        },
+        {
+          "to": "vegimon",
           "requiredEnergy": "vitality",
           "minEnergy": 0,
           "maxCareMistakes": 99,
@@ -714,7 +795,7 @@
       "id": "garurumon",
       "displayName": "Garurumon",
       "stage": "Adult",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Garurumon",
       "evolutions": [
         {
@@ -740,6 +821,50 @@
           ]
         },
         {
+          "to": "metalmamemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Let it test itself in battle"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.5,
+              "hint": "Win at least half of what it starts"
+            }
+          ]
+        },
+        {
+          "to": "whamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Cover a very long distance with it"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Let it rest deep between crossings"
+            }
+          ]
+        },
+        {
           "to": "gerbemon",
           "requiredEnergy": "vitality",
           "minEnergy": 0,
@@ -752,7 +877,7 @@
       "id": "geremon",
       "displayName": "Geremon",
       "stage": "Adult",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Geremon",
       "evolutions": [
         {
@@ -790,7 +915,7 @@
       "id": "weregarurumon",
       "displayName": "WereGarurumon",
       "stage": "Perfect",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "WereGarurumon",
       "evolutions": [
         {
@@ -806,7 +931,7 @@
       "id": "gerbemon",
       "displayName": "Gerbemon",
       "stage": "Perfect",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "Gerbemon",
       "evolutions": [
         {
@@ -822,15 +947,415 @@
       "id": "metalgarurumon",
       "displayName": "MetalGarurumon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "MetalGarurumon"
     },
     {
       "id": "metaletemon",
       "displayName": "MetalEtemon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "gabumon",
+      "line": "dmc-v2",
       "spriteFile": "MetalEtemon"
+    },
+    {
+      "id": "elecmon",
+      "displayName": "Elecmon",
+      "stage": "Child",
+      "line": "dmc-v2",
+      "spriteFile": "Elecmon",
+      "comment": "The V2 tree's second Rookie under Tsunomon. It also carries Geremon, which is NOT one of its arrows in the document: Geremon was Gabumon's junk fallback from US-008 until this story, and the tree gives Gabumon five Champions ending in Vegimon, so the fallback moved to Vegimon (the V2 device's junk Champion, reached by BOTH Rookies) and Geremon would otherwise have been left with no parent at all - unreachable from the egg, and a Digimon the player could no longer get. Here it is the overfeeding branch rather than the neglect one.",
+      "evolutions": [
+        {
+          "to": "garurumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Burn energy with it day after day"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Give it a few honest sessions"
+            }
+          ]
+        },
+        {
+          "to": "angemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Let it sleep long and undisturbed"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Never wake it in the night"
+            }
+          ]
+        },
+        {
+          "to": "birdramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Take it up flight after flight"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 150,
+              "hint": "Keep it moving hard"
+            }
+          ]
+        },
+        {
+          "to": "geremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Stuff it with one treat too many, over and over"
+            }
+          ]
+        },
+        {
+          "to": "vegimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kabuterimon",
+      "displayName": "Kabuterimon",
+      "stage": "Adult",
+      "line": "dmc-v2",
+      "spriteFile": "Kabuterimon",
+      "evolutions": [
+        {
+          "to": "skullgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Drill it far past the point most would stop"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1200,
+              "hint": "Give it little rest between drills"
+            }
+          ]
+        },
+        {
+          "to": "gerbemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "angemon",
+      "displayName": "Angemon",
+      "stage": "Adult",
+      "line": "dmc-v2",
+      "spriteFile": "Angemon",
+      "evolutions": [
+        {
+          "to": "skullgreymon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Send it into fight after fight"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Rouse it from sleep again and again"
+            }
+          ]
+        },
+        {
+          "to": "gerbemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "yukidarumon",
+      "displayName": "Yukidarumon",
+      "stage": "Adult",
+      "line": "dmc-v2",
+      "spriteFile": "Yukidarumon",
+      "evolutions": [
+        {
+          "to": "metalmamemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2200,
+              "hint": "Keep the furnace burning through the cold"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Feed it sparingly"
+            }
+          ]
+        },
+        {
+          "to": "whamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 35000,
+              "hint": "Take it the long way, every time"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Build its bulk with steady work"
+            }
+          ]
+        },
+        {
+          "to": "gerbemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "vegimon",
+      "displayName": "Vegimon",
+      "stage": "Adult",
+      "line": "dmc-v2",
+      "spriteFile": "Vegimon",
+      "comment": "THE V2 DEVICE'S JUNK CHAMPION, and since this story the fallback of BOTH Rookies - it is the one Champion the document hangs off Gabumon and Elecmon alike, exactly as Numemon is in V1 and Scumon in V3. Its own arrow in the document is Vegimon -> Vademon, which is the junk edge here. The second edge, to SkullGreymon, is NOT in the document: an Adult needs somewhere earned to go or it is a dead end at Adult, and the tree gives Vegimon nothing else. Beating it into shape is the way out.",
+      "evolutions": [
+        {
+          "to": "skullgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 1,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Train it out of the rubbish heap, session after session"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "Make a winner of it"
+            }
+          ]
+        },
+        {
+          "to": "dmcv2_vademon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "birdramon",
+      "displayName": "Birdramon",
+      "stage": "Adult",
+      "line": "dmc-v2",
+      "spriteFile": "Birdramon",
+      "evolutions": [
+        {
+          "to": "skullgreymon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 420,
+              "hint": "Keep it in the air for hours on end"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Let it hunt for its fights"
+            }
+          ]
+        },
+        {
+          "to": "gerbemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "skullgreymon",
+      "displayName": "SkullGreymon",
+      "stage": "Perfect",
+      "line": "dmc-v2",
+      "spriteFile": "SkullGreymon",
+      "evolutions": [
+        {
+          "to": "skullmammon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "metalmamemon",
+      "displayName": "MetalMamemon",
+      "stage": "Perfect",
+      "line": "dmc-v2",
+      "spriteFile": "MetalMamemon",
+      "evolutions": [
+        {
+          "to": "cresgarurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "whamon",
+      "displayName": "Whamon",
+      "stage": "Perfect",
+      "line": "dmc-v2",
+      "spriteFile": "Whamon",
+      "comment": "ONE RUNG ABOVE WHERE THE DOCUMENT PUTS IT, and this is the story's one stage divergence. The V2 tree lists Whamon as a Champion feeding MetalMamemon, but this asset pack files its only animated sheet under Perfect/Whamon.png, so the roster has it at Perfect and a node claiming Adult would resolve to no art at all. Rather than drop a named Digimon, it stands BESIDE MetalMamemon instead of beneath it, off the same two Champions the document puts on its row (Garurumon and Yukidarumon), and shares MetalMamemon's Mega - the invented arrow, needed because a terminal Perfect is a Digimon that can never evolve again. Pendulum Color V2 Deep Savers puts Whamon at Perfect too (Rukamon -> Whamon -> Plesiomon), so US-139 will need a line-scoped id for it.",
+      "evolutions": [
+        {
+          "to": "cresgarurumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "dmcv2_vademon",
+      "displayName": "Vademon",
+      "stage": "Perfect",
+      "line": "dmc-v2",
+      "spriteFile": "Vademon",
+      "comment": "NOT a duplicate of the `vademon` node in the gazimon line - it is the same Digimon in a second tree, the dmcv1_shinmonzaemon pattern. The V2 tree ends Vegimon -> Vademon -> Ebemon, and the gazimon line (US-061's junk Perfect, and the V5 tree when US-137 wires it) already took the plain id. `line` is single-valued and EvolutionTreeLayout drops any connector leaving its line, so sharing the node would have left Vegimon pointing out of its own tree with nothing drawn.",
+      "evolutions": [
+        {
+          "to": "dmcv2_ebemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "skullmammon",
+      "displayName": "SkullMammon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v2",
+      "spriteFile": "SkullMammon"
+    },
+    {
+      "id": "cresgarurumon",
+      "displayName": "CresGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v2",
+      "spriteFile": "CresGarurumon",
+      "comment": "Terminal here on purpose. The tree's last row is CresGarurumon -> Ultra: Omegamon Alter-S by Jogress with BlitzGreymon, and a Jogress is not an evolution edge - US-130/US-131 ship it as a recipe in Resources/jogress.json, which already carries exactly this pair. It is the other half of the V1 tree's Ultra row (US-133), whose BlitzGreymon is terminal for the same reason."
+    },
+    {
+      "id": "dmcv2_ebemon",
+      "displayName": "Ebemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v2",
+      "spriteFile": "Ebemon",
+      "comment": "The line-scoped Ebemon, for the same reason as dmcv2_vademon: the gazimon line already owns the plain id, and the V2 tree's junk chain has to end inside its own tree to be drawn."
     },
     {
       "id": "pal_digitama",

@@ -12,11 +12,18 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// The junk destinations, named explicitly rather than inferred. A rule like "the default edge
     /// points at a node nothing else points at" would pass for a perfectly good Digimon that
     /// happens to be reached one way, and the whole claim here is about WHICH Digimon.
+    ///
+    /// `vegimon` and the line-scoped `dmcv2_vademon` joined the list in US-134: the device trees
+    /// name their own junk Champion, and it is the one both of a version's Rookies fall to —
+    /// Numemon in Ver.1, Vegimon in Ver.2, Scumon in Ver.3. Vegimon replaced Geremon as the Ver.2
+    /// fallback for exactly that reason; Geremon is still reachable, as Elecmon's overfeeding
+    /// branch.
     private static let junkIds: Set<String> = [
         // Adult
-        "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon",
+        "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
         // Perfect
-        "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "etemon",
+        "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
+        "etemon",
         // Ultimate
         "kingetemon",
     ]
@@ -29,16 +36,23 @@ final class EvolutionCriteriaTests: XCTestCase {
 
     /// Two is the half that matters: a single outgoing edge is not a choice at all.
     ///
-    /// The ceiling was three until US-133 — two earned branches plus the junk fallback. The device
-    /// trees of Phase E give a Rookie five or six Champions, and even split across two Children
-    /// (the US-044 pattern) that needs three earned branches on one of them. Four is the ceiling
-    /// the whole source document fits in, and it is the Dex's too: `DexRow.evolutionCandidates`
-    /// draws a three-column grid, so four candidates are two rows inside a sheet that scrolls.
-    func testEveryNonTerminalChildAndAdultHasTwoToFourOutgoingEdges() {
+    /// The ceiling was three until US-133 — two earned branches plus the junk fallback — and four
+    /// until US-134. It is now five, and the reason is data rather than taste: the Version 2 tree
+    /// gives Gabumon five Champions (Kabuterimon, Garurumon, Angemon, Yukidarumon, Vegimon) and
+    /// every one of them has a playable sheet, so nothing prunes it the way an undrawable Tyranomon
+    /// pruned Agumon's fifth in US-133. Splitting them across the two Rookies is not open either:
+    /// the document draws all five arrows out of Gabumon.
+    ///
+    /// US-133's note that "four is what the whole source document fits in" was simply wrong — V4's
+    /// Palmon and V5's Gizamon are SIX wide, so US-136 and US-137 will raise this again. It is
+    /// raised one step at a time on purpose: the ceiling should never be looser than the file it
+    /// guards. The Dex agrees at five — `DexRow.evolutionCandidates` draws a three-column grid, so
+    /// five candidates are still two rows inside a sheet that scrolls.
+    func testEveryNonTerminalChildAndAdultHasTwoToFiveOutgoingEdges() {
         XCTAssertFalse(branchingNodes.isEmpty)
         for node in branchingNodes {
-            XCTAssertTrue((2...4).contains(node.evolutions.count),
-                          "\(node.id) has \(node.evolutions.count) outgoing edges, not two to four")
+            XCTAssertTrue((2...5).contains(node.evolutions.count),
+                          "\(node.id) has \(node.evolutions.count) outgoing edges, not two to five")
         }
     }
 
