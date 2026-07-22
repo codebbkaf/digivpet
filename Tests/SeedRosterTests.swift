@@ -263,7 +263,7 @@ final class SeedRosterTests: XCTestCase {
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
         let adult = Stage.adult.ladderIndex!
-        let above = graph.nodes.filter { $0.line == "patamon" && ($0.stage.ladderIndex ?? -1) >= adult }
+        let above = graph.nodes.filter { $0.line == "dmc-v3" && ($0.stage.ladderIndex ?? -1) >= adult }
 
         XCTAssertFalse(above.isEmpty, "the Patamon line has no Adult-or-later nodes at all")
         for node in above {
@@ -303,15 +303,20 @@ final class SeedRosterTests: XCTestCase {
         XCTAssertTrue(comment.contains("Poyomon"), "the comment must name what it diverges from")
     }
 
-    /// Patamon's five Champions are still the V3 tree's five and every one still leads to an
-    /// Ultimate — but US-061 split them across two Children, because a Child may offer at most two
-    /// earned branches plus its junk fallback. Tsukaimon, Patamon's dark counterpart, carries the
-    /// other two. Both Children fall back to Scumon.
-    func testThePatamonLinesFiveChampionsAreSplitAcrossTwoChildren() throws {
+    /// Patamon's five Champions are the V3 tree's five and every one still leads to an Ultimate.
+    ///
+    /// US-061 had to split them across two Children — a Child could offer at most two earned
+    /// branches plus its junk fallback back then — and gave Tsukaimon, Patamon's dark counterpart,
+    /// the other two. US-135 raised the out-degree ceiling to five (US-134 had already taken it
+    /// there for the Ver.2 tree) and put all five back on Patamon where the document draws them.
+    /// Tsukaimon KEEPS Ogremon and Bakemon rather than being emptied: it is in no source tree, so
+    /// stripping its branches would leave a shipped Child that evolves into nothing.
+    func testThePatamonLinesFiveChampionsAllHangOffPatamon() throws {
         let patamon = try XCTUnwrap(graph.node(id: "patamon"))
         let tsukaimon = try XCTUnwrap(graph.node(id: "tsukaimon"))
 
-        XCTAssertEqual(patamon.evolutions.map(\.to).sorted(), ["centalmon", "scumon", "unimon"])
+        XCTAssertEqual(patamon.evolutions.map(\.to).sorted(),
+                       ["bakemon", "centalmon", "ogremon", "scumon", "unimon"])
         XCTAssertEqual(tsukaimon.evolutions.map(\.to).sorted(), ["bakemon", "ogremon", "scumon"])
         XCTAssertEqual(graph.parents(of: "tsukaimon").map(\.id), ["tokomon"],
                        "the second Child hangs off the Baby II, so both are reachable from the egg")
@@ -324,11 +329,15 @@ final class SeedRosterTests: XCTestCase {
     }
 
     /// Each Child's earned branches need distinct dominant types, or one of them is unreachable.
-    /// Scumon is deliberately excluded on both: it shares an earned branch's gate and wins only
+    /// Scumon is deliberately excluded on all three: it shares an earned branch's gate and wins only
     /// when that branch's higher `minEnergy`, stricter `maxCareMistakes` or unmet criteria shut it
     /// out.
+    ///
+    /// Kunemon, the V3 tree's second Rookie, joined in US-135; four earned branches is the most a
+    /// Child can carry, since there are only four energy types to tell them apart with.
     func testThePatamonChildrensEarnedBranchesUseDistinctEnergies() throws {
-        for (child, shadowed) in [("patamon", "unimon"), ("tsukaimon", "bakemon")] {
+        for (child, shadowed) in [("patamon", "unimon"), ("tsukaimon", "bakemon"),
+                                  ("kunemon", "drimogemon")] {
             let node = try XCTUnwrap(graph.node(id: child))
             let earned = node.evolutions.filter { !$0.isDefault }
 

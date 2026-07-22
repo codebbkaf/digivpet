@@ -218,13 +218,13 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — twenty-two nodes have one today, in the `dmc-v1`, `dmc-v2`, `patamon`, `piyomon` and
+prose — twenty-five nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `piyomon` and
 `gazimon` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 111 nodes across six `line` values — `dmc-v1` (21 nodes),
-`dmc-v2` (23), `palmon` (10), `patamon` (17), `piyomon` (20) and `gazimon` (20) — each a complete
+`Resources/evolutions.json` holds 114 nodes across six `line` values — `dmc-v1` (21 nodes),
+`dmc-v2` (23), `dmc-v3` (20), `palmon` (10), `piyomon` (20) and `gazimon` (20) — each a complete
 line from Digitama through Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
@@ -265,16 +265,25 @@ idle-only Betamon and a missing Tyranomon pruned Version 1. Four things about it
   Omegamon Alter-S with BlitzGreymon lives in `Resources/jogress.json`, which is why
   CresGarurumon is terminal here.
 
-`patamon` is US-044's Digital Monster Color V3 line and is much wider: Patamon branches five ways
-into Unimon / Centalmon / Ogremon / Bakemon / Scumon, which converge into three Perfects
-(Andromon, Giromon, Etemon) and three Ultimates (HiAndromon, Gokumon, BanchoLeomon). Two things
-about it are worth knowing before editing it:
+`dmc-v3` is the third of the same story: US-044 authored it as `patamon`, a pruned Digital Monster
+Color Version 3 tree, and US-135 renamed it and filled that tree in. It was the least pruned of the
+three — Patamon's five Champions converging into Andromon / Giromon / Etemon and then HiAndromon /
+Gokumon / BanchoLeomon were all already here — so completing it took only three new nodes. Four
+things about it:
 
 - **Its Baby I is Puttimon, not the V3 tree's Poyomon.** Poyomon is one of the 157 idle-only
-  Digimon, so it may never be playable. See the `comment` on the `puttimon` node.
-- **Five Champions, four energy types.** Scumon — the V3 tree's junk evolution — is the
-  `isDefault` edge rather than an earned one, and shares Bakemon's `vitality` gate from below on
-  `minEnergy`. A neglected Patamon lands on Scumon; a well-raised vitality one still gets Bakemon.
+  Digimon, so it may never be playable. It is the ONLY name in the Version 3 section with no
+  animated sheet. See the `comment` on the `puttimon` node.
+- **Kunemon is the second Rookie, and Tsukaimon is a third the device never had.** US-061 split
+  Patamon's five Champions across Patamon and an invented Tsukaimon, because a Child could carry
+  only two earned branches then. US-135 put all five back on Patamon, where the document draws
+  them, but left Tsukaimon its Ogremon and Bakemon rather than emptying it: a shipped Digimon that
+  evolves into nothing is an orphan made by the story whose job is to remove them.
+- **Scumon is the junk Champion and Etemon the junk Perfect.** A device tree's junk Champion is the
+  one BOTH Rookies fall to — Numemon in V1, Vegimon in V2, Scumon here — so it is the `isDefault`
+  edge on all three Children, and shares Unimon's `spirit` gate from below on `minEnergy`.
+- **It has no Ultra row at all**, unlike Versions 1, 2 and 4, so all three of its Megas are
+  terminal and none of them appears in `Resources/jogress.json`.
 
 `piyomon` is US-045's Digital Monster Color V4 line and has the same five-wide shape: Piyomon
 branches into Monochromon / Leomon / Kuwagamon / Coelamon / Mojyamon, converging into Megadramon /

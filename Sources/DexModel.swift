@@ -333,6 +333,7 @@ final class DexModel: ObservableObject {
     static let lineTitles: [String: String] = [
         "dmc-v1": "Color Ver.1",
         "dmc-v2": "Color Ver.2",
+        "dmc-v3": "Color Ver.3",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id

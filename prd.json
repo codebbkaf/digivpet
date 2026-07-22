@@ -441,8 +441,8 @@
         "Typecheck passes"
       ],
       "priority": 22,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Renamed the pruned `patamon` seed line to `dmc-v3` and completed the Digital Monster Color Version 3 tree: 3 new nodes (Kunemon, Shellmon, Drimogemon), 20 in the line, 114 in the file. Source: Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md line 43; no external reference needed - the section is complete and the app's four-energy branching model covers it. Patamon takes all five of its Champions back from US-061's invented Tsukaimon (which keeps Ogremon/Bakemon rather than being emptied into an orphan); Kunemon is the document's second Rookie with Shellmon and Drimogemon its alone. AC11: the ONE name in the section with no playable sprite is Poyomon (searched `find -iname Poyomon.png`: only 16x16 Digimon Sprites/Idle Frame Only/Poyomon.png, no 48x64 sheet), already substituted by Puttimon in US-044. No Ultra/Jogress row in this section. Validator ZERO findings over the whole file. Orphans 760 -> 757 (Appendix B). Build green, 1729 tests (1716 + 13 new), 0 failures. Tree screenshotted on 41mm and 46mm under -dexDemo -dexLineDemo=dmc-v3: draws with connectors, titled 'Color Ver.3', no black screen."
     },
     {
       "id": "US-136",

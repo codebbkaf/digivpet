@@ -146,6 +146,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   deleting that edge would have left Geremon reachable from nothing — a shipped Digimon quietly
   turned back into an orphan by the very story that removes them. Rehome it; a test should pin the
   new parent.
+- **A device slug line renames in exactly six places, and the list has not changed across three
+  trees now (US-133/134/135).** `elements.json` `lineDefaults`, `moves.json` `lineDefaults`,
+  `MinigameAssignment.byLine`, `DexModel.lineTitles` (ADD, the others MOVE), plus
+  `EvolutionGraphTests`' per-line count dictionary and any `$0.line == "<old>"` filter in
+  `SeedRosterTests`. `perl -pi -e 's/"line": "old"/"line": "dmc-vN"/g'` on `evolutions.json` does
+  the data half; then `grep -rn "<old>" Sources Tests docs Resources scripts` and read every hit —
+  a node id equal to the old line key (`patamon`, `gabumon`) means most hits must NOT change.
+- **`-dexLineDemo=<line>` does nothing without `-dexDemo`.** The line flag is read inside `DexView`;
+  `-dexDemo` is what pushes the Dex at launch from `ContentView`. Alone it lands you on the main
+  screen and the shot looks like the flag was ignored. The bundle id is `com.digivpet.DigiVPet`,
+  NOT `...watchkitapp` — `simctl launch` fails with FBSOpenApplicationServiceErrorDomain code 4 if
+  you guess it.
 - **A device tree's junk Champion is the one BOTH of its Rookies fall to** — Numemon in Ver.1,
   Vegimon in Ver.2, Scumon in Ver.3, Nanimon in Ver.4, Raremon in Ver.5. That is the `isDefault`
   edge, and `EvolutionCriteriaTests.junkIds` has to name it or the junk-fallback test fails.
@@ -1722,4 +1734,78 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   five-wide (Unimon / Centalmon / Ogremon / Bakemon / Scumon), which is the whole of that tree's
   Rookie row, so the ceiling raised here should be enough for it. Its Kunemon side is the new work,
   and V3 has no Ultra/Jogress row at all.
+---
+
+## 2026-07-22 - US-135 (Wire the Digital Monster Color Version 3 evolution tree)
+- **The V3 tree is now complete and playable end to end.** The seed line US-044 called `patamon`
+  WAS this tree, authored pruned; this story **renamed it to `dmc-v3`** and added the three nodes it
+  was missing. Build green, **1729 tests (1716 + 13 new), 0 failures. Orphans 760 -> 757.**
+- Files changed: `Resources/evolutions.json` (17 nodes re-lined, 3 new, 3 new edges on existing
+  nodes), `Resources/elements.json`, `Resources/moves.json`, `Sources/DexModel.swift`,
+  `Sources/MinigameAssignment.swift`, `docs/evolutions-schema.md`, `Tests/DMCVersion3TreeTests.swift`
+  (new, 13 tests) and four existing test files.
+
+- **THE CHEAPEST TREE OF PHASE E SO FAR, and the reason is worth knowing before US-136.** US-133
+  added 10 nodes and US-134 added 13; this one added **three**. US-044 had already authored the
+  whole spine — Patamon's five Champions, all three Perfects, all three Megas — and even the two
+  Champions it could not reach (Shellmon, Drimogemon) were already named in `SeedRosterTests`'
+  `patamonLineVerifiedSet`. **Read the existing line before estimating the work**: only Kunemon (the
+  document's second Rookie) and its two exclusive Champions were genuinely absent. Expect US-136
+  (`piyomon` -> V4) to be closer to this than to US-134, since US-045 authored it the same way —
+  but its Rookie is SIX wide and two of its Champions have no art, so it will need the ceiling
+  raised and the rehoming that US-045 already did checked rather than redone.
+
+- **NO CEILINGS MOVED, for the first time in Phase E.** Patamon and Kunemon are five-wide and
+  US-134's 2...5 out-degree ceiling and five-candidate Dex ceiling already covered them. **V4's
+  Palmon and V5's Gizamon are still SIX wide in the document** — that raise is US-136/US-137's,
+  unchanged from what US-134 predicted.
+- **Four earned branches is the HARD ceiling for a Child, and it is not a taste question.**
+  `SeedRosterTests.testThePatamonChildrensEarnedBranchesUseDistinctEnergies` requires every earned
+  edge out of a Child to carry a distinct `requiredEnergy`, and there are only four energy types.
+  A five-wide Rookie is therefore always four earned + the junk `isDefault`, and the junk edge must
+  share a rival's energy while sitting below it on `minEnergy`. **A SIX-wide Rookie cannot be
+  authored this way at all** — US-136 will have to either split the sixth onto another Child (the
+  US-045 pattern) or change what distinguishes two edges of the same energy. Decide that BEFORE
+  authoring V4, not after the test fails.
+
+- **The same edge can point at the same target from two parents with DIFFERENT energies, and that
+  is what made Kunemon fit.** Ogremon is `stamina` from Patamon and Tsukaimon but `strength` from
+  Kunemon; Bakemon is `vitality` from all three. `requiredEnergy` is a property of the EDGE, not of
+  the target node, so a shared Champion costs a Rookie whichever of its four slots is still free.
+  Nothing in the validator or the tests objects. Without this, Kunemon's five could not have been
+  authored at all: it shares three of them with Patamon.
+
+- **DO NOT EMPTY A NODE THE SOURCE DOCUMENT DOES NOT CONTAIN.** Tsukaimon is not in the V3 tree —
+  US-061 invented it to hold Ogremon and Bakemon when a Child could carry only two earned branches.
+  Giving Patamon its five back made Tsukaimon's branches redundant, and deleting them would have
+  left a shipped Child that evolves into nothing: a NEW orphan, made by the story whose job is to
+  remove them. It keeps them and stands beside Kunemon as a third Rookie the device never had. This
+  is US-134's Geremon lesson in the other direction — that one was about a lost IN-edge, this one
+  about lost OUT-edges. **Check both directions before pruning.**
+
+- **Version 3 needed NO line-scoped alias**, the first tree in Phase E that did not: none of its
+  sixteen names is owned by another line. The running tally in `RosterTests` is unchanged —
+  `dmcv1_shinmonzaemon`, `dmcv2_ebemon`, `dmcv2_vademon`, `extyranomon`, `piyo_tanemon`,
+  `piyo_yuramon`. A test in `DMCVersion3TreeTests` asserts no `dmcv3_` id exists, so the day one is
+  needed the reason has to be written down.
+- **Version 3 has no Ultra/Jogress row at all**, unlike V1, V2 and V4. Its three Megas are terminal
+  and a test pins that, so a later story adding a recipe for one of them has to say why.
+
+- **AC11's one absent name, searched with `find -iname` over the whole asset pack:**
+  - **Poyomon** — only `16x16 Digimon Sprites/Idle Frame Only/Poyomon.png`, no 48x64 sheet under
+    `Baby I/`, so it is `dexOnly`. US-044 already substituted Puttimon and wrote the reason onto the
+    `puttimon` node; this story only re-asserted it. Every OTHER name in the section is playable.
+  - Kunemon, Shellmon and Drimogemon were each checked for FOLDER as well as existence (US-134's
+    Whamon lesson): `Child/Kunemon.png`, `Adult/Shellmon.png`, `Adult/Drimogemon.png` — all three
+    agree with the rung the document puts them on, so nothing needed rehoming this time.
+
+- **LOOKED AT ON BOTH SCREENS, because every Phase E tree gets photographed once.** 41mm and 46mm,
+  `-dexDemo -dexLineDemo=dmc-v3`: the twenty-node tree draws with its ladder and the three-way fork
+  out of Tokomon, titled **"Color Ver.3"** from `DexModel.lineTitles` rather than the raw key. No
+  black screen — US-133's regression was at 22 nodes and this tree is smaller than the 23-node V2
+  one already cleared. Both simulators erased afterwards (`-dexDemo` writes discoveries to the save).
+
+- REMAINS: US-136 onward (22/56 passing). US-136 is Digital Monster Color Version 4 — the `piyomon`
+  line renamed to `dmc-v4`. Read the two paragraphs above about the six-wide Rookie and the
+  four-energy limit before starting it; that is the one thing this story did not have to solve.
 ---

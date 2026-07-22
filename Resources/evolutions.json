@@ -1568,7 +1568,7 @@
       "id": "pata_digitama",
       "displayName": "Pata Digitama",
       "stage": "Digitama",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Pata_Digitama",
       "evolutions": [
         {
@@ -1583,7 +1583,7 @@
       "id": "puttimon",
       "displayName": "Puttimon",
       "stage": "Baby I",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Puttimon",
       "comment": "DIVERGENCE FROM THE SOURCE TREE (US-044). The Digital Monster Color V3 tree (Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md) starts this line at Fresh: Poyomon, but Poyomon exists only as a single 16x16 frame in 'Idle Frame Only/' with no 48x64 animated sheet (verified in docs/sprite-availability.md), so it is dexOnly and may never be playable or named by an edge. Puttimon is substituted as the Baby I: it is the closest animated stand-in, being the Baby I of the same Angel family Patamon belongs to. Poyomon is the ONLY divergence in this line; every other node is the V3 tree as written.",
       "evolutions": [
@@ -1600,7 +1600,7 @@
       "id": "tokomon",
       "displayName": "Tokomon",
       "stage": "Baby II",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Tokomon",
       "evolutions": [
         {
@@ -1615,6 +1615,12 @@
           "requiredEnergy": "vitality",
           "minEnergy": 30,
           "maxCareMistakes": 4
+        },
+        {
+          "to": "kunemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
         }
       ]
     },
@@ -1622,9 +1628,9 @@
       "id": "patamon",
       "displayName": "Patamon",
       "stage": "Child",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Patamon",
-      "comment": "The V3 tree gives Patamon five Champions but there are only four energy types. Scumon \u2014 the tree's junk evolution, shared with the Kunemon branch \u2014 is the one that is not earned: it is the isDefault edge, so a Patamon that qualifies for nothing else lands there. Bakemon shares Scumon's vitality gate but sits above it on minEnergy, so a well-raised vitality Patamon still reaches Bakemon.",
+      "comment": "The V3 tree gives Patamon five Champions and US-135 authors all five here, where US-044 could only fit three: four earned branches, one per energy type, plus Scumon. Scumon is the tree's junk Champion \u2014 the one BOTH Rookies fall to \u2014 so it is the isDefault edge, and a Patamon that qualifies for nothing else lands there. It shares Unimon's spirit gate but sits below it on minEnergy, so a well-raised spirit Patamon still reaches Unimon. Tsukaimon, which carried Ogremon and Bakemon between US-061 and US-135, keeps them: it is not in the source tree at all and would otherwise have been left with no branches of its own.",
       "evolutions": [
         {
           "to": "unimon",
@@ -1671,6 +1677,50 @@
           ]
         },
         {
+          "to": "ogremon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 180,
+              "hint": "Work out alongside it"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep its meals in check"
+            }
+          ]
+        },
+        {
+          "to": "bakemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it sleep deeply"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Leave its nights alone"
+            }
+          ]
+        },
+        {
           "to": "scumon",
           "requiredEnergy": "spirit",
           "minEnergy": 0,
@@ -1683,7 +1733,7 @@
       "id": "tsukaimon",
       "displayName": "Tsukaimon",
       "stage": "Child",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Tsukaimon",
       "evolutions": [
         {
@@ -1740,10 +1790,115 @@
       ]
     },
     {
+      "id": "kunemon",
+      "displayName": "Kunemon",
+      "stage": "Child",
+      "line": "dmc-v3",
+      "spriteFile": "Kunemon",
+      "comment": "The V3 tree's SECOND Rookie under Tokomon, wired by US-135. Its five Champions are Ogremon / Bakemon / Shellmon / Drimogemon / Scumon; the first two and the last it shares with Patamon, exactly as the document draws them, and Shellmon and Drimogemon are its alone. Scumon is the fallback both Rookies fall to, so it is the isDefault edge here as well.",
+      "evolutions": [
+        {
+          "to": "ogremon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1000,
+              "hint": "Burn active calories with it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 4,
+              "hint": "Let it pick a few fights"
+            }
+          ]
+        },
+        {
+          "to": "bakemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1600,
+              "hint": "Let it sleep long and still"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Leave its nights alone"
+            }
+          ]
+        },
+        {
+          "to": "shellmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 220,
+              "hint": "Keep it moving for long stretches"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "drimogemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Take it walking often"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it regularly"
+            }
+          ]
+        },
+        {
+          "to": "scumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "unimon",
       "displayName": "Unimon",
       "stage": "Adult",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Unimon",
       "evolutions": [
         {
@@ -1781,7 +1936,7 @@
       "id": "centalmon",
       "displayName": "Centalmon",
       "stage": "Adult",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Centalmon",
       "evolutions": [
         {
@@ -1819,7 +1974,7 @@
       "id": "ogremon",
       "displayName": "Ogremon",
       "stage": "Adult",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Ogremon",
       "evolutions": [
         {
@@ -1857,7 +2012,7 @@
       "id": "bakemon",
       "displayName": "Bakemon",
       "stage": "Adult",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Bakemon",
       "evolutions": [
         {
@@ -1892,10 +2047,88 @@
       ]
     },
     {
+      "id": "shellmon",
+      "displayName": "Shellmon",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Shellmon",
+      "comment": "Kunemon's alone in the V3 tree, and the document's third feeder into Andromon (with Unimon and Centalmon). Wired by US-135.",
+      "evolutions": [
+        {
+          "to": "andromon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Keep it moving for long stretches"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Almost never overfeed it"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "drimogemon",
+      "displayName": "Drimogemon",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Drimogemon",
+      "comment": "Kunemon's alone in the V3 tree, and the document's third feeder into Giromon (with Ogremon and Bakemon). Wired by US-135.",
+      "evolutions": [
+        {
+          "to": "giromon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 100,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 130000,
+              "hint": "Walk a very long way"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Train it hard"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
       "id": "scumon",
       "displayName": "Scumon",
       "stage": "Adult",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Scumon",
       "evolutions": [
         {
@@ -1933,7 +2166,7 @@
       "id": "andromon",
       "displayName": "Andromon",
       "stage": "Perfect",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Andromon",
       "evolutions": [
         {
@@ -1949,7 +2182,7 @@
       "id": "giromon",
       "displayName": "Giromon",
       "stage": "Perfect",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Giromon",
       "evolutions": [
         {
@@ -1965,7 +2198,7 @@
       "id": "etemon",
       "displayName": "Etemon",
       "stage": "Perfect",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Etemon",
       "evolutions": [
         {
@@ -2003,7 +2236,7 @@
       "id": "hiandromon",
       "displayName": "HiAndromon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Hi-Andromon",
       "comment": "The V3 tree spells this HiAndromon; the art is filed as Hi-Andromon.png (docs/sprite-availability.md)."
     },
@@ -2011,21 +2244,21 @@
       "id": "gokumon",
       "displayName": "Gokumon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "Gokumon"
     },
     {
       "id": "bancholeomon",
       "displayName": "BanchoLeomon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "BanchoLeomon"
     },
     {
       "id": "kingetemon",
       "displayName": "KingEtemon",
       "stage": "Ultimate-Super Ultimate",
-      "line": "patamon",
+      "line": "dmc-v3",
       "spriteFile": "KingEtemon"
     },
     {
