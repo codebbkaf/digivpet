@@ -172,11 +172,18 @@ final class PerfectSweepSToZTests: XCTestCase {
     /// takes the `isDefault` edge exactly when nothing else qualifies, so a condition on one would
     /// be data that lies about how it is taken. What the criterion binds is the EARNED edges.
     func testEverySweptPerfectClimbsByOneGatedDefaultEdge() throws {
+        // **US-163 IS THE FIRST STORY TO FORK A PERFECT, AND THESE ARE THE ONES IT FORKED.** The
+        // Ultimate sweep's in-edges come from this rung, so a Perfect that already had its climb
+        // gained an EARNED branch beside it — a different `requiredEnergy`, two criteria, and the
+        // climb untouched and still `isDefault`, which is the whole of what this test checks. Each
+        // is NAMED with its new edge count rather than the count being loosened to a `>=`.
+        let branchedByUS163: [String: Int] = ["shishimamon": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
-            XCTAssertEqual(node.evolutions.count, 1, "\(perfect) is not a single climb")
+            XCTAssertEqual(node.evolutions.count, branchedByUS163[perfect] ?? 1,
+                           "\(perfect) is not a single climb")
 
-            let climb = try XCTUnwrap(node.evolutions.first)
+            let climb = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             XCTAssertTrue(climb.isDefault, "\(perfect)'s climb is not its fallback")
             XCTAssertEqual(climb.to, ultimate)
             XCTAssertEqual(climb.conditions, [], "\(perfect)'s fallback carries criteria")
@@ -402,19 +409,19 @@ final class PerfectSweepSToZTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["penc-sw"], 18, "Sagomon, Sanzomon, Shawujinmon and Xingtianmon")
-        XCTAssertEqual(sizes["penc-me"], 63, "Scorpiomon, Shootmon, Superstarmon and Tekkamon")
-        XCTAssertEqual(sizes["penc-nso"], 62,
-                       "SaviorHackmon, Vamdemon X and WereGarurumon X")
+        XCTAssertEqual(sizes["penc-me"], 67, "Scorpiomon, Shootmon, Superstarmon and Tekkamon, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 69,
+                       "SaviorHackmon, Vamdemon X and WereGarurumon X, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["penc-wg"], 42, "both Yatagaramon")
         XCTAssertEqual(sizes["commandramon"], 15,
                        "SkullBaluchimon, Triceramon X, Chaosdramon X and the Karakurumon floor")
         XCTAssertEqual(sizes["adventure02"], 18,
                        "Vermillimon, BlackWarGreymon and the Jyagamon floor")
-        XCTAssertEqual(sizes["vital"], 41, "Shishimamon, Sirenmon and Regalecusmon")
+        XCTAssertEqual(sizes["vital"], 42, "Shishimamon, Sirenmon and Regalecusmon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["dmc-v2"], 30, "WereGarurumon Black")
-        XCTAssertEqual(sizes["dmc-v3"], 52, "Sekkamon")
+        XCTAssertEqual(sizes["dmc-v3"], 53, "Sekkamon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["dmc-v4"], 30, "Triceramon")
-        XCTAssertEqual(sizes["penc-ds"], 44, "WaruSeadramon")
+        XCTAssertEqual(sizes["penc-ds"], 45, "WaruSeadramon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["algomon"], 12, "unchanged — see the Siesamon test above")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 11)
@@ -489,8 +496,14 @@ final class PerfectSweepSToZTests: XCTestCase {
         XCTAssertTrue(Set(graph.parents(of: "vamdemon_x").map(\.id))
             .isSubset(of: Set(graph.parents(of: "vamdemon").map(\.id))),
                       "Vamdemon X no longer hangs off one of its base form's own Champions")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "vamdemon_x")).evolutions.map(\.to),
-                       try XCTUnwrap(graph.node(id: "vamdemon")).evolutions.map(\.to),
+        // The convergence is on the CLIMB rather than on the whole edge list, and it has to be:
+        // US-163 hung BelialVamdemon on Vamdemon as an earned branch — the base form's own final
+        // form, which the variant has no citation for — so the two nodes' edge lists differ while
+        // the Mega they both climb to is still VenomVamdemon.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "vamdemon_x")).evolutions
+                        .first(where: \.isDefault)?.to,
+                       try XCTUnwrap(graph.node(id: "vamdemon")).evolutions
+                        .first(where: \.isDefault)?.to,
                        "Vamdemon X no longer converges on its base form's own Mega")
 
         // And the one that does not, with the reason pinned at both ends.
@@ -756,7 +769,7 @@ final class PerfectSweepSToZTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       67, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       62, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
         // Ogudomon is still the one US-159 pinned in Lucemon Falldown's comment, and it is an
         // Ultimate, so it belongs to the sweeps after this one rather than to this one.
@@ -787,9 +800,9 @@ final class PerfectSweepSToZTests: XCTestCase {
             XCTAssertNil(roster.entry(id: id), "\(id) removed an orphan after all")
         }
 
-        XCTAssertEqual(graph.nodes.count, 787, "760 before this story")
+        XCTAssertEqual(graph.nodes.count, 817, "760 before this story")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "165 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 108, "105 before this story")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 138, "105 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

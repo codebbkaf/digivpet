@@ -322,11 +322,11 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 105,
+        XCTAssertEqual(sizes["tamers"], 113,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
-                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
-        XCTAssertEqual(sizes["dmc-v3"], 52)
-        XCTAssertEqual(sizes["palmon"], 28, "US-159's Lilamon and Lilimon X")
+                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["dmc-v3"], 53, "plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["palmon"], 29, "US-159's Lilamon and Lilimon X, plus US-163's one Ultimate")
     }
 
     /// **The variant rule, and the honest version of it.** The criteria say a variant hangs off its
@@ -641,8 +641,18 @@ final class ChildSweepAToFTests: XCTestCase {
         let clearedByUS162 = ["damemon", "garurumon_black", "ginryumon", "hookmon", "lianpumon",
                               "nisedrimogemon", "reppamon", "tsuchidarumon"]
         let perfectsFromUS162 = ["adventure02_jyagamon", "commandramon_karakurumon"]
+
+        // **US-163 CLEARS FIVE AND ADDS NONE BACK, WHICH IS WHAT AN ULTIMATE SWEEP IS.** The top
+        // rung is TERMINAL, so a story that authors thirty Ultimates authors thirty leaves the
+        // ledger does not count (it filters `stage != .ultimate`) and no junk floor at all — the
+        // first Phase E story whose net is a straight fall. The five are the leaf Perfects the
+        // A-B Ultimates cite: Grademon for Alphamon, Mametyramon for Bagramon, Canoweissmon for
+        // Arcturusmon, BlackRapidmon for BlackSaintGalgomon and MegaloGrowmon for Breakdramon.
+        // Net 67 -> 62. The remaining sixty-two are owed an Ultimate by the six sweeps after this.
+        let clearedByUS163 = ["blackrapidmon", "canoweissmon", "grademon", "mametyramon",
+                              "megalogrowmon"]
         let cleared = clearedByUS157 + clearedByUS158 + clearedByUS159 + clearedByUS160
-            + clearedByUS161 + clearedByUS162
+            + clearedByUS161 + clearedByUS162 + clearedByUS163
 
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
@@ -651,7 +661,7 @@ final class ChildSweepAToFTests: XCTestCase {
                            + perfectsFromUS160 + perfectsFromUS161 + perfectsFromUS162)
                            .filter { !cleared.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 67)
+        XCTAssertEqual(deadEnds.count, 62)
 
         // And the twenty-five really did leave because they lead somewhere now, not because they
         // vanished.
@@ -681,11 +691,11 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 787,
+        XCTAssertEqual(graph.nodes.count, 817,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
-                           + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
+                           + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
     // MARK: - The whole file still validates

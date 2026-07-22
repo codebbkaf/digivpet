@@ -314,7 +314,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 63,
+        XCTAssertEqual(inLine.count, 67,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
                            + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon, "
@@ -410,7 +410,11 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       "grandiskuwagamon", "rizegreymon_x",
                                       // US-162's four, hung off this line's own Kuwagamon X,
                                       // Minotaurmon, Omekamon and Guardromon.
-                                      "scorpiomon", "shootmon", "superstarmon", "tekkamon"]
+                                      "scorpiomon", "shootmon", "superstarmon", "tekkamon",
+                                      // US-163's four Megas: Anubimon over Cerberumon X — the
+                                      // drawable form of its bolded parent — both Belphemon over
+                                      // Astamon, and Brigadramon over Cargodramon.
+                                      "anubimon", "belphemon_rage", "belphemon_x", "brigadramon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

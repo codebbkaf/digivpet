@@ -162,11 +162,18 @@ final class PerfectSweepHToLTests: XCTestCase {
     /// that lies about how it is taken. What the criterion binds is the EARNED edges, and every
     /// earned edge this story authored is checked below.
     func testEverySweptPerfectClimbsByOneGatedDefaultEdge() throws {
+        // **US-163 IS THE FIRST STORY TO FORK A PERFECT, AND THESE ARE THE ONES IT FORKED.** The
+        // Ultimate sweep's in-edges come from this rung, so a Perfect that already had its climb
+        // gained an EARNED branch beside it — a different `requiredEnergy`, two criteria, and the
+        // climb untouched and still `isDefault`, which is the whole of what this test checks. Each
+        // is NAMED with its new edge count rather than the count being loosened to a `>=`.
+        let branchedByUS163: [String: Int] = ["insekimon": 2, "ladydevimon": 2, "lilamon": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
-            XCTAssertEqual(node.evolutions.count, 1, "\(perfect) is not a single climb")
+            XCTAssertEqual(node.evolutions.count, branchedByUS163[perfect] ?? 1,
+                           "\(perfect) is not a single climb")
 
-            let climb = try XCTUnwrap(node.evolutions.first)
+            let climb = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             XCTAssertTrue(climb.isDefault, "\(perfect)'s climb is not its fallback")
             XCTAssertEqual(climb.to, ultimate)
             XCTAssertEqual(climb.conditions, [], "\(perfect)'s fallback carries criteria")
@@ -380,14 +387,14 @@ final class PerfectSweepHToLTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 105,
-                       "Jazarichmon, LadyDevimon, LadyDevimon X and their two Megas" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
-        XCTAssertEqual(sizes["penc-nso"], 62,
-                       "Insekimon, Lavogaritamon, Volcanicdramon and Lucemon Falldown" + ", plus US-160's five, plus US-161's Orochimon")
-        XCTAssertEqual(sizes["penc-me"], 63, "Hisyaryumon and Ouryumon" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
+        XCTAssertEqual(sizes["tamers"], 113,
+                       "Jazarichmon, LadyDevimon, LadyDevimon X and their two Megas" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 69,
+                       "Insekimon, Lavogaritamon, Volcanicdramon and Lucemon Falldown" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["penc-me"], 67, "Hisyaryumon and Ouryumon" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
         XCTAssertEqual(sizes["wanyamon"], 29, "Karatenmon and Tengumon" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["palmon"], 28, "Lilamon and Lilimon X")
-        XCTAssertEqual(sizes["penc-ds"], 44, "Hangyomon" + ", plus US-160's two")
+        XCTAssertEqual(sizes["palmon"], 29, "Lilamon and Lilimon X, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-ds"], 45, "Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 6)
     }
@@ -650,7 +657,7 @@ final class PerfectSweepHToLTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       67, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       62, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -671,11 +678,11 @@ final class PerfectSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 787, "693 before this story")
+        XCTAssertEqual(graph.nodes.count, 817, "693 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "115 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 108, "88 before this story")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 138, "88 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly one Perfect, so a second parent hung on one

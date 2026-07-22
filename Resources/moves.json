@@ -4722,6 +4722,186 @@
       "tint": "yellow",
       "signatureName": "Potato Barrage",
       "signatureSymbol": "leaf.fill"
+    },
+    "agumon_ynk": {
+      "projectileSymbol": "flame.fill",
+      "tint": "mint",
+      "signatureName": "Bond of Bravery",
+      "signatureSymbol": "flame.fill"
+    },
+    "algomon_ultimate": {
+      "projectileSymbol": "eye.fill",
+      "tint": "green",
+      "signatureName": "Total Algorithm",
+      "signatureSymbol": "eye.fill"
+    },
+    "alphamon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "red",
+      "signatureName": "Digitalize of Soul",
+      "signatureSymbol": "shield.fill"
+    },
+    "alphamon_ouryuken": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "mint",
+      "signatureName": "Ouryuken Slash",
+      "signatureSymbol": "bolt.fill"
+    },
+    "amaterasumon": {
+      "projectileSymbol": "star.fill",
+      "tint": "yellow",
+      "signatureName": "Heavenly Rock Door",
+      "signatureSymbol": "star.fill"
+    },
+    "ancientbeatmon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "green",
+      "signatureName": "Thunder Fist",
+      "signatureSymbol": "bolt.fill"
+    },
+    "ancientmegatheriumon": {
+      "projectileSymbol": "snowflake",
+      "tint": "teal",
+      "signatureName": "Great Blizzard",
+      "signatureSymbol": "snowflake"
+    },
+    "ancientmermaimon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "yellow",
+      "signatureName": "Ocean Trident",
+      "signatureSymbol": "drop.fill"
+    },
+    "ancientsphinxmon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "yellow",
+      "signatureName": "Necro Mist",
+      "signatureSymbol": "moon.fill"
+    },
+    "anubimon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "yellow",
+      "signatureName": "Pyramid Power",
+      "signatureSymbol": "triangle.fill"
+    },
+    "apocalymon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "blue",
+      "signatureName": "Darkness Zone",
+      "signatureSymbol": "moon.fill"
+    },
+    "arcturusmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "blue",
+      "signatureName": "Arcturus Lance",
+      "signatureSymbol": "star.fill"
+    },
+    "ariemon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "orange",
+      "signatureName": "Golden Fleece",
+      "signatureSymbol": "hammer.fill"
+    },
+    "armagemon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "purple",
+      "signatureName": "Ultimate Flare",
+      "signatureSymbol": "circle.fill"
+    },
+    "armamon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "orange",
+      "signatureName": "Full Armament",
+      "signatureSymbol": "shield.fill"
+    },
+    "bagramon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "teal",
+      "signatureName": "Darkness Loader",
+      "signatureSymbol": "moon.fill"
+    },
+    "bancholilimon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "pink",
+      "signatureName": "Bancho Bloom",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "barbamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "orange",
+      "signatureName": "Pandemonium Lost",
+      "signatureSymbol": "sparkles"
+    },
+    "barbamon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "yellow",
+      "signatureName": "Greed Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "beelzebumon_blast": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "teal",
+      "signatureName": "Death the Cannon",
+      "signatureSymbol": "bolt.fill"
+    },
+    "beelzebumon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "cyan",
+      "signatureName": "Double Impact Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "belialvamdemon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "green",
+      "signatureName": "Melting Blood",
+      "signatureSymbol": "moon.fill"
+    },
+    "belphemon_rage": {
+      "projectileSymbol": "flame.fill",
+      "tint": "orange",
+      "signatureName": "Gift of Darkness",
+      "signatureSymbol": "flame.fill"
+    },
+    "belphemon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "indigo",
+      "signatureName": "Lampranthus Cross",
+      "signatureSymbol": "flame.fill"
+    },
+    "blacksaintgalgomon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "gray",
+      "signatureName": "Giant Missile Black",
+      "signatureSymbol": "hammer.fill"
+    },
+    "blackseraphimon": {
+      "projectileSymbol": "sparkles",
+      "tint": "gray",
+      "signatureName": "Fallen Excalibur",
+      "signatureSymbol": "sparkles"
+    },
+    "blackwargreymon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "teal",
+      "signatureName": "Terra Destroyer Cross",
+      "signatureSymbol": "flame.fill"
+    },
+    "blastmon": {
+      "projectileSymbol": "sparkles",
+      "tint": "green",
+      "signatureName": "Crystal Barrage",
+      "signatureSymbol": "sparkles"
+    },
+    "breakdramon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "orange",
+      "signatureName": "Destruction Drill",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "brigadramon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "blue",
+      "signatureName": "Brigade Cannon",
+      "signatureSymbol": "bolt.fill"
     }
   },
   "lineDefaults": {

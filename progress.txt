@@ -21,6 +21,37 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E, ULTIMATE RUNG: ONE ORPHAN COSTS ONE NODE, AND THAT IS THE WHOLE STORY.** The rung is
+  TERMINAL, so no out-edge is owed; `EvolutionCriteriaTests.branchingNodes` is Child and Adult only,
+  so a forked Perfect owes no junk floor; and every line but `algomon` already has a Perfect, so
+  none can be opened. US-163 wired thirty orphans with thirty nodes. The cost is entirely knock-on.
+- **PHASE E: FORKING A PERFECT IS THE NEW BREAKAGE, AND TWO GREPS FIND IT.** Every Perfect carried
+  exactly one `isDefault` climb until US-163; six `PerfectSweep*Tests` assert `evolutions.count == 1`
+  over their `swept` list and four device-tree files assert an exact `targets(of:)` list. Run
+  `grep -n "is not a single climb" Tests` and `grep -rn 'XCTAssertEqual(try targets(of:' Tests` for
+  every parent BEFORE authoring, and read a climb as `first(where: \.isDefault)`, never as `first`.
+- **`SeedRosterTests.earnedPath` PREFERS THE EARNED EDGE, SO BRANCHING A PERFECT ON US-002's NAMED
+  LINES SILENTLY REDIRECTS THEM.** `lilimon` and `metalgreymon` are both walked by
+  `testTheThreeNamedLinesAreTheOnesShipped`; an earned branch on either moves the line's endpoint
+  away from Rosemon / WarGreymon. US-163 lost its BOLDED parent for BanchoLilimon to this and took
+  Lilamon (the sister form, cited on the same page) instead. Grep the test before branching on
+  `palmon`, `dmc-v1` or `dmc-v2`.
+- **A LEAF'S FIRST IN-EDGE IS ITS `isDefault` CLIMB AND SO CARRIES NO CRITERIA.**
+  `SeedRosterTests.testEveryNonTerminalNodeHasExactlyOneDefaultEdge` fails a node with edges and no
+  fallback. That is also the standing reading of "no edge is unconditional": the AC binds the EARNED
+  edges, because US-020 takes an `isDefault` edge whatever its gates say.
+- **A LINE CAN BE CLOSED TO A NODE BY ART RATHER THAN BY SHAPE.** Armagemon belongs on `diablomon`
+  and cannot go there: its bolded parent Kuramon is a Baby I (`invalidStageTransition`) and BOTH
+  Perfect rungs the Kuramon swarm climbs through, Chrysalimon and Infermon, are idle-only
+  (`edgeToDexOnlyNode`) — and the Perfect rung closed in US-162, so nothing can be authored into it.
+  Check the cited line's Perfect rung for dexOnly art before assuming a thematic home is available.
+- **AN X-ANTIBODY MEGA'S WHOLE `Evolves From` IS USUALLY ULTIMATES, SO THE STRONG VARIANT RULE IS
+  THE ONLY READING — AND IT IS FREE.** Hang it on the Perfect its base form hangs on, with a
+  distinct `requiredEnergy`. Barbamon X, Beelzebumon X and Belphemon X all landed that way.
+- **WIKIMON: USE `opensearch` BEFORE CONCLUDING A DIGIMON HAS NO PAGE.**
+  `curl -s "https://wikimon.net/api.php?action=opensearch&search=<name>&limit=50&format=json"`.
+  A raw fetch of a wrong title returns an EMPTY BODY, not a 404. `Agumon YnK` is
+  `Agumon -Yuki no Kizuna-`; `BlackWarGreymon X` is `Black War Greymon (X-Antibody)`.
 - **PHASE E: A LINE'S RUNG OPENS UNDER ITS JUNK CHAMPION, AND THAT IS WHAT PROMOTES ITS EGGS.**
   US-161 left `adventure02` closed because XV-mon carries only one of the line's two eggs; US-162
   branched Nise Drimogemon instead — the junk Adult that takes the `isDefault` fall of ALL THREE
@@ -4758,4 +4789,115 @@ plus the junk floors `commandramon_karakurumon` and `adventure02_jyagamon`.
   Boutmon and LadyDevimon X on `vital`, Paildramon on `adventure02` (also live now). Ogudomon is
   still pinned in Lucemon Falldown's comment. The 67 leaves in `ChildSweepAToFTests`' dead-end
   ledger are still owed an out-edge; the three Ultimates this story opened are not on it.
+---
+
+## 2026-07-23 - US-163: Orphan sweep: Ultimate-Super Ultimate A-B (the first sweep at the top rung)
+
+Wired all THIRTY orphaned Ultimate whose displayName starts A-B, for exactly thirty nodes — the
+first Phase E story whose orphan count and node count are the same number, because **an Ultimate
+sweep is an IN-EDGE sweep and nothing else**. The rung is terminal, so the AC's out-edge clause does
+not bind; `EvolutionCriteriaTests.branchingNodes` filters to Child and Adult, so a forked Perfect
+owes no junk floor; and every one of the thirty joined a line that already had a Perfect rung.
+
+**Orphan count, Appendix B over a regenerated `roster.generated.json`: 146 BEFORE -> 116 AFTER.**
+Ultimate bucket 130 -> 100, Armor-Hybrid still 16, nothing below either. 787 -> 817 nodes.
+Files: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`scripts/us163_author.py` (new, the record of what was authored), `Tests/UltimateSweepAToBTests.swift`
+(new, 29 tests) and a 29-file knock-on set. Build green, 2382 tests pass (2353 before),
+`testShippedEvolutionsJsonIsValid` and this story's own validator test both report zero findings.
+
+The thirty, `Perfect -> Ultimate`:
+  Agumon YnK           metalgreymon_virus(dmc-v1)     vitality
+  Algomon              mummymon(penc-nso)             vitality
+  Alphamon             grademon(tamers)               LEAF -> isDefault climb
+  Alphamon Ouryuken    doruguremon(tamers)            spirit
+  Amaterasumon         shishimamon(vital)             spirit
+  AncientBeatmon       atlurkabuterimon_red(penc-nsp) stamina
+  AncientMegatheriumon mammon(penc-nso)               vitality
+  AncientMermaimon     mermaimon(penc-ds)             vitality
+  AncientSphinxmon     mummymon(penc-nso)             spirit
+  Anubimon             cerberumon_x(penc-me)          spirit
+  Apocalymon           ladydevimon(tamers)            vitality (earned by LOSING)
+  Arcturusmon          canoweissmon(penc-vb)          LEAF -> isDefault climb
+  Ariemon              marinbullmon(dmc-v3)           strength
+  Armagemon            chimairamon(dmc-v1)            stamina
+  Armamon              omegashoutmon(xros)            vitality  STRANDED, inherited
+  Bagramon             mametyramon(tamers)            LEAF -> isDefault climb
+  BanchoLilimon        lilamon(palmon)                spirit
+  Barbamon             mephismon(penc-nso)            spirit
+  Barbamon X           mephismon(penc-nso)            strength
+  Beelzebumon Blast    baalmon(tamers)                strength
+  Beelzebumon X        baalmon(tamers)                vitality
+  BelialVamdemon       vamdemon(penc-nso)             vitality
+  Belphemon Rage       astamon(penc-me)               stamina
+  Belphemon X          astamon(penc-me)               vitality
+  BlackSaintGalgomon   blackrapidmon(tamers)          LEAF -> isDefault climb
+  BlackSeraphimon      holyangemon(penc-vb)           strength (earned by LOSING)
+  BlackWarGreymon X    metalgreymon_virus_x(dmc-v1)   stamina
+  Blastmon             insekimon(penc-nso)            strength
+  Breakdramon          megalogrowmon(tamers)          LEAF -> isDefault climb
+  Brigadramon          cargodramon(penc-me)           strength
+
+**Learnings for future iterations:**
+
+- **THE ULTIMATE RUNG IS THE CHEAPEST RUNG IN PHASE E, AND THE NEXT FIVE SWEEPS SHOULD BE SCOPED
+  THAT WAY.** No out-edge is owed (terminal), no junk floor is owed (`branchingNodes` is Child and
+  Adult only), and no line can be opened because every line except `algomon` already has a Perfect.
+  So one orphan costs exactly one node and one edge. Budget US-164..US-168 at ~20 orphans each with
+  no structural work at all — the whole cost is the knock-on, which was 204 failures here.
+
+- **THIS IS THE FIRST STORY TO FORK A PERFECT, AND THAT IS WHAT BROKE 204 TESTS.** Every Perfect in
+  the file carried exactly one `isDefault` climb until now, and six `PerfectSweep*Tests` assert
+  `evolutions.count == 1` over their own `swept` list while four device-tree files assert an exact
+  `targets(of:)` list. Fix by NAMING (`branchedByUS163[perfect] ?? 1`) and by reading the climb as
+  `first(where: \.isDefault)` rather than as `first` — never by loosening to a `>=`. **Run
+  `grep -n "is not a single climb" Tests` and `grep -rn 'XCTAssertEqual(try targets(of:' Tests` for
+  every parent BEFORE authoring**; those two greps are the new pre-flight for this rung.
+
+- **A LEAF PERFECT'S FIRST EDGE MUST BE `isDefault`, SO IT CANNOT CARRY CRITERIA.**
+  `SeedRosterTests.testEveryNonTerminalNodeHasExactlyOneDefaultEdge` fails a node with edges and no
+  fallback, so an in-edge onto a leaf is the climb itself. That is also the AC-4 reading every rung
+  below recorded: "no edge is unconditional" binds the EARNED edges, because US-020 takes an
+  `isDefault` edge whatever its gates say. Five leaves were cleared this way (67 -> 62 on the ledger).
+
+- **`SeedRosterTests.earnedPath` IS A TRAP AT THIS RUNG AND IT COST TWO PLACEMENTS.** That test
+  walks US-002's three named lines by preferring the EARNED edge at every rung, so giving
+  `lilimon` or `metalgreymon` an earned branch silently redirects "Palmon -> Togemon -> Lilimon ->
+  Rosemon" or "MetalGreymon -> WarGreymon" to the new node. BanchoLilimon went to Lilamon (the
+  sister form, cited on the same page) and Agumon YnK to MetalGreymon (Virus) (the same fork one
+  arrow over) because of it. **`grep -n earnedPath Tests/SeedRosterTests.swift` before branching any
+  Perfect on `palmon`, `dmc-v1` or `dmc-v2`.**
+
+- **A LINE CAN BE CLOSED TO A NODE BY ART RATHER THAN BY SHAPE, AND `diablomon` IS THE FIRST.**
+  Armagemon is what the Kuramon swarm becomes and `diablomon` is that line — but its bolded parent
+  Kuramon is a Baby I (`invalidStageTransition`) and BOTH Perfect rungs the swarm climbs through,
+  Chrysalimon and Infermon, are idle-only (`edgeToDexOnlyNode`). No story can author a Perfect into
+  that line either, since US-162 closed the rung. Check the CITED line's Perfect rung for dexOnly
+  art before assuming a thematic home is available.
+
+- **AN X-ANTIBODY MEGA USUALLY HAS NO DRAWABLE PARENT OF ITS OWN, BECAUSE ITS WHOLE `Evolves From`
+  IS ULTIMATES.** Barbamon X, Beelzebumon X and Belphemon X each cite only Ultimates (their own
+  base form is the bolded one), so the strong variant rule — same PARENT, not merely same line — is
+  the only reading available and is free: hang the variant on the Perfect its base form hangs on,
+  with a distinct energy. Expect the same for every `*mon X` in the C-Z bands.
+
+- **TWO WIKIMON PAGE TITLES IN THIS BAND ARE UNGUESSABLE AND `opensearch` IS THE ANSWER.**
+  `Agumon YnK` is `Agumon -Yuki no Kizuna-` and `BlackWarGreymon X` is `Black War Greymon
+  (X-Antibody)` — the spaced-title rule US-160 recorded, plus a sheet name that is an abbreviation
+  of a subtitle. Use
+  `curl -s "https://wikimon.net/api.php?action=opensearch&search=<name>&limit=50&format=json"`
+  before concluding a Digimon has no page; a raw fetch of a wrong title returns an empty body, not
+  a 404.
+
+- **THE STRANDED LIST GAINS AT MOST ONE NODE PER SWEEP AT THIS RUNG, AND IT IS ALWAYS `xros`.**
+  Armamon's only cited Perfect parent anywhere is OmegaShoutmon, and `xros` has no Digitama. Any
+  A-Z Ultimate whose citations point only at `xros` or `penc-sw` inherits the same thing; add it to
+  `EvolutionCriteriaTests.strandedUltimate` and let the parent loop prove it is inheritance.
+
+- REMAINS: US-164 onward (50/56 passing). 116 orphans — 100 Ultimate (C-Z), 16 Armor-Hybrid, 0
+  below. Five Ultimate sweeps and the Armor-Hybrid one are all that is left. 62 Perfect leaves are
+  still owed a climb (`ChildSweepAToFTests`' ledger); MetalGreymon X, Huankunmon and
+  BlackMachGaogamon are among them. Rehome candidates still pinned: Kinkakumon on `penc-sw`,
+  Hisyaryumon and Cargodramon on `commandramon`, Boutmon and LadyDevimon X on `vital`, Paildramon
+  on `adventure02`. Ogudomon is still pinned in Lucemon Falldown's comment and belongs to US-167.
 ---

@@ -335,6 +335,11 @@ final class SeedRosterTests: XCTestCase {
         // Sekkamon and Ryugumon a cited climb, so both ends were already on this line. Eyeballed
         // as `Perfect/Sekkamon.png`.
         "Sekkamon",
+        // US-163's one, and the second ULTIMATE this set has taken from a sweep: Marin Bullmon is
+        // Ariemon's BOLDED `Evolves From` on Wikimon and was already on this line above, so the
+        // A-B Ultimate sweep landed the ram over the bull without arguing. Eyeballed as
+        // `Ultimate-Super Ultimate/Ariemon.png`.
+        "Ariemon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

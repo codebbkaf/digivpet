@@ -241,7 +241,7 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 62,
+        XCTAssertEqual(inLine.count, 69,
                        "US-147 hung Sunmon and Coronamon here, US-148 Firamon, US-149 Gotsumon and "
                            + "Icemon, US-150 PetitMamon, Vorvomon and Lavorvomon, US-154 Musyamon, "
                            + "US-155 ShimaUnimon, US-157 Archnemon and BlueMeramon, US-158 "
@@ -676,7 +676,17 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
                                       // Vamdemon X over Musyamon beside the Vamdemon it
                                       // already carried, and WereGarurumon X over this line's
                                       // own Garurumon, the very Champion its base form has.
-                                      "saviorhackmon", "vamdemon_x", "weregarurumon_x"]
+                                      "saviorhackmon", "vamdemon_x", "weregarurumon_x",
+                                      // US-163's SEVEN, the largest single addition this line has
+                                      // taken from a sweep and all of them Megas: Barbamon and
+                                      // Barbamon X over Mephismon, BelialVamdemon over this line's
+                                      // own Vamdemon, AncientMegatheriumon over Mammon, Blastmon
+                                      // over Insekimon, and Algomon and AncientSphinxmon over
+                                      // Mummymon — which is the only drawable parent Algomon has
+                                      // anywhere, since its own line can never gain a Perfect.
+                                      "barbamon", "barbamon_x", "belialvamdemon",
+                                      "ancientmegatheriumon", "blastmon", "algomon_ultimate",
+                                      "ancientsphinxmon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")

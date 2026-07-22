@@ -339,10 +339,10 @@ final class BabyIISweepTests: XCTestCase {
         // Sizes are the FILE's, not this story's: US-150 added twelve to `tamers` and eleven
         // to `vital`, the latter because the four Otamamon variants and their Champions all
         // landed on the Vital Bracelet line.
-        XCTAssertEqual(sizes["tamers"], 105,
+        XCTAssertEqual(sizes["tamers"], 113,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
-                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
-        XCTAssertEqual(sizes["vital"], 41)
+                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["vital"], 42, "plus US-163's one Ultimate")
         XCTAssertEqual(sizes["wanyamon"], 29, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`, plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
     }
 

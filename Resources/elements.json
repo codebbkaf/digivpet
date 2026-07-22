@@ -3148,6 +3148,126 @@
     "adventure02_jyagamon": {
       "element": "plant",
       "attribute": "virus"
+    },
+    "agumon_ynk": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "algomon_ultimate": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "alphamon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "alphamon_ouryuken": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "amaterasumon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ancientbeatmon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "ancientmegatheriumon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "ancientmermaimon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "ancientsphinxmon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "anubimon": {
+      "element": "dark",
+      "attribute": "vaccine"
+    },
+    "apocalymon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "arcturusmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ariemon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "armagemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "armamon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "bagramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "bancholilimon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "barbamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "barbamon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "beelzebumon_blast": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "beelzebumon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "belialvamdemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "belphemon_rage": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "belphemon_x": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "blacksaintgalgomon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "blackseraphimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "blackwargreymon_x": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "blastmon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "breakdramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "brigadramon": {
+      "element": "machine",
+      "attribute": "data"
     }
   },
   "lineDefaults": {

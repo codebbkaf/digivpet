@@ -174,11 +174,18 @@ final class PerfectSweepNToRTests: XCTestCase {
     /// takes the `isDefault` edge exactly when nothing else qualifies, so a condition on one would
     /// be data that lies about how it is taken. What the criterion binds is the EARNED edges.
     func testEverySweptPerfectClimbsByOneGatedDefaultEdge() throws {
+        // **US-163 IS THE FIRST STORY TO FORK A PERFECT, AND THESE ARE THE ONES IT FORKED.** The
+        // Ultimate sweep's in-edges come from this rung, so a Perfect that already had its climb
+        // gained an EARNED branch beside it — a different `requiredEnergy`, two criteria, and the
+        // climb untouched and still `isDefault`, which is the whole of what this test checks. Each
+        // is NAMED with its new edge count rather than the count being loosened to a `>=`.
+        let branchedByUS163: [String: Int] = ["omegashoutmon": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
-            XCTAssertEqual(node.evolutions.count, 1, "\(perfect) is not a single climb")
+            XCTAssertEqual(node.evolutions.count, branchedByUS163[perfect] ?? 1,
+                           "\(perfect) is not a single climb")
 
-            let climb = try XCTUnwrap(node.evolutions.first)
+            let climb = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             XCTAssertTrue(climb.isDefault, "\(perfect)'s climb is not its fallback")
             XCTAssertEqual(climb.to, ultimate)
             XCTAssertEqual(climb.conditions, [], "\(perfect)'s fallback carries criteria")
@@ -453,16 +460,16 @@ final class PerfectSweepNToRTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["vital"], 41, "Oboromon, RaijiLudomon, their two Megas and the floor")
-        XCTAssertEqual(sizes["xros"], 21, "both OmegaShoutmon, ZekeGreymon and the Etemon floor")
-        XCTAssertEqual(sizes["penc-me"], 63,
-                       "both Okuwamon, their two Megas and RizeGreymon X")
-        XCTAssertEqual(sizes["penc-nsp"], 39, "both Panjyamon")
-        XCTAssertEqual(sizes["tamers"], 105, "Rapidmon and SaintGalgomon")
+        XCTAssertEqual(sizes["vital"], 42, "Oboromon, RaijiLudomon, their two Megas and the floor, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["xros"], 22, "both OmegaShoutmon, ZekeGreymon and the Etemon floor, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-me"], 67,
+                       "both Okuwamon, their two Megas and RizeGreymon X, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-nsp"], 40, "both Panjyamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["tamers"], 113, "Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
         XCTAssertEqual(sizes["wanyamon"], 29, "RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["dmc-v1"], 36, "NeoDevimon")
-        XCTAssertEqual(sizes["penc-nso"], 62, "Orochimon")
-        XCTAssertEqual(sizes["penc-vb"], 55, "Regulusmon")
+        XCTAssertEqual(sizes["dmc-v1"], 39, "NeoDevimon, plus US-163's three Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 69, "Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 57, "Regulusmon, plus US-163's two Ultimates")
         XCTAssertEqual(sizes["penc-wg"], 42, "Paildramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 10)
@@ -745,7 +752,7 @@ final class PerfectSweepNToRTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       67, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       62, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
         // The three Saiyu Warriors Perfects US-157 pinned were still owed here, and all three are
         // S-Z, so they were US-162's — which took all three onto `penc-sw`, closing the pin US-157
@@ -779,9 +786,9 @@ final class PerfectSweepNToRTests: XCTestCase {
             XCTAssertNil(roster.entry(id: id), "\(id) removed an orphan after all")
         }
 
-        XCTAssertEqual(graph.nodes.count, 787, "736 before this story")
+        XCTAssertEqual(graph.nodes.count, 817, "736 before this story")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "148 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 108, "98 before this story")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 138, "98 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

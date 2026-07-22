@@ -206,8 +206,18 @@ final class AdultSweepUToZTests: XCTestCase {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.stage, .perfect)
             XCTAssertEqual(node.line, line, "\(perfect) is not on its Champion's line")
-            XCTAssertTrue(node.evolutions.isEmpty,
-                          "\(perfect) leads somewhere, so the dead-end ledger has to move too")
+            // US-163 wired two of the three onward and MOVED the ledger with them, which is what
+            // this message asked for: BlackRapidmon climbs to BlackSaintGalgomon and Canoweissmon
+            // to Arcturusmon, both cited on Wikimon and both off `ChildSweepAToFTests`' ledger in
+            // the same edit. Huankunmon is still a leaf and still owed an Ultimate.
+            let wiredByUS163 = ["blackrapidmon": "blacksaintgalgomon", "canoweissmon": "arcturusmon"]
+            if let ultimate = wiredByUS163[perfect] {
+                XCTAssertEqual(node.evolutions.map(\.to), [ultimate],
+                               "\(perfect)'s single climb is not the one US-163 gave it")
+            } else {
+                XCTAssertTrue(node.evolutions.isEmpty,
+                              "\(perfect) leads somewhere, so the dead-end ledger has to move too")
+            }
             XCTAssertEqual(Set(graph.parents(of: perfect).map(\.id)), parents,
                            "\(perfect)'s parents changed without this claim changing with them")
         }
@@ -477,9 +487,9 @@ final class AdultSweepUToZTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["penc-wg"], 42, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
-        XCTAssertEqual(sizes["penc-vb"], 55, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon")
+        XCTAssertEqual(sizes["penc-vb"], 57, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
         XCTAssertEqual(sizes["dmc-v4"], 30, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 105, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
+        XCTAssertEqual(sizes["tamers"], 113, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -623,10 +633,16 @@ final class AdultSweepUToZTests: XCTestCase {
     /// the dead-end ledger at 105. Pinned so that the first Perfect sweep is told the shape of its
     /// job rather than having to count it.
     func testWhatTheAdultRungHandsToThePerfectSweeps() throws {
-        for id in authoredPerfects.map(\.perfect) {
+        // US-163 IS the sweep that said so: BlackRapidmon and Canoweissmon lead somewhere now,
+        // and the claim flips rather than dying — the same shape US-152 gave FlareLizamon.
+        for id in authoredPerfects.map(\.perfect) where id != "blackrapidmon" && id != "canoweissmon" {
             XCTAssertTrue(try XCTUnwrap(graph.node(id: id)).evolutions.isEmpty,
                           "\(id) leads somewhere — then US-157 onward should say so here")
         }
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "blackrapidmon")).evolutions.map(\.to),
+                       ["blacksaintgalgomon"])
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "canoweissmon")).evolutions.map(\.to),
+                       ["arcturusmon"])
 
         // US-157 took `penc-sw` off this list — Cho-Hakkaimon opened it — so six lines are left
         // for the sweeps after it, and Cargodramon's node comment nominates `commandramon` as the
@@ -656,7 +672,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 787, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
+        XCTAssertEqual(graph.nodes.count, 817, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
     func testTheGraphValidatesWithNoFindings() {

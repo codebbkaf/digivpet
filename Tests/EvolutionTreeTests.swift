@@ -140,7 +140,11 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // parent — climbing the Blitz Greymon this line already had, so the Perfect column grew by
         // one and nothing else moved. The row count is UP one all the same: Devimon now carries
         // three earned branches plus its fall, and the Perfect column is the widest in the tree.
-        XCTAssertEqual(nodes.count, 36)
+        // Thirty-nine since US-163, the first sweep at the top rung: Agumon YnK over MetalGreymon
+        // (Virus), BlackWarGreymon X over MetalGreymon (Virus) X and Armagemon over Chimairamon,
+        // so only the Ultimate column grew. The row count does NOT move — the Perfect column is
+        // ten deep and the Ultimate one is nine, so the widest column is still the Perfect one.
+        XCTAssertEqual(nodes.count, 39)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
@@ -151,6 +155,6 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 55)
+        XCTAssertEqual(layout.connectors.count, 58)
     }
 }

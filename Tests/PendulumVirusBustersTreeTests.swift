@@ -226,12 +226,17 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // document's own two drawings — the pair this test is about — are unchanged.
         XCTAssertEqual(Set(graph.parents(of: "holyangemon").map(\.id)),
                        ["pencvb_angemon", "pencvb_wizarmon", "blacktailmon", "gulusgammamon"])
-        XCTAssertEqual(try targets(of: "holyangemon"), ["seraphimon", "cherubimon_virtue"])
+        // US-163 hung a THIRD target on it, BlackSeraphimon — the fallen form of the very
+        // Seraphimon the document draws here — as a second earned branch. The document's own two
+        // drawings are unchanged and the `isDefault` climb is still Seraphimon, which is what this
+        // test is about.
+        XCTAssertEqual(try targets(of: "holyangemon"),
+                       ["cherubimon_virtue", "blackseraphimon", "seraphimon"])
 
-        // Exactly one isDefault climb, and the second one EARNED — the pencme_andromon shape.
+        // Exactly one isDefault climb, and the others EARNED — the pencme_andromon shape.
         let earned = try node("holyangemon").evolutions.filter { !$0.isDefault }
-        XCTAssertEqual(earned.map(\.to), ["cherubimon_virtue"])
-        XCTAssertFalse(earned[0].conditions.isEmpty, "the second climb must be earned")
+        XCTAssertEqual(earned.map(\.to), ["cherubimon_virtue", "blackseraphimon"])
+        XCTAssertFalse(earned.contains { $0.conditions.isEmpty }, "every extra climb must be earned")
         XCTAssertEqual(try node("holyangemon").evolutions.first(where: \.isDefault)?.to,
                        "seraphimon")
     }
@@ -292,7 +297,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 55,
+        XCTAssertEqual(inLine.count, 57,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
                            + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon, "
                            + "US-152 GulusGammamon, US-153 KausGammamon, US-154 Mikemon and "
@@ -387,7 +392,12 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
                                       "entmon",
                                       // US-161's one: Regulusmon over the bolded GulusGammamon,
                                       // climbing this line's own MetalGarurumon.
-                                      "regulusmon"]
+                                      "regulusmon",
+                                      // US-163's two Megas: Arcturusmon over the leaf Canoweissmon
+                                      // — both Vital Bracelet BE Digimon — and BlackSeraphimon
+                                      // over this line's own HolyAngemon, beside the Seraphimon it
+                                      // already drew.
+                                      "arcturusmon", "blackseraphimon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

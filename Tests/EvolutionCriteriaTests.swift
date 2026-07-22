@@ -404,7 +404,12 @@ final class EvolutionCriteriaTests: XCTestCase {
         let strandedPerfect = ["chohakkaimon", "gokuwmon", "omegashoutmon", "omegashoutmon_x",
                                "pandamon", "sagomon", "sanzomon", "shawujinmon", "triceramon_x",
                                "xingtianmon", "xros_etemon"]
-        let strandedUltimate = ["seitengokuwmon", "shakamon", "zekegreymon"]
+        // US-163's ONE, and it is the same inheritance a fourth time: Armamon's only cited parent
+        // at the Perfect rung anywhere is OmegaShoutmon, which is on the list above because `xros`
+        // has no Digitama. Its two other cited parents are an Adult and an Ultimate, so there was
+        // never a second reading. The other twenty-nine Ultimates that story authored all sit on
+        // lines an egg reaches, which is what keeps this a claim rather than a dumping ground.
+        let strandedUltimate = ["armamon", "seitengokuwmon", "shakamon", "zekegreymon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,
