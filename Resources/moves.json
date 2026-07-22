@@ -3858,6 +3858,180 @@
       "tint": "purple",
       "signatureName": "Rapid Fire",
       "signatureSymbol": "bolt.fill"
+    },
+    "andiramon_data": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "green",
+      "signatureName": "Arm Bomber",
+      "signatureSymbol": "scissors"
+    },
+    "angewomon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "mint",
+      "signatureName": "Holy Arrow Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "anomalocarimon_x": {
+      "projectileSymbol": "scissors",
+      "tint": "gray",
+      "signatureName": "Cutter Shrimp",
+      "signatureSymbol": "scissors"
+    },
+    "archnemon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "green",
+      "signatureName": "Spider Thread",
+      "signatureSymbol": "circle.fill"
+    },
+    "astamon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "purple",
+      "signatureName": "Hellfire Volley",
+      "signatureSymbol": "bolt.fill"
+    },
+    "atlurkabuterimon_red": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "red",
+      "signatureName": "Crimson Mega Blaster",
+      "signatureSymbol": "bolt.fill"
+    },
+    "baalmon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "orange",
+      "signatureName": "Death Slinger",
+      "signatureSymbol": "moon.fill"
+    },
+    "blackmegalogrowmon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "purple",
+      "signatureName": "Double Edge Cannon",
+      "signatureSymbol": "flame.fill"
+    },
+    "bluemeramon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "cyan",
+      "signatureName": "Cold Flame",
+      "signatureSymbol": "snowflake"
+    },
+    "boutmon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "yellow",
+      "signatureName": "Blazing Knuckle",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "cannonbeemon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "yellow",
+      "signatureName": "Nitrogen Bomb",
+      "signatureSymbol": "bolt.fill"
+    },
+    "cargodramon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "green",
+      "signatureName": "Suppression Strike",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "caturamon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "brown",
+      "signatureName": "Thunder Drum",
+      "signatureSymbol": "hammer.fill"
+    },
+    "cerberumon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "green",
+      "signatureName": "Portals of Hell",
+      "signatureSymbol": "flame.fill"
+    },
+    "chimairamon": {
+      "projectileSymbol": "wind",
+      "tint": "purple",
+      "signatureName": "Heat Viper",
+      "signatureSymbol": "wind"
+    },
+    "chohakkaimon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "pink",
+      "signatureName": "Nine-Tooth Rake",
+      "signatureSymbol": "hammer.fill"
+    },
+    "crescemon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "mint",
+      "signatureName": "Lunatic Dance",
+      "signatureSymbol": "moon.fill"
+    },
+    "cryspaledramon": {
+      "projectileSymbol": "snowflake",
+      "tint": "blue",
+      "signatureName": "Glacier Lance",
+      "signatureSymbol": "snowflake"
+    },
+    "cyberdramon_x": {
+      "projectileSymbol": "scissors",
+      "tint": "purple",
+      "signatureName": "Erase Claw",
+      "signatureSymbol": "scissors"
+    },
+    "pandamon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "white",
+      "signatureName": "Bamboo Bomber",
+      "signatureSymbol": "circle.fill"
+    },
+    "ophanimon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "mint",
+      "signatureName": "Sefirot Crystal",
+      "signatureSymbol": "star.fill"
+    },
+    "beelzebumon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "yellow",
+      "signatureName": "Double Impact",
+      "signatureSymbol": "bolt.fill"
+    },
+    "chaosdukemon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "purple",
+      "signatureName": "Demon's Disaster",
+      "signatureSymbol": "shield.fill"
+    },
+    "kazuchimon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "pink",
+      "signatureName": "Thunder Cleave",
+      "signatureSymbol": "bolt.fill"
+    },
+    "tigervespamon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "orange",
+      "signatureName": "Mach Stinger",
+      "signatureSymbol": "bolt.fill"
+    },
+    "millenniumon": {
+      "projectileSymbol": "eye.fill",
+      "tint": "red",
+      "signatureName": "Dimension Destroyer",
+      "signatureSymbol": "eye.fill"
+    },
+    "shakamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "yellow",
+      "signatureName": "Lotus Repose",
+      "signatureSymbol": "sparkles"
+    },
+    "dianamon": {
+      "projectileSymbol": "snowflake",
+      "tint": "indigo",
+      "signatureName": "Crescent Harken",
+      "signatureSymbol": "snowflake"
+    },
+    "hexeblaumon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "blue",
+      "signatureName": "Blaue Sturm",
+      "signatureSymbol": "shield.fill"
     }
   },
   "lineDefaults": {

@@ -375,11 +375,11 @@ final class ChildSweepMToZTests: XCTestCase {
         // Thirteen of the twenty-one grew, `tamers` and `vital` by a dozen and eleven. These are
         // the FILE's sizes rather than this story's, so US-148's and US-149's nodes are in them.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 82,
+        XCTAssertEqual(sizes["tamers"], 90,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon")
         XCTAssertEqual(sizes["vital"], 33)
-        XCTAssertEqual(sizes["penc-me"], 44, "US-151 hung Deckerdramon on Hagurumon")
+        XCTAssertEqual(sizes["penc-me"], 50, "US-151 hung Deckerdramon on Hagurumon, US-157 six more nodes")
         XCTAssertEqual(sizes["adventure02"], 15)
         XCTAssertEqual(sizes["dmc-v2"], 29, "the dmc-v2 line gained no node here")
     }
@@ -592,9 +592,9 @@ final class ChildSweepMToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643,
+        XCTAssertEqual(graph.nodes.count, 672,
                        "548 before this story, 599 after it, 610 after US-151, 615 after US-152, "
-                           + "618 after US-153, 635 after US-155")
+                           + "618 after US-153, 635 after US-155, 672 after US-157")
     }
 
     /// The two Children in range whose Champion is NOT a new node. Both take the arrow the source

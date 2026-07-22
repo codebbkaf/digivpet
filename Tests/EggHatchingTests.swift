@@ -171,8 +171,15 @@ final class EggHatchingTests: XCTestCase {
                         "kame_digitama", "kuda_digitama", "kuda2006_digitama", "espi_digitama",
                         "mush_digitama", "pawnchessblack_digitama", "pawnchesswhite_digitama",
                         "phasco_digitama", "picodevi_digitama", "plot_digitama", "swim_digitama",
-                        "vorvo_digitama", "lala_digitama", "luce_digitama"],
-                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, and US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate")
+                        "vorvo_digitama", "lala_digitama", "luce_digitama",
+                        // US-157's five, and the first promotion since US-146 that came from the
+                        // TOP of a thread rather than the middle: opening the `tamers` Ultimate
+                        // rung (Beelzebumon, ChaosDukemon, Dianamon, Hexeblaumon) gave that line
+                        // its first Mega, so every `tamers` egg whose thread already ran to a
+                        // Perfect now runs all the way and is a legal starting egg.
+                        "guil_digitama", "blackguil_digitama", "imp_digitama", "lop_digitama",
+                        "bluco_digitama"],
+                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate — and US-157 promoted five `tamers` eggs by giving that line an Ultimate rung at last")
 
         // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
         // top of its thread, and a new game must not start on one. That filter lives in
@@ -189,11 +196,18 @@ final class EggHatchingTests: XCTestCase {
             .filter { !$0.dexOnly && !graph.reachesUltimate(from: $0.id) }
             .map(\.id)
             .sorted()
+        //
+        // US-157 takes FIVE off this list rather than one — Guil, BlackGuil, Imp, Lop and Bluco —
+        // and for a different reason than any story before it: not because their thread grew, but
+        // because the thread's far END finally exists. `tamers` had five Perfects and no Ultimate
+        // at all until this story opened four, so every egg on that line stopped one rung short.
+        // Rena, Terrier, Monodra and V Digitama stay, because their own threads still stop below
+        // the Perfect rung.
         XCTAssertEqual(unraisable,
-                       ["bear_digitama", "blackguil_digitama", "bluco_digitama", "commandra_digitama",
-                        "gao_digitama", "ghost_digitama", "guil_digitama", "imp_digitama",
+                       ["bear_digitama", "commandra_digitama",
+                        "gao_digitama", "ghost_digitama",
                         "kera_digitama", "koe_digitama", "lioll_digitama",
-                        "lop_digitama", "ludo_digitama", "meicoo_digitama",
+                        "ludo_digitama", "meicoo_digitama",
                         "monodra_digitama", "morpho_digitama", "pulse_digitama", "rena_digitama",
                         "sunariza_digitama", "terrier_digitama", "v_digitama", "worm_digitama",
                         "zuba_digitama"])

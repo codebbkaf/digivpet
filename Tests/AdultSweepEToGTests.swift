@@ -105,22 +105,28 @@ final class AdultSweepEToGTests: XCTestCase {
 
     // MARK: - AC2/AC3: the shape of every edge this story authored
 
-    /// Each swept Champion is one earned branch plus one unconditioned fallback, and the fallback is
-    /// its own line's junk Perfect. A condition on a fallback would be data that lies — US-020 takes
-    /// the `isDefault` edge exactly when nothing else qualifies — which is the reading of "no edge
-    /// is unconditional" every rung below recorded.
+    /// Each swept Champion still has THIS story's earned branch plus exactly one unconditioned
+    /// fallback, and the fallback is its own line's junk Perfect. A condition on a fallback would be
+    /// data that lies — US-020 takes the `isDefault` edge exactly when nothing else qualifies —
+    /// which is the reading of "no edge is unconditional" every rung below recorded.
+    ///
+    /// The edge COUNT was pinned at two until US-157, which hung Anomalocarimon X off Ebidramon; a
+    /// later sweep adding a second earned branch to a Champion is the system working, not drift, so
+    /// what is pinned now is the single fallback and this story's own arrow rather than the total.
     func testEverySweptChampionIsOneEarnedBranchAndOneUnconditionedFallback() throws {
         for (adult, _, perfect) in swept {
             let node = try XCTUnwrap(graph.node(id: adult))
-            XCTAssertEqual(node.evolutions.count, 2, "\(adult) is not a branch plus a fallback")
+            XCTAssertEqual(node.evolutions.filter(\.isDefault).count, 1,
+                           "\(adult) no longer has exactly one fallback")
 
             let fallback = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             XCTAssertEqual(fallback.conditions, [], "\(adult)'s fallback carries criteria")
             XCTAssertEqual(fallback.minEnergy, 0, "\(adult)'s fallback demands energy")
             XCTAssertGreaterThanOrEqual(fallback.maxCareMistakes, 99)
 
-            let earned = try XCTUnwrap(node.evolutions.first { !$0.isDefault })
-            XCTAssertEqual(earned.to, perfect)
+            let earned = try XCTUnwrap(node.evolutions.first { $0.to == perfect },
+                                       "\(adult) no longer reaches \(perfect)")
+            XCTAssertFalse(earned.isDefault, "\(adult) -> \(perfect) took over the junk branch")
             XCTAssertFalse(earned.conditions.isEmpty,
                            "\(adult) -> \(perfect) is gated on energy alone")
             for condition in earned.conditions {
@@ -267,11 +273,11 @@ final class AdultSweepEToGTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-ds"], 38,
+        XCTAssertEqual(sizes["penc-ds"], 39,
                        "US-152 added Ebidramon and Gawappamon, US-153 Kinkakumon")
-        XCTAssertEqual(sizes["tamers"], 82,
+        XCTAssertEqual(sizes["tamers"], 90,
                        "US-152 added FlareLizamon and Growmon Orange; US-154 six more; US-156 two")
-        XCTAssertEqual(sizes["penc-vb"], 49,
+        XCTAssertEqual(sizes["penc-vb"], 53,
                        "US-152 added GulusGammamon, US-153 KausGammamon, US-154 two more, "
                            + "US-156 two more")
 
@@ -387,9 +393,9 @@ final class AdultSweepEToGTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643,
+        XCTAssertEqual(graph.nodes.count, 672,
                        "610 before this story, 615 after it, 618 after US-153, 629 after US-154, "
-                           + "635 after US-155")
+                           + "635 after US-155, 643 after US-156, 672 after US-157")
     }
 
     func testTheGraphValidatesWithNoFindings() {

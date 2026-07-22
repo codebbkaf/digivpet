@@ -134,9 +134,11 @@ final class AdultSweepMToRTests: XCTestCase {
             .sorted()
 
         XCTAssertEqual(leaves,
+                       // US-157 took THREE off this list by giving each an out-edge: Paledramon
+                       // (Crys Paledramon), Porcupamon (Astamon) and Raptordramon (Cerberumon X).
                        ["madleomon", "manekimon", "mantaraymon_x", "meicoomon", "mimicmon",
-                        "nisedrimogemon", "numemon_x", "ogremon_x", "omekamon", "paledramon",
-                        "parasaurmon", "peckmon", "pidmon", "porcupamon", "raptordramon",
+                        "nisedrimogemon", "numemon_x", "ogremon_x", "omekamon",
+                        "parasaurmon", "peckmon", "pidmon",
                         "reppamon", "rhinomon_x"].sorted(),
                        "the M-R leaves have moved without the ledger moving with them")
 
@@ -372,10 +374,10 @@ final class AdultSweepMToRTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 82, "four Champions and both new Perfects, plus US-156's two")
-        XCTAssertEqual(sizes["penc-vb"], 49, "Mikemon and Nefertimon X, plus US-156's two")
-        XCTAssertEqual(sizes["penc-ds"], 38, "MoriShellmon")
-        XCTAssertEqual(sizes["penc-nso"], 44, "Musyamon")
+        XCTAssertEqual(sizes["tamers"], 90, "four Champions and both new Perfects, plus US-156's two and US-157's eight")
+        XCTAssertEqual(sizes["penc-vb"], 53, "Mikemon and Nefertimon X, plus US-156's two and US-157's four")
+        XCTAssertEqual(sizes["penc-ds"], 39, "MoriShellmon, plus US-157's Anomalocarimon X")
+        XCTAssertEqual(sizes["penc-nso"], 46, "Musyamon, plus US-157's Archnemon and BlueMeramon")
         XCTAssertEqual(sizes["penc-wg"], 37, "RedV-dramon, plus US-156's two Black V-dramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
@@ -491,12 +493,29 @@ final class AdultSweepMToRTests: XCTestCase {
     /// name starts with W, so it went to US-156 — which wired it, and found that the advice attached
     /// to it was wrong. Gammamon was NOT full; vitality was free, so the bolded arrow was drawn and
     /// the Gabumon stand-in was not needed. The claim here is now the corrected one.
+    ///
+    /// **US-157 wired TWO of the six, and neither is the arrow this story left.** Cyberdramon X and
+    /// Angewomon X are Perfects whose display names begin A-C, so the first Perfect sweep owned
+    /// them — but it hung Cyberdramon X off Revolmon on `penc-me` and Angewomon X off Tailmon X on
+    /// `penc-vb`, NOT off Meramon X or Pegasmon X, both of which are `tamers` and both of which are
+    /// still full up. So the four still owed are the four below, and the two that left are pinned
+    /// with the parent they actually took.
     func testThePerfectSheetsLeftForTheLaterSweepsAreStillUnwired() throws {
-        for id in ["cyberdramon_x", "mamemon_x", "omegashoutmon_x",
-                   "angewomon_x", "hisyaryumon", "monzaemon_x"] {
+        for id in ["mamemon_x", "omegashoutmon_x", "hisyaryumon", "monzaemon_x"] {
             XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it is owed")
             XCTAssertNil(graph.node(id: id),
                          "\(id) is wired now — say which of this story's arrows it is")
+        }
+
+        for (perfect, parent) in [("cyberdramon_x", "revolmon"), ("angewomon_x", "tailmon_x")] {
+            XCTAssertEqual(graph.parents(of: perfect).map(\.id), [parent],
+                           "US-157 wired \(perfect) off a different Champion than it recorded")
+        }
+        for champion in ["meramon_x", "pegasmon_x"] {
+            XCTAssertFalse(
+                try XCTUnwrap(graph.node(id: champion)).evolutions.map(\.to)
+                    .contains(where: ["cyberdramon_x", "angewomon_x"].contains),
+                "\(champion) took one of the two after all — then this claim wants rewriting")
         }
         XCTAssertTrue(try authoredComment(on: "meramon_x").contains("Cyberdramon"),
                       "the arrows that were NOT taken are not written down")
@@ -528,7 +547,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643, "618 before this story, 635 after US-155")
+        XCTAssertEqual(graph.nodes.count, 672, "618 before this story, 635 after US-155, 643 after US-156")
     }
 
     func testTheGraphValidatesWithNoFindings() {

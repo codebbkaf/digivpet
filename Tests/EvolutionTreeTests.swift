@@ -130,7 +130,10 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         //
         // Thirty since US-155, which moved the shape again: Tyrannomon is Agumon's fourth earned
         // branch and its last free energy, so the Adult column went from eight to nine.
-        XCTAssertEqual(nodes.count, 30)
+        // Thirty-two since US-157, which hung Chimairamon off Airdramon and Millenniumon over
+        // it: two more nodes and two more connectors, in the Perfect and Ultimate columns, so the
+        // Adult column and the row count are untouched.
+        XCTAssertEqual(nodes.count, 32)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
@@ -141,6 +144,6 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 44)
+        XCTAssertEqual(layout.connectors.count, 46)
     }
 }

@@ -292,7 +292,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 49,
+        XCTAssertEqual(inLine.count, 53,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
                            + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon, "
                            + "US-152 GulusGammamon, US-153 KausGammamon, US-154 Mikemon and "
@@ -379,7 +379,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
                                       "plotmon_x", "tailmon_x", "cockatrimon",
                                       "blacktailmon", "gulusgammamon", "kausgammamon",
                                       "mikemon", "nefertimon_x",
-                                      "wezengammamon", "canoweissmon"]
+                                      "wezengammamon", "canoweissmon",
+                                      // US-157's four, hung off Turuiemon, Tailmon X and Leomon.
+                                      "andiramon_data", "angewomon_x", "caturamon", "ophanimon_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
@@ -487,8 +489,11 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
     /// US-141's and US-142's this climb is NOT a Wikimon arrow, and the node's `comment` says so:
     /// it is flavour, Turuiemon being a Beast Man and Asuramon heading the Beast Man thread here.
     func testTheJunkChampionKeepsOneEarnedWayBackIntoTheTree() throws {
+        // US-157 gave Turuiemon a SECOND earned climb, Andiramon Data — the one arrow on this
+        // node that Wikimon actually bolds — so what is pinned is that the flavour way back is
+        // still there and still earned, not that it is the only one.
         let earned = try node("turuiemon").evolutions.filter { !$0.isDefault }
-        XCTAssertEqual(earned.map(\.to), ["pencvb_asuramon"])
+        XCTAssertEqual(earned.map(\.to), ["pencvb_asuramon", "andiramon_data"])
         XCTAssertFalse(earned[0].conditions.isEmpty, "the way back must be earned, not free")
 
         // And that leaves Asuramon with two parents, the earned one and the way back.

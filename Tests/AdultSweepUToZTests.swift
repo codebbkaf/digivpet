@@ -134,7 +134,8 @@ final class AdultSweepUToZTests: XCTestCase {
             .filter { graph.node(id: $0)?.evolutions.isEmpty == true }
             .sorted()
 
-        XCTAssertEqual(leaves, ["waspmon", "witchmon", "wizarmon_x", "xv-mon", "yanmamon"],
+        // Waspmon left this list in US-157, which gave it Cannonbeemon.
+        XCTAssertEqual(leaves, ["witchmon", "wizarmon_x", "xv-mon", "yanmamon"],
                        "the U-Z leaves have moved without the ledger moving with them")
 
         for id in leaves {
@@ -352,9 +353,18 @@ final class AdultSweepUToZTests: XCTestCase {
     /// since Huankunmon is that same device's Perfect. It lost on cost, exactly as US-153's
     /// Kinkakumon did: `penc-sw` has no Perfect rung at all, so that reading is three nodes and a
     /// new `junkIds` entry against this one's two.
+    ///
+    /// **US-157 OPENED THAT RUNG**, so the half of this claim that said it was still shut is
+    /// flipped rather than deleted: Cho-Hakkaimon and the junk floor Pandamon are on `penc-sw` now,
+    /// which is two of the three nodes this test priced. Xiquemon and Huankunmon are STILL on
+    /// `dmc-v4` and are still the first rehome candidates; moving them was deliberately left out of
+    /// US-157's scope, because a rehome drags a Champion, its Perfect, its Rookie's energy budget
+    /// and four device-tree tests with it.
     func testThePencSwReadingOfXiquemonIsStillTheCheaperOneNotTaken() throws {
-        XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }, [],
-                       "`penc-sw` has a Perfect rung now — Xiquemon is the first rehome candidate")
+        XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }
+                        .map(\.id).sorted(),
+                       ["chohakkaimon", "pandamon"],
+                       "`penc-sw`'s Perfect rung has moved since US-157 opened it")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "fujamon")).line, "penc-sw",
                        "the cited Rookie of the rejected reading has moved line")
         XCTAssertEqual(roster.entry(id: "kamemon")?.dexOnly, true,
@@ -448,9 +458,9 @@ final class AdultSweepUToZTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["penc-wg"], 37, "V-dramon Black and XV-mon Black")
-        XCTAssertEqual(sizes["penc-vb"], 49, "WezenGammamon and Canoweissmon")
+        XCTAssertEqual(sizes["penc-vb"], 53, "WezenGammamon and Canoweissmon, plus US-157's four")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 82, "Youkomon and BlackRapidmon")
+        XCTAssertEqual(sizes["tamers"], 90, "Youkomon and BlackRapidmon, plus US-157's eight")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -573,10 +583,12 @@ final class AdultSweepUToZTests: XCTestCase {
                           "\(id) leads somewhere — then US-157 onward should say so here")
         }
 
+        // US-157 took `penc-sw` off this list — Cho-Hakkaimon opened it — so six lines are left
+        // for the sweeps after it, and Cargodramon's node comment nominates `commandramon` as the
+        // next one worth opening.
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["xros", "vital", "adventure02", "algomon", "commandramon", "diablomon",
-                        "penc-sw"],
+                       ["xros", "vital", "adventure02", "algomon", "commandramon", "diablomon"],
                        "a line gained or lost its Perfect rung; the sweeps' bill has changed")
     }
 
@@ -598,7 +610,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643, "635 before this story")
+        XCTAssertEqual(graph.nodes.count, 672, "635 before this story, 643 after it, 672 after US-157")
     }
 
     func testTheGraphValidatesWithNoFindings() {

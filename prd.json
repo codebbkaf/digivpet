@@ -913,8 +913,8 @@
         "Typecheck passes"
       ],
       "priority": 44,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the NINETEEN playable Perfect with no edge at all whose display name begins A-C. Each gained one earned in-edge from a Champion of its own line and one isDefault climb into an Ultimate of that line. TEN cost nothing above; the other NINE opened an Ultimate that had no node - four of them on `tamers`, which had five Perfects and no Ultimate rung at all. NINE of the nineteen in-edges came off Champions that were LEAVES, so the dead-end ledger FELL for the first time in Phase E, 105 -> 97, and each of those nine also gained its line's junk floor. `penc-sw`'s Perfect rung was opened at last (Cho-Hakkaimon + Shakamon + the junk floor Pandamon, the three-node bill US-153 and US-156 both quoted), and the new `tamers` Ultimate rung promoted FIVE Digitama to legal starting eggs. Orphans 286 -> 257 (Appendix B over a regenerated `roster.generated.json`): Perfect 104 -> 84, Ultimate 166 -> 157. 643 -> 672 nodes. Full suite 2210 tests green (2185 before), build green, validator zero findings."
     },
     {
       "id": "US-158",

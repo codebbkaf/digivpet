@@ -110,9 +110,12 @@ final class AdultSweepHToLTests: XCTestCase {
             .sorted()
 
         XCTAssertEqual(leaves,
-                       ["hakubamon", "hi-commandramon", "hookmon", "hyougamon", "icedevimon",
+                       // US-157 took THREE off this list by giving each an out-edge: Hakubamon
+                       // (Cho-Hakkaimon, which opened `penc-sw`'s Perfect rung), Ice Devimon
+                       // (Baalmon) and Lekismon (Crescemon).
+                       ["hi-commandramon", "hookmon", "hyougamon",
                         "icemon", "igamon", "jazardmon", "junglemojyamon", "kokeshimon",
-                        "kuwagamon_x", "kyubimon", "kyubimon_silver", "lavorvomon", "lekismon",
+                        "kuwagamon_x", "kyubimon", "kyubimon_silver", "lavorvomon",
                         "leomon_x", "lianpumon"].sorted(),
                        "the H-L leaves have moved without the ledger moving with them")
 
@@ -305,8 +308,8 @@ final class AdultSweepHToLTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-vb"], 49, "US-153 added KausGammamon, US-154 two more, US-156 two more")
-        XCTAssertEqual(sizes["penc-ds"], 38, "US-153 added Kinkakumon, US-154 MoriShellmon")
+        XCTAssertEqual(sizes["penc-vb"], 53, "US-153 added KausGammamon, US-154 two more, US-156 two more, US-157 four")
+        XCTAssertEqual(sizes["penc-ds"], 39, "US-153 added Kinkakumon, US-154 MoriShellmon, US-157 Anomalocarimon X")
         XCTAssertEqual(sizes["penc-wg"], 37, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 3)
@@ -331,8 +334,15 @@ final class AdultSweepHToLTests: XCTestCase {
                            "\(id) reaches Kinkakumon, so the rejected reading was taken after all")
         }
 
-        XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }.map(\.id), [],
-                       "`penc-sw` has a Perfect rung now — Kinkakumon's placement is worth revisiting")
+        // US-157 OPENED THAT RUNG, so the "still no Perfect" half of this claim is flipped rather
+        // than deleted: `penc-sw` now has Cho-Hakkaimon and the junk floor Pandamon under it, which
+        // is exactly the two-node bill this test quoted. Kinkakumon is therefore a live rehome
+        // candidate — and it is NOT rehomed here, because a Champion's move drags its whole thread
+        // (Jellymon below, Zudomon above) across a line and that is a story of its own.
+        XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }
+                        .map(\.id).sorted(),
+                       ["chohakkaimon", "pandamon"],
+                       "`penc-sw`'s Perfect rung has moved since US-157 opened it")
 
         let comment = try authoredComment(on: "kinkakumon")
         XCTAssertTrue(comment.contains("Saiyu Warriors"),
@@ -435,8 +445,9 @@ final class AdultSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643,
-                       "615 before this story, 618 after it, 629 after US-154, 635 after US-155")
+        XCTAssertEqual(graph.nodes.count, 672,
+                       "615 before this story, 618 after it, 629 after US-154, 635 after US-155, "
+                           + "643 after US-156, 672 after US-157")
     }
 
     func testTheGraphValidatesWithNoFindings() {

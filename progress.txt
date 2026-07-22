@@ -21,6 +21,32 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E, PERFECT RUNG AND ABOVE: the cheapest in-edge is one that ALSO clears a dead end, and
+  every leaf you branch costs a junk-floor edge in the same breath.** A Champion sweep only ever
+  added leaves; a Perfect sweep removes them, because a Perfect needs a Champion beneath it and after
+  six Adult sweeps most Champions are leaves. US-157 cleared nine and the ledger in
+  `ChildSweepAToFTests` fell for the first time in Phase E (105 -> 97). The catch:
+  `EvolutionCriteriaTests` fails any branching Champion with no `isDefault` edge onto a junk Perfect
+  of its OWN line, so the fallback has to be written in the same edit as the earned branch.
+- **A PERFECT'S CLIMB IS A SINGLE `isDefault` EDGE — `minEnergy` 150, `maxCareMistakes` 2, NO
+  conditions — and that is legal because `EvolutionCriteriaTests.branchingNodes` filters to Child and
+  Adult.** The 2..5 ceiling and the junk-floor rule do not reach this rung. The AC's "no edge is
+  unconditional" binds the EARNED edges; a condition on an `isDefault` edge is data that lies,
+  because US-020 takes it whatever the gates say.
+- **`Roster.bundled` reads `Resources/roster.json` (one entry per SHEET); Appendix B reads
+  `roster.generated.json` (which mirrors `evolutions.json`, aliases and all).** A range test written
+  off `roster.entries` will disagree with the orphan count by exactly the number of line-scoped
+  aliases in the band — three in A-C. Both numbers are right; say which is which in the test.
+- **Opening a line's TOP rung promotes its eggs.** `MainScreenModel.startingDigitamaId` filters on
+  `graph.reachesUltimate`, so US-157's first four `tamers` Ultimates turned five Digitama from
+  unraisable into legal starting eggs and moved BOTH lists in `EggHatchingTests`. `wanyamon` is the
+  last line with Perfects and no Mega — expect the same there.
+- **Author a multi-node edit with a script, after proving the JSON round-trips.**
+  `json.dumps(d, indent=2, ensure_ascii=False)` reproduces `evolutions.json`, `elements.json` and
+  `moves.json` byte-for-byte (no trailing newline). US-157 added 29 nodes across three files that
+  way; see `scripts/us157_author.py`. And check `moves.json` `signatureName` against the WHOLE file —
+  it is unique globally while `projectileSymbol|tint` is unique only per line, and a variant naturally
+  wants to reuse its base form's attack name.
 - **PHASE E: a "no sheet for this name" claim from an EARLIER story can be a SPELLING miss — check
   the roster before inheriting it.** `DMCVersion1TreeTests` recorded since US-133 that the Version 1
   document's Tyranomon had "no colour sheet at all, only `Black and White Sprites/Adult/
@@ -3956,4 +3982,132 @@ The five, with the citation each rests on:
   105 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge by whichever story
   claims them; Galgomon (BlackRapidmon's obvious second parent), Greymon X and now Canoweissmon,
   Huankunmon and BlackRapidmon are among them.
+---
+
+## 2026-07-22 - US-157 - Orphan sweep: Perfect A-C (the first sweep at the Perfect rung)
+Wired the NINETEEN playable Perfect whose display name begins A-C that had no edge at all. Each
+gained one earned in-edge from a Champion of its own line and one `isDefault` climb into an Ultimate
+of that line. TEN cost nothing above; the other NINE opened an Ultimate that had no node anywhere.
+Orphans 286 -> 257 (Appendix B over a regenerated `roster.generated.json`): **Perfect 104 -> 84 and
+Ultimate 166 -> 157**. 643 -> 672 nodes.
+
+Files: `Resources/evolutions.json` (19 new Perfects, 9 new Ultimates, 1 new junk Perfect, 19 new
+Champion branches and 9 new junk-floor edges), `Resources/elements.json` and `Resources/moves.json`
+(29 entries each), new `Tests/PerfectSweepAToCTests.swift` (25 tests), the throwaway-but-kept
+authoring script `scripts/us157_author.py`, and the knock-on edits listed below.
+Full suite 2210 tests green (2185 before), build green, validator zero findings.
+
+The nineteen, with the citation each rests on:
+  andiramon_data        penc-vb   turuiemon           -> cherubimon_vice      (BOTH bolded)
+  angewomon_x           penc-vb   tailmon_x           -> ophanimon_x  NEW     (bolded in, cited out)
+  anomalocarimon_x      penc-ds   ebidramon           -> aegisdramon          (NO CITATION, LINE x2)
+  archnemon             penc-nso  dokugumon           -> piemon               (both cited)
+  astamon               penc-me   porcupamon          -> pencme_venomvamdemon (bolded in, cited out)
+  atlurkabuterimon_red  penc-nsp  pencnsp_kabuterimon -> heraklekabuterimon   (BOTH bolded)
+  baalmon               tamers    icedevimon          -> beelzebumon   NEW    (both cited)
+  blackmegalogrowmon    tamers    blackgrowmon        -> chaosdukemon  NEW    (BOTH bolded, St-731/Bo-550)
+  bluemeramon           penc-nso  pencnso_meramon     -> pencnso_boltmon      (both cited, zero cost)
+  boutmon               penc-me   thunderballmon      -> kazuchimon    NEW    (cited in, bolded out)
+  cannonbeemon          palmon    waspmon             -> tigervespamon NEW    (BOTH bolded)
+  cargodramon           penc-me   tankmon             -> pencme_mugendramon   (both cited)
+  caturamon             penc-vb   pencvb_leomon       -> pencvb_saberleomon   (both cited)
+  cerberumon_x          penc-me   raptordramon        -> pencme_wargreymon    (both cited)
+  chimairamon           dmc-v1    airdramon           -> millenniumon  NEW    (BOTH bolded)
+  chohakkaimon          penc-sw   hakubamon           -> shakamon      NEW    (cited in, bolded out)
+  crescemon             tamers    lekismon            -> dianamon      NEW    (BOTH bolded)
+  cryspaledramon        tamers    paledramon          -> hexeblaumon   NEW    (BOTH bolded)
+  cyberdramon_x         penc-me   revolmon            -> pencme_mugendramon   (NO CITATION, LINE x2)
+
+**Learnings for future iterations:**
+
+- **A PERFECT SWEEP PAYS THE DEAD-END LEDGER DOWN, NOT UP, AND THAT IS THE WHOLE SHAPE OF THIS RUNG.**
+  Every Champion sweep added leaves; this one removed nine. The reason is structural: a Perfect needs
+  a Champion beneath it, and after six Adult sweeps most Champions ARE leaves — so the cheapest
+  in-edge is almost always one that also clears a debt. `ChildSweepAToFTests`' ledger fell 105 -> 97
+  (nine cleared, Pandamon added). Price the in-edge off the ledger FIRST: nine of nineteen came free
+  that way, and each one that does saves a later story a whole edit.
+
+- **BUT EVERY LEAF CHAMPION YOU BRANCH COSTS A JUNK FLOOR EDGE IN THE SAME BREATH.** A leaf has no
+  `isDefault` edge because it has no edges; the moment it gains an earned branch,
+  `EvolutionCriteriaTests.testEveryNonTerminalChildAndAdultFallsToAJunkEvolution` requires one onto a
+  junk Perfect of its OWN line. Eight of the nine floors already existed (`andiramon_virus`,
+  `locomon` twice, `catchmamemon` four times, `jyagamon`); only `penc-sw` had none. Write the
+  fallback in the same edit as the branch or the suite fails on the node you just wired.
+
+- **`Roster.bundled` IS `Resources/roster.json`, WHICH IS ONE ENTRY PER SHEET — APPENDIX B'S 37 AND
+  THE TEST'S 34 ARE BOTH RIGHT.** The script in Appendix B reads `roster.generated.json`, which
+  mirrors `evolutions.json` and therefore carries the LINE-SCOPED ALIASES (`pencme_andromon`,
+  `pencvb_angewomon`, `pencvb_asuramon` in this range alone). A range test written off
+  `roster.entries` will disagree with the orphan count by exactly the number of aliases in the band.
+  Use `Roster.bundled` for "every Digimon on disk is obtainable" and the generated file only for the
+  Appendix B number, and say which is which in the test.
+
+- **OPENING A LINE'S TOP RUNG PROMOTES ITS EGGS, AND `EggHatchingTests` IS WHERE THAT SHOWS UP.**
+  `MainScreenModel.startingDigitamaId` filters candidates on `graph.reachesUltimate`, so giving
+  `tamers` its first four Ultimates turned FIVE Digitama (Guil, BlackGuil, Imp, Lop, Bluco) from
+  unraisable into legal starting eggs in one edit. This is the first promotion since US-146 that came
+  from the TOP of a thread rather than the middle. Any Ultimate sweep that opens a rung on `wanyamon`
+  — the last line with Perfects and no Mega — should expect the same and grep
+  `reachesUltimate` before assuming the egg lists are inert.
+
+- **`penc-sw`'s PERFECT RUNG COST EXACTLY THE THREE NODES US-153 AND US-156 QUOTED, AND PAYING IT
+  FLIPS FOUR OLDER TESTS RATHER THAN DELETING THEM.** Cho-Hakkaimon + Shakamon + the junk floor
+  Pandamon + one `EvolutionCriteriaTests.junkIds` entry. The knock-on nobody listed:
+  `AdultSweepHToLTests.testKinkakumonTookTheCitedLineThatAlreadyHadAPerfectRung` and
+  `AdultSweepUToZTests.testThePencSwReadingOfXiquemonIsStillTheCheaperOneNotTaken` both asserted the
+  rung was still SHUT, and `testWhatTheAdultRungHandsToThePerfectSweeps` pinned `penc-sw` in the
+  no-Perfect set. All three were flipped, not removed — they now name Kinkakumon and Xiquemon as live
+  rehome candidates, which is the record those stories were trying to leave. **Neither was rehomed
+  here, deliberately**: a rehome drags a Champion, its Perfect, its Rookie's energy budget and four
+  device-tree tests across a line, and that is a story of its own.
+  ALSO: the whole line stays STRANDED (`penc-sw` has no Digitama), so all three new nodes joined
+  `EvolutionCriteriaTests`' stranded list in two new groups, `strandedPerfect` and `strandedUltimate`,
+  with the same "parents are all stranded too" loop the rungs below use.
+
+- **A PERFECT'S CLIMB IS ITS `isDefault` EDGE, AND THAT IS THE HOUSE STYLE — DO NOT PUT CONDITIONS ON
+  IT.** Every Perfect in this file since US-134 carries one edge: `isDefault`, `requiredEnergy`,
+  `minEnergy 150`, `maxCareMistakes 2`, NO conditions. `EvolutionCriteriaTests.branchingNodes` filters
+  to Child and Adult, so the 2..5 ceiling and the junk-floor rule do NOT apply at this rung — a
+  single-edge Perfect is legal and is what the file already had 81 of. The AC's "no edge is
+  unconditional" binds the EARNED edges, which is the reading every rung below recorded; a condition
+  on an `isDefault` edge is data that lies, because US-020 takes it whatever the gates say.
+
+- **THE 29-NODE EDIT WAS SCRIPTED, AND THAT IS SAFE ONLY BECAUSE THE JSON ROUND-TRIPS EXACTLY.**
+  `json.dumps(d, indent=2, ensure_ascii=False)` reproduces `evolutions.json`, `elements.json` and
+  `moves.json` byte-for-byte (no trailing newline). Verify that first, then author from a table —
+  hand-editing 29 nodes across three files invites exactly the drift these tests exist to catch.
+  `scripts/us157_author.py` is kept as the record of what was authored and why.
+
+- **CHECK moves.json SIGNATURE NAMES AGAINST THE WHOLE FILE, NOT THE LINE.** `projectileSymbol|tint`
+  is unique PER LINE but `signatureName` is unique GLOBALLY, and six of the first draft's names
+  collided with the base form they were named after (Angewomon X/Ophanimon X/Cyberdramon X shared
+  their base's attack, BlackMegaloGrowmon shared MegaloGrowmon's). Variants are exactly where this
+  bites. Also keep `signatureSymbol` inside the 21 SF Symbols the file already uses — the render test
+  is the only thing that would catch an invented one, and it runs on the simulator.
+
+- **The knock-on list for this rung, all twenty-two files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, all six `AdultSweep*Tests` and all three `ChildSweep*Tests`
+  (643 -> 672); the per-line dict in `EvolutionGraphTests` (`dmc-v1` 30->32, `palmon` 24->26,
+  `penc-ds` 38->39, `penc-me` 44->50, `penc-nso` 44->46, `penc-nsp` 33->34, `penc-sw` 9->12,
+  `penc-vb` 49->53, `tamers` 82->90) and the same lines' `sizes[...]` rows in every `*Sweep*Tests`;
+  `inLine.count` AND `sweepEggs` in `PendulumDeepSaversTreeTests`, `PendulumMetalEmpireTreeTests`,
+  `PendulumNatureSpiritsTreeTests`, `PendulumNightmareSoldiersTreeTests` and
+  `PendulumVirusBustersTreeTests`; `pencme_mugendramon`'s parent set in `PendulumMetalEmpireTreeTests`
+  and Turuiemon's earned list in `PendulumVirusBustersTreeTests`; the dmc-v1 tree in
+  `EvolutionTreeTests` (30->32 nodes, 44->46 connectors); BOTH egg lists in `EggHatchingTests`;
+  `junkIds` and the stranded list in `EvolutionCriteriaTests`; the four leaf lists in
+  `AdultSweepHToLTests`/`MToR`/`SToT`/`UToZ`; the dead-end ledger in `ChildSweepAToFTests`
+  (105 -> 97); `AdultSweepEToGTests`' "exactly two edges" claim about Ebidramon, relaxed to "exactly
+  one fallback"; `AdultSweepMToRTests`' still-unwired list (Cyberdramon X and Angewomon X left it);
+  and the three `penc-sw` pins above. `MinigameAssignmentTests`, `DexModel.lineTitles` and both
+  `lineDefaults` did NOT move: no new line.
+
+- REMAINS: US-158 onward (44/56 passing). Eleven Perfect and Ultimate sweeps and the Armor-Hybrid one
+  hold the remaining 257 orphans: 84 Perfect, 157 Ultimate, 16 Armor-Hybrid. Six lines still have no
+  Perfect rung — `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon` — and
+  `wanyamon` is now the LAST line with Perfects and no Ultimate above them. Cargodramon (for
+  `commandramon`) and Boutmon (for `vital`) are pinned as rehome candidates the day either of those
+  rungs opens, as are Kinkakumon and Xiquemon for `penc-sw`. The 97 leaves in `ChildSweepAToFTests`'
+  dead-end ledger are still owed an out-edge; nine of this story's own Ultimates are NOT on it, since
+  the ledger stops below the top rung.
 ---

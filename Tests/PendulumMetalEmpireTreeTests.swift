@@ -243,9 +243,14 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         XCTAssertEqual(earned.map(\.to), ["pencme_mugendramon"])
         XCTAssertFalse(earned[0].conditions.isEmpty, "the second climb must be earned")
 
-        // Mugendramon is still reachable without it, through Cyberdramon's default edge.
+        // Mugendramon is still reachable without it, through Cyberdramon's default edge — and
+        // US-157 gave it two more parents, Cargodramon and Cyberdramon X, both of which climb into
+        // it by their own citation. The claim this test makes is about ANDROMON's second thread,
+        // so it is the Andromon and Cyberdramon halves that are pinned rather than the total.
+        XCTAssertTrue(Set(graph.parents(of: "pencme_mugendramon").map(\.id))
+                        .isSuperset(of: ["pencme_andromon", "cyberdramon"]))
         XCTAssertEqual(Set(graph.parents(of: "pencme_mugendramon").map(\.id)),
-                       ["pencme_andromon", "cyberdramon"])
+                       ["pencme_andromon", "cyberdramon", "cargodramon", "cyberdramon_x"])
         XCTAssertEqual(Set(graph.parents(of: "knightmon").map(\.id)),
                        ["tankmon", "thunderballmon"])
     }
@@ -306,10 +311,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 44,
+        XCTAssertEqual(inLine.count, 50,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
-                           + "US-151 Deckerdramon")
+                           + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -381,7 +386,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       "kokuwamon_x", "kuwagamon_x",
                                       "phascomon", "porcupamon", "toyagumon_black",
                                       "raptordramon", "omekamon",
-                                      "deckerdramon"]
+                                      "deckerdramon",
+                                      // US-157's six, all hung off this line's own Champions.
+                                      "astamon", "boutmon", "cargodramon", "cerberumon_x",
+                                      "cyberdramon_x", "kazuchimon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

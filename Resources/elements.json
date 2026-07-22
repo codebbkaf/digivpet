@@ -2572,6 +2572,122 @@
     "blackrapidmon": {
       "element": "machine",
       "attribute": "virus"
+    },
+    "andiramon_data": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "angewomon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "anomalocarimon_x": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "archnemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "astamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "atlurkabuterimon_red": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "baalmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "blackmegalogrowmon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "bluemeramon": {
+      "element": "ice",
+      "attribute": "virus"
+    },
+    "boutmon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "cannonbeemon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "cargodramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "caturamon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "cerberumon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "chimairamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "chohakkaimon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "crescemon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "cryspaledramon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "cyberdramon_x": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "pandamon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "ophanimon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "beelzebumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "chaosdukemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "kazuchimon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "tigervespamon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "millenniumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "shakamon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "dianamon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "hexeblaumon": {
+      "element": "ice",
+      "attribute": "vaccine"
     }
   },
   "lineDefaults": {

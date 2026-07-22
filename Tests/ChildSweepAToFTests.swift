@@ -322,11 +322,11 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 82,
+        XCTAssertEqual(sizes["tamers"], 90,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon")
         XCTAssertEqual(sizes["dmc-v3"], 48)
-        XCTAssertEqual(sizes["palmon"], 24)
+        XCTAssertEqual(sizes["palmon"], 26)
     }
 
     /// **The variant rule, and the honest version of it.** The criteria say a variant hangs off its
@@ -507,7 +507,7 @@ final class ChildSweepAToFTests: XCTestCase {
     /// anywhere in the file with no way onward any more — and refilled the Adult half with
     /// thirty-three of its own. US-151..US-156 shrink what is left, and each is told to edit this
     /// rather than having to notice.
-    func testTheOnlyDeadEndsBelowUltimateAreTheOnesTheSweepsHaveOpened() {
+    func testTheOnlyDeadEndsBelowUltimateAreTheOnesTheSweepsHaveOpened() throws {
         let deadEnds = graph.nodes
             .filter { $0.evolutions.isEmpty && $0.stage != .ultimate }
             .map(\.id)
@@ -577,12 +577,28 @@ final class ChildSweepAToFTests: XCTestCase {
         // full — while Galgomon and the `penc-sw` reading of Xiquemon are the Perfect sweeps').
         let perfectsFromUS156 = ["blackrapidmon", "canoweissmon", "huankunmon"]
 
+        // **US-157 IS THE FIRST STORY TO MOVE THIS LEDGER DOWN, AND THAT IS WHAT A PERFECT SWEEP
+        // IS FOR.** Every Perfect it authored needed a Champion beneath it, and nine of the
+        // nineteen it chose were LEAVES sitting on this list — so wiring them onward paid off nine
+        // of the debts the Champion sweeps ran up. It adds exactly one back: Pandamon, the junk
+        // floor `penc-sw` needed before Hakubamon could branch at all. Net 105 -> 97.
+        let clearedByUS157 = ["blackgrowmon", "hakubamon", "icedevimon", "lekismon", "paledramon",
+                              "porcupamon", "raptordramon", "tailmon_x", "waspmon"]
+        let perfectsFromUS157 = ["pandamon"]
+
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
                            + championsFromUS150 + perfectsFromUS151 + perfectsFromUS154
-                           + perfectsFromUS155 + perfectsFromUS156).sorted(),
+                           + perfectsFromUS155 + perfectsFromUS156 + perfectsFromUS157)
+                           .filter { !clearedByUS157.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 105)
+        XCTAssertEqual(deadEnds.count, 97)
+
+        // And the nine really did leave because they lead somewhere now, not because they vanished.
+        for id in clearedByUS157 {
+            XCTAssertFalse(try XCTUnwrap(graph.node(id: id)).evolutions.isEmpty,
+                           "\(id) is a dead end again — then it belongs back on the ledger")
+        }
     }
 
     // MARK: - AC: the orphans this story removed
@@ -605,10 +621,10 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643,
+        XCTAssertEqual(graph.nodes.count, 672,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
-                           + "635 after US-155")
+                           + "635 after US-155, 643 after US-156, 672 after US-157")
     }
 
     // MARK: - The whole file still validates

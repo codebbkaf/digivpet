@@ -212,9 +212,9 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 38,
+        XCTAssertEqual(inLine.count, 39,
                        "US-152 hung Ebidramon and Gawappamon on this line, US-153 Kinkakumon, "
-                           + "US-154 MoriShellmon")
+                           + "US-154 MoriShellmon, US-157 Anomalocarimon X")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, ["puyomon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -548,7 +548,9 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         // Rookies.
         let sweepEggs: Set<String> = ["beta_digitama", "kame_digitama", "puyomon",
                                       "ebidramon", "gawappamon", "kinkakumon",
-                                      "morishellmon"]
+                                      "morishellmon",
+                                      // US-157's, hung off this line's own Ebidramon.
+                                      "anomalocarimon_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         XCTAssertEqual(mine.count, 31)
         XCTAssertEqual(mine.filter { Roster.bundled.entry(id: $0.id) == nil }.count,

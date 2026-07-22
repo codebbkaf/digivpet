@@ -54,6 +54,12 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// a Champion rung when the Child G-L sweep reached them. Targetmon is a Xros Wars gag Digimon
     /// shaped like a shooting-gallery target and Kokeshimon a limbless painted doll; both are plain
     /// roster ids off unused sheets, so both remove an orphan rather than being aliases.
+    /// US-157 added ONE, the first at the PERFECT rung since US-151: opening `penc-sw`'s Perfect
+    /// rung for Cho-Hakkaimon meant Hakubamon became a branching Champion, and a branching Champion
+    /// needs a floor. Pandamon is a stuffed-panda puppet off an unused sheet — a Chinese toy beside
+    /// a Journey to the West line, following Tsuchidarumon the mud daruma, which US-148 chose as
+    /// that same line's junk CHAMPION. It is a plain roster id, so it removes an orphan, and it is
+    /// in no tree markdown — the grep US-140 insists on.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
@@ -63,7 +69,7 @@ final class EvolutionCriteriaTests: XCTestCase {
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
-        "andiramon_virus", "karakurumon", "catchmamemon",
+        "andiramon_virus", "karakurumon", "catchmamemon", "pandamon",
         // Ultimate
         "kingetemon",
     ]
@@ -353,10 +359,20 @@ final class EvolutionCriteriaTests: XCTestCase {
         let strandedAdult = ["arresterdramon", "dobermon", "dorulumon", "ginkakumon", "ginryumon",
                              "greymon_2010", "hakubamon", "lianpumon", "parasaurmon",
                              "shoutmon_king", "siesamon", "targetmon", "tsuchidarumon"]
+        // US-157's THREE, and they are the same arithmetic two rungs further up: it opened
+        // `penc-sw`'s Perfect rung over Hakubamon, which was ALREADY on the list above, so
+        // Cho-Hakkaimon, the junk floor Pandamon under it and Shakamon over it inherit Hakubamon's
+        // strandedness exactly. `penc-sw` has no Digitama — US-144 and US-145 spent all 57 — so no
+        // story at this rung or any rung above it can fix that, and the parent loops below prove
+        // this is inheritance rather than three nodes nobody bothered to wire. Every OTHER Perfect
+        // US-157 authored sits on a line an egg reaches, which is what makes the list a claim.
+        let strandedPerfect = ["chohakkaimon", "pandamon"]
+        let strandedUltimate = ["shakamon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,
-                       (strandedBabyI + strandedBabyII + strandedChild + strandedAdult).sorted(),
+                       (strandedBabyI + strandedBabyII + strandedChild + strandedAdult
+                           + strandedPerfect + strandedUltimate).sorted(),
                        "unreachable nodes: \(stranded)")
 
         // Every stranded Baby II is stranded ONLY because its single parent is one of the thirteen,
@@ -372,6 +388,14 @@ final class EvolutionCriteriaTests: XCTestCase {
         }
         for id in strandedAdult {
             XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedChild.contains($0) }, [],
+                           "\(id) has a reachable parent and should not be stranded")
+        }
+        for id in strandedPerfect {
+            XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedAdult.contains($0) }, [],
+                           "\(id) has a reachable parent and should not be stranded")
+        }
+        for id in strandedUltimate {
+            XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedPerfect.contains($0) }, [],
                            "\(id) has a reachable parent and should not be stranded")
         }
     }

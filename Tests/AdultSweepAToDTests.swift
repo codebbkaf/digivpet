@@ -223,7 +223,7 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 82, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
+        XCTAssertEqual(sizes["tamers"], 90, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
                            + "US-152 added FlareLizamon and Growmon Orange; "
                            + "US-156 added Youkomon and BlackRapidmon")
         XCTAssertEqual(sizes["wanyamon"], 20,
@@ -232,10 +232,10 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(sizes["penc-wg"], 37,
                        "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon, "
                            + "US-156 the two Black V-dramon")
-        XCTAssertEqual(sizes["penc-vb"], 49,
+        XCTAssertEqual(sizes["penc-vb"], 53,
                        "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon, "
                            + "US-156 WezenGammamon and Canoweissmon")
-        XCTAssertEqual(sizes["penc-me"], 44, "US-151 added Deckerdramon")
+        XCTAssertEqual(sizes["penc-me"], 50, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon")
     }
 
     /// **The variant rule.** Four of the seven are variants — Black, and nothing else at this rung —
@@ -396,9 +396,9 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 643,
+        XCTAssertEqual(graph.nodes.count, 672,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154, "
-                           + "635 after US-155")
+                           + "635 after US-155, 643 after US-156, 672 after US-157")
     }
 
     func testTheGraphValidatesWithNoFindings() {

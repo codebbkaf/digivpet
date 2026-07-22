@@ -214,7 +214,7 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
         // US-150 hung YukiAgumon and its Champion Hyougamon on this line's Koromon, which is why
         // the line is two larger than the tree the document draws.
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 33)
+        XCTAssertEqual(inLine.count, 34, "US-157 hung AtlurKabuterimon Red on this line")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -521,7 +521,9 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
         // anything about what one story did once another tree lands beside it.
         // `angora_digitama` is US-144's, not this story's, so it is excluded rather than counted.
         // `yukiagumon` and `hyougamon` are US-150's, excluded the same way.
-        let notThisStorys: Set<String> = ["angora_digitama", "yukiagumon", "hyougamon"]
+        // `atlurkabuterimon_red` is US-157's, excluded the same way.
+        let notThisStorys: Set<String> = ["angora_digitama", "yukiagumon", "hyougamon",
+                                          "atlurkabuterimon_red"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !notThisStorys.contains($0.id) }.count,
                        30)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
