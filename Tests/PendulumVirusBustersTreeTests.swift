@@ -267,6 +267,13 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
     /// here. What the test still means is unchanged — nothing in the line is stranded above the
     /// eggs — and `testTheLineIsRootedAtARealRosterDigitamaThatAMapCanActuallyGrant` is what pins
     /// which eggs those are.
+    ///
+    /// US-146 puts TWO nodes beyond the eggs' reach, and they are listed rather than excused.
+    /// Pusurimon's only Child is Herissmon, which is already a node here, so Pusurimon can sit on
+    /// no other line — and its only parent is Pusumon, which comes with it. Neither can ever gain
+    /// an in-edge from above: US-144 and US-145 spent all 57 Digitama, and `EggHatcher.hatchTarget`
+    /// reads `evolutions.first`, so no egg has a second hatch to give. Pinned as a list, not
+    /// dropped from the check, so a THIRD stranded node fails.
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
         let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
         XCTAssertTrue(eggs.contains("heriss_digitama"), "the line's own egg is gone")
@@ -281,8 +288,8 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 33)
-        XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
+        XCTAssertEqual(inLine.count, 35)
+        XCTAssertEqual(inLine.filter { !reached.contains($0) }.sorted(), ["pusumon", "pusurimon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
 
@@ -355,7 +362,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // US-144 hung `kuda_digitama` and `kuda2006_digitama` on this line. That egg is not one of this story's nodes, so it is
         // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
         // story's notes made, and a total quietly one higher would no longer be that claim.
-        let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama"]
+        // `pusumon` and `pusurimon` are US-146's and excluded for the same reason.
+        let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama",
+                                      "pusumon", "pusurimon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

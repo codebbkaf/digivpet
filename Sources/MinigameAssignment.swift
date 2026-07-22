@@ -139,6 +139,14 @@ enum MinigameAssignment {
         // which is what remembering a sequence is.
         "vital": .reflexStrike,
         "adventure02": .sequenceRecall,
+        // US-146 opens the last two lines of the Baby I rung, and the same tie-break runs again:
+        // counting the file as this story leaves it, Power Meter was carrying the fewest (60) and
+        // Crown Sprint the next fewest (63), so `xros` — the larger of the two new lines — goes to
+        // Power Meter and `penc-sw` to Crown Sprint. Flavour agrees on both: a DigiXros is holding
+        // several Digimon together until the fusion fires, which is what a charge meter is; and the
+        // Saiyu Warriors are Journey to the West, whose Monkey King crosses the sky in one bound.
+        "xros": .powerMeter,
+        "penc-sw": .crownSprint,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

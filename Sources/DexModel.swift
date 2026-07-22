@@ -356,6 +356,10 @@ final class DexModel: ObservableObject {
         "algomon": "Algomon Signal",
         "adventure02": "Adventure 02",
         "vital": "Vital Bracelet",
+        // US-146's two. Both are named for the device their thread comes off rather than for a
+        // Digimon, so neither could ever resolve through the node-id convention.
+        "xros": "Xros Loader",
+        "penc-sw": "Pendulum SW",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id

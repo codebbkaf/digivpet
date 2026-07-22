@@ -132,17 +132,21 @@ final class DigitamaSweepLToZTests: XCTestCase {
         XCTAssertEqual(authoredHatches.count + openedBabyI.count, 35)
     }
 
-    /// The handover number, asserted rather than left in `notes`: thirteen orphaned Baby I remain,
-    /// and NOT ONE of them can be given an in-edge by a Digitama, because every playable Digitama
-    /// in the file already has its single hatch edge spent. US-146 has to solve that some other way
-    /// or record it as unreachable; either is fine, but it must not be discovered by surprise.
+    /// The handover number, asserted rather than left in `notes`: thirteen Baby I are beyond every
+    /// Digitama's reach, because every playable Digitama in the file already has its single hatch
+    /// edge spent. US-146 took the second of the two options this test offered it — it authored the
+    /// thirteen for their OUT-edges and recorded them as unreachable — so they are no longer
+    /// ORPHANS by the Appendix B rule, and the claim here narrows to the half that survives: they
+    /// have no in-edge, and no egg is left that could give them one.
+    ///
+    /// `DigitamaSweepBabyITests` names the same thirteen from the other side.
     func testTheBabyIStillOrphanedCannotBeReachedByAnyRemainingEgg() {
-        let connected = self.connected()
-        let stranded = roster.entries
-            .filter { $0.stage == .babyI && !$0.dexOnly && !connected.contains($0.id) }
+        let parentless = roster.entries
+            .filter { $0.stage == .babyI && !$0.dexOnly }
+            .filter { graph.parents(of: $0.id).isEmpty }
             .map(\.id)
             .sorted()
-        XCTAssertEqual(stranded.count, 13, "stranded Baby I: \(stranded)")
+        XCTAssertEqual(parentless.count, 13, "Baby I with no in-edge: \(parentless)")
 
         let spareEggs = roster.entries
             .filter { $0.stage == .digitama && !$0.dexOnly }
@@ -186,25 +190,17 @@ final class DigitamaSweepLToZTests: XCTestCase {
 
     // MARK: - The whole-file dead-end ledger
 
-    /// **The handover to US-146/US-147, and the one list both of them should edit.** Before US-144
-    /// the file had ZERO nodes below Ultimate with no way onward. A sweep that authors one rung at
-    /// a time cannot keep that: the Baby I an egg hatches into has to exist before the Baby II
-    /// above it does. So the invariant is a ledger, and it lives here rather than in US-144's file
-    /// because this is the newest sweep and the next one will look at the newest.
-    ///
-    /// It fails in BOTH directions on purpose — a twenty-first dead end fails it, and so does
-    /// wiring one of the twenty onward. The next sweep is meant to edit this list down and is told
-    /// to rather than having to notice.
-    func testTheOnlyDeadEndsBelowUltimateAreTheOnesTheTwoDigitamaSweepsOpened() {
-        let deadEnds = graph.nodes
-            .filter { $0.evolutions.isEmpty && $0.stage != .ultimate }
-            .map(\.id)
-            .sorted()
-
-        let usTags = ["algomon_babyi", "bommon", "cocomon", "dodomon", "jyarimon", "kiimon",
-                      "kuramon", "popomon"] + openedBabyI
-        XCTAssertEqual(deadEnds, usTags.sorted(),
-                       "the dead-end ledger has drifted; US-146/US-147 should be shrinking it")
+    /// The whole-file ledger moved on to `DigitamaSweepBabyITests`, which is the newest sweep and
+    /// the one US-147 should edit; what is left here is this story's own half of it, narrowed to
+    /// the claim that survives. US-146 wired every one of the twelve Baby I this story opened, so
+    /// NONE of them is a dead end any more — and none may quietly become one again.
+    func testTheTwelveBabyIThisSweepOpenedAreNoLongerDeadEnds() {
+        for babyId in openedBabyI {
+            let node = graph.node(id: babyId)
+            XCTAssertNotNil(node, "no node \(babyId)")
+            XCTAssertFalse(node?.evolutions.isEmpty ?? true,
+                           "\(babyId) is a dead end again — US-146 gave it a Baby II")
+        }
     }
 
     /// Two of the twelve are cheaper to close than the other ten, and saying which buys US-147 the
@@ -237,23 +233,31 @@ final class DigitamaSweepLToZTests: XCTestCase {
 
     /// The criterion is that a sweep must not produce dozens of one-node lines, and the answer here
     /// is two new lines for twelve new threads — the other ten went onto lines that already exist.
-    /// Sizes are asserted as well as membership, since a line of one would satisfy "only two new
-    /// lines" and still be the thing the rule forbids.
+    ///
+    /// The SIZES of the two lines belong to whichever story last grew them, not to this one:
+    /// US-146 put four more nodes on each, so what is pinned here is the thirteen nodes US-145
+    /// itself put on them, and that the ten it did not are still on lines it did not open.
     func testTheSweepOpenedTwoLinesAndPutTheRestOntoExistingOnes() {
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(Set(sizes.keys).intersection(newLines).count, newLines.count,
                        "a line this story opened is missing from the graph")
-        XCTAssertEqual(sizes["adventure02"], 4)
-        XCTAssertEqual(sizes["vital"], 9)
+
+        let mine = Set(["v_digitama", "chicomon", "worm_digitama", "leafmon",
+                        "pulse_digitama", "dokimon", "morpho_digitama", "bubbmon",
+                        "sunariza_digitama", "sunamon", "ludo_digitama",
+                        "zuba_digitama", "cotsucomon"])
+        for id in mine {
+            XCTAssertTrue(newLines.contains(graph.node(id: id)?.line ?? ""),
+                          "\(id) left the line this story opened for it")
+        }
 
         // Every other node this story authored landed on a line that already existed.
         let authored = Set(authoredHatches.map(\.egg) + openedBabyI)
-        let onNewLines = graph.nodes.filter { newLines.contains($0.line) }.map(\.id)
-        XCTAssertEqual(Set(onNewLines), Set(["v_digitama", "chicomon", "worm_digitama", "leafmon",
-                                             "pulse_digitama", "dokimon", "morpho_digitama", "bubbmon",
-                                             "sunariza_digitama", "sunamon", "ludo_digitama",
-                                             "zuba_digitama", "cotsucomon"]))
-        XCTAssertEqual(authored.subtracting(onNewLines).count, 22)
+        XCTAssertEqual(authored.subtracting(mine).count, 22)
+        for id in authored.subtracting(mine) {
+            XCTAssertFalse(newLines.contains(graph.node(id: id)?.line ?? ""),
+                           "\(id) is on a line this story opened after all")
+        }
     }
 
     /// The four Tamers partners this sweep added join Guilmon's and Impmon's line rather than
@@ -266,7 +270,9 @@ final class DigitamaSweepLToZTests: XCTestCase {
         }
         let tamers = graph.nodes.filter { $0.line == "tamers" }
         XCTAssertEqual(tamers.filter { $0.stage == .digitama }.count, 8)
-        XCTAssertEqual(tamers.filter { $0.stage == .babyI }.count, 7)
+        // Eight Baby I, not the seven this story left: US-146 hung Pafumon here, one of the
+        // thirteen Baby I no egg can reach, because Yaamon is the Baby II its stand-in points at.
+        XCTAssertEqual(tamers.filter { $0.stage == .babyI }.count, 8)
     }
 
     /// Every new line resolves to a Dex heading and to a training game. Both are keyed on strings

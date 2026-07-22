@@ -43,11 +43,11 @@ final class MinigameAssignmentTests: XCTestCase {
             .mapValues { $0.sorted() }
 
         XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp", "tamers"],
-                                 .crownSprint: ["commandramon", "dmc-v3", "penc-ds"],
+                                 .crownSprint: ["commandramon", "dmc-v3", "penc-ds", "penc-sw"],
                                  .sequenceRecall: ["adventure02", "diablomon", "dmc-v5", "penc-nso"],
                                  .reflexStrike: ["algomon", "dmc-v4", "penc-wg", "vital"],
                                  .buttonMasher: ["dmc-v1", "penc-me", "wanyamon"],
-                                 .powerMeter: ["dmc-v2", "penc-vb"]])
+                                 .powerMeter: ["dmc-v2", "penc-vb", "xros"]])
     }
 
     /// The table is keyed on strings the JSON owns, so a renamed line would silently drop that whole

@@ -693,8 +693,8 @@
         "Typecheck passes"
       ],
       "priority": 33,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the WHOLE Baby I rung, not only the 13 names still orphaned: the PRD's Appendix A lists 38 orphaned Baby I and US-144/US-145 gave 25 of them an in-edge only, so the out-edge half was left for this story on all of them. 38 new nodes (13 Baby I + the 25 Baby II they and the 20 dead ends now evolve into), 33 new edges, 365 -> 403 nodes. Orphans at stage 'Baby I': 13 BEFORE, 0 AFTER (whole file 563 -> 525; Baby II fell 37 -> 12 as a side effect). The AC 'every Digimon in the range gets at least one in-edge' CANNOT be met and is not claimed: a Baby I's only possible parent is a Digitama, EggHatcher.hatchTarget reads evolutions.first so an egg carries exactly one hatch edge, and US-144/US-145 spent all 57 - US-145 proved 12 was the most the last 23 could open. So 13 Baby I have no parent and never can; they are authored for their out-edges and pinned by name in EvolutionCriteriaTests.testEveryNonEggNodeIsReachableFromSomeDigitama (21 stranded: the 13 plus the 8 Baby II only they feed), which was a zero before and is now a checked list that still fails on a 22nd. Two new lines only - `xros` (6) and `penc-sw` (2), each justified on a DEVICE every member shares per Wikimon's Virtual Pets section (Digimon Xros Loader; Pendulum COLOR 6 Saiyu Warriors); the other 30 nodes joined existing lines. Four pairings are stand-ins rather than Wikimon arrows (Curimon/Gurimon absent, Pafumon/Kyaromon idle-only, Pyonmon/Bosamon absent, Puyomon/Puyoyomon absent) and each names the missing rung and the shared next rung it was rehomed on; Bombmon has NO evolution on Wikimon at all and its comment says FLAVOUR rather than dressing itself as a citation. Every sprite ls'd, no dexOnly on any edge, validator ZERO findings. Build green, 1967 tests, 0 failures."
     },
     {
       "id": "US-147",

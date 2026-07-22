@@ -66,6 +66,38 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   eggs: 12 doubled up (their species was already wired, or is dexOnly/absent so no thread could
   reach it), 10 opened a Baby I. That leaves US-145 23 eggs for 25 still-orphaned Baby I, so
   **US-145 must double up as little as it can** or some Baby I can never be reached.
+- **PHASE E SWEEPS: THE GLOBAL REACHABILITY TEST LIVES IN `EvolutionCriteriaTests`, not in
+  `EvolutionGraphTests`, and every device line has its OWN twin.** `testEveryNonEggNodeIsReachable
+  FromSomeDigitama` was a global zero from US-008 until US-146; each of the six `Pendulum*TreeTests`
+  and five `DMC*TreeTests` also asserts "every node on this line is reachable from one of its eggs".
+  So a node with no in-edge breaks the test of WHATEVER LINE you put it on. Grep for both BEFORE
+  choosing a line, and when a node genuinely cannot be reached, pin it by NAME rather than relaxing
+  the check — US-146 turned the global one into a 21-name list that still fails on a 22nd, and
+  proved separately that each stranded Baby II has no reachable parent so the list cannot absorb a
+  node nobody bothered to wire.
+- **PHASE E SWEEPS: a rung's scope is the RUNG, not the names still orphaned when you start.** A
+  sweep AC asks for an in-edge AND an out-edge; an earlier sweep may have met only one of them for
+  most of the range. US-144/US-145 de-orphaned 25 Baby I with in-edges alone, so US-146's real job
+  was 33 out-edges, not 13 nodes. Check which criterion the earlier story met before scoping.
+- **PHASE E SWEEPS: fetch the Wikimon page of a Digimon that is NOT on disk.** Wikimon has pages
+  the sprite pack lacks, so `curl wikimon.net/Gurimon` still gives "Evolves To: Koemon" — and the
+  stand-in is whichever rung ON DISK shares that target. One sweep of ~37 `curl`s over every orphan
+  at the stage above, parsed for `Evolves_From`/`Evolves_To`, answers every pairing question in a
+  sweep at once and is reusable by the next one. Beware: an `Evolves To` at Baby I can be a DigiXros
+  FUSION list and not an evolution at all (Bombmon's is), in which case say FLAVOUR in the comment
+  and let a test grep for the word.
+- **PHASE E SWEEPS: the graph has more nodes at a rung than the roster has playable Digimon.**
+  `graph.nodes(at: .babyI)` is 45; `roster.entries` playable Baby I is 43 — `piyo_yuramon` and
+  `pencnsp_botamon` are line-scoped aliases with no roster entry. Assert a rung's SHAPE over graph
+  nodes and its COVERAGE over roster entries; iterating roster entries silently skips every alias.
+- **PHASE E SWEEPS: the eleven-file knock-on list for a rung-sized story.** Node count in BOTH
+  `ElementCatalogTests` and `EvolutionGraphValidatorTests`; line sizes in `EvolutionGraphTests`;
+  the game -> [lines] literal in `MinigameAssignmentTests`; `MoveCatalogTests` wants a unique
+  symbol|tint WITHIN a line and a globally unique `signatureName`;
+  `ElementCatalogTests.testElementsVaryWithinALine` forbids a single-element line, which any 2-node
+  line trips; and `EggHatchingTests`' two starting-egg lists move whenever a thread newly reaches an
+  Ultimate. Plus `lineDefaults` in elements.json AND moves.json, `DexModel.lineTitles` and
+  `MinigameAssignment.byLine` for each new line.
 - **PHASE E SWEEPS: a new game must not start on an unfinished thread.**
   `MainScreenModel.startingDigitamaId` filters candidates through
   `EvolutionGraph.reachesUltimate(from:)` (US-144). Without it a fresh install could land on
@@ -2752,4 +2784,80 @@ failures, validator zero findings.
   which reading is taken, the way US-144 and US-145 both did. `ketomon` and `bommon` are the two
   Baby I whose canonical Baby II is idle-only and which need a stand-in from US-147. Orphans by
   stage now: Ultimate 166, Adult 129, Perfect 114, Child 88, Baby II 37, Armor-Hybrid 16, Baby I 13.
+---
+
+## 2026-07-22 - US-146 (Orphan sweep: Baby I)
+
+Wired the WHOLE Baby I rung. 38 new nodes and 33 new edges; `Resources/evolutions.json` 365 -> 403,
+plus the matching rows in `elements.json`/`moves.json`, two new lines in `Sources/DexModel.swift`
+and `Sources/MinigameAssignment.swift`, a new `Tests/DigitamaSweepBabyITests.swift` (16 tests), and
+ELEVEN existing test files. Build green, 1967 tests, 0 failures, validator zero findings.
+
+Orphan count for the stage: **Baby I 13 BEFORE, 0 AFTER.** Whole file 563 -> 525; Baby II fell
+37 -> 12 as a side effect of authoring the rung above.
+
+**Learnings for future iterations:**
+
+- **THE STORY'S SCOPE WAS THE RUNG, NOT THE 13 NAMES.** The PRD's Appendix A lists 38 orphaned
+  Baby I and US-144/US-145 de-orphaned 25 of them by giving them an in-edge from an egg — which
+  left the OTHER half of the same AC ("and at least one out-edge") unmet on all 38. Reading the
+  scope as "the 13 still orphaned today" would have shipped 20 Baby I that still lead nowhere and
+  handed US-147 a rung it is not named for. When a sweep's range has been partly eaten by an
+  earlier story, check WHICH criterion that story met before deciding what is left.
+- **AN AC THAT CANNOT BE MET IS PINNED AS A LIST, NEVER RELAXED TO A SKIP.** 13 Baby I can never
+  have a parent (all 57 eggs spent, one hatch edge each, and US-145 proved 12 was the ceiling), so
+  `EvolutionCriteriaTests.testEveryNonEggNodeIsReachableFromSomeDigitama` — a GLOBAL zero since
+  US-008 — became a 21-name list: the 13, plus the 8 Baby II only they feed. It still fails on a
+  22nd, and a second assertion proves each stranded Baby II has no reachable parent, so the list
+  cannot quietly absorb a Baby II nobody bothered to wire. Same shape in the two device-tree
+  reachability tests that gained a stranded node (`penc-ds` one, `penc-vb` two).
+- **THAT GLOBAL REACHABILITY TEST IS THE ONE TO GREP FOR BEFORE AUTHORING, and it is not where you
+  would look.** `EvolutionCriteriaTests`, not `EvolutionGraphTests`. The six `Pendulum*TreeTests`
+  and five `DMC*TreeTests` each have a per-line twin (`testEveryNodeInTheLineIsReachableFrom...`),
+  so a node with no in-edge breaks the test of WHATEVER LINE it lands on. That constraint, not
+  flavour, is what decided most of this story's line assignments: eleven of the thirteen went onto
+  sweep lines (`tamers`, `wanyamon`, `vital`, `adventure02`, `algomon`, `commandramon`) or the two
+  new ones, and only Puyomon and Pusumon had to touch a device line — because Pukamon and Herissmon
+  are the only nodes on disk their threads can possibly reach.
+- **A MISSING RUNG AT BABY II IS A REHOME ON THE RUNG ABOVE — fetch the Baby II's own page even
+  though it is not on disk.** Wikimon has pages for Digimon the sprite pack lacks, so
+  `curl wikimon.net/Gurimon` still yields "Evolves To: Koemon", and the stand-in is whichever Baby
+  II ON DISK also evolves into Koemon (Wanyamon). Four of the thirteen went this way (Gurimon,
+  Kyaromon-idle-only, Bosamon, Puyoyomon). One sweep of 37 `curl`s over every orphaned Baby II,
+  parsed for `Evolves_From`/`Evolves_To`, answered every pairing question in the story AT ONCE —
+  including which Baby I each Baby II wants — and US-147 can reuse the same dump.
+- **Wikimon's `Evolves To` at Baby I can be a DigiXros list, not an evolution.** Bombmon's is three
+  fusions (Mega Decker Greymon, Monochromon, Shoutmon X7) and no ordinary arrow at all, so it has
+  no Baby II on any page. Its comment says FLAVOUR in capitals and a test greps for that word —
+  the one honest way to author a pairing that has no citation. Do not let a fusion list read as an
+  evolution because it is sitting under the right heading.
+- **`graph.nodes(at: .babyI)` is 45 and the roster's playable Baby I is 43.** `piyo_yuramon` and
+  `pencnsp_botamon` are line-scoped aliases — graph nodes with no roster entry of their own. Assert
+  the SHAPE of a rung over graph nodes and its COVERAGE over roster entries; a test that iterates
+  roster entries silently skips every alias.
+- **The knock-on list for a rung this size, all eleven files, in the order they bit:** node count in
+  `ElementCatalogTests` AND `EvolutionGraphValidatorTests`; line sizes in `EvolutionGraphTests`;
+  `MinigameAssignmentTests`' game -> [lines] literal; `MoveCatalogTests` wants a UNIQUE
+  symbol|tint per line AND a globally unique `signatureName` (three of mine collided with eggs
+  authored five stories ago); `ElementCatalogTests.testElementsVaryWithinALine` forbids a
+  single-element line, which a 2-node line trips instantly; and `EggHatchingTests`' two starting-egg
+  lists move whenever a thread newly reaches an Ultimate.
+- **FINISHING a thread promotes its egg, and the promotion is silent.** `lala_digitama` and
+  `luce_digitama` became starting-egg candidates the moment Pipimon and Tsubumon got their Baby II,
+  because Tanemon and Tokomon already reached an Ultimate. US-145 flagged those two as the cheap
+  closes and it was right — they were the only two edges in the story that changed what a new game
+  can start on.
+- **A ledger belongs in the newest story that changed it, and this one MOVED UP A RUNG.** The
+  whole-file dead-end list is now
+  `DigitamaSweepBabyITests.testTheOnlyDeadEndsBelowUltimateAreTheBabyIIThisSweepOpened` — 25
+  entries, all Baby II. US-144's and US-145's copies were flipped in place to "my Baby I are no
+  longer dead ends", so wiring them back into leaves fails too.
+- REMAINS: US-147 onward (33/56 passing). US-147 is Baby II and inherits a rung that is 25/37 done:
+  every Baby II it needs to wire already has its in-edge, so its whole job is the out-edge to a
+  Child plus the 12 Baby II still orphaned (`arkadimon_baby`, `budmon`, `chicchimon`, `cupimon`,
+  `hiyarimon`, `kozenimon`, `meicoobaby`, `pokomon`, `sunmon`, `tokomon_x`, `torikaraballmon`,
+  `upamon`). Eight of the 25 it wires onward are on the stranded list, so
+  their Children will be unreachable too; that is expected and must NOT be authored away by
+  inventing an in-edge. Orphans by stage now: Ultimate 166, Adult 129, Perfect 114, Child 88,
+  Armor-Hybrid 16, Baby II 12, Baby I 0.
 ---

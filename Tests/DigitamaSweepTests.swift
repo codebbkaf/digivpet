@@ -186,11 +186,12 @@ final class DigitamaSweepTests: XCTestCase {
         for line in newLines {
             XCTAssertGreaterThan(sizes[line] ?? 0, 1, "line \(line) is a single node")
         }
-        // Both grew in US-145: `tamers` took four more Tamers partners with a Baby I apiece and
-        // `wanyamon` took Liollmon's egg. The numbers are the file's, not this story's, and are
-        // pinned here rather than in the newer sweep because this is where the lines were opened.
-        XCTAssertEqual(sizes["tamers"], 15)
-        XCTAssertEqual(sizes["wanyamon"], 6)
+        // Both grew in US-145 — `tamers` took four more Tamers partners with a Baby I apiece and
+        // `wanyamon` took Liollmon's egg — and again in US-146, which put a Baby II above every
+        // Baby I on both. The numbers are the file's, not this story's, and are pinned here rather
+        // than in the newer sweep because this is where the lines were opened.
+        XCTAssertEqual(sizes["tamers"], 23)
+        XCTAssertEqual(sizes["wanyamon"], 8)
     }
 
     /// Twelve of the twenty-two eggs added no rung at all, because their species is already wired.
@@ -227,15 +228,15 @@ final class DigitamaSweepTests: XCTestCase {
     /// with no way onward; a sweep that authors a rung at a time cannot keep that, because the Baby
     /// I an egg hatches into has to exist before the Baby II above it does.
     ///
-    /// So the invariant becomes a ledger instead of a zero. US-145 opened twelve more Baby I the
-    /// same way, so the WHOLE-FILE ledger now lives in `DigitamaSweepLToZTests` — one list, in the
-    /// newest sweep, which is where the next one will look. What is left here is this story's own
-    /// half of it: its eight are all still dead ends, so wiring one onward without editing US-144's
-    /// notes fails, and the whole-file check upstairs catches a ninth appearing anywhere.
-    func testTheBabyIThisSweepOpenedAreStillDeadEnds() {
+    /// So the invariant becomes a ledger instead of a zero, and the WHOLE-FILE ledger lives in
+    /// whichever sweep last changed it — now `DigitamaSweepBabyITests`, since US-146 emptied the
+    /// Baby I rung of dead ends and refilled it at Baby II. What is left here is this story's own
+    /// half of it, flipped: all eight of US-144's Baby I now lead somewhere, and none may quietly
+    /// become a leaf again.
+    func testTheBabyIThisSweepOpenedAreNoLongerDeadEnds() {
         for id in openedBabyI {
-            XCTAssertEqual(graph.node(id: id)?.evolutions.isEmpty, true,
-                           "\(id) now leads somewhere — shrink the ledger in DigitamaSweepLToZTests too")
+            XCTAssertEqual(graph.node(id: id)?.evolutions.isEmpty, false,
+                           "\(id) leads nowhere — US-146 gave every Baby I a Baby II")
         }
     }
 

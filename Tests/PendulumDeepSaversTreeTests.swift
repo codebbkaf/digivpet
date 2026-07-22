@@ -191,6 +191,13 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
     /// here. What the test still means is unchanged — nothing in the line is stranded above the
     /// eggs — and `testTheLineIsRootedAtARealRosterDigitamaThatAMapCanActuallyGrant` is what pins
     /// which eggs those are.
+    ///
+    /// US-146 puts ONE node beyond the eggs' reach, and it is listed rather than excused. Puyomon's
+    /// own Baby II (Puyoyomon) is not in the sprite pack, and Pukamon is the only Baby II on disk
+    /// that evolves into Jellymon the way Puyoyomon does — so Puyomon hangs here. It can never gain
+    /// an in-edge whatever line it sits on: US-144 and US-145 spent all 57 Digitama, and
+    /// `EggHatcher.hatchTarget` reads `evolutions.first`, so no egg has a second hatch to give.
+    /// Pinned as a one-element list, not dropped from the check, so a SECOND stranded node fails.
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
         let eggs = graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id)
         XCTAssertTrue(eggs.contains("goma_digitama"), "the line's own egg is gone")
@@ -205,8 +212,8 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 33)
-        XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
+        XCTAssertEqual(inLine.count, 34)
+        XCTAssertEqual(inLine.filter { !reached.contains($0) }, ["puyomon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
 
@@ -527,9 +534,10 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        // `beta_digitama` and `kame_digitama` are US-144's, not this story's, so they are excluded
-        // rather than counted — the totals here are what this story's notes claimed.
-        let sweepEggs: Set<String> = ["beta_digitama", "kame_digitama"]
+        // `beta_digitama` and `kame_digitama` are US-144's and `puyomon` is US-146's, not this
+        // story's, so they are excluded rather than counted — the totals here are what this
+        // story's notes claimed.
+        let sweepEggs: Set<String> = ["beta_digitama", "kame_digitama", "puyomon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         XCTAssertEqual(mine.count, 31)
         XCTAssertEqual(mine.filter { Roster.bundled.entry(id: $0.id) == nil }.count,
@@ -550,7 +558,9 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
             }
         }
         XCTAssertTrue(graph.parents(of: "pitchmon").contains { $0.id == "goma_digitama" })
-        XCTAssertEqual(graph.parents(of: "pukamon").map(\.id), ["pitchmon"])
+        // US-146 gave Pukamon a second parent: Puyomon, whose own Baby II is not in the sprite
+        // pack and whose stand-in had to be the one Baby II that also evolves into Jellymon.
+        XCTAssertEqual(graph.parents(of: "pukamon").map(\.id).sorted(), ["pitchmon", "puyomon"])
         XCTAssertEqual(try node("pitchmon").stage, .babyI)
         XCTAssertEqual(try node("pukamon").stage, .babyII)
     }

@@ -1,458 +1,1925 @@
 {
   "_comment": "Per-Digimon typing on the two axes of D-2 (US-087). types = by id (top tier, and every one of the 88 nodes in evolutions.json has one); lineDefaults = per evolution line, a safety net for a node added to a line later; keywordRules = ORDERED substrings matched case-insensitively against the id, first match wins, for the ~930 roster-only Digimon nobody has hand-typed. Anything still unmatched resolves to neutral/free, which is inert by design. Elements are this app's invention and are chosen for flavour, so they are consistent with the Digimon's authored attack in moves.json (Meramon throws flame -> fire) and need NOT be constant down a line: agumon fire -> greymon fire -> metalgreymon machine is correct, not a bug. ATTRIBUTES: canon where canon exists (Agumon/Greymon/WarGreymon/Andromon/HiAndromon/Garurumon/WereGarurumon Vaccine, Gabumon/MetalGarurumon/Palmon/Togemon/Lilimon/Rosemon/Patamon/Monochromon/Coelamon Data, Numemon/Tsukaimon/Ogremon/Bakemon/Etemon/Gazimon/DarkTyranomon/Devidramon/Nanomon/Mugendramon/MetalTyranomon Virus, MetalGreymon Vaccine). JUDGEMENT CALLS, not looked up: every Digitama and Baby (all typed free - an egg has no canon attribute, and their element is inherited from the line's theme); the Numemon/Scumon rubbish family beyond Numemon itself (geremon, gerbemon, scumon, goldnumemon, blackkingnumemon, platinumnumemon, greatkingscumon, karatsukinumemon - all read as virus); jyagamon, gokumon, digitamamon, shinmonzaemon, metaletemon, kingetemon, cyclomon, deltamon, extyranomon, raremon, tuskmon, vademon, psychemon, gizamon, boltmon, ebemon (virus); hyokomon, muchomon, centalmon, mojyamon, gaioumon (data); unimon, leomon, bancholeomon, piccolomon, gankoomon, raidenmon, darkdramon (vaccine - Darkdramon in particular is Vaccine despite the name, which is why it needs an explicit entry: the 'dark' keyword rule would otherwise type it dark/virus). Keyword-tier attributes are a genre heuristic, not canon: the angel families are vaccine and the devil/undead families virus because those two are consistent across the franchise; every other rule says free rather than fabricating an attribute for a whole family. KEYWORD ORDER IS THE COLLISION RESOLVER, and the first block of rules earns its place only that way: trice before ice (Triceramon is not an ice type), cherubimon before ice (_vice), orange before ange (Growmon Orange is not an angel), aquila before aqua, yuki before agu (YukiAgumon is the snow one), kaguya and raguel before agu, haguru before agu (Hagurumon is a gear). Six required rules - angel, machine, raidra, frigi, aqua, flame - currently match NO roster id and are kept because the story names them and the ids may yet be added.",
-
   "types": {
-    "agu_digitama": { "element": "fire", "attribute": "free" },
-    "botamon": { "element": "fire", "attribute": "free" },
-    "koromon": { "element": "fire", "attribute": "free" },
-    "agumon": { "element": "fire", "attribute": "vaccine" },
-    "greymon": { "element": "fire", "attribute": "vaccine" },
-    "meramon": { "element": "fire", "attribute": "data" },
-    "numemon": { "element": "dark", "attribute": "virus" },
-    "metalgreymon": { "element": "machine", "attribute": "vaccine" },
-    "blackkingnumemon": { "element": "dark", "attribute": "virus" },
-    "wargreymon": { "element": "fire", "attribute": "vaccine" },
-    "platinumnumemon": { "element": "steel", "attribute": "virus" },
-    "swimmon": { "element": "water", "attribute": "data" },
-    "devimon": { "element": "dark", "attribute": "virus" },
-    "airdramon": { "element": "wind", "attribute": "vaccine" },
-    "seadramon": { "element": "water", "attribute": "data" },
-    "metalgreymon_virus": { "element": "machine", "attribute": "virus" },
-    "mamemon": { "element": "steel", "attribute": "data" },
-    "monzaemon": { "element": "light", "attribute": "vaccine" },
-    "blitzgreymon": { "element": "machine", "attribute": "vaccine" },
-    "banchomamemon": { "element": "steel", "attribute": "data" },
-    "dmcv1_shinmonzaemon": { "element": "dark", "attribute": "virus" },
-
-    "gabu_digitama": { "element": "ice", "attribute": "free" },
-    "punimon": { "element": "ice", "attribute": "free" },
-    "tsunomon": { "element": "ice", "attribute": "free" },
-    "gabumon": { "element": "ice", "attribute": "data" },
-    "garurumon": { "element": "ice", "attribute": "vaccine" },
-    "geremon": { "element": "dark", "attribute": "virus" },
-    "weregarurumon": { "element": "ice", "attribute": "vaccine" },
-    "gerbemon": { "element": "dark", "attribute": "virus" },
-    "metalgarurumon": { "element": "ice", "attribute": "data" },
-    "metaletemon": { "element": "steel", "attribute": "virus" },
-    "elecmon": { "element": "electric", "attribute": "data" },
-    "kabuterimon": { "element": "electric", "attribute": "vaccine" },
-    "angemon": { "element": "light", "attribute": "vaccine" },
-    "yukidarumon": { "element": "ice", "attribute": "data" },
-    "vegimon": { "element": "plant", "attribute": "virus" },
-    "birdramon": { "element": "fire", "attribute": "vaccine" },
-    "skullgreymon": { "element": "dark", "attribute": "virus" },
-    "metalmamemon": { "element": "steel", "attribute": "data" },
-    "whamon": { "element": "water", "attribute": "vaccine" },
-    "dmcv2_vademon": { "element": "dark", "attribute": "virus" },
-    "skullmammon": { "element": "dark", "attribute": "virus" },
-    "cresgarurumon": { "element": "ice", "attribute": "vaccine" },
-    "dmcv2_ebemon": { "element": "machine", "attribute": "virus" },
-
-    "pal_digitama": { "element": "plant", "attribute": "free" },
-    "yuramon": { "element": "plant", "attribute": "free" },
-    "tanemon": { "element": "plant", "attribute": "free" },
-    "palmon": { "element": "plant", "attribute": "data" },
-    "togemon": { "element": "plant", "attribute": "data" },
-    "karatsukinumemon": { "element": "earth", "attribute": "virus" },
-    "lilimon": { "element": "plant", "attribute": "data" },
-    "jyagamon": { "element": "plant", "attribute": "virus" },
-    "rosemon": { "element": "plant", "attribute": "data" },
-    "shinmonzaemon": { "element": "dark", "attribute": "virus" },
-
-    "pata_digitama": { "element": "wind", "attribute": "free" },
-    "puttimon": { "element": "light", "attribute": "free" },
-    "tokomon": { "element": "wind", "attribute": "free" },
-    "patamon": { "element": "wind", "attribute": "data" },
-    "tsukaimon": { "element": "dark", "attribute": "virus" },
-    "kunemon": { "element": "electric", "attribute": "virus" },
-    "unimon": { "element": "light", "attribute": "vaccine" },
-    "centalmon": { "element": "earth", "attribute": "data" },
-    "ogremon": { "element": "dark", "attribute": "virus" },
-    "bakemon": { "element": "dark", "attribute": "virus" },
-    "shellmon": { "element": "water", "attribute": "vaccine" },
-    "drimogemon": { "element": "earth", "attribute": "data" },
-    "scumon": { "element": "dark", "attribute": "virus" },
-    "andromon": { "element": "machine", "attribute": "vaccine" },
-    "giromon": { "element": "machine", "attribute": "virus" },
-    "etemon": { "element": "dark", "attribute": "virus" },
-    "hiandromon": { "element": "machine", "attribute": "vaccine" },
-    "gokumon": { "element": "fire", "attribute": "virus" },
-    "bancholeomon": { "element": "fire", "attribute": "vaccine" },
-    "kingetemon": { "element": "dark", "attribute": "virus" },
-
-    "piyo_digitama": { "element": "wind", "attribute": "free" },
-    "piyo_yuramon": { "element": "plant", "attribute": "free" },
-    "piyo_tanemon": { "element": "plant", "attribute": "free" },
-    "piyomon": { "element": "wind", "attribute": "vaccine" },
-    "dmcv4_palmon": { "element": "plant", "attribute": "data" },
-    "hyokomon": { "element": "wind", "attribute": "data" },
-    "muchomon": { "element": "fire", "attribute": "data" },
-    "leomon": { "element": "fire", "attribute": "vaccine" },
-    "monochromon": { "element": "earth", "attribute": "data" },
-    "mojyamon": { "element": "ice", "attribute": "data" },
-    "coelamon": { "element": "water", "attribute": "data" },
-    "kuwagamon": { "element": "electric", "attribute": "virus" },
-    "goldnumemon": { "element": "steel", "attribute": "virus" },
-    "megadramon": { "element": "machine", "attribute": "virus" },
-    "piccolomon": { "element": "wind", "attribute": "vaccine" },
-    "digitamamon": { "element": "dark", "attribute": "virus" },
-    "greatkingscumon": { "element": "dark", "attribute": "virus" },
-    "darkdramon": { "element": "machine", "attribute": "vaccine" },
-    "bloomlordmon": { "element": "plant", "attribute": "data" },
-    "gankoomon": { "element": "fire", "attribute": "vaccine" },
-    "boltmon": { "element": "machine", "attribute": "virus" },
-
-    "gazi_digitama": { "element": "dark", "attribute": "free" },
-    "zurumon": { "element": "dark", "attribute": "free" },
-    "pagumon": { "element": "dark", "attribute": "free" },
-    "gazimon": { "element": "electric", "attribute": "virus" },
-    "gizamon": { "element": "water", "attribute": "virus" },
-    "psychemon": { "element": "electric", "attribute": "virus" },
-    "darktyranomon": { "element": "dark", "attribute": "virus" },
-    "cyclomon": { "element": "dark", "attribute": "virus" },
-    "devidramon": { "element": "dark", "attribute": "virus" },
-    "tuskmon": { "element": "earth", "attribute": "virus" },
-    "deltamon": { "element": "dark", "attribute": "virus" },
-    "raremon": { "element": "dark", "attribute": "virus" },
-    "metaltyranomon": { "element": "machine", "attribute": "virus" },
-    "extyranomon": { "element": "fire", "attribute": "virus" },
-    "nanomon": { "element": "machine", "attribute": "virus" },
-    "vademon": { "element": "dark", "attribute": "virus" },
-    "mugendramon": { "element": "machine", "attribute": "virus" },
-    "gaioumon": { "element": "steel", "attribute": "data" },
-    "raidenmon": { "element": "electric", "attribute": "vaccine" },
-    "ebemon": { "element": "machine", "attribute": "virus" },
-    "tento_digitama": { "element": "electric", "attribute": "free" },
-    "pencnsp_botamon": { "element": "fire", "attribute": "free" },
-    "pencnsp_koromon": { "element": "fire", "attribute": "free" },
-    "pencnsp_agumon": { "element": "fire", "attribute": "vaccine" },
-    "tentomon": { "element": "electric", "attribute": "vaccine" },
-    "angoramon": { "element": "wind", "attribute": "data" },
-    "pencnsp_greymon": { "element": "fire", "attribute": "vaccine" },
-    "pencnsp_leomon": { "element": "fire", "attribute": "vaccine" },
-    "pencnsp_seadramon": { "element": "water", "attribute": "data" },
-    "tailmon": { "element": "light", "attribute": "vaccine" },
-    "pencnsp_kabuterimon": { "element": "electric", "attribute": "vaccine" },
-    "pencnsp_garurumon": { "element": "ice", "attribute": "vaccine" },
-    "symbareangoramon": { "element": "wind", "attribute": "data" },
-    "platinumscumon": { "element": "dark", "attribute": "virus" },
-    "pencnsp_metalgreymon": { "element": "machine", "attribute": "vaccine" },
-    "asuramon": { "element": "fire", "attribute": "data" },
-    "megaseadramon": { "element": "water", "attribute": "data" },
-    "angewomon": { "element": "light", "attribute": "vaccine" },
-    "atlurkabuterimon_blue": { "element": "electric", "attribute": "vaccine" },
-    "pencnsp_weregarurumon": { "element": "ice", "attribute": "vaccine" },
-    "lamortmon": { "element": "wind", "attribute": "data" },
-    "pumpmon": { "element": "plant", "attribute": "virus" },
-    "pencnsp_wargreymon": { "element": "fire", "attribute": "vaccine" },
-    "saberleomon": { "element": "earth", "attribute": "vaccine" },
-    "metalseadramon": { "element": "steel", "attribute": "data" },
-    "holydramon": { "element": "light", "attribute": "vaccine" },
-    "heraklekabuterimon": { "element": "electric", "attribute": "vaccine" },
-    "pencnsp_metalgarurumon": { "element": "ice", "attribute": "data" },
-    "diarbbitmon": { "element": "wind", "attribute": "vaccine" },
-    "noblepumpmon": { "element": "plant", "attribute": "virus" },
-    "goma_digitama": { "element": "water", "attribute": "free" },
-    "pitchmon": { "element": "water", "attribute": "free" },
-    "pukamon": { "element": "water", "attribute": "free" },
-    "gomamon": { "element": "water", "attribute": "vaccine" },
-    "ganimon": { "element": "earth", "attribute": "virus" },
-    "shakomon": { "element": "water", "attribute": "virus" },
-    "jellymon": { "element": "electric", "attribute": "data" },
-    "ikkakumon": { "element": "ice", "attribute": "vaccine" },
-    "rukamon": { "element": "water", "attribute": "data" },
-    "pencds_coelamon": { "element": "water", "attribute": "data" },
-    "gesomon": { "element": "water", "attribute": "virus" },
-    "octmon": { "element": "water", "attribute": "virus" },
-    "pencds_seadramon": { "element": "water", "attribute": "data" },
-    "teslajellymon": { "element": "electric", "attribute": "data" },
-    "diginorimon": { "element": "plant", "attribute": "virus" },
-    "zudomon": { "element": "ice", "attribute": "vaccine" },
-    "pencds_whamon": { "element": "water", "attribute": "vaccine" },
-    "pencds_megaseadramon": { "element": "water", "attribute": "data" },
-    "marindevimon": { "element": "dark", "attribute": "virus" },
-    "dagomon": { "element": "dark", "attribute": "virus" },
-    "anomalocarimon": { "element": "water", "attribute": "virus" },
-    "thetismon": { "element": "electric", "attribute": "vaccine" },
-    "piranimon": { "element": "water", "attribute": "virus" },
-    "vikemon": { "element": "ice", "attribute": "vaccine" },
-    "plesiomon": { "element": "water", "attribute": "vaccine" },
-    "pencds_metalseadramon": { "element": "steel", "attribute": "data" },
-    "leviamon": { "element": "dark", "attribute": "virus" },
-    "pukumon": { "element": "water", "attribute": "virus" },
-    "aegisdramon": { "element": "light", "attribute": "vaccine" },
-    "amphimon": { "element": "electric", "attribute": "free" },
-    "metalpiranimon": { "element": "steel", "attribute": "virus" },
-    "baku_digitama": { "element": "dark", "attribute": "free" },
-    "mokumon": { "element": "fire", "attribute": "free" },
-    "petimeramon": { "element": "fire", "attribute": "free" },
-    "bakumon": { "element": "dark", "attribute": "data" },
-    "candmon": { "element": "fire", "attribute": "data" },
-    "picodevimon": { "element": "dark", "attribute": "virus" },
-    "hanumon": { "element": "earth", "attribute": "vaccine" },
-    "pencnso_garurumon": { "element": "ice", "attribute": "vaccine" },
-    "loogarmon": { "element": "dark", "attribute": "data" },
-    "pencnso_meramon": { "element": "fire", "attribute": "data" },
-    "wizarmon": { "element": "dark", "attribute": "data" },
-    "pencnso_devimon": { "element": "dark", "attribute": "virus" },
-    "pencnso_bakemon": { "element": "dark", "attribute": "virus" },
-    "dokugumon": { "element": "dark", "attribute": "virus" },
-    "gokimon": { "element": "dark", "attribute": "virus" },
-    "mammon": { "element": "ice", "attribute": "virus" },
-    "pencnso_weregarurumon": { "element": "ice", "attribute": "vaccine" },
-    "soloogarmon": { "element": "dark", "attribute": "data" },
-    "deathmeramon": { "element": "fire", "attribute": "virus" },
-    "pencnso_pumpmon": { "element": "plant", "attribute": "virus" },
-    "vamdemon": { "element": "dark", "attribute": "virus" },
-    "phantomon": { "element": "dark", "attribute": "virus" },
-    "darumamon": { "element": "wind", "attribute": "virus" },
-    "pencnso_skullmammon": { "element": "steel", "attribute": "virus" },
-    "pencnso_metalgarurumon": { "element": "ice", "attribute": "data" },
-    "fenriloogamon": { "element": "dark", "attribute": "vaccine" },
-    "pencnso_boltmon": { "element": "steel", "attribute": "virus" },
-    "pencnso_noblepumpmon": { "element": "plant", "attribute": "virus" },
-    "venomvamdemon": { "element": "dark", "attribute": "virus" },
-    "piemon": { "element": "dark", "attribute": "virus" },
-    "deathmon": { "element": "dark", "attribute": "virus" },
-    "flora_digitama": { "element": "plant", "attribute": "free" },
-    "nyokimon": { "element": "plant", "attribute": "free" },
-    "pyocomon": { "element": "plant", "attribute": "free" },
-    "pencwg_piyomon": { "element": "wind", "attribute": "vaccine" },
-    "floramon": { "element": "plant", "attribute": "data" },
-    "mushmon": { "element": "plant", "attribute": "virus" },
-    "pteromon": { "element": "wind", "attribute": "data" },
-    "pencwg_birdramon": { "element": "fire", "attribute": "vaccine" },
-    "v-dramon": { "element": "wind", "attribute": "vaccine" },
-    "pencwg_togemon": { "element": "plant", "attribute": "data" },
-    "kiwimon": { "element": "wind", "attribute": "data" },
-    "woodmon": { "element": "plant", "attribute": "virus" },
-    "redvegimon": { "element": "plant", "attribute": "virus" },
-    "galemon": { "element": "wind", "attribute": "data" },
-    "zassoumon": { "element": "plant", "attribute": "virus" },
-    "garudamon": { "element": "fire", "attribute": "vaccine" },
-    "aerov-dramon": { "element": "wind", "attribute": "vaccine" },
-    "pencwg_lilimon": { "element": "plant", "attribute": "data" },
-    "blossomon": { "element": "plant", "attribute": "data" },
-    "jyureimon": { "element": "plant", "attribute": "data" },
-    "pencwg_gerbemon": { "element": "dark", "attribute": "virus" },
-    "grandgalemon": { "element": "wind", "attribute": "data" },
-    "tonosamagekomon": { "element": "water", "attribute": "virus" },
-    "hououmon": { "element": "fire", "attribute": "vaccine" },
-    "ulforcev-dramon": { "element": "light", "attribute": "vaccine" },
-    "pencwg_rosemon": { "element": "plant", "attribute": "data" },
-    "griffomon": { "element": "wind", "attribute": "virus" },
-    "pinochimon": { "element": "plant", "attribute": "virus" },
-    "rafflesimon": { "element": "plant", "attribute": "virus" },
-    "zephagamon": { "element": "wind", "attribute": "data" },
-    "eldoradimon": { "element": "earth", "attribute": "data" },
-    "funbee_digitama": { "element": "machine", "attribute": "free" },
-    "choromon": { "element": "machine", "attribute": "free" },
-    "caprimon": { "element": "machine", "attribute": "free" },
-    "toyagumon": { "element": "machine", "attribute": "virus" },
-    "kokuwamon": { "element": "electric", "attribute": "data" },
-    "hagurumon": { "element": "machine", "attribute": "virus" },
-    "junkmon": { "element": "steel", "attribute": "virus" },
-    "pencme_greymon": { "element": "fire", "attribute": "vaccine" },
-    "revolmon": { "element": "machine", "attribute": "data" },
-    "tankmon": { "element": "steel", "attribute": "data" },
-    "thunderballmon": { "element": "electric", "attribute": "data" },
-    "clockmon": { "element": "machine", "attribute": "data" },
-    "guardromon": { "element": "steel", "attribute": "vaccine" },
-    "mechanorimon": { "element": "machine", "attribute": "virus" },
-    "minotaurmon": { "element": "earth", "attribute": "virus" },
-    "pencme_raremon": { "element": "dark", "attribute": "virus" },
-    "pencme_metalgreymon": { "element": "machine", "attribute": "vaccine" },
-    "pencme_andromon": { "element": "machine", "attribute": "vaccine" },
-    "cyberdramon": { "element": "machine", "attribute": "virus" },
-    "knightmon": { "element": "steel", "attribute": "data" },
-    "bigmamemon": { "element": "machine", "attribute": "data" },
-    "warumonzaemon": { "element": "dark", "attribute": "virus" },
-    "rebellimon": { "element": "fire", "attribute": "virus" },
-    "locomon": { "element": "steel", "attribute": "data" },
-    "pencme_wargreymon": { "element": "fire", "attribute": "vaccine" },
-    "pencme_mugendramon": { "element": "machine", "attribute": "virus" },
-    "craniummon": { "element": "steel", "attribute": "vaccine" },
-    "princemamemon": { "element": "steel", "attribute": "data" },
-    "pencme_hiandromon": { "element": "machine", "attribute": "vaccine" },
-    "pencme_venomvamdemon": { "element": "dark", "attribute": "virus" },
-    "gundramon": { "element": "machine", "attribute": "virus" },
-    "grandlocomon": { "element": "steel", "attribute": "data" },
-    "heriss_digitama": { "element": "light", "attribute": "free" },
-    "yukimibotamon": { "element": "ice", "attribute": "free" },
-    "nyaromon": { "element": "light", "attribute": "free" },
-    "pencvb_agumon": { "element": "fire", "attribute": "vaccine" },
-    "pencvb_gabumon": { "element": "ice", "attribute": "data" },
-    "plotmon": { "element": "light", "attribute": "data" },
-    "herissmon": { "element": "earth", "attribute": "data" },
-    "pencvb_greymon": { "element": "fire", "attribute": "vaccine" },
-    "pencvb_leomon": { "element": "earth", "attribute": "vaccine" },
-    "pencvb_garurumon": { "element": "ice", "attribute": "vaccine" },
-    "pencvb_angemon": { "element": "light", "attribute": "vaccine" },
-    "pencvb_tailmon": { "element": "light", "attribute": "vaccine" },
-    "pencvb_wizarmon": { "element": "dark", "attribute": "data" },
-    "filmon": { "element": "wind", "attribute": "data" },
-    "turuiemon": { "element": "earth", "attribute": "vaccine" },
-    "pencvb_metalgreymon": { "element": "machine", "attribute": "vaccine" },
-    "pencvb_asuramon": { "element": "fire", "attribute": "data" },
-    "pencvb_weregarurumon": { "element": "ice", "attribute": "vaccine" },
-    "holyangemon": { "element": "light", "attribute": "vaccine" },
-    "pencvb_angewomon": { "element": "light", "attribute": "vaccine" },
-    "stiffilmon": { "element": "wind", "attribute": "data" },
-    "andiramon_virus": { "element": "dark", "attribute": "virus" },
-    "pencvb_wargreymon": { "element": "fire", "attribute": "vaccine" },
-    "pencvb_saberleomon": { "element": "earth", "attribute": "data" },
-    "pencvb_metalgarurumon": { "element": "ice", "attribute": "data" },
-    "seraphimon": { "element": "light", "attribute": "vaccine" },
-    "ophanimon": { "element": "light", "attribute": "vaccine" },
-    "cherubimon_virtue": { "element": "light", "attribute": "vaccine" },
-    "rasenmon": { "element": "wind", "attribute": "vaccine" },
-    "cherubimon_vice": { "element": "dark", "attribute": "virus" },
-
-    "agu2006_digitama": { "element": "fire", "attribute": "free" },
-    "gabublack_digitama": { "element": "dark", "attribute": "free" },
-    "elec_digitama": { "element": "electric", "attribute": "free" },
-    "kune_digitama": { "element": "electric", "attribute": "free" },
-    "hyoko_digitama": { "element": "wind", "attribute": "free" },
-    "angora_digitama": { "element": "wind", "attribute": "free" },
-    "cand_digitama": { "element": "fire", "attribute": "free" },
-    "beta_digitama": { "element": "water", "attribute": "free" },
-    "kame_digitama": { "element": "water", "attribute": "free" },
-    "kuda_digitama": { "element": "light", "attribute": "free" },
-    "kuda2006_digitama": { "element": "light", "attribute": "free" },
-    "espi_digitama": { "element": "machine", "attribute": "free" },
-    "guil_digitama": { "element": "fire", "attribute": "free" },
-    "blackguil_digitama": { "element": "dark", "attribute": "free" },
-    "imp_digitama": { "element": "dark", "attribute": "free" },
-    "bluco_digitama": { "element": "ice", "attribute": "free" },
-    "jyarimon": { "element": "fire", "attribute": "free" },
-    "kiimon": { "element": "dark", "attribute": "free" },
-    "cocomon": { "element": "ice", "attribute": "free" },
-    "gao_digitama": { "element": "water", "attribute": "free" },
-    "bear_digitama": { "element": "earth", "attribute": "free" },
-    "koe_digitama": { "element": "plant", "attribute": "free" },
-    "dodomon": { "element": "water", "attribute": "free" },
-    "popomon": { "element": "earth", "attribute": "free" },
-    "kera_digitama": { "element": "machine", "attribute": "free" },
-    "kuramon": { "element": "dark", "attribute": "free" },
-    "commandra_digitama": { "element": "steel", "attribute": "free" },
-    "bommon": { "element": "machine", "attribute": "free" },
-    "ghost_digitama": { "element": "dark", "attribute": "free" },
-    "algomon_babyi": { "element": "machine", "attribute": "free" },
-
-    "lala_digitama": { "element": "plant", "attribute": "free" },
-    "lioll_digitama": { "element": "fire", "attribute": "free" },
-    "lop_digitama": { "element": "ice", "attribute": "free" },
-    "luce_digitama": { "element": "light", "attribute": "free" },
-    "ludo_digitama": { "element": "steel", "attribute": "free" },
-    "meicoo_digitama": { "element": "dark", "attribute": "free" },
-    "monodra_digitama": { "element": "dark", "attribute": "free" },
-    "morpho_digitama": { "element": "wind", "attribute": "free" },
-    "mush_digitama": { "element": "plant", "attribute": "free" },
-    "pawnchessblack_digitama": { "element": "dark", "attribute": "free" },
-    "pawnchesswhite_digitama": { "element": "light", "attribute": "free" },
-    "phasco_digitama": { "element": "dark", "attribute": "free" },
-    "picodevi_digitama": { "element": "dark", "attribute": "free" },
-    "plot_digitama": { "element": "light", "attribute": "free" },
-    "pulse_digitama": { "element": "electric", "attribute": "free" },
-    "rena_digitama": { "element": "fire", "attribute": "free" },
-    "sunariza_digitama": { "element": "earth", "attribute": "free" },
-    "swim_digitama": { "element": "water", "attribute": "free" },
-    "terrier_digitama": { "element": "wind", "attribute": "free" },
-    "v_digitama": { "element": "fire", "attribute": "free" },
-    "vorvo_digitama": { "element": "fire", "attribute": "free" },
-    "worm_digitama": { "element": "plant", "attribute": "free" },
-    "zuba_digitama": { "element": "steel", "attribute": "free" },
-    "pipimon": { "element": "plant", "attribute": "free" },
-    "tsubumon": { "element": "light", "attribute": "free" },
-    "relemon": { "element": "light", "attribute": "free" },
-    "ketomon": { "element": "dark", "attribute": "free" },
-    "tomorimon": { "element": "dark", "attribute": "free" },
-    "zerimon": { "element": "plant", "attribute": "free" },
-    "chicomon": { "element": "water", "attribute": "free" },
-    "leafmon": { "element": "plant", "attribute": "free" },
-    "dokimon": { "element": "electric", "attribute": "free" },
-    "bubbmon": { "element": "water", "attribute": "free" },
-    "sunamon": { "element": "earth", "attribute": "free" },
-    "cotsucomon": { "element": "steel", "attribute": "free" }
+    "agu_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "botamon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "koromon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "agumon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "greymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "meramon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "numemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "metalgreymon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "blackkingnumemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "wargreymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "platinumnumemon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "swimmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "devimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "airdramon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "seadramon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "metalgreymon_virus": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "mamemon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "monzaemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "blitzgreymon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "banchomamemon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "dmcv1_shinmonzaemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "gabu_digitama": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "punimon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "tsunomon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "gabumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "garurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "geremon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "weregarurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "gerbemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "metalgarurumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "metaletemon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "elecmon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "kabuterimon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "angemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "yukidarumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "vegimon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "birdramon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "skullgreymon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "metalmamemon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "whamon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "dmcv2_vademon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "skullmammon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "cresgarurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "dmcv2_ebemon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "pal_digitama": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "yuramon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "tanemon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "palmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "togemon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "karatsukinumemon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "lilimon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "jyagamon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "rosemon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "shinmonzaemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "pata_digitama": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "puttimon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "tokomon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "patamon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "tsukaimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "kunemon": {
+      "element": "electric",
+      "attribute": "virus"
+    },
+    "unimon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "centalmon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "ogremon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "bakemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "shellmon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "drimogemon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "scumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "andromon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "giromon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "etemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "hiandromon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "gokumon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "bancholeomon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "kingetemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "piyo_digitama": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "piyo_yuramon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "piyo_tanemon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "piyomon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "dmcv4_palmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "hyokomon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "muchomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "leomon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "monochromon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "mojyamon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "coelamon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "kuwagamon": {
+      "element": "electric",
+      "attribute": "virus"
+    },
+    "goldnumemon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "megadramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "piccolomon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "digitamamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "greatkingscumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "darkdramon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "bloomlordmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "gankoomon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "boltmon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "gazi_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "zurumon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "pagumon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "gazimon": {
+      "element": "electric",
+      "attribute": "virus"
+    },
+    "gizamon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "psychemon": {
+      "element": "electric",
+      "attribute": "virus"
+    },
+    "darktyranomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "cyclomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "devidramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "tuskmon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "deltamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "raremon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "metaltyranomon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "extyranomon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "nanomon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "vademon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "mugendramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "gaioumon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "raidenmon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "ebemon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "tento_digitama": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "pencnsp_botamon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "pencnsp_koromon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "pencnsp_agumon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "tentomon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "angoramon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "pencnsp_greymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "pencnsp_leomon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "pencnsp_seadramon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "tailmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pencnsp_kabuterimon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "pencnsp_garurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "symbareangoramon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "platinumscumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "pencnsp_metalgreymon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "asuramon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "megaseadramon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "angewomon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "atlurkabuterimon_blue": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "pencnsp_weregarurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "lamortmon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "pumpmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "pencnsp_wargreymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "saberleomon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "metalseadramon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "holydramon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "heraklekabuterimon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "pencnsp_metalgarurumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "diarbbitmon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "noblepumpmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "goma_digitama": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "pitchmon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "pukamon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "gomamon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "ganimon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "shakomon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "jellymon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "ikkakumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "rukamon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "pencds_coelamon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "gesomon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "octmon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "pencds_seadramon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "teslajellymon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "diginorimon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "zudomon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "pencds_whamon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "pencds_megaseadramon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "marindevimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dagomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "anomalocarimon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "thetismon": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "piranimon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "vikemon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "plesiomon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "pencds_metalseadramon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "leviamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "pukumon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "aegisdramon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "amphimon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "metalpiranimon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "baku_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "mokumon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "petimeramon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "bakumon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "candmon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "picodevimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "hanumon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "pencnso_garurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "loogarmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "pencnso_meramon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "wizarmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "pencnso_devimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "pencnso_bakemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dokugumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "gokimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "mammon": {
+      "element": "ice",
+      "attribute": "virus"
+    },
+    "pencnso_weregarurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "soloogarmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "deathmeramon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "pencnso_pumpmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "vamdemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "phantomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "darumamon": {
+      "element": "wind",
+      "attribute": "virus"
+    },
+    "pencnso_skullmammon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "pencnso_metalgarurumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "fenriloogamon": {
+      "element": "dark",
+      "attribute": "vaccine"
+    },
+    "pencnso_boltmon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "pencnso_noblepumpmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "venomvamdemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "piemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "deathmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "flora_digitama": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "nyokimon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "pyocomon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "pencwg_piyomon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "floramon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "mushmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "pteromon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "pencwg_birdramon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "v-dramon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "pencwg_togemon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "kiwimon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "woodmon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "redvegimon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "galemon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "zassoumon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "garudamon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "aerov-dramon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "pencwg_lilimon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "blossomon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "jyureimon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "pencwg_gerbemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "grandgalemon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "tonosamagekomon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "hououmon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "ulforcev-dramon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pencwg_rosemon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "griffomon": {
+      "element": "wind",
+      "attribute": "virus"
+    },
+    "pinochimon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "rafflesimon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "zephagamon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "eldoradimon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "funbee_digitama": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "choromon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "caprimon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "toyagumon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "kokuwamon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "hagurumon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "junkmon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "pencme_greymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "revolmon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "tankmon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "thunderballmon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "clockmon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "guardromon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "mechanorimon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "minotaurmon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "pencme_raremon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "pencme_metalgreymon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "pencme_andromon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "cyberdramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "knightmon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "bigmamemon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "warumonzaemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "rebellimon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "locomon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "pencme_wargreymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "pencme_mugendramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "craniummon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "princemamemon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "pencme_hiandromon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "pencme_venomvamdemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "gundramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "grandlocomon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "heriss_digitama": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "yukimibotamon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "nyaromon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "pencvb_agumon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "pencvb_gabumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "plotmon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "herissmon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "pencvb_greymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "pencvb_leomon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "pencvb_garurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "pencvb_angemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pencvb_tailmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pencvb_wizarmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "filmon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "turuiemon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "pencvb_metalgreymon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "pencvb_asuramon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "pencvb_weregarurumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "holyangemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "pencvb_angewomon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "stiffilmon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "andiramon_virus": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "pencvb_wargreymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "pencvb_saberleomon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "pencvb_metalgarurumon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "seraphimon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ophanimon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "cherubimon_virtue": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "rasenmon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "cherubimon_vice": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "agu2006_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "gabublack_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "elec_digitama": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "kune_digitama": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "hyoko_digitama": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "angora_digitama": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "cand_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "beta_digitama": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "kame_digitama": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "kuda_digitama": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "kuda2006_digitama": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "espi_digitama": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "guil_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "blackguil_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "imp_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "bluco_digitama": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "jyarimon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "kiimon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "cocomon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "gao_digitama": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "bear_digitama": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "koe_digitama": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "dodomon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "popomon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "kera_digitama": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "kuramon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "commandra_digitama": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "bommon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "ghost_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "algomon_babyi": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "lala_digitama": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "lioll_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "lop_digitama": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "luce_digitama": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "ludo_digitama": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "meicoo_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "monodra_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "morpho_digitama": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "mush_digitama": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "pawnchessblack_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "pawnchesswhite_digitama": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "phasco_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "picodevi_digitama": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "plot_digitama": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "pulse_digitama": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "rena_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "sunariza_digitama": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "swim_digitama": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "terrier_digitama": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "v_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "vorvo_digitama": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "worm_digitama": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "zuba_digitama": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "pipimon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "tsubumon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "relemon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "ketomon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "tomorimon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "zerimon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "chicomon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "leafmon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "dokimon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "bubbmon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "sunamon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "cotsucomon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "algomon_babyii": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "chocomon": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "wanyamon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "gigimon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "yaamon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "tsumemon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "mochimon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "chibimon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "kakkinmon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "bibimon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "dorimon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "minomon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "moonmon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "goromon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "onibimon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "gummymon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "monimon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "pickmon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "babydmon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "puroromon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "mococomon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "xiaomon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "poromon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "pusurimon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "kyokyomon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "bombmon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "chibickmon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "petitmon": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "fufumon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "pupumon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "fukamon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "paomon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "pururumon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "curimon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "pafumon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "pyonmon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "pusumon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "puyomon": {
+      "element": "water",
+      "attribute": "free"
+    }
   },
-
   "lineDefaults": {
-    "dmc-v1": { "element": "fire", "attribute": "free" },
-    "dmc-v2": { "element": "ice", "attribute": "free" },
-    "palmon": { "element": "plant", "attribute": "free" },
-    "dmc-v3": { "element": "wind", "attribute": "free" },
-    "dmc-v4": { "element": "wind", "attribute": "free" },
-    "dmc-v5": { "element": "dark", "attribute": "free" },
-    "penc-nsp": { "element": "wind", "attribute": "free" },
-    "penc-ds": { "element": "water", "attribute": "free" },
-    "penc-nso": { "element": "dark", "attribute": "free" },
-    "penc-wg": { "element": "wind", "attribute": "free" },
-    "penc-me": { "element": "machine", "attribute": "free" },
-    "penc-vb": { "element": "light", "attribute": "free" },
-    "tamers": { "element": "fire", "attribute": "free" },
-    "wanyamon": { "element": "earth", "attribute": "free" },
-    "diablomon": { "element": "dark", "attribute": "free" },
-    "commandramon": { "element": "steel", "attribute": "free" },
-    "algomon": { "element": "machine", "attribute": "free" },
-    "adventure02": { "element": "fire", "attribute": "free" },
-    "vital": { "element": "steel", "attribute": "free" }
+    "dmc-v1": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "dmc-v2": {
+      "element": "ice",
+      "attribute": "free"
+    },
+    "palmon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "dmc-v3": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "dmc-v4": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "dmc-v5": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "penc-nsp": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "penc-ds": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "penc-nso": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "penc-wg": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "penc-me": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "penc-vb": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "tamers": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "wanyamon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "diablomon": {
+      "element": "dark",
+      "attribute": "free"
+    },
+    "commandramon": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "algomon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "adventure02": {
+      "element": "fire",
+      "attribute": "free"
+    },
+    "vital": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "xros": {
+      "element": "steel",
+      "attribute": "free"
+    },
+    "penc-sw": {
+      "element": "earth",
+      "attribute": "free"
+    }
   },
-
   "keywordRules": [
-    { "keyword": "trice", "element": "earth", "attribute": "free" },
-    { "keyword": "cherubimon", "element": "light", "attribute": "vaccine" },
-    { "keyword": "orange", "element": "fire", "attribute": "free" },
-    { "keyword": "aquila", "element": "wind", "attribute": "free" },
-    { "keyword": "yuki", "element": "ice", "attribute": "free" },
-    { "keyword": "kaguya", "element": "light", "attribute": "free" },
-    { "keyword": "raguel", "element": "dark", "attribute": "virus" },
-
-    { "keyword": "seraphi", "element": "light", "attribute": "vaccine" },
-    { "keyword": "angel", "element": "light", "attribute": "vaccine" },
-    { "keyword": "ange", "element": "light", "attribute": "vaccine" },
-    { "keyword": "holy", "element": "light", "attribute": "vaccine" },
-
-    { "keyword": "frigi", "element": "ice", "attribute": "free" },
-    { "keyword": "ice", "element": "ice", "attribute": "free" },
-
-    { "keyword": "skull", "element": "dark", "attribute": "virus" },
-    { "keyword": "vamde", "element": "dark", "attribute": "virus" },
-    { "keyword": "devi", "element": "dark", "attribute": "virus" },
-    { "keyword": "black", "element": "dark", "attribute": "virus" },
-    { "keyword": "dark", "element": "dark", "attribute": "virus" },
-    { "keyword": "numemon", "element": "dark", "attribute": "virus" },
-    { "keyword": "scumon", "element": "dark", "attribute": "virus" },
-
-    { "keyword": "metal", "element": "machine", "attribute": "free" },
-    { "keyword": "haguru", "element": "machine", "attribute": "free" },
-    { "keyword": "andro", "element": "machine", "attribute": "free" },
-    { "keyword": "guardro", "element": "machine", "attribute": "free" },
-    { "keyword": "machine", "element": "machine", "attribute": "free" },
-
-    { "keyword": "kabuterimon", "element": "electric", "attribute": "free" },
-    { "keyword": "thunder", "element": "electric", "attribute": "free" },
-    { "keyword": "raidra", "element": "electric", "attribute": "free" },
-
-    { "keyword": "garurumon", "element": "ice", "attribute": "free" },
-
-    { "keyword": "gotsu", "element": "earth", "attribute": "free" },
-    { "keyword": "golem", "element": "earth", "attribute": "free" },
-    { "keyword": "ankylo", "element": "earth", "attribute": "free" },
-
-    { "keyword": "gomamon", "element": "water", "attribute": "free" },
-    { "keyword": "seadra", "element": "water", "attribute": "free" },
-    { "keyword": "aqua", "element": "water", "attribute": "free" },
-
-    { "keyword": "piyo", "element": "wind", "attribute": "free" },
-    { "keyword": "birdra", "element": "wind", "attribute": "free" },
-
-    { "keyword": "palmon", "element": "plant", "attribute": "free" },
-    { "keyword": "woodmon", "element": "plant", "attribute": "free" },
-    { "keyword": "floramon", "element": "plant", "attribute": "free" },
-
-    { "keyword": "agu", "element": "fire", "attribute": "free" },
-    { "keyword": "mera", "element": "fire", "attribute": "free" },
-    { "keyword": "flame", "element": "fire", "attribute": "free" },
-    { "keyword": "greymon", "element": "fire", "attribute": "free" }
+    {
+      "keyword": "trice",
+      "element": "earth",
+      "attribute": "free"
+    },
+    {
+      "keyword": "cherubimon",
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    {
+      "keyword": "orange",
+      "element": "fire",
+      "attribute": "free"
+    },
+    {
+      "keyword": "aquila",
+      "element": "wind",
+      "attribute": "free"
+    },
+    {
+      "keyword": "yuki",
+      "element": "ice",
+      "attribute": "free"
+    },
+    {
+      "keyword": "kaguya",
+      "element": "light",
+      "attribute": "free"
+    },
+    {
+      "keyword": "raguel",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "seraphi",
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    {
+      "keyword": "angel",
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    {
+      "keyword": "ange",
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    {
+      "keyword": "holy",
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    {
+      "keyword": "frigi",
+      "element": "ice",
+      "attribute": "free"
+    },
+    {
+      "keyword": "ice",
+      "element": "ice",
+      "attribute": "free"
+    },
+    {
+      "keyword": "skull",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "vamde",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "devi",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "black",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "dark",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "numemon",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "scumon",
+      "element": "dark",
+      "attribute": "virus"
+    },
+    {
+      "keyword": "metal",
+      "element": "machine",
+      "attribute": "free"
+    },
+    {
+      "keyword": "haguru",
+      "element": "machine",
+      "attribute": "free"
+    },
+    {
+      "keyword": "andro",
+      "element": "machine",
+      "attribute": "free"
+    },
+    {
+      "keyword": "guardro",
+      "element": "machine",
+      "attribute": "free"
+    },
+    {
+      "keyword": "machine",
+      "element": "machine",
+      "attribute": "free"
+    },
+    {
+      "keyword": "kabuterimon",
+      "element": "electric",
+      "attribute": "free"
+    },
+    {
+      "keyword": "thunder",
+      "element": "electric",
+      "attribute": "free"
+    },
+    {
+      "keyword": "raidra",
+      "element": "electric",
+      "attribute": "free"
+    },
+    {
+      "keyword": "garurumon",
+      "element": "ice",
+      "attribute": "free"
+    },
+    {
+      "keyword": "gotsu",
+      "element": "earth",
+      "attribute": "free"
+    },
+    {
+      "keyword": "golem",
+      "element": "earth",
+      "attribute": "free"
+    },
+    {
+      "keyword": "ankylo",
+      "element": "earth",
+      "attribute": "free"
+    },
+    {
+      "keyword": "gomamon",
+      "element": "water",
+      "attribute": "free"
+    },
+    {
+      "keyword": "seadra",
+      "element": "water",
+      "attribute": "free"
+    },
+    {
+      "keyword": "aqua",
+      "element": "water",
+      "attribute": "free"
+    },
+    {
+      "keyword": "piyo",
+      "element": "wind",
+      "attribute": "free"
+    },
+    {
+      "keyword": "birdra",
+      "element": "wind",
+      "attribute": "free"
+    },
+    {
+      "keyword": "palmon",
+      "element": "plant",
+      "attribute": "free"
+    },
+    {
+      "keyword": "woodmon",
+      "element": "plant",
+      "attribute": "free"
+    },
+    {
+      "keyword": "floramon",
+      "element": "plant",
+      "attribute": "free"
+    },
+    {
+      "keyword": "agu",
+      "element": "fire",
+      "attribute": "free"
+    },
+    {
+      "keyword": "mera",
+      "element": "fire",
+      "attribute": "free"
+    },
+    {
+      "keyword": "flame",
+      "element": "fire",
+      "attribute": "free"
+    },
+    {
+      "keyword": "greymon",
+      "element": "fire",
+      "attribute": "free"
+    }
   ]
 }
