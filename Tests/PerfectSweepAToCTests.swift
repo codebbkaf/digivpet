@@ -64,7 +64,9 @@ final class PerfectSweepAToCTests: XCTestCase {
     /// below the top rung.
     private let authoredUltimates: [(ultimate: String, parents: Set<String>, line: String)] = [
         ("ophanimon_x", ["angewomon_x"], "penc-vb"),
-        ("beelzebumon", ["baalmon"], "tamers"),
+        // US-159 hung LadyDevimon under this one — the first of the nine to take a second Perfect,
+        // and a cited climb on that page. Named rather than the check being loosened to a superset.
+        ("beelzebumon", ["baalmon", "ladydevimon"], "tamers"),
         ("chaosdukemon", ["blackmegalogrowmon"], "tamers"),
         ("kazuchimon", ["boutmon"], "penc-me"),
         ("tigervespamon", ["cannonbeemon"], "palmon"),
@@ -356,14 +358,14 @@ final class PerfectSweepAToCTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 94, "four Perfects and four Ultimates, plus US-158's four")
-        XCTAssertEqual(sizes["penc-me"], 51, "five Perfects and Kazuchimon, plus US-158's Duramon")
+        XCTAssertEqual(sizes["tamers"], 99, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five")
+        XCTAssertEqual(sizes["penc-me"], 53, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two")
         XCTAssertEqual(sizes["penc-vb"], 54, "three Perfects and Ophanimon X, plus US-158's Entmon")
-        XCTAssertEqual(sizes["penc-nso"], 49, "Archnemon and BlueMeramon, plus US-158's three")
+        XCTAssertEqual(sizes["penc-nso"], 53, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four")
         XCTAssertEqual(sizes["dmc-v1"], 32, "Chimairamon and Millenniumon")
-        XCTAssertEqual(sizes["palmon"], 26, "Cannonbeemon and TigerVespamon")
+        XCTAssertEqual(sizes["palmon"], 28, "Cannonbeemon and TigerVespamon, plus US-159's two")
         XCTAssertEqual(sizes["penc-sw"], 14, "Cho-Hakkaimon, Pandamon and Shakamon, plus US-158's two")
-        XCTAssertEqual(sizes["penc-ds"], 40, "Anomalocarimon X, plus US-158's Gusokumon")
+        XCTAssertEqual(sizes["penc-ds"], 41, "Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon")
         XCTAssertEqual(sizes["penc-nsp"], 36, "AtlurKabuterimon Red, plus US-158's two")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 9)
@@ -446,9 +448,17 @@ final class PerfectSweepAToCTests: XCTestCase {
         // Ultimate one, so this story could not have reached them. **Monodra left the list in
         // US-158**, which wired DORUguremon and DORUgoramon over the leaf DORUgamon — the
         // middle-of-the-thread kind of promotion, not this story's top-of-the-thread kind.
-        for id in ["rena_digitama", "terrier_digitama", "v_digitama"] {
+        // **Rena and Terrier left in US-159** the same middle-of-the-thread way: LadyDevimon over
+        // the leaf Kyubimon, and LadyDevimon X over the junk Numemon X that Terriermon falls to.
+        // V Digitama is the last one, and no Perfect sweep can move it — `adventure02` has no
+        // Perfect rung at all.
+        for id in ["v_digitama"] {
             XCTAssertFalse(graph.reachesUltimate(from: id),
                            "\(id) reaches an Ultimate now — say which arrow did it")
+        }
+        for id in ["rena_digitama", "terrier_digitama"] {
+            XCTAssertTrue(graph.reachesUltimate(from: id),
+                          "\(id) stopped reaching an Ultimate — US-159's LadyDevimon pair carries it")
         }
     }
 
@@ -629,7 +639,7 @@ final class PerfectSweepAToCTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       90, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       81, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -650,19 +660,21 @@ final class PerfectSweepAToCTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 693,
-                       "643 before this story, 672 after it, 693 after US-158")
+        XCTAssertEqual(graph.nodes.count, 709,
+                       "643 before this story, 672 after it, 693 after US-158, 709 after US-159")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
-        XCTAssertEqual(graph.nodes(at: .perfect).count, 115,
-                       "81 before this story, 101 after it, 115 after US-158")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 88,
-                       "72 before this story, 81 after it, 88 after US-158")
+        XCTAssertEqual(graph.nodes(at: .perfect).count, 126,
+                       "81 before this story, 101 after it, 115 after US-158, 126 after US-159")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 93,
+                       "72 before this story, 81 after it, 88 after US-158, 93 after US-159")
     }
 
-    /// Every Ultimate this story opened serves exactly one Perfect, so a second parent hung on one
-    /// later fails this rather than passing quietly — the `Set(graph.parents(of:))` equality shape
-    /// US-151, US-152, US-154, US-155 and US-156 established.
+    /// Every Ultimate this story opened served exactly one Perfect when it was written, so a second
+    /// parent hung on one later fails this rather than passing quietly — the
+    /// `Set(graph.parents(of:))` equality shape US-151, US-152, US-154, US-155 and US-156
+    /// established. US-159 hung LadyDevimon under Beelzebumon and NAMED it here, which is what the
+    /// shape is for: the claim is the parent SET, not the count.
     func testTheNineUltimatesThisStoryOpenedEachServeExactlyOneOfItsPerfects() throws {
         for (ultimate, parents, line) in authoredUltimates {
             let node = try XCTUnwrap(graph.node(id: ultimate))

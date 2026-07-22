@@ -185,7 +185,15 @@ final class EggHatchingTests: XCTestCase {
                         // edit. The fifth is Monodra, whose DORUmon thread reached only as far as
                         // DORUgamon until this story wired DORUguremon and DORUgoramon over it.
                         "gao_digitama", "bear_digitama", "koe_digitama", "lioll_digitama",
-                        "monodra_digitama"],
+                        "monodra_digitama",
+                        // US-159's two, and both are middle-of-the-thread promotions on `tamers`:
+                        // Rena Digitama runs to Renamon, whose Kyubimon was a leaf until LadyDevimon
+                        // and Beelzebumon went over it, and Terrier Digitama runs to Terriermon,
+                        // whose only onward edge is the JUNK fall to Numemon X — which US-159 gave
+                        // an earned branch to LadyDevimon X and on to BeelStarmon X. So the Terrier
+                        // egg reaches a Mega only by being neglected first, which is a strange
+                        // thread and a legal one.
+                        "rena_digitama", "terrier_digitama"],
                        "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate — and US-157 promoted five `tamers` eggs by giving that line an Ultimate rung at last")
 
         // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
@@ -217,12 +225,19 @@ final class EggHatchingTests: XCTestCase {
         // promoted all four at once. Monodra is the fifth and is the ordinary middle-of-the-thread
         // kind: DORUgamon was a leaf until DORUguremon and DORUgoramon went over it. Rena, Terrier
         // and V Digitama stay — their threads still stop below the Perfect rung.
+        //
+        // US-159 takes TWO more, Rena and Terrier, and both are `tamers` again: LadyDevimon over
+        // the leaf Kyubimon carries the first, and LadyDevimon X over the junk Numemon X carries
+        // the second. **AND THAT IS THE LAST ONE ANY PERFECT SWEEP CAN MOVE**: all eleven eggs left
+        // here sit on `commandramon`, `algomon`, `diablomon`, `vital` or `adventure02`, and not one
+        // of those five lines has a Perfect rung at all — so promoting any of them means opening a
+        // whole rung, not adding a node to one.
         XCTAssertEqual(unraisable,
                        ["commandra_digitama", "ghost_digitama",
                         "kera_digitama",
                         "ludo_digitama", "meicoo_digitama",
-                        "morpho_digitama", "pulse_digitama", "rena_digitama",
-                        "sunariza_digitama", "terrier_digitama", "v_digitama", "worm_digitama",
+                        "morpho_digitama", "pulse_digitama",
+                        "sunariza_digitama", "v_digitama", "worm_digitama",
                         "zuba_digitama"])
 
         var seen: Set<String> = []

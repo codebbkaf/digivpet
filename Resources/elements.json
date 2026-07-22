@@ -2772,6 +2772,70 @@
     "seitengokuwmon": {
       "element": "light",
       "attribute": "vaccine"
+    },
+    "hangyomon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "hisyaryumon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "insekimon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "jazarichmon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "karatenmon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "ladydevimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "ladydevimon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "lavogaritamon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "lilamon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "lilimon_x": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "lucemon_falldown": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "ouryumon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "metallicdramon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "tengumon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "beelstarmon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "volcanicdramon": {
+      "element": "fire",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

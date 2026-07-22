@@ -322,11 +322,11 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 94,
+        XCTAssertEqual(sizes["tamers"], 99,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
-                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four")
+                           + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five")
         XCTAssertEqual(sizes["dmc-v3"], 48)
-        XCTAssertEqual(sizes["palmon"], 26)
+        XCTAssertEqual(sizes["palmon"], 28, "US-159's Lilamon and Lilimon X")
     }
 
     /// **The variant rule, and the honest version of it.** The criteria say a variant hangs off its
@@ -593,7 +593,17 @@ final class ChildSweepAToFTests: XCTestCase {
         // Champions, which is what let that line's first Ultimates be authored over them.
         let clearedByUS158 = ["cockatrimon", "dorugamon", "firamon", "gaogamon", "ginkakumon",
                               "gryzmon", "starmon"]
-        let cleared = clearedByUS157 + clearedByUS158
+
+        // **US-159 IS THE BIGGEST FALL YET AND IT ALSO ADDS NOTHING BACK**: NINE of its eleven
+        // Perfects hang off a leaf Champion, and every junk floor those nine needed already existed
+        // (Locomon, Darumamon twice, CatchMamemon three times, Karakurumon, Jyagamon twice), so
+        // `EvolutionCriteriaTests.junkIds` did not move for the second story running. Net 90 -> 81.
+        // Two of the nine are JUNK Champions with an earned branch — Numemon X and, one rung down
+        // the same idea, the Scumon US-133 recorded — which is the arrangement that let the Terrier
+        // Digitama reach a Mega at last.
+        let clearedByUS159 = ["icemon", "igamon", "jazardmon", "kyubimon", "lavorvomon",
+                              "numemon_x", "omekamon", "sunflowmon", "togemon_x"]
+        let cleared = clearedByUS157 + clearedByUS158 + clearedByUS159
 
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
@@ -601,9 +611,9 @@ final class ChildSweepAToFTests: XCTestCase {
                            + perfectsFromUS155 + perfectsFromUS156 + perfectsFromUS157)
                            .filter { !cleared.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 90)
+        XCTAssertEqual(deadEnds.count, 81)
 
-        // And the sixteen really did leave because they lead somewhere now, not because they
+        // And the twenty-five really did leave because they lead somewhere now, not because they
         // vanished.
         for id in cleared {
             XCTAssertFalse(try XCTUnwrap(graph.node(id: id)).evolutions.isEmpty,
@@ -631,11 +641,11 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 693,
+        XCTAssertEqual(graph.nodes.count, 709,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
-                           + "693 after US-158")
+                           + "693 after US-158, 709 after US-159")
     }
 
     // MARK: - The whole file still validates

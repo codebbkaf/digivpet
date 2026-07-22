@@ -4158,6 +4158,102 @@
       "tint": "orange",
       "signatureName": "Ruyi Jingu Bang",
       "signatureSymbol": "sparkles"
+    },
+    "hangyomon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "teal",
+      "signatureName": "Strike Fishing",
+      "signatureSymbol": "triangle.fill"
+    },
+    "hisyaryumon": {
+      "projectileSymbol": "scissors",
+      "tint": "blue",
+      "signatureName": "Ryuuga Zanshouken",
+      "signatureSymbol": "scissors"
+    },
+    "insekimon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "brown",
+      "signatureName": "Meteor Shard",
+      "signatureSymbol": "circle.fill"
+    },
+    "jazarichmon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "red",
+      "signatureName": "Gilded Fang",
+      "signatureSymbol": "triangle.fill"
+    },
+    "karatenmon": {
+      "projectileSymbol": "wind",
+      "tint": "purple",
+      "signatureName": "Crow Feather Blade",
+      "signatureSymbol": "wind"
+    },
+    "ladydevimon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "indigo",
+      "signatureName": "Darkness Wave",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "ladydevimon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "purple",
+      "signatureName": "Darkness Wave Cross",
+      "signatureSymbol": "triangle.fill"
+    },
+    "lavogaritamon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "orange",
+      "signatureName": "Magma Bomb",
+      "signatureSymbol": "flame.fill"
+    },
+    "lilamon": {
+      "projectileSymbol": "wind",
+      "tint": "pink",
+      "signatureName": "Lila Shower",
+      "signatureSymbol": "wind"
+    },
+    "lilimon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "green",
+      "signatureName": "Flower Cannon Cross",
+      "signatureSymbol": "triangle.fill"
+    },
+    "lucemon_falldown": {
+      "projectileSymbol": "star.fill",
+      "tint": "purple",
+      "signatureName": "Purgatorial Flame",
+      "signatureSymbol": "flame.fill"
+    },
+    "ouryumon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "yellow",
+      "signatureName": "Ouryuuken",
+      "signatureSymbol": "hammer.fill"
+    },
+    "metallicdramon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "indigo",
+      "signatureName": "Metallic Roar",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "tengumon": {
+      "projectileSymbol": "wind",
+      "tint": "indigo",
+      "signatureName": "Tengu Gale",
+      "signatureSymbol": "wind"
+    },
+    "beelstarmon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "gray",
+      "signatureName": "Fatal Bullet Cross",
+      "signatureSymbol": "star.fill"
+    },
+    "volcanicdramon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "red",
+      "signatureName": "Volcanic Napalm",
+      "signatureSymbol": "flame.fill"
     }
   },
   "lineDefaults": {

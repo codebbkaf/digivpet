@@ -460,7 +460,7 @@ final class AdultSweepUToZTests: XCTestCase {
         XCTAssertEqual(sizes["penc-wg"], 39, "V-dramon Black and XV-mon Black, plus US-158's two")
         XCTAssertEqual(sizes["penc-vb"], 54, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon")
         XCTAssertEqual(sizes["dmc-v4"], 29, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 94, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four")
+        XCTAssertEqual(sizes["tamers"], 99, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -511,7 +511,16 @@ final class AdultSweepUToZTests: XCTestCase {
         // story is told to revisit rather than left to rot.
         XCTAssertNil(graph.node(id: "regulusmon"), "WezenGammamon had a cheaper arrow after all")
         XCTAssertNil(graph.node(id: "sagomon"), "Xiquemon had a cheaper arrow after all")
-        XCTAssertNil(graph.node(id: "ladydevimon"), "Youkomon had a cheaper arrow after all")
+
+        // LadyDevimon is the one of the three that a later story DID author, and the claim flips
+        // rather than dies: US-159 wired it on this same `tamers` line — but off Kyubimon, which
+        // was a LEAF, not off the Youkomon this story had to hand BlackRapidmon. So Youkomon's
+        // arrow really was the expensive one, and the cheap one was a rung down all along.
+        XCTAssertEqual(graph.parents(of: "ladydevimon").map(\.id), ["kyubimon"],
+                       "LadyDevimon moved — say which Champion has it now")
+        XCTAssertFalse(try XCTUnwrap(graph.node(id: "youkomon")).evolutions.map(\.to)
+            .contains("ladydevimon"),
+                       "Youkomon took LadyDevimon after all — then this claim wants rewriting")
     }
 
     // MARK: - AC: the sprites are real, and nothing on an edge is dexOnly
@@ -610,7 +619,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 693, "635 before this story, 643 after it, 693 after US-158")
+        XCTAssertEqual(graph.nodes.count, 709, "635 before this story, 643 after it, 693 after US-158, 709 after US-159")
     }
 
     func testTheGraphValidatesWithNoFindings() {

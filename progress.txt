@@ -21,6 +21,22 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E: A BOLDED PARENT CAN BE UNDRAWABLE FOR A REASON OF SHAPE, NOT OF ART — CHECK ITS STAGE.**
+  Lucemon Falldown's sole bolded `Evolves From` is Lucemon, a CHILD, and
+  `GraphValidationError.invalidStageTransition` refuses a Child -> Perfect edge. Every earlier
+  "cannot" in this series was dexOnly art or a missing sheet. Price the STAGE of a bolded parent
+  before pricing anything else, and when the canonical arrow is illegal say so in the node comment —
+  US-159's tests grep for it.
+- **PHASE E: WHEN A RANGE HOLDS A BASE FORM AND ITS X, SOLVE THE X FIRST — ITS ONE POSSIBLE PARENT
+  DECIDES BOTH LINES.** LadyDevimon has forty cited parents across nine lines; LadyDevimon X has
+  exactly one usable one anywhere (Numemon X, `tamers`), because its bolded parent is the base form
+  itself — a Perfect, never an in-edge. Choosing the base form's line off its OWN citations would
+  have split the pair and broken the variant rule.
+- **PHASE E: A JUNK CHAMPION IS A LEGAL PARENT FOR AN EARNED BRANCH, AND SOMETIMES THE ONLY ONE.**
+  Numemon X, Raremon and Scumon all carry one. Prove it in BOTH directions through the engine — the
+  earned branch for a raised Digimon, the junk fall for a neglected one — rather than reasoning about
+  it. Watch the knock-on: a Child whose ONLY onward edge is the junk fall (Terriermon) then reaches a
+  Mega only by being neglected, which moves `EggHatchingTests`.
 - **PHASE E, PERFECT RUNG AND ABOVE: the cheapest in-edge is one that ALSO clears a dead end, and
   every leaf you branch costs a junk-floor edge in the same breath.** A Champion sweep only ever
   added leaves; a Perfect sweep removes them, because a Perfect needs a Champion beneath it and after
@@ -4254,4 +4270,117 @@ The fourteen, each `Champion -> Perfect -> Ultimate`:
   `vital`'s. Sagomon, Sanzomon and Shawujinmon are the three Saiyu Warriors Perfects still owed.
   The 90 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge; the seven
   Ultimates this story opened are NOT on it, since the ledger stops below the top rung.
+---
+
+## 2026-07-23 - US-159: Orphan sweep: Perfect H-L
+
+Wired the ELEVEN playable Perfect whose display name begins H-L that were still orphans, for eleven
+new Perfect nodes plus FIVE new Ultimates. Third story at the Perfect rung.
+
+**Orphan count, Appendix B over a regenerated `roster.generated.json`: 235 BEFORE -> 219 AFTER.**
+Perfect bucket 69 -> 58 (the H-L band 11 -> 0), Ultimate bucket 150 -> 145. Graph 693 -> 709.
+Files changed: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`scripts/us159_author.py` (new, the record of what was authored), `Tests/PerfectSweepHToLTests.swift`
+(new, 27 tests), and eighteen existing test files. Full suite 2264 green (2237 before), build green,
+validator zero findings.
+
+The eleven, each `Champion -> Perfect -> Ultimate`:
+  Hangyomon          ebidramon(penc-ds)        -> vikemon
+  Hisyaryumon        omekamon(penc-me)         -> ouryumon         NEW
+  Insekimon          icemon(penc-nso)          -> pencnso_boltmon
+  Jazarichmon        jazardmon(tamers)         -> metallicdramon   NEW
+  Karatenmon         igamon(wanyamon)          -> tengumon         NEW
+  LadyDevimon        kyubimon(tamers)          -> beelzebumon
+  LadyDevimon X      numemon_x(tamers)         -> beelstarmon_x    NEW
+  Lavogaritamon      lavorvomon(penc-nso)      -> volcanicdramon   NEW
+  Lilamon            sunflowmon(palmon)        -> rosemon
+  Lilimon X          togemon_x(palmon)         -> rosemon
+  Lucemon Falldown   pencnso_devimon(penc-nso) -> venomvamdemon
+
+**Learnings for future iterations:**
+
+- **NINE OF ELEVEN IN-EDGES CAME OFF A LEAF CHAMPION — THE LARGEST FALL THE DEAD-END LEDGER HAS
+  TAKEN (90 -> 81) — AND EVERY JUNK FLOOR ALREADY EXISTED, SO `junkIds` DID NOT MOVE FOR THE SECOND
+  STORY RUNNING.** US-157 cleared nine and had to invent Pandamon; US-158 cleared seven and invented
+  nothing; this cleared nine and invented nothing. **Price the in-edge off `ChildSweepAToFTests`'
+  ledger FIRST**: at this rung the cheap parent is nearly always a leaf, and a leaf costs only an
+  `isDefault` edge onto a junk Perfect its line already has. Expect the M-Z sweeps to keep the shape.
+
+- **A JUNK CHAMPION IS A LEGAL PARENT, AND SOMETIMES THE ONLY ONE — AND THAT IS WHAT PROMOTED THE
+  TERRIER EGG.** Numemon X is `tamers`' junk Champion (US-148) and is the ONLY cited parent in this
+  graph for LadyDevimon X: the bolded one is LadyDevimon itself (a Perfect, so never an in-edge) and
+  Velgrmon is Armor-Hybrid. So the earned branch hangs off the junk fall — the Scumon arrangement
+  US-133 recorded, now the third of its kind after Raremon and Scumon. The consequence is the
+  strangest thread in the file: **Terriermon's ONLY onward edge is the junk fall, so Terrier Digitama
+  reaches a Mega only by being neglected first**, which is what took it and Rena Digitama off
+  `EggHatchingTests`' unraisable list. Prove a junk parent in BOTH directions through the engine —
+  earned branch for a raised Digimon, junk fall for a neglected one — rather than reasoning about it.
+
+- **THAT WAS THE LAST EGG PROMOTION ANY PERFECT SWEEP CAN MAKE.** After US-159 no egg on a line that
+  HAS a Perfect rung is unraisable: the eleven still on `EggHatchingTests`' list sit on
+  `commandramon`, `algomon`, `diablomon`, `vital` and `adventure02`, and not one of those five lines
+  has a Perfect rung at all. Pinned as a disjointness claim rather than a name list in
+  `PerfectSweepHToLTests`, so it fails the day someone opens one of those rungs and forgets the eggs.
+
+- **A VARIANT'S ONE POSSIBLE PARENT CAN DECIDE WHERE ITS BASE FORM GOES — READ THE PAIR TOGETHER
+  BEFORE CHOOSING EITHER LINE.** LadyDevimon has forty cited parents across nine lines and Piemon on
+  `penc-nso` was the obvious reading; LadyDevimon X has exactly one usable parent anywhere,
+  Numemon X on `tamers`. Choosing LadyDevimon's line off its OWN citations would have split the pair
+  across two lines and broken the variant rule. Same shape as US-158's DarkKnightmon/DarkKnightmon X
+  but read from the constrained end: **when a range holds a base form and its X, solve the X first.**
+
+- **A BOLDED PARENT CAN BE UNDRAWABLE FOR A REASON OF SHAPE RATHER THAN OF ART, AND THAT IS A NEW
+  KIND OF "cannot".** Lucemon Falldown's sole bolded `Evolves From` is Lucemon — which is a CHILD on
+  `dmc-v3`, and `GraphValidationError.invalidStageTransition` refuses a Child -> Perfect edge. Every
+  earlier "cannot" in this series was dexOnly art or a missing sheet; check the STAGE of a bolded
+  parent before pricing it, and when the canonical arrow is illegal say so in the comment (a test
+  greps for it) instead of quietly substituting a Champion.
+
+- **TWO REHOME PINS LEFT, BOTH BECAUSE THE CITED PARENT SITS ON A LINE WITH NO PERFECT RUNG.**
+  Hisyaryumon's bolded parents (Ginryumon, Ryudamon) are `commandramon`, so it took the cited
+  Omekamon on `penc-me` and is pinned as `commandramon`'s rehome candidate; LadyDevimon X's other
+  drawable parent, Mantaraymon X, is `vital`, so it joins Boutmon as that line's. Both pins are node
+  comments AND tests. That makes the standing list: Kinkakumon and Xiquemon for `penc-sw`,
+  Cargodramon and Boutmon and LadyDevimon X for `vital`/`commandramon`, Hisyaryumon for
+  `commandramon`. Opening one of the six Perfect-less rungs should sweep that list first.
+
+- **`EBIDRAMON IS NOW FULL` — the handover US-158 wrote was spent by the very next story.** The
+  bolded Hangyomon arrow took its last free energy (spirit); vitality/stamina/strength went to
+  Anomalocarimon, Anomalocarimon X and Gusokumon. Four earned branches plus the junk fall is five
+  edges, which is `EvolutionCriteriaTests`' ceiling exactly. `PerfectSweepDToGTests`' claim was
+  FLIPPED to `Set(EnergyType.allCases)` rather than deleted. A `penc-ds` Perfect after this needs a
+  different Champion, not a fifth edge.
+
+- **SCRIPT THE MECHANICAL KNOCK-ONS, BUT NOT WITH "APPEND TO THE LAST STRING LITERAL".** The
+  node-count and per-line-size edits span twenty files, so they were done with a small Python pass;
+  it appended its note to the last string in the XCTAssertEqual call, which for a message-less
+  `XCTAssertEqual(sizes["palmon"], 26)` is the DICTIONARY KEY — three assertions silently became
+  `sizes["palmon, plus US-159's two"]` and failed with `nil is not equal to`. Cheap to spot, cheaper
+  to avoid: only append when the call already has a message argument.
+
+- **The knock-on list for this rung, all nineteen files:** node count 693 -> 709 in
+  `ElementCatalogTests`, `EvolutionGraphValidatorTests`, all six `AdultSweep*Tests`, all three
+  `ChildSweep*Tests` and both `PerfectSweep*Tests`; the per-line dict in `EvolutionGraphTests`
+  (`palmon` 26->28, `penc-ds` 40->41, `penc-me` 51->53, `penc-nso` 49->53, `tamers` 94->99,
+  `wanyamon` 24->26) and the same lines' `sizes[...]` rows in every `*Sweep*Tests` and
+  `DigitamaSweepTests`; `inLine.count` AND `sweepEggs` in `PendulumDeepSaversTreeTests`,
+  `PendulumMetalEmpireTreeTests` and `PendulumNightmareSoldiersTreeTests`; the dead-end ledger in
+  `ChildSweepAToFTests` (90 -> 81, nine cleared) and its twin in both `PerfectSweep*Tests`; the leaf
+  lists in `AdultSweepHToLTests` (five left), `AdultSweepMToRTests` (two) and `AdultSweepSToTTests`
+  (two); `AdultSweepMToRTests`' still-unwired list (Hisyaryumon left it, re-pinned with the parent it
+  took); `AdultSweepUToZTests`' "LadyDevimon is still unwired" claim, FLIPPED to name Kyubimon;
+  `PerfectSweepAToCTests`' `beelzebumon` parent SET (Baalmon + LadyDevimon) and its `rena`/`terrier`
+  egg pins; `PerfectSweepDToGTests`' Ebidramon energies, its `wanyamon` Ultimate set (relaxed to a
+  superset for Tengumon) and its egg pins; BOTH lists in `EggHatchingTests`. `EvolutionCriteriaTests`
+  did NOT move at all — no new junk floor and no new stranded node, which is the first sweep at this
+  rung where that file was untouched. `MinigameAssignmentTests`, `DexModel.lineTitles`, `RosterTests`
+  and both `lineDefaults` did not move either: no new line.
+
+- REMAINS: US-160 onward (46/56 passing). Nine Perfect and Ultimate sweeps and the Armor-Hybrid one
+  hold the remaining 219 orphans: 58 Perfect, 145 Ultimate, 16 Armor-Hybrid. Six lines still have no
+  Perfect rung — `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`. Sagomon,
+  Sanzomon and Shawujinmon are still the three Saiyu Warriors Perfects owed. Ogudomon is pinned in
+  Lucemon Falldown's comment as belonging over whichever Demon Lord line a later sweep opens. The 81
+  leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge; the five Ultimates
+  this story opened are NOT on it, since the ledger stops below the top rung.
 ---

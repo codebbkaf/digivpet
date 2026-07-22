@@ -953,8 +953,8 @@
         "Typecheck passes"
       ],
       "priority": 46,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the ELEVEN playable Perfect whose display name begins H-L, for 11 new Perfect nodes plus 5 new Ultimates (16 nodes; graph 693 -> 709). Orphans, Appendix B over a regenerated roster.generated.json: 235 BEFORE -> 219 AFTER — Perfect bucket 69 -> 58 (the H-L band 11 -> 0), Ultimate bucket 150 -> 145. NINE of the eleven hang off a leaf Champion, the biggest fall the dead-end ledger has taken (90 -> 81), and every junk floor those nine needed already existed so junkIds did not move. New Tests/PerfectSweepHToLTests.swift (27 tests); full suite 2264 green, build green, validator zero findings."
     },
     {
       "id": "US-160",
