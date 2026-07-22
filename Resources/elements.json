@@ -213,7 +213,38 @@
     "pencnso_noblepumpmon": { "element": "plant", "attribute": "virus" },
     "venomvamdemon": { "element": "dark", "attribute": "virus" },
     "piemon": { "element": "dark", "attribute": "virus" },
-    "deathmon": { "element": "dark", "attribute": "virus" }
+    "deathmon": { "element": "dark", "attribute": "virus" },
+    "flora_digitama": { "element": "plant", "attribute": "free" },
+    "nyokimon": { "element": "plant", "attribute": "free" },
+    "pyocomon": { "element": "plant", "attribute": "free" },
+    "pencwg_piyomon": { "element": "wind", "attribute": "vaccine" },
+    "floramon": { "element": "plant", "attribute": "data" },
+    "mushmon": { "element": "plant", "attribute": "virus" },
+    "pteromon": { "element": "wind", "attribute": "data" },
+    "pencwg_birdramon": { "element": "fire", "attribute": "vaccine" },
+    "v-dramon": { "element": "wind", "attribute": "vaccine" },
+    "pencwg_togemon": { "element": "plant", "attribute": "data" },
+    "kiwimon": { "element": "wind", "attribute": "data" },
+    "woodmon": { "element": "plant", "attribute": "virus" },
+    "redvegimon": { "element": "plant", "attribute": "virus" },
+    "galemon": { "element": "wind", "attribute": "data" },
+    "zassoumon": { "element": "plant", "attribute": "virus" },
+    "garudamon": { "element": "fire", "attribute": "vaccine" },
+    "aerov-dramon": { "element": "wind", "attribute": "vaccine" },
+    "pencwg_lilimon": { "element": "plant", "attribute": "data" },
+    "blossomon": { "element": "plant", "attribute": "data" },
+    "jyureimon": { "element": "plant", "attribute": "data" },
+    "pencwg_gerbemon": { "element": "dark", "attribute": "virus" },
+    "grandgalemon": { "element": "wind", "attribute": "data" },
+    "tonosamagekomon": { "element": "water", "attribute": "virus" },
+    "hououmon": { "element": "fire", "attribute": "vaccine" },
+    "ulforcev-dramon": { "element": "light", "attribute": "vaccine" },
+    "pencwg_rosemon": { "element": "plant", "attribute": "data" },
+    "griffomon": { "element": "wind", "attribute": "virus" },
+    "pinochimon": { "element": "plant", "attribute": "virus" },
+    "rafflesimon": { "element": "plant", "attribute": "virus" },
+    "zephagamon": { "element": "wind", "attribute": "data" },
+    "eldoradimon": { "element": "earth", "attribute": "data" }
   },
 
   "lineDefaults": {
@@ -225,7 +256,8 @@
     "dmc-v5": { "element": "dark", "attribute": "free" },
     "penc-nsp": { "element": "wind", "attribute": "free" },
     "penc-ds": { "element": "water", "attribute": "free" },
-    "penc-nso": { "element": "dark", "attribute": "free" }
+    "penc-nso": { "element": "dark", "attribute": "free" },
+    "penc-wg": { "element": "wind", "attribute": "free" }
   },
 
   "keywordRules": [

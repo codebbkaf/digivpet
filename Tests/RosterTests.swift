@@ -117,6 +117,11 @@ final class RosterTests: XCTestCase {
         // nodes on one roster entry. `pencnso_pumpmon` and `pencnso_noblepumpmon` are the second
         // pair whose plain id belongs to another Pendulum tree: US-138 chose Pumpmon as Nature
         // Spirits' invented JUNK Perfect and the V3 document draws it as an earned branch.
+        //
+        // The six `pencwg_` ids are US-141's Wind Guardians tree. Three of them are the first
+        // three-rung THREAD to be scoped whole: Togemon, Lilimon and Rosemon have belonged to the
+        // `palmon` line since US-008 and the V4 Pendulum draws all three over Floramon.
+        // `pencwg_gerbemon` is the second Pumpmon case — junk in `dmc-v2`, earned here.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
                         "extyranomon", "pencds_coelamon", "pencds_megaseadramon",
@@ -129,6 +134,8 @@ final class RosterTests: XCTestCase {
                         "pencnsp_greymon", "pencnsp_kabuterimon", "pencnsp_koromon",
                         "pencnsp_leomon", "pencnsp_metalgarurumon", "pencnsp_metalgreymon",
                         "pencnsp_seadramon", "pencnsp_wargreymon", "pencnsp_weregarurumon",
+                        "pencwg_birdramon", "pencwg_gerbemon", "pencwg_lilimon",
+                        "pencwg_piyomon", "pencwg_rosemon", "pencwg_togemon",
                         "piyo_tanemon", "piyo_yuramon"])
 
         // The art tree really does hold BOTH `Hi-Andromon.png` and `HiAndromon.png`, so the

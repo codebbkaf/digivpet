@@ -79,7 +79,7 @@ final class ElementCatalogTests: XCTestCase {
     /// AC2. Counted off the graph rather than a literal, so adding a node to `evolutions.json`
     /// without typing it fails HERE instead of shipping a playable Digimon with no matchup.
     func testEveryGraphNodeHasAnExplicitTypesEntry() {
-        XCTAssertEqual(graph.nodes.count, 207)
+        XCTAssertEqual(graph.nodes.count, 238)
         for node in graph.nodes {
             XCTAssertNotNil(catalog.types[node.id],
                             "\(node.id) (\(node.displayName)) has no explicit elements.json entry")

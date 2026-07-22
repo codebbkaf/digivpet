@@ -6025,6 +6025,824 @@
     "line": "penc-nso",
     "spriteFile": "Deathmon",
     "comment": "The junk Ultimate - the top of this tree's neglect path. Every line carries one so that neglect changes WHICH Digimon you get, never whether you get one (US-061)."
-  }
+  },
+    {
+      "id": "flora_digitama",
+      "displayName": "Flora Digitama",
+      "stage": "Digitama",
+      "line": "penc-wg",
+      "spriteFile": "Flora_Digitama",
+      "comment": "The Pendulum Color V4 Wind Guardians tree's egg. The source document starts at \"Fresh: Nyokimon\" and names no Digitama at all, so the choice is this app's, and it has to be one of the 57 Digitama ids the ROSTER holds: maps.json grants a Digitama by roster id (US-126), and an id the roster does not have could never be dropped. The obvious pick, Piyo Digitama, was spent by US-136 on dmc-v4 - the Digital Monster Ver.4 tree is Piyomon's too - so this line takes Floramon's. Two of this tree's other three Rookies have an egg on disk (flora_digitama and mush_digitama; Pteromon has none), and 14_farmland drops both of them beside piyo_digitama itself, so either would have worked and maps.json needed no change either way - Floramon's is chosen because Floramon is the first of the two the document lists. Same reasoning as US-138's tento_digitama, US-139's goma_digitama and US-140's baku_digitama.",
+      "evolutions": [
+        {
+          "to": "nyokimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "nyokimon",
+      "displayName": "Nyokimon",
+      "stage": "Baby I",
+      "line": "penc-wg",
+      "spriteFile": "Nyokimon",
+      "comment": "The document's \"Fresh: Nyokimon\", wired under its own spelling. Nyokimon is a Baby I sheet in this pack even though the roster also holds an idle-only copy of it, so the playable one is the one wired here.",
+      "evolutions": [
+        {
+          "to": "pyocomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pyocomon",
+      "displayName": "Pyocomon",
+      "stage": "Baby II",
+      "line": "penc-wg",
+      "spriteFile": "Pyocomon",
+      "comment": "The document's \"In-Training: Yokomon (Pyocomon)\" - it supplies both names itself, and Pyocomon is the one the art uses (`find -iname '*yokomon*'` finds only Child/Hyokomon.png, a different Digimon entirely). It forks four ways, one per Rookie the section draws, and every one of the four has a sheet - the first Pendulum tree since US-139 whose Rookie rung is complete. The Pteromon edge is the one that is CONDITIONED, because the document marks it \"Rookie (Unlockable Slot 7)\": the same shape US-138 gave Angoramon and US-139 gave Jellymon.",
+      "evolutions": [
+        {
+          "to": "pencwg_piyomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "floramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "mushmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "pteromon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "Climb until the seventh slot opens"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Train it before it can fly"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pencwg_piyomon",
+      "displayName": "Piyomon",
+      "stage": "Child",
+      "line": "penc-wg",
+      "spriteFile": "Piyomon",
+      "comment": "The document's \"Rookie: Biyomon (Piyomon)\" - it supplies both names, and Piyomon is the spelling the art uses. Line-scoped because US-136 gave the plain `piyomon` to dmc-v4, whose tree is also Piyomon's: a node's line is single-valued, so a Digimon in two trees is two nodes on one roster entry.",
+      "evolutions": [
+        {
+          "to": "pencwg_birdramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Climb until it learns to leave the ground"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Drill the wingbeats"
+            }
+          ]
+        },
+        {
+          "to": "v-dramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Test its horn in real fights"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240,
+              "hint": "Work up a sweat beside it"
+            }
+          ]
+        },
+        {
+          "to": "zassoumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "floramon",
+      "displayName": "Floramon",
+      "stage": "Child",
+      "line": "penc-wg",
+      "spriteFile": "Floramon",
+      "comment": "The document's \"Rookie: Floramon\", wired under its own spelling. Its egg is this line's root - see flora_digitama.",
+      "evolutions": [
+        {
+          "to": "pencwg_togemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Stand up as often as a flower turns"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Do not let it bloat before it blooms"
+            }
+          ]
+        },
+        {
+          "to": "kiwimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Walk it through the tall grass"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Let it roost through the night"
+            }
+          ]
+        },
+        {
+          "to": "zassoumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "mushmon",
+      "displayName": "Mushmon",
+      "stage": "Child",
+      "line": "penc-wg",
+      "spriteFile": "Mushmon",
+      "comment": "The document's \"Rookie: Mushroomon\". `find -iname '*mushroomon*'` returns nothing at all; `Child/Mushmon.png` is a real 48x64 sheet of the same Digimon under its Japanese name. The US-140 lesson applied before the name was called absent.",
+      "evolutions": [
+        {
+          "to": "woodmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it stand still and grow rings"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Never wake it in the dark"
+            }
+          ]
+        },
+        {
+          "to": "redvegimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Train it until it is spoiling for a fight"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Pick fight after fight"
+            }
+          ]
+        },
+        {
+          "to": "zassoumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pteromon",
+      "displayName": "Pteromon",
+      "stage": "Child",
+      "line": "penc-wg",
+      "spriteFile": "Pteromon",
+      "comment": "The document's \"Rookie (Unlockable Slot 7): Pteromon\", wired under its own spelling. The first unlockable-slot Rookie in the Pendulum sections that this pack can actually draw - US-140's Loogamon had no sheet - so the conditioned In-Training edge is back, on pyocomon -> pteromon. Its thread is the only one of the four the document draws whole and unrespelled: Galemon, GrandGalemon and Zephagamon are all on disk under those exact names.",
+      "evolutions": [
+        {
+          "to": "galemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Cover real ground under it"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80,
+              "hint": "Climb high enough to catch the wind"
+            }
+          ]
+        },
+        {
+          "to": "zassoumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencwg_birdramon",
+      "displayName": "Birdramon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Birdramon",
+      "comment": "The document's \"Champion: Birdramon\". Line-scoped because US-134 gave the plain `birdramon` to dmc-v2.",
+      "evolutions": [
+        {
+          "to": "garudamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Burn energy until the fire takes shape"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Drill it into a war bird"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "v-dramon",
+      "displayName": "V-dramon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "V-dramon",
+      "comment": "The document's \"Champion: Veedramon\". `find -iname '*veedramon*'` returns nothing; the art is filed under the hyphenated Japanese spelling `Adult/V-dramon.png`, and its whole thread with it (AeroV-dramon, UlforceV-dramon). Three of this section's names would have been reported absent by a search on the document's spelling alone.",
+      "evolutions": [
+        {
+          "to": "aerov-dramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Win it a reputation"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Push the pace beside it"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencwg_togemon",
+      "displayName": "Togemon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Togemon",
+      "comment": "The document's \"Champion: Togemon\". Line-scoped because the plain `togemon` has belonged to the `palmon` line since US-008 - and so have Lilimon and Rosemon above it, which makes this the first thread in the file that is line-scoped all three rungs deep.",
+      "evolutions": [
+        {
+          "to": "pencwg_lilimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 100,
+              "hint": "Stand often enough to open a blossom"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Keep it slender"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kiwimon",
+      "displayName": "Kiwimon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Kiwimon",
+      "comment": "The document's \"Champion: Kiwimon\", wired under its own spelling. Its Ultimate is NOT the document's: see blossomon.",
+      "evolutions": [
+        {
+          "to": "blossomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 100000,
+              "hint": "March it across the whole field"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2000,
+              "hint": "Let it rest between the flights"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "woodmon",
+      "displayName": "Woodmon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Woodmon",
+      "comment": "The document's \"Champion: Woodmon\", wired under its own spelling.",
+      "evolutions": [
+        {
+          "to": "jyureimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2400,
+              "hint": "Give it the long sleep of an old tree"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Do not disturb the grove"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "redvegimon",
+      "displayName": "RedVegimon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "RedVegimon",
+      "comment": "The document's \"Champion: RedVegiemon\". The sheet drops the middle 'e' - `Adult/RedVegimon.png` - which is the same one-letter drift US-139 met in Pichimon/Pitchmon. Its Mega is not the document's: see pencwg_gerbemon.",
+      "evolutions": [
+        {
+          "to": "pencwg_gerbemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Train it past all patience"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "Let the fights pile up"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "galemon",
+      "displayName": "Galemon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Galemon",
+      "comment": "The document's \"Champion: Galemon\", wired under its own spelling.",
+      "evolutions": [
+        {
+          "to": "grandgalemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80000,
+              "hint": "Ride the distance out"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 150,
+              "hint": "Climb into the high wind"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "zassoumon",
+      "displayName": "Zassoumon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Zassoumon",
+      "comment": "This tree's junk Champion, and NOT the document's: the Pendulum Color sections draw only the earned tree and name no junk branch at all, while US-061 requires every Child and Adult to have an isDefault edge reachable by doing nothing. So the chain is chosen off orphan sheets the way US-138, US-139 and US-140 chose theirs - Zassoumon, a literal weed, is the one every Rookie of a plant-and-wind tree falls to. Wikimon lists Blossomon as something Zassoumon really evolves into, which is the one earned way back up out of the junk branch.",
+      "evolutions": [
+        {
+          "to": "blossomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80000,
+              "hint": "Walk the weed back into the sun"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "Prune it into shape"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "garudamon",
+      "displayName": "Garudamon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "Garudamon",
+      "comment": "The document's \"Ultimate: Garudamon\", wired under its own spelling. The pack also holds Garudamon_X; the plain sheet is the one wired.",
+      "evolutions": [
+        {
+          "to": "hououmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "aerov-dramon",
+      "displayName": "AeroV-dramon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "AeroV-dramon",
+      "comment": "The document's \"Ultimate: AeroVeedramon\", under the hyphenated spelling the art uses.",
+      "evolutions": [
+        {
+          "to": "ulforcev-dramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencwg_lilimon",
+      "displayName": "Lilimon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "Lilimon",
+      "comment": "The document's \"Ultimate: Lillymon\". `find -iname '*lillymon*'` returns nothing; the art is `Perfect/Lilimon.png`, one 'l' short. Line-scoped because the plain `lilimon` is the `palmon` line's.",
+      "evolutions": [
+        {
+          "to": "pencwg_rosemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "blossomon",
+      "displayName": "Blossomon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "Blossomon",
+      "comment": "NOT the document's name. The document draws \"Champion: Kiwimon -> Ultimate: Deramon -> Mega: Gryphonmon\", and Deramon has no sheet anywhere in the pack - `find -iname '*dera*'` over all 1,056 entries returns only Thunderballmon, and the roster has no Deramon under any spelling. Rather than drop the thread (US-140's lesson: price the rehome first), Wikimon was read for what really sits between the two rungs that DO have art: Blossomon is listed both as something Kiwimon evolves into and as something Griffomon evolves from, so it stands in for Deramon on the same thread. It is also Zassoumon's canonical Perfect, which is what gives this tree's junk Champion its one way back up.",
+      "evolutions": [
+        {
+          "to": "griffomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "jyureimon",
+      "displayName": "Jyureimon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "Jyureimon",
+      "comment": "The document's \"Ultimate: Cherrymon (Jureimon)\" - it supplies both names, and neither is quite the one on disk: the sheet is `Perfect/Jyureimon.png`, with a 'y' the document's bracketed spelling drops. A substring search on the document's own romanization misses it, which is why this name was nearly reported absent.",
+      "evolutions": [
+        {
+          "to": "pinochimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencwg_gerbemon",
+      "displayName": "Gerbemon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "Gerbemon",
+      "comment": "The document's \"Ultimate: Garbagemon\". `find -iname '*garbage*'` returns nothing, and the roster's nearest hit by substring, `garbamon`, is a DIFFERENT Digimon and dexOnly - exactly the trap US-139 recorded. The real sheet is `Perfect/Gerbemon.png`, Garbagemon's Japanese name. Line-scoped because US-134 already made the plain `gerbemon` the Digital Monster Ver.2 tree's junk Perfect: the same Digimon is junk there and an earned branch here, which is the pencnso_pumpmon case of US-140 again, and one node could not be both.",
+      "evolutions": [
+        {
+          "to": "rafflesimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "grandgalemon",
+      "displayName": "GrandGalemon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "GrandGalemon",
+      "comment": "The document's \"Ultimate: GrandGalemon\", wired under its own spelling.",
+      "evolutions": [
+        {
+          "to": "zephagamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tonosamagekomon",
+      "displayName": "TonosamaGekomon",
+      "stage": "Perfect",
+      "line": "penc-wg",
+      "spriteFile": "TonosamaGekomon",
+      "comment": "This tree's junk Perfect, invented for the same reason as zassoumon. Wikimon lists it as something Zassoumon really evolves into and ElDoradimon as something it really evolves into, so the invented chain is at least a chain the source material would recognise.",
+      "evolutions": [
+        {
+          "to": "eldoradimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "hououmon",
+      "displayName": "Hououmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Hououmon",
+      "comment": "The document's \"Mega: Hououmon\", wired under its own spelling."
+    },
+    {
+      "id": "ulforcev-dramon",
+      "displayName": "UlforceV-dramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "UlforceV-dramon",
+      "comment": "The document's \"Mega: UlforceVeedramon\", under the hyphenated spelling the art uses."
+    },
+    {
+      "id": "pencwg_rosemon",
+      "displayName": "Rosemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Rosemon",
+      "comment": "The document's \"Mega: Rosemon\". Line-scoped because the plain `rosemon` is the `palmon` line's, and the pack's Rosemon_Burst and Rosemon_X are separate roster entries this tree does not draw."
+    },
+    {
+      "id": "griffomon",
+      "displayName": "Griffomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Griffomon",
+      "comment": "The document's \"Mega: Gryphonmon\". `find -iname '*gryphon*'` returns nothing; the sheet is `Ultimate-Super Ultimate/Griffomon.png`. The roster's other hit by substring, `hippogriffomon`, is dexOnly and a different Digimon."
+    },
+    {
+      "id": "pinochimon",
+      "displayName": "Pinochimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Pinochimon",
+      "comment": "The document's \"Mega: Puppetmon (Pinocchimon)\" - it supplies both names, and the art uses a third romanization again: `Pinochimon`, one 'c' short of the bracketed spelling."
+    },
+    {
+      "id": "rafflesimon",
+      "displayName": "Rafflesimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Rafflesimon",
+      "comment": "NOT the document's name. The document tops this thread with \"Mega: Crossmon / Eaglemon\", and neither has a sheet: `find -iname '*cross*'` and `'*eagl*'` over the whole pack return nothing, and the roster holds neither under any spelling. Wikimon lists Rafflesimon as something Gerbemon really evolves into, and it is a plant Mega, so it stands in for Crossmon at the top of the RedVegiemon thread rather than leaving that thread stopped at Perfect."
+    },
+    {
+      "id": "zephagamon",
+      "displayName": "Zephagamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Zephagamon",
+      "comment": "The document's \"Mega: Zephagamon\", wired under its own spelling - the top of the unlockable slot 7 thread, which this pack draws whole."
+    },
+    {
+      "id": "eldoradimon",
+      "displayName": "ElDoradimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "ElDoradimon",
+      "comment": "The top of this tree's invented junk chain, chosen off an orphan sheet the way US-140's Deathmon was. Wikimon lists it as something TonosamaGekomon really evolves into. It is named nowhere in the tree markdown, which is what makes it safe to spend - the grep US-140's notes insist on was run over the whole document before it was chosen, and over Zassoumon and TonosamaGekomon with it."
+    }
   ]
 }

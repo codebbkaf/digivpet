@@ -27,10 +27,12 @@ final class MinigameAssignmentTests: XCTestCase {
     }
 
     /// Exactly which lines share a game, spelled out so that a line landing on a shared game by
-    /// accident reads as a slip rather than as the pattern. Three pairs since US-140: the two
-    /// nature-flavoured trees on the timing bar, Deep Savers beside Ver.3 on the sprint, and
-    /// Nightmare Soldiers beside Ver.5 on sequence recall. Written as the whole game -> [lines]
-    /// dictionary rather than as a list of pairs, so the next Pendulum tree costs one literal.
+    /// accident reads as a slip rather than as the pattern. Four pairs since US-141: the two
+    /// nature-flavoured trees on the timing bar, Deep Savers beside Ver.3 on the sprint,
+    /// Nightmare Soldiers beside Ver.5 on sequence recall, and Wind Guardians beside Ver.4 on
+    /// reflex strike — the last of those the only pair that shares Digimon as well as a game, both
+    /// trees being Piyomon's. Written as the whole game -> [lines] dictionary rather than as a list
+    /// of pairs, so the next Pendulum tree costs one literal.
     func testTheSharedGamesAreExactlyTheAuthoredPairs() {
         let sharers = Dictionary(grouping: MinigameAssignment.byLine.keys,
                                  by: { MinigameAssignment.byLine[$0]! })
@@ -39,7 +41,8 @@ final class MinigameAssignmentTests: XCTestCase {
 
         XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp"],
                                  .crownSprint: ["dmc-v3", "penc-ds"],
-                                 .sequenceRecall: ["dmc-v5", "penc-nso"]])
+                                 .sequenceRecall: ["dmc-v5", "penc-nso"],
+                                 .reflexStrike: ["dmc-v4", "penc-wg"]])
     }
 
     /// The table is keyed on strings the JSON owns, so a renamed line would silently drop that whole

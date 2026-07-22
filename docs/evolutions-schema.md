@@ -218,14 +218,15 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — 103 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
-`dmc-v5`, `penc-nsp`, `penc-ds` and `penc-nso` lines.
+prose — 134 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
+`dmc-v5`, `penc-nsp`, `penc-ds`, `penc-nso` and `penc-wg` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 207 nodes across nine `line` values — `dmc-v1` (21 nodes),
+`Resources/evolutions.json` holds 238 nodes across ten `line` values — `dmc-v1` (21 nodes),
 `dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10), `penc-nsp` (30),
-`penc-ds` (31) and `penc-nso` (31) — each a complete line from Digitama through Ultimate.
+`penc-ds` (31), `penc-nso` (31) and `penc-wg` (31) — each a complete line from Digitama through
+Ultimate.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
@@ -441,3 +442,39 @@ first Phase E tree since US-138 with names that are genuinely absent. Five thing
   first choice for the Perfect rung and had to be dropped: the **Version 5** Metal Empire section
   draws it as an earned Ultimate over Mekanorimon, so it belongs to US-142. Grep the document
   before choosing a junk node.
+
+`penc-wg` is the Pendulum Color V4 Wind Guardians tree (US-141), the fourth line authored from
+nothing and the fourth at 31 nodes. It is the first Pendulum tree whose **Rookie rung is drawn
+whole** — all four of the section's Rookies have sheets, including the unlockable seventh slot —
+and the first whose gaps are in the MIDDLE and at the TOP of threads rather than at the bottom.
+Five things about it:
+
+- **Eleven of the section's twenty-eight names are filed under a spelling the document does not
+  use**, and the brackets the document supplies are not always right either: `Cherrymon
+  (Jureimon)` is on disk as `Jyureimon`, and `Puppetmon (Pinocchimon)` as `Pinochimon`. The rest
+  are Yokomon/`Pyocomon`, Biyomon/`Piyomon`, Mushroomon/`Mushmon`, Veedramon/`V-dramon`,
+  AeroVeedramon/`AeroV-dramon`, UlforceVeedramon/`UlforceV-dramon`, Lillymon/`Lilimon`,
+  Gryphonmon/`Griffomon`, RedVegiemon/`RedVegimon` and Garbagemon/`Gerbemon`.
+- **Garbagemon is the dexOnly-twin trap of US-139 again.** Searching the roster by substring finds
+  `garbamon` — a DIFFERENT Digimon, idle-only — so the name looks both present and unusable. The
+  real sheet is `Perfect/Gerbemon.png`, under the Japanese name. Read every substring hit's
+  `dexOnly` AND keep looking.
+- **Three names really are absent, and Wikimon supplied a stand-in on the same thread for each.**
+  `Deramon` (the Perfect over Kiwimon) has no sheet — `find -iname '*dera*'` over the whole pack
+  returns only Thunderballmon — so `Blossomon`, which Wikimon lists both as something Kiwimon
+  evolves into and as something Griffomon evolves from, takes that rung. `Crossmon` / `Eaglemon`
+  (the Mega over Garbagemon) are equally absent, so `Rafflesimon`, which Wikimon lists as a
+  Gerbemon evolution, tops that thread. US-140's rule — price the rehome before dropping a
+  thread — applied to a missing middle rung and a missing top one.
+- **Six of its thirty-one nodes are line-scoped aliases**, the best ratio of any Pendulum tree, and
+  three of them are the file's first whole **three-rung thread** to be scoped: Togemon → Lilimon →
+  Rosemon have belonged to `palmon` since US-008 and the V4 Pendulum draws all three over
+  Floramon. `pencwg_gerbemon` is the second Pumpmon case — `dmc-v2`'s junk Perfect is this tree's
+  earned branch above RedVegimon.
+- **Its egg is `flora_digitama`, and it is the first Pendulum egg that is NOT the default Rookie's
+  own.** Pyocomon falls to Piyomon, but `piyo_digitama` went to `dmc-v4` in US-136 — the Digital
+  Monster Ver.4 tree is Piyomon's too — and one egg cannot root two lines, so the egg is
+  Floramon's — `14_farmland` already drops it, beside `piyo_digitama` itself, so `maps.json` was
+  not touched. Its junk chain is this app's invention as ever: Zassoumon → TonosamaGekomon →
+  ElDoradimon, all three off orphan sheets and all three linked to each other on Wikimon, with
+  Zassoumon keeping one earned edge back up to Blossomon.

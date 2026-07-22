@@ -57,6 +57,13 @@ final class SeedRosterTests: XCTestCase {
         // falls to.
         ["baku_digitama", "mokumon", "petimeramon", "bakumon",
          "gokimon", "darumamon", "deathmon"],
+        // US-141's Pendulum Color V4 Wind Guardians line, the same shape once more: no junk branch
+        // in the document, so Zassoumon, TonosamaGekomon and ElDoradimon were chosen off unused
+        // sheets, and its egg is `flora_digitama` — Floramon's. It is the first Pendulum tree whose
+        // egg is NOT its default Rookie's: Pyocomon falls to Piyomon, but Piyomon's own egg went to
+        // dmc-v4 in US-136, so the egg is the next Rookie of this tree that has one.
+        ["flora_digitama", "nyokimon", "pyocomon", "pencwg_piyomon",
+         "zassoumon", "tonosamagekomon", "eldoradimon"],
     ]
 
     /// The seven rungs a complete line must cover, in order.

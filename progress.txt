@@ -25,6 +25,15 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   later device section may draw it as an earned branch (US-140 lost WaruMonzaemon to US-142's V5
   section this way). The same grep is what the story's own "this name is not in the document" test
   does — write it before authoring, not after.
+- **PHASE E: a missing rung is a REHOME, not a dropped thread — including a missing MIDDLE one.**
+  Fetch the Wikimon page for the rung above the gap and the rung below it and intersect their
+  Evolves From / Evolves To lists; a stand-in that appears in both sits on the same thread the
+  document draws. US-140 did this for a missing bottom, US-141 for a missing middle (Deramon ->
+  Blossomon) and a missing top (Crossmon -> Rafflesimon). Cite the page in the node `comment` — a
+  test greps for "Wikimon".
+- **PHASE E: a substring search misses a letter INSIDE a name.** `Jureimon` is not a substring of
+  `Jyureimon`, so the document's own bracketed spelling does not find its own sheet. Search a
+  PREFIX, not the whole name, before calling anything absent.
 - **PHASE E: a document name with no `find -iname` hit is usually a DUB name, not an absent
   Digimon.** Try the Japanese one: Mammothmon/`Mammon`, Wizardmon/`Wizarmon`, Pumpkinmon/`Pumpmon`,
   Piedmon/`Piemon`, Myotismon/`Vamdemon`, Candlemon/`Candmon`, Apemon/`Hanumon`. Also check the
@@ -2278,4 +2287,91 @@ Validator: zero findings over the whole file.
 - REMAINS: US-141 onward (27/56 passing). US-141..143 are the last three Pendulum trees, same
   shape - no seed line, no junk branch in the document, a Digitama to choose from the roster, and
   now overlap with the other Pendulum trees as well as the Digital Monster ones.
+---
+
+## 2026-07-22 - US-141 (Wire the Pendulum Color V4 Wind Guardians evolution tree)
+
+Authored `penc-wg` from nothing, the fourth Phase E device tree with no seed line to rename.
+**31 nodes, 207 -> 238**, joining `penc-ds` and `penc-nso` as the widest lines in the file.
+**ORPHANS 692 -> 667, 25 removed**, counted with Appendix B over a regenerated
+`roster.generated.json` (Digitama 48->47, Baby I 36->35, Baby II 40->39, Child 97->94,
+Adult 144->138, Perfect 129->123, Ultimate 182->175; Armor-Hybrid unchanged at 16). The other 6
+new nodes are line-scoped `pencwg_` aliases and remove nothing - the best ratio of any Pendulum
+tree so far.
+
+The tree, from `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` line 138:
+Flora Digitama -> Nyokimon -> Pyocomon, forking FOUR ways to Piyomon / Floramon / Mushmon /
+Pteromon, seven Champion-to-Mega threads above them, and Zassoumon -> TonosamaGekomon ->
+ElDoradimon as the invented junk chain. Egg is `flora_digitama` (Floramon's), already dropped by
+`14_farmland`, so maps.json was not touched.
+
+Files: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`Sources/DexModel.swift`, `Sources/MinigameAssignment.swift`,
+`Tests/PendulumWindGuardiansTreeTests.swift` (new, 27 tests),
+`Tests/EvolutionGraphTests.swift`, `Tests/EvolutionGraphValidatorTests.swift`,
+`Tests/ElementCatalogTests.swift`, `Tests/EvolutionCriteriaTests.swift`,
+`Tests/SeedRosterTests.swift`, `Tests/RosterTests.swift`, `Tests/EggHatchingTests.swift`,
+`Tests/MinigameAssignmentTests.swift`, `docs/evolutions-schema.md`.
+
+Build green, **1865 tests (1838 + 27), 0 failures** - and 1865 is exactly
+`grep -cE '^\s+func test' Tests/*.swift`, so the summary is not a crashed-host undercount.
+Validator: zero findings over the whole file.
+
+- **Learnings for future iterations:**
+
+- **A tree can be missing a MIDDLE rung and a TOP rung, not just a bottom one, and the same rehome
+  move fixes all three shapes.** US-140 rescued a thread whose Rookie and Champion were undrawn;
+  this section has no `Deramon` (the Perfect between Kiwimon and Griffomon) and no
+  `Crossmon`/`Eaglemon` (the Mega above Garbagemon). Wikimon's own Evolves From / Evolves To lists
+  name a stand-in that sits on the SAME thread in each case - Blossomon is listed both as a
+  Kiwimon evolution and as a Griffomon prior form, Rafflesimon as a Gerbemon evolution - so the
+  document's arrows survive intact. **Fetch the Wikimon page for the rung ABOVE and the rung BELOW
+  the gap and intersect the two lists**; that is a five-minute lookup that saved six nodes here.
+- **Do not trust a substring search that finds nothing when a letter is INSIDE the name.**
+  `Jureimon` is not a substring of `Jyureimon`, so the document's own bracketed spelling misses its
+  own sheet. `grep -i` on a prefix (`jure` -> nothing, `jyu` -> the file) is the fix. Two of this
+  section's names hid this way and both were nearly reported absent.
+- **`garbamon` is NOT `Garbagemon`.** The roster's nearest substring hit is a different Digimon and
+  dexOnly, while the real sheet is `Perfect/Gerbemon.png` under the Japanese name - so the name
+  looks simultaneously present and unusable, and both readings are wrong. US-139's Octomon/Octmon
+  rule with an extra turn of the screw: after checking every substring hit's `dexOnly`, KEEP
+  LOOKING under the Japanese name rather than concluding the Digimon is idle-only.
+- **An egg does not have to be the default Rookie's own, and pretending otherwise wastes a story.**
+  Every Pendulum tree so far took its In-Training's default Rookie's egg; here that egg
+  (`piyo_digitama`) went to `dmc-v4` in US-136, because the Digital Monster Ver.4 tree is Piyomon's
+  too. The rule that actually matters is only "a real roster Digitama that some map drops" - see
+  `flora_digitama`'s comment. **Check the map that drops it and name that map correctly**: the
+  first draft of this comment said `02_forest`, which is not even a map in this app; `14_farmland`
+  is. A wrong map id in a comment is a lie a later story will act on.
+- **The unlockable-slot Rookie is drawable again**, so US-138/139's conditioned In-Training edge
+  came back after lapsing in US-140. If a section marks a Rookie "Unlockable Slot N", check for its
+  sheet before assuming the shape is gone: Pteromon has one, and its whole thread (Galemon,
+  GrandGalemon, Zephagamon) is the only one in this section drawn whole AND unrespelled.
+- **A four-way fork at Baby II is fine and is now the widest in the file.** Four Rookies means four
+  edges, one per energy type, which is exactly the ceiling `SeedRosterTests`' distinct-energy rule
+  allows. No out-degree ceiling moved (still 2...5, unchanged since US-134) because the Child and
+  Adult rungs are only two and three wide here.
+- **The knock-on list is stable at eight places for the third tree running** (US-139's list,
+  unchanged, all eight fired): `EvolutionGraphTests`' per-line count dict; `graph.nodes.count` in
+  `ElementCatalogTests` AND `EvolutionGraphValidatorTests`; `EggHatchingTests`' seeded-Digitama
+  set; `SeedRosterTests`' `seedLines`; `RosterTests`' exact alias list;
+  `EvolutionCriteriaTests.junkIds` (BOTH the Adult and the Perfect junk node);
+  `MinigameAssignmentTests`' sharer map. Watch the SORT ORDER in `RosterTests`: `pencwg_` sorts
+  after `pencnsp_`, not after `pencnso_`.
+- **Terminal nodes in `evolutions.json` OMIT the `evolutions` key entirely** rather than carrying
+  `[]`. The decoder accepts both, so this is style, not correctness - but a generator that always
+  writes the key produces a 47-node inconsistency in one commit. Emit it only when non-empty.
+- **`json.dump` still cannot rewrite `evolutions.json`** - mixed encoding, as US-139 recorded.
+  Splice new nodes TEXTUALLY, and do `elements.json` / `moves.json` by string insertion. Keep new
+  comments ASCII. The whole 31-node tree came out of one `/tmp` python script, and it was reverted
+  with `git checkout` and re-run THREE times (duplicate signature names, the `evolutions: []`
+  style, a wrong map id) rather than hand-patched. That is the right move every time.
+- **Check new `signatureName`s against the WHOLE file, not just your line.** Three of the first
+  draft's collided with the `palmon` line's (Flower Cannon, Thorn Whip, Petal Puff) - unsurprising,
+  since this tree draws Togemon, Lilimon and Rosemon too, and a flower tree runs out of flower
+  words. `MoveCatalogTests` catches it, but only after a full 23-second test run.
+- REMAINS: US-142 onward (28/56 passing). US-142 (Metal Empire) and US-143 (Virus Busters / ZERO)
+  are the last two Pendulum trees. US-140's notes already flag two names US-142 must handle:
+  WaruMonzaemon is its earned Ultimate over Mekanorimon, and VenomVamdemon is already spent by
+  `penc-nso`, so US-142 needs `pencv5_venomvamdemon`.
 ---

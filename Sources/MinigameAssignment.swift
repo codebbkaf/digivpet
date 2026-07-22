@@ -95,6 +95,12 @@ enum MinigameAssignment {
         // vampires trains at — and its line (`dmc-v5`, 20 nodes) was tied with `dmc-v3`'s for the
         // fewest Digimon, so flavour broke the tie the same way it did in US-139.
         "penc-nso": .sequenceRecall,
+        // US-141's Wind Guardians is the tenth line and the fourth sharer. Reflex Strike is the
+        // quick one, which is what a tree of birds trains at — and the line it doubles up with,
+        // `dmc-v4` (21 nodes), is the one Wind Guardians already SHARES Digimon with: both trees
+        // are Piyomon's, which is why `pencwg_piyomon` and `pencwg_birdramon` exist at all. That
+        // is a stronger tie-break than the node count, which put `dmc-v1` level with `dmc-v4`.
+        "penc-wg": .reflexStrike,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

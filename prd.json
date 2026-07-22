@@ -585,8 +585,8 @@
         "Typecheck passes"
       ],
       "priority": 28,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Authored `penc-wg` from nothing, the fourth Phase E device tree with no seed line. 31 nodes, 207 -> 238, tying `penc-ds`/`penc-nso` as the widest lines. ORPHANS 692 -> 667, 25 removed, counted with Appendix B over a regenerated roster.generated.json (Digitama 48->47, Baby I 36->35, Baby II 40->39, Child 97->94, Adult 144->138, Perfect 129->123, Ultimate 182->175; Armor-Hybrid unchanged at 16). The other 6 new nodes are line-scoped `pencwg_` aliases and remove nothing. ABSENT NAMES (searched for and not found anywhere in the sprite pack or roster, under any spelling): Deramon (`find -iname '*dera*'` returns only Thunderballmon), Crossmon and Eaglemon (`'*cross*'`, `'*eagl*'` return nothing). Wikimon supplied a stand-in on the same thread for each - Blossomon between Kiwimon and Griffomon, Rafflesimon above Gerbemon - so no thread was dropped. EXTERNAL REFERENCE USED: wikimon.net (pages for Griffomon, Gerbemon, Blossomon, Zassoumon and Tonosama Gekomon), cited in the node comments. Eleven further names are on disk only under a different spelling: Yokomon/Pyocomon, Biyomon/Piyomon, Mushroomon/Mushmon, Veedramon/V-dramon, AeroVeedramon/AeroV-dramon, UlforceVeedramon/UlforceV-dramon, Lillymon/Lilimon, Gryphonmon/Griffomon, RedVegiemon/RedVegimon, Garbagemon/Gerbemon, Cherrymon(Jureimon)/Jyureimon and Puppetmon(Pinocchimon)/Pinochimon - and `garbamon` is a DIFFERENT, dexOnly Digimon. Egg is `flora_digitama` (piyo_digitama was spent on dmc-v4 by US-136); 14_farmland already drops it, so maps.json was not touched. Junk chain (this app's invention, the document draws none): Zassoumon -> TonosamaGekomon -> ElDoradimon. Build green, 1865 tests (1838 + 27), 0 failures, and 1865 is exactly the `func test` count so the summary is not a crashed-host undercount. Validator: zero findings over the whole file."
     },
     {
       "id": "US-142",
