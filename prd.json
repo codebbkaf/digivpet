@@ -1053,8 +1053,8 @@
         "Typecheck passes"
       ],
       "priority": 51,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired 20 of the 22 orphaned Ultimate C-D; the other two, Chaosdramon and Chaosmon, are Jogress results the DMC Ver.5/Ver.4 and Metal Empire trees reserve as non-nodes (asserted by DMCVersion5/4TreeTests and PendulumMetalEmpireTreeTests), so they are obtainable and left unwired. Orphans BEFORE 116 (Ultimate 100, Armor-Hybrid 16) -> AFTER 96 (Ultimate 80, Armor-Hybrid 16), counted with Appendix B over a regenerated roster.generated.json; the 80 is the evolution-edge count and 78 the true remainder once the two Jogress results are set aside. 817 -> 837 nodes. Two shapes of in-edge: TWO leaf Perfects (metalgreymon_x, huankunmon) took their single isDefault climb - both parked for this rung by 'A leaf until the Ultimate sweeps' in US-160/US-159 and both cited parents - clearing the dead-end ledger 62 -> 60; the other eighteen are earned branches beside an existing climb, two criteria and a distinct requiredEnergy apiece. HolyAngemon became the FIRST four-edge Perfect in the file (Dominimon spent its last free energy, node CLOSED); five Perfects now carry three edges. The eponymous diablomon line got its Diablomon and Diablomon X over Meicrackmon, the only drawable route (every cited parent idle-only or wrong-stage - the Armagemon wall US-163 hit). Chaosdramon V2 follows a cited parent (MetalGreymon X) because its base form is a Jogress result. Cernumon IS wired - a Jogress result no tree reserves, like aegisdramon/millenniumon. Every one of the 20 comments cites Wikimon or says why it cannot. Build green, 2408 tests pass (0 failures), validator reports zero findings. Knock-on was ~19 files of node-census/per-line/ledger counts plus semantic updates to the Andromon and HolyAngemon multi-parent tests; scripts/us164_author.py is the record of what was authored. HANDOVER: 78 Ultimate still truly owed to US-165..US-168 (80 by edge-count, minus the two Jogress), 16 Armor-Hybrid for US-169, 60 Perfect leaves still owed a climb; Ogudomon (O) belongs to US-167."
     },
     {
       "id": "US-165",

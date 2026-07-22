@@ -462,15 +462,15 @@ final class PerfectSweepNToRTests: XCTestCase {
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["vital"], 42, "Oboromon, RaijiLudomon, their two Megas and the floor, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["xros"], 22, "both OmegaShoutmon, ZekeGreymon and the Etemon floor, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-me"], 67,
+        XCTAssertEqual(sizes["penc-me"], 70,
                        "both Okuwamon, their two Megas and RizeGreymon X, plus US-163's four Ultimates")
-        XCTAssertEqual(sizes["penc-nsp"], 40, "both Panjyamon, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["tamers"], 113, "Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-nsp"], 41, "both Panjyamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["tamers"], 116, "Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
         XCTAssertEqual(sizes["wanyamon"], 29, "RizeGreymon and Ravmon")
         XCTAssertEqual(sizes["dmc-v1"], 39, "NeoDevimon, plus US-163's three Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 69, "Orochimon, plus US-163's seven Ultimates")
-        XCTAssertEqual(sizes["penc-vb"], 57, "Regulusmon, plus US-163's two Ultimates")
-        XCTAssertEqual(sizes["penc-wg"], 42, "Paildramon")
+        XCTAssertEqual(sizes["penc-nso"], 73, "Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 60, "Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["penc-wg"], 43, "Paildramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 10)
     }
@@ -752,7 +752,7 @@ final class PerfectSweepNToRTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       62, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       60, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
         // The three Saiyu Warriors Perfects US-157 pinned were still owed here, and all three are
         // S-Z, so they were US-162's — which took all three onto `penc-sw`, closing the pin US-157
@@ -786,9 +786,9 @@ final class PerfectSweepNToRTests: XCTestCase {
             XCTAssertNil(roster.entry(id: id), "\(id) removed an orphan after all")
         }
 
-        XCTAssertEqual(graph.nodes.count, 817, "736 before this story")
+        XCTAssertEqual(graph.nodes.count, 837, "736 before this story")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "148 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 138, "98 before this story, 138 after US-163")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 158, "98 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

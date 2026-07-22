@@ -322,10 +322,10 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 113,
+        XCTAssertEqual(sizes["tamers"], 116,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["dmc-v3"], 53, "plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["dmc-v3"], 54, "plus US-163's one Ultimate")
         XCTAssertEqual(sizes["palmon"], 29, "US-159's Lilamon and Lilimon X, plus US-163's one Ultimate")
     }
 
@@ -651,8 +651,13 @@ final class ChildSweepAToFTests: XCTestCase {
         // Net 67 -> 62. The remaining sixty-two are owed an Ultimate by the six sweeps after this.
         let clearedByUS163 = ["blackrapidmon", "canoweissmon", "grademon", "mametyramon",
                               "megalogrowmon"]
+
+        // **US-164 CLEARS TWO MORE THE SAME WAY**, the C-D Ultimate sweep: MetalGreymon X climbs to
+        // Chaosdramon and Huankunmon to Dijiangmon, both cited on Wikimon and both parked for this
+        // rung in the words "A leaf until the Ultimate sweeps". Net 62 -> 60.
+        let clearedByUS164 = ["huankunmon", "metalgreymon_x"]
         let cleared = clearedByUS157 + clearedByUS158 + clearedByUS159 + clearedByUS160
-            + clearedByUS161 + clearedByUS162 + clearedByUS163
+            + clearedByUS161 + clearedByUS162 + clearedByUS163 + clearedByUS164
 
         XCTAssertEqual(deadEnds,
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
@@ -661,7 +666,7 @@ final class ChildSweepAToFTests: XCTestCase {
                            + perfectsFromUS160 + perfectsFromUS161 + perfectsFromUS162)
                            .filter { !cleared.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 62)
+        XCTAssertEqual(deadEnds.count, 60)
 
         // And the twenty-five really did leave because they lead somewhere now, not because they
         // vanished.
@@ -691,7 +696,7 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 817,
+        XCTAssertEqual(graph.nodes.count, 837,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "

@@ -212,7 +212,7 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 45,
+        XCTAssertEqual(inLine.count, 46,
                        "US-152 hung Ebidramon and Gawappamon on this line, US-153 Kinkakumon, "
                            + "US-154 MoriShellmon, US-157 Anomalocarimon X, US-158 Gusokumon, "
                            + "US-159 Hangyomon, US-160 MarinChimairamon and Mermaimon")
@@ -563,7 +563,9 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
                                       // US-163's one: AncientMermaimon over this line's own
                                       // Mermaimon — a mermaid warrior under the Ancient Warrior of
                                       // Water, with seven of that page's cited parents here too.
-                                      "ancientmermaimon"]
+                                      "ancientmermaimon",
+                                      // US-164's one: Cthyllamon over this line's own Dagomon.
+                                      "cthyllamon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         XCTAssertEqual(mine.count, 31)
         XCTAssertEqual(mine.filter { Roster.bundled.entry(id: $0.id) == nil }.count,

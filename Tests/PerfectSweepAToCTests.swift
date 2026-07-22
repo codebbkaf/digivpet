@@ -202,11 +202,16 @@ final class PerfectSweepAToCTests: XCTestCase {
         // gained an EARNED branch beside it — a different `requiredEnergy`, two criteria, and the
         // climb untouched and still `isDefault`, which is the whole of what this test checks. Each
         // is NAMED with its new edge count rather than the count being loosened to a `>=`.
-        let branchedByUS163: [String: Int] = ["astamon": 3, "atlurkabuterimon_red": 2, "baalmon": 3,
-                                             "cargodramon": 2, "cerberumon_x": 2, "chimairamon": 2]
+        // US-164, the C-D Ultimate sweep, forked two more of them: andiramon_virus (Cherubimon
+        // Vice X) and blackmegalogrowmon (ChaosDukemon Core) each gained their first branch
+        // (1 -> 2). Chimairamon stayed at its US-163 count because Chaosmon, the Ultimate that
+        // would have forked it, is a Jogress result and so was left unwired.
+        let branchedBySweeps: [String: Int] = ["astamon": 3, "atlurkabuterimon_red": 2, "baalmon": 3,
+                                             "cargodramon": 2, "cerberumon_x": 2, "chimairamon": 2,
+                                             "andiramon_virus": 2, "blackmegalogrowmon": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
-            XCTAssertEqual(node.evolutions.count, branchedByUS163[perfect] ?? 1,
+            XCTAssertEqual(node.evolutions.count, branchedBySweeps[perfect] ?? 1,
                            "\(perfect) is not a single climb")
 
             let climb = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
@@ -381,15 +386,15 @@ final class PerfectSweepAToCTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 113, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["penc-me"], 67, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
-        XCTAssertEqual(sizes["penc-vb"], 57, "three Perfects and Ophanimon X, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 69, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["tamers"], 116, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-me"], 70, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 60, "three Perfects and Ophanimon X, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 73, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["dmc-v1"], 39, "Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon, plus US-163's three Ultimates")
         XCTAssertEqual(sizes["palmon"], 29, "Cannonbeemon and TigerVespamon, plus US-159's two, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["penc-sw"], 18, "Cho-Hakkaimon, Pandamon and Shakamon, plus US-158's two")
-        XCTAssertEqual(sizes["penc-ds"], 45, "Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-nsp"], 40, "AtlurKabuterimon Red, plus US-158's two" + ", plus US-160's one, plus US-161's both Panjyamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-ds"], 46, "Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-nsp"], 41, "AtlurKabuterimon Red, plus US-158's two" + ", plus US-160's one, plus US-161's both Panjyamon, plus US-163's one Ultimate")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 9)
     }
@@ -677,7 +682,7 @@ final class PerfectSweepAToCTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       62, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       60, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -698,13 +703,13 @@ final class PerfectSweepAToCTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 817,
+        XCTAssertEqual(graph.nodes.count, 837,
                        "643 before this story, 672 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189,
                        "81 before this story, 101 after it, 115 after US-158, 126 after US-159, 148 after US-160, 165 after US-161, 189 after US-162")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 138,
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 158,
                        "72 before this story, 81 after it, 88 after US-158, 93 after US-159, 98 after US-160, 105 after US-161, 108 after US-162, 138 after US-163")
     }
 

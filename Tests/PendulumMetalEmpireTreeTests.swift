@@ -236,12 +236,14 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         // is about the DOCUMENT's two drawings, which are unchanged.
         XCTAssertEqual(Set(graph.parents(of: "pencme_andromon").map(\.id)),
                        ["revolmon", "guardromon", "deckerdramon"])
-        XCTAssertEqual(try targets(of: "pencme_andromon"),
-                       ["pencme_hiandromon", "pencme_mugendramon"])
+        // US-164 hung Craniummon X here as a THIRD outgoing edge — Andromon is a cited `Evolves
+        // From` on its page — so the document's two drawings are now a subset rather than the whole.
+        XCTAssertTrue(Set(try targets(of: "pencme_andromon"))
+                        .isSuperset(of: ["pencme_hiandromon", "pencme_mugendramon"]))
 
         let earned = try node("pencme_andromon").evolutions.filter { !$0.isDefault }
-        XCTAssertEqual(earned.map(\.to), ["pencme_mugendramon"])
-        XCTAssertFalse(earned[0].conditions.isEmpty, "the second climb must be earned")
+        XCTAssertEqual(Set(earned.map(\.to)), ["pencme_mugendramon", "craniummon_x"])
+        XCTAssertTrue(earned.allSatisfy { !$0.conditions.isEmpty }, "each earned climb must be gated")
 
         // Mugendramon is still reachable without it, through Cyberdramon's default edge — and
         // US-157 gave it two more parents, Cargodramon and Cyberdramon X, both of which climb into
@@ -314,7 +316,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 67,
+        XCTAssertEqual(inLine.count, 70,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
                            + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon, "
@@ -414,7 +416,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       // US-163's four Megas: Anubimon over Cerberumon X — the
                                       // drawable form of its bolded parent — both Belphemon over
                                       // Astamon, and Brigadramon over Cargodramon.
-                                      "anubimon", "belphemon_rage", "belphemon_x", "brigadramon"]
+                                      "anubimon", "belphemon_rage", "belphemon_x", "brigadramon",
+                                      // US-164's three: Craniummon X over this line's own Andromon,
+                                      // and both Duftmon over its Knightmon.
+                                      "craniummon_x", "duftmon", "duftmon_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

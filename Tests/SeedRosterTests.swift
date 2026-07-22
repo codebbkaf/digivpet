@@ -340,6 +340,11 @@ final class SeedRosterTests: XCTestCase {
         // A-B Ultimate sweep landed the ram over the bull without arguing. Eyeballed as
         // `Ultimate-Super Ultimate/Ariemon.png`.
         "Ariemon",
+        // US-164's one: Chaosdramon V2, hung over MetalGreymon X because its base form Chaosdramon
+        // is a Jogress result and not a node. MetalGreymon X was already on this line (US-155), so
+        // the C-D Ultimate sweep landed it here. Eyeballed as
+        // `Ultimate-Super Ultimate/Chaosdramon_V2.png`.
+        "Chaosdramon V2",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -482,6 +487,10 @@ final class SeedRosterTests: XCTestCase {
         // Triceramon's BOLDED `Evolves From` and Darkdramon a cited `Evolves To`, so both ends of
         // it were already on this line and the document's own Monochromon carries it.
         "Triceramon",
+        // US-164's one, over Huankunmon (US-156, above): Dijiangmon cites Huankunmon on Wikimon,
+        // and Huankunmon was already on this line, so the C-D Ultimate sweep landed it here.
+        // Eyeballed as `Ultimate-Super Ultimate/Dijiangmon.png`.
+        "Dijiangmon",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

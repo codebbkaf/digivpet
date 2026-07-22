@@ -3268,6 +3268,86 @@
     "brigadramon": {
       "element": "machine",
       "attribute": "data"
+    },
+    "callismon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "cernumon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "chaosdukemon_core": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "chaosdramon_v2": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "cherubimon_vice_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "cherubimon_virtue_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "craniummon_x": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "cthyllamon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "darknessbagramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "deathmon_black": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "demon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "demon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "diablomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "diablomon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "dijiangmon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "dominimon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "duftmon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "duftmon_x": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "dukemon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "dynasmon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
     }
   },
   "lineDefaults": {

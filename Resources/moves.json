@@ -4902,6 +4902,126 @@
       "tint": "blue",
       "signatureName": "Brigade Cannon",
       "signatureSymbol": "bolt.fill"
+    },
+    "callismon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "mint",
+      "signatureName": "Beast Slayer",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "cernumon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "blue",
+      "signatureName": "Antler Gale",
+      "signatureSymbol": "leaf.fill"
+    },
+    "chaosdukemon_core": {
+      "projectileSymbol": "shield.fill",
+      "tint": "indigo",
+      "signatureName": "Chrono Breaker",
+      "signatureSymbol": "shield.fill"
+    },
+    "chaosdramon_v2": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "orange",
+      "signatureName": "Twin Chaos Cannon",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "cherubimon_vice_x": {
+      "projectileSymbol": "moon.fill",
+      "tint": "brown",
+      "signatureName": "Lightning Spear Cross",
+      "signatureSymbol": "moon.fill"
+    },
+    "cherubimon_virtue_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "blue",
+      "signatureName": "Storm of Judgement Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "craniummon_x": {
+      "projectileSymbol": "shield.fill",
+      "tint": "teal",
+      "signatureName": "Final Elysion Cross",
+      "signatureSymbol": "shield.fill"
+    },
+    "cthyllamon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "brown",
+      "signatureName": "Abyssal Chant",
+      "signatureSymbol": "drop.fill"
+    },
+    "darknessbagramon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "red",
+      "signatureName": "Death Crush",
+      "signatureSymbol": "moon.fill"
+    },
+    "deathmon_black": {
+      "projectileSymbol": "moon.fill",
+      "tint": "teal",
+      "signatureName": "Vampire Wave Black",
+      "signatureSymbol": "moon.fill"
+    },
+    "demon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "white",
+      "signatureName": "Flame Inferno of Wrath",
+      "signatureSymbol": "flame.fill"
+    },
+    "demon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "indigo",
+      "signatureName": "Chaos Flare Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "diablomon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "teal",
+      "signatureName": "Catastrophe Day",
+      "signatureSymbol": "circle.fill"
+    },
+    "diablomon_x": {
+      "projectileSymbol": "circle.fill",
+      "tint": "cyan",
+      "signatureName": "Catastrophe Cannon Cross",
+      "signatureSymbol": "circle.fill"
+    },
+    "dijiangmon": {
+      "projectileSymbol": "wind",
+      "tint": "mint",
+      "signatureName": "Faceless Gale",
+      "signatureSymbol": "wind"
+    },
+    "dominimon": {
+      "projectileSymbol": "sparkles",
+      "tint": "teal",
+      "signatureName": "Holy Dominion",
+      "signatureSymbol": "sparkles"
+    },
+    "duftmon": {
+      "projectileSymbol": "scissors",
+      "tint": "mint",
+      "signatureName": "Black Aura Blast",
+      "signatureSymbol": "scissors"
+    },
+    "duftmon_x": {
+      "projectileSymbol": "scissors",
+      "tint": "cyan",
+      "signatureName": "Leopard Cross Slash",
+      "signatureSymbol": "scissors"
+    },
+    "dukemon_x": {
+      "projectileSymbol": "shield.fill",
+      "tint": "white",
+      "signatureName": "Royal Saber Cross",
+      "signatureSymbol": "shield.fill"
+    },
+    "dynasmon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "white",
+      "signatureName": "Dragon Thrower Cross",
+      "signatureSymbol": "bolt.fill"
     }
   },
   "lineDefaults": {

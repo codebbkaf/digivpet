@@ -4901,3 +4901,34 @@ The thirty, `Perfect -> Ultimate`:
   Hisyaryumon and Cargodramon on `commandramon`, Boutmon and LadyDevimon X on `vital`, Paildramon
   on `adventure02`. Ogudomon is still pinned in Lucemon Falldown's comment and belongs to US-167.
 ---
+
+## 2026-07-23 - US-164 (Orphan sweep: Ultimate-Super Ultimate C-D)
+- Wired 20 of 22 orphaned Ultimate C-D as evolution nodes; left Chaosdramon and Chaosmon alone
+  because they are Jogress results the DMC Ver.5/Ver.4 + Metal Empire trees reserve as non-nodes.
+- Orphans 116 -> 96 (Ultimate 100 -> 80 by edge-count, 78 true once the two Jogress are set aside;
+  Armor-Hybrid 16). Nodes 817 -> 837. Dead-end ledger 62 -> 60 (metalgreymon_x, huankunmon cleared).
+- Files: Resources/{evolutions,elements,moves}.json (data), scripts/us164_author.py (authoring
+  record), Tests/UltimateSweepCToDTests.swift (new), plus ~19 knock-on test files.
+- **Learnings for future iterations:**
+  - **A JOGRESS RESULT IS OBTAINABLE, SO IT IS NOT ALWAYS AN ORPHAN TO WIRE — BUT ONLY WHEN A DEVICE
+    TREE RESERVES IT.** Chaosdramon and Chaosmon are drawn as the Jogress Ultra row in their device
+    documents, and DMCVersion5TreeTests / DMCVersion4TreeTests / PendulumMetalEmpireTreeTests each
+    assert `graph.node(id:) == nil` for them. Wiring them breaks those tests. BUT aegisdramon,
+    millenniumon and cernumon are ALSO jogress results and ARE wired as nodes (no tree reserves
+    them). So the rule is: before wiring an Ultimate, run `grep -l "<id>" Tests/*TreeTests.swift`
+    and check jogress.json — if a tree pins it to no node, treat it as obtainable and exclude it
+    from the sweep (coverage test reads "in-edge OR jogress-result"); otherwise wire it.
+  - Appendix B's orphan script counts by EVOLUTION edges only, so a reserved jogress result still
+    shows as an "orphan" by that metric. Report both numbers: the raw edge-count and the true
+    remainder with jogress results subtracted.
+  - **A VARIANT WHOSE BASE FORM IS NOT A NODE (dexOnly, OR a reserved jogress result) follows a
+    cited parent.** Dynasmon (dexOnly) -> Dynasmon X on doruguremon; Chaosdramon (jogress) ->
+    Chaosdramon V2 on metalgreymon_x. Chaosdramon cites Metal Greymon (X-Antibody), so the V2 hangs
+    on the base form's cited parent, same shape as US-163's BlackWarGreymon X escape hatch.
+  - The `branchedByUS163` dicts in the six PerfectSweep*Tests are the per-file record of which
+    Perfects have been forked; renamed to `branchedBySweeps` and appended when US-164 forked more.
+    A Perfect that gains a SECOND earned branch (deathmeramon, meicrackmon got two each: demon+demon_x,
+    diablomon+diablomon_x) goes to 3 edges. Grep `evolutions.count, 2` / `branchedBy` before authoring.
+  - HolyAngemon is now the FIRST four-edge Perfect (cherubimon_virtue, blackseraphimon, dominimon,
+    seraphimon) and is CLOSED — all four energies spent. A later sweep wanting the Virus Busters
+    HolyAngemon thread must take a different Perfect.

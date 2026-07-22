@@ -241,7 +241,7 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 69,
+        XCTAssertEqual(inLine.count, 73,
                        "US-147 hung Sunmon and Coronamon here, US-148 Firamon, US-149 Gotsumon and "
                            + "Icemon, US-150 PetitMamon, Vorvomon and Lavorvomon, US-154 Musyamon, "
                            + "US-155 ShimaUnimon, US-157 Archnemon and BlueMeramon, US-158 "
@@ -686,7 +686,12 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
                                       // anywhere, since its own line can never gain a Perfect.
                                       "barbamon", "barbamon_x", "belialvamdemon",
                                       "ancientmegatheriumon", "blastmon", "algomon_ultimate",
-                                      "ancientsphinxmon"]
+                                      "ancientsphinxmon",
+                                      // US-164's four Megas: Callismon over Soloogarmon, Deathmon
+                                      // Black over the Darumamon that carries the plain Deathmon,
+                                      // and both Demon over DeathMeramon — DeathMeramon cited
+                                      // beside Demon's own device on the page.
+                                      "callismon", "deathmon_black", "demon", "demon_x"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")

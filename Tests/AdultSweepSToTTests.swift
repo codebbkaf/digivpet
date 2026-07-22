@@ -203,8 +203,16 @@ final class AdultSweepSToTTests: XCTestCase {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.stage, .perfect)
             XCTAssertEqual(node.line, "dmc-v3", "\(perfect) is not on Agumon X's line")
-            XCTAssertTrue(node.evolutions.isEmpty,
-                          "\(perfect) leads somewhere, so the dead-end ledger has to move too")
+            // US-164 wired MetalGreymon X onward and moved the ledger with it: it climbs to
+            // Chaosdramon V2, cited on Chaosdramon's Wikimon page, and comes off the dead-end
+            // ledger in the same edit.
+            if perfect == "metalgreymon_x" {
+                XCTAssertEqual(node.evolutions.map(\.to), ["chaosdramon_v2"],
+                               "\(perfect)'s single climb is not the one US-164 gave it")
+            } else {
+                XCTAssertTrue(node.evolutions.isEmpty,
+                              "\(perfect) leads somewhere, so the dead-end ledger has to move too")
+            }
             XCTAssertEqual(Set(graph.parents(of: perfect).map(\.id)), parents,
                            "\(perfect)'s parents changed without this claim changing with them")
         }
@@ -391,10 +399,10 @@ final class AdultSweepSToTTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["dmc-v1"], 39, "Tyrannomon, plus US-157's Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon, plus US-163's three Ultimates")
-        XCTAssertEqual(sizes["dmc-v3"], 53, "Tyrannomon X and MetalGreymon X" + ", plus US-160's three, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["dmc-v4"], 30, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-nso"], 69, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
-        XCTAssertEqual(sizes["tamers"], 113, "Siesamon X, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["dmc-v3"], 54, "Tyrannomon X and MetalGreymon X" + ", plus US-160's three, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["dmc-v4"], 31, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
+        XCTAssertEqual(sizes["penc-nso"], 73, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["tamers"], 116, "Siesamon X, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -550,7 +558,7 @@ final class AdultSweepSToTTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 817,
+        XCTAssertEqual(graph.nodes.count, 837,
                        "629 before this story, 635 after it, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
