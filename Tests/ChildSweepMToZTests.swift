@@ -591,8 +591,9 @@ final class ChildSweepMToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 615,
-                       "548 before this story, 599 after it, 610 after US-151, 615 after US-152")
+        XCTAssertEqual(graph.nodes.count, 618,
+                       "548 before this story, 599 after it, 610 after US-151, 615 after US-152, "
+                           + "618 after US-153")
     }
 
     /// The two Children in range whose Champion is NOT a new node. Both take the arrow the source

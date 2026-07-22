@@ -251,9 +251,12 @@ final class ChildSweepGToLTests: XCTestCase {
     /// falsifies it without doing anything wrong — US-151 hung BlackGaogamon off Gaomon. So the
     /// count is now a floor plus a named exception list: a Child of this story that grows a third
     /// earned branch nobody wrote down still fails here. US-152 added two more to the list —
-    /// GulusGammamon off Gammamon and Growmon Orange off Guilmon, both cited arrows.
+    /// GulusGammamon off Gammamon and Growmon Orange off Guilmon, both cited arrows — and US-153
+    /// took Gammamon to FOUR with KausGammamon, which is the ceiling the four energy types impose:
+    /// three earned branches on distinct energies plus the junk fallback. A fifth cannot be told
+    /// apart from one of them, so this entry can never move again.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
-        let branchedByALaterSweep = ["gaomon": 3, "gammamon": 3, "guilmon": 3]
+        let branchedByALaterSweep = ["gaomon": 3, "gammamon": 4, "guilmon": 3]
 
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -543,8 +546,9 @@ final class ChildSweepGToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 615,
-                       "497 before this story, 548 after it, 599 after US-150, 610 after US-151, 615 after US-152")
+        XCTAssertEqual(graph.nodes.count, 618,
+                       "497 before this story, 548 after it, 599 after US-150, 610 after US-151, "
+                           + "615 after US-152, 618 after US-153")
     }
 
     /// The one Child in range whose Champion is NOT a new node. Lalamon's canonical Champion,

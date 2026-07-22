@@ -261,7 +261,8 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 33, "US-151 hung Akatorimon on Floramon")
+        XCTAssertEqual(inLine.count, 34,
+                       "US-151 hung Akatorimon on Floramon, US-153 Kougamon on Mushmon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -658,8 +659,12 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "mush_digitama" }.count, 32,
-                       "US-151 hung Akatorimon on Floramon, the parent Wikimon gives it")
+        // Excluded by NAME rather than by bumping the total, the way every other tree file does it:
+        // `mush_digitama` is US-144's, `akatorimon` US-151's and `kougamon` US-153's, so the count
+        // below stays the claim THIS story's notes made about its own nodes.
+        let sweepEggs: Set<String> = ["mush_digitama", "akatorimon", "kougamon"]
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31,
+                       "the thirty-one nodes this story authored")
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        6, "the six aliases, which remove no orphan")
     }

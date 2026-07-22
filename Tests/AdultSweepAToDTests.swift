@@ -228,9 +228,9 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(sizes["wanyamon"], 20,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon")
         XCTAssertEqual(sizes["dmc-v4"], 26, "US-151 added the two Burgermon")
-        XCTAssertEqual(sizes["penc-wg"], 33, "US-151 added Akatorimon")
-        XCTAssertEqual(sizes["penc-vb"], 44,
-                       "US-151 added BlackTailmon, US-152 GulusGammamon")
+        XCTAssertEqual(sizes["penc-wg"], 34, "US-151 added Akatorimon, US-153 Kougamon")
+        XCTAssertEqual(sizes["penc-vb"], 45,
+                       "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon")
         XCTAssertEqual(sizes["penc-me"], 44, "US-151 added Deckerdramon")
     }
 
@@ -384,7 +384,8 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 615, "599 before this story, 615 after US-152")
+        XCTAssertEqual(graph.nodes.count, 618,
+                       "599 before this story, 615 after US-152, 618 after US-153")
     }
 
     func testTheGraphValidatesWithNoFindings() {

@@ -580,9 +580,9 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 615,
+        XCTAssertEqual(graph.nodes.count, 618,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
-                           + "610 after US-151, 615 after US-152")
+                           + "610 after US-151, 615 after US-152, 618 after US-153")
     }
 
     // MARK: - The whole file still validates

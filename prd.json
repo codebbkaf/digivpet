@@ -833,8 +833,8 @@
         "Typecheck passes"
       ],
       "priority": 40,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Orphan count 314 -> 311 (Appendix B, regenerated roster.generated.json); the Adult bucket 22 -> 19 and no other bucket moved, because this story spent no Perfect. Only THREE playable Adults H-L were still orphaned - KausGammamon, Kinkakumon, Kougamon - not the ~25 the PRD estimated, because the eleven device trees and three Child sweeps had already taken the rung from 168 orphans to 22. Each got one earned in-edge from a Child of its own line and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk fallback: gammamon -> kausgammamon -> pencvb_weregarurumon on penc-vb (both arrows cited to Pendulum COLOR ZERO Virus Busters, which is also its Wikimon family), jellymon -> kinkakumon -> zudomon on penc-ds (both cited to Vital Bracelet BE), mushmon -> kougamon -> jyureimon on penc-wg (both cited to D-alpha-508 / Digimon Story: Sunburst & Moonlight). Every line already had a Perfect rung, so 615 -> 618 nodes with no new Perfect, no new line and the dead-end ledger left at 99. Kinkakumon's Saiyu Warriors reading (Fujamon/Takinmon on penc-sw) was rejected on price - penc-sw still has NO Perfect rung - and both halves of that are pinned as a test. Gammamon is now FULL at three earned branches plus junk, the four-energy ceiling. The 17 Adults H-L that US-149/US-150 left as LEAVES were out of scope (they have in-edges, so they are not orphans) and stay on the dead-end ledger for the Perfect sweeps. New Tests/AdultSweepHToLTests.swift (20 tests). Full suite 2115 tests green, build green."
     },
     {
       "id": "US-154",

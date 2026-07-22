@@ -5082,6 +5082,28 @@
           ]
         },
         {
+          "to": "kinkakumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Burn enough energy to keep the current high"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "And swing something heavy with it until it dents"
+            }
+          ]
+        },
+        {
           "to": "diginorimon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -6744,6 +6766,28 @@
               "comparison": "atLeast",
               "value": 12,
               "hint": "Pick fight after fight"
+            }
+          ]
+        },
+        {
+          "to": "kougamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it keep to the shadows and rest unseen"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And never once give it away by waking it"
             }
           ]
         },
@@ -14864,6 +14908,28 @@
           ]
         },
         {
+          "to": "kausgammamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Take it up every height you can find"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7,
+              "hint": "And drill the glide until the landing comes out calm"
+            }
+          ]
+        },
+        {
           "to": "turuiemon",
           "requiredEnergy": "spirit",
           "minEnergy": 0,
@@ -17110,6 +17176,123 @@
         {
           "to": "andiramon_virus",
           "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kausgammamon",
+      "displayName": "KausGammamon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "KausGammamon",
+      "comment": "Wikimon: Kaus Gammamon Evolves From Gammamon (bolded) and Evolves To Were Garurumon (with any Data Adult Digimon from the Digimon Pendulum COLOR), and BOTH of those arrows are cited to Pendulum COLOR ZERO Virus Busters - the device this line is named for. Its family field says Virus Busters outright. Both ends were already on `penc-vb`, Gammamon since US-149 and WereGarurumon since US-143, so no Perfect was spent and no line argument had to be made. The bolded Evolves To is Canoweissmon, which has a Perfect sheet but no node; taking WereGarurumon instead keeps the story at three nodes and leaves Canoweissmon to the Perfect sweeps. Stamina is the energy Gammamon had left after BetelGammamon took spirit and GulusGammamon strength, and it suits the glider: Wikimon's profile has it soaring on its arm membranes and its knee jets.",
+      "evolutions": [
+        {
+          "to": "pencvb_weregarurumon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80000,
+              "hint": "Let it glide the whole length of a valley"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.65,
+              "hint": "And let the cool head win more than it loses"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kinkakumon",
+      "displayName": "Kinkakumon",
+      "stage": "Adult",
+      "line": "penc-ds",
+      "spriteFile": "Kinkakumon",
+      "comment": "US-152's rule applied before the line was chosen: intersect BOTH ends against the graph. Wikimon draws Kinkakumon out of Jellymon and into Zudomon, both cited to Vital Bracelet BE, and both are already on `penc-ds` - Jellymon is the tree's unlockable sixth Rookie and Zudomon is Ikkakumon's Perfect - so this costs no new Perfect. The Saiyu Warriors reading was the other candidate and was rejected on price rather than on citation: Fujamon and Takinmon are cited parents too, but `penc-sw` has NO Perfect rung at all, so it would have cost an earned Perfect plus a junk floor. Its Perfect rung is left to the Perfect sweeps. Strength is the energy Jellymon had left after TeslaJellymon took spirit, and the profile earns it: an Oni that swings a Seven-Star Gold Rod and kicks lightning.",
+      "evolutions": [
+        {
+          "to": "zudomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 700,
+              "hint": "Keep the rod arm working until it aches"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "And send it headlong into fight after fight"
+            }
+          ]
+        },
+        {
+          "to": "piranimon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "kougamon",
+      "displayName": "Kougamon",
+      "stage": "Adult",
+      "line": "penc-wg",
+      "spriteFile": "Kougamon",
+      "comment": "Wikimon: Kougamon Evolves From Mushmon (Digimon Story: Sunburst & Moonlight, and D-alpha-508) and Evolves To Jyureimon (D-alpha-508, with or without Igamon), and both are on `penc-wg` already - Mushmon is the tree's Mushroomon and Jyureimon is the Perfect over Woodmon. The same page notes that D-alpha-508 has Kougamon treated as a Togemon when evolving, which is what puts a ninja monkey on a plant line rather than flavour. Spirit is the energy Mushmon had left after Woodmon took vitality and RedVegimon strength, and it suits the Kouga-style shadow clones the profile gives it. Kougamon has an idle-only sheet in `Idle Frame Only/` as well; the 48x64 one in `Adult/` is what the roster entry points at.",
+      "evolutions": [
+        {
+          "to": "jyureimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120000,
+              "hint": "Move it shadow to shadow across the whole map"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "And practise the clone trick until it splits clean"
+            }
+          ]
+        },
+        {
+          "to": "tonosamagekomon",
+          "requiredEnergy": "spirit",
           "minEnergy": 0,
           "maxCareMistakes": 99,
           "isDefault": true

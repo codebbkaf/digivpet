@@ -3690,6 +3690,24 @@
       "tint": "gray",
       "signatureName": "Gulus Fang",
       "signatureSymbol": "moon.fill"
+    },
+    "kausgammamon": {
+      "projectileSymbol": "wind",
+      "tint": "blue",
+      "signatureName": "Urda Impulse",
+      "signatureSymbol": "wind"
+    },
+    "kinkakumon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "yellow",
+      "signatureName": "Lightning Oni Kick",
+      "signatureSymbol": "hammer.fill"
+    },
+    "kougamon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "purple",
+      "signatureName": "Kouga Shadow Clone",
+      "signatureSymbol": "triangle.fill"
     }
   },
   "lineDefaults": {

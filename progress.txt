@@ -58,6 +58,18 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   Perfect rung later; choosing it off both ends at once is why US-152 wired five Champions for five
   nodes while US-151 needed eleven for seven. Seven lines still owe a Perfect rung, so the saving is
   real every time it lands.
+- **PHASE E ADULT SWEEPS: when TWO lines are both cited, the tiebreak is which one already has the
+  rung above.** US-153's Kinkakumon had a Saiyu Warriors reading (Fujamon/Takinmon, `penc-sw`) and a
+  Vital Bracelet BE one (Jellymon -> Zudomon, `penc-ds`); both are real citations, the first is the
+  better theme, and the second cost two fewer nodes because `penc-sw` still has no Perfect rung.
+  Take the cheap one, but write the rejected reading into the node `comment` AND pin both halves as
+  a test ("the `penc-sw` Children still do not reach it" + "`penc-sw` still has no Perfect"), so the
+  story that opens that rung is told Kinkakumon is a rehome candidate instead of having to notice.
+- **PHASE E: a Child is FULL at three earned branches plus the junk fallback**, because
+  `EvolutionEngine` picks on dominant energy first and there are four energy types. US-153 took
+  Gammamon to the ceiling (spirit/strength/stamina + junk). When a sweep fills a Child, say so in a
+  test rather than in a comment — the next sweep needs another parent, not a fourth branch, and
+  `ChildSweepGToLTests`' `branchedByALaterSweep` entry for it can never move again.
 - **PHASE E: when the BOLDED Wikimon parent is `dexOnly`, read further down the SAME Evolves From
   before calling the rung unwireable.** `edgeToDexOnlyNode` forbids the edge, but the next cited
   parent is usually already on a line the file holds - US-152's Gawappamon took Gomamon three
@@ -3505,4 +3517,90 @@ The five, with the citation each rests on:
   rung - `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`, `penc-sw` - are
   untouched, and the 99 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge
   by whichever story claims them.
+---
+
+## 2026-07-22 - US-153 - Orphan sweep: Adult H-L
+Wired the THREE playable Champions whose display name begins H-L that had no edge at all:
+KausGammamon, Kinkakumon and Kougamon. Each gained one earned in-edge from a Child of its own line
+and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk fallback.
+Orphans 314 -> 311 (Appendix B over a regenerated `roster.generated.json`): Adult 22 -> 19, and NO
+other bucket moved. 615 -> 618 nodes.
+
+Files: `Resources/evolutions.json` (3 new Champions, 3 new Child branches, 0 new Perfects),
+`Resources/elements.json` and `Resources/moves.json` (3 entries each), new
+`Tests/AdultSweepHToLTests.swift` (20 tests), and the knock-on edits listed below.
+Full suite 2115 tests green (2095 before), build green.
+
+The three, with the citation each rests on:
+  kausgammamon  penc-vb  gammamon -> pencvb_weregarurumon  (Pendulum COLOR ZERO Virus Busters, both
+                                                            arrows; its Wikimon family is literally
+                                                            "Virus Busters")
+  kinkakumon    penc-ds  jellymon -> zudomon               (Vital Bracelet BE, both arrows)
+  kougamon      penc-wg  mushmon  -> jyureimon             (D-alpha-508 + Digimon Story: Sunburst &
+                                                            Moonlight, both arrows)
+
+**Learnings for future iterations:**
+
+- **THE PRD'S PER-LETTER ESTIMATES ARE STALE, AND CHECKING THE REAL RANGE IS THE FIRST THING TO DO.**
+  The AC says "roughly 25 orphaned Adult"; there were three. The estimate was taken when the rung
+  held 168 orphans, and eleven device trees plus three Child sweeps had already spent 146 of them.
+  Run Appendix B and bucket by first letter BEFORE planning the story — US-154..US-156 hold 19
+  between them (M-R 9, S-T 5, U-Z 5), not the ~75 the descriptions imply.
+
+- **TWO CITED LINES IS A REAL CHOICE, AND THE TIEBREAK IS THE RUNG ABOVE.** Kinkakumon is an Oni of
+  the Journey-to-the-West set and Wikimon cites Fujamon and Takinmon, both `penc-sw` Children, to
+  *Pendulum COLOR 6 Saiyu Warriors* — the thematically right home. It also cites Jellymon below and
+  Zudomon above to *Vital Bracelet BE*, and both of those were already on `penc-ds`. The first
+  reading costs an earned Perfect plus a junk floor under it (`penc-sw` has NO Perfect rung, the bill
+  US-151 paid twice); the second costs nothing. Took the second, wrote the first into the node
+  `comment`, and pinned it from both ends in `testKinkakumonTookTheCitedLineThatAlreadyHadAPerfect
+  Rung`: Fujamon and Takinmon still do not reach it, and `penc-sw` still has no Perfect. That test
+  FLIPS the day someone opens that rung, which is the point.
+
+- **A CHILD IS FULL AT THREE EARNED BRANCHES, AND US-153 FILLED ONE.** Gammamon now carries
+  BetelGammamon (spirit), GulusGammamon (strength) and KausGammamon (stamina) plus its junk
+  fallback. Four energy types is the ceiling `EvolutionEngine` imposes — a fourth earned branch
+  cannot be told apart from one of the three — so `ChildSweepGToLTests`' `branchedByALaterSweep`
+  entry for `gammamon` is at 4 and can never move again. Said out loud in
+  `testEveryChildThisStoryBranchedStillUsesDistinctEnergiesAndGammamonIsFull` so US-154, which has
+  WezenGammamon (the last of the four Gammamon Champions) in range, prices the problem before it
+  starts rather than discovering it as a failing test: **WezenGammamon cannot hang off Gammamon
+  even though Gammamon is its bolded cited parent** — every energy is spoken for. The way out is
+  already on the page and was checked while writing this: `Wezen Gammamon`'s `Evolves From` also
+  cites **Gabumon** to *Pendulum COLOR ZERO Virus Busters*, and `pencvb_gabumon` is on the same
+  line with room left. Prefer that second citation to a rehome, the US-150 rule.
+
+- **THE BOLDED `Evolves To` IS NOT ALWAYS THE ONE TO TAKE.** KausGammamon's is Canoweissmon, which
+  has a full Perfect sheet on disk and no node — taking it would have spent a Perfect for nothing,
+  because WereGarurumon is cited on the SAME page to the SAME device and was already on the line.
+  The arrow NOT taken is named in the comment and pinned in
+  `testTheGammamonThreadsLeftForTheLaterSweepsAreStillOpen`, which fails the day Canoweissmon is
+  wired and makes whoever wires it say which arrow it is.
+
+- **`PendulumWindGuardiansTreeTests`' UNGUARDED "every Champion falls to the junk Perfect" LOOP
+  SURVIVED, and the reason is worth knowing.** The Codebase Patterns section warns it "fails the
+  moment a sweep puts an Adult on them". It did not, because a sweep Adult carries a junk fallback
+  BY CONSTRUCTION — `EvolutionCriteriaTests` demands one. What actually breaks that loop is an Adult
+  with NO edges at all, which is what a Child sweep produces and an Adult sweep does not. Deep
+  Savers and Wind Guardians can still be broken by a future story that authors a leaf Champion.
+
+- **The knock-on list for this rung, all fourteen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, `AdultSweepAToDTests`, `AdultSweepEToGTests`, `ChildSweepAToFTests`,
+  `ChildSweepGToLTests` and `ChildSweepMToZTests` (615 -> 618); the per-line dict in
+  `EvolutionGraphTests` (`penc-ds` 36->37, `penc-wg` 33->34, `penc-vb` 44->45) and the same three in
+  `AdultSweepAToDTests` and `AdultSweepEToGTests`; `inLine.count` plus `sweepEggs` in
+  `PendulumDeepSaversTreeTests`, `PendulumVirusBustersTreeTests` and `PendulumWindGuardiansTreeTests`
+  (Wind Guardians had no `sweepEggs` set at all and got one rather than a bumped total);
+  `branchedByALaterSweep` in `ChildSweepGToLTests` (`gammamon` 3 -> 4); Zudomon's exact parent set in
+  `PendulumDeepSaversTreeTests` (a FOURTH `Set(graph.parents(of:))` equality — the pattern note's
+  count of three is now four); and Jellymon's row in that file's per-Rookie reachability table.
+  `EvolutionCriteriaTests.junkIds`, the dead-end ledger (still 99), `MinigameAssignmentTests`,
+  `EggHatchingTests`, `DexScreenTests`, `DexModel.lineTitles` and both `lineDefaults` did NOT move:
+  no new line, no new node at Perfect or above, and no thread newly reached an Ultimate.
+
+- REMAINS: US-154 onward (40/56 passing). Three Adult sweeps hold the 19 orphaned Champions M-Z,
+  then twelve Perfect and Ultimate sweeps and the Armor-Hybrid one. The seven lines still with no
+  Perfect rung - `xros`, `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`, `penc-sw` -
+  are untouched, and the 99 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an
+  out-edge by whichever story claims them.
 ---
