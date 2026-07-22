@@ -34,10 +34,20 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// it, and they end at Cherubimon (Vice) — the counterpart of the Cherubimon (Virtue) the V0
     /// document puts over Wizardmon, so neglecting a Virus Buster turns it into what it was raised
     /// to fight.
+    /// US-148 added SIX at once, and for a reason none of the earlier six had: the Child sweep is
+    /// the first story to give an out-edge to a Child on a line that had no Champion rung at all.
+    /// `algomon`, `commandramon`, `diablomon`, `penc-sw`, `tamers` and `wanyamon` were opened by
+    /// US-144/US-145/US-146 as Digitama-to-Child threads, so each needed a junk floor before any of
+    /// its Children could branch. Every one is a plain roster id off an unused sheet rather than a
+    /// line-scoped alias, so each also removes an orphan: Numemon X is the franchise's junk
+    /// Champion under its X-Antibody name (`numemon` is dmc-v1's), Manekimon a beckoning-cat
+    /// figurine, Mimicmon a chest that pretends to be treasure, Troopmon a faceless mook, Damemon
+    /// the washout its name says it is, and Tsuchidarumon a mud daruma. See their `comment`s.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
         "platinumscumon", "diginorimon", "gokimon", "zassoumon", "pencme_raremon", "turuiemon",
+        "numemon_x", "manekimon", "mimicmon", "troopmon", "damemon", "tsuchidarumon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
@@ -302,9 +312,16 @@ final class EvolutionCriteriaTests: XCTestCase {
                               "puroromon", "pusurimon", "xiaomon"]
         let strandedChild = ["fujamon", "gumdramon", "kakamon", "labramon", "ryudamon",
                              "shoutmon", "takinmon", "tinkermon", "xros_hagurumon"]
+        // US-148's two: the Champions it hung over Fujamon, which is itself stranded. `penc-sw` has
+        // no Digitama at all, so the whole Saiyu Warriors line is unreachable from the top of the
+        // ladder down and always was — wiring the rung above Fujamon inherits that and cannot fix
+        // it. Every other Child US-148 wired sits on a thread an egg reaches, which is why the list
+        // grows by exactly two rather than by the twenty-three Champions the story authored.
+        let strandedAdult = ["ginkakumon", "tsuchidarumon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
-        XCTAssertEqual(stranded, (strandedBabyI + strandedBabyII + strandedChild).sorted(),
+        XCTAssertEqual(stranded,
+                       (strandedBabyI + strandedBabyII + strandedChild + strandedAdult).sorted(),
                        "unreachable nodes: \(stranded)")
 
         // Every stranded Baby II is stranded ONLY because its single parent is one of the thirteen,
@@ -316,6 +333,10 @@ final class EvolutionCriteriaTests: XCTestCase {
         }
         for id in strandedChild {
             XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedBabyII.contains($0) }, [],
+                           "\(id) has a reachable parent and should not be stranded")
+        }
+        for id in strandedAdult {
+            XCTAssertEqual(graph.parents(of: id).map(\.id).filter { !strandedChild.contains($0) }, [],
                            "\(id) has a reachable parent and should not be stranded")
         }
     }

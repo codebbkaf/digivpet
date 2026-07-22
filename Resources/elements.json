@@ -1816,6 +1816,178 @@
     "zenimon": {
       "element": "steel",
       "attribute": "free"
+    },
+    "agumon_2006": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "agumon_black": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "agumon_black_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "agumon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "alraumon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "armadimon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "clearagumon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "dokunemon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "dracomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "dracomon_x": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "dracumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "ekakimon": {
+      "element": "plant",
+      "attribute": "free"
+    },
+    "elecmon_violet": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "funbeemon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "geogreymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "gryzmon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "manekimon": {
+      "element": "neutral",
+      "attribute": "virus"
+    },
+    "greymon_blue": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "coredramon_green": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "madleomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "greymon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "darktyranomon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "growmon_x": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "tortamon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "togemon_x": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "waspmon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "yanmamon": {
+      "element": "wind",
+      "attribute": "free"
+    },
+    "sunflowmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "guardromon_gold": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "blackgrowmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "paledramon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "dorugamon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "numemon_x": {
+      "element": "neutral",
+      "attribute": "virus"
+    },
+    "algomon_adult": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "mimicmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "death-x-dorugamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "sangloupmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "troopmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "hi-commandramon": {
+      "element": "steel",
+      "attribute": "virus"
+    },
+    "damemon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "firamon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "ginkakumon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "tsuchidarumon": {
+      "element": "earth",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

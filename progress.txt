@@ -392,6 +392,37 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `simctl launch` with an opaque FBSOpenApplicationServiceErrorDomain code=4 while
   `simctl io screenshot` still writes a plausible PNG of the watch face — which reads as the very
   black-screen bug the Phase E screenshot exists to catch.
+- **PHASE E SWEEPS: THE FOUR ENERGIES ARE A HARD CEILING OF FOUR BRANCHES PER PARENT.**
+  `EvolutionEngine` filters on `dominant == requiredEnergy` and the rung sweeps assert distinct
+  energies per node, so a Baby II can carry at most FOUR edges, ever. Koromon and Pyocomon were both
+  already full in US-148, which is why Agumon 2006 could not go on Agumon's own line and Elecmon
+  Violet could not go on its only cited parent's. Compute `{vitality,strength,spirit,stamina} -
+  used` over every candidate parent BEFORE promising a placement.
+- **PHASE E SWEEPS: A CHILD-OR-ABOVE SWEEP IS THREE RUNGS OF WORK.** An in-edge branches the rung
+  below; an out-edge needs TWO edges (`EvolutionCriteriaTests` wants 2..5 at Child and Adult) and
+  one of them must land on a JUNK node of the same line. Six lines opened by the Digitama sweeps had
+  no Champion rung at all, so US-148 had to invent a junk floor for each before any of their
+  Children could branch. Check `graph.nodes.filter { $0.line == L && $0.stage == <rung above> }`
+  before estimating a sweep.
+- **PHASE E SWEEPS: TAKE JUNK NODES OUT OF THE ORPHAN POOL, NOT OUT OF AN ALIAS.** `junkIds` is a
+  TEST's list, not a validator rule, and US-138/139/140/143 already set the precedent of picking a
+  thematically-junk unused sheet. US-148 found six (Numemon X, Manekimon, Mimicmon, Troopmon,
+  Damemon, Tsuchidarumon), so six junk floors removed six orphans instead of the zero a
+  line-scoped alias removes. Search the orphan pool by flavour first.
+- **PHASE E SWEEPS: A JUNK EDGE SHARES ITS EARNED SIBLING'S ENERGY and sits below it on
+  `minEnergy`** — the Agumon/Numemon shape from US-061. The distinct-energy rule is scoped to EARNED
+  edges, so a two-edge Child needs only one energy; giving the junk edge its own would make it
+  unreachable whenever the player's dominant type is the other one.
+- **PHASE E SWEEPS: CHECK THE STRANDED LISTS WHILE PICKING A PARENT, NOT AFTERWARDS.** An in-edge
+  from a stranded parent strands the child and everything above it. US-148 moved Funbeemon off
+  Puroromon (stranded) onto Tanemon — equally cited by Wikimon — and kept a whole thread reachable
+  for free; only Fujamon's two Champions were unavoidable, because `penc-sw` has no Digitama at all.
+- **PHASE E SWEEPS: hold the whole story as DATA in a throwaway authoring script that REFUSES TO
+  WRITE until it has self-checked.** `/tmp/us148/author.py` verified in one pass: no id already a
+  node, no edge crossing a line, no parent branching twice on one energy, no repeated symbol|tint
+  within a line, no repeated `signatureName` globally, no digit in any hint. It caught three
+  duplicate signature names before a byte hit the repo. Splice `evolutions.json` textually (US-136);
+  a leaf node authored by the previous sweep is matched on its literal `"evolutions": []` line.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -2950,4 +2981,95 @@ Orphan count for the stage: **Baby II 12 BEFORE, 0 AFTER.** Whole file 525 -> 47
   `BabyIISweepTests.testTheOnlyDeadEndsBelowUltimateAreTheChildrenThisSweepOpened`, 39 entries, and
   the Child sweeps are meant to edit it down. Orphans by stage now: Ultimate 166, Adult 129,
   Perfect 114, Child 50, Armor-Hybrid 16, Baby II 0.
+---
+
+## 2026-07-22 - US-148 (Orphan sweep: Child A-F)
+
+Wired the A-F third of the Child rung. 43 new nodes — the 14 orphaned Children A-F, the 23 earned
+Champions above the whole A-F range, and 6 junk Champions for the lines that had no Champion rung at
+all — plus 14 new branch edges across 9 Baby II, and out-edges on the 9 Children US-147 had opened
+as A-F leaves. `Resources/evolutions.json` 454 -> 497, the matching rows in `elements.json` /
+`moves.json`, a new `Tests/ChildSweepAToFTests.swift` (22 tests) and NINE existing test files. NO
+new lines, and NO aliases — new nodes and orphans removed are the same number for the first time
+since US-135. Build green, 2008 tests, 0 failures, validator zero findings.
+
+Orphan count for the stage: **Child 50 BEFORE, 36 AFTER — Child A-F 14 BEFORE, 0 AFTER.**
+Whole file 475 -> 432; Adult fell 129 -> 100 as a side effect of authoring the rung above.
+
+**Learnings for future iterations:**
+
+- **A CHILD SWEEP IS THREE RUNGS OF WORK, NOT ONE, AND THE THIRD IS THE ONE NOBODY BUDGETS FOR.**
+  Giving a Child an in-edge branches a Baby II (expected, US-147 said so). Giving it an out-edge
+  costs a Champion — but `EvolutionCriteriaTests.testEveryNonTerminalChildAndAdultHasTwoToFiveOut
+  goingEdges` means TWO out-edges, and `...FallsToAJunkEvolution` means one of them lands on a junk
+  Champion of the Child's OWN line. Six lines (`algomon`, `commandramon`, `diablomon`, `penc-sw`,
+  `tamers`, `wanyamon`) were Digitama-to-Child threads with no Champion rung at all, so each needed
+  a junk floor invented before ANY of its Children could branch. That is 6 of the 29 Champions, and
+  it is a fixed cost US-149 and US-150 will NOT pay again — every line those two touch now has one,
+  except whatever they open. Check `graph.nodes.filter { $0.line == L && $0.stage == .adult }`
+  before estimating.
+- **JUNK CHAMPIONS CAN COME OUT OF THE ORPHAN POOL INSTEAD OF BEING ALIASES.** The obvious move was
+  six line-scoped aliases (`pencme_raremon` precedent), which cost a `RosterTests` alias-list entry
+  each and remove NO orphan. The roster still had six junk-flavoured Adults nobody had wired:
+  Numemon X, Manekimon, Mimicmon, Troopmon, Damemon, Tsuchidarumon. Using them removed six orphans
+  instead of none. `junkIds` is a TEST's list, not a validator rule — US-138/139/140/143 already set
+  the precedent of picking a thematically-junk unused sheet — so the only real constraint is that
+  the pick reads as junk. Search the orphan pool by flavour before reaching for an alias.
+- **THE FOUR ENERGIES ARE A HARD CEILING OF FOUR BRANCHES PER BABY II, and it is what decides where
+  a variant lives.** `BabyIISweepTests.testEachBabyIIsBranchesAskForADifferentEnergy` plus
+  `EvolutionEngine`'s `dominant == requiredEnergy` filter means a Baby II can carry at most four
+  edges, ever. Koromon and Pyocomon were both already full, which is why Agumon 2006 could not go on
+  Agumon's own line and Elecmon Violet could not go on its only cited parent's. Run
+  `{vitality,strength,spirit,stamina} - used` over every candidate parent BEFORE promising the AC's
+  "variants hang off their base form's line" — the honest version is "with its base form OR with its
+  variant thread", and `tokomon_x` (US-147's X-Antibody In-Training) took all three X-Antibody
+  Children for exactly that reason.
+- **A CHILD'S JUNK EDGE SHARES ITS EARNED EDGE'S ENERGY and sits below it on `minEnergy`.** That is
+  the Agumon/Numemon shape from US-061 and it is REQUIRED reading: the distinct-energy rule is
+  scoped to EARNED edges (`SeedRosterTests`, `BabyIISweepTests`), so a two-edge Child does not need
+  two energies, and giving the junk edge its own energy would make it unreachable whenever the
+  player's dominant type is the other one.
+- **`SeedRosterTests.patamonLineVerifiedSet` IS A WHOLE-LINE CHECK ON `dmc-v3`, and any sweep that
+  puts a Champion there trips it.** It reads "every Adult-or-later node on dmc-v3 is in the US-043
+  verified set" — a list of DISPLAY NAMES, not ids. Four of US-148's Champions landed there because
+  Tokomon X and Upamon are dmc-v3's. Add to the set with a note, the way KingEtemon was added in
+  US-061; do not scope the check down.
+- **`EvolutionTreeLayoutTests.testTheBundledVersionOneLineIsABranchingTree` pins the dmc-v1 LAYOUT,
+  not just its size** — node count, the Adult column's id list IN ORDER, `rowCount` and the
+  connector count. Four earlier stories added only Digitama and could leave the branch shape alone;
+  the first story to hang a new Child off Koromon moved all four numbers. Anything that widens a
+  device line's Adult column has to update it.
+- **THE ADULT MIRROR OF US-147's CHILD GUARD LANDED EXACTLY WHERE US-147 PREDICTED.**
+  `PendulumNightmareSoldiersTreeTests` runs "every Champion on this line falls to Darumamon" over
+  `$0.stage == .adult`, and a brand-new leaf Champion has no edges at all; it needs
+  `&& !$0.evolutions.isEmpty`. The Adult sweeps (US-151..153) will hit the Perfect version of this.
+- **THE STRANDED LIST GREW BY TWO, AND ONLY TWO, BECAUSE `penc-sw` HAS NO DIGITAMA.** Fujamon was
+  already stranded, so the two Champions hung over it are too. That is inherited arithmetic, not an
+  omission — but it is worth checking BEFORE choosing a parent: `funbeemon`'s cited parent Puroromon
+  is also stranded, and moving it to Tanemon (equally cited) kept a whole thread reachable for free.
+  Look up `EvolutionCriteriaTests`' stranded lists while picking parents, not afterwards.
+- **The knock-on list for this rung, all nine files:** node count in `ElementCatalogTests` AND
+  `EvolutionGraphValidatorTests` (454 -> 497); the per-line dict in `EvolutionGraphTests`; line
+  sizes in `DigitamaSweepTests` AND `BabyIISweepTests`; `junkIds` and the stranded lists in
+  `EvolutionCriteriaTests`; the dmc-v1 layout in `EvolutionTreeTests`; the dmc-v3 verified set in
+  `SeedRosterTests`; and three places in `PendulumNightmareSoldiersTreeTests`. Plus the
+  `greymon_x` example in BOTH `MoveCatalogTests` and `ElementCatalogTests`, which US-138's own
+  learning had predicted: **a test that needs "something OUTSIDE the graph" must DERIVE it.** Both
+  are now `roster.entries.first { catalog[...] == nil && graph.node(id:) == nil }`.
+  `MinigameAssignmentTests` and `EggHatchingTests` did NOT move: no new line, and no thread newly
+  reached an Ultimate (every new Champion is a leaf).
+- **The authoring script pattern is worth repeating.** `/tmp/us148/author.py` held the whole story
+  as data — parents, energies, conditions, comments, elements, moves — and REFUSED TO WRITE until
+  it had checked, in one pass: no id already a node, no edge crossing a line, no Baby II branching
+  twice on one energy, no repeated symbol|tint within a line, no repeated `signatureName` globally,
+  and no digit in any hint. It caught three duplicate signature names before a single byte hit the
+  repo. Splice `evolutions.json` textually (mixed encoding, see US-136), and note that the nine
+  US-147 leaves are matched on their literal `"evolutions": []` line, which makes the replacement
+  a one-line regex per node.
+- REMAINS: US-149 onward (35/56 passing). US-149 (Child G-L) and US-150 (Child M-Z) face the same
+  three-rung shape; the dead-end ledger is now
+  `ChildSweepAToFTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesTheSweepsHaveOpened`, 59 entries —
+  30 Children for US-149/US-150 and 29 Champions for US-151..US-153 — and both halves are meant to
+  be edited down. Orphans by stage now: Ultimate 166, Perfect 114, Adult 100, Child 36,
+  Armor-Hybrid 16.
 ---

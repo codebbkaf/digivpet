@@ -15,12 +15,18 @@ final class MoveCatalogTests: XCTestCase {
         XCTAssertEqual(move.signatureName, "Pepper Breath")
     }
 
-    func testFallsBackByLineWhenIdIsUnauthored() {
-        // US-074 authored every graph node, so the line tier is now a safety net for a node added
-        // LATER rather than a live path — exercised here with an id the graph does not yet contain.
-        XCTAssertNil(catalog.moves["greymon_x"], "test assumes greymon_x is unauthored")
-        XCTAssertNil(graph.node(id: "greymon_x"), "test assumes greymon_x is not yet a node")
-        let move = catalog.move(forId: "greymon_x", line: "dmc-v1", stage: .adult)
+    /// US-074 authored every graph node, so the line tier is now a safety net for a node added
+    /// LATER rather than a live path — exercised here with an id the graph does not yet contain.
+    ///
+    /// That id is DERIVED rather than named. It said `greymon_x` until US-148 wired Greymon
+    /// (X-Antibody) onto dmc-v3; Phase E is pulling the whole roster into the graph one sweep at a
+    /// time, so any hard-coded "not a node yet" example is on a timer.
+    func testFallsBackByLineWhenIdIsUnauthored() throws {
+        let unauthored = try XCTUnwrap(
+            roster.entries.first { catalog.moves[$0.id] == nil && graph.node(id: $0.id) == nil }?.id,
+            "every roster Digimon is now an authored graph node — the line tier is unreachable")
+
+        let move = catalog.move(forId: unauthored, line: "dmc-v1", stage: .adult)
         XCTAssertEqual(move, catalog.lineDefaults["dmc-v1"])
         XCTAssertNotEqual(move, catalog.stageDefaults[Stage.adult.rawValue],
                           "line tier must win over the stage floor")

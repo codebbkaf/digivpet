@@ -188,11 +188,12 @@ final class DigitamaSweepTests: XCTestCase {
         }
         // Both grew in US-145 — `tamers` took four more Tamers partners with a Baby I apiece and
         // `wanyamon` took Liollmon's egg — again in US-146, which put a Baby II above every Baby I
-        // on both, and again in US-147, which put a Child above every Baby II. The numbers are the
+        // on both, again in US-147, which put a Child above every Baby II, and again in US-148,
+    // which put a Champion above every Child whose name begins A-F. The numbers are the
         // file's, not this story's, and are pinned here rather than in the newer sweep because
         // this is where the lines were opened.
-        XCTAssertEqual(sizes["tamers"], 34)
-        XCTAssertEqual(sizes["wanyamon"], 11)
+        XCTAssertEqual(sizes["tamers"], 40)
+        XCTAssertEqual(sizes["wanyamon"], 15)
     }
 
     /// Twelve of the twenty-two eggs added no rung at all, because their species is already wired.

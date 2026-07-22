@@ -733,8 +733,8 @@
         "Typecheck passes"
       ],
       "priority": 35,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the A-F third of the Child rung: 43 new nodes (the 14 orphaned Children A-F, 23 earned Champions above them, 6 junk Champions for the lines that had no Champion rung at all), 14 new branch edges at Baby II across 9 Baby II, and the 9 Children US-147 opened as A-F leaves wired onward. evolutions.json 454 -> 497, plus the matching elements.json/moves.json rows, a new Tests/ChildSweepAToFTests.swift (22 tests) and 9 existing test files. NO new lines; no aliases, so new nodes and orphans removed are the same number. ORPHAN COUNT for the stage (Appendix B, regenerated roster.generated.json): Child 50 BEFORE, 36 AFTER — Child A-F 14 BEFORE, 0 AFTER. Whole file 475 -> 432; Adult fell 129 -> 100 as a side effect of authoring the rung above. Build green, 2008 tests, 0 failures, validator zero findings."
     },
     {
       "id": "US-149",

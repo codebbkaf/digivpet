@@ -300,9 +300,15 @@ final class SeedRosterTests: XCTestCase {
     /// KingEtemon is US-061's addition, verified the same way the rest were: it is a real 48x64
     /// sheet in `Ultimate-Super Ultimate/`, which `testEverySeedNodeHasAnAnimatedSheetWithTheRightFrameCount`
     /// re-proves by slicing it.
+    /// The last four are US-148's, verified the same way KingEtemon was: each is a real 48x64 sheet
+    /// under `Adult/`, which `ChildSweepAToFTests.testEveryNodeThisSweepAddedIsASliceableSheet`
+    /// re-proves by slicing it. They are on this line because the Child sweep put the three
+    /// X-Antibody Children under Tokomon X, which US-147 hung on dmc-v3, and Armadimon under
+    /// Upamon — an in-edge decides the line, so the Champions above them had nowhere else to go.
     private let patamonLineVerifiedSet: Set<String> = [
         "Unimon", "Centalmon", "Ogremon", "Bakemon", "Shellmon", "Drimogemon", "Scumon",
         "Andromon", "Giromon", "Etemon", "HiAndromon", "Gokumon", "BanchoLeomon", "KingEtemon",
+        "Greymon X", "DarkTyranomon X", "Growmon X", "Tortamon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

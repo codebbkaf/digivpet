@@ -122,17 +122,22 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // Agumon (2006) being Agumon under another sheet — and twenty-five since US-145 added
         // three more onto Botamon: Swimmon's, and PawnChessmon's two colours. Every one of them
         // adds a node and a connector in the Digitama column and nothing else: the branch shape
-        // below is untouched, which is what the rest of this test still checks.
-        XCTAssertEqual(nodes.count, 25)
+        // below was untouched by all four.
+        //
+        // Twenty-nine since US-148, and that one DID move the shape: the Child sweep hung
+        // BlackAgumon and Dracomon off Koromon, each with a Champion of its own, so the Adult
+        // column went from six to eight and the tree from six rows to eight.
+        XCTAssertEqual(nodes.count, 29)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
-                       ["greymon", "meramon", "numemon", "devimon", "airdramon", "seadramon"])
-        XCTAssertEqual(layout.rowCount, 6)
+                       ["greymon", "meramon", "numemon", "devimon", "airdramon", "seadramon",
+                        "greymon_blue", "coredramon_green"])
+        XCTAssertEqual(layout.rowCount, 8)
         // Every one of the line's edges is drawn, because none of them leaves the line — which is
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 35)
+        XCTAssertEqual(layout.connectors.count, 41)
     }
 }

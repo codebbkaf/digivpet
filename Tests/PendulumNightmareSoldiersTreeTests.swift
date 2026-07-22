@@ -241,7 +241,7 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 36, "US-147 hung Sunmon and Coronamon here")
+        XCTAssertEqual(inLine.count, 37, "US-147 hung Sunmon and Coronamon here, US-148 Firamon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -353,8 +353,12 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         for rookie in ["bakumon", "candmon", "picodevimon"] {
             XCTAssertEqual(try node(rookie).evolutions.first(where: \.isDefault)?.to, "gokimon")
         }
-        // And every Champion falls to the same Perfect.
-        for champion in graph.nodes.filter({ $0.line == line && $0.stage == .adult }) {
+        // And every Champion falls to the same Perfect — every one that has an out-edge at all.
+        // US-148 hung Firamon over Coronamon and left it a leaf until the Adult sweeps, exactly as
+        // US-147 left this line's Coronamon one; a rung-at-a-time sweep always opens the rung above
+        // as leaves, so the guard is the same one the Child loop grew.
+        for champion in graph.nodes.filter({ $0.line == line && $0.stage == .adult
+                                             && !$0.evolutions.isEmpty }) {
             XCTAssertEqual(champion.evolutions.first(where: \.isDefault)?.to, "darumamon",
                            "\(champion.id) does not fall to this tree's junk Perfect")
         }
@@ -628,9 +632,9 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         // `cand_digitama` is US-144's, not this story's, so it is excluded rather than counted.
-        // `sunmon` and `coronamon` are US-147's, excluded the same way.
+        // `sunmon` and `coronamon` are US-147's and `firamon` is US-148's, excluded the same way.
         let sweepEggs: Set<String> = ["cand_digitama", "picodevi_digitama", "vorvo_digitama",
-                                      "sunmon", "coronamon"]
+                                      "sunmon", "coronamon", "firamon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")

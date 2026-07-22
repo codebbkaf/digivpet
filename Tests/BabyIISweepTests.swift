@@ -208,6 +208,11 @@ final class BabyIISweepTests: XCTestCase {
     /// when nothing else qualifies, so its own criteria are never consulted. That is why "no edge is
     /// unconditional" is read here as "no edge a player has to EARN is unconditional" — the same
     /// reading US-144 recorded for the hatch edges and US-146 for the Baby I rung.
+    ///
+    /// The earned count moved from nine to twenty in US-148: a Child's only possible parent is a
+    /// Baby II, so the only way to give an orphaned Child an in-edge is to branch one of these,
+    /// exactly as US-147 had to branch a Baby I one rung down. Eleven of the fourteen Children
+    /// that sweep authored hang off a node in this set.
     func testEveryBabyIIBranchIsEarnedAndHintedAndEveryFallbackIsNot() throws {
         var earned = 0
         XCTAssertEqual(sweptBabyII.count, 38)
@@ -230,7 +235,7 @@ final class BabyIISweepTests: XCTestCase {
             }
             XCTAssertNotNil(try? XCTUnwrap(node.evolutions.first?.requiredEnergy))
         }
-        XCTAssertEqual(earned, 9, "the number of earned Baby II branches has drifted")
+        XCTAssertEqual(earned, 20, "the number of earned Baby II branches has drifted")
     }
 
     /// Each Baby II's branches are told apart by dominant energy, or one of them is unreachable:
@@ -276,22 +281,33 @@ final class BabyIISweepTests: XCTestCase {
 
     // MARK: - The dead-end ledger, moved up one rung
 
-    /// **The handover to US-148, and the list it should edit.** Before US-144 the file had ZERO
-    /// nodes below Ultimate with no way onward; a sweep that authors one rung at a time cannot keep
-    /// that, because a rung has to exist before the rung above it does. US-147 empties the Baby II
-    /// half of that ledger and refills it at Child, so the ledger moves here — the newest sweep,
-    /// which is where the next one will look.
+    /// **The half of US-147's ledger US-148 has paid off.** The whole-file dead-end ledger now
+    /// lives in `ChildSweepAToFTests`, the newest sweep, which is where the next one will look;
+    /// what stays here is the claim this story can still own — of the thirty-nine Children it
+    /// opened as leaves, exactly the nine whose display name begins A-F have been wired onward,
+    /// and the other thirty are still waiting for US-149 and US-150.
     ///
-    /// It fails in BOTH directions on purpose: a fortieth dead end fails it, and so does wiring one
-    /// of the thirty-nine onward. The three Child sweeps are meant to edit this list down and are
-    /// told to rather than having to notice.
-    func testTheOnlyDeadEndsBelowUltimateAreTheChildrenThisSweepOpened() {
-        let deadEnds = graph.nodes
-            .filter { $0.evolutions.isEmpty && $0.stage != .ultimate }
-            .map(\.id)
+    /// It fails in BOTH directions on purpose: a tenth wired here without its range being right
+    /// fails it, and so does one of the nine being left a leaf.
+    func testTheChildrenThisSweepOpenedAreBeingWiredOnwardInAlphabeticalOrder() throws {
+        let stillLeaves = authoredChild
+            .filter { graph.node(id: $0)?.evolutions.isEmpty ?? true }
             .sorted()
-        XCTAssertEqual(deadEnds, authoredChild.sorted(),
-                       "the dead-end ledger has drifted; US-148..150 should be shrinking it")
+        XCTAssertEqual(stillLeaves,
+                       ["gaomon", "ghostmon", "guilmon", "gumdramon", "impmon", "kakamon",
+                        "keramon", "koemon", "labramon", "lalamon", "lopmon", "ludomon", "lunamon",
+                        "meicoochild", "monodramon", "morphomon", "penmon", "pulsemon", "renamon",
+                        "ryudamon", "shoutmon", "sistermon_blanc", "sunarizamon", "takinmon",
+                        "terriermon", "tinkermon", "v-mon", "wormmon", "xros_hagurumon", "zenimon"],
+                       "US-149 (G-L) and US-150 (M-Z) should be shrinking this")
+
+        // The nine US-148 took are exactly the A-F ones, read off the display name rather than
+        // listed, so a Child renamed into or out of the range moves with it.
+        for id in authoredChild where !stillLeaves.contains(id) {
+            let name = try XCTUnwrap(graph.node(id: id)?.displayName)
+            XCTAssertTrue(("A"..."F").contains(String(name.prefix(1)).uppercased()),
+                          "\(id) (\(name)) was wired by the A-F sweep but is not in A-F")
+        }
     }
 
     // MARK: - AC: lines are grouped coherently
@@ -323,9 +339,9 @@ final class BabyIISweepTests: XCTestCase {
         // Nine of the twenty-one grew by more than the four nodes a chain would add, which is the
         // shape of grouping rather than of a chain per Digimon.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 34)
+        XCTAssertEqual(sizes["tamers"], 40)
         XCTAssertEqual(sizes["vital"], 18)
-        XCTAssertEqual(sizes["wanyamon"], 11)
+        XCTAssertEqual(sizes["wanyamon"], 15)
     }
 
     /// The line-scoped alias, called out because it is the one node here that is not its own
