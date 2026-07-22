@@ -31,18 +31,18 @@ final class DexTypeBadgeTests: XCTestCase {
     /// A roster-only Digimon typed by the keyword tier, so the row is proved to read the same
     /// lookup the battle will — not just the authored `types` table.
     ///
-    /// The Seadramon-family example is found in the roster at RUN TIME. It was `megaseadramon`
-    /// until US-138 wired that one into the Pendulum Nature Spirits tree; Phase E keeps claiming
-    /// ids, and what this test needs is ANY entry the graph does not have.
+    /// The example is found in the roster at RUN TIME. It was a Seadramon until US-165 wired the
+    /// last of them into the graph; `ankylomon` replaces it — one of the 157 idle-only Digimon that
+    /// can NEVER become a node, so no later sweep can claim it, and `ankylo` keyword-types to earth.
     func testARosterOnlyEntryIsTypedByTheSameLookup() throws {
         let entry = try XCTUnwrap(
-            roster.entries.first { $0.id.contains("seadra") && graph.node(id: $0.id) == nil },
-            "every Seadramon is now a graph node — pick another keyword rule to exercise")
+            roster.entries.first { $0.id.contains("ankylo") && graph.node(id: $0.id) == nil },
+            "ankylomon is now a graph node — pick another keyword rule to exercise")
 
         let type = try XCTUnwrap(DexTypeBadges.type(for: row(entry.id, discovered: true),
                                                     in: graph, catalog: catalog))
 
-        XCTAssertEqual(type.element, .water)
+        XCTAssertEqual(type.element, .earth)
     }
 
     // MARK: - AC: an undiscovered entry shows neither badge

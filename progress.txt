@@ -4932,3 +4932,50 @@ The thirty, `Perfect -> Ultimate`:
   - HolyAngemon is now the FIRST four-edge Perfect (cherubimon_virtue, blackseraphimon, dominimon,
     seraphimon) and is CLOSED — all four energies spent. A later sweep wanting the Virus Busters
     HolyAngemon thread must take a different Perfect.
+
+## 2026-07-23 - US-165 (Orphan sweep: Ultimate-Super Ultimate E-H)
+- Wired all 14 orphaned Ultimate E-H as evolution nodes. No jogress result in the E-H range, so no
+  reservations to skip. Orphans: Ultimate 80 -> 66 (Appendix B), Armor-Hybrid 16 untouched; total
+  96 -> 82. Nodes 837 -> 851. Dead-end ledger 60 -> 59 (Pandamon cleared). Validator: zero findings.
+- Files: Resources/{evolutions,elements,moves}.json (data), scripts/us165_author.py (authoring
+  record), Tests/UltimateSweepEToHTests.swift (new, 25 tests), plus ~20 knock-on test files.
+- Build green, 2433 tests, 0 failures.
+- **Learnings for future iterations:**
+  - **A "seadra" (or any keyword-rule) roster-only fixture DIES when its last member is wired.**
+    US-165 made GigaSeadramon a node, and DexTypeBadgeTests / ElementCatalogTests both pick a
+    roster-only Seadramon at RUN TIME to exercise the keyword fallback. There were none left, so
+    both broke. FIX: repoint at one of the 157 permanently-`dexOnly` Digimon (ankylomon -> earth) —
+    those can NEVER become nodes, so no later sweep can strand the test again. Before choosing a
+    keyword fixture, prefer a dexOnly id over any playable one.
+  - **A "second design" whose Wikimon page is the OTHER spelling follows a cited parent, the
+    Chaosdramon V2 shape.** `hi-andromon` (sprite Hi-Andromon) and `hiandromon` (HiAndromon) are two
+    roster entries; Wikimon has only `HiAndromon` (the dmc-v3 node under Andromon). So hi-andromon is
+    the pack's 2nd Andromon sprite and hangs on the OTHER Andromon (`pencme_andromon`, penc-me), not
+    a duplicate of the first. Run `opensearch` when a page 404s — Hi-Andromon 404s, HiAndromon is the
+    real title.
+  - **A sweep can make a Perfect a FOUR-EDGE node, and two prior test files pin that Perfect's edge
+    count.** doruguremon (was 3) and pencme_andromon (was 3) each gained a 4th edge here. That breaks
+    UltimateSweepCToDTests' "these five carry three edges" list AND PerfectSweepDToGTests'
+    `branchedBySweeps` dict AND PendulumMetalEmpireTreeTests' `earned` set AND the doruguremon
+    edge-order assertion. Grep the parent id across Tests/*.swift BEFORE authoring a 4th edge; each
+    hit is a hardcoded count to bump.
+  - **The whole-graph live numbers move for EVERY prior sweep, not just the adjacent one.** Bulk
+    edits needed: `graph.nodes.count` 837->851 (19 files), `graph.nodes(at:.ultimate).count`
+    158->172 (6 Perfect-sweep files), the ultimate orphan bucket 80->66 and true-remainder 78->64
+    (both A-B and C-D Ultimate sweeps), dead-end ledger 60->59 (7 files), and 8 line sizes
+    (tamers 116->117, penc-nso 73->75, penc-me 70->71, penc-nsp 41->43, penc-wg 43->45, dmc-v4
+    31->34, dmc-v5 25->26, penc-sw 18->20) plus the EvolutionGraphTests byLine dict. The tree files
+    exclude a sweep's additions via a `sweepEggs`/`notThisStorys` set so their census stays fixed —
+    ADD your nodes there, do not bump the census.
+  - **A node on the stranded penc-sw (Saiyu Warriors) line must (a) say "Saiyu Warriors" in its
+    comment** (ChildSweepAToFTests / BabyIISweepTests / DigitamaSweepBabyITests iterate every penc-sw
+    node) **and (b) be added to EvolutionCriteriaTests.strandedUltimate** (the line has no Digitama,
+    so nothing on it is egg-reachable). enmamon and erlangmon both landed there — the honest home,
+    since enmamon's every citation is an Ultimate and erlangmon's only bolded on-line parent is the
+    Pandamon leaf.
+  - **Comment keyword assertions are CASE-SENSITIVE `.contains("Wikimon")`.** "ON WIKIMON" fails;
+    write "Wikimon" exactly. Three comments here needed a fix before the new test's citation check
+    passed.
+  - REMAINS: US-166 onward (52/56 passing). 66 Ultimate orphans (I-Z) + 16 Armor-Hybrid = 82 total.
+    Four sweeps left: three Ultimate (I-M, N-R, S-Z) and the Armor-Hybrid one (US-169). Ogudomon is
+    still pinned for US-167 (display name O).

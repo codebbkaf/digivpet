@@ -491,6 +491,11 @@ final class SeedRosterTests: XCTestCase {
         // and Huankunmon was already on this line, so the C-D Ultimate sweep landed it here.
         // Eyeballed as `Ultimate-Super Ultimate/Dijiangmon.png`.
         "Dijiangmon",
+        // US-165's three, all over this line's own Perfects: Gankoomon X and HolyDigitamamon over
+        // Digitamamon (Gankoomon X the strong variant rule, HolyDigitamamon the eponym), and
+        // Goddramon X over Megadramon (a cited parent, its own base form idle-only). Each eyeballed
+        // as its `Ultimate-Super Ultimate/*.png` sheet.
+        "Gankoomon X", "HolyDigitamamon", "Goddramon X",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -694,6 +699,9 @@ final class SeedRosterTests: XCTestCase {
         // off DarkTyranomon and X off Cyclomon, which are the two Champions the plain
         // MetalTyranomon already hangs off on this line. Both are 48x64 sheets under `Perfect/`.
         "MetalTyranomon V2", "MetalTyranomon X",
+        // US-165's one: Ebemon X hangs off Vademon, its base form's own Perfect (the strong variant
+        // rule), which is already on this line. Eyeballed as `Ultimate-Super Ultimate/Ebemon_X.png`.
+        "Ebemon X",
     ]
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

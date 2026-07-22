@@ -241,8 +241,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         XCTAssertTrue(Set(try targets(of: "pencme_andromon"))
                         .isSuperset(of: ["pencme_hiandromon", "pencme_mugendramon"]))
 
+        // US-165 hung Hi-Andromon here as a FOURTH edge — the pack's second Andromon design — so
+        // pencme_andromon now spends all four energies.
         let earned = try node("pencme_andromon").evolutions.filter { !$0.isDefault }
-        XCTAssertEqual(Set(earned.map(\.to)), ["pencme_mugendramon", "craniummon_x"])
+        XCTAssertEqual(Set(earned.map(\.to)), ["pencme_mugendramon", "craniummon_x", "hi-andromon"])
         XCTAssertTrue(earned.allSatisfy { !$0.conditions.isEmpty }, "each earned climb must be gated")
 
         // Mugendramon is still reachable without it, through Cyberdramon's default edge — and
@@ -316,7 +318,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 70,
+        XCTAssertEqual(inLine.count, 71,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
                            + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon, "
@@ -419,7 +421,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       "anubimon", "belphemon_rage", "belphemon_x", "brigadramon",
                                       // US-164's three: Craniummon X over this line's own Andromon,
                                       // and both Duftmon over its Knightmon.
-                                      "craniummon_x", "duftmon", "duftmon_x"]
+                                      "craniummon_x", "duftmon", "duftmon_x",
+                                      // US-165's one: Hi-Andromon, the pack's second Andromon
+                                      // design, over this line's own Andromon.
+                                      "hi-andromon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

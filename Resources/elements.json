@@ -3348,6 +3348,62 @@
     "dynasmon_x": {
       "element": "fire",
       "attribute": "vaccine"
+    },
+    "ebemon_x": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "enmamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "erlangmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "examon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "gankoomon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "gigaseadramon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "goddramon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "gracenovamon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "granddracumon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "hi-andromon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "holydigitamamon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "holydramon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "hououmon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "hydramon": {
+      "element": "wind",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

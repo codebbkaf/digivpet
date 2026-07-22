@@ -442,18 +442,18 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 116, "Manticoremon, both MegaloGrowmon and Dukemon, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 73,
+        XCTAssertEqual(sizes["tamers"], 117, "Manticoremon, both MegaloGrowmon and Dukemon, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 75,
                        "Mammon X, both Mephismon, Mummymon and Dinorexmon, plus US-161's Orochimon, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["diablomon"], 24,
                        "both Meicrackmon, the Gerbemon floor, Rasielmon and Raguelmon")
         XCTAssertEqual(sizes["dmc-v1"], 39, "Mamemon X, MetalGreymon Virus X and Monzaemon X, plus US-161's NeoDevimon, plus US-163's three Ultimates")
         XCTAssertEqual(sizes["dmc-v3"], 54, "MarinBullmon, Ryugumon and MetalPhantomon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["penc-ds"], 46, "MarinChimairamon and Mermaimon, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["dmc-v5"], 25, "MetalTyranomon V2 and MetalTyranomon X")
+        XCTAssertEqual(sizes["dmc-v5"], 26, "MetalTyranomon V2 and MetalTyranomon X")
         XCTAssertEqual(sizes["wanyamon"], 29, "MachGaogamon, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["penc-nsp"], 41, "MegaSeadramon X, plus US-161's both Panjyamon, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-me"], 70, "MetalMamemon X, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-nsp"], 43, "MegaSeadramon X, plus US-161's both Panjyamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-me"], 71, "MetalMamemon X, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 10)
     }
@@ -711,7 +711,7 @@ final class PerfectSweepMTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       60, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       59, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
         // `vital` was all leaves when this story ran, which was the claim behind "cheapest rung
         // left to open" — and US-161 took the advice: it branched Kokeshimon and Tia Ludomon and
@@ -745,11 +745,11 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertNil(roster.entry(id: "diablomon_gerbemon"),
                      "the junk floor gained a roster entry, so it removes an orphan after all")
 
-        XCTAssertEqual(graph.nodes.count, 837, "709 before this story")
+        XCTAssertEqual(graph.nodes.count, 851, "709 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "126 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 158, "93 before this story, 138 after US-163")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 172, "93 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

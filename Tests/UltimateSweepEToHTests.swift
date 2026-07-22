@@ -2,73 +2,51 @@ import XCTest
 
 @testable import DigiVPet
 
-/// US-164 — the twenty-first of Phase E's orphan sweeps and **the second at the TOP rung**: the
-/// twenty playable Ultimate whose display name begins C-D that no device tree and no earlier sweep
-/// reached, and that a Jogress recipe does not already reach. The Ultimate bucket 100 -> 80.
+/// US-165 — the twenty-second of Phase E's orphan sweeps and **the third at the TOP rung**: the
+/// fourteen playable Ultimate whose display name begins E-H that no device tree and no earlier sweep
+/// reached, and that no Jogress recipe already reaches. The Ultimate bucket 80 -> 66.
 ///
-/// **AN ULTIMATE SWEEP IS AN IN-EDGE SWEEP AND NOTHING ELSE**, exactly as US-163 recorded: the rung
-/// is terminal, so there is no rung above to open, no junk floor to invent
-/// (`EvolutionCriteriaTests.branchingNodes` filters to Child and Adult), and no new line. Twenty
-/// orphans cost exactly twenty nodes.
+/// **AN ULTIMATE SWEEP IS AN IN-EDGE SWEEP AND NOTHING ELSE**, exactly as US-163/US-164 recorded:
+/// the rung is terminal, so there is no rung above to open, no junk floor to invent
+/// (`EvolutionCriteriaTests.branchingNodes` filters to Child and Adult), and no new line. Fourteen
+/// orphans cost exactly fourteen nodes.
 ///
-/// **TWO C-D ULTIMATES ARE NOT ORPHANS AND ARE LEFT ALONE: Chaosdramon and Chaosmon.** Both are
-/// Jogress results — the DMC Ver.5 / Ver.4 documents draw them as the Jogress Ultra row and
-/// `jogress.json` spends them — so they are obtainable, and `DMCVersion5TreeTests`,
-/// `DMCVersion4TreeTests` and `PendulumMetalEmpireTreeTests` each pin them to NO evolution node.
-/// Cernumon is a Jogress result too, but no device tree reserves it (as `aegisdramon` and
-/// `millenniumon` are both Jogress results and wired nodes), so it IS wired here.
+/// Thirteen hang an EARNED branch beside the climb their Perfect already has, with two criteria and a
+/// `requiredEnergy` distinct from every other edge on that node; ONE — Erlangmon — is the single
+/// `isDefault` climb of a LEAF, Pandamon, a bolded Saiyu-Warriors parent that had been a Perfect dead
+/// end. One entry off `ChildSweepAToFTests`' ledger, 60 -> 59.
 ///
-/// Two shapes of in-edge, and the parent decides which:
-///
-///  * TWO leaf Perfects gain their single `isDefault` climb — MetalGreymon X -> Chaosdramon V2 and
-///    Huankunmon -> Dijiangmon. Both were parked for this rung IN AS MANY WORDS: US-160 and US-159
-///    each ended those nodes with "A leaf until the Ultimate sweeps", and each is a CITED parent of
-///    the Digimon it now carries. Two entries off `ChildSweepAToFTests`' dead-end ledger, 62 -> 60.
-///  * The other eighteen hang an EARNED branch beside the climb their Perfect already has, with two
-///    criteria and a `requiredEnergy` distinct from every other edge on that node.
-///
-/// **THIS STORY'S ONE FIRST: HolyAngemon becomes the FIRST PERFECT IN THE FILE WITH FOUR EDGES**,
-/// and in doing so spends its last free energy on Dominimon — the node is CLOSED.
-final class UltimateSweepCToDTests: XCTestCase {
+/// **TWO PERFECTS REACH FOUR EDGES**: DORUguremon (Examon X) and pencme_andromon (Hi-Andromon) join
+/// HolyAngemon (US-164) as the file's four-edge, all-energies-spent Perfects.
+final class UltimateSweepEToHTests: XCTestCase {
     private let graph = EvolutionGraph.bundled
     private let roster = Roster.bundled
 
-    /// Chaosdramon and Chaosmon: C-D Ultimates that are Jogress results, so obtainable and left
-    /// unwired. Named here because the coverage and bucket claims below have to know them.
-    private let jogressReachable = ["chaosdramon", "chaosmon"]
-
-    /// The twenty orphaned Ultimates this story wired, with the Perfect that now reaches each and
+    /// The fourteen orphaned Ultimates this story wired, with the Perfect that now reaches each and
     /// the `requiredEnergy` of the new edge. Every one is a plain roster id, so every one removes an
     /// orphan.
     private let swept: [(ultimate: String, parent: String, energy: EnergyType)] = [
-        ("callismon", "soloogarmon", .vitality),
-        ("cernumon", "jyureimon", .spirit),
-        ("chaosdukemon_core", "blackmegalogrowmon", .vitality),
-        ("chaosdramon_v2", "metalgreymon_x", .strength),
-        ("cherubimon_vice_x", "andiramon_virus", .vitality),
-        ("cherubimon_virtue_x", "entmon", .spirit),
-        ("craniummon_x", "pencme_andromon", .stamina),
-        ("cthyllamon", "dagomon", .vitality),
-        ("darknessbagramon", "darkknightmon", .strength),
-        ("deathmon_black", "darumamon", .vitality),
-        ("demon", "deathmeramon", .spirit),
-        ("demon_x", "deathmeramon", .vitality),
-        ("diablomon", "meicrackmon", .strength),
-        ("diablomon_x", "meicrackmon", .spirit),
-        ("dijiangmon", "huankunmon", .spirit),
-        ("dominimon", "holyangemon", .stamina),
-        ("duftmon", "knightmon", .spirit),
-        ("duftmon_x", "knightmon", .vitality),
-        ("dukemon_x", "megalogrowmon_orange", .spirit),
-        ("dynasmon_x", "doruguremon", .vitality),
+        ("ebemon_x", "vademon", .vitality),
+        ("enmamon", "gokuwmon", .vitality),
+        ("erlangmon", "pandamon", .spirit),
+        ("examon_x", "doruguremon", .stamina),
+        ("gankoomon_x", "digitamamon", .vitality),
+        ("gigaseadramon", "megaseadramon", .strength),
+        ("goddramon_x", "megadramon", .vitality),
+        ("gracenovamon", "flaremon", .strength),
+        ("granddracumon", "vamdemon", .strength),
+        ("hi-andromon", "pencme_andromon", .spirit),
+        ("holydigitamamon", "digitamamon", .spirit),
+        ("holydramon_x", "angewomon", .spirit),
+        ("hououmon_x", "garudamon_x", .vitality),
+        ("hydramon", "blossomon", .vitality),
     ]
 
-    /// The two Perfects that were LEAVES before this story and now carry their one `isDefault`
-    /// climb — Huankunmon -> Dijiangmon and MetalGreymon X -> Chaosdramon V2. Each is an entry off
-    /// `ChildSweepAToFTests`' ledger.
-    private let leafParents = ["huankunmon", "metalgreymon_x"]
+    /// The one Perfect that was a LEAF before this story and now carries its one `isDefault` climb —
+    /// Pandamon -> Erlangmon. An entry off `ChildSweepAToFTests`' dead-end ledger.
+    private let leafParents = ["pandamon"]
 
-    /// The shared "did everything right" context, US-151's through US-163's exactly.
+    /// The shared "did everything right" context, US-151's through US-164's exactly.
     private let met = ConditionContext(
         stageTotals: MetricTotals(values: ["health.steps": 500_000,
                                            "health.activeEnergy": 50_000,
@@ -91,49 +69,37 @@ final class UltimateSweepCToDTests: XCTestCase {
 
     /// The headline claim. The range is derived from the ROSTER, so an Ultimate sheet added to the
     /// folder later lands in scope and fails here instead of being quietly missed.
-    func testEveryPlayableUltimateCToDIsANodeWithAnInEdge() throws {
+    func testEveryPlayableUltimateEToHIsANodeWithAnInEdge() throws {
         let inRange = roster.entries.filter {
             $0.stage == .ultimate && !$0.dexOnly
-                && ("C"..."D").contains(String($0.displayName.prefix(1)).uppercased())
+                && ("E"..."H").contains(String($0.displayName.prefix(1)).uppercased())
         }
-        XCTAssertEqual(inRange.count, 37, "the C-D Ultimate range changed size")
+        XCTAssertEqual(inRange.count, 30, "the E-H Ultimate range changed size")
 
-        // Every one is OBTAINABLE — by an evolution in-edge, or (for the two Jogress results) by a
-        // recipe. Chaosdramon and Chaosmon have no node and must not: the device trees reserve
-        // them, so this test reads "obtainable", not "has an evolution parent".
+        // No E-H Ultimate is a Jogress result reserved as a non-node, so every one is obtainable by
+        // an evolution in-edge.
         for entry in inRange {
-            let byJogress = JogressCatalog.bundled.recipes.contains { $0.result == entry.id }
-            if byJogress && graph.node(id: entry.id) == nil {
-                continue  // reserved as a Jogress result, and correctly not an evolution node
-            }
             let node = try XCTUnwrap(graph.node(id: entry.id), "\(entry.id) is not a node at all")
             XCTAssertEqual(node.stage, .ultimate)
-            XCTAssertTrue(!graph.parents(of: entry.id).isEmpty || byJogress,
-                          "\(entry.id) is neither evolved into nor a Jogress")
-        }
-        for id in jogressReachable {
-            XCTAssertTrue(graph.parents(of: id).isEmpty,
-                          "\(id) gained an evolution parent, but the device trees reserve it")
-            XCTAssertTrue(JogressCatalog.bundled.recipes.contains { $0.result == id },
-                          "\(id) is not a Jogress result, so leaving it unwired stranded it")
+            XCTAssertFalse(graph.parents(of: entry.id).isEmpty, "\(entry.id) is evolved into by nothing")
         }
 
-        // Fifteen of the thirty-seven were already wired before this story — device-tree Megas and
-        // the Megas the Perfect sweeps opened under them (Chaosdramon X US-151's, Dukemon US-160's,
-        // Craniummon US-142's, Cherubimon Vice/Virtue US-143's, and so on).
-        let alreadyWired = ["chaosdramon_x", "chaosdukemon", "cherubimon_vice", "cherubimon_virtue",
-                            "craniummon", "cresgarurumon", "darkdramon", "darkknightmon_x",
-                            "deathmon", "dianamon", "diarbbitmon", "dinorexmon", "dinotigermon",
-                            "dorugoramon", "dukemon"]
+        // Sixteen of the thirty were already wired before this story — device-tree Megas and the Megas
+        // the Perfect sweeps opened under them (including the first Hi-Andromon design `hiandromon`
+        // and Griffomon US-158's). The alias nodes `dmcv2_ebemon` and `pencme_hiandromon` are not
+        // roster entries, so they are outside this playable range.
+        let alreadyWired = ["ebemon", "eldoradimon", "fenriloogamon", "gaioumon", "gankoomon",
+                            "gokumon", "grandiskuwagamon", "grandlocomon", "grankuwagamon", "griffomon",
+                            "gundramon", "heraklekabuterimon", "hexeblaumon", "hiandromon", "holydramon",
+                            "hououmon"]
         XCTAssertEqual(Set(inRange.map(\.id)),
-                       Set(swept.map(\.ultimate)).union(alreadyWired).union(jogressReachable),
-                       "the range no longer partitions into this story's twenty, the fifteen before, and the two Jogress")
+                       Set(swept.map(\.ultimate)).union(alreadyWired),
+                       "the range no longer partitions into this story's fourteen and the sixteen before")
     }
 
-    /// The whole-file form, so an Ultimate outside C-D that a later sweep is meant to take shows up
-    /// as a falling number rather than as nothing at all. The evolution-edge count is 80 — the two
-    /// Jogress results are obtainable but carry no edge, so 78 is the true remainder E-Z is owed.
-    func testTheUltimateBucketFellByExactlyThisStorysTwenty() {
+    /// The whole-file form, so an Ultimate outside E-H that a later sweep is meant to take shows up as
+    /// a falling number rather than as nothing at all.
+    func testTheUltimateBucketFellByExactlyThisStorysFourteen() {
         let connected = Set(graph.nodes.flatMap { $0.evolutions.map(\.to) })
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let orphans = roster.entries
@@ -141,9 +107,7 @@ final class UltimateSweepCToDTests: XCTestCase {
             .map(\.id)
 
         XCTAssertEqual(orphans.count, 66,
-                       "100 before this story, 80 after; US-165 then took the E-H band down to 66")
-        XCTAssertEqual(orphans.filter { !jogressReachable.contains($0) }.count, 64,
-                       "64 is the true remainder once the two Jogress results are set aside")
+                       "80 Ultimate were edge-orphaned before this story and 66 after")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
         }
@@ -179,7 +143,7 @@ final class UltimateSweepCToDTests: XCTestCase {
         }
     }
 
-    /// No new lines for twenty-two new nodes, and the count is the file's rather than this story's.
+    /// No new lines for fourteen new nodes, and the count is the file's rather than this story's.
     func testTheSweepOpenedNoNewLines() {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
@@ -187,20 +151,17 @@ final class UltimateSweepCToDTests: XCTestCase {
         XCTAssertEqual(sizes["tamers"], 117)
         XCTAssertEqual(sizes["penc-nso"], 75)
         XCTAssertEqual(sizes["penc-me"], 71)
-        XCTAssertEqual(sizes["penc-vb"], 60)
-        XCTAssertEqual(sizes["dmc-v3"], 54)
-        XCTAssertEqual(sizes["penc-ds"], 46)
         XCTAssertEqual(sizes["penc-wg"], 45)
         XCTAssertEqual(sizes["penc-nsp"], 43)
-        XCTAssertEqual(sizes["dmc-v1"], 39)
         XCTAssertEqual(sizes["dmc-v4"], 34)
-        XCTAssertEqual(sizes["diablomon"], 24)
+        XCTAssertEqual(sizes["dmc-v5"], 26)
+        XCTAssertEqual(sizes["penc-sw"], 20)
     }
 
     // MARK: - AC4: the shape of every edge this story authored
 
-    /// The AC's "no edge is unconditional" binds the EARNED edges. The twenty branches each carry
-    /// two criteria with a non-empty hint; the two leaf climbs do NOT, and must not — the reading
+    /// The AC's "no edge is unconditional" binds the EARNED edges. The thirteen branches each carry
+    /// two criteria with a non-empty hint; the one leaf climb does NOT, and must not — the reading
     /// every rung below this one recorded, US-020 taking an `isDefault` edge whatever its gates say.
     func testEveryEarnedBranchCarriesCriteriaAndEveryLeafClimbDoesNot() throws {
         for (ultimate, parent, energy) in swept {
@@ -256,26 +217,23 @@ final class UltimateSweepCToDTests: XCTestCase {
                            "\(parent) offers two edges on the same energy")
         }
 
-        // **HolyAngemon is the first Perfect in the file to carry four edges**, and it now spends
-        // every one of the four energies — the node is closed to any later sweep.
-        let holyangemon = try XCTUnwrap(graph.node(id: "holyangemon"))
-        XCTAssertEqual(holyangemon.evolutions.count, 4)
-        XCTAssertEqual(Set(holyangemon.evolutions.compactMap(\.requiredEnergy)), Set(EnergyType.allCases))
-
-        // The Perfects that carry three edges after this story. (Chimairamon was NOT forked here —
-        // Chaosmon, which would have, is a Jogress result left unwired — so it stays at the two
-        // edges US-163 gave it.) US-165 later took doruguremon and pencme_andromon to FOUR edges
-        // (Examon X and Hi-Andromon), so they are checked at four rather than three.
-        for parent in ["deathmeramon", "knightmon", "meicrackmon"] {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).evolutions.count, 3, parent)
-        }
+        // **DORUguremon and pencme_andromon each reach four edges**, spending every energy — the
+        // second and third four-edge Perfects in the file after HolyAngemon (US-164).
         for parent in ["doruguremon", "pencme_andromon"] {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).evolutions.count, 4, parent)
+            let node = try XCTUnwrap(graph.node(id: parent))
+            XCTAssertEqual(node.evolutions.count, 4, parent)
+            XCTAssertEqual(Set(node.evolutions.compactMap(\.requiredEnergy)), Set(EnergyType.allCases), parent)
+        }
+
+        // Digitamamon carries three after this story — Gankoomon, Gankoomon X and HolyDigitamamon —
+        // and Vamdemon three with GrandDracumon.
+        for parent in ["digitamamon", "vamdemon"] {
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).evolutions.count, 3, parent)
         }
     }
 
-    /// Proven through the ENGINE rather than argued: a Digimon that earned the branch takes it, and
-    /// a Digimon that did not falls to the Perfect's own climb instead. Both directions.
+    /// Proven through the ENGINE rather than argued: a Digimon that earned the branch takes it, and a
+    /// Digimon that did not falls to the Perfect's own climb instead. Both directions.
     func testEveryNewBranchIsTakenByTheEngineWhenItIsEarnedAndNotOtherwise() throws {
         for (ultimate, parent, energy) in swept where !leafParents.contains(parent) {
             let node = try XCTUnwrap(graph.node(id: parent))
@@ -300,10 +258,9 @@ final class UltimateSweepCToDTests: XCTestCase {
         }
     }
 
-    /// The two leaf climbs are the only way on from their Perfect, so the engine has to take them
-    /// for a Digimon that did nothing in particular. MetalGreymon X's fallback is Chaosdramon, its
-    /// `isDefault` edge, even though it now also offers Chaosdramon V2.
-    func testTheTwoClearedLeavesClimbForADigimonThatEarnedNothing() throws {
+    /// The one leaf climb is the only way on from Pandamon, so the engine has to take it for a
+    /// Digimon that did nothing in particular.
+    func testTheClearedLeafClimbsForADigimonThatEarnedNothing() throws {
         for parent in leafParents {
             let node = try XCTUnwrap(graph.node(id: parent))
             let target = try XCTUnwrap(node.evolutions.first(where: \.isDefault)).to
@@ -316,9 +273,9 @@ final class UltimateSweepCToDTests: XCTestCase {
         }
     }
 
-    /// The window trap US-150 shipped into a first draft: `care.battleCount` and
-    /// `care.battleWinRatio` are answerable only over `lifetime` and every other `care.*` counter
-    /// only over `stage`, so an edge that asks the other way is UNREACHABLE rather than merely hard.
+    /// The window trap US-150 shipped into a first draft: `care.battleCount` and `care.battleWinRatio`
+    /// are answerable only over `lifetime` and every other `care.*` counter only over `stage`, so an
+    /// edge that asks the other way is UNREACHABLE rather than merely hard.
     func testNoCriterionThisStoryAuthoredAsksForAWindowTheContextCannotAnswer() throws {
         for parent in Set(swept.map(\.parent)) {
             for edge in try XCTUnwrap(graph.node(id: parent)).evolutions {
@@ -333,8 +290,8 @@ final class UltimateSweepCToDTests: XCTestCase {
     }
 
     /// No branch is gated SOLELY on a metric that is typically empty on real hardware — the rule
-    /// `ConditionMetric.isSparseOnHardware` states. Two of these edges reach for daylight, each
-    /// paired with a care counter.
+    /// `ConditionMetric.isSparseOnHardware` states. GrandDracumon reaches for daylight, paired with a
+    /// care counter.
     func testNoBranchIsGatedSolelyOnAMetricThatIsEmptyOnRealHardware() throws {
         for (ultimate, parent, _) in swept where !leafParents.contains(parent) {
             let edge = try XCTUnwrap(
@@ -395,57 +352,57 @@ final class UltimateSweepCToDTests: XCTestCase {
 
     // MARK: - AC3: the lines are coherent, and the variants sit with their base forms
 
-    /// **THE STRONG FORM OF THE VARIANT RULE — SAME PARENT, NOT MERELY SAME LINE — HOLDS FOR THE
-    /// THREE X-ANTIBODY MEGAS WHOSE BASE FORM IS A SINGLE-PARENT NODE.** Demon X, Diablomon X and
-    /// Duftmon X each have an `Evolves From` made ENTIRELY of Ultimates or undrawable forms, so each
-    /// hangs off the very Perfect its base form hangs off. The Cherubimon pair sit on a cited parent
-    /// of their two-parent base form; Craniummon X and Dynasmon X on a cited parent elsewhere on the
-    /// line; and Chaosdramon V2 on a cited parent because its base form is a Jogress result, not a
-    /// node at all.
+    /// The variant rule in its four shapes. Ebemon X and Gankoomon X share their base form's single
+    /// Perfect exactly; Holydramon X and Hououmon X take one of their multi-parent base form's
+    /// Perfects; Examon X and Goddramon X follow a cited parent because their base form is idle-only;
+    /// Hi-Andromon follows a cited parent because it is the pack's SECOND design of a node that
+    /// already exists under a different sprite.
     func testTheVariantsSitWithTheirBaseFormOrFollowACitedParent() throws {
-        // Same PARENT as the base form: the X and its base share their one Perfect exactly.
-        for (variant, base) in [("demon_x", "demon"), ("diablomon_x", "diablomon"),
-                                ("duftmon_x", "duftmon")] {
+        // Same PARENT as the base form, exactly.
+        for (variant, base) in [("ebemon_x", "ebemon"), ("gankoomon_x", "gankoomon")] {
             XCTAssertEqual(graph.parents(of: variant).map(\.id), graph.parents(of: base).map(\.id),
                            "\(variant) no longer hangs off \(base)'s own Perfect")
             XCTAssertEqual(try XCTUnwrap(graph.node(id: variant)).line,
                            try XCTUnwrap(graph.node(id: base)).line)
         }
 
-        // Same LINE, a parent that is drawable: the Cherubimon pair each take one of their
-        // two-parent base form's Perfects, and Craniummon X a cited parent. Each parent is either
-        // the base form's own or on the base form's line.
-        for (variant, base, parent) in [("cherubimon_vice_x", "cherubimon_vice", "andiramon_virus"),
-                                        ("cherubimon_virtue_x", "cherubimon_virtue", "entmon"),
-                                        ("craniummon_x", "craniummon", "pencme_andromon")] {
+        // One of a multi-parent base form's Perfects, on the base form's line.
+        for (variant, base, parent) in [("holydramon_x", "holydramon", "angewomon"),
+                                        ("hououmon_x", "hououmon", "garudamon_x")] {
             XCTAssertEqual(try XCTUnwrap(graph.node(id: variant)).line,
                            try XCTUnwrap(graph.node(id: base)).line, variant)
             XCTAssertEqual(graph.parents(of: variant).map(\.id), [parent], variant)
-            let parentLine = try XCTUnwrap(graph.node(id: parent)).line
-            let onBaseFormsLine = graph.parents(of: base).map(\.id).contains(parent)
-                || parentLine == graph.node(id: base)?.line
-            XCTAssertTrue(onBaseFormsLine, variant)
+            XCTAssertTrue(graph.parents(of: base).map(\.id).contains(parent),
+                          "\(parent) is not one of \(base)'s parents")
         }
 
-        // Dynasmon X: base form Dynasmon is idle-only (not a node), so the variant follows a cited
-        // parent. Chaosdramon V2: base form Chaosdramon is a Jogress result (not a node), so it
-        // follows MetalGreymon X, a cited parent of Chaosdramon on its own `dmc-v3` line.
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "dynasmon_x")).line, "tamers")
-        XCTAssertEqual(graph.parents(of: "dynasmon_x").map(\.id), ["doruguremon"])
-        XCTAssertEqual(roster.entry(id: "dynasmon")?.dexOnly, true)
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "chaosdramon_v2")).line, "dmc-v3")
-        XCTAssertEqual(graph.parents(of: "chaosdramon_v2").map(\.id), ["metalgreymon_x"])
-        XCTAssertNil(graph.node(id: "chaosdramon"), "Chaosdramon is a Jogress result, not a node")
+        // Idle-only base form -> a cited parent (the Dynasmon X shape).
+        for variant in ["examon_x", "goddramon_x"] {
+            let base = variant.replacingOccurrences(of: "_x", with: "")
+            XCTAssertEqual(roster.entry(id: base)?.dexOnly, true, "\(base) should be idle-only")
+            XCTAssertNil(graph.node(id: base), "\(base) is idle-only and must not be a node")
+        }
+        XCTAssertEqual(graph.parents(of: "examon_x").map(\.id), ["doruguremon"])
+        XCTAssertEqual(graph.parents(of: "goddramon_x").map(\.id), ["megadramon"])
 
-        // DarknessBagramon is the rare case whose bolded parent (DarkKnightmon) is a drawable
-        // Perfect in this pack, so the page's own arrow is drawn exactly as drawn.
-        XCTAssertEqual(graph.parents(of: "darknessbagramon").map(\.id), ["darkknightmon"])
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "darkknightmon")).stage, .perfect)
-        XCTAssertTrue(try authoredComment(on: "darknessbagramon").contains("DarkKnightmon"))
+        // Hi-Andromon: the pack's second design, so it follows a cited parent (the OTHER Andromon on
+        // `penc-me`) while the first design `hiandromon` keeps its `dmc-v3` home — the Chaosdramon V2
+        // shape, US-164.
+        XCTAssertEqual(graph.parents(of: "hi-andromon").map(\.id), ["pencme_andromon"])
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "hi-andromon")).line, "penc-me")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "hiandromon")).line, "dmc-v3")
+        XCTAssertTrue(try authoredComment(on: "hi-andromon").contains("SECOND"))
+
+        // DarknessBagramon's opposite: DarkKnightmon aside, this story's demon lord GrandDracumon has
+        // NO drawable bolded parent (Dracumon is a Child, Matadormon has no sheet), so it takes cited
+        // Vamdemon on the Nightmare Soldiers line.
+        XCTAssertEqual(graph.parents(of: "granddracumon").map(\.id), ["vamdemon"])
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "vamdemon")).stage, .perfect)
+        XCTAssertEqual(try XCTUnwrap(roster.entry(id: "dracumon")).stage, .child)
     }
 
     /// This story authored no one-node line and no line at all: every new node joined a line that
-    /// already had at least a Champion rung on it.
+    /// already had at least a Perfect rung on it.
     func testEveryLineThisStoryTouchedAlreadyHadAPerfectRung() throws {
         for (ultimate, _, _) in swept {
             let line = try XCTUnwrap(graph.node(id: ultimate)).line
@@ -455,11 +412,11 @@ final class UltimateSweepCToDTests: XCTestCase {
         }
     }
 
-    // MARK: - The two leaves this story cleared
+    // MARK: - The leaf this story cleared
 
-    /// The dead-end ledger's other direction: each of the two really does lead somewhere now, and
-    /// each was a LEAF rather than an orphan — it had an in-edge all along.
-    func testTheTwoLeafPerfectsThisStoryClearedNowClimb() throws {
+    /// The dead-end ledger's other direction: Pandamon really does lead somewhere now, and it was a
+    /// LEAF rather than an orphan — it had an in-edge all along.
+    func testTheLeafPerfectThisStoryClearedNowClimbs() throws {
         for parent in leafParents {
             let node = try XCTUnwrap(graph.node(id: parent))
             XCTAssertEqual(node.stage, .perfect)
@@ -472,40 +429,32 @@ final class UltimateSweepCToDTests: XCTestCase {
                        59, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
-    // MARK: - The nodes on shut-out lines, and the eponym's near-miss
+    // MARK: - The nodes on shut-out lines, and the eponym rescues
 
-    /// **THE `diablomon` LINE IS NAMED FOR A DIGIMON EVERY CITED ROUTE ONTO IT SHUTS OUT — AND THIS
-    /// STORY GOT IT HOME ANYWAY.** All four bolded parents on Wikimon are on this line and none is
-    /// drawable: Chrysalimon and Infermon are idle-only (`edgeToDexOnlyNode`), Keramon is a Child
-    /// and Kuramon a Baby I (`invalidStageTransition`). US-163 hit the same wall with Armagemon and
-    /// had to leave the line; Meicrackmon, a drawable Perfect on the line that already climbs, is
-    /// what let the eponym stay.
-    func testTheEponymDiablomonLandedOnItsOwnLineDespiteEveryCitedRouteBeingShut() throws {
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "diablomon")).line, "diablomon")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "diablomon_x")).line, "diablomon")
-
-        for id in ["chrysalimon", "infermon"] {
-            XCTAssertEqual(try XCTUnwrap(roster.entry(id: id)).dexOnly, true)
-            XCTAssertNil(graph.node(id: id))
-        }
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "keramon")).stage, .child)
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "kuramon")).stage, .babyI)
-        XCTAssertTrue(try authoredComment(on: "diablomon").contains("edgeToDexOnlyNode"))
-        XCTAssertTrue(try authoredComment(on: "diablomon").contains("invalidStageTransition"))
+    /// **ENMAMON AND GRACENOVAMON HAVE AN `Evolves From` MADE ENTIRELY OF ULTIMATES**, the Cernumon
+    /// shape: each is drawn one rung below on the Perfect that climbs into a cited Ultimate.
+    func testTheNodesWhoseEveryParentIsAnUltimateAreDrawnOneRungBelow() throws {
+        // Enmamon's Seiten Gokuwmon and GraceNovamon's Apollomon are the cited Ultimates whose
+        // Perfect parents (Gokuwmon, Flaremon) actually carry these nodes.
+        XCTAssertTrue(graph.node(id: "gokuwmon")?.evolutions.contains { $0.to == "seitengokuwmon" } ?? false,
+                      "Gokuwmon no longer climbs to Enmamon's cited Ultimate")
+        XCTAssertTrue(graph.node(id: "flaremon")?.evolutions.contains { $0.to == "apollomon" } ?? false,
+                      "Flaremon no longer climbs to GraceNovamon's cited Ultimate")
+        XCTAssertTrue(try authoredComment(on: "enmamon").contains("EVERY"))
+        XCTAssertTrue(try authoredComment(on: "gracenovamon").contains("BOTH BOLDED PARENTS ARE ULTIMATES"))
     }
 
-    /// **TWO NODES HAD A BOLDED PARENT THAT WAS A PLAIN THING, NOT A DIGIMON**, the Code Key trap
-    /// US-163 recorded for Barbamon: ChaosDukemon Core's Chrono Core is an item, and Dijiangmon's
-    /// bolded parent is literally "Digitama". Each says so in its comment.
-    func testTheNodesWhoseBoldedParentIsNotADigimonSayItInAsManyWords() throws {
-        XCTAssertTrue(try authoredComment(on: "chaosdukemon_core").contains("ITEM"))
-        XCTAssertTrue(try authoredComment(on: "dijiangmon").contains("NOT A DIGIMON"))
+    /// **HOLYDIGITAMAMON HAS AN EMPTY `Evolves From` ON WIKIMON**, so it lands on its eponym
+    /// Digitamamon — recorded in as many words.
+    func testTheNodeWithNoCitedParentSaysSoAndUsesItsEponym() throws {
+        XCTAssertEqual(graph.parents(of: "holydigitamamon").map(\.id), ["digitamamon"])
+        XCTAssertTrue(try authoredComment(on: "holydigitamamon").contains("EMPTY"))
     }
 
     // MARK: - AC: every choice is recorded in the data file
 
-    /// Every node this story added carries a comment, and each one either cites Wikimon or says in
-    /// as many words that it could not — the rule US-146 set and every sweep since has kept.
+    /// Every node this story added carries a comment, and each one either cites Wikimon or says in as
+    /// many words that it could not — the rule US-146 set and every sweep since has kept.
     func testEveryNodeThisStoryAddedCitesItsSourceOrSaysItCannot() throws {
         for (ultimate, _, _) in swept {
             let comment = try authoredComment(on: ultimate)
@@ -514,60 +463,34 @@ final class UltimateSweepCToDTests: XCTestCase {
             XCTAssertGreaterThan(comment.count, 200, "\(ultimate)'s comment is a stub")
         }
 
-        // The undrawable and rejected readings are written down too.
-        XCTAssertTrue(try authoredComment(on: "callismon").contains("invalidStageTransition"),
-                      "that Callismon's bolded parent is at the wrong rung is not recorded")
-        XCTAssertTrue(try authoredComment(on: "cernumon").contains("EVERY"),
-                      "that all of Cernumon's parents are Ultimates is not recorded")
-        XCTAssertTrue(try authoredComment(on: "chaosdramon_v2").contains("NO PAGE"),
-                      "that Chaosdramon V2 has no Wikimon page is not recorded")
-        XCTAssertTrue(try authoredComment(on: "dominimon").contains("FOUR EDGES"),
-                      "that Dominimon makes HolyAngemon the first four-edge Perfect is not recorded")
-        XCTAssertTrue(try authoredComment(on: "dynasmon_x").contains("IDLE-ONLY"),
-                      "that Dynasmon X's base form is idle-only is not recorded")
-    }
-
-    /// **ONE EDGE IN THIS STORY IS EARNED BY LOSING**, the Lucemon Falldown arrangement: a core is
-    /// what is left when a knight burns out. Proven through the engine in both directions.
-    func testTheFallenMegaIsEarnedByLosingRatherThanByWinning() throws {
-        let node = try XCTUnwrap(graph.node(id: "blackmegalogrowmon"))
-        let edge = try XCTUnwrap(node.evolutions.first { $0.to == "chaosdukemon_core" })
-        let ratio = try XCTUnwrap(edge.conditions.first { $0.metric == "care.battleWinRatio" })
-        XCTAssertEqual(ratio.comparison, .atMost, "ChaosDukemon Core's losing gate became a winning one")
-
-        var totals = EnergyTotals()
-        totals[try XCTUnwrap(edge.requiredEnergy)] = edge.minEnergy
-        XCTAssertNotEqual(
-            EvolutionEngine.evolutionTarget(for: node, stageEnergy: totals,
-                                            dominant: edge.requiredEnergy, careMistakes: 0,
-                                            battleWins: 60, conditions: met),
-            "chaosdukemon_core",
-            "a BlackMegaloGrowmon that won everything still becomes ChaosDukemon Core")
-        XCTAssertEqual(
-            EvolutionEngine.evolutionTarget(for: node, stageEnergy: totals,
-                                            dominant: edge.requiredEnergy, careMistakes: 0,
-                                            battleWins: 60, conditions: context(for: edge)),
-            "chaosdukemon_core",
-            "a BlackMegaloGrowmon that lost does not become ChaosDukemon Core")
+        // The idle-only bases and the four-edge results are written down too.
+        XCTAssertTrue(try authoredComment(on: "examon_x").contains("IDLE-ONLY"),
+                      "that Examon X's base form is idle-only is not recorded")
+        XCTAssertTrue(try authoredComment(on: "examon_x").contains("FOUR-EDGE"),
+                      "that Examon X makes DORUguremon a four-edge Perfect is not recorded")
+        XCTAssertTrue(try authoredComment(on: "goddramon_x").contains("IDLE-ONLY"),
+                      "that Goddramon X's base form is idle-only is not recorded")
+        XCTAssertTrue(try authoredComment(on: "hi-andromon").contains("FOUR-EDGE"),
+                      "that Hi-Andromon makes pencme_andromon a four-edge Perfect is not recorded")
     }
 
     // MARK: - AC8: the orphan count, and what this sweep hands on
 
     /// The count that goes into `notes`, asserted rather than merely written down.
-    func testTheTwentyOrphansThisStoryRemovedAreAllPlainRosterIds() throws {
-        XCTAssertEqual(swept.count, 20)
+    func testTheFourteenOrphansThisStoryRemovedAreAllPlainRosterIds() throws {
+        XCTAssertEqual(swept.count, 14)
         for (ultimate, _, _) in swept {
             XCTAssertNotNil(roster.entry(id: ultimate),
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 851, "817 before this story, 837 after it")
+        XCTAssertEqual(graph.nodes.count, 851, "837 before this story, 851 after it")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
-    /// **The handover to US-165 onward, in the shape US-151 through US-163 established: a claim, not
-    /// a note.** What the remaining Ultimate sweeps inherit is a rung two-fifths done, sixty Perfect
-    /// leaves still owed a climb, and the sixteen Armor-Hybrid US-169 owns.
+    /// **The handover to US-166 onward, in the shape US-151 through US-164 established: a claim, not a
+    /// note.** What the remaining Ultimate sweeps inherit is a rung past halfway done and the sixteen
+    /// Armor-Hybrid US-169 owns.
     func testWhatThisSweepHandsToTheRestOfTheUltimateRung() throws {
         let connected = Set(graph.nodes.flatMap { $0.evolutions.map(\.to) })
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
@@ -575,8 +498,6 @@ final class UltimateSweepCToDTests: XCTestCase {
 
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 66,
                        "the Ultimate edge-orphan bucket moved without this claim moving with it")
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate && !jogressReachable.contains($0.id) }.count,
-                       64, "64 Ultimate truly owed once the two Jogress results are set aside")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")
         XCTAssertEqual(stillOrphaned.filter { $0.stage != .ultimate && $0.stage != .armorHybrid },
@@ -589,8 +510,8 @@ final class UltimateSweepCToDTests: XCTestCase {
 
     // MARK: - Helpers
 
-    /// A context derived from the EDGE's own conditions rather than the shared "did everything
-    /// right" one, because that fixture cannot satisfy an `atMost` criterion — US-151's rule.
+    /// A context derived from the EDGE's own conditions rather than the shared "did everything right"
+    /// one, because that fixture cannot satisfy an `atMost` criterion — US-151's rule.
     private func context(for edge: EvolutionEdge) -> ConditionContext {
         var values = met.stageTotals?.values ?? [:]
         var training = 50
@@ -622,7 +543,7 @@ final class UltimateSweepCToDTests: XCTestCase {
     }
 
     /// `comment` is documentation the decoder drops, so it is read out of the raw JSON — the same
-    /// helper US-144 through US-163 use.
+    /// helper US-144 through US-164 use.
     private func authoredComment(on id: String) throws -> String {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "evolutions", withExtension: "json"))
         let raw = try XCTUnwrap(

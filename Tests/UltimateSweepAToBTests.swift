@@ -135,8 +135,8 @@ final class UltimateSweepAToBTests: XCTestCase {
         // 100 after this story; US-164 then took the C-D band down to 80 (two of the band,
         // Chaosdramon and Chaosmon, are Jogress results it left unwired, so 80 is the
         // evolution-edge count and 78 the true owed remainder).
-        XCTAssertEqual(orphans.count, 80,
-                       "130 Ultimate were orphaned before US-163 and 100 after; US-164 reached 80")
+        XCTAssertEqual(orphans.count, 66,
+                       "130 before US-163, 100 after; US-164 reached 80, US-165 reached 66")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
         }
@@ -182,13 +182,13 @@ final class UltimateSweepAToBTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 116)
-        XCTAssertEqual(sizes["penc-nso"], 73)
-        XCTAssertEqual(sizes["penc-me"], 70)
+        XCTAssertEqual(sizes["tamers"], 117)
+        XCTAssertEqual(sizes["penc-nso"], 75)
+        XCTAssertEqual(sizes["penc-me"], 71)
         XCTAssertEqual(sizes["dmc-v1"], 39)
         XCTAssertEqual(sizes["penc-vb"], 60)
         XCTAssertEqual(sizes["penc-ds"], 46)
-        XCTAssertEqual(sizes["penc-nsp"], 41)
+        XCTAssertEqual(sizes["penc-nsp"], 43)
         XCTAssertEqual(sizes["dmc-v3"], 54)
         XCTAssertEqual(sizes["vital"], 42)
         XCTAssertEqual(sizes["palmon"], 29)
@@ -460,7 +460,7 @@ final class UltimateSweepAToBTests: XCTestCase {
         }
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       60, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       59, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - The nodes with no drawable citation, and the one stranded node
@@ -603,8 +603,8 @@ final class UltimateSweepAToBTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 837, "787 before this story, 817 after it")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 158, "108 before this story")
+        XCTAssertEqual(graph.nodes.count, 851, "787 before this story, 817 after it")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 172, "108 before this story, 172 after US-165")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
@@ -616,7 +616,7 @@ final class UltimateSweepAToBTests: XCTestCase {
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 80,
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 66,
                        "the Ultimate bucket moved without this claim moving with it")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")

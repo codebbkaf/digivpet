@@ -409,7 +409,12 @@ final class EvolutionCriteriaTests: XCTestCase {
         // has no Digitama. Its two other cited parents are an Adult and an Ultimate, so there was
         // never a second reading. The other twenty-nine Ultimates that story authored all sit on
         // lines an egg reaches, which is what keeps this a claim rather than a dumping ground.
-        let strandedUltimate = ["armamon", "seitengokuwmon", "shakamon", "zekegreymon"]
+        // US-165's Enmamon and Erlangmon join the stranded `penc-sw` list: Erlangmon climbs from
+        // Pandamon and Enmamon from Gokuwmon, both already stranded because `penc-sw` (Saiyu
+        // Warriors) has no Digitama in this pack. Every cited parent Enmamon has is an Ultimate, so
+        // there was never an egg-reachable reading.
+        let strandedUltimate = ["armamon", "enmamon", "erlangmon", "seitengokuwmon", "shakamon",
+                                "zekegreymon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,

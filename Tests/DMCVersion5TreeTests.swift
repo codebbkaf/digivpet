@@ -484,8 +484,10 @@ final class DMCVersion5TreeTests: XCTestCase {
     func testTheStoryAddedNoNodesAndSoRemovedNoOrphans() throws {
         // US-160's two are excluded by name for the same reason: MetalTyranomon V2 hangs off
         // DarkTyranomon and MetalTyranomon X off Cyclomon, both Champions this tree already drew.
+        // US-165's Ebemon X is excluded the same way: it hangs off Vademon, its base form's own
+        // Perfect, which this tree already drew.
         let laterSweeps: Set<String> = ["gazimon_x", "leomon_x", "gigadramon",
-                                        "metaltyranomon_v2", "metaltyranomon_x"]
+                                        "metaltyranomon_v2", "metaltyranomon_x", "ebemon_x"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !laterSweeps.contains($0.id) }.count,
                        20, "US-137 adds no node to the Version 5 line")
 

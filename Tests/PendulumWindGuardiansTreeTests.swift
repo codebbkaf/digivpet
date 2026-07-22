@@ -261,7 +261,7 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 43,
+        XCTAssertEqual(inLine.count, 45,
                        "US-151 hung Akatorimon on Floramon, US-153 Kougamon on Mushmon, "
                            + "US-154 RedV-dramon on Piyomon, US-156 V-dramon Black on Piyomon "
                            + "and XV-mon Black on Mushmon, US-158 Delumon on Kiwimon and "
@@ -678,7 +678,10 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
                                       "yatagaramon", "yatagaramon_2006",
                                       // US-164's one: Cernumon over this line's own Jyureimon,
                                       // one rung below the Pinochimon its page cites.
-                                      "cernumon"]
+                                      "cernumon",
+                                      // US-165's two: Hououmon X over this line's own Garudamon X
+                                      // and Hydramon over its Blossomon.
+                                      "hououmon_x", "hydramon"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31,
                        "the thirty-one nodes this story authored")
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,

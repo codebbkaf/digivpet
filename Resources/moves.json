@@ -5022,6 +5022,90 @@
       "tint": "white",
       "signatureName": "Dragon Thrower Cross",
       "signatureSymbol": "bolt.fill"
+    },
+    "ebemon_x": {
+      "projectileSymbol": "eye.fill",
+      "tint": "purple",
+      "signatureName": "Dark Network Cross",
+      "signatureSymbol": "eye.fill"
+    },
+    "enmamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "purple",
+      "signatureName": "Hell's Judgment",
+      "signatureSymbol": "flame.fill"
+    },
+    "erlangmon": {
+      "projectileSymbol": "eye.fill",
+      "tint": "white",
+      "signatureName": "Three Pointed Blade",
+      "signatureSymbol": "eye.fill"
+    },
+    "examon_x": {
+      "projectileSymbol": "wind",
+      "tint": "pink",
+      "signatureName": "Pendragon Glory Cross",
+      "signatureSymbol": "wind"
+    },
+    "gankoomon_x": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "orange",
+      "signatureName": "Kongou Cross",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "gigaseadramon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "purple",
+      "signatureName": "Giga Torpedo",
+      "signatureSymbol": "drop.fill"
+    },
+    "goddramon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "white",
+      "signatureName": "Heaven Fire Cross",
+      "signatureSymbol": "flame.fill"
+    },
+    "gracenovamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "white",
+      "signatureName": "Grace Nova",
+      "signatureSymbol": "sparkles"
+    },
+    "granddracumon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "white",
+      "signatureName": "Dark Round",
+      "signatureSymbol": "moon.fill"
+    },
+    "hi-andromon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "blue",
+      "signatureName": "Hyper Atomic Ray",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "holydigitamamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "yellow",
+      "signatureName": "Holy Shell",
+      "signatureSymbol": "sparkles"
+    },
+    "holydramon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "pink",
+      "signatureName": "Holy Flame Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "hououmon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "purple",
+      "signatureName": "Star Light Explosion Cross",
+      "signatureSymbol": "flame.fill"
+    },
+    "hydramon": {
+      "projectileSymbol": "wind",
+      "tint": "green",
+      "signatureName": "Hydra Breath",
+      "signatureSymbol": "wind"
     }
   },
   "lineDefaults": {
