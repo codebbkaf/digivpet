@@ -192,7 +192,9 @@ final class DigitamaSweepTests: XCTestCase {
     // which put a Champion above every Child whose name begins A-F. The numbers are the
         // file's, not this story's, and are pinned here rather than in the newer sweep because
         // this is where the lines were opened.
-        XCTAssertEqual(sizes["tamers"], 56)
+        // US-149 put a Champion above every Child G-L and US-150 above every Child M-Z, which
+        // is where the last twelve `tamers` nodes came from.
+        XCTAssertEqual(sizes["tamers"], 68)
         XCTAssertEqual(sizes["wanyamon"], 17)
     }
 

@@ -301,8 +301,9 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 38,
-                       "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X")
+        XCTAssertEqual(inLine.count, 43,
+                       "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
+                           + "US-150 Phascomon, ToyAgumon Black and three Champions")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -368,9 +369,12 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
         // story's notes made, and a total quietly one higher would no longer be that claim.
         // `kozenimon` and `zenimon` are US-147's, excluded the same way.
+        // The five US-150 added are excluded the same way.
         let sweepEggs: Set<String> = ["espi_digitama", "phasco_digitama",
                                       "kozenimon", "zenimon",
-                                      "kokuwamon_x", "kuwagamon_x"]
+                                      "kokuwamon_x", "kuwagamon_x",
+                                      "phascomon", "porcupamon", "toyagumon_black",
+                                      "raptordramon", "omekamon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

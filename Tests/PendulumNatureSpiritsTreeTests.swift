@@ -211,8 +211,10 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
             }
         }
 
+        // US-150 hung YukiAgumon and its Champion Hyougamon on this line's Koromon, which is why
+        // the line is two larger than the tree the document draws.
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 31)
+        XCTAssertEqual(inLine.count, 33)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -360,12 +362,20 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
     /// The document marks Angoramon "Rookie (Unlockable Slot 6)". That is why its edge out of
     /// Koromon is the only conditioned In-Training edge in this tree — an In-Training rung is
     /// otherwise gated on dominant energy alone.
+    ///
+    /// SCOPED TO THE EDGES THE TREE DRAWS, and it had to be: US-150 hung YukiAgumon off this same
+    /// Koromon, and a sweep's earned branch is conditioned by its own acceptance criteria. Scoping
+    /// keeps the claim the document actually makes — of the three Rookies THIS SECTION draws, only
+    /// the unlockable one is earned — rather than relaxing it into "some edge is unconditioned".
     func testTheUnlockableSixthSlotIsTheOnlyEarnedInTrainingEdge() throws {
         let koromon = try node("pencnsp_koromon")
-        for edge in koromon.evolutions {
+        let drawnBySection: Set<String> = ["pencnsp_agumon", "tentomon", "angoramon"]
+        for edge in koromon.evolutions where drawnBySection.contains(edge.to) {
             XCTAssertEqual(!edge.conditions.isEmpty, edge.to == "angoramon",
                            "\(edge.to) is conditioned out of step with the unlockable slot")
         }
+        XCTAssertEqual(Set(koromon.evolutions.map(\.to)).subtracting(drawnBySection),
+                       ["yukiagumon"], "a fourth Rookie was hung here without saying so")
         XCTAssertFalse(try XCTUnwrap(koromon.evolutions.first { $0.to == "angoramon" }).isDefault)
     }
 
@@ -510,7 +520,10 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
         // and US-139 moved it to 176 without touching a node here. A whole-file count cannot say
         // anything about what one story did once another tree lands beside it.
         // `angora_digitama` is US-144's, not this story's, so it is excluded rather than counted.
-        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "angora_digitama" }.count, 30)
+        // `yukiagumon` and `hyougamon` are US-150's, excluded the same way.
+        let notThisStorys: Set<String> = ["angora_digitama", "yukiagumon", "hyougamon"]
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && !notThisStorys.contains($0.id) }.count,
+                       30)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        12, "the twelve aliases, which remove no orphan")
     }

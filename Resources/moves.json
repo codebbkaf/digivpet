@@ -1837,6 +1837,18 @@
       "signatureName": "Woolly Wobble",
       "signatureSymbol": "circle.fill"
     },
+    "yukiagumon": {
+      "projectileSymbol": "snowflake",
+      "tint": "red",
+      "signatureName": "Frost Claw",
+      "signatureSymbol": "snowflake"
+    },
+    "hyougamon": {
+      "projectileSymbol": "snowflake",
+      "tint": "orange",
+      "signatureName": "Glacier Club",
+      "signatureSymbol": "snowflake"
+    },
     "cand_digitama": {
       "projectileSymbol": "circle.fill",
       "tint": "orange",
@@ -2191,84 +2203,6 @@
       "signatureName": "Anvil Tap",
       "signatureSymbol": "hammer.fill"
     },
-    "bombmon": {
-      "projectileSymbol": "flame.fill",
-      "tint": "orange",
-      "signatureName": "Bomberhead",
-      "signatureSymbol": "flame.fill"
-    },
-    "chibickmon": {
-      "projectileSymbol": "star.fill",
-      "tint": "gray",
-      "signatureName": "Chip Shot",
-      "signatureSymbol": "star.fill"
-    },
-    "petitmon": {
-      "projectileSymbol": "flame.fill",
-      "tint": "red",
-      "signatureName": "Petit Flame",
-      "signatureSymbol": "flame.fill"
-    },
-    "fufumon": {
-      "projectileSymbol": "wind",
-      "tint": "mint",
-      "signatureName": "Fluff Puff",
-      "signatureSymbol": "wind"
-    },
-    "pupumon": {
-      "projectileSymbol": "drop.fill",
-      "tint": "green",
-      "signatureName": "Larva Spit",
-      "signatureSymbol": "drop.fill"
-    },
-    "fukamon": {
-      "projectileSymbol": "hand.raised.fill",
-      "tint": "brown",
-      "signatureName": "Fuzz Butt",
-      "signatureSymbol": "hand.raised.fill"
-    },
-    "paomon": {
-      "projectileSymbol": "moon.fill",
-      "tint": "white",
-      "signatureName": "Pup Whimper",
-      "signatureSymbol": "moon.fill"
-    },
-    "pururumon": {
-      "projectileSymbol": "wind",
-      "tint": "cyan",
-      "signatureName": "Feather Flutter",
-      "signatureSymbol": "wind"
-    },
-    "curimon": {
-      "projectileSymbol": "leaf.fill",
-      "tint": "yellow",
-      "signatureName": "Chestnut Roll",
-      "signatureSymbol": "leaf.fill"
-    },
-    "pafumon": {
-      "projectileSymbol": "circle.fill",
-      "tint": "white",
-      "signatureName": "Powder Puff",
-      "signatureSymbol": "circle.fill"
-    },
-    "pyonmon": {
-      "projectileSymbol": "hand.raised.fill",
-      "tint": "mint",
-      "signatureName": "Hop Kick",
-      "signatureSymbol": "hand.raised.fill"
-    },
-    "pusumon": {
-      "projectileSymbol": "triangle.fill",
-      "tint": "yellow",
-      "signatureName": "Needle Poke",
-      "signatureSymbol": "triangle.fill"
-    },
-    "puyomon": {
-      "projectileSymbol": "drop.fill",
-      "tint": "mint",
-      "signatureName": "Jelly Wobble",
-      "signatureSymbol": "drop.fill"
-    },
     "algomon_babyii": {
       "projectileSymbol": "eye.fill",
       "tint": "gray",
@@ -2353,6 +2287,12 @@
       "signatureName": "Sand Tumble",
       "signatureSymbol": "circle.fill"
     },
+    "onibimon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "teal",
+      "signatureName": "Wisp Lantern",
+      "signatureSymbol": "flame.fill"
+    },
     "gummymon": {
       "projectileSymbol": "leaf.fill",
       "tint": "mint",
@@ -2413,11 +2353,83 @@
       "signatureName": "Iron Chomp",
       "signatureSymbol": "hammer.fill"
     },
-    "onibimon": {
+    "bombmon": {
       "projectileSymbol": "flame.fill",
-      "tint": "teal",
-      "signatureName": "Wisp Lantern",
+      "tint": "orange",
+      "signatureName": "Bomberhead",
       "signatureSymbol": "flame.fill"
+    },
+    "chibickmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "gray",
+      "signatureName": "Chip Shot",
+      "signatureSymbol": "star.fill"
+    },
+    "petitmon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "red",
+      "signatureName": "Petit Flame",
+      "signatureSymbol": "flame.fill"
+    },
+    "fufumon": {
+      "projectileSymbol": "wind",
+      "tint": "mint",
+      "signatureName": "Fluff Puff",
+      "signatureSymbol": "wind"
+    },
+    "pupumon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "green",
+      "signatureName": "Larva Spit",
+      "signatureSymbol": "drop.fill"
+    },
+    "fukamon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "brown",
+      "signatureName": "Fuzz Butt",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "paomon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "white",
+      "signatureName": "Pup Whimper",
+      "signatureSymbol": "moon.fill"
+    },
+    "pururumon": {
+      "projectileSymbol": "wind",
+      "tint": "cyan",
+      "signatureName": "Feather Flutter",
+      "signatureSymbol": "wind"
+    },
+    "curimon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "yellow",
+      "signatureName": "Chestnut Roll",
+      "signatureSymbol": "leaf.fill"
+    },
+    "pafumon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "white",
+      "signatureName": "Powder Puff",
+      "signatureSymbol": "circle.fill"
+    },
+    "pyonmon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "mint",
+      "signatureName": "Hop Kick",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "pusumon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "yellow",
+      "signatureName": "Needle Poke",
+      "signatureSymbol": "triangle.fill"
+    },
+    "puyomon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "mint",
+      "signatureName": "Jelly Wobble",
+      "signatureSymbol": "drop.fill"
     },
     "budmon": {
       "projectileSymbol": "leaf.fill",
@@ -2605,6 +2617,30 @@
       "signatureName": "Pixie Dust",
       "signatureSymbol": "sparkles"
     },
+    "parasaurmon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "red",
+      "signatureName": "Crest Bellow",
+      "signatureSymbol": "leaf.fill"
+    },
+    "xv-mon": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "red",
+      "signatureName": "Crossing Beam",
+      "signatureSymbol": "triangle.fill"
+    },
+    "sorcerymon": {
+      "projectileSymbol": "sparkles",
+      "tint": "red",
+      "signatureName": "Crystal Cane",
+      "signatureSymbol": "sparkles"
+    },
+    "nisedrimogemon": {
+      "projectileSymbol": "trash.fill",
+      "tint": "red",
+      "signatureName": "Blunt Drill",
+      "signatureSymbol": "trash.fill"
+    },
     "commandramon": {
       "projectileSymbol": "triangle.fill",
       "tint": "brown",
@@ -2737,11 +2773,17 @@
       "signatureName": "Spitfire Shadow",
       "signatureSymbol": "flame.fill"
     },
-    "agumon_black_x": {
+    "dracomon": {
       "projectileSymbol": "flame.fill",
-      "tint": "gray",
-      "signatureName": "Black Antibody Blast",
+      "tint": "green",
+      "signatureName": "Tail Smash",
       "signatureSymbol": "flame.fill"
+    },
+    "elecmon_violet": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "purple",
+      "signatureName": "Sparking Malice",
+      "signatureSymbol": "bolt.fill"
     },
     "agumon_x": {
       "projectileSymbol": "flame.fill",
@@ -2749,34 +2791,10 @@
       "signatureName": "Spitfire Ray",
       "signatureSymbol": "flame.fill"
     },
-    "alraumon": {
-      "projectileSymbol": "leaf.fill",
-      "tint": "indigo",
-      "signatureName": "Sleeping Pollen",
-      "signatureSymbol": "leaf.fill"
-    },
-    "armadimon": {
-      "projectileSymbol": "hammer.fill",
-      "tint": "yellow",
-      "signatureName": "Diamond Shell",
-      "signatureSymbol": "hammer.fill"
-    },
-    "clearagumon": {
-      "projectileSymbol": "circle.fill",
-      "tint": "teal",
-      "signatureName": "Glass Knuckle",
-      "signatureSymbol": "circle.fill"
-    },
-    "dokunemon": {
-      "projectileSymbol": "leaf.fill",
-      "tint": "gray",
-      "signatureName": "Poison Thread",
-      "signatureSymbol": "leaf.fill"
-    },
-    "dracomon": {
+    "agumon_black_x": {
       "projectileSymbol": "flame.fill",
-      "tint": "green",
-      "signatureName": "Tail Smash",
+      "tint": "gray",
+      "signatureName": "Black Antibody Blast",
       "signatureSymbol": "flame.fill"
     },
     "dracomon_x": {
@@ -2785,11 +2803,29 @@
       "signatureName": "Tempest Breath",
       "signatureSymbol": "flame.fill"
     },
-    "dracumon": {
-      "projectileSymbol": "moon.fill",
-      "tint": "red",
-      "signatureName": "Undead Fang",
-      "signatureSymbol": "moon.fill"
+    "armadimon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "yellow",
+      "signatureName": "Diamond Shell",
+      "signatureSymbol": "hammer.fill"
+    },
+    "alraumon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "indigo",
+      "signatureName": "Sleeping Pollen",
+      "signatureSymbol": "leaf.fill"
+    },
+    "funbeemon": {
+      "projectileSymbol": "wind",
+      "tint": "yellow",
+      "signatureName": "Bee Sting",
+      "signatureSymbol": "wind"
+    },
+    "dokunemon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "gray",
+      "signatureName": "Poison Thread",
+      "signatureSymbol": "leaf.fill"
     },
     "ekakimon": {
       "projectileSymbol": "leaf.fill",
@@ -2797,17 +2833,17 @@
       "signatureName": "Crayon Scribble",
       "signatureSymbol": "leaf.fill"
     },
-    "elecmon_violet": {
-      "projectileSymbol": "bolt.fill",
-      "tint": "purple",
-      "signatureName": "Sparking Malice",
-      "signatureSymbol": "bolt.fill"
+    "clearagumon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "teal",
+      "signatureName": "Glass Knuckle",
+      "signatureSymbol": "circle.fill"
     },
-    "funbeemon": {
-      "projectileSymbol": "wind",
-      "tint": "yellow",
-      "signatureName": "Bee Sting",
-      "signatureSymbol": "wind"
+    "dracumon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "red",
+      "signatureName": "Undead Fang",
+      "signatureSymbol": "moon.fill"
     },
     "geogreymon": {
       "projectileSymbol": "flame.fill",
@@ -2893,6 +2929,18 @@
       "signatureName": "Sunshine Beam",
       "signatureSymbol": "leaf.fill"
     },
+    "palmon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "red",
+      "signatureName": "Rewritten Ivy",
+      "signatureSymbol": "leaf.fill"
+    },
+    "junglemojyamon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "red",
+      "signatureName": "Canopy Bone",
+      "signatureSymbol": "leaf.fill"
+    },
     "guardromon_gold": {
       "projectileSymbol": "gearshape.fill",
       "tint": "yellow",
@@ -2964,6 +3012,12 @@
       "tint": "gray",
       "signatureName": "Bandage Bash",
       "signatureSymbol": "hammer.fill"
+    },
+    "ginryumon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "red",
+      "signatureName": "Silver Scale Slash",
+      "signatureSymbol": "shield.fill"
     },
     "firamon": {
       "projectileSymbol": "flame.fill",
@@ -3175,6 +3229,78 @@
       "signatureName": "Shadow Barrage",
       "signatureSymbol": "bolt.fill"
     },
+    "renamon_x": {
+      "projectileSymbol": "wind",
+      "tint": "red",
+      "signatureName": "Silvered Palm",
+      "signatureSymbol": "wind"
+    },
+    "shakomon_x": {
+      "projectileSymbol": "drop.fill",
+      "tint": "red",
+      "signatureName": "Hinge Snap",
+      "signatureSymbol": "drop.fill"
+    },
+    "solarmon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "red",
+      "signatureName": "Hot Plate",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "terriermon_x": {
+      "projectileSymbol": "wind",
+      "tint": "orange",
+      "signatureName": "Doubled Ears",
+      "signatureSymbol": "wind"
+    },
+    "wankomon": {
+      "projectileSymbol": "circle.fill",
+      "tint": "cyan",
+      "signatureName": "Pup Rush",
+      "signatureSymbol": "circle.fill"
+    },
+    "kyubimon_silver": {
+      "projectileSymbol": "flame.fill",
+      "tint": "cyan",
+      "signatureName": "Silver Ninetails",
+      "signatureSymbol": "flame.fill"
+    },
+    "tobucatmon": {
+      "projectileSymbol": "wind",
+      "tint": "mint",
+      "signatureName": "Skyborne Paw",
+      "signatureSymbol": "wind"
+    },
+    "kyubimon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "white",
+      "signatureName": "Foxfire Nine",
+      "signatureSymbol": "flame.fill"
+    },
+    "dogmon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "red",
+      "signatureName": "Chain Hound",
+      "signatureSymbol": "hammer.fill"
+    },
+    "coredramon_blue": {
+      "projectileSymbol": "wind",
+      "tint": "teal",
+      "signatureName": "Blue Core Roar",
+      "signatureSymbol": "wind"
+    },
+    "tenkomon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "red",
+      "signatureName": "Heaven Fox Bell",
+      "signatureSymbol": "moon.fill"
+    },
+    "starmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "red",
+      "signatureName": "Meteor Squall",
+      "signatureSymbol": "star.fill"
+    },
     "arresterdramon": {
       "projectileSymbol": "wind",
       "tint": "red",
@@ -3199,11 +3325,35 @@
       "signatureName": "Bullseye Barrage",
       "signatureSymbol": "circle.fill"
     },
+    "starmon_2010": {
+      "projectileSymbol": "star.fill",
+      "tint": "red",
+      "signatureName": "Little Point",
+      "signatureSymbol": "star.fill"
+    },
+    "dorulumon": {
+      "projectileSymbol": "wind",
+      "tint": "orange",
+      "signatureName": "Drill Fang",
+      "signatureSymbol": "wind"
+    },
+    "shoutmon_king": {
+      "projectileSymbol": "music.note",
+      "tint": "orange",
+      "signatureName": "Crowned Shout",
+      "signatureSymbol": "music.note"
+    },
     "lianpumon": {
       "projectileSymbol": "hand.raised.fill",
       "tint": "yellow",
       "signatureName": "Iron Palm",
       "signatureSymbol": "hand.raised.fill"
+    },
+    "hakubamon": {
+      "projectileSymbol": "wind",
+      "tint": "red",
+      "signatureName": "White Charger",
+      "signatureSymbol": "wind"
     },
     "soulmon": {
       "projectileSymbol": "moon.fill",
@@ -3216,6 +3366,12 @@
       "tint": "indigo",
       "signatureName": "Hex Bolt",
       "signatureSymbol": "sparkles"
+    },
+    "meicoomon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "orange",
+      "signatureName": "Wailing Claw",
+      "signatureSymbol": "moon.fill"
     },
     "tialudomon": {
       "projectileSymbol": "sparkles",
@@ -3234,6 +3390,72 @@
       "tint": "brown",
       "signatureName": "Splinter Toss",
       "signatureSymbol": "trash.fill"
+    },
+    "otamamon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "red",
+      "signatureName": "Croak Volley",
+      "signatureSymbol": "drop.fill"
+    },
+    "otamamon_red": {
+      "projectileSymbol": "drop.fill",
+      "tint": "orange",
+      "signatureName": "Scarlet Spit",
+      "signatureSymbol": "drop.fill"
+    },
+    "otamamon_red_ver2": {
+      "projectileSymbol": "drop.fill",
+      "tint": "yellow",
+      "signatureName": "Second Scarlet",
+      "signatureSymbol": "drop.fill"
+    },
+    "otamamon_x": {
+      "projectileSymbol": "drop.fill",
+      "tint": "green",
+      "signatureName": "Antibody Splash",
+      "signatureSymbol": "drop.fill"
+    },
+    "gekomon": {
+      "projectileSymbol": "music.note",
+      "tint": "red",
+      "signatureName": "Tone Deluge",
+      "signatureSymbol": "music.note"
+    },
+    "hookmon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "red",
+      "signatureName": "Grapple Cast",
+      "signatureSymbol": "hammer.fill"
+    },
+    "mantaraymon_x": {
+      "projectileSymbol": "drop.fill",
+      "tint": "mint",
+      "signatureName": "Rewritten Wing",
+      "signatureSymbol": "drop.fill"
+    },
+    "seadramon_x": {
+      "projectileSymbol": "drop.fill",
+      "tint": "teal",
+      "signatureName": "Rewritten Coil",
+      "signatureSymbol": "drop.fill"
+    },
+    "chamblemon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "red",
+      "signatureName": "Blade Tongue",
+      "signatureSymbol": "leaf.fill"
+    },
+    "reppamon": {
+      "projectileSymbol": "wind",
+      "tint": "red",
+      "signatureName": "Gale Tail",
+      "signatureSymbol": "wind"
+    },
+    "baboongamon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "red",
+      "signatureName": "Dune Knuckle",
+      "signatureSymbol": "hand.raised.fill"
     },
     "garurumon_black": {
       "projectileSymbol": "moon.fill",
@@ -3265,6 +3487,24 @@
       "signatureName": "Sky Judgement",
       "signatureSymbol": "star.fill"
     },
+    "sangomon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "red",
+      "signatureName": "Reef Lance",
+      "signatureSymbol": "drop.fill"
+    },
+    "tobiumon": {
+      "projectileSymbol": "wind",
+      "tint": "red",
+      "signatureName": "Skimming Fin",
+      "signatureSymbol": "wind"
+    },
+    "rhinomon_x": {
+      "projectileSymbol": "shield.fill",
+      "tint": "orange",
+      "signatureName": "Rewritten Charge",
+      "signatureSymbol": "shield.fill"
+    },
     "leomon_x": {
       "projectileSymbol": "hand.raised.fill",
       "tint": "orange",
@@ -3277,17 +3517,83 @@
       "signatureName": "Ember Nova",
       "signatureSymbol": "flame.fill"
     },
+    "plotmon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "red",
+      "signatureName": "Rewritten Bark",
+      "signatureSymbol": "sparkles"
+    },
+    "tailmon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "orange",
+      "signatureName": "Rewritten Ring",
+      "signatureSymbol": "sparkles"
+    },
+    "cockatrimon": {
+      "projectileSymbol": "eye.fill",
+      "tint": "red",
+      "signatureName": "Petrifying Stare",
+      "signatureSymbol": "eye.fill"
+    },
     "icemon": {
       "projectileSymbol": "snowflake",
       "tint": "gray",
       "signatureName": "Frozen Fist",
       "signatureSymbol": "snowflake"
     },
+    "petitmamon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "orange",
+      "signatureName": "Little Horn",
+      "signatureSymbol": "moon.fill"
+    },
+    "vorvomon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "green",
+      "signatureName": "Magma Chip",
+      "signatureSymbol": "flame.fill"
+    },
+    "lavorvomon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "mint",
+      "signatureName": "Molten Vent",
+      "signatureSymbol": "flame.fill"
+    },
     "kuwagamon_x": {
       "projectileSymbol": "scissors",
       "tint": "red",
       "signatureName": "Shear Storm",
       "signatureSymbol": "scissors"
+    },
+    "phascomon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "red",
+      "signatureName": "Eucalypt Curse",
+      "signatureSymbol": "moon.fill"
+    },
+    "toyagumon_black": {
+      "projectileSymbol": "circle.fill",
+      "tint": "red",
+      "signatureName": "Counterfeit Bite",
+      "signatureSymbol": "circle.fill"
+    },
+    "porcupamon": {
+      "projectileSymbol": "scissors",
+      "tint": "orange",
+      "signatureName": "Quill Volley",
+      "signatureSymbol": "scissors"
+    },
+    "raptordramon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "red",
+      "signatureName": "Plated Lunge",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "omekamon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "red",
+      "signatureName": "Doll Strike",
+      "signatureSymbol": "hand.raised.fill"
     }
   },
   "lineDefaults": {

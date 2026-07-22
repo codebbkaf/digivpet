@@ -344,21 +344,42 @@ final class DigitamaSweepLToZTests: XCTestCase {
                 XCTAssertNil(species)
                 XCTAssertNil(roster.entry(id: "liollmon"),
                              "Liollmon now has a sheet; lioll_digitama should open a thread")
+            // **These last two reasons were checked as "the species still has no node", and
+            // US-150 wired all three of them — Meicoomon as a Champion, Phascomon and Vorvomon as
+            // Children. That guard has therefore done its job and is replaced by the promise it
+            // was deferring: the egg's own thread must now ARRIVE at the species it is named for.
+            // A weaker check would let a later sweep put the species on some other line and leave
+            // the egg pointing at nothing, which is exactly what the guard existed to catch.
             case .ownBabyIIsIdleOnly:
                 let id = try XCTUnwrap(species)
                 XCTAssertNotNil(roster.entry(id: id))
-                XCTAssertNil(graph.node(id: id), "\(id) is wired now; revisit \(eggId)")
                 XCTAssertEqual(roster.entry(id: "meicoo_baby")?.dexOnly, true,
                                "Meicoo's Baby I is playable now; \(eggId) should open that thread")
+                XCTAssertTrue(reachable(from: eggId).contains(id),
+                              "\(eggId) still does not arrive at \(id)")
             case .everyCandidateBabyIAlreadyWired:
                 let id = try XCTUnwrap(species)
                 XCTAssertNotNil(roster.entry(id: id))
-                XCTAssertNil(graph.node(id: id), "\(id) is wired now; revisit \(eggId)")
                 // The Baby I it settled for is one an earlier story authored, which is the whole
                 // claim: there was an existing rung to join and no orphan to open.
                 XCTAssertNotNil(graph.node(id: babyI))
+                XCTAssertTrue(reachable(from: eggId).contains(id),
+                              "\(eggId) still does not arrive at \(id)")
             }
         }
+    }
+
+    /// Every node an egg's thread can grow into, the egg itself included.
+    private func reachable(from id: String) -> Set<String> {
+        var seen: Set<String> = [id]
+        var frontier = [id]
+        while let next = frontier.popLast() {
+            for edge in graph.node(id: next)?.evolutions ?? [] where !seen.contains(edge.to) {
+                seen.insert(edge.to)
+                frontier.append(edge.to)
+            }
+        }
+        return seen
     }
 
     /// `comment` is authored in `evolutions.json` and deliberately NOT decoded into

@@ -52,7 +52,7 @@ final class EvolutionCriteriaTests: XCTestCase {
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
         "platinumscumon", "diginorimon", "gokimon", "zassoumon", "pencme_raremon", "turuiemon",
         "numemon_x", "manekimon", "mimicmon", "troopmon", "damemon", "tsuchidarumon",
-        "targetmon", "kokeshimon",
+        "targetmon", "kokeshimon", "nisedrimogemon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
@@ -323,8 +323,11 @@ final class EvolutionCriteriaTests: XCTestCase {
         // it exactly one parent, Chibickmon, whose Baby II is Pickmon — and all three Baby II of
         // the `xros` line are already stranded, because that line has no Digitama and no egg is
         // left to give it one.
+        // Starmon 2010 is US-150's one addition, and it is inherited for the same reason Gaossmon
+        // was: Wikimon gives it exactly one Evolves From, Pickmon, and all three `xros` Baby II
+        // are stranded because that line has no Digitama.
         let strandedChild = ["fujamon", "gaossmon", "gumdramon", "kakamon", "labramon", "ryudamon",
-                             "shoutmon", "takinmon", "tinkermon", "xros_hagurumon"]
+                             "shoutmon", "starmon_2010", "takinmon", "tinkermon", "xros_hagurumon"]
         // US-148's two: the Champions it hung over Fujamon, which is itself stranded. `penc-sw` has
         // no Digitama at all, so the whole Saiyu Warriors line is unreachable from the top of the
         // ladder down and always was — wiring the rung above Fujamon inherits that and cannot fix
@@ -335,8 +338,14 @@ final class EvolutionCriteriaTests: XCTestCase {
         // every one hangs off a Child that was ALREADY on the list before this story, or off
         // Gaossmon. The Champion sweeps could not have chosen otherwise — a Child's Champion has to
         // sit on the Child's own line, and `xros` and `penc-sw` have no reachable Child at all.
-        let strandedAdult = ["arresterdramon", "dobermon", "ginkakumon", "greymon_2010",
-                             "lianpumon", "siesamon", "targetmon", "tsuchidarumon"]
+        // US-150's five are the same arithmetic one rung up again, and the parent loop below
+        // proves it: Dorulumon hangs off Starmon 2010, Shoutmon King off Shoutmon, Ginryumon off
+        // Ryudamon, Hakubamon off Takinmon and Parasaurmon off Tinkermon — every one a Child that
+        // was ALREADY on the list. The thirty-three Champions US-150 authored over a REACHABLE
+        // Child are not here, which is what makes the list a claim rather than a dumping ground.
+        let strandedAdult = ["arresterdramon", "dobermon", "dorulumon", "ginkakumon", "ginryumon",
+                             "greymon_2010", "hakubamon", "lianpumon", "parasaurmon",
+                             "shoutmon_king", "siesamon", "targetmon", "tsuchidarumon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,

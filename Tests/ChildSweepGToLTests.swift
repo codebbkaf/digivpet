@@ -326,14 +326,15 @@ final class ChildSweepGToLTests: XCTestCase {
                           "\(id) is on a line of its own")
         }
         // Thirteen of the twenty-one grew, and the biggest by sixteen — grouping rather than a
-        // chain per Digimon. `adventure02`, `commandramon`, `dmc-v1`, `dmc-v4`, `palmon`,
-        // `penc-ds`, `penc-nsp` and `penc-wg` did not move at all.
+        // chain per Digimon. These are the FILE's sizes and not this story's, so US-150's are in
+        // them too: twelve more on `tamers`, three on `dmc-v3` and on `xros`, eleven on `vital`,
+        // and two on `palmon`, which this story did not touch at all.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 56)
-        XCTAssertEqual(sizes["dmc-v3"], 43)
-        XCTAssertEqual(sizes["xros"], 14)
-        XCTAssertEqual(sizes["vital"], 22)
-        XCTAssertEqual(sizes["palmon"], 22, "the palmon line gained no node here")
+        XCTAssertEqual(sizes["tamers"], 68)
+        XCTAssertEqual(sizes["dmc-v3"], 46)
+        XCTAssertEqual(sizes["xros"], 17)
+        XCTAssertEqual(sizes["vital"], 33)
+        XCTAssertEqual(sizes["palmon"], 24)
     }
 
     /// **The variant rule, and the honest version of it.** The criteria say a variant hangs off its
@@ -398,22 +399,24 @@ final class ChildSweepGToLTests: XCTestCase {
                                "\(child.id) does not fall to \(line)'s junk Champion")
             }
         }
-        // Before this story neither line had a single Champion; that is why each needed one, and it
-        // is still checkable from the shipped file because no OTHER story has put an Adult on
-        // either — US-150 onward must keep that true or edit this.
+        // Before this story neither line had a single Champion. THE HISTORICAL HALF OF THAT CLAIM
+        // STOPPED BEING CHECKABLE IN US-150, which put seven more Adults on `vital` and three more
+        // on `xros`, so "every Adult here is one US-149 authored" is simply false now — the same
+        // rot US-149 itself found in US-148's version. What survives, and is what the claim was
+        // really about, is that the junk FLOOR of each line is still this story's.
         for (line, junk) in junkFloors {
             let adults = graph.nodes.filter { $0.line == line && $0.stage == .adult }.map(\.id)
             XCTAssertTrue(adults.contains(junk))
-            XCTAssertTrue(Set(adults).isSubset(of: Set(authoredAdults)),
-                          "\(line) already had a Champion, so it did not need a new floor")
+            XCTAssertTrue(authoredAdults.contains(junk),
+                          "\(line)'s junk floor is no longer the one this story authored")
         }
-        // And this is nearly the last time a sweep pays this cost: `adventure02` is the ONLY line
-        // left without an Adult, and it is US-150's to pay because all three of its Children -
-        // V-mon, Wormmon and Tinkermon - are M-Z. Stated as a list of one rather than as a
-        // sentence, so US-150 either empties it or fails here.
+        // And this was the last time a sweep pays this cost. US-149 left this as the one-element
+        // list `["adventure02"]` for US-150 to empty, and US-150 emptied it with NiseDrimogemon:
+        // every line in the file now has a Champion rung, and a twenty-second line opened without
+        // one would fail here.
         let withoutAChampionRung = Set(graph.nodes.map(\.line))
             .filter { line in graph.nodes.filter { $0.line == line && $0.stage == .adult }.isEmpty }
-        XCTAssertEqual(withoutAChampionRung, ["adventure02"])
+        XCTAssertEqual(withoutAChampionRung, [])
     }
 
     /// The Xros Loader claim US-146 made about `xros` still holds now that the line has a Champion
@@ -530,7 +533,7 @@ final class ChildSweepGToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 548, "497 before this story")
+        XCTAssertEqual(graph.nodes.count, 599, "497 before this story, 548 after it, 599 after US-150")
     }
 
     /// The one Child in range whose Champion is NOT a new node. Lalamon's canonical Champion,

@@ -288,8 +288,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 39,
-                       "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon")
+        XCTAssertEqual(inLine.count, 42,
+                       "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
+                           + "US-150 Plotmon X, Tailmon X and Cockatrimon")
         XCTAssertEqual(inLine.filter { !reached.contains($0) }.sorted(), ["pusumon", "pusurimon"],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -365,9 +366,11 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // story's notes made, and a total quietly one higher would no longer be that claim.
         // `pusumon` and `pusurimon` are US-146's and excluded for the same reason.
         // `hiyarimon` and `penmon` are US-147's, excluded for the same reason.
+        // `plotmon_x`, `tailmon_x` and `cockatrimon` are US-150's, excluded the same way.
         let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama",
                                       "pusumon", "pusurimon", "hiyarimon", "penmon",
-                                      "gammamon", "betelgammamon"]
+                                      "gammamon", "betelgammamon",
+                                      "plotmon_x", "tailmon_x", "cockatrimon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

@@ -1225,6 +1225,14 @@
       "element": "wind",
       "attribute": "free"
     },
+    "yukiagumon": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "hyougamon": {
+      "element": "ice",
+      "attribute": "virus"
+    },
     "cand_digitama": {
       "element": "fire",
       "attribute": "free"
@@ -1737,6 +1745,22 @@
       "element": "light",
       "attribute": "data"
     },
+    "parasaurmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "xv-mon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "sorcerymon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "nisedrimogemon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
     "commandramon": {
       "element": "steel",
       "attribute": "virus"
@@ -1825,7 +1849,11 @@
       "element": "dark",
       "attribute": "virus"
     },
-    "agumon_black_x": {
+    "dracomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "elecmon_violet": {
       "element": "dark",
       "attribute": "virus"
     },
@@ -1833,45 +1861,41 @@
       "element": "fire",
       "attribute": "vaccine"
     },
-    "alraumon": {
-      "element": "plant",
+    "agumon_black_x": {
+      "element": "dark",
       "attribute": "virus"
-    },
-    "armadimon": {
-      "element": "earth",
-      "attribute": "free"
-    },
-    "clearagumon": {
-      "element": "machine",
-      "attribute": "free"
-    },
-    "dokunemon": {
-      "element": "plant",
-      "attribute": "virus"
-    },
-    "dracomon": {
-      "element": "fire",
-      "attribute": "data"
     },
     "dracomon_x": {
       "element": "fire",
       "attribute": "data"
     },
-    "dracumon": {
-      "element": "dark",
+    "armadimon": {
+      "element": "earth",
+      "attribute": "free"
+    },
+    "alraumon": {
+      "element": "plant",
+      "attribute": "virus"
+    },
+    "funbeemon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "dokunemon": {
+      "element": "plant",
       "attribute": "virus"
     },
     "ekakimon": {
       "element": "plant",
       "attribute": "free"
     },
-    "elecmon_violet": {
+    "clearagumon": {
+      "element": "machine",
+      "attribute": "free"
+    },
+    "dracumon": {
       "element": "dark",
       "attribute": "virus"
-    },
-    "funbeemon": {
-      "element": "wind",
-      "attribute": "data"
     },
     "geogreymon": {
       "element": "fire",
@@ -1929,6 +1953,14 @@
       "element": "plant",
       "attribute": "data"
     },
+    "palmon_x": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "junglemojyamon": {
+      "element": "plant",
+      "attribute": "data"
+    },
     "guardromon_gold": {
       "element": "machine",
       "attribute": "vaccine"
@@ -1974,6 +2006,10 @@
       "attribute": "virus"
     },
     "damemon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "ginryumon": {
       "element": "steel",
       "attribute": "data"
     },
@@ -2117,6 +2153,54 @@
       "element": "machine",
       "attribute": "virus"
     },
+    "renamon_x": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "shakomon_x": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "solarmon": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "terriermon_x": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "wankomon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "kyubimon_silver": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "tobucatmon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "kyubimon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "dogmon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "coredramon_blue": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "tenkomon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "starmon": {
+      "element": "light",
+      "attribute": "data"
+    },
     "arresterdramon": {
       "element": "wind",
       "attribute": "data"
@@ -2133,8 +2217,24 @@
       "element": "neutral",
       "attribute": "data"
     },
+    "starmon_2010": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "dorulumon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "shoutmon_king": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
     "lianpumon": {
       "element": "earth",
+      "attribute": "vaccine"
+    },
+    "hakubamon": {
+      "element": "light",
       "attribute": "vaccine"
     },
     "soulmon": {
@@ -2142,6 +2242,10 @@
       "attribute": "virus"
     },
     "wizarmon_x": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "meicoomon": {
       "element": "dark",
       "attribute": "data"
     },
@@ -2154,6 +2258,50 @@
       "attribute": "data"
     },
     "kokeshimon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "otamamon": {
+      "element": "water",
+      "attribute": "free"
+    },
+    "otamamon_red": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "otamamon_red_ver2": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "otamamon_x": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "gekomon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "hookmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "mantaraymon_x": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "seadramon_x": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "chamblemon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "reppamon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "baboongamon": {
       "element": "earth",
       "attribute": "virus"
     },
@@ -2177,6 +2325,18 @@
       "element": "light",
       "attribute": "vaccine"
     },
+    "sangomon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "tobiumon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "rhinomon_x": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
     "leomon_x": {
       "element": "earth",
       "attribute": "vaccine"
@@ -2185,12 +2345,56 @@
       "element": "fire",
       "attribute": "data"
     },
+    "plotmon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "tailmon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "cockatrimon": {
+      "element": "wind",
+      "attribute": "data"
+    },
     "icemon": {
       "element": "ice",
       "attribute": "data"
     },
+    "petitmamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "vorvomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "lavorvomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
     "kuwagamon_x": {
       "element": "steel",
+      "attribute": "virus"
+    },
+    "phascomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "toyagumon_black": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "porcupamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "raptordramon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "omekamon": {
+      "element": "earth",
       "attribute": "virus"
     }
   },

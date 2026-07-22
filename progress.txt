@@ -155,6 +155,23 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   file.** `ChildSweepAToFTests`' "this line had no Champion before" was checked as "every Adult here
   is one US-148 authored"; US-149 added sixteen to `tamers` alone. Replace such an assertion with
   the half that stays true and say why in the comment — do not delete it, and do not let it rot.
+- **PHASE E SWEEPS: `care.battleCount` is answerable ONLY over the `lifetime` window; every other
+  `care.*` counter ONLY over `stage`.** `ConditionContext.careValue` hands back `.unknown` for
+  `(.careBattleCount, .stage)`, so such an edge is UNREACHABLE rather than merely hard — and the
+  validator has no opinion about windows, so only the engine tests catch it. US-150 shipped four of
+  them into a first draft; `ChildSweepMToZTests.testNoBattleCriterionAsksForAWindowTheContextCannot
+  Answer` now pins the rule over `evolutions.json`. It does NOT cover `maps.json`, where US-128
+  recorded the same trap in 12 Digitama slots and left it alone on purpose — that is a data story,
+  and this pattern is why it is worth doing.
+- **PHASE E SWEEPS: re-run the egg BFS when a sweep WIRES a species an earlier egg doubled up for.**
+  US-145 parked three eggs on someone else's Baby I because their own species had no node. US-150
+  gave all three a node and let that decide one placement — Phascomon went to its CITED line's
+  second In-Training rather than to a free one on flavour — so every one of the three now arrives.
+  `DigitamaSweepLToZTests`' "the species is still unwired" guards exist to make you notice.
+- **PHASE E SWEEPS: prefer a SECOND CITATION over a rehome when the first-choice parent is full.**
+  US-149's Gomamon X had to be rehomed by flavour; US-150's Shakomon X hit the identical trap
+  (`penc-ds` has one In-Training and it is full) and instead followed the other parent Wikimon
+  names for it. A citation is checkable in a test; a rehome is only a comment.
 - **PHASE E: a substring search misses a letter INSIDE a name.** `Jureimon` is not a substring of
   `Jyureimon`, so the document's own bracketed spelling does not find its own sheet. Search a
   PREFIX, not the whole name, before calling anything absent.
@@ -3196,4 +3213,72 @@ Whole file 432 -> 381; Adult fell 100 -> 67 as a side effect of authoring the ru
   entries — 16 Children for US-150 and 62 Champions for US-151..US-153 — and both halves are meant
   to be edited down. Orphans by stage now: Ultimate 166, Perfect 114, Adult 67, Child 18,
   Armor-Hybrid 16.
+---
+
+## 2026-07-22 - US-150 - Orphan sweep: Child M-Z (the rung is finished)
+
+Wired the M-Z third of the Child rung. 51 new nodes: the 18 orphaned Children M-Z and the 33
+Champions above them. 18 new branch edges across 14 Baby II, and out-edges on the 16 Children
+US-147 opened as M-Z leaves. `evolutions.json` 548 -> 599.
+
+- Files: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`, new
+  `Tests/ChildSweepMToZTests.swift` (26 tests), and 17 existing test files for counts and for
+  three historical claims that stopped being checkable.
+- Build green. 2057 tests, 0 failures. Validator zero findings over the whole file. The 26 new
+  tests were also observed passing on their own.
+- ORPHAN COUNT (Appendix B, over a regenerated `roster.generated.json`): whole file 381 -> 330.
+  Child 18 BEFORE, 0 AFTER. Adult fell 67 -> 34 as a side effect of authoring the rung above.
+  Remaining: Ultimate 166, Perfect 114, Adult 34, Armor-Hybrid 16.
+
+**Learnings for future iterations:**
+
+- **`care.battleCount` is answerable ONLY over the `lifetime` window, and every other `care.*`
+  counter ONLY over `stage`.** `ConditionContext.careValue` returns `.unknown` for
+  `(.careBattleCount, .stage)`, so four edges first authored with `"window": "stage"` on a battle
+  criterion were UNREACHABLE rather than merely hard. It was caught by
+  `BabyIISweepTests.testEveryBabyIIBranchIsTakenByTheEngineWhenItIsEarned` — the engine test, not
+  the validator, which has no opinion about windows. `ChildSweepMToZTests` now pins the rule over
+  the whole file.
+- **An egg's promise is worth re-running when a sweep WIRES a species an earlier egg doubled up
+  for.** US-145 parked `meicoo_digitama`, `phasco_digitama` and `vorvo_digitama` on someone else's
+  Baby I because their own species had no node; this story gave all three a node, and choosing
+  Phascomon's parent by that BFS (Kozenimon on `penc-me`, its cited Caprimon's line) rather than by
+  flavour (Sunmon on `penc-nso`) made all three eggs arrive at their species. The cost was moving
+  Solarmon onto its other cited parent, Gigimon, on `tamers`. `DigitamaSweepLToZTests`' two "the
+  species is still unwired" guards were replaced by the arrival check they were deferring.
+- **A device tree's In-Training claim is the thing a Child sweep breaks, and scoping beats
+  relaxing.** `PendulumNatureSpiritsTreeTests.testTheUnlockableSixthSlotIsTheOnlyEarnedInTrainingEdge`
+  read "Koromon's ONLY conditioned edge is Angoramon"; hanging YukiAgumon there falsifies it. It is
+  now scoped to the three Rookies the SECTION draws, plus an assertion naming the one extra target
+  — so a fourth Rookie hung there silently still fails.
+- **Three historical claims were replaced rather than bumped, and each says why in its comment.**
+  US-149's "every Adult on `vital`/`xros` is one US-149 authored" (ten more landed there; the junk
+  FLOOR half survives); the Nature Spirits one above; and `DexScreenTests`' "the roster dwarfs the
+  graph" — 599 nodes against 1,025 entries is past half, so the floor is now the 157 idle-only
+  Digimon, which can NEVER gain a node because `edgeToDexOnlyNode` forbids it. That last one had
+  already been rewritten once from `> 800`; a claim Phase E keeps eroding needs a floor Phase E
+  cannot reach.
+- **The variant rule again, and the better of the two escapes.** Eight of nine variants sat on
+  their base form's line and three on its own In-Training. Shakomon X could not — `penc-ds` has
+  exactly ONE In-Training and Pukamon carries all four energies, the trap US-149's Gomamon X hit —
+  but instead of a flavour rehome it followed its OTHER Wikimon-cited parent, Chocomon, onto
+  `tamers`. Prefer a second citation over a rehome: it is checkable.
+- **The knock-on list for this rung, all seventeen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, `ChildSweepAToFTests` and `ChildSweepGToLTests` (548 -> 599);
+  the per-line dict in `EvolutionGraphTests`; line sizes in `DigitamaSweepTests`,
+  `BabyIISweepTests`, `ChildSweepAToFTests` and `ChildSweepGToLTests`; `junkIds` and BOTH stranded
+  lists in `EvolutionCriteriaTests`; the dmc-v3 verified set in `SeedRosterTests`; the
+  earned-branch count and the wired-onward ledger in `BabyIISweepTests`; the dead-end ledger in
+  `ChildSweepAToFTests`; `inLine.count` and the `sweepEggs` set in `PendulumNightmareSoldiersTree
+  Tests`, `PendulumVirusBustersTreeTests`, `PendulumMetalEmpireTreeTests` and
+  `PendulumNatureSpiritsTreeTests`; the doubled-up-egg reasons in `DigitamaSweepLToZTests`; and the
+  roster/graph proportion in `DexScreenTests`. `MinigameAssignmentTests`, `EggHatchingTests`,
+  `DexModel.lineTitles` and the two `lineDefaults` did NOT move: no new line, and no thread newly
+  reached an Ultimate.
+- REMAINS: US-151 onward (37/56 passing). The Adult rung is next and it is the same shape one rung
+  up: 34 orphaned Adults over seven stories, and 95 dead ends in
+  `ChildSweepAToFTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesTheSweepsHaveOpened` — the Child
+  half is now EMPTY and the Adult half is 95 Champions for US-151..US-156 to wire onward. Note the
+  arithmetic the Adult sweeps face: the Perfect rung has 114 orphans and only 95 Adults to hang
+  them off, so doubling up starts there.
 ---

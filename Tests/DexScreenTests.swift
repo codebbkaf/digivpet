@@ -602,17 +602,25 @@ final class DexEvolutionCandidateTests: XCTestCase {
     /// A real roster entry, to prove the empty case is reached by ordinary data rather than only by
     /// a made-up id. Most of the roster is exactly this.
     ///
-    /// Stated as a PROPORTION rather than as a count on purpose. The literal was `> 800` and Phase E
-    /// is wiring the roster into the graph a tree at a time, so it fell to exactly 800 in US-142 and
-    /// would have had to be edited by every sweep after it. What the test is really claiming — that
-    /// the roster still dwarfs the graph, so the empty case is the common one — survives as a
-    /// fraction of whatever the roster happens to hold.
+    /// Stated as a FLOOR that cannot move on purpose, and the reasoning is worth keeping. The
+    /// literal was `> 800`, then "more than half the roster" — both were readings of "the roster
+    /// dwarfs the graph", and Phase E is wiring the roster in a rung at a time, so both were
+    /// eventually going to be false. Half stopped being true in US-150, which took the graph past
+    /// 599 nodes against a 1,025-entry roster.
+    ///
+    /// What the test is really claiming is that the empty case is reached by ORDINARY data rather
+    /// than only by a made-up id, and the 157 idle-only Digimon guarantee that for good: a dexOnly
+    /// entry may never sit on an edge (`EvolutionGraphValidator.edgeToDexOnlyNode`), so it can
+    /// never gain a node however far Phase E runs. That is the floor asserted here.
     func testMostOfTheShippedRosterHasNoCandidates() throws {
         let withoutNodes = Roster.bundled.entries.filter {
             EvolutionGraph.bundled.node(id: $0.id) == nil
         }
-        XCTAssertGreaterThan(withoutNodes.count, Roster.bundled.entries.count / 2,
-                             "The roster dwarfs the graph; that is why the empty case needs a message.")
+        let dexOnly = Roster.bundled.entries.filter(\.dexOnly).count
+        XCTAssertEqual(dexOnly, 157)
+        XCTAssertGreaterThanOrEqual(withoutNodes.count, dexOnly,
+                                    "every idle-only Digimon is a roster entry with no node; "
+                                        + "that is why the empty case needs a message.")
 
         let entry = try XCTUnwrap(withoutNodes.first)
         XCTAssertTrue(

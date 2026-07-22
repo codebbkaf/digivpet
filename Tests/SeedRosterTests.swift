@@ -312,6 +312,10 @@ final class SeedRosterTests: XCTestCase {
         // US-149's four. The X-Antibody thread US-148 opened on this line took Gabumon X and
         // Gomamon X, and Cupimon took Lucemon and Hackmon, so their Champions land here too.
         "Gururumon", "Tylomon X", "Dinohumon", "Pidmon",
+        // US-150's two, verified the same way: Sangomon went under Upamon (the only In-Training
+        // with a free energy that Wikimon names for it) and Sistermon Blanc was already on this
+        // line, so Tobiumon and Rhinomon X are the Champions above them.
+        "Tobiumon", "Rhinomon X",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
