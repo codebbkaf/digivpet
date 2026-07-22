@@ -212,7 +212,7 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 46,
+        XCTAssertEqual(inLine.count, 48,
                        "US-152 hung Ebidramon and Gawappamon on this line, US-153 Kinkakumon, "
                            + "US-154 MoriShellmon, US-157 Anomalocarimon X, US-158 Gusokumon, "
                            + "US-159 Hangyomon, US-160 MarinChimairamon and Mermaimon")
@@ -567,7 +567,7 @@ final class PendulumDeepSaversTreeTests: XCTestCase {
                                       // US-164's one: Cthyllamon over this line's own Dagomon.
                                       "cthyllamon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
-        XCTAssertEqual(mine.count, 31)
+        XCTAssertEqual(mine.count, 33)
         XCTAssertEqual(mine.filter { Roster.bundled.entry(id: $0.id) == nil }.count,
                        5, "the five aliases, which remove no orphan")
     }

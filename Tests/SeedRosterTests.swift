@@ -496,6 +496,9 @@ final class SeedRosterTests: XCTestCase {
         // Goddramon X over Megadramon (a cited parent, its own base form idle-only). Each eyeballed
         // as its `Ultimate-Super Ultimate/*.png` sheet.
         "Gankoomon X", "HolyDigitamamon", "Goddramon X",
+        // US-166's one: Minervamon X over Digitamamon, its base form idle-only so it follows the
+        // cited parent (the Dynasmon X shape). Eyeballed as `Ultimate-Super Ultimate/Minervamon_X.png`.
+        "Minervamon X",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

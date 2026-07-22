@@ -5106,6 +5106,168 @@
       "tint": "green",
       "signatureName": "Hydra Breath",
       "signatureSymbol": "wind"
+    },
+    "imperialdramon_fighter": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "orange",
+      "signatureName": "Positron Laser",
+      "signatureSymbol": "bolt.fill"
+    },
+    "imperialdramon_fighter_black": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "purple",
+      "signatureName": "Black Positron Laser",
+      "signatureSymbol": "bolt.fill"
+    },
+    "imperialdramon_paladin": {
+      "projectileSymbol": "sparkles",
+      "tint": "cyan",
+      "signatureName": "Omega Blade",
+      "signatureSymbol": "sparkles"
+    },
+    "jesmon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "red",
+      "signatureName": "Sanctuary Blade",
+      "signatureSymbol": "shield.fill"
+    },
+    "jesmon_x": {
+      "projectileSymbol": "shield.fill",
+      "tint": "pink",
+      "signatureName": "Judgement Testament",
+      "signatureSymbol": "shield.fill"
+    },
+    "jesmon_gx": {
+      "projectileSymbol": "shield.fill",
+      "tint": "yellow",
+      "signatureName": "Final Crest",
+      "signatureSymbol": "shield.fill"
+    },
+    "jougamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "brown",
+      "signatureName": "Rock Fist Barrage",
+      "signatureSymbol": "flame.fill"
+    },
+    "jumbogamemon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "green",
+      "signatureName": "Jumbo Press",
+      "signatureSymbol": "shield.fill"
+    },
+    "justimon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "gray",
+      "signatureName": "Justice Kick Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "kaguyamon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "white",
+      "signatureName": "Lunar Rainbow",
+      "signatureSymbol": "moon.fill"
+    },
+    "kuzuhamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "purple",
+      "signatureName": "Fox Drop",
+      "signatureSymbol": "flame.fill"
+    },
+    "leviamon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "red",
+      "signatureName": "Rostrum Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "lilithmon": {
+      "projectileSymbol": "sparkles",
+      "tint": "purple",
+      "signatureName": "Nazar Nail",
+      "signatureSymbol": "sparkles"
+    },
+    "lilithmon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "blue",
+      "signatureName": "Phantom Pain Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "lordknightmon_x": {
+      "projectileSymbol": "shield.fill",
+      "tint": "pink",
+      "signatureName": "Spiral Masquerade Cross",
+      "signatureSymbol": "shield.fill"
+    },
+    "lotusmon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "green",
+      "signatureName": "Thousand Arrows",
+      "signatureSymbol": "flame.fill"
+    },
+    "lucemon_satan": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "indigo",
+      "signatureName": "Divine Atonement",
+      "signatureSymbol": "bolt.fill"
+    },
+    "lucemon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "teal",
+      "signatureName": "Dead or Alive Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "magnamon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "yellow",
+      "signatureName": "Magna Blast Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "marinangemon": {
+      "projectileSymbol": "heart.fill",
+      "tint": "pink",
+      "signatureName": "Ocean Love",
+      "signatureSymbol": "heart.fill"
+    },
+    "mastemon": {
+      "projectileSymbol": "sparkles",
+      "tint": "white",
+      "signatureName": "Dual Genesis",
+      "signatureSymbol": "sparkles"
+    },
+    "megidramon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "orange",
+      "signatureName": "Megiddo Flame",
+      "signatureSymbol": "drop.fill"
+    },
+    "megidramon_x": {
+      "projectileSymbol": "drop.fill",
+      "tint": "purple",
+      "signatureName": "Hell Fire Cross",
+      "signatureSymbol": "drop.fill"
+    },
+    "metalgarurumon_black": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "white",
+      "signatureName": "Cocytus Breath Black",
+      "signatureSymbol": "bolt.fill"
+    },
+    "metalgarurumon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "cyan",
+      "signatureName": "Metal Wolf Claw Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "minervamon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "orange",
+      "signatureName": "Strike Sword Cross",
+      "signatureSymbol": "triangle.fill"
+    },
+    "mitamamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "mint",
+      "signatureName": "Purifying Barrier",
+      "signatureSymbol": "sparkles"
     }
   },
   "lineDefaults": {

@@ -3404,6 +3404,114 @@
     "hydramon": {
       "element": "wind",
       "attribute": "virus"
+    },
+    "imperialdramon_fighter": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "imperialdramon_fighter_black": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "imperialdramon_paladin": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "jesmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "jesmon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "jesmon_gx": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "jougamon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "jumbogamemon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "justimon_x": {
+      "element": "electric",
+      "attribute": "vaccine"
+    },
+    "kaguyamon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "kuzuhamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "leviamon_x": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "lilithmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "lilithmon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "lordknightmon_x": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "lotusmon": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "lucemon_satan": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "lucemon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "magnamon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "marinangemon": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "mastemon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "megidramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "megidramon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "metalgarurumon_black": {
+      "element": "ice",
+      "attribute": "virus"
+    },
+    "metalgarurumon_x": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "minervamon_x": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "mitamamon": {
+      "element": "light",
+      "attribute": "data"
     }
   },
   "lineDefaults": {

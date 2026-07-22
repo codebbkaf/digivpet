@@ -21,6 +21,30 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E, ULTIMATE SWEEP: RE-RUN `xcodegen generate` AFTER WRITING THE NEW TEST FILE, OR IT NEVER
+  RUNS.** US-166 ran `xcodegen generate` FIRST (to pick up the JSON) then wrote
+  `UltimateSweepIToMTests.swift` — the project glob had already been captured, so `build-for-testing`
+  compiled the whole target GREEN and the suite went 0 failures while the new class was simply not in
+  the bundle (its Test Suite line never appeared, test count did not rise). Generate AGAIN after the
+  file exists; confirm with `grep -c <ClassName> DigiVPet.xcodeproj/project.pbxproj` and by seeing the
+  count climb.
+- **PHASE E, ULTIMATE RUNG: A JOGRESS-RESULT ULTIMATE IS WIRED UNLESS A DEVICE TREE RESERVES IT TO
+  NO-NODE (the Cernumon precedent, US-164).** `jogress.json` naming a result is NOT a reason to skip
+  it — `cernumon`, `aegisdramon`, `millenniumon` are all jogress results AND wired nodes. What makes
+  C-D set Chaosdramon/Chaosmon aside is that `DMCVersion5/4TreeTests` and `PendulumMetalEmpireTreeTests`
+  pin them to NO evolution node. US-166 wired Mastemon (directly off Angewomon, both jogress parents
+  being Perfects) and Mitamamon (Cernumon shape, off Garudamon, its jogress parents both Ultimates)
+  because no tree reserved either. `UltimateSweepCToDTests.jogressReachable` is the set of the C-D
+  results left unwired, and its "true remainder" assertions (64->37 here) are relative to the whole
+  current bucket, so every later sweep moves them.
+- **PHASE E, ULTIMATE RUNG: A LATER SWEEP THAT FORKS A PERFECT AN EARLIER SWEEP TREATED AS A LEAF
+  BREAKS TWO SHAPES, NOT ONE.** US-166 branched Megalo Growmon, which US-163/A-B had cleared as a
+  LEAF (its only edge the isDefault climb to Breakdramon). That fails `UltimateSweepAToBTests`
+  `testEveryEarnedBranchCarriesCriteriaAndEveryLeafClimbDoesNot` (`evolutions.count == 1` — special-
+  case it) AND `testTheFiveClearedLeavesClimbForADigimonThatEarnedNothing`, which read the climb as
+  `evolutions.first` — that is now an EARNED branch, so change it to `first(where: \.isDefault)`. Grep
+  every UltimateSweep file's `leafParents` for a parent you intend to branch, not just the PerfectSweep
+  `branchedBySweeps` dicts.
 - **PHASE E, ULTIMATE RUNG: ONE ORPHAN COSTS ONE NODE, AND THAT IS THE WHOLE STORY.** The rung is
   TERMINAL, so no out-edge is owed; `EvolutionCriteriaTests.branchingNodes` is Child and Adult only,
   so a forked Perfect owes no junk floor; and every line but `algomon` already has a Perfect, so
@@ -4979,3 +5003,32 @@ The thirty, `Perfect -> Ultimate`:
   - REMAINS: US-166 onward (52/56 passing). 66 Ultimate orphans (I-Z) + 16 Armor-Hybrid = 82 total.
     Four sweeps left: three Ultimate (I-M, N-R, S-Z) and the Armor-Hybrid one (US-169). Ogudomon is
     still pinned for US-167 (display name O).
+
+## 2026-07-23 - US-166 (Orphan sweep: Ultimate-Super Ultimate I-M)
+- Wired the 27 orphaned Ultimate whose display name begins I-M. Ultimate orphan bucket 66 -> 39;
+  total playable orphans 82 -> 55 (Armor-Hybrid 16 untouched, US-169's). Nodes 851 -> 878.
+- Files: Resources/{evolutions,elements,moves}.json (27 nodes + 27 edges + 27 element/move rows),
+  scripts/us166_author.py (authoring record, refuses to run twice), Tests/UltimateSweepIToMTests.swift
+  (new, 25 tests). ~30 existing test files updated for the moved live-state.
+- Build green, 2458 tests (2433 + 25), 0 failures. Validator ZERO findings over evolutions.json.
+- PLACEMENTS: 26 earned branches (one health metric + one care counter, distinct requiredEnergy) +
+  1 leaf isDefault climb (Karakurumon -> Kaguyamon, dead-end ledger 59 -> 58). FIVE new four-edge
+  Perfects, all energies spent: paildramon (3 Imperialdramon Modes), saviorhackmon (3 Jesmon),
+  ladydevimon (Lilithmon + Lilithmon X), knightmon (LordKnightmon X), digitamamon (Minervamon X).
+- JOGRESS RESULTS wired the Cernumon way: mastemon off Angewomon (both jogress parents are Perfects,
+  so a direct Perfect->Ultimate edge), mitamamon one rung below on Garudamon (jogress parents
+  Hououmon + MarinAngemon both Ultimates, the Cernumon shape). Neither is tree-reserved.
+- VARIANTS: same-parent strong variant (jesmon_x, lilithmon_x, megidramon_x, imperialdramon_fighter_black);
+  Dynasmon-X idle-only-base -> cited parent (justimon_x/cyberdramon_x, lordknightmon_x/knightmon,
+  magnamon_x/aerov-dramon, minervamon_x/digitamamon); leviamon_x off marindevimon; metalgarurumon_x
+  off weregarurumon_x. Every id resolved from Wikimon Evolves From, bolded citation preferred.
+- Learnings (also promoted to Codebase Patterns at top):
+  - Re-run `xcodegen generate` AFTER writing the new test file; running it only before left the new
+    class out of the bundle and the suite went green (2433) without ever running it. Confirmed by the
+    count climbing to 2458 and the IToM Test Suite line appearing after a second generate.
+  - Forking a Perfect an earlier sweep cleared as a LEAF (megalogrowmon) breaks the A-B leaf tests:
+    special-case evolutions.count and read the climb as first(where: \.isDefault), not .first.
+  - A jogress-result Ultimate is still wired unless a device tree pins it to no-node (cernumon
+    precedent); jougamon/jumbogamemon land stranded on penc-sw (no Digitama) -> strandedUltimate.
+- REMAINS: US-167 (N-R), US-168 (S-Z), US-169 (Armor-Hybrid). 39 Ultimate orphans (N-Z) + 16
+  Armor-Hybrid = 55 total. Ogudomon still pinned for US-167 (display name O). 53/56 passing.

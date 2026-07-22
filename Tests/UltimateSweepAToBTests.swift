@@ -135,7 +135,7 @@ final class UltimateSweepAToBTests: XCTestCase {
         // 100 after this story; US-164 then took the C-D band down to 80 (two of the band,
         // Chaosdramon and Chaosmon, are Jogress results it left unwired, so 80 is the
         // evolution-edge count and 78 the true owed remainder).
-        XCTAssertEqual(orphans.count, 66,
+        XCTAssertEqual(orphans.count, 39,
                        "130 before US-163, 100 after; US-164 reached 80, US-165 reached 66")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
@@ -182,16 +182,16 @@ final class UltimateSweepAToBTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 117)
-        XCTAssertEqual(sizes["penc-nso"], 75)
-        XCTAssertEqual(sizes["penc-me"], 71)
+        XCTAssertEqual(sizes["tamers"], 121)
+        XCTAssertEqual(sizes["penc-nso"], 81)
+        XCTAssertEqual(sizes["penc-me"], 73)
         XCTAssertEqual(sizes["dmc-v1"], 39)
         XCTAssertEqual(sizes["penc-vb"], 60)
-        XCTAssertEqual(sizes["penc-ds"], 46)
-        XCTAssertEqual(sizes["penc-nsp"], 43)
+        XCTAssertEqual(sizes["penc-ds"], 48)
+        XCTAssertEqual(sizes["penc-nsp"], 44)
         XCTAssertEqual(sizes["dmc-v3"], 54)
         XCTAssertEqual(sizes["vital"], 42)
-        XCTAssertEqual(sizes["palmon"], 29)
+        XCTAssertEqual(sizes["palmon"], 30)
         XCTAssertEqual(sizes["xros"], 22)
     }
 
@@ -214,7 +214,10 @@ final class UltimateSweepAToBTests: XCTestCase {
 
             if leafParents.contains(parent) {
                 XCTAssertTrue(edge.isDefault, "\(parent)'s only edge is not its fallback")
-                XCTAssertEqual(node.evolutions.count, 1, "\(parent) is not a single climb")
+                // US-166 forked Megalo Growmon (Megidramon and Megidramon X) beside the isDefault
+                // climb to Breakdramon this story gave it, so it is no longer a single edge.
+                XCTAssertEqual(node.evolutions.count, parent == "megalogrowmon" ? 3 : 1,
+                               "\(parent) is not a single climb")
                 XCTAssertEqual(edge.conditions, [], "\(parent)'s fallback carries criteria")
             } else {
                 XCTAssertFalse(edge.isDefault, "\(ultimate)'s in-edge is a fallback, not earned")
@@ -299,7 +302,9 @@ final class UltimateSweepAToBTests: XCTestCase {
     func testTheFiveClearedLeavesClimbForADigimonThatEarnedNothing() throws {
         for parent in leafParents {
             let node = try XCTUnwrap(graph.node(id: parent))
-            let target = try XCTUnwrap(node.evolutions.first).to
+            // The isDefault climb, not `.first` — US-166 forked Megalo Growmon, so its earned
+            // branches now sort ahead of the Breakdramon climb a neglected Digimon still takes.
+            let target = try XCTUnwrap(node.evolutions.first(where: \.isDefault)).to
             XCTAssertEqual(
                 EvolutionEngine.scheduledEvolutionTarget(
                     for: node, stageEnergy: EnergyTotals(), dominant: nil, careMistakes: 9,
@@ -460,7 +465,7 @@ final class UltimateSweepAToBTests: XCTestCase {
         }
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       59, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       58, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - The nodes with no drawable citation, and the one stranded node
@@ -603,8 +608,8 @@ final class UltimateSweepAToBTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 851, "787 before this story, 817 after it")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 172, "108 before this story, 172 after US-165")
+        XCTAssertEqual(graph.nodes.count, 878, "787 before this story, 817 after it")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 199, "108 before this story, 172 after US-165")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
@@ -616,7 +621,7 @@ final class UltimateSweepAToBTests: XCTestCase {
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 66,
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 39,
                        "the Ultimate bucket moved without this claim moving with it")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")

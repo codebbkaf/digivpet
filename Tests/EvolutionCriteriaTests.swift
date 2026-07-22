@@ -413,8 +413,11 @@ final class EvolutionCriteriaTests: XCTestCase {
         // Pandamon and Enmamon from Gokuwmon, both already stranded because `penc-sw` (Saiyu
         // Warriors) has no Digitama in this pack. Every cited parent Enmamon has is an Ultimate, so
         // there was never an egg-reachable reading.
-        let strandedUltimate = ["armamon", "enmamon", "erlangmon", "seitengokuwmon", "shakamon",
-                                "zekegreymon"]
+        // US-166's Jougamon and JumboGamemon join the stranded `penc-sw` list: Jougamon climbs from
+        // Cho-Hakkaimon and JumboGamemon from Shawujinmon, both already stranded because `penc-sw`
+        // (Saiyu Warriors) has no Digitama in this pack.
+        let strandedUltimate = ["armamon", "enmamon", "erlangmon", "jougamon", "jumbogamemon",
+                                "seitengokuwmon", "shakamon", "zekegreymon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,
