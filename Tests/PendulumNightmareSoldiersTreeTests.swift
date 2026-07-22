@@ -278,12 +278,14 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         XCTAssertEqual(graph.nodes.filter { $0.id.hasPrefix("pencnso_") }.count, aliases.count,
                        "an alias was added or removed without updating this list")
 
-        // The three Garurumon-thread triples, stated as a count so a fourth copy cannot slip in.
+        // The Garurumon thread was the file's first triple and is a QUADRUPLE since US-143: the V0
+        // Virus Busters section draws Gabumon over Garurumon, WereGarurumon and MetalGarurumon too,
+        // which is the fourth tree to draw that thread. This assertion is what caught it.
         for plain in ["garurumon", "weregarurumon", "metalgarurumon"] {
             let name = try node(plain).displayName
             let copies = graph.nodes.filter { $0.displayName == name }
-            XCTAssertEqual(Set(copies.map(\.line)), ["dmc-v2", "penc-nsp", line],
-                           "\(plain) is drawn by three trees")
+            XCTAssertEqual(Set(copies.map(\.line)), ["dmc-v2", "penc-nsp", "penc-vb", line],
+                           "\(plain) is drawn by four trees")
         }
     }
 

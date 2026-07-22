@@ -155,9 +155,10 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
     }
 
     /// The document's WarGreymon row reads "Mega: WarGreymon / Omegamon (Jogress)". Omegamon is a
-    /// recipe, not an edge — the treatment every other tree's Jogress row got — and this is the
-    /// only tree that holds BOTH of that recipe's parents, so the row is satisfiable inside one
-    /// line for the first time.
+    /// recipe, not an edge — the treatment every other tree's Jogress row got — and this was the
+    /// first tree to hold BOTH of that recipe's parents, so the row is satisfiable inside one line.
+    /// US-143's Virus Busters / ZERO is the second and the recipe's real home: the V0 document
+    /// draws "Ultra: Omegamon (Jogress)" on its Agumon thread AND on its Gabumon one.
     func testTheOmegamonHalfOfTheRowIsAJogressRecipeRatherThanAnEdge() throws {
         XCTAssertNil(graph.node(id: "omegamon"), "Omegamon is a Jogress result, not a node here")
         XCTAssertTrue(try node("pencnsp_wargreymon").evolutions.isEmpty)

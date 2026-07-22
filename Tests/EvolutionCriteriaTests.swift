@@ -29,13 +29,19 @@ final class EvolutionCriteriaTests: XCTestCase {
     /// Nightmare Soldiers section draws no junk branch either. WaruMonzaemon was the first choice
     /// for the Perfect rung and had to be dropped — the Version 5 Metal Empire section draws it as
     /// an earned Ultimate, so it belongs to US-142. Grep the document before choosing a junk node.
+    /// `turuiemon` and `andiramon_virus` joined in US-143, the last of the eleven device trees and
+    /// the sixth to have to invent a junk branch. They are the Lopmon line's fall as Wikimon draws
+    /// it, and they end at Cherubimon (Vice) — the counterpart of the Cherubimon (Virtue) the V0
+    /// document puts over Wizardmon, so neglecting a Virus Buster turns it into what it was raised
+    /// to fight.
     private static let junkIds: Set<String> = [
         // Adult
         "numemon", "scumon", "geremon", "karatsukinumemon", "goldnumemon", "raremon", "vegimon",
-        "platinumscumon", "diginorimon", "gokimon", "zassoumon", "pencme_raremon",
+        "platinumscumon", "diginorimon", "gokimon", "zassoumon", "pencme_raremon", "turuiemon",
         // Perfect
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
+        "andiramon_virus",
         // Ultimate
         "kingetemon",
     ]

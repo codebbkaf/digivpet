@@ -128,6 +128,13 @@ final class RosterTests: XCTestCase {
         // file, after US-140's Garurumon one — three trees draw Agumon's Champion and up.
         // `pencme_raremon` is the third Pumpmon case and the first where the plain id is junk in
         // BOTH lines: Raremon is `dmc-v5`'s junk Champion and this tree's too.
+        //
+        // The fifteen `pencvb_` ids are US-143's Virus Busters / ZERO tree, and they are HALF of
+        // that tree — the worst ratio in the file, because the V0 device is the one every earlier
+        // tree borrowed from. Both of the file's triples become QUADRUPLES here: Greymon /
+        // MetalGreymon / WarGreymon are now drawn by `dmc-v1`, `penc-nsp`, `penc-me` and this
+        // tree, and Garurumon / WereGarurumon / MetalGarurumon by `dmc-v2`, `penc-nsp`,
+        // `penc-nso` and this tree.
         XCTAssertEqual(aliases.sorted(),
                        ["dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
                         "extyranomon", "pencds_coelamon", "pencds_megaseadramon",
@@ -143,6 +150,11 @@ final class RosterTests: XCTestCase {
                         "pencnsp_greymon", "pencnsp_kabuterimon", "pencnsp_koromon",
                         "pencnsp_leomon", "pencnsp_metalgarurumon", "pencnsp_metalgreymon",
                         "pencnsp_seadramon", "pencnsp_wargreymon", "pencnsp_weregarurumon",
+                        "pencvb_agumon", "pencvb_angemon", "pencvb_angewomon",
+                        "pencvb_asuramon", "pencvb_gabumon", "pencvb_garurumon",
+                        "pencvb_greymon", "pencvb_leomon", "pencvb_metalgarurumon",
+                        "pencvb_metalgreymon", "pencvb_saberleomon", "pencvb_tailmon",
+                        "pencvb_wargreymon", "pencvb_weregarurumon", "pencvb_wizarmon",
                         "pencwg_birdramon", "pencwg_gerbemon", "pencwg_lilimon",
                         "pencwg_piyomon", "pencwg_rosemon", "pencwg_togemon",
                         "piyo_tanemon", "piyo_yuramon"])

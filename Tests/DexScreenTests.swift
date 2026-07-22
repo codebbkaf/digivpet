@@ -474,6 +474,7 @@ final class DexModelTests: XCTestCase {
             XCTAssertNotEqual(title, line, "line '\(line)' heads its section with its own key")
         }
         XCTAssertEqual(DexModel.lineTitles["penc-me"], "Pendulum ME")
+        XCTAssertEqual(DexModel.lineTitles["penc-vb"], "Pendulum VB")
         XCTAssertNil(DexModel.lineTitles["palmon"], "palmon is titled by its namesake node")
     }
 

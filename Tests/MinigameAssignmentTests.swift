@@ -27,15 +27,16 @@ final class MinigameAssignmentTests: XCTestCase {
     }
 
     /// Exactly which lines share a game, spelled out so that a line landing on a shared game by
-    /// accident reads as a slip rather than as the pattern. Five pairs since US-142, which leaves
-    /// Power Meter the only game a single line still has to itself. The other four: the two
+    /// accident reads as a slip rather than as the pattern. SIX pairs since US-143, and no line is
+    /// alone with a game any more: twelve lines, six games, two lines each. The two
     /// nature-flavoured trees on the timing bar, Deep Savers beside Ver.3 on the sprint,
-    /// Nightmare Soldiers beside Ver.5 on sequence recall, and Wind Guardians beside Ver.4 on
-    /// reflex strike — the last of those the only pair that shares Digimon as well as a game, both
-    /// trees being Piyomon's. Metal Empire joins `dmc-v1` on the button masher, the last game that
-    /// was still alone alongside the power meter and the one with fewer Digimon behind it. Written
-    /// as the whole game -> [lines] dictionary rather than as a list of pairs, so the next Pendulum
-    /// tree costs one literal.
+    /// Nightmare Soldiers beside Ver.5 on sequence recall, Wind Guardians beside Ver.4 on
+    /// reflex strike — that one the only pair that shares Digimon as well as a game, both trees
+    /// being Piyomon's — Metal Empire beside Ver.1 on the button masher, and Virus Busters beside
+    /// Ver.2 on the power meter, which was the last game a single line still held. Written as the
+    /// whole game -> [lines] dictionary rather than as a list of pairs, so a new tree costs one
+    /// literal; from here the sharers are TRIPLES, and the tie-break is unchanged — fewest Digimon
+    /// behind the game, flavour breaks ties.
     func testTheSharedGamesAreExactlyTheAuthoredPairs() {
         let sharers = Dictionary(grouping: MinigameAssignment.byLine.keys,
                                  by: { MinigameAssignment.byLine[$0]! })
@@ -46,7 +47,8 @@ final class MinigameAssignmentTests: XCTestCase {
                                  .crownSprint: ["dmc-v3", "penc-ds"],
                                  .sequenceRecall: ["dmc-v5", "penc-nso"],
                                  .reflexStrike: ["dmc-v4", "penc-wg"],
-                                 .buttonMasher: ["dmc-v1", "penc-me"]])
+                                 .buttonMasher: ["dmc-v1", "penc-me"],
+                                 .powerMeter: ["dmc-v2", "penc-vb"]])
     }
 
     /// The table is keyed on strings the JSON owns, so a renamed line would silently drop that whole

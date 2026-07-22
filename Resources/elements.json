@@ -276,7 +276,37 @@
     "pencme_hiandromon": { "element": "machine", "attribute": "vaccine" },
     "pencme_venomvamdemon": { "element": "dark", "attribute": "virus" },
     "gundramon": { "element": "machine", "attribute": "virus" },
-    "grandlocomon": { "element": "steel", "attribute": "data" }
+    "grandlocomon": { "element": "steel", "attribute": "data" },
+    "heriss_digitama": { "element": "light", "attribute": "free" },
+    "yukimibotamon": { "element": "ice", "attribute": "free" },
+    "nyaromon": { "element": "light", "attribute": "free" },
+    "pencvb_agumon": { "element": "fire", "attribute": "vaccine" },
+    "pencvb_gabumon": { "element": "ice", "attribute": "data" },
+    "plotmon": { "element": "light", "attribute": "data" },
+    "herissmon": { "element": "earth", "attribute": "data" },
+    "pencvb_greymon": { "element": "fire", "attribute": "vaccine" },
+    "pencvb_leomon": { "element": "earth", "attribute": "vaccine" },
+    "pencvb_garurumon": { "element": "ice", "attribute": "vaccine" },
+    "pencvb_angemon": { "element": "light", "attribute": "vaccine" },
+    "pencvb_tailmon": { "element": "light", "attribute": "vaccine" },
+    "pencvb_wizarmon": { "element": "dark", "attribute": "data" },
+    "filmon": { "element": "wind", "attribute": "data" },
+    "turuiemon": { "element": "earth", "attribute": "vaccine" },
+    "pencvb_metalgreymon": { "element": "machine", "attribute": "vaccine" },
+    "pencvb_asuramon": { "element": "fire", "attribute": "data" },
+    "pencvb_weregarurumon": { "element": "ice", "attribute": "vaccine" },
+    "holyangemon": { "element": "light", "attribute": "vaccine" },
+    "pencvb_angewomon": { "element": "light", "attribute": "vaccine" },
+    "stiffilmon": { "element": "wind", "attribute": "data" },
+    "andiramon_virus": { "element": "dark", "attribute": "virus" },
+    "pencvb_wargreymon": { "element": "fire", "attribute": "vaccine" },
+    "pencvb_saberleomon": { "element": "earth", "attribute": "data" },
+    "pencvb_metalgarurumon": { "element": "ice", "attribute": "data" },
+    "seraphimon": { "element": "light", "attribute": "vaccine" },
+    "ophanimon": { "element": "light", "attribute": "vaccine" },
+    "cherubimon_virtue": { "element": "light", "attribute": "vaccine" },
+    "rasenmon": { "element": "wind", "attribute": "vaccine" },
+    "cherubimon_vice": { "element": "dark", "attribute": "virus" }
 
   },
 
@@ -291,7 +321,8 @@
     "penc-ds": { "element": "water", "attribute": "free" },
     "penc-nso": { "element": "dark", "attribute": "free" },
     "penc-wg": { "element": "wind", "attribute": "free" },
-    "penc-me": { "element": "machine", "attribute": "free" }
+    "penc-me": { "element": "machine", "attribute": "free" },
+    "penc-vb": { "element": "light", "attribute": "free" }
   },
 
   "keywordRules": [

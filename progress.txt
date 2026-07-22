@@ -31,6 +31,17 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   document draws. US-140 did this for a missing bottom, US-141 for a missing middle (Deramon ->
   Blossomon) and a missing top (Crossmon -> Rafflesimon). Cite the page in the node `comment` — a
   test greps for "Wikimon".
+- **PHASE E: two of a document's names can be ONE Digimon.** The V0 section draws HolyAngemon over
+  Angemon and MagnaAngemon over Wizardmon; they are the same Digimon under a JP and a dub name,
+  with one sheet between them, so US-143 wired one node with two parents and two children rather
+  than inventing a second id on the same art. Do not diff the bullet list by eye — sweep every
+  `*mon` word out of the section's own text and assert each resolves to a playable roster entry,
+  under its own spelling or a recorded substitution. That sweep is what turns "a name is missing"
+  into "a name is a duplicate", and it is a test, not a one-off grep.
+- **PHASE E: `elements.json` and `moves.json` need a `lineDefaults` entry for a NEW LINE**, not
+  only the per-id rows — `ElementCatalogTests.testEveryGraphLineHasALineDefault` and its moves
+  twin. Missed by US-143's first pass; it is a ninth place on the knock-on list, and it only
+  applies when the story opens a line rather than adding to one.
 - **PHASE E: a substring search misses a letter INSIDE a name.** `Jureimon` is not a substring of
   `Jyureimon`, so the document's own bracketed spelling does not find its own sheet. Search a
   PREFIX, not the whole name, before calling anything absent.
@@ -2504,4 +2515,76 @@ Simulator and drew its Dex, which is the cheap proof that no `bundled` catalog t
   643. Two names US-143 must handle are already spent: `greymon`/`metalgreymon`/`wargreymon` are
   now THREE nodes each (dmc-v1, penc-nsp, penc-me), so its Agumon thread needs a fourth copy, and
   Garurumon's thread is already a triple.
+---
+
+## 2026-07-22 - US-143 - Wire the Pendulum Color V0 Virus Busters / ZERO evolution tree
+
+Authored `penc-vb` from nothing: 30 nodes, 270 -> 300. It is the LAST of the eleven device trees,
+so every `### Version` section of `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`
+now has a line in the graph, and Phase E's first half is done. Orphans 643 -> 628, 15 removed
+(counted with Appendix B, after `python3 scripts/build_roster.py`).
+
+Files: `Resources/evolutions.json` (+30 nodes), `Resources/elements.json` and `Resources/moves.json`
+(+30 entries and a `penc-vb` lineDefault each), `Sources/DexModel.swift` (line title),
+`Sources/MinigameAssignment.swift` (Power Meter), new `Tests/PendulumVirusBustersTreeTests.swift`
+(27 tests), `docs/evolutions-schema.md`, and the eight-place knock-on list plus three marker tests.
+Build green, 1921 tests, 0 failures, validator zero findings.
+
+**Learnings for future iterations:**
+
+- **THE FIRST TREE WITH NOTHING ABSENT.** All twenty-six names the section draws have a playable
+  48x64 sheet, so no Wikimon stand-in and no rehomed rung were needed - the first since US-139.
+  Five are filed under a spelling the document does not use, and the drift rules found every one:
+  SnowBotamon/`YukimiBotamon` (a dub name, `find -iname '*snowbotamon*'` returns NOTHING),
+  Salamon/`Plotmon` and Gatomon/`Tailmon` (bracketed by the document itself), Wizardmon/`Wizarmon`
+  and Stefilmon/`Stiffilmon`. Two letters inside a word again - `Stefilmon` is not a substring of
+  `Stiffilmon`, US-140's prefix-search lesson.
+- **A DOCUMENT CAN DRAW ONE DIGIMON TWICE UNDER TWO NAMES.** The section draws
+  "Angemon -> HolyAngemon -> Seraphimon" and "Wizardmon -> MagnaAngemon -> Cherubimon (Virtue)" -
+  and MagnaAngemon IS HolyAngemon, the dub name, with ONE sheet between them. Wired as one node
+  with two parents and two children (the `pencme_andromon` shape from US-142: one `isDefault`
+  climb, one EARNED second climb). The check that catches this class of thing is the one this
+  story added: sweep every `*mon` word out of the section's own text and assert each resolves to a
+  playable roster entry under its own spelling or a recorded substitution. Do that instead of
+  eyeballing the bullet list - it is what turned MagnaAngemon from a missing name into a duplicate.
+- **HALF this tree is aliases, and that is what a LATE device tree costs.** Fifteen of thirty nodes
+  are `pencvb_`, the worst ratio in the file, because the V0 device is the one every earlier tree
+  borrowed from - Agumon, Gabumon and everything above them were spent by US-133/US-138/US-142
+  before this story reached the tree that owns them. Both of the file's triples became QUADRUPLES.
+  Expect the orphan yield of a tree to fall as Phase E goes on: 24 removed in US-142, 15 here.
+- **The two triple-count marker tests fired exactly as designed, and cost nothing.** US-142's
+  `testTheGreymonThreadIsDrawnByExactlyThreeTrees` and US-140's Garurumon equivalent both asserted
+  a count with a "has a fourth copy" message; both broke on the first run and both were rewritten
+  into the same claim one number higher. Keep writing them. US-138's Omegamon doc-comment ("the
+  only tree that holds BOTH of that recipe's parents") was prose, not an assertion, and had to be
+  found by hand - if a claim is worth writing, write it as XCTAssert.
+- **The junk chain can be chosen for MEANING, not just for being spare.** Turuiemon ->
+  Andiramon (Virus) -> Cherubimon (Vice) is the Lopmon line's fall, every arrow of it drawn by
+  Wikimon, and its top is the counterpart of the Cherubimon (Virtue) this same document draws as an
+  earned Mega - so neglecting a Virus Buster ends it as the thing the tree exists to fight. Two
+  sheets of one Digimon, one earned and one junk, in ONE line, which no earlier tree had. Note the
+  ONE arrow that is NOT canon: Turuiemon's earned way back up to Asuramon is flavour, and the
+  node's `comment` says so rather than implying Wikimon draws it. Do not launder a choice as a
+  citation.
+- **`penc-vb` takes Power Meter, and the game table is now exactly 2 lines per game.** Twelve
+  lines, six games, six pairs - the sharer dictionary in `MinigameAssignmentTests` is at its
+  symmetric point. The 26 orphan sweeps (US-144..169) do not add lines, but if anything ever does,
+  the next sharer makes a TRIPLE, and the tie-break is unchanged: fewest Digimon behind the game,
+  flavour breaks ties.
+- **The knock-on list is stable at eight places for the fifth tree running**, plus the two marker
+  tests: `EvolutionGraphTests`' per-line count dict; `graph.nodes.count` in `ElementCatalogTests`
+  AND `EvolutionGraphValidatorTests`; `EggHatchingTests`' seeded-Digitama set; `SeedRosterTests`'
+  `seedLines`; `RosterTests`' exact alias list (sort order: `pencvb_` after `pencnso_`/`pencnsp_`,
+  before `pencwg_`); `EvolutionCriteriaTests.junkIds` (both rungs); `MinigameAssignmentTests`'
+  sharer map; `DexScreenTests`' line-title assertion. ONE more this story found:
+  **`elements.json` and `moves.json` need a `lineDefaults` entry for the new line**, not only the
+  per-id ones - `ElementCatalogTests.testEveryGraphLineHasALineDefault` and its moves twin.
+- **The pre-flight checker beside the authoring script earned its keep a third time.** It caught
+  eight signature-name collisions and one id that should not have been an alias at all (`filmon`
+  was in no other line, so `pencvb_filmon` would have spent an alias and removed no orphan) before
+  a 23-second test run could. Check "is this plain id already a node?" for EVERY node, not just the
+  ones you expect to collide.
+- REMAINS: US-144 onward (30/56 passing). The eleven device trees are done; US-144..169 are the 26
+  orphan sweeps over the remaining 628, which by stage are Ultimate 166, Adult 129, Perfect 114,
+  Child 88, Digitama 45, Baby II 37, Baby I 33, Armor-Hybrid 16.
 ---

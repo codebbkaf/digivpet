@@ -275,7 +275,37 @@
     "pencme_hiandromon": { "projectileSymbol": "bolt.fill", "tint": "teal", "signatureName": "Copper Cyclone", "signatureSymbol": "bolt.fill" },
     "pencme_venomvamdemon": { "projectileSymbol": "eye.fill", "tint": "purple", "signatureName": "Venom Infusion", "signatureSymbol": "eye.fill" },
     "gundramon": { "projectileSymbol": "bolt.fill", "tint": "red", "signatureName": "Gun Barrage", "signatureSymbol": "bolt.fill" },
-    "grandlocomon": { "projectileSymbol": "wind", "tint": "blue", "signatureName": "Wheel Grinder", "signatureSymbol": "wind" }
+    "grandlocomon": { "projectileSymbol": "wind", "tint": "blue", "signatureName": "Wheel Grinder", "signatureSymbol": "wind" },
+    "heriss_digitama": { "projectileSymbol": "sparkles", "tint": "white", "signatureName": "Quill Wobble", "signatureSymbol": "sparkles" },
+    "yukimibotamon": { "projectileSymbol": "snowflake", "tint": "white", "signatureName": "Snow Bubble", "signatureSymbol": "snowflake" },
+    "nyaromon": { "projectileSymbol": "sparkles", "tint": "yellow", "signatureName": "Tail Whisk", "signatureSymbol": "sparkles" },
+    "pencvb_agumon": { "projectileSymbol": "flame.fill", "tint": "orange", "signatureName": "Baby Flame", "signatureSymbol": "flame.fill" },
+    "pencvb_gabumon": { "projectileSymbol": "flame.fill", "tint": "blue", "signatureName": "Petit Fire", "signatureSymbol": "flame.fill" },
+    "plotmon": { "projectileSymbol": "circle.fill", "tint": "white", "signatureName": "Puppy Howling", "signatureSymbol": "circle.fill" },
+    "herissmon": { "projectileSymbol": "triangle.fill", "tint": "brown", "signatureName": "Needle Spin", "signatureSymbol": "triangle.fill" },
+    "pencvb_greymon": { "projectileSymbol": "flame.fill", "tint": "red", "signatureName": "Great Antler", "signatureSymbol": "flame.fill" },
+    "pencvb_leomon": { "projectileSymbol": "hand.raised.fill", "tint": "yellow", "signatureName": "Beast Sword", "signatureSymbol": "hand.raised.fill" },
+    "pencvb_garurumon": { "projectileSymbol": "snowflake", "tint": "blue", "signatureName": "Freeze Fang", "signatureSymbol": "snowflake" },
+    "pencvb_angemon": { "projectileSymbol": "sparkles", "tint": "cyan", "signatureName": "Heaven's Knuckle", "signatureSymbol": "sparkles" },
+    "pencvb_tailmon": { "projectileSymbol": "hand.raised.fill", "tint": "white", "signatureName": "Lightning Paw", "signatureSymbol": "hand.raised.fill" },
+    "pencvb_wizarmon": { "projectileSymbol": "moon.fill", "tint": "indigo", "signatureName": "Magical Game", "signatureSymbol": "moon.fill" },
+    "filmon": { "projectileSymbol": "scissors", "tint": "green", "signatureName": "Feather Cut", "signatureSymbol": "scissors" },
+    "turuiemon": { "projectileSymbol": "hand.raised.fill", "tint": "purple", "signatureName": "Gauntlet Claw", "signatureSymbol": "hand.raised.fill" },
+    "pencvb_metalgreymon": { "projectileSymbol": "bolt.fill", "tint": "orange", "signatureName": "Mega Claw", "signatureSymbol": "bolt.fill" },
+    "pencvb_asuramon": { "projectileSymbol": "flame.fill", "tint": "purple", "signatureName": "Flame Inferno", "signatureSymbol": "flame.fill" },
+    "pencvb_weregarurumon": { "projectileSymbol": "hand.raised.fill", "tint": "blue", "signatureName": "Kaiser Nail", "signatureSymbol": "hand.raised.fill" },
+    "holyangemon": { "projectileSymbol": "shield.fill", "tint": "yellow", "signatureName": "Gate of Destiny", "signatureSymbol": "shield.fill" },
+    "pencvb_angewomon": { "projectileSymbol": "sparkles", "tint": "pink", "signatureName": "Celestial Arrow", "signatureSymbol": "sparkles" },
+    "stiffilmon": { "projectileSymbol": "leaf.fill", "tint": "mint", "signatureName": "Ribbon Bind", "signatureSymbol": "leaf.fill" },
+    "andiramon_virus": { "projectileSymbol": "hammer.fill", "tint": "indigo", "signatureName": "Bunny Blades", "signatureSymbol": "hammer.fill" },
+    "pencvb_wargreymon": { "projectileSymbol": "star.fill", "tint": "orange", "signatureName": "Great Tornado", "signatureSymbol": "star.fill" },
+    "pencvb_saberleomon": { "projectileSymbol": "hand.raised.fill", "tint": "brown", "signatureName": "Twin Fang", "signatureSymbol": "hand.raised.fill" },
+    "pencvb_metalgarurumon": { "projectileSymbol": "snowflake", "tint": "cyan", "signatureName": "Grace Cross Freezer", "signatureSymbol": "snowflake" },
+    "seraphimon": { "projectileSymbol": "star.fill", "tint": "yellow", "signatureName": "Seven Heavens", "signatureSymbol": "star.fill" },
+    "ophanimon": { "projectileSymbol": "shield.fill", "tint": "pink", "signatureName": "Eden's Javelin", "signatureSymbol": "shield.fill" },
+    "cherubimon_virtue": { "projectileSymbol": "bolt.fill", "tint": "pink", "signatureName": "Storm of Judgment", "signatureSymbol": "bolt.fill" },
+    "rasenmon": { "projectileSymbol": "wind", "tint": "teal", "signatureName": "Vortex Fang", "signatureSymbol": "wind" },
+    "cherubimon_vice": { "projectileSymbol": "bolt.fill", "tint": "purple", "signatureName": "Lightning Spear", "signatureSymbol": "bolt.fill" }
 
   },
   "lineDefaults": {
@@ -289,7 +319,8 @@
     "penc-ds": { "projectileSymbol": "drop.fill", "tint": "cyan", "signatureName": "Deep Current", "signatureSymbol": "drop.fill" },
     "penc-nso": { "projectileSymbol": "moon.fill", "tint": "indigo", "signatureName": "Nightmare Veil", "signatureSymbol": "moon.fill" },
     "penc-wg": { "projectileSymbol": "wind", "tint": "green", "signatureName": "Guardian Gale", "signatureSymbol": "wind" },
-    "penc-me": { "projectileSymbol": "gearshape.fill", "tint": "orange", "signatureName": "Metal Empire Volley", "signatureSymbol": "gearshape.fill" }
+    "penc-me": { "projectileSymbol": "gearshape.fill", "tint": "orange", "signatureName": "Metal Empire Volley", "signatureSymbol": "gearshape.fill" },
+    "penc-vb": { "projectileSymbol": "sparkles", "tint": "yellow", "signatureName": "Holy Volley", "signatureSymbol": "sparkles" }
   },
   "stageDefaults": {
     "Digitama": { "projectileSymbol": "sparkles", "tint": "white", "signatureName": "Wobble", "signatureSymbol": "sparkles" },

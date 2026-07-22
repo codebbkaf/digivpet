@@ -633,8 +633,8 @@
         "Typecheck passes"
       ],
       "priority": 30,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Authored penc-vb from nothing: 30 nodes, 270 -> 300, and the LAST of the eleven device trees - every ### Version section of the tree document now has a line. Orphans 643 -> 628, 15 removed (heriss_digitama, yukimibotamon, nyaromon, plotmon, herissmon, filmon, turuiemon, holyangemon, stiffilmon, andiramon_virus, seraphimon, ophanimon, cherubimon_virtue, rasenmon, cherubimon_vice), counted with Appendix B. NO name in the section is absent: all 26 Digimon the document draws have a playable 48x64 sheet, five under a spelling it does not use (SnowBotamon/YukimiBotamon, Salamon/Plotmon, Gatomon/Tailmon, Wizardmon/Wizarmon, Stefilmon/Stiffilmon) - the first tree needing no Wikimon stand-in and no rehomed rung. MagnaAngemon IS HolyAngemon, so the document's two drawings of it (over Angemon toward Seraphimon, over Wizardmon toward Cherubimon Virtue) are ONE node with two parents and two children. Omegamon stays a jogress.json recipe, as in every other tree's Ultra row. Fifteen of the thirty nodes are pencvb_ aliases, the worst ratio in the file, and both existing triples become quadruples. Junk chain invented as in every Pendulum tree: Turuiemon -> Andiramon (Virus) -> Cherubimon (Vice), every arrow drawn by Wikimon and the dark mirror of this tree's own Cherubimon (Virtue). Egg is heriss_digitama, dropped by 14_farmland. Validator: zero findings. Build green, 1921 tests, 0 failures."
     },
     {
       "id": "US-144",

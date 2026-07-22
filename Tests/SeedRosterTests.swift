@@ -73,6 +73,15 @@ final class SeedRosterTests: XCTestCase {
         // — 06_industrial drops this one.
         ["funbee_digitama", "choromon", "caprimon", "toyagumon",
          "pencme_raremon", "locomon", "grandlocomon"],
+        // US-143's Pendulum Color V0 Virus Busters / ZERO line, the last of the eleven device
+        // trees and the same shape a sixth time: no junk branch in the document, so Turuiemon,
+        // Andiramon (Virus) and Cherubimon (Vice) were chosen off orphan sheets — a chain Wikimon
+        // draws whole, and one that ends at the dark counterpart of a Mega the document itself
+        // puts in this tree. Its egg is `heriss_digitama`, Herissmon's own: Agumon is the Rookie
+        // its In-Training falls to, but `agu_digitama` roots dmc-v1, so the egg is the next Rookie
+        // of this tree that has one — US-141's case exactly.
+        ["heriss_digitama", "yukimibotamon", "nyaromon", "pencvb_agumon",
+         "turuiemon", "andiramon_virus", "cherubimon_vice"],
     ]
 
     /// The seven rungs a complete line must cover, in order.

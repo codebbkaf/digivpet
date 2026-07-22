@@ -218,15 +218,16 @@ JSON has no comment syntax, so a node may carry a **`comment`** string. It is no
 nothing at runtime. Use it where the data departs from the source evolution trees in
 `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md`, so the next reader diffing the
 two finds the reason in the file rather than in a commit message. It is not a place for general
-prose — 166 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
-`dmc-v5`, `penc-nsp`, `penc-ds`, `penc-nso`, `penc-wg` and `penc-me` lines.
+prose — 196 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4`,
+`dmc-v5`, `penc-nsp`, `penc-ds`, `penc-nso`, `penc-wg`, `penc-me` and `penc-vb` lines.
 
 ## Current contents
 
-`Resources/evolutions.json` holds 270 nodes across eleven `line` values — `dmc-v1` (21 nodes),
+`Resources/evolutions.json` holds 300 nodes across twelve `line` values — `dmc-v1` (21 nodes),
 `dmc-v2` (23), `dmc-v3` (20), `dmc-v4` (21), `dmc-v5` (20), `palmon` (10), `penc-nsp` (30),
-`penc-ds` (31), `penc-nso` (31), `penc-wg` (31) and `penc-me` (32) — each a complete line from
-Digitama through Ultimate.
+`penc-ds` (31), `penc-nso` (31), `penc-wg` (31), `penc-me` (32) and `penc-vb` (30) — each a
+complete line from Digitama through Ultimate. With `penc-vb` every one of the eleven device
+sections in `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` has a line here.
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and
@@ -511,3 +512,37 @@ children. Five things about it:
   best-supported one yet: Raremon → Locomon → GrandLocomon, every arrow of it drawn by Wikimon,
   which lists Raremon in Junkmon's *Evolves To* and gives Locomon six of this tree's nine
   Champions as prior forms. Raremon keeps one earned edge back up to Rebellimon.
+
+`penc-vb` is the Pendulum Color V0 Virus Busters / ZERO tree (US-143), the sixth line authored from
+nothing and the LAST of the eleven device trees. It is the first Phase E tree with no absent name,
+no dexOnly twin and no rehomed rung at all: every one of the twenty-six Digimon the section draws
+has a playable 48x64 sheet. Five things about it:
+
+- **HALF of its thirty nodes are line-scoped aliases**, the worst ratio in the file and not a
+  surprise — the V0 device is the one every earlier tree borrowed from, so Agumon, Gabumon and
+  everything above them were spent long before this story reached them. Both of the file's triples
+  become QUADRUPLES: Greymon / MetalGreymon / WarGreymon are drawn by `dmc-v1`, `penc-nsp`,
+  `penc-me` and this tree, and Garurumon / WereGarurumon / MetalGarurumon by `dmc-v2`, `penc-nsp`,
+  `penc-nso` and this tree.
+- **One node carries two of the document's rungs.** The section draws "Angemon → HolyAngemon →
+  Seraphimon" and "Wizardmon → MagnaAngemon → Cherubimon (Virtue)" — and MagnaAngemon IS
+  HolyAngemon, the dub name of the same Digimon, with one sheet between them. So `holyangemon` has
+  two parents and two children, the second node in the file with that shape after
+  `pencme_andromon`, and its second climb is EARNED while the first is the `isDefault` one.
+- **Five names are filed under a spelling the document does not use**: SnowBotamon/`YukimiBotamon`,
+  Salamon/`Plotmon`, Gatomon/`Tailmon`, Wizardmon/`Wizarmon` and Stefilmon/`Stiffilmon`. The
+  document brackets two of them itself; the other three would have been reported absent by a `find`
+  on its spelling alone. The US-140 dub-name lesson, sixth time.
+- **Its Ultra row is a Jogress on BOTH threads.** "Mega: WarGreymon → Ultra: Omegamon (Jogress)" and
+  "Mega: MetalGarurumon → Ultra: Omegamon (Jogress)" — Omegamon is the recipe in `jogress.json` that
+  `penc-nsp` was the first line to hold both parents of. This is the second, and the one whose own
+  document actually draws the fusion, so both Megas are terminal.
+- **Its egg is `heriss_digitama` and its junk chain is this app's invention, as ever.** The egg is
+  Herissmon's — `agu_digitama` roots `dmc-v1`, so the default Rookie's own egg was unavailable and
+  the choice fell to the next Rookie of this tree that has one, which is US-141's case exactly.
+  `14_farmland` already drops it. The junk chain is Turuiemon → Andiramon (Virus) → Cherubimon
+  (Vice), the Lopmon line's fall as Wikimon draws it, and it is chosen for what it MEANS rather than
+  only for being spare: Cherubimon (Vice) is the counterpart of the Cherubimon (Virtue) this
+  document itself puts over Wizardmon, so a neglected Virus Buster ends as the thing the tree exists
+  to fight. Turuiemon keeps one earned way back up, to Asuramon — and that one arrow is flavour
+  rather than canon, which its `comment` says.

@@ -332,15 +332,17 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                        "an alias was added or removed without updating this list")
     }
 
-    /// The Agumon thread is the second TRIPLE in the file, after US-140's Garurumon one: Greymon,
-    /// MetalGreymon and WarGreymon are drawn by the Ver.1 Digital Monster tree, the V1 Pendulum and
-    /// now the V5 Pendulum alike, so each of those three Digimon is three nodes on one roster entry.
-    func testTheGreymonThreadIsDrawnByExactlyThreeTrees() throws {
+    /// The Agumon thread was the second TRIPLE in the file when this story landed, and US-143 made
+    /// it a QUADRUPLE — which is what the count here was written to catch, and did: the V0 Virus
+    /// Busters section draws Agumon over Greymon, MetalGreymon and WarGreymon as well, so four
+    /// trees now share those three roster entries. Restated rather than deleted, because the claim
+    /// still worth guarding is that this tree is ONE of them and that no fifth copy has appeared.
+    func testTheGreymonThreadIsDrawnByExactlyFourTrees() throws {
         for plain in ["greymon", "metalgreymon", "wargreymon"] {
             let name = try node(plain).displayName
             let copies = graph.nodes.filter { $0.displayName == name }
-            XCTAssertEqual(Set(copies.map(\.line)), ["dmc-v1", "penc-nsp", line])
-            XCTAssertEqual(copies.count, 3, "\(plain) has a fourth copy")
+            XCTAssertEqual(Set(copies.map(\.line)), ["dmc-v1", "penc-nsp", "penc-vb", line])
+            XCTAssertEqual(copies.count, 4, "\(plain) has a fifth copy")
         }
     }
 

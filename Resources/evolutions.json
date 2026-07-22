@@ -7766,6 +7766,838 @@
       "line": "penc-me",
       "spriteFile": "GrandLocomon",
       "comment": "The top of this tree's invented junk chain, chosen off an orphan sheet the way US-140's Deathmon and US-141's ElDoradimon were. Wikimon lists it as something Locomon really evolves into. It is named nowhere in the tree markdown, which is what makes it safe to spend - the grep US-140's notes insist on was run over the whole document before it was chosen, and over Locomon, Minotaurmon and Gundramon with it."
+    },
+    {
+      "id": "heriss_digitama",
+      "displayName": "Heriss Digitama",
+      "stage": "Digitama",
+      "line": "penc-vb",
+      "spriteFile": "Heriss_Digitama",
+      "comment": "The Pendulum Color V0 Virus Busters / ZERO tree's egg. The source document starts at \"Fresh: SnowBotamon\" and names no Digitama at all, so the choice is this app's, and it has to be one of the 57 Digitama ids the ROSTER holds: maps.json grants a Digitama by roster id (US-126), and an id the roster does not have could never be dropped. The default Rookie's own egg was not available - Agumon's `agu_digitama` roots dmc-v1 and one egg cannot root two lines - which is US-141's flora_digitama case exactly, so the egg is the next Rookie of this tree that has one. Heriss Digitama is Herissmon's, Herissmon being the section's unlockable-slot Rookie, and 14_farmland already drops it beside piyo_digitama and flora_digitama, so maps.json is untouched. Plotmon's `plot_digitama` was the other candidate and was passed over on reach: 10_city_dusk is the thirteenth map in the unlock chain and 14_farmland is the second, and this is the tree a player should be able to start early.",
+      "evolutions": [
+        {
+          "to": "yukimibotamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "yukimibotamon",
+      "displayName": "YukimiBotamon",
+      "stage": "Baby I",
+      "line": "penc-vb",
+      "spriteFile": "YukimiBotamon",
+      "comment": "The document's \"Fresh: SnowBotamon\", wired under the spelling the art uses. `find -iname '*snowbotamon*'` over the whole pack returns nothing at all and the roster holds no entry of that name; `Baby I/YukimiBotamon.png` is the same Digimon under its Japanese name, SnowBotamon being the dub one. The US-140 name-drift rule applied before the name was called absent.",
+      "evolutions": [
+        {
+          "to": "nyaromon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 20,
+          "maxCareMistakes": 5,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "nyaromon",
+      "displayName": "Nyaromon",
+      "stage": "Baby II",
+      "line": "penc-vb",
+      "spriteFile": "Nyaromon",
+      "comment": "The document's \"In-Training: Nyaromon\", under its own spelling. It forks four ways, one per Rookie the section draws, and all four have playable sheets. The Herissmon edge is the one that is CONDITIONED, because the document marks it \"Rookie (Unlockable Slot)\": the same shape US-138 gave Angoramon, US-139 gave Jellymon, US-141 gave Pteromon and US-142 gave Junkmon.",
+      "evolutions": [
+        {
+          "to": "pencvb_agumon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "isDefault": true
+        },
+        {
+          "to": "pencvb_gabumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "plotmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 30,
+          "maxCareMistakes": 4
+        },
+        {
+          "to": "herissmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 30,
+          "maxCareMistakes": 4,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Drill it until the spare slot opens"
+            },
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20000,
+              "hint": "Walk far enough to turn up a stray"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pencvb_agumon",
+      "displayName": "Agumon",
+      "stage": "Child",
+      "line": "penc-vb",
+      "spriteFile": "Agumon",
+      "comment": "The document's first Rookie. `agumon` is dmc-v1's and `pencnsp_agumon` is the Nature Spirits tree's, so this is the THIRD node on one roster entry - the piyo_yuramon pattern. Same art, same rung, line-scoped id, because `line` is single-valued and the Dex draws one tree per line.",
+      "evolutions": [
+        {
+          "to": "pencvb_greymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Drill the horn until it hardens"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1200,
+              "hint": "Burn energy the way a flame does"
+            }
+          ]
+        },
+        {
+          "to": "pencvb_leomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Let it stand in real fights"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240,
+              "hint": "Keep the beast king's pace"
+            }
+          ]
+        },
+        {
+          "to": "turuiemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_gabumon",
+      "displayName": "Gabumon",
+      "stage": "Child",
+      "line": "penc-vb",
+      "spriteFile": "Gabumon",
+      "comment": "The document's second Rookie. `gabumon` is dmc-v2's, so this is the line-scoped copy: the Digital Monster Ver.2 tree and this one both root at Gabumon.",
+      "evolutions": [
+        {
+          "to": "pencvb_garurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20000,
+              "hint": "Run it through the night"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Sharpen its fangs"
+            }
+          ]
+        },
+        {
+          "to": "pencvb_angemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Let it rest under a clean light"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Never wake it in the dark"
+            }
+          ]
+        },
+        {
+          "to": "turuiemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "plotmon",
+      "displayName": "Plotmon",
+      "stage": "Child",
+      "line": "penc-vb",
+      "spriteFile": "Plotmon",
+      "comment": "The document's \"Rookie: Salamon (Plotmon)\". The bracket is the spelling the art is filed under - `find -iname '*salamon*'` returns nothing - so the bracketed name is the one wired, exactly as US-141 wired Cherrymon as Jyureimon. Plotmon belongs to no other line, so this is a plain roster id rather than an alias.",
+      "evolutions": [
+        {
+          "to": "pencvb_tailmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Keep it on its feet"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "Teach the paw to strike"
+            }
+          ]
+        },
+        {
+          "to": "pencvb_wizarmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60,
+              "hint": "Climb to where the spells are"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "A magician keeps a light stomach"
+            }
+          ]
+        },
+        {
+          "to": "turuiemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "herissmon",
+      "displayName": "Herissmon",
+      "stage": "Child",
+      "line": "penc-vb",
+      "spriteFile": "Herissmon",
+      "comment": "The document's \"Rookie (Unlockable Slot): Herissmon\", the only rung of the section whose edge in is gated on anything more than dominant energy. Its own egg roots this line - see heriss_digitama.",
+      "evolutions": [
+        {
+          "to": "filmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Roll it a long way"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 6,
+              "hint": "Blunt its quills on something real"
+            }
+          ]
+        },
+        {
+          "to": "turuiemon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_greymon",
+      "displayName": "Greymon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Greymon",
+      "comment": "Agumon's Champion. The FOURTH copy of this Digimon in the file - dmc-v1, penc-nsp, penc-me and now this tree all draw Greymon over their own Agumon - so the Greymon thread overtakes US-140's Garurumon one as the most-drawn in the file.",
+      "evolutions": [
+        {
+          "to": "pencvb_metalgreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2500,
+              "hint": "Burn hot enough to melt the ore"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Beat the metal into shape"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_leomon",
+      "displayName": "Leomon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Leomon",
+      "comment": "Agumon's second Champion. `leomon` is dmc-v4's and `pencnsp_leomon` is Nature Spirits', so this is the third copy.",
+      "evolutions": [
+        {
+          "to": "pencvb_asuramon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "Take it through fight after fight"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep the fists moving"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_garurumon",
+      "displayName": "Garurumon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Garurumon",
+      "comment": "Gabumon's Champion, and the FOURTH copy of this Digimon: dmc-v2, penc-nsp, penc-nso and this tree all draw the Garurumon thread.",
+      "evolutions": [
+        {
+          "to": "pencvb_weregarurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Run until it learns to stand up"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "Teach it to fight on two legs"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_angemon",
+      "displayName": "Angemon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Angemon",
+      "comment": "Gabumon's second Champion. `angemon` is dmc-v2's - the Version 2 document hangs it off Gabumon too - so this is the line-scoped copy.",
+      "evolutions": [
+        {
+          "to": "holyangemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3600,
+              "hint": "Give it long, undisturbed nights"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "Do not break its rest"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_tailmon",
+      "displayName": "Tailmon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Tailmon",
+      "comment": "The document's \"Champion: Gatomon (Tailmon)\" - the bracket again being the spelling the art uses. `tailmon` is penc-nsp's, where US-138 rehomed it under Angoramon after Betamon turned out to be idle-only, so this is the line-scoped copy.",
+      "evolutions": [
+        {
+          "to": "pencvb_angewomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "Keep it upright and watching"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Train the claw into an arrow"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_wizarmon",
+      "displayName": "Wizarmon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Wizarmon",
+      "comment": "The document's \"Champion: Wizardmon\", wired under the spelling the art uses - `find -iname '*wizardmon*'` returns nothing, `Adult/Wizarmon.png` is the same Digimon. `wizarmon` is penc-nso's, so this is the line-scoped copy.",
+      "evolutions": [
+        {
+          "to": "holyangemon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 120,
+              "hint": "Climb toward the gate"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 2,
+              "hint": "Keep the staff hand light"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "filmon",
+      "displayName": "Filmon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Filmon",
+      "comment": "Herissmon's Champion, on the unlockable slot's thread. Filmon belongs to no other line, so it is a plain roster id.",
+      "evolutions": [
+        {
+          "to": "stiffilmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Walk it past its own endurance"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 12,
+              "hint": "Let it win its own ground"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "turuiemon",
+      "displayName": "Turuiemon",
+      "stage": "Adult",
+      "line": "penc-vb",
+      "spriteFile": "Turuiemon",
+      "comment": "THE JUNK CHAMPION, and it is this app's invention rather than the document's: the Pendulum Color sections draw only the earned tree and name no neglect branch at all, while US-061 requires every Child and Adult to carry an isDefault edge reachable by doing nothing. Chosen off an ORPHAN sheet the way US-138 to US-142 chose theirs, and the chain above it is the dark mirror of this tree's own top: Wikimon draws Turuiemon -> Andiramon (Virus) -> Cherubimon (Vice), which is the Lopmon line's fall, and Cherubimon (Vice) is the counterpart of the Cherubimon (Virtue) the document puts over Wizardmon. Neglecting a Virus Buster turns it into what it was made to fight. Turuiemon, Andiramon and Cherubimon (Vice) are named nowhere in the tree markdown - the whole-document grep US-140's notes insist on was run over all three, and over Antylamon and Lopmon with them, before any of them was spent. Like every junk Champion since US-138 it keeps one earned way back UP, so a player who neglected a Rookie and then worked is not locked out: the climb to Asuramon is this app's choice on flavour rather than a Wikimon arrow - Turuiemon is a Beast Man and Asuramon heads the Beast Man thread of this tree.",
+      "evolutions": [
+        {
+          "to": "pencvb_asuramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 18,
+              "hint": "Work off the neglect in the dojo"
+            },
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 500,
+              "hint": "Earn the way back the hard way"
+            }
+          ]
+        },
+        {
+          "to": "andiramon_virus",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_metalgreymon",
+      "displayName": "MetalGreymon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "MetalGreymon",
+      "comment": "Greymon's Ultimate in the document's terms. The fourth copy, beside dmc-v1's, penc-nsp's and penc-me's.",
+      "evolutions": [
+        {
+          "to": "pencvb_wargreymon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_asuramon",
+      "displayName": "Asuramon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "Asuramon",
+      "comment": "Leomon's Ultimate. `asuramon` is penc-nsp's, which draws the same Leomon -> Asuramon -> SaberLeomon thread, so this is the line-scoped copy.",
+      "evolutions": [
+        {
+          "to": "pencvb_saberleomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_weregarurumon",
+      "displayName": "WereGarurumon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "WereGarurumon",
+      "comment": "Garurumon's Ultimate, the fourth copy of it.",
+      "evolutions": [
+        {
+          "to": "pencvb_metalgarurumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "holyangemon",
+      "displayName": "HolyAngemon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "HolyAngemon",
+      "comment": "ONE node for TWO of the document's rungs. The section draws \"Angemon -> Ultimate: HolyAngemon -> Mega: Seraphimon\" and \"Wizardmon -> Ultimate: MagnaAngemon -> Mega: Cherubimon (Virtue)\" - and MagnaAngemon IS HolyAngemon, the dub name of the same Digimon. `find -iname '*magnaangemon*'` returns nothing and the roster holds no such entry, so there is one sheet for the two drawings and one node carrying both. That makes it the second node in the file with two parents AND two children, after US-142's pencme_andromon, and the shape is the same: exactly one isDefault climb (Seraphimon, over Angemon's holy thread) plus one EARNED second climb (Cherubimon (Virtue), over Wizardmon's). Wiring MagnaAngemon as a separate node was the alternative and would have meant two ids on one sprite for no reason the player could see.",
+      "evolutions": [
+        {
+          "to": "seraphimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        },
+        {
+          "to": "cherubimon_virtue",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 24,
+              "hint": "Hold the line in fight after fight"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7200,
+              "hint": "Keep the long vigil"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pencvb_angewomon",
+      "displayName": "Angewomon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "Angewomon",
+      "comment": "Tailmon's Ultimate. `angewomon` is penc-nsp's, which draws the same Tailmon -> Angewomon rung, so this is the line-scoped copy.",
+      "evolutions": [
+        {
+          "to": "ophanimon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "stiffilmon",
+      "displayName": "Stiffilmon",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "Stiffilmon",
+      "comment": "The document's \"Ultimate: Stefilmon\", wired under the spelling the art uses - `find -iname '*stefilmon*'` returns nothing, `Perfect/Stiffilmon.png` is the same Digimon. Belongs to no other line, so it is a plain roster id.",
+      "evolutions": [
+        {
+          "to": "rasenmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "andiramon_virus",
+      "displayName": "Andiramon Virus",
+      "stage": "Perfect",
+      "line": "penc-vb",
+      "spriteFile": "Andiramon_Virus",
+      "variant": "Virus",
+      "comment": "The junk Ultimate, the middle rung of the invented neglect chain - see turuiemon for why this tree has one at all. Wikimon draws Turuiemon -> Andiramon (Virus) and Andiramon (Virus) -> Cherubimon (Vice), so every arrow of the branch is one the source material already draws; only the DECISION to spend these three sheets on neglect is this app's.",
+      "evolutions": [
+        {
+          "to": "cherubimon_vice",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pencvb_wargreymon",
+      "displayName": "WarGreymon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "WarGreymon",
+      "comment": "The top of Agumon's thread. The document writes the row as \"Mega: WarGreymon -> Ultra: Omegamon (Jogress)\" - Omegamon is a RECIPE in jogress.json, not an edge, which is the treatment every other tree's Ultra row got, so this node is terminal. This tree is the second to hold BOTH of that recipe's parents after penc-nsp, and the first whose document draws the Jogress on both of them.",
+      "evolutions": []
+    },
+    {
+      "id": "pencvb_saberleomon",
+      "displayName": "SaberLeomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "SaberLeomon",
+      "comment": "The top of Leomon's thread; `saberleomon` is penc-nsp's.",
+      "evolutions": []
+    },
+    {
+      "id": "pencvb_metalgarurumon",
+      "displayName": "MetalGarurumon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "MetalGarurumon",
+      "comment": "The top of Gabumon's thread, and the other parent of the Omegamon recipe. Its row reads \"Mega: MetalGarurumon -> Ultra: Omegamon (Jogress)\" for the same reason pencvb_wargreymon's does, so it is terminal too.",
+      "evolutions": []
+    },
+    {
+      "id": "seraphimon",
+      "displayName": "Seraphimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Seraphimon",
+      "comment": "The top of Angemon's holy thread, and a plain roster id: no other line draws it.",
+      "evolutions": []
+    },
+    {
+      "id": "ophanimon",
+      "displayName": "Ophanimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Ophanimon",
+      "comment": "The top of Tailmon's thread. A plain roster id.",
+      "evolutions": []
+    },
+    {
+      "id": "cherubimon_virtue",
+      "displayName": "Cherubimon Virtue",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Cherubimon_Virtue",
+      "comment": "The document's \"Mega: Cherubimon (Virtue)\", the top of Wizardmon's thread and the second climb out of holyangemon. The bracket is part of the name here rather than a respelling: the pack ships Cherubimon (Virtue) and Cherubimon (Vice) as two sheets, and this tree spends both - Virtue as the document's earned Mega and Vice as the junk one.",
+      "evolutions": []
+    },
+    {
+      "id": "rasenmon",
+      "displayName": "Rasenmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Rasenmon",
+      "comment": "The top of the unlockable slot's thread. `Rasenmon_Fury.png` is a separate sheet and a separate roster entry; the document writes the name unqualified, so the unqualified sheet is the one wired.",
+      "evolutions": []
+    },
+    {
+      "id": "cherubimon_vice",
+      "displayName": "Cherubimon Vice",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Cherubimon_Vice",
+      "comment": "The junk Mega - the top of the invented neglect chain, and the point of choosing that chain: a neglected Virus Buster ends as the Vice counterpart of the Virtue the document draws over Wizardmon. Named nowhere in the tree markdown; a test greps the bundled document to keep that true.",
+      "evolutions": []
     }
   ]
 }

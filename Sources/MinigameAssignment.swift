@@ -107,6 +107,13 @@ enum MinigameAssignment {
         // objecting: mashing a button is working a piston, which is what a tree of tanks, gears and
         // locomotives should be made to do.
         "penc-me": .buttonMasher,
+        // US-143's Virus Busters / ZERO is the twelfth line and the sixth sharer, and it takes the
+        // last game that was still held by one line — so every game now has exactly two lines
+        // behind it, which is where this stops being "a game is shared" and becomes the shape.
+        // The tie-break did not have to be run: Power Meter was the only unshared game left. Its
+        // flavour agrees anyway — the meter is about holding a charge until it is full, which is
+        // what every holy Digimon in this tree does before it fires.
+        "penc-vb": .powerMeter,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

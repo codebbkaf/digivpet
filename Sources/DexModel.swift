@@ -341,6 +341,7 @@ final class DexModel: ObservableObject {
         "penc-nso": "Pendulum NSo",
         "penc-wg": "Pendulum WG",
         "penc-me": "Pendulum ME",
+        "penc-vb": "Pendulum VB",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id
