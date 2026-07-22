@@ -211,7 +211,10 @@ final class PerfectSweepHToLTests: XCTestCase {
             // Omekamon carries THREE since US-161, which hung RizeGreymon X on it beside the
             // Hisyaryumon this story gave it — both cited on `penc-me`, both climbing Ouryumon.
             // Named rather than the claim being loosened to `>=`, the shape US-160 established.
-            XCTAssertEqual(node.evolutions.count, parent == "omekamon" ? 3 : 2,
+            // US-162 hung Superstarmon on Omekamon as well, so it carries FOUR. Named exception
+            // rather than a loosened `>=`, the shape US-160 established — and Omekamon is now full
+            // in the sense that matters: three earned branches on three distinct energies.
+            XCTAssertEqual(node.evolutions.count, parent == "omekamon" ? 4 : 2,
                            "\(parent) is not one earned branch plus a fallback")
             XCTAssertEqual(node.evolutions.first(where: \.isDefault)?.to, junk,
                            "\(parent) does not fall to its line's junk Perfect")
@@ -379,12 +382,12 @@ final class PerfectSweepHToLTests: XCTestCase {
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["tamers"], 105,
                        "Jazarichmon, LadyDevimon, LadyDevimon X and their two Megas" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
-        XCTAssertEqual(sizes["penc-nso"], 59,
+        XCTAssertEqual(sizes["penc-nso"], 62,
                        "Insekimon, Lavogaritamon, Volcanicdramon and Lucemon Falldown" + ", plus US-160's five, plus US-161's Orochimon")
-        XCTAssertEqual(sizes["penc-me"], 59, "Hisyaryumon and Ouryumon" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
+        XCTAssertEqual(sizes["penc-me"], 63, "Hisyaryumon and Ouryumon" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
         XCTAssertEqual(sizes["wanyamon"], 29, "Karatenmon and Tengumon" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
         XCTAssertEqual(sizes["palmon"], 28, "Lilamon and Lilimon X")
-        XCTAssertEqual(sizes["penc-ds"], 43, "Hangyomon" + ", plus US-160's two")
+        XCTAssertEqual(sizes["penc-ds"], 44, "Hangyomon" + ", plus US-160's two")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 6)
     }
@@ -457,8 +460,14 @@ final class PerfectSweepHToLTests: XCTestCase {
         XCTAssertTrue(comment.contains("REHOME CANDIDATE"), "the rehome pin is missing")
         XCTAssertTrue(comment.contains("Ginryumon"))
 
-        // `commandramon` STILL has no Perfect rung, which is what makes the pin a live one.
-        XCTAssertEqual(graph.nodes.filter { $0.line == "commandramon" && $0.stage == .perfect }, [])
+        // **US-162 OPENED `commandramon`'s PERFECT RUNG**, over the very Ginryumon this pin names
+        // — Triceramon X, with SkullBaluchimon beside it over Damemon — so the pin is now a live
+        // job for an Ultimate sweep rather than a waiting one. Same claim, other side: what is
+        // checked is that Hisyaryumon did NOT quietly move there with it.
+        XCTAssertFalse(graph.nodes.filter { $0.line == "commandramon" && $0.stage == .perfect }
+            .isEmpty, "`commandramon` lost the Perfect rung US-162 opened")
+        XCTAssertFalse(try XCTUnwrap(graph.node(id: "ginryumon")).evolutions.map(\.to)
+            .contains("hisyaryumon"), "Hisyaryumon was rehomed — then this whole pin wants rewriting")
     }
 
     /// **LADYDEVIMON X IS THE SAME SHAPE ONE LINE OVER.** Mantaraymon X is the page's other drawable
@@ -631,7 +640,7 @@ final class PerfectSweepHToLTests: XCTestCase {
 
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["adventure02", "algomon", "commandramon"],
+                       ["algomon"],
                        "a line gained or lost its Perfect rung; the remaining sweeps' bill changed — "
                            + "US-160 took `diablomon` off this list by putting the two Meicrackmon "
                            + "over Meicoomon, and gave it Rasielmon and Raguelmon in the same edit")
@@ -641,7 +650,7 @@ final class PerfectSweepHToLTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       73, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       67, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -662,11 +671,11 @@ final class PerfectSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760, "693 before this story")
+        XCTAssertEqual(graph.nodes.count, 787, "693 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
-        XCTAssertEqual(graph.nodes(at: .perfect).count, 165, "115 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 105, "88 before this story")
+        XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "115 before this story")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 108, "88 before this story")
     }
 
     /// Every Ultimate this story opened serves exactly one Perfect, so a second parent hung on one

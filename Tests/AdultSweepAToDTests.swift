@@ -229,14 +229,14 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(sizes["wanyamon"], 29,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon, "
                            + "plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["dmc-v4"], 29, "US-151 added the two Burgermon, US-156 Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-wg"], 40,
+        XCTAssertEqual(sizes["dmc-v4"], 30, "US-151 added the two Burgermon, US-156 Xiquemon and Huankunmon")
+        XCTAssertEqual(sizes["penc-wg"], 42,
                        "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon, "
                            + "US-156 the two Black V-dramon, plus US-158's two, plus US-161's Paildramon")
         XCTAssertEqual(sizes["penc-vb"], 55,
                        "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon, "
                            + "US-156 WezenGammamon and Canoweissmon, plus US-158's Entmon, plus US-161's Regulusmon")
-        XCTAssertEqual(sizes["penc-me"], 59, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
+        XCTAssertEqual(sizes["penc-me"], 63, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
     }
 
     /// **The variant rule.** Four of the seven are variants — Black, and nothing else at this rung —
@@ -401,10 +401,10 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760,
+        XCTAssertEqual(graph.nodes.count, 787,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
-                           + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
+                           + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
     }
 
     func testTheGraphValidatesWithNoFindings() {

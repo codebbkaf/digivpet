@@ -249,8 +249,11 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         // so it is the Andromon and Cyberdramon halves that are pinned rather than the total.
         XCTAssertTrue(Set(graph.parents(of: "pencme_mugendramon").map(\.id))
                         .isSuperset(of: ["pencme_andromon", "cyberdramon"]))
+        // US-162's Scorpiomon is the fifth, over the leaf Kuwagamon X, with Mugendramon BOLDED on
+        // its own page. Named rather than the claim being loosened to a superset.
         XCTAssertEqual(Set(graph.parents(of: "pencme_mugendramon").map(\.id)),
-                       ["pencme_andromon", "cyberdramon", "cargodramon", "cyberdramon_x"])
+                       ["pencme_andromon", "cyberdramon", "cargodramon", "cyberdramon_x",
+                        "scorpiomon"])
         XCTAssertEqual(Set(graph.parents(of: "knightmon").map(\.id)),
                        ["tankmon", "thunderballmon"])
     }
@@ -311,7 +314,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 59,
+        XCTAssertEqual(inLine.count, 63,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
                            + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon, "
@@ -404,7 +407,10 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                                       // this line's own Kuwagamon X — a leaf until then, cited on
                                       // both pages — plus RizeGreymon X over Omekamon.
                                       "okuwamon", "okuwamon_x", "grankuwagamon",
-                                      "grandiskuwagamon", "rizegreymon_x"]
+                                      "grandiskuwagamon", "rizegreymon_x",
+                                      // US-162's four, hung off this line's own Kuwagamon X,
+                                      // Minotaurmon, Omekamon and Guardromon.
+                                      "scorpiomon", "shootmon", "superstarmon", "tekkamon"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

@@ -3040,6 +3040,114 @@
     "xros_etemon": {
       "element": "earth",
       "attribute": "virus"
+    },
+    "sagomon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "sanzomon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "saviorhackmon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "scorpiomon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "sekkamon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "shawujinmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "shishimamon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "shootmon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "sirenmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "skullbaluchimon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "superstarmon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "tekkamon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "triceramon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "triceramon_x": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "vamdemon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "vermillimon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "waruseadramon": {
+      "element": "water",
+      "attribute": "virus"
+    },
+    "weregarurumon_black": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "weregarurumon_x": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "xingtianmon": {
+      "element": "earth",
+      "attribute": "virus"
+    },
+    "yatagaramon": {
+      "element": "dark",
+      "attribute": "data"
+    },
+    "yatagaramon_2006": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "chaosdramon_x": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "blackwargreymon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "regalecusmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "commandramon_karakurumon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "adventure02_jyagamon": {
+      "element": "plant",
+      "attribute": "virus"
     }
   },
   "lineDefaults": {

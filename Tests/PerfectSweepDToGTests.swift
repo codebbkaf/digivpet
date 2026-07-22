@@ -62,7 +62,9 @@ final class PerfectSweepDToGTests: XCTestCase {
         // on its page. Named rather than the check being loosened to a superset.
         ("ancientvolcamon", ["gogmamon", "machgaogamon"], "wanyamon"),
         ("dinotigermon", ["grappleomon"], "wanyamon"),
-        ("seitengokuwmon", ["gokuwmon"], "penc-sw"),
+        // US-162 hung Xingtianmon under this one — a cited climb on that page, over the same
+        // Ginkakumon Gokuwmon hangs off. Named rather than the check being loosened.
+        ("seitengokuwmon", ["gokuwmon", "xingtianmon"], "penc-sw"),
     ]
 
     /// The seven Champions that were LEAVES before this story, and the junk Perfect each now falls
@@ -242,7 +244,11 @@ final class PerfectSweepDToGTests: XCTestCase {
             // Two when this story wrote it. Gaogamon is three since US-160 gave it MachGaogamon,
             // its bolded Perfect, so what is pinned is "one fallback and at least one earned
             // branch" plus the exact count for the six nobody has branched again.
-            XCTAssertEqual(node.evolutions.count, parent == "gaogamon" ? 3 : 2,
+            // Gaogamon is three since US-160 gave it MachGaogamon; Firamon and Ginkakumon are
+            // three since US-162 gave them SaviorHackmon and Xingtianmon. Named exceptions rather
+            // than a loosened `>=`, so a FOURTH branch on any of them still fails here.
+            XCTAssertEqual(node.evolutions.count,
+                           ["gaogamon", "firamon", "ginkakumon"].contains(parent) ? 3 : 2,
                            "\(parent) is not one earned branch plus a fallback")
             XCTAssertEqual(node.evolutions.first(where: \.isDefault)?.to, junk,
                            "\(parent) does not fall to its line's junk Perfect")
@@ -378,13 +384,13 @@ final class PerfectSweepDToGTests: XCTestCase {
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["tamers"], 105, "DarkSuperstarmon, DORUguremon and their two Megas, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
         XCTAssertEqual(sizes["wanyamon"], 29, "Gogmamon, Grappleomon and the line's first two Megas, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["penc-nso"], 59, "Fantomon, Flaremon and Apollomon, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
-        XCTAssertEqual(sizes["penc-wg"], 40, "Delumon and Garudamon X, plus US-161's Paildramon")
+        XCTAssertEqual(sizes["penc-nso"], 62, "Fantomon, Flaremon and Apollomon, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
+        XCTAssertEqual(sizes["penc-wg"], 42, "Delumon and Garudamon X, plus US-161's Paildramon")
         XCTAssertEqual(sizes["penc-nsp"], 39, "DarkKnightmon and DarkKnightmon X" + ", plus US-160's one, plus US-161's both Panjyamon")
-        XCTAssertEqual(sizes["penc-sw"], 14, "Gokuwmon and SeitenGokuwmon")
-        XCTAssertEqual(sizes["penc-me"], 59, "Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
+        XCTAssertEqual(sizes["penc-sw"], 18, "Gokuwmon and SeitenGokuwmon")
+        XCTAssertEqual(sizes["penc-me"], 63, "Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas")
         XCTAssertEqual(sizes["penc-vb"], 55, "Entmon, plus US-161's Regulusmon")
-        XCTAssertEqual(sizes["penc-ds"], 43, "Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
+        XCTAssertEqual(sizes["penc-ds"], 44, "Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
         XCTAssertEqual(sizes["dmc-v5"], 25, "Gigadramon, and Ex-Tyranomon renamed rather than added" + ", plus US-160's two")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 10)
@@ -409,11 +415,18 @@ final class PerfectSweepDToGTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "darkknightmon_x")).line,
                        try XCTUnwrap(graph.node(id: "darkknightmon")).line)
 
-        XCTAssertNil(graph.node(id: "superstarmon"),
-                     "Superstarmon is wired now — then DarkSuperstarmon's line follows IT")
-        XCTAssertNotNil(roster.entry(id: "superstarmon"),
-                        "the S-Z sweep still owes Superstarmon, over Starmon on `tamers`")
+        // **US-162 WIRED SUPERSTARMON AND DID NOT PUT IT ON `tamers`**, so this claim flips
+        // rather than dies: Starmon, the bolded parent, is a `tamers` Adult and `tamers` holds no
+        // cited climb for Superstarmon at all, so it went to Omekamon on `penc-me` with the cited
+        // Prince Mamemon above it. DarkSuperstarmon therefore does NOT follow its base form's line,
+        // and that is the one place in the file where the pair is split — said here so it is a
+        // recorded decision rather than a drift.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "superstarmon")).line, "penc-me")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "darksuperstarmon")).line, "tamers")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "starmon")).line, "tamers")
+        XCTAssertFalse(try XCTUnwrap(graph.node(id: "starmon")).evolutions.map(\.to)
+            .contains("superstarmon"),
+                       "Starmon took Superstarmon after all — then the pair is together again")
     }
 
     /// **The seven placements that cost nothing, restated as a check on the DATA rather than on the
@@ -494,8 +507,11 @@ final class PerfectSweepDToGTests: XCTestCase {
             XCTAssertTrue(graph.reachesUltimate(from: id),
                           "\(id) stopped reaching an Ultimate — US-159's LadyDevimon pair carries it")
         }
-        XCTAssertFalse(graph.reachesUltimate(from: "v_digitama"),
-                       "v_digitama reaches an Ultimate now — say which arrow did it")
+        // **US-162 took V Digitama**, the last one, by opening `adventure02`'s Perfect rung under
+        // Nise Drimogemon — the line's junk Champion, which all three of its Children fall into, so
+        // one arrow promoted both eggs of that line at once.
+        XCTAssertTrue(graph.reachesUltimate(from: "v_digitama"),
+                      "v_digitama stopped reaching an Ultimate — US-162's Vermillimon carries it")
     }
 
     /// **`penc-sw` GAINED THE FIRST OF THE FOUR PERFECTS US-157 OPENED ITS RUNG FOR.** Gokuwmon is
@@ -517,11 +533,12 @@ final class PerfectSweepDToGTests: XCTestCase {
         // Kinkakumon is STILL on `penc-ds`, which is what makes the argument a live one.
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "kinkakumon")).line, "penc-ds")
 
-        // The two Saiyu Warriors Perfects still owed after this story.
+        // The three Saiyu Warriors Perfects still owed after this story, all taken by US-162 and
+        // all onto this rung. Same claim, other side.
         for id in ["sagomon", "sanzomon", "shawujinmon"] {
-            XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it is owed")
-            XCTAssertNil(graph.node(id: id),
-                         "\(id) is wired now — say which arrow, and onto which line")
+            XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it was owed")
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).line, "penc-sw",
+                           "\(id) left the rung US-157 opened for it")
         }
 
         // And the whole line is STILL stranded, which no story at this rung can fix: `penc-sw` has
@@ -646,13 +663,13 @@ final class PerfectSweepDToGTests: XCTestCase {
 
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["adventure02", "algomon", "commandramon"],
+                       ["algomon"],
                        "a line gained or lost its Perfect rung; the remaining sweeps' bill changed — "
                            + "US-160 took `diablomon` off this list by putting the two Meicrackmon "
                            + "over Meicoomon, and gave it Rasielmon and Raguelmon in the same edit")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       73, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       67, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -674,11 +691,11 @@ final class PerfectSweepDToGTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760, "672 before this story, 693 after it, 709 after US-159, 736 after US-160, 760 after US-161")
+        XCTAssertEqual(graph.nodes.count, 787, "672 before this story, 693 after it, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
-        XCTAssertEqual(graph.nodes(at: .perfect).count, 165, "101 before this story, 115 after it, 126 after US-159, 148 after US-160, 165 after US-161")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 105, "81 before this story, 88 after it, 93 after US-159, 98 after US-160, 105 after US-161")
+        XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "101 before this story, 115 after it, 126 after US-159, 148 after US-160, 165 after US-161, 189 after US-162")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 108, "81 before this story, 88 after it, 93 after US-159, 98 after US-160, 105 after US-161, 108 after US-162")
     }
 
     /// Every Ultimate this story opened serves exactly one Perfect, so a second parent hung on one

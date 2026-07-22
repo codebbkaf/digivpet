@@ -342,7 +342,7 @@ final class BabyIISweepTests: XCTestCase {
         XCTAssertEqual(sizes["tamers"], 105,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
-        XCTAssertEqual(sizes["vital"], 38)
+        XCTAssertEqual(sizes["vital"], 41)
         XCTAssertEqual(sizes["wanyamon"], 29, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`, plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
     }
 

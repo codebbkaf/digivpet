@@ -207,7 +207,16 @@ final class EggHatchingTests: XCTestCase {
                         // `diablomon` two. Every `vital` Child falls to Kokeshimon, which now
                         // carries Oboromon and Zanbamon, so all five arrive together.
                         "ludo_digitama", "morpho_digitama", "pulse_digitama",
-                        "sunariza_digitama", "zuba_digitama"],
+                        "sunariza_digitama", "zuba_digitama",
+                        // US-162's three, and they close the Perfect rung with the same move made
+                        // twice: `commandramon` and `adventure02` were the last two lines with no
+                        // Perfect rung, and the S-Z sweep opened both. Commandra Digitama runs
+                        // through Commandramon into Damemon, which now carries SkullBaluchimon and
+                        // Chaosdramon X. V and Worm Digitama are the interesting pair — US-161
+                        // deliberately left that line closed because XV-mon carries only one of
+                        // them, and US-162 branched Nise Drimogemon instead, the JUNK Champion all
+                        // three of the line's Children fall into, so both eggs arrived at once.
+                        "commandra_digitama", "v_digitama", "worm_digitama"],
                        "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, US-145's added eight more, US-146 promoted Lala and Luce Digitama by finishing the two threads they hatch — Pipimon into Tanemon and Tsubumon into Tokomon, both Baby II that already reached an Ultimate — and US-157 promoted five `tamers` eggs by giving that line an Ultimate rung at last")
 
         // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
@@ -262,9 +271,14 @@ final class EggHatchingTests: XCTestCase {
         // have opened it with Paildramon over XV-mon, and did not, precisely because Worm Digitama
         // descends through Wormmon to Sorcerymon and would have been left unraisable on a line
         // that HAS a Perfect rung. `adventure02` is a whole-line job, not a one-node one.
-        XCTAssertEqual(unraisable,
-                       ["commandra_digitama", "ghost_digitama",
-                        "v_digitama", "worm_digitama"])
+        // US-162 takes THREE more and leaves exactly ONE, which is where this list stops for
+        // good: Commandra by branching Damemon, and V and Worm together by branching Nise
+        // Drimogemon rather than XV-mon. **Ghost Digitama cannot be moved by any story at this
+        // rung or above**, because `algomon`'s only Perfect-orphan citation is Siesamon and
+        // Siesamon descends from Paomon — a Baby I no Digitama can reach, since US-145 spent all
+        // fifty-seven. See
+        // `PerfectSweepSToZTests.testAlgomonCouldNotBeOpenedBecauseItsEggCannotReachSiesamon`.
+        XCTAssertEqual(unraisable, ["ghost_digitama"])
 
         var seen: Set<String> = []
         for _ in 0..<200 {

@@ -146,8 +146,15 @@ final class RosterTests: XCTestCase {
         // has no unused junk-flavoured Perfect sheet, and each floor is cited from its own line's
         // Champions — Darumamon from Kokeshimon, Etemon from Targetmon. `penc-nso` already owns
         // `darumamon` and `dmc-v3` already owns `etemon`.
+        //
+        // `commandramon_karakurumon` and `adventure02_jyagamon` are US-162's, the last two junk
+        // floors this rung can need — that story opened the Perfect rung on the final two lines
+        // without one. They are the first floors in the series that Wikimon does NOT draw: neither
+        // Damemon nor Ginryumon nor Nise Drimogemon cites a junk Perfect at all, so each rests on
+        // a flavour argument its node comment states in as many words. `wanyamon` already owns
+        // `karakurumon` and `dmc-v3` already owns `jyagamon`.
         XCTAssertEqual(aliases.sorted(),
-                       ["diablomon_gerbemon",
+                       ["adventure02_jyagamon", "commandramon_karakurumon", "diablomon_gerbemon",
                         "dmcv1_shinmonzaemon", "dmcv2_ebemon", "dmcv2_vademon", "dmcv4_palmon",
                         "pencds_coelamon", "pencds_megaseadramon",
                         "pencds_metalseadramon", "pencds_seadramon", "pencds_whamon",

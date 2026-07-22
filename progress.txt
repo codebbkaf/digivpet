@@ -21,6 +21,33 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E: A LINE'S RUNG OPENS UNDER ITS JUNK CHAMPION, AND THAT IS WHAT PROMOTES ITS EGGS.**
+  US-161 left `adventure02` closed because XV-mon carries only one of the line's two eggs; US-162
+  branched Nise Drimogemon instead — the junk Adult that takes the `isDefault` fall of ALL THREE
+  Children — and promoted both at once. Same for `commandramon`'s Damemon. **Look at which Champion
+  every Child of the line falls into before looking at which Champion is cited**; US-133's Scumon
+  rule already makes an earned branch off a junk Adult legal, and the junk one is reachable from
+  every thread by construction.
+- **PHASE E: A LINE CAN BE PERMANENTLY UNOPENABLE — CHECK `reachesUltimate` FROM ITS OWN EGGS
+  FIRST.** `algomon`'s Ghost Digitama reaches only Algomon (Adult), Mimicmon and Witchmon; the
+  Labramon -> Siesamon thread that every citation points at hangs off `paomon`, one of the thirteen
+  Baby I no Digitama can reach. Opening the rung there breaks US-159's "no unraisable egg on a line
+  that HAS a Perfect rung" invariant — which is asserted in ANOTHER story's file
+  (`PerfectSweepNToRTests.testVitalsFiveDigitamaWereAllPromotedAtOnce`), so it is easy to miss until
+  the suite is red.
+- **PHASE E: BEFORE AUTHORING, GREP FOR EVERY CLIMB TARGET AND EVERY PARENT.** `grep -rn
+  'Set(graph.parents' Tests` and `grep -rn 'evolutions.count,' Tests` are now the two greps that
+  matter most: US-162 broke seven parent-set ledgers and six `evolutions.count` claims across nine
+  files. Fix each by NAMING the new parent or with a named exception — never by loosening to a
+  superset or a `>=`. A "still owed" pin can also live in THREE files at once (the three Saiyu
+  Warriors Perfects), so `grep -rn '<the id>' Tests` for every orphan in the band as well.
+- **PHASE E: A JUNK FLOOR CAN BE UNCITED, AND THEN THE COMMENT MUST SAY THE WORD FLAVOUR.** Every
+  floor US-157..US-161 authored was on its Champion's own Wikimon `Evolves To`; US-162's two are
+  not, because none of `commandramon`'s or `adventure02`'s Champions cites a junk Perfect at all.
+  `RosterTests`' alias list and `EvolutionCriteriaTests.junkIds` move either way.
+- **`penc-sw` IS THE ONLY LINE WHERE EVERY NODE'S COMMENT MUST NAME ITS DEVICE** ("Saiyu Warriors").
+  Three files enforce it — `ChildSweepAToFTests`, `BabyIISweepTests`, `DigitamaSweepBabyITests` —
+  and the rule is invisible from the node you are writing.
 - **PHASE E: A JUNK FLOOR IS PER-LINE, NOT PER-CHAMPION, AND A FLOOR THAT ALREADY CLIMBS IS THE
   ONLY FREE ONE.** US-161 opened `vital` with ten leaf Champions and bought ONE alias
   (`vital_darumamon`) that served every one of them — do not multiply the alias cost by the number
@@ -4629,4 +4656,106 @@ Build green, 2322 tests pass, `testShippedEvolutionsJsonIsValid` reports zero va
   line-scoped-alias price. Sagomon, Sanzomon and Shawujinmon are still the three Saiyu Warriors
   Perfects owed; Ogudomon is still pinned in Lucemon Falldown's comment. The Ultimate rung is now
   the bulk of the work: 133 orphans against seven remaining sweeps.
+---
+
+## 2026-07-23 - US-162: Orphan sweep: Perfect S-Z (the Perfect rung is finished)
+
+Wired the TWENTY-TWO orphaned Perfect whose displayName starts S-Z — which was every Perfect still
+orphaned anywhere — the three Ultimates they climb into that had no node, and the two junk Perfect
+floors the two lines this story OPENS needed first. 27 nodes, 760 -> 787. **The Perfect rung is
+closed: no later sweep can add to it.**
+
+**Orphan count, Appendix B over a regenerated `roster.generated.json`: 171 BEFORE -> 146 AFTER.**
+Perfect bucket 22 -> 0, Ultimate 133 -> 130, Armor-Hybrid still 16.
+Files: `Resources/evolutions.json`, `Resources/elements.json`, `Resources/moves.json`,
+`scripts/us162_author.py` (new, the record of what was authored), `Tests/PerfectSweepSToZTests.swift`
+(new, 31 tests) and the 26-file knock-on set US-160 listed. Build green, 2353 tests pass (2322
+before), `testShippedEvolutionsJsonIsValid` reports zero validator findings.
+
+The twenty-two, each `Champion -> Perfect -> Ultimate`:
+  Sagomon              lianpumon(penc-sw)         -> shakamon
+  Sanzomon             hakubamon(penc-sw)         -> shakamon
+  SaviorHackmon        firamon(penc-nso)          -> pencnso_boltmon
+  Scorpiomon           kuwagamon_x(penc-me)       -> pencme_mugendramon
+  Sekkamon             shellmon(dmc-v3)           -> ryugumon
+  Shawujinmon          tsuchidarumon(penc-sw)     -> shakamon
+  Shishimamon          reppamon(vital)            -> zanbamon
+  Shootmon             minotaurmon(penc-me)       -> kazuchimon
+  Sirenmon             hookmon(vital)             -> regalecusmon        NEW
+  SkullBaluchimon      damemon(commandramon)      -> chaosdramon_x       NEW
+  Superstarmon         omekamon(penc-me)          -> princemamemon
+  Tekkamon             guardromon(penc-me)        -> pencme_hiandromon
+  Triceramon           monochromon(dmc-v4)        -> darkdramon
+  Triceramon X         ginryumon(commandramon)    -> chaosdramon_x       NEW
+  Vamdemon X           musyamon(penc-nso)         -> venomvamdemon
+  Vermillimon          nisedrimogemon(adventure02)-> blackwargreymon     NEW
+  WaruSeadramon        pencds_seadramon(penc-ds)  -> leviamon
+  WereGarurumon Black  garurumon_black(dmc-v2)    -> cresgarurumon
+  WereGarurumon X      pencnso_garurumon(penc-nso)-> pencnso_metalgarurumon
+  Xingtianmon          ginkakumon(penc-sw)        -> seitengokuwmon
+  Yatagaramon          xv-mon_black(penc-wg)      -> hououmon
+  Yatagaramon 2006     pencwg_birdramon(penc-wg)  -> griffomon
+plus the junk floors `commandramon_karakurumon` and `adventure02_jyagamon`.
+
+**Learnings for future iterations:**
+
+- **A LINE'S PERFECT RUNG OPENS UNDER ITS JUNK CHAMPION, NOT UNDER ITS BEST ONE — AND THAT IS WHAT
+  PROMOTES THE EGGS.** US-161 left `adventure02` closed because XV-mon carries only V Digitama and
+  branching it would have stranded Worm Digitama. The answer it missed is Nise Drimogemon, the
+  line's junk Adult, which takes the `isDefault` fall of V-mon, Wormmon AND Tinkermon — so ONE
+  earned branch off it promoted both eggs at once. **Before pricing a rung, look at which Champion
+  every Child of the line falls into, not at which Champion is cited**; the junk one is reachable
+  from every thread by construction, and US-133's Scumon rule already makes an earned branch off it
+  legal. Same shape one line over: `commandramon`'s Damemon catches both its Children's falls.
+
+- **A LINE CAN BE PERMANENTLY UNOPENABLE, AND `algomon` IS ONE.** Its only egg, Ghost Digitama,
+  descends to Algomon (Adult), Mimicmon and Witchmon and stops; the Labramon -> Siesamon thread —
+  the only `algomon` Champion any Perfect orphan cites — hangs off `paomon`, one of the thirteen
+  Baby I no Digitama can reach since US-145 spent all fifty-seven. So opening the rung under
+  Siesamon would have broken US-159's "no unraisable egg on a line that HAS a Perfect rung"
+  invariant, and the Perfect rung is now closed, so no story can open it with a real orphan again.
+  Shishimamon went to `vital` under Reppamon instead, with the cited Zanbamon already above it.
+  **Check `reachesUltimate` from the line's own eggs BEFORE choosing the Champion, not after** — the
+  test that catches this is `PerfectSweepNToRTests.testVitalsFiveDigitamaWereAllPromotedAtOnce`, and
+  it fires from another story's file, which is easy to miss.
+
+- **A JUNK FLOOR CAN BE UNCITED, AND THEN THE COMMENT HAS TO SAY THE WORD FLAVOUR.** Every floor
+  from US-157 through US-161 was on its own Champion's Wikimon `Evolves To`. Neither Damemon nor
+  Ginryumon nor Nise Drimogemon cites a junk Perfect at all, so `commandramon_karakurumon` (a
+  clockwork automaton over a line of mechanised soldiers) and `adventure02_jyagamon` (a fake mole
+  digging up a potato) rest on shape alone. `RosterTests`' alias list and
+  `EvolutionCriteriaTests.junkIds` both move, and the new test greps each comment for "FLAVOUR".
+
+- **THE `Set(graph.parents(of:))` LEDGERS ARE NOW THE BULK OF THE KNOCK-ON WORK, AND SEVEN BROKE.**
+  Shakamon (+3), Seiten Gokuwmon, Kazuchimon, Ryugumon, Zanbamon, `pencme_mugendramon` (in TWO
+  files) and Andromon's thread test. Every one was fixed by NAMING the new parent in the earlier
+  story's `authoredUltimates` table. Four `evolutions.count` exceptions moved the same way
+  (Musyamon 2->3, Firamon and Ginkakumon 2->3, Omekamon 3->4, Kuwagamon X 3->4, XV-mon Black 3->4).
+  **Run `grep -rn 'Set(graph.parents' Tests` and `grep -rn 'evolutions.count,' Tests` for every
+  climb target and every parent BEFORE authoring** — it is cheaper than reading 152 failures.
+
+- **A "still owed" PIN FLIPS IN THREE PLACES AT ONCE.** The three Saiyu Warriors Perfects US-157
+  pinned were asserted `XCTAssertNil(graph.node(id:))` in `PerfectSweepAToCTests`,
+  `PerfectSweepDToGTests` AND `PerfectSweepNToRTests`. Each became "…is on `penc-sw`" rather than
+  being deleted. Likewise `penc-sw`'s Perfect-rung census is pinned in two Adult sweep files.
+  `grep -rn '<the id>' Tests` for every orphan in the band before starting.
+
+- **EVERY `penc-sw` NODE'S COMMENT MUST CONTAIN "Saiyu Warriors"** — three separate tests enforce it
+  (`ChildSweepAToFTests`, `BabyIISweepTests`, `DigitamaSweepBabyITests`). It is the only line in the
+  file with that rule, and it is invisible from the node you are writing.
+
+- **SUPERSTARMON SPLIT FROM DARKSUPERSTARMON, WHICH IS THE FIRST BASE-FORM/VARIANT PAIR ON TWO
+  LINES.** Starmon is the bolded parent and a `tamers` Adult, but `tamers` holds no cited climb for
+  Superstarmon at all, while `penc-me` holds Omekamon AND Prince Mamemon — and Revolmon and
+  Thunderballmon, the two other cited `penc-me` parents, are both FULL at three earned branches. So
+  the pair is split on purpose and `PerfectSweepDToGTests.testTheVariantsLandedBesideTheirBaseForm`
+  records it. **A "full" claim is worth re-counting (US-156's lesson) — here it held.**
+
+- REMAINS: US-163 onward (49/56 passing). 146 orphans — 130 Ultimate, 16 Armor-Hybrid, 0 below.
+  Every line now has a Perfect rung except `algomon`, which cannot gain one. Six Ultimate sweeps and
+  the Armor-Hybrid one are all that is left. Rehome candidates still pinned: Kinkakumon on `penc-sw`,
+  Hisyaryumon and Cargodramon on `commandramon` (whose rung is now OPEN, so both are live),
+  Boutmon and LadyDevimon X on `vital`, Paildramon on `adventure02` (also live now). Ogudomon is
+  still pinned in Lucemon Falldown's comment. The 67 leaves in `ChildSweepAToFTests`' dead-end
+  ledger are still owed an out-edge; the three Ultimates this story opened are not on it.
 ---

@@ -143,10 +143,16 @@ final class AdultSweepMToRTests: XCTestCase {
                        // US-160 took ONE more, Meicoomon (both Meicrackmon) — the arrow that
                        // opened `diablomon`'s Perfect rung, and the only parent this pack can
                        // draw for either of them.
+                       // US-162 took TWO more, and both are the shape this file keeps recording:
+                       // Nise Drimogemon (Vermillimon) is `adventure02`'s JUNK Champion — the
+                       // fourth junk node in the file with an earned branch — and branching it
+                       // opened that line's Perfect rung AND promoted both its eggs at once, which
+                       // is what US-161 could not do through XV-mon. Reppamon (Shishimamon) is the
+                       // ordinary kind.
                        ["madleomon", "manekimon", "mantaraymon_x", "mimicmon",
-                        "nisedrimogemon", "ogremon_x",
+                        "ogremon_x",
                         "parasaurmon", "peckmon", "pidmon",
-                        "reppamon", "rhinomon_x"].sorted(),
+                        "rhinomon_x"].sorted(),
                        "the M-R leaves have moved without the ledger moving with them")
 
         for id in leaves {
@@ -164,7 +170,11 @@ final class AdultSweepMToRTests: XCTestCase {
     func testEverySweptChampionIsOneEarnedBranchAndOneUnconditionedFallback() throws {
         for (adult, _, perfect) in swept {
             let node = try XCTUnwrap(graph.node(id: adult))
-            XCTAssertEqual(node.evolutions.count, 2, "\(adult) is not a branch plus a fallback")
+            // Musyamon is THREE since US-162 hung Vamdemon X on it beside the Vamdemon this
+            // story gave it — the variant on the very Champion its base form has. A named
+            // exception rather than a loosened `>=`, the shape US-160 established.
+            XCTAssertEqual(node.evolutions.count, adult == "musyamon" ? 3 : 2,
+                           "\(adult) is not a branch plus a fallback")
 
             let fallback = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
             XCTAssertEqual(fallback.conditions, [], "\(adult)'s fallback carries criteria")
@@ -383,9 +393,9 @@ final class AdultSweepMToRTests: XCTestCase {
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["tamers"], 105, "four Champions and both new Perfects, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
         XCTAssertEqual(sizes["penc-vb"], 55, "Mikemon and Nefertimon X, plus US-156's two and US-157's four, plus US-158's Entmon, plus US-161's Regulusmon")
-        XCTAssertEqual(sizes["penc-ds"], 43, "MoriShellmon, plus US-157's Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
-        XCTAssertEqual(sizes["penc-nso"], 59, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
-        XCTAssertEqual(sizes["penc-wg"], 40, "RedV-dramon, plus US-156's two Black V-dramon, plus US-158's two, plus US-161's Paildramon")
+        XCTAssertEqual(sizes["penc-ds"], 44, "MoriShellmon, plus US-157's Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
+        XCTAssertEqual(sizes["penc-nso"], 62, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
+        XCTAssertEqual(sizes["penc-wg"], 42, "RedV-dramon, plus US-156's two Black V-dramon, plus US-158's two, plus US-161's Paildramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
@@ -572,7 +582,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760, "618 before this story, 635 after US-155, 643 after US-156, 709 after US-159, 736 after US-160, 760 after US-161")
+        XCTAssertEqual(graph.nodes.count, 787, "618 before this story, 635 after US-155, 643 after US-156, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
     }
 
     func testTheGraphValidatesWithNoFindings() {

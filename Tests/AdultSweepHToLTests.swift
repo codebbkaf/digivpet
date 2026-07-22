@@ -122,10 +122,13 @@ final class AdultSweepHToLTests: XCTestCase {
                        // US-161 took TWO more: Kokeshimon (Oboromon, which opened `vital`'s
                        // Perfect rung) and Kuwagamon X, which carries BOTH Okuwamon because it is
                        // the one Champion cited on both of their pages.
-                       ["hi-commandramon", "hookmon",
+                       // US-162 took TWO more and both opened something: Hookmon (Sirenmon, and
+                       // the Regalecusmon over it) and Lianpumon (Sagomon, the first of the three
+                       // Saiyu Warriors Perfects US-157 pinned).
+                       ["hi-commandramon",
                         "junglemojyamon",
                         "kyubimon_silver",
-                        "leomon_x", "lianpumon"].sorted(),
+                        "leomon_x"].sorted(),
                        "the H-L leaves have moved without the ledger moving with them")
 
         for id in leaves {
@@ -318,8 +321,8 @@ final class AdultSweepHToLTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["penc-vb"], 55, "US-153 added KausGammamon, US-154 two more, US-156 two more, US-157 four, plus US-158's Entmon, plus US-161's Regulusmon")
-        XCTAssertEqual(sizes["penc-ds"], 43, "US-153 added Kinkakumon, US-154 MoriShellmon, US-157 Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
-        XCTAssertEqual(sizes["penc-wg"], 40, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more, plus US-158's two, plus US-161's Paildramon")
+        XCTAssertEqual(sizes["penc-ds"], 44, "US-153 added Kinkakumon, US-154 MoriShellmon, US-157 Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two")
+        XCTAssertEqual(sizes["penc-wg"], 42, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more, plus US-158's two, plus US-161's Paildramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 3)
     }
@@ -350,8 +353,10 @@ final class AdultSweepHToLTests: XCTestCase {
         // (Jellymon below, Zudomon above) across a line and that is a story of its own.
         XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }
                         .map(\.id).sorted(),
-                       ["chohakkaimon", "gokuwmon", "pandamon"],
-                       "`penc-sw`'s Perfect rung has moved since US-158 added Gokuwmon to it")
+                       ["chohakkaimon", "gokuwmon", "pandamon", "sagomon", "sanzomon", "shawujinmon",
+                        "xingtianmon"],
+                       "`penc-sw`'s Perfect rung has moved; US-162 finished it with the three "
+                           + "Saiyu Warriors Perfects US-157 pinned, plus Xingtianmon")
 
         let comment = try authoredComment(on: "kinkakumon")
         XCTAssertTrue(comment.contains("Saiyu Warriors"),
@@ -454,9 +459,9 @@ final class AdultSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760,
+        XCTAssertEqual(graph.nodes.count, 787,
                        "615 before this story, 618 after it, 629 after US-154, 635 after US-155, "
-                           + "643 after US-156, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
+                           + "643 after US-156, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
     }
 
     func testTheGraphValidatesWithNoFindings() {

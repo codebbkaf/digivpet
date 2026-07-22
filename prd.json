@@ -1013,8 +1013,8 @@
         "Typecheck passes"
       ],
       "priority": 49,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired all 22 orphaned Perfect S-Z — every Perfect still orphaned anywhere, so the rung is CLOSED — plus the 3 Ultimates they climb into and 2 line-scoped junk floors: 27 nodes, 760 -> 787. Orphans BEFORE 171 (Perfect 22, Ultimate 133, Armor-Hybrid 16) -> AFTER 146 (Perfect 0, Ultimate 130, Armor-Hybrid 16), counted with Appendix B over a regenerated roster.generated.json. `commandramon` and `adventure02` gained a Perfect rung and a Mega; `adventure02` opened under its JUNK Champion Nise Drimogemon, which all three of its Children fall into, so both its eggs were promoted at once — the problem US-161 could not solve. `algomon` STAYS CLOSED and cannot be opened by any later story: its only cited Champion, Siesamon, descends from Paomon, a Baby I no Digitama can reach, so opening it would strand Ghost Digitama. Dead-end ledger 73 -> 67. Build green, 2353 tests pass, validator reports zero findings."
     },
     {
       "id": "US-163",

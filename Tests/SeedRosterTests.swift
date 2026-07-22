@@ -331,6 +331,10 @@ final class SeedRosterTests: XCTestCase {
         // sheet, `Perfect/MarinBullmon.png`, `Perfect/MetalPhantomon.png` and
         // `Ultimate-Super Ultimate/Ryugumon.png`.
         "MarinBullmon", "MetalPhantomon", "Ryugumon",
+        // US-162's one, on the same terms and beside those three: Shellmon is a cited parent for
+        // Sekkamon and Ryugumon a cited climb, so both ends were already on this line. Eyeballed
+        // as `Perfect/Sekkamon.png`.
+        "Sekkamon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -469,6 +473,10 @@ final class SeedRosterTests: XCTestCase {
         // `Perfect/Huankunmon.png`. This pair is the first the sweeps hung off the DOCUMENT's own
         // Rookie rather than off an invented one, and it is the last energy Piyomon had.
         "Xiquemon", "Huankunmon",
+        // US-162's one, verified the same way as `Perfect/Triceramon.png`. Monochromon is
+        // Triceramon's BOLDED `Evolves From` and Darkdramon a cited `Evolves To`, so both ends of
+        // it were already on this line and the document's own Monochromon carries it.
+        "Triceramon",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

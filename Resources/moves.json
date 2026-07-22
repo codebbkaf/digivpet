@@ -4560,6 +4560,168 @@
       "tint": "brown",
       "signatureName": "Dark Network",
       "signatureSymbol": "music.note"
+    },
+    "sagomon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "teal",
+      "signatureName": "River Sand Crush",
+      "signatureSymbol": "drop.fill"
+    },
+    "sanzomon": {
+      "projectileSymbol": "sparkles",
+      "tint": "white",
+      "signatureName": "Sutra Seal",
+      "signatureSymbol": "sparkles"
+    },
+    "saviorhackmon": {
+      "projectileSymbol": "shield.fill",
+      "tint": "white",
+      "signatureName": "Savior Fang",
+      "signatureSymbol": "shield.fill"
+    },
+    "scorpiomon": {
+      "projectileSymbol": "scissors",
+      "tint": "yellow",
+      "signatureName": "Scorpion Tail Blade",
+      "signatureSymbol": "scissors"
+    },
+    "sekkamon": {
+      "projectileSymbol": "snowflake",
+      "tint": "white",
+      "signatureName": "Snowflake Dance",
+      "signatureSymbol": "snowflake"
+    },
+    "shawujinmon": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "red",
+      "signatureName": "Crescent Spade",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "shishimamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "orange",
+      "signatureName": "Shrine Lion Wave",
+      "signatureSymbol": "flame.fill"
+    },
+    "shootmon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "red",
+      "signatureName": "Shooting Knuckle",
+      "signatureSymbol": "flame.fill"
+    },
+    "sirenmon": {
+      "projectileSymbol": "music.note",
+      "tint": "blue",
+      "signatureName": "Siren Song",
+      "signatureSymbol": "music.note"
+    },
+    "skullbaluchimon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "brown",
+      "signatureName": "Bone Trample",
+      "signatureSymbol": "hammer.fill"
+    },
+    "superstarmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "yellow",
+      "signatureName": "Hollywood Meteor",
+      "signatureSymbol": "star.fill"
+    },
+    "tekkamon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "gray",
+      "signatureName": "Iron Fire Blade",
+      "signatureSymbol": "hammer.fill"
+    },
+    "triceramon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "gray",
+      "signatureName": "Tri Horn Attack",
+      "signatureSymbol": "hammer.fill"
+    },
+    "triceramon_x": {
+      "projectileSymbol": "shield.fill",
+      "tint": "brown",
+      "signatureName": "Wild Horn Cross",
+      "signatureSymbol": "shield.fill"
+    },
+    "vamdemon_x": {
+      "projectileSymbol": "moon.fill",
+      "tint": "gray",
+      "signatureName": "Crimson Bat Cross",
+      "signatureSymbol": "moon.fill"
+    },
+    "vermillimon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "red",
+      "signatureName": "Vermillion Flare",
+      "signatureSymbol": "flame.fill"
+    },
+    "waruseadramon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "red",
+      "signatureName": "Evil Icicle",
+      "signatureSymbol": "drop.fill"
+    },
+    "weregarurumon_black": {
+      "projectileSymbol": "hand.raised.fill",
+      "tint": "gray",
+      "signatureName": "Black Moon Kick",
+      "signatureSymbol": "hand.raised.fill"
+    },
+    "weregarurumon_x": {
+      "projectileSymbol": "snowflake",
+      "tint": "indigo",
+      "signatureName": "Garuru Kick Cross",
+      "signatureSymbol": "snowflake"
+    },
+    "xingtianmon": {
+      "projectileSymbol": "hammer.fill",
+      "tint": "red",
+      "signatureName": "Headless Axe",
+      "signatureSymbol": "hammer.fill"
+    },
+    "yatagaramon": {
+      "projectileSymbol": "wind",
+      "tint": "white",
+      "signatureName": "Three Legged Raven",
+      "signatureSymbol": "wind"
+    },
+    "yatagaramon_2006": {
+      "projectileSymbol": "wind",
+      "tint": "yellow",
+      "signatureName": "Mikafutsu no Kami",
+      "signatureSymbol": "wind"
+    },
+    "chaosdramon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "red",
+      "signatureName": "Chaos Cannon Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "blackwargreymon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "gray",
+      "signatureName": "Terra Destroyer",
+      "signatureSymbol": "flame.fill"
+    },
+    "regalecusmon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "indigo",
+      "signatureName": "Deep Sea Ribbon",
+      "signatureSymbol": "drop.fill"
+    },
+    "commandramon_karakurumon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "brown",
+      "signatureName": "Clockwork Seize",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "adventure02_jyagamon": {
+      "projectileSymbol": "leaf.fill",
+      "tint": "yellow",
+      "signatureName": "Potato Barrage",
+      "signatureSymbol": "leaf.fill"
     }
   },
   "lineDefaults": {

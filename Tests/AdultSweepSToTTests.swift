@@ -130,9 +130,12 @@ final class AdultSweepSToTTests: XCTestCase {
                         // King carries both OmegaShoutmon on `xros`, and Tia Ludomon carries
                         // RaijiLudomon on `vital` — its bolded parent, and the only line either
                         // of that Digimon's drawable parents sits on.
+                        // US-162 took ONE more, Tsuchidarumon — `penc-sw`'s JUNK Champion,
+                        // carrying Shawujinmon because that Digimon has no cited parent on the
+                        // only line its bolded CLIMB exists on.
                         "sorcerymon", "soulmon", "targetmon",
                         "tenkomon", "tobiumon", "tobucatmon", "tortamon",
-                        "troopmon", "tsuchidarumon", "tylomon_x"].sorted(),
+                        "troopmon", "tylomon_x"].sorted(),
                        "the S-T leaves have moved without the ledger moving with them")
 
         for id in leaves {
@@ -388,9 +391,9 @@ final class AdultSweepSToTTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["dmc-v1"], 36, "Tyrannomon, plus US-157's Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon")
-        XCTAssertEqual(sizes["dmc-v3"], 51, "Tyrannomon X and MetalGreymon X" + ", plus US-160's three")
-        XCTAssertEqual(sizes["dmc-v4"], 29, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-nso"], 59, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
+        XCTAssertEqual(sizes["dmc-v3"], 52, "Tyrannomon X and MetalGreymon X" + ", plus US-160's three")
+        XCTAssertEqual(sizes["dmc-v4"], 30, "Saberdramon, plus US-156's Xiquemon and Huankunmon")
+        XCTAssertEqual(sizes["penc-nso"], 62, "ShimaUnimon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon")
         XCTAssertEqual(sizes["tamers"], 105, "Siesamon X, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
@@ -440,10 +443,11 @@ final class AdultSweepSToTTests: XCTestCase {
             XCTAssertNotEqual(try XCTUnwrap(graph.node(id: id)).line, "dmc-v3",
                               "\(id) is on Tyrannomon X's line now, so the new Perfect was avoidable")
         }
-        for id in ["yatagaramon_2006"] {
-            XCTAssertNil(graph.node(id: id),
-                         "\(id) is wired now — Tyrannomon X had a cheaper arrow after all")
-        }
+        // Yatagaramon 2006 was the last name on that list and US-162 wired it — but on `penc-wg`,
+        // beside the plain Yatagaramon, so the intersection this story reported really was empty.
+        // Same claim, other side: it fails if the 2006 form is ever put on `dmc-v3`.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "yatagaramon_2006")).line, "penc-wg")
+        XCTAssertEqual(graph.parents(of: "yatagaramon_2006").map(\.id), ["pencwg_birdramon"])
         // MetalTyranomon X was the other half of that claim and US-160 wired it — but NOT on
         // `dmc-v3`, so the intersection this story reported really was empty. The M sweep put it
         // on `dmc-v5` under Cyclomon, the plain MetalTyranomon's own second parent, which is the
@@ -546,8 +550,8 @@ final class AdultSweepSToTTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760,
-                       "629 before this story, 635 after it, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
+        XCTAssertEqual(graph.nodes.count, 787,
+                       "629 before this story, 635 after it, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
     }
 
     func testTheGraphValidatesWithNoFindings() {

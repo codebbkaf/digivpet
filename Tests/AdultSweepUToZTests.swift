@@ -156,7 +156,9 @@ final class AdultSweepUToZTests: XCTestCase {
             // XV-mon Black carries THREE since US-161, which hung Paildramon on it — a cited
             // parent for that Digimon, and the variant of the very XV-mon its page names. Named
             // rather than the claim being loosened to `>=`, the shape US-160 established.
-            XCTAssertEqual(node.evolutions.count, adult == "xv-mon_black" ? 3 : 2,
+            // US-162 hung Yatagaramon on it too, so it carries FOUR — a cited parent again, and
+            // the line's cited Hououmon above it. Named exception rather than a loosened `>=`.
+            XCTAssertEqual(node.evolutions.count, adult == "xv-mon_black" ? 4 : 2,
                            "\(adult) is not a branch plus a fallback")
 
             let fallback = try XCTUnwrap(node.evolutions.first(where: \.isDefault))
@@ -332,8 +334,15 @@ final class AdultSweepUToZTests: XCTestCase {
         // and is argued in the node comment — `adventure02` has no Perfect rung at all.
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "v-dramon")).line, "penc-wg")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "xv-mon")).line, "adventure02")
-        XCTAssertEqual(graph.nodes.filter { $0.line == "adventure02" && $0.stage == .perfect }, [],
-                       "`adventure02` has a Perfect rung now, so XV-mon Black wants re-arguing")
+        // **US-162 GAVE `adventure02` A PERFECT RUNG**, under Nise Drimogemon rather than under
+        // XV-mon — the line's junk Champion, which all three of its Children fall into, so both of
+        // its eggs were promoted at once. This claim therefore flips rather than dies: what is
+        // checked is that XV-mon is STILL the leaf that made the exception right, so XV-mon Black's
+        // argument for holding the V-dramon thread on `penc-wg` is unchanged.
+        XCTAssertFalse(graph.nodes.filter { $0.line == "adventure02" && $0.stage == .perfect }
+            .isEmpty, "`adventure02` lost the Perfect rung US-162 opened")
+        XCTAssertTrue(try XCTUnwrap(graph.node(id: "xv-mon")).evolutions.isEmpty,
+                      "XV-mon was branched — then XV-mon Black's exception wants re-arguing")
     }
 
     /// **Youkomon's canonical thread cannot be drawn, and the check is that it still cannot.** Doumon
@@ -371,8 +380,10 @@ final class AdultSweepUToZTests: XCTestCase {
     func testThePencSwReadingOfXiquemonIsStillTheCheaperOneNotTaken() throws {
         XCTAssertEqual(graph.nodes.filter { $0.line == "penc-sw" && $0.stage == .perfect }
                         .map(\.id).sorted(),
-                       ["chohakkaimon", "gokuwmon", "pandamon"],
-                       "`penc-sw`'s Perfect rung has moved since US-158 added Gokuwmon to it")
+                       ["chohakkaimon", "gokuwmon", "pandamon", "sagomon", "sanzomon", "shawujinmon",
+                        "xingtianmon"],
+                       "`penc-sw`'s Perfect rung has moved; US-162 finished it with the three "
+                           + "Saiyu Warriors Perfects US-157 pinned, plus Xingtianmon")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "fujamon")).line, "penc-sw",
                        "the cited Rookie of the rejected reading has moved line")
         XCTAssertEqual(roster.entry(id: "kamemon")?.dexOnly, true,
@@ -465,9 +476,9 @@ final class AdultSweepUToZTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-wg"], 40, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
+        XCTAssertEqual(sizes["penc-wg"], 42, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
         XCTAssertEqual(sizes["penc-vb"], 55, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon")
-        XCTAssertEqual(sizes["dmc-v4"], 29, "Xiquemon and Huankunmon")
+        XCTAssertEqual(sizes["dmc-v4"], 30, "Xiquemon and Huankunmon")
         XCTAssertEqual(sizes["tamers"], 105, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
@@ -517,7 +528,14 @@ final class AdultSweepUToZTests: XCTestCase {
         // on a line the Champion's cited Rookie cannot reach, has no sheet, or is idle-only. Spot
         // checked on the cheapest-looking alternative for each, so the day one becomes usable the
         // story is told to revisit rather than left to rot.
-        XCTAssertNil(graph.node(id: "sagomon"), "Xiquemon had a cheaper arrow after all")
+        // Sagomon was the first of the three and US-162 wired it — on `penc-sw`, but off
+        // Lianpumon rather than off the Xiquemon this story had to hand Huankunmon, so Xiquemon's
+        // arrow really was the expensive one and the cheap one was on a sibling Champion all along.
+        // Same shape as Regulusmon below, and the same claim from the other side.
+        XCTAssertEqual(graph.parents(of: "sagomon").map(\.id), ["lianpumon"],
+                       "Sagomon moved — say which Champion has it now")
+        XCTAssertFalse(try XCTUnwrap(graph.node(id: "xiquemon")).evolutions.map(\.to)
+            .contains("sagomon"), "Xiquemon took Sagomon after all")
 
         // Regulusmon is the second of the three a later story authored, and the claim flips rather
         // than dies for the same reason LadyDevimon's did below: US-161 wired it on this same
@@ -615,7 +633,7 @@ final class AdultSweepUToZTests: XCTestCase {
         // next one worth opening.
         let linesWithAPerfect = Set(graph.nodes.filter { $0.stage == .perfect }.map(\.line))
         XCTAssertEqual(Set(graph.nodes.map(\.line)).subtracting(linesWithAPerfect),
-                       ["adventure02", "algomon", "commandramon"],
+                       ["algomon"],
                        "a line gained or lost its Perfect rung; the sweeps' bill has changed — "
                            + "US-160 took `diablomon` off this list, US-161 `vital` and `xros`")
     }
@@ -638,7 +656,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 760, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161")
+        XCTAssertEqual(graph.nodes.count, 787, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162")
     }
 
     func testTheGraphValidatesWithNoFindings() {

@@ -85,7 +85,7 @@ final class EvolutionCriteriaTests: XCTestCase {
         "blackkingnumemon", "gerbemon", "jyagamon", "greatkingscumon", "vademon", "dmcv2_vademon",
         "etemon", "pumpmon", "piranimon", "darumamon", "tonosamagekomon", "locomon",
         "andiramon_virus", "karakurumon", "catchmamemon", "pandamon", "diablomon_gerbemon",
-        "vital_darumamon", "xros_etemon",
+        "vital_darumamon", "xros_etemon", "commandramon_karakurumon", "adventure02_jyagamon",
         // Ultimate
         "kingetemon",
     ]
@@ -393,8 +393,17 @@ final class EvolutionCriteriaTests: XCTestCase {
         // inheritance rather than four nodes nobody wired. The other eleven Perfects that story
         // authored, INCLUDING the five that opened `vital`, all sit on lines an egg reaches, which
         // is what keeps this list a claim rather than a dumping ground.
+        // US-162's FIVE are the last of this arithmetic, and they close the Perfect rung with it:
+        // Sagomon and Sanzomon over Lianpumon and Hakubamon, Shawujinmon over Tsuchidarumon and
+        // Xingtianmon over Ginkakumon — all four `penc-sw` Champions ALREADY on the list above —
+        // and Triceramon X over Ginryumon, which has been on it since US-150. Their Megas, Shakamon
+        // and Seiten Gokuwmon, were already stranded. Chaosdramon X is NOT here, because
+        // SkullBaluchimon hangs off Damemon, which V-mon's own thread reaches; the `commandramon`
+        // line is stranded down one branch and raisable down the other, and that is exactly the
+        // distinction the parent loops below enforce.
         let strandedPerfect = ["chohakkaimon", "gokuwmon", "omegashoutmon", "omegashoutmon_x",
-                               "pandamon", "xros_etemon"]
+                               "pandamon", "sagomon", "sanzomon", "shawujinmon", "triceramon_x",
+                               "xingtianmon", "xros_etemon"]
         let strandedUltimate = ["seitengokuwmon", "shakamon", "zekegreymon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
