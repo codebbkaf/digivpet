@@ -3774,6 +3774,42 @@
       "tint": "brown",
       "signatureName": "Bean Bomber",
       "signatureSymbol": "gearshape.fill"
+    },
+    "saberdramon": {
+      "projectileSymbol": "wind",
+      "tint": "purple",
+      "signatureName": "Mach Shadow",
+      "signatureSymbol": "wind"
+    },
+    "shimaunimon": {
+      "projectileSymbol": "wind",
+      "tint": "white",
+      "signatureName": "Raster Shot",
+      "signatureSymbol": "wind"
+    },
+    "siesamon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "white",
+      "signatureName": "Barbarian-Killing Ball",
+      "signatureSymbol": "sparkles"
+    },
+    "tyrannomon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "brown",
+      "signatureName": "Wild Buster",
+      "signatureSymbol": "flame.fill"
+    },
+    "tyrannomon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "pink",
+      "signatureName": "Crimson Breath",
+      "signatureSymbol": "flame.fill"
+    },
+    "metalgreymon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "red",
+      "signatureName": "Trident Arm Ver.9.9",
+      "signatureSymbol": "bolt.fill"
     }
   },
   "lineDefaults": {

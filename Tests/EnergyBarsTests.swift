@@ -338,7 +338,10 @@ final class EnergyFractionTests: XCTestCase {
 final class SeedEnergyBarsTests: XCTestCase {
     /// The bars against the REAL graph, not a fixture: the seed's branching node aims a bar at each
     /// type it can actually earn, and leaves the type no branch asks for with nothing to reach for.
-    /// US-133 added the spirit branch, Devimon.
+    /// US-133 added the spirit branch, Devimon, and US-155 the vitality one, Tyrannomon — which
+    /// spends the last type, so the "nothing to reach for" half of this claim is gone and Agumon
+    /// now aims at all four. The seed's OTHER branching nodes still leave a type empty; this one
+    /// cannot, and that is the shape a full Rookie has.
     func testTheShippedAgumonAimsItsBarsAtItsRealBranches() throws {
         let agumon = try XCTUnwrap(EvolutionGraph.bundled.node(id: "agumon"))
         let progress = agumon.energyProgress(for: energy(strength: 30))
@@ -346,7 +349,7 @@ final class SeedEnergyBarsTests: XCTestCase {
         XCTAssertEqual(progress.goal(.strength).target, 60, "-> Greymon")
         XCTAssertEqual(progress.goal(.stamina).target, 60, "-> Meramon")
         XCTAssertEqual(progress.goal(.spirit).target, 60, "-> Devimon")
-        XCTAssertNil(progress.goal(.vitality).target)
+        XCTAssertEqual(progress.goal(.vitality).target, 60, "-> Tyrannomon")
         XCTAssertNil(progress.totalGate, "a Child hatches from nothing")
         XCTAssertEqual(progress.fraction(.strength), 0.5, accuracy: 0.001)
     }

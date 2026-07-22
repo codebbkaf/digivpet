@@ -55,26 +55,36 @@ final class DMCVersion1TreeTests: XCTestCase {
         }
     }
 
-    /// AC11's other half, as a test rather than only as a note: the two names the section carries
-    /// that this asset pack cannot draw must appear NOWHERE — not as nodes, not as edge targets.
+    /// AC11's other half, as a test rather than only as a note — **and US-155 found that only ONE
+    /// of the two names was ever undrawable.**
     ///
-    ///  - Betamon: `Idle Frame Only/Betamon.png` only, so it is `dexOnly` in the roster.
-    ///  - Tyranomon: no colour sheet at all. The only file matching the name is
-    ///    `Black and White Sprites/Adult/Tyranomon.png`, a monochrome folder the roster does not
-    ///    index, so there is no roster entry to point at either.
-    func testTheTwoUndrawableNamesAppearNowhere() {
+    ///  - Betamon: `Idle Frame Only/Betamon.png` only, so it is `dexOnly` in the roster. Still out.
+    ///  - Tyranomon: this said "no colour sheet at all, only `Black and White Sprites/Adult/
+    ///    Tyranomon.png`". That was a SPELLING miss, not a missing asset. The pack spells the
+    ///    colour sheet with two n's — `Adult/Tyrannomon.png` — and the roster indexes it as
+    ///    `tyrannomon`, playable. US-155 wired it where the document draws it, under Agumon. The
+    ///    one-n id is still checked here, because a node under Wikimon's spelling would be a
+    ///    duplicate of a Digimon this line already has.
+    func testTheOneUndrawableNameAppearsNowhereAndTyranomonIsASpelling() {
         for missing in ["betamon", "tyranomon"] {
-            XCTAssertNil(graph.node(id: missing), "\(missing) cannot be drawn and may not be a node")
+            XCTAssertNil(graph.node(id: missing), "\(missing) may not be a node under this id")
             for node in graph.nodes {
                 for edge in node.evolutions {
-                    XCTAssertNotEqual(edge.to, missing, "\(node.id) points at undrawable \(missing)")
+                    XCTAssertNotEqual(edge.to, missing, "\(node.id) points at \(missing)")
                 }
             }
         }
         XCTAssertEqual(Roster.bundled.entry(id: "betamon")?.dexOnly, true,
                        "the reason Betamon is out is that it is dexOnly; if that changed, wire it")
         XCTAssertNil(Roster.bundled.entry(id: "tyranomon"),
-                     "the reason Tyranomon is out is that it has no colour sheet at all")
+                     "the one-n spelling indexes nothing; the pack writes it with two")
+
+        // The half that was wrong, pinned so it cannot be re-recorded as an absence.
+        let tyrannomon = Roster.bundled.entry(id: "tyrannomon")
+        XCTAssertEqual(tyrannomon?.dexOnly, false, "Tyrannomon is playable, under two n's")
+        XCTAssertEqual(tyrannomon?.spriteFile, "Tyrannomon")
+        XCTAssertEqual(graph.node(id: "tyrannomon")?.line, line,
+                       "the document's Tyranomon belongs to this tree")
     }
 
     // MARK: - AC3: every arrow in the section is an edge
@@ -86,8 +96,10 @@ final class DMCVersion1TreeTests: XCTestCase {
         // Betamon's slot under Koromon, carried by its substitute.
         XCTAssertTrue(try targets(of: "koromon").contains("swimmon"))
 
-        // Rookie -> Champion. Agumon's four of the five the document lists; Tyranomon is undrawable.
-        XCTAssertEqual(try targets(of: "agumon"), ["greymon", "devimon", "meramon", "numemon"])
+        // Rookie -> Champion. All five the document lists, since US-155: the fifth, Tyranomon,
+        // was recorded here as undrawable and was not — see the test below.
+        XCTAssertEqual(try targets(of: "agumon"),
+                       ["greymon", "devimon", "meramon", "tyrannomon", "numemon"])
         // Betamon's five, less the three Agumon already reaches, on the substitute.
         XCTAssertEqual(try targets(of: "swimmon"), ["airdramon", "seadramon", "numemon"])
 

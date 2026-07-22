@@ -215,8 +215,11 @@ final class DMCVersion4TreeTests: XCTestCase {
         // draws above it. The claim this test makes is unchanged — the branch the invented Child
         // was created to CARRY is still there — so the extras are named rather than the equality
         // being dropped.
+        // US-155 hung Saberdramon here on the same terms: Wikimon draws it out of Muchomon
+        // (Da-511) and into Megadramon, which this line already had.
         XCTAssertEqual(try targets(of: "muchomon"),
-                       ["kuwagamon", "burgermon_papa", "burgermon_mama", "goldnumemon"])
+                       ["kuwagamon", "burgermon_papa", "burgermon_mama", "saberdramon",
+                        "goldnumemon"])
 
         // US-147 gave both a SECOND parent — Chicchimon and Torikara Ballmon, two Baby II with
         // no Evolves From anywhere on Wikimon, put on the bird line beside Piyo's Tanemon. Neither

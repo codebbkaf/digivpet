@@ -344,8 +344,8 @@ final class ChildSweepGToLTests: XCTestCase {
         // them too: twelve more on `tamers`, three on `dmc-v3` and on `xros`, eleven on `vital`,
         // and two on `palmon`, which this story did not touch at all.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 79, "US-152 hung two more Champions under it, US-154 six")
-        XCTAssertEqual(sizes["dmc-v3"], 46)
+        XCTAssertEqual(sizes["tamers"], 80, "US-152 hung two more Champions under it, US-154 six")
+        XCTAssertEqual(sizes["dmc-v3"], 48)
         XCTAssertEqual(sizes["xros"], 17)
         XCTAssertEqual(sizes["vital"], 33)
         XCTAssertEqual(sizes["palmon"], 24)
@@ -547,7 +547,7 @@ final class ChildSweepGToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 629,
+        XCTAssertEqual(graph.nodes.count, 635,
                        "497 before this story, 548 after it, 599 after US-150, 610 after US-151, "
                            + "615 after US-152, 618 after US-153")
     }

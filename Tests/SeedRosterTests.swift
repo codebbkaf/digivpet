@@ -178,12 +178,13 @@ final class SeedRosterTests: XCTestCase {
         XCTAssertEqual(try earnedPath(from: "weregarurumon").map(\.displayName),
                        ["WereGarurumon", "MetalGarurumon"])
 
-        // Agumon branches three ways at Child, and since US-133 Greymon forks too — the V1 tree's
-        // Ultimate is MetalGreymon (Virus), which sits beside US-043's Vaccine one. Both are
-        // asserted as forks rather than forced through `earnedPath`, which walks a single thread.
+        // Agumon branches FOUR ways at Child since US-155 added Tyrannomon on the last free
+        // energy, and since US-133 Greymon forks too — the V1 tree's Ultimate is MetalGreymon
+        // (Virus), which sits beside US-043's Vaccine one. Both are asserted as forks rather than
+        // forced through `earnedPath`, which walks a single thread.
         XCTAssertEqual(
             try XCTUnwrap(graph.node(id: "agumon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
-            ["devimon", "greymon", "meramon"])
+            ["devimon", "greymon", "meramon", "tyrannomon"])
         XCTAssertEqual(
             try XCTUnwrap(graph.node(id: "greymon")).evolutions.filter { !$0.isDefault }.map(\.to).sorted(),
             ["metalgreymon", "metalgreymon_virus"])
@@ -239,10 +240,12 @@ final class SeedRosterTests: XCTestCase {
     /// The branch above, pinned: Agumon is where dominant energy first changes the outcome. Since
     /// US-061 it is earned branches plus the Numemon fallback, and the fallback shares Greymon's
     /// strength gate, sitting below it on `minEnergy` so it only wins when Greymon is shut out.
-    /// US-133 added the V1 tree's third earned Champion, Devimon, on the spirit branch.
+    /// US-133 added the V1 tree's third earned Champion, Devimon, on the spirit branch, and US-155
+    /// its fourth, Tyrannomon, on vitality — the last free energy, so this count can never grow
+    /// again without an edge going dead.
     func testAgumonBranchesOnStrengthOrStamina() throws {
         let agumon = try XCTUnwrap(graph.node(id: "agumon"))
-        XCTAssertEqual(agumon.evolutions.count, 4)
+        XCTAssertEqual(agumon.evolutions.count, 5)
 
         let earned = agumon.evolutions.filter { !$0.isDefault }
         // Deliberately NOT Dictionary(uniqueKeysWithValues:) keyed on requiredEnergy: two edges
@@ -316,6 +319,11 @@ final class SeedRosterTests: XCTestCase {
         // with a free energy that Wikimon names for it) and Sistermon Blanc was already on this
         // line, so Tobiumon and Rhinomon X are the Champions above them.
         "Tobiumon", "Rhinomon X",
+        // US-155's two, and the first PERFECT this set has taken from a sweep. Agumon X is on this
+        // line, so Tyrannomon X is (Digital Monster X), and MetalGreymon X had to come with it:
+        // every other Perfect Tyranomon X's page cites is on a line dmc-v3 cannot reach. Both are
+        // animated sheets under `Adult/` and `Perfect/`.
+        "Tyrannomon X", "MetalGreymon X",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -447,6 +455,9 @@ final class SeedRosterTests: XCTestCase {
         // sweeps hang Digimon the US-045 document never drew onto lines the document opened. Both
         // Burgamon Adult were verified the same way — an animated sheet under `Adult/`.
         "Burgermon Papa", "Burgermon Mama",
+        // US-155's one, on the same terms: Muchomon is another Child the document never drew, and
+        // Wikimon draws Saberdramon out of it and into Megadramon, which this line already had.
+        "Saberdramon",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -558,7 +569,7 @@ final class SeedRosterTests: XCTestCase {
         // are still exactly five, and the extras are named rather than the equality dropped.
         XCTAssertEqual(champions.sorted(),
                        ["burgermon_mama", "burgermon_papa", "coelamon", "kuwagamon", "leomon",
-                        "mojyamon", "monochromon"])
+                        "mojyamon", "monochromon", "saberdramon"])
         // `contains` rather than `==` since US-147: Hyokomon and Muchomon each gained a second
         // Baby II parent from the Baby II sweep. Piyo's Tanemon is still one of them, which is
         // what "reachable" needs.

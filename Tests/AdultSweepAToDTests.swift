@@ -223,11 +223,11 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 79, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
+        XCTAssertEqual(sizes["tamers"], 80, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
                            + "US-152 added FlareLizamon and Growmon Orange")
         XCTAssertEqual(sizes["wanyamon"], 20,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon")
-        XCTAssertEqual(sizes["dmc-v4"], 26, "US-151 added the two Burgermon")
+        XCTAssertEqual(sizes["dmc-v4"], 27, "US-151 added the two Burgermon")
         XCTAssertEqual(sizes["penc-wg"], 35,
                        "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon")
         XCTAssertEqual(sizes["penc-vb"], 47,
@@ -393,7 +393,7 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 629,
+        XCTAssertEqual(graph.nodes.count, 635,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154")
     }
 

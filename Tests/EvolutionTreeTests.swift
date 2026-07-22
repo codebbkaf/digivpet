@@ -127,17 +127,20 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // Twenty-nine since US-148, and that one DID move the shape: the Child sweep hung
         // BlackAgumon and Dracomon off Koromon, each with a Champion of its own, so the Adult
         // column went from six to eight and the tree from six rows to eight.
-        XCTAssertEqual(nodes.count, 29)
+        //
+        // Thirty since US-155, which moved the shape again: Tyrannomon is Agumon's fourth earned
+        // branch and its last free energy, so the Adult column went from eight to nine.
+        XCTAssertEqual(nodes.count, 30)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
                        ["greymon", "meramon", "numemon", "devimon", "airdramon", "seadramon",
-                        "greymon_blue", "coredramon_green"])
-        XCTAssertEqual(layout.rowCount, 8)
+                        "greymon_blue", "coredramon_green", "tyrannomon"])
+        XCTAssertEqual(layout.rowCount, 9)
         // Every one of the line's edges is drawn, because none of them leaves the line — which is
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 41)
+        XCTAssertEqual(layout.connectors.count, 44)
     }
 }

@@ -180,6 +180,28 @@
           ]
         },
         {
+          "to": "tyrannomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Walk the little lizard until its tail drags a road"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And feed it steadily rather than in heaps"
+            }
+          ]
+        },
+        {
           "to": "numemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -2919,6 +2941,28 @@
               "comparison": "atMost",
               "value": 4,
               "hint": "Leave the drilling to Papa"
+            }
+          ]
+        },
+        {
+          "to": "saberdramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16000,
+              "hint": "Let the bird keep the hours of a thing that hunts at night"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 8,
+              "hint": "And drill the talons it strikes with"
             }
           ]
         },
@@ -5804,6 +5848,28 @@
               "comparison": "atLeast",
               "value": 1200,
               "hint": "Let it dream between the hunts"
+            }
+          ]
+        },
+        {
+          "to": "shimaunimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40000,
+              "hint": "Run it over open ground until the stripes blur"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And never shake the dream-eater awake"
             }
           ]
         },
@@ -12748,6 +12814,28 @@
           ]
         },
         {
+          "to": "siesamon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 600,
+              "hint": "Leave it out in the sun long enough to charge on it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 9,
+              "hint": "And sharpen the guardian's claws while it basks"
+            }
+          ]
+        },
+        {
           "to": "numemon_x",
           "requiredEnergy": "spirit",
           "minEnergy": 0,
@@ -14206,6 +14294,28 @@
               "comparison": "atLeast",
               "value": 20000,
               "hint": "Walk it until the horn shows"
+            }
+          ]
+        },
+        {
+          "to": "tyrannomon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1800,
+              "hint": "Draw the primordial data out with hard effort"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 11,
+              "hint": "And put muscle behind the ridge along its back"
             }
           ]
         },
@@ -17864,6 +17974,210 @@
       "line": "tamers",
       "spriteFile": "Mametyramon",
       "comment": "The third earned Perfect on this line, and like Grademon it serves two of this story's Champions at once - but here the two parents are the card's own Jogress pair. Wikimon's Bx-43 draws Mametyramon out of Monochromon (X-Antibody) \"with or without Pteranomon or Pteranomon (X-Antibody)\", and Pteranomon X's page cites the same card from its side, so both arrows are one drawing. A leaf until the Ultimate sweeps.",
+      "evolutions": []
+    },
+    {
+      "id": "saberdramon",
+      "displayName": "Saberdramon",
+      "stage": "Adult",
+      "line": "dmc-v4",
+      "spriteFile": "Saberdramon",
+      "comment": "Wikimon gives Saberdramon sixteen cited parents and twenty-odd cited children, and exactly one line already held a node at BOTH ends - `dmc-v4`, where Muchomon (Da-511) is a Rookie and Megadramon (Digimon World -next 0rder-, and its International Edition) is the Perfect over Airdramon. That is the US-152 rule: intersect Evolves From AND Evolves To before choosing the line, rather than choosing off the parent and paying for a new Perfect afterwards. The other pairings were priced and rejected: Pico Devimon and Candmon reach Vamdemon and Pumpmon on `penc-nso`, but Pico Devimon is full as of US-154 and Candmon's arrow is the DSSM Jogress with Dot Falcomon, which has no sheet here; Piyomon reaches Garudamon on `penc-wg` but US-154 spent Piyomon's last energy on RedV-dramon. Spirit is the energy Muchomon had left after Kuwagamon took strength and the two Burgermon vitality and stamina, and a bird of black flame that hunts at night is the quiet, dark one of the four.",
+      "evolutions": [
+        {
+          "to": "megadramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 900,
+              "hint": "Take it higher than a thing that heavy should go"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 14,
+              "hint": "And let a temper that ferocious find its fights"
+            }
+          ]
+        },
+        {
+          "to": "greatkingscumon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "shimaunimon",
+      "displayName": "ShimaUnimon",
+      "stage": "Adult",
+      "line": "penc-nso",
+      "spriteFile": "ShimaUnimon",
+      "comment": "Both arrows to the SAME source, which is the cleanest a placement gets: Wikimon draws Shima Unimon out of Bakumon and into Mammon, each cited to Digimon World 2, and this tree already held both - Bakumon since US-140 and Mammon as the Perfect over Mojyamon's thread. Its other readings were real but dearer: Elecmon and Elecmon Violet reach Skull Greymon on `dmc-v2`, Yuki Agumon reaches Asuramon on `penc-nsp`, and Clear Agumon, Gaomon and Kokuwamon each reach a Perfect on a line their own does not hold. Spirit is the energy Bakumon had left after Hanumon took strength, Garurumon vitality and Loogarmon stamina, and a striped Unimon that lost the Pegasus wings and kept the unicorn horn is the one of the four that is more idea than muscle. This fills Bakumon: four earned branches, one per energy, plus the junk fallback.",
+      "evolutions": [
+        {
+          "to": "mammon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 800,
+              "hint": "Work the legs that gave up flying for speed"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 20000,
+              "hint": "And let it rest long enough to grow into tusks"
+            }
+          ]
+        },
+        {
+          "to": "darumamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "siesamon_x",
+      "displayName": "Siesamon X",
+      "stage": "Adult",
+      "line": "tamers",
+      "spriteFile": "Siesamon_X",
+      "comment": "Wikimon gives Siesamon (X-Antibody) four cited parents and four cited children, every one of them to Digital Monster X Ver.3: in from Blucomon, DORUmon and Terriermon (X-Antibody), out to DORUguremon, Garudamon (X-Antibody), Grademon and Omega Shoutmon (X-Antibody). All three parents are already on `tamers`, and of the four children exactly one is a node - Grademon, which US-154 opened for Meramon X and Pegasmon X off this same device. So the pairing costs nothing at the rung above, and DORUmon is the parent taken because DORUguremon, its own Perfect, is the other arrow this page draws. The base Siesamon is on `algomon` and stays there: the variant follows the X thread, which is where every X-Antibody Digimon in this file lives. Strength is the energy DORUmon had left beside Dorugamon's spirit.",
+      "evolutions": [
+        {
+          "to": "grademon",
+          "requiredEnergy": "strength",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 2400,
+              "hint": "Spend the sunlight it charges rather than hoarding it"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.65,
+              "hint": "And let the holy beast win the calamities it meets"
+            }
+          ]
+        },
+        {
+          "to": "catchmamemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tyrannomon",
+      "displayName": "Tyrannomon",
+      "stage": "Adult",
+      "line": "dmc-v1",
+      "spriteFile": "Tyrannomon",
+      "comment": "The oldest arrow in the franchise, and both halves of it are cited to the same device: Wikimon bolds Agumon at the head of Tyranomon's Evolves From to Digital Monster Ver. 1, and names Mamemon in its Evolves To to Digital Monster Ver. 1 as well. `dmc-v1` already held both, so the rung above cost nothing. Its Evolves To is one of the longest on the wiki and several other entries are nodes here - Megadramon on `dmc-v4`, Metal Tyranomon and Ex-Tyranomon on `dmc-v5`, Mametyramon on `tamers` - but every one of them is on a line no cited parent of Tyranomon reaches, and `testNoEdgeCrossesALine` is what makes that decide rather than flavour. Vitality is the last energy Agumon had, after Greymon took strength, Meramon stamina and Devimon spirit; a dinosaur famous for being docile and easy to raise is the one that comes of plain good health. This fills Agumon.",
+      "evolutions": [
+        {
+          "to": "mamemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Keep the heavy one on its feet, hour after hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "And drill the docile one until it is anything but"
+            }
+          ]
+        },
+        {
+          "to": "blackkingnumemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "tyrannomon_x",
+      "displayName": "Tyrannomon X",
+      "stage": "Adult",
+      "line": "dmc-v3",
+      "spriteFile": "Tyrannomon_X",
+      "comment": "The X mirror of the arrow above it, and cited the same way twice: Wikimon draws Tyranomon (X-Antibody) out of Agumon (X-Antibody) to Digital Monster X and into Metal Greymon (X-Antibody) to Digital Monster X. Agumon X is on `dmc-v3`, so that is the line, and Metal Greymon X had to be opened because NONE of the other cited children could be reached from it - Mametyramon is on `tamers`, Metal Tyranomon and Ex-Tyranomon on `dmc-v5`, and Dorbickmon, Metal Tyranomon X and Yatagaramon 2006 have no node. That cost one node rather than two, because `dmc-v3` already has Etemon as its junk floor. The other cited parents were rejected on the same test: Herissmon is on `penc-vb`, which holds none of the children; Dark Tyranomon is a Champion, not a Rookie; and Tyranomon itself is this story's own Champion on `dmc-v1`. Vitality is the energy Agumon X had beside Greymon X's strength, and it is the same energy the base Agumon spends on the base Tyranomon one line over.",
+      "evolutions": [
+        {
+          "to": "metalgreymon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 120,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 70000,
+              "hint": "Keep it rolling until the ridge on its back cuts air"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 16,
+              "hint": "And make it fight its way through everything that comes"
+            }
+          ]
+        },
+        {
+          "to": "etemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 0,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "metalgreymon_x",
+      "displayName": "MetalGreymon X",
+      "stage": "Perfect",
+      "line": "dmc-v3",
+      "spriteFile": "MetalGreymon_X",
+      "comment": "The one Perfect this story had to open, and it exists because every OTHER Perfect Wikimon names in Tyranomon (X-Antibody)'s Evolves To is either on a line `dmc-v3` cannot reach or has no sheet at all. Metal Greymon (X-Antibody) is cited to Digital Monster X, the same device that draws Agumon X into Tyranomon X, so the whole thread is one drawing. It cost one node rather than two: US-133 put Etemon under this line as its junk floor long before this story. Wikimon also draws it from Greymon (X-Antibody), which is already a Champion here and a dead end - that arrow is left to the Perfect sweeps rather than drawn now, so this node has exactly one parent. A leaf until the Ultimate sweeps.",
       "evolutions": []
     }
   ]

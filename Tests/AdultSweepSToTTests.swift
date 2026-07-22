@@ -2,74 +2,61 @@ import XCTest
 
 @testable import DigiVPet
 
-/// US-154 — the eleventh of Phase E's orphan sweeps and the fourth at the Adult rung: the nine
-/// playable Champions whose display name begins M-R that no device tree and no Child sweep reached.
+/// US-155 — the twelfth of Phase E's orphan sweeps and the fifth at the Adult rung: the five
+/// playable Champions whose display name begins S-T that no device tree and no Child sweep reached.
 ///
-/// **The scope reading is US-151's through US-153's.** The criteria ask for coverage of "every
-/// remaining orphan at stage Adult whose displayName starts with M-R", so the seventeen Champions in
+/// **The scope reading is US-151's through US-154's.** The criteria ask for coverage of "every
+/// remaining orphan at stage Adult whose displayName starts with S-T", so the twenty Champions in
 /// this range that US-149 and US-150 left as LEAVES are not in scope — they have an in-edge and are
 /// therefore not orphans. They stay in `ChildSweepAToFTests.testTheOnlyDeadEndsBelowUltimateAreThe
 /// OnesTheSweepsHaveOpened`, and the Perfect sweeps from US-157 on are what pays them off.
 ///
-/// **Nine, not the thirty-three the PRD estimated.** The estimate was taken when the Adult rung held
-/// 168 orphans; eleven device trees and three Child sweeps later the whole rung holds 19, of which
-/// nine fall in M-R. The range is derived from the roster here rather than from a list, so the claim
-/// is checkable rather than asserted.
+/// **Five, not the thirty the PRD estimated.** The estimate was taken when the Adult rung held 168
+/// orphans; eleven device trees, three Child sweeps and four Adult sweeps later the whole rung holds
+/// 10, of which five fall in S-T. The range is derived from the roster here rather than from a list,
+/// so the claim is checkable rather than asserted.
 ///
-/// **What it costs one rung up: two Perfects, and that number is the story.** Five of the nine
-/// landed on a line that already had the Perfect Wikimon names for them — the US-152 rule of
-/// intersecting `Evolves From` AND `Evolves To` before choosing a line. The other four are
-/// X-Antibody Champions of the `tamers` X thread, and EVERY Perfect any of them cites is a sheet on
-/// disk with no node, so the rung above had to be opened. It was opened twice rather than four
-/// times because the citations pair up: Grademon is in the Evolves To of both Meramon X and
-/// Pegasmon X off *Digital Monster X Ver.3*, and Mametyramon is the two sides of Bx-43, which
-/// fuses Monochromon X and Pteranomon X. Neither needed a junk floor under it — US-151 put
-/// CatchMamemon under `tamers` already.
-final class AdultSweepMToRTests: XCTestCase {
+/// **What it costs one rung up: ONE Perfect, and every other arrow was already on the file.** Four
+/// of the five landed on a line that already held both the Rookie below and the Perfect above —
+/// the US-152 rule of intersecting `Evolves From` AND `Evolves To` before choosing a line, which
+/// here paid off four times out of five because the pairs are unusually tidy: Muchomon and
+/// Megadramon are both `dmc-v4`, Bakumon and Mammon are both `penc-nso` and both cited to *Digimon
+/// World 2*, DORUmon and Grademon are both `tamers` off *Digital Monster X Ver.3*, and Agumon and
+/// Mamemon are both `dmc-v1` off *Digital Monster Ver. 1*. Only Tyranomon X had no such pair, and
+/// Metal Greymon X cost one node rather than two because `dmc-v3` has had Etemon as its junk floor
+/// since US-133.
+final class AdultSweepSToTTests: XCTestCase {
     private let graph = EvolutionGraph.bundled
     private let roster = Roster.bundled
 
-    /// The nine orphaned Champions this story wired, with the Child that now reaches each and the
+    /// The five orphaned Champions this story wired, with the Child that now reaches each and the
     /// Perfect each now reaches. Every one is a plain roster id, so every one removes an orphan.
     private let swept: [(adult: String, parent: String, perfect: String)] = [
-        ("meramon_x", "blucomon", "grademon"),
-        ("mikemon", "plotmon", "pencvb_angewomon"),
-        ("monochromon_x", "guilmon_x", "mametyramon"),
-        ("morishellmon", "ganimon", "anomalocarimon"),
-        ("musyamon", "picodevimon", "vamdemon"),
-        ("nefertimon_x", "plotmon_x", "pencvb_angewomon"),
-        ("pegasmon_x", "lopmon_x", "grademon"),
-        ("pteranomon_x", "monodramon", "mametyramon"),
-        ("redv-dramon", "pencwg_piyomon", "aerov-dramon"),
+        ("saberdramon", "muchomon", "megadramon"),
+        ("shimaunimon", "bakumon", "mammon"),
+        ("siesamon_x", "dorumon", "grademon"),
+        ("tyrannomon", "agumon", "mamemon"),
+        ("tyrannomon_x", "agumon_x", "metalgreymon_x"),
     ]
 
-    /// The two Perfects this story authored, and the two Champions each was authored for. Both are
-    /// leaves until the Ultimate sweeps, and both are on the ledger in `ChildSweepAToFTests`.
-    /// US-155 gave Grademon a THIRD parent, Siesamon X, and the claim is widened by NAMING it
-    /// rather than by loosening the equality: Wikimon draws Siesamon (X-Antibody) into Grademon off
-    /// the same *Digital Monster X Ver.3* the other two arrows come from, so it is the same
-    /// drawing, one card wider.
+    /// The one Perfect this story authored, and the one Champion it was authored for. It is a leaf
+    /// until the Ultimate sweeps, and it is on the ledger in `ChildSweepAToFTests`.
     private let authoredPerfects: [(perfect: String, parents: Set<String>)] = [
-        ("grademon", ["meramon_x", "pegasmon_x", "siesamon_x"]),
-        ("mametyramon", ["monochromon_x", "pteranomon_x"]),
+        ("metalgreymon_x", ["tyrannomon_x"]),
     ]
 
     /// The junk Perfect each of the five lines already had, and which Champion falls to it. Nothing
-    /// here is new: `catchmamemon` is US-151's, `andiramon_virus` US-143's, `piranimon` US-139's,
-    /// `darumamon` US-140's, `tonosamagekomon` US-141's.
+    /// here is new: `greatkingscumon` is US-142's, `darumamon` US-140's, `catchmamemon` US-151's,
+    /// `blackkingnumemon` and `etemon` are US-133's.
     private let junkFloors: [(adult: String, junk: String)] = [
-        ("meramon_x", "catchmamemon"),
-        ("mikemon", "andiramon_virus"),
-        ("monochromon_x", "catchmamemon"),
-        ("morishellmon", "piranimon"),
-        ("musyamon", "darumamon"),
-        ("nefertimon_x", "andiramon_virus"),
-        ("pegasmon_x", "catchmamemon"),
-        ("pteranomon_x", "catchmamemon"),
-        ("redv-dramon", "tonosamagekomon"),
+        ("saberdramon", "greatkingscumon"),
+        ("shimaunimon", "darumamon"),
+        ("siesamon_x", "catchmamemon"),
+        ("tyrannomon", "blackkingnumemon"),
+        ("tyrannomon_x", "etemon"),
     ]
 
-    /// The shared "did everything right" context, US-151's through US-153's exactly.
+    /// The shared "did everything right" context, US-151's through US-154's exactly.
     private let met = ConditionContext(
         stageTotals: MetricTotals(values: ["health.steps": 500_000,
                                            "health.activeEnergy": 50_000,
@@ -88,12 +75,12 @@ final class AdultSweepMToRTests: XCTestCase {
 
     /// The headline claim. The range is derived from the ROSTER, so an Adult sheet added to the
     /// folder later lands in scope and fails here instead of being quietly missed.
-    func testEveryPlayableAdultMToRIsANodeWithAnInEdge() throws {
+    func testEveryPlayableAdultSToTIsANodeWithAnInEdge() throws {
         let inRange = roster.entries.filter {
             $0.stage == .adult && !$0.dexOnly
-                && ("M"..."R").contains(String($0.displayName.prefix(1)).uppercased())
+                && ("S"..."T").contains(String($0.displayName.prefix(1)).uppercased())
         }
-        XCTAssertEqual(inRange.count, 39)
+        XCTAssertEqual(inRange.count, 36)
 
         for entry in inRange {
             let node = try XCTUnwrap(graph.node(id: entry.id),
@@ -101,7 +88,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: node.id).isEmpty, "\(node.id) has no in-edge")
         }
 
-        // The nine this story owns lead somewhere too. The rest are US-149's and US-150's leaves.
+        // The five this story owns lead somewhere too. The rest are US-149's and US-150's leaves.
         for (adult, _, _) in swept {
             XCTAssertFalse(try XCTUnwrap(graph.node(id: adult)).evolutions.isEmpty,
                            "\(adult) leads nowhere — a Dex entry with no tree")
@@ -109,36 +96,36 @@ final class AdultSweepMToRTests: XCTestCase {
     }
 
     /// The Appendix B orphan rule rerun over the range this story owns.
-    func testNoAdultMToRIsStillAnOrphan() {
+    func testNoAdultSToTIsStillAnOrphan() {
         let sources = Set(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let targets = Set(graph.nodes.flatMap { $0.evolutions.map(\.to) })
         let connected = sources.union(targets)
 
         let orphans = roster.entries
             .filter { $0.stage == .adult && !$0.dexOnly
-                && ("M"..."R").contains(String($0.displayName.prefix(1)).uppercased()) }
+                && ("S"..."T").contains(String($0.displayName.prefix(1)).uppercased()) }
             .map(\.id)
             .filter { !connected.contains($0) }
-        XCTAssertEqual(orphans, [], "Adults M-R still orphaned: \(orphans)")
+        XCTAssertEqual(orphans, [], "Adults S-T still orphaned: \(orphans)")
     }
 
-    /// The seventeen in range that this story deliberately did NOT wire onward, named rather than
+    /// The twenty in range that this story deliberately did NOT wire onward, named rather than
     /// counted. They are leaves, not orphans, and every one of them is on the dead-end ledger; if a
     /// later story wires one, it belongs there and here, not silently in one place.
-    func testTheAdultsMToRThisStoryLeftAsLeavesAreTheDeadEndLedgersOwn() throws {
+    func testTheAdultsSToTThisStoryLeftAsLeavesAreTheDeadEndLedgersOwn() throws {
         let leaves = roster.entries
             .filter { $0.stage == .adult && !$0.dexOnly
-                && ("M"..."R").contains(String($0.displayName.prefix(1)).uppercased()) }
+                && ("S"..."T").contains(String($0.displayName.prefix(1)).uppercased()) }
             .map(\.id)
             .filter { graph.node(id: $0)?.evolutions.isEmpty == true }
             .sorted()
 
         XCTAssertEqual(leaves,
-                       ["madleomon", "manekimon", "mantaraymon_x", "meicoomon", "mimicmon",
-                        "nisedrimogemon", "numemon_x", "ogremon_x", "omekamon", "paledramon",
-                        "parasaurmon", "peckmon", "pidmon", "porcupamon", "raptordramon",
-                        "reppamon", "rhinomon_x"].sorted(),
-                       "the M-R leaves have moved without the ledger moving with them")
+                       ["sandyanmamon", "sangloupmon", "seadramon_x", "shoutmon_king", "siesamon",
+                        "sorcerymon", "soulmon", "starmon", "sunflowmon", "tailmon_x", "targetmon",
+                        "tenkomon", "tialudomon", "tobiumon", "tobucatmon", "togemon_x", "tortamon",
+                        "troopmon", "tsuchidarumon", "tylomon_x"].sorted(),
+                       "the S-T leaves have moved without the ledger moving with them")
 
         for id in leaves {
             XCTAssertFalse(graph.parents(of: id).isEmpty,
@@ -175,8 +162,8 @@ final class AdultSweepMToRTests: XCTestCase {
         }
     }
 
-    /// Every fallback is a junk Perfect that already existed on the Champion's own line — the two
-    /// Perfects this story DID author are earned branches, not floors.
+    /// Every fallback is a junk Perfect that already existed on the Champion's own line — the one
+    /// Perfect this story DID author is an earned branch, not a floor.
     func testEveryFallbackIsAnExistingJunkFloorOnTheChampionsOwnLine() throws {
         for (adult, junk) in junkFloors {
             let node = try XCTUnwrap(graph.node(id: adult))
@@ -187,26 +174,30 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertEqual(floor.line, node.line, "\(junk) is not on \(adult)'s line")
             XCTAssertEqual(floor.stage, .perfect)
             XCTAssertFalse(authoredPerfects.map(\.perfect).contains(junk),
-                           "\(junk) is one of this story's own Perfects, so it is not an old floor")
+                           "\(junk) is this story's own Perfect, so it is not an old floor")
         }
     }
 
-    /// **The two Perfects this story opened, and the pairing that made them two instead of four.**
-    /// Each was authored for exactly the two Champions Wikimon cites into it, so a third parent
-    /// hung here later fails this rather than passing quietly — the `Set(graph.parents(of:))`
-    /// equality shape US-151 and US-152 established.
-    func testTheTwoPerfectsThisStoryOpenedEachServeExactlyTwoOfItsChampions() throws {
+    /// **The one Perfect this story opened, and the four occasions it did not have to.** Metal
+    /// Greymon X was authored for exactly one Champion, so a second parent hung here later fails
+    /// this rather than passing quietly — the `Set(graph.parents(of:))` equality shape US-151,
+    /// US-152 and US-154 established. Greymon X is the obvious second parent and is deliberately
+    /// NOT drawn: it is a dead end on the ledger, and the Perfect sweeps own it.
+    func testTheOnePerfectThisStoryOpenedServesExactlyOneOfItsChampions() throws {
         for (perfect, parents) in authoredPerfects {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.stage, .perfect)
-            XCTAssertEqual(node.line, "tamers", "\(perfect) is not on the X-Antibody line")
+            XCTAssertEqual(node.line, "dmc-v3", "\(perfect) is not on Agumon X's line")
             XCTAssertTrue(node.evolutions.isEmpty,
                           "\(perfect) leads somewhere, so the dead-end ledger has to move too")
             XCTAssertEqual(Set(graph.parents(of: perfect).map(\.id)), parents,
                            "\(perfect)'s parents changed without this claim changing with them")
         }
 
-        // And the five that cost nothing: each landed on a Perfect that had a parent before this
+        XCTAssertTrue(try XCTUnwrap(graph.node(id: "greymon_x")).evolutions.isEmpty,
+                      "Greymon X was wired onward — say which arrow, and move the ledger")
+
+        // And the four that cost nothing: each landed on a Perfect that had a parent before this
         // story, which is what "authored no new Perfect" means for them.
         for (adult, _, perfect) in swept
         where !authoredPerfects.map(\.perfect).contains(perfect) {
@@ -233,12 +224,13 @@ final class AdultSweepMToRTests: XCTestCase {
         }
     }
 
-    /// **Plotmon is now FULL, and this is where that is written down.** `EvolutionEngine` picks on
-    /// the dominant energy first, so two branches out of one node sharing an energy would make the
-    /// second dead data — four energy types is a hard ceiling on earned branches. Plotmon carries
-    /// Tailmon (vitality, US-143), Wizarmon (spirit, US-143), BlackTailmon (strength, US-151) and
-    /// now Mikemon (stamina). No later sweep can hang a fifth here: it must find another parent.
-    func testEveryChildThisStoryBranchedStillUsesDistinctEnergiesAndPlotmonIsFull() throws {
+    /// **Three Rookies are now FULL, and this is where that is written down.** `EvolutionEngine`
+    /// picks on the dominant energy first, so two branches out of one node sharing an energy would
+    /// make the second dead data — four energy types is a hard ceiling on earned branches. Agumon,
+    /// Bakumon and Muchomon each spent their last energy here, which is more Rookies closed in one
+    /// story than any sweep before it. No later sweep can hang a fifth branch on any of the three:
+    /// it must find another parent.
+    func testTheThreeRookiesThisStoryFilledHaveAnEnergyForEveryEarnedBranch() throws {
         for parent in Set(swept.map(\.parent)) {
             let earned = try XCTUnwrap(graph.node(id: parent)).evolutions.filter { !$0.isDefault }
             let energies = earned.compactMap(\.requiredEnergy)
@@ -247,52 +239,62 @@ final class AdultSweepMToRTests: XCTestCase {
                            "\(parent) offers two branches on the same energy")
         }
 
-        let plotmon = try XCTUnwrap(graph.node(id: "plotmon"))
-        XCTAssertEqual(Set(plotmon.evolutions.filter { !$0.isDefault }.compactMap(\.requiredEnergy)),
-                       Set(EnergyType.allCases), "Plotmon has an energy left after all")
-        XCTAssertEqual(plotmon.evolutions.count, 5, "five is the ceiling `EvolutionCriteriaTests` sets")
+        for id in ["agumon", "bakumon", "muchomon"] {
+            let node = try XCTUnwrap(graph.node(id: id))
+            XCTAssertEqual(Set(node.evolutions.filter { !$0.isDefault }.compactMap(\.requiredEnergy)),
+                           Set(EnergyType.allCases), "\(id) has an energy left after all")
+            XCTAssertEqual(node.evolutions.count, 5,
+                           "five is the ceiling `EvolutionCriteriaTests` sets")
+        }
 
-        // Pico Devimon is full too, on the same arithmetic. Monodramon, Ganimon and Piyomon are one
-        // branch short of it and the four remaining Rookies are two — said out loud so the next
-        // sweep prices a branch off this list rather than by discovering the ceiling as a failure.
-        let earnedCounts = Dictionary(uniqueKeysWithValues: Set(swept.map(\.parent)).map {
-            ($0, (graph.node(id: $0)?.evolutions.filter { !$0.isDefault }.count) ?? 0)
-        })
-        XCTAssertEqual(earnedCounts["plotmon"], 4)
-        XCTAssertEqual(earnedCounts["monodramon"], 3)
-        XCTAssertEqual(earnedCounts["picodevimon"], 4)
-        XCTAssertEqual(earnedCounts["ganimon"], 3)
-        XCTAssertEqual(earnedCounts["pencwg_piyomon"], 3)
-        for id in ["blucomon", "guilmon_x", "lopmon_x", "plotmon_x"] {
-            XCTAssertEqual(earnedCounts[id], 2, "\(id) is not the two branches this story left it")
+        // DORUmon and Agumon X are two branches short of the ceiling, said out loud so the next
+        // sweep prices a branch off this list rather than discovering the ceiling as a failure.
+        for id in ["dorumon", "agumon_x"] {
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).evolutions.filter { !$0.isDefault }.count,
+                           2, "\(id) is not the two branches this story left it")
         }
     }
 
-    /// **Musyamon shares its energy with its own Child's junk fallback, on purpose.** Pico Devimon
-    /// had exactly one energy left — Devimon took spirit, Bakemon vitality, Dokugumon stamina — and
-    /// its junk edge to Gokimon is gated on strength too. That is the Scumon arrangement US-133
-    /// recorded rather than a collision: the junk edge asks for 0 energy, the earned one for 60, so
-    /// the earned branch wins whenever it is earned and the junk one whenever it is not.
-    func testMusyamonSharesStrengthWithPicoDevimonsJunkEdgeAndStillWins() throws {
-        let picodevimon = try XCTUnwrap(graph.node(id: "picodevimon"))
-        let junk = try XCTUnwrap(picodevimon.evolutions.first(where: \.isDefault))
-        let earned = try XCTUnwrap(picodevimon.evolutions.first { $0.to == "musyamon" })
-        XCTAssertEqual(junk.requiredEnergy, earned.requiredEnergy)
-        XCTAssertGreaterThan(earned.minEnergy, junk.minEnergy)
+    /// **Agumon X's new branch takes the energy nothing else on the node uses, and the branch it
+    /// already had is untouched.** Vitality was free — Greymon X has strength, and so does the junk
+    /// Scumon edge, which is the Scumon arrangement US-133 recorded. Proved through the engine on
+    /// all three paths rather than reasoned about, because `evolutionTarget` matches on the
+    /// DOMINANT energy: a vitality Agumon X that earned nothing matches no edge at all, and it is
+    /// `scheduledEvolutionTarget` — the path the app actually takes — that falls it to junk.
+    func testAgumonXReachesTyrannomonXOnVitalityWithoutDisturbingGreymonX() throws {
+        let agumonX = try XCTUnwrap(graph.node(id: "agumon_x"))
+        let earned = try XCTUnwrap(agumonX.evolutions.first { $0.to == "tyrannomon_x" })
+        XCTAssertEqual(earned.requiredEnergy, .vitality)
 
-        var totals = EnergyTotals()
-        totals[.strength] = earned.minEnergy
+        var vitality = EnergyTotals()
+        vitality[.vitality] = earned.minEnergy
         XCTAssertEqual(
-            EvolutionEngine.evolutionTarget(for: picodevimon, stageEnergy: totals,
-                                            dominant: .strength, careMistakes: 0, battleWins: 40,
+            EvolutionEngine.evolutionTarget(for: agumonX, stageEnergy: vitality, dominant: .vitality,
+                                            careMistakes: 0, battleWins: 40,
                                             conditions: context(for: earned)),
-            "musyamon", "a well-raised strength Pico Devimon does not reach Musyamon")
+            "tyrannomon_x", "a well-raised vitality Agumon X does not reach Tyrannomon X")
 
+        // The branch that was already there still wins on its own energy.
+        let greymonX = try XCTUnwrap(agumonX.evolutions.first { $0.to == "greymon_x" })
+        var strength = EnergyTotals()
+        strength[.strength] = greymonX.minEnergy
         XCTAssertEqual(
-            EvolutionEngine.evolutionTarget(for: picodevimon, stageEnergy: EnergyTotals(),
-                                            dominant: .strength, careMistakes: 0, battleWins: 0,
-                                            conditions: .unknown),
-            junk.to, "a neglected strength Pico Devimon does not fall to \(junk.to)")
+            EvolutionEngine.evolutionTarget(for: agumonX, stageEnergy: strength, dominant: .strength,
+                                            careMistakes: 0, battleWins: 40,
+                                            conditions: context(for: greymonX)),
+            "greymon_x", "the new branch displaced the one Agumon X already had")
+
+        // And a neglected one still falls to Scumon, whatever it was leaning towards.
+        let junk = try XCTUnwrap(agumonX.evolutions.first(where: \.isDefault))
+        XCTAssertEqual(junk.to, "scumon")
+        for dominant in [EnergyType.vitality, .strength] {
+            XCTAssertEqual(
+                EvolutionEngine.scheduledEvolutionTarget(
+                    for: agumonX, stageEnergy: EnergyTotals(), dominant: dominant,
+                    careMistakes: 9, battleWins: 0,
+                    stageEnteredAt: .distantPast, now: Date(), conditions: .unknown),
+                "scumon", "a neglected \(dominant) Agumon X does not fall to Scumon")
+        }
     }
 
     /// Every edge this story authored is really reachable through the engine, criteria and all —
@@ -334,8 +336,8 @@ final class AdultSweepMToRTests: XCTestCase {
     /// The window trap US-150 shipped into a first draft and `ChildSweepMToZTests` pinned over the
     /// whole file: `care.battleCount` is answerable only over `lifetime` and every other `care.*`
     /// counter only over `stage`, so an edge that asks the other way is UNREACHABLE rather than
-    /// merely hard. Restated over this story's eighteen new edges because it is cheap and because
-    /// the engine, not the validator, is the only thing that catches it.
+    /// merely hard. Restated over this story's ten new edges because it is cheap and because the
+    /// engine, not the validator, is the only thing that catches it.
     func testNoCriterionThisStoryAuthoredAsksForAWindowTheContextCannotAnswer() throws {
         let touched = swept.map(\.adult) + swept.map(\.parent)
         for id in Set(touched) {
@@ -365,82 +367,77 @@ final class AdultSweepMToRTests: XCTestCase {
         }
     }
 
-    /// No new lines for eleven new nodes: six onto `tamers`, two onto `penc-vb`, one each onto
-    /// `penc-ds`, `penc-nso` and `penc-wg`. A sweep must not produce dozens of one-node lines, and
-    /// the way this one satisfies that is by opening none at all.
+    /// No new lines for six new nodes: two onto `dmc-v3`, one each onto `dmc-v1`, `dmc-v4`,
+    /// `penc-nso` and `tamers`. A sweep must not produce dozens of one-node lines, and the way this
+    /// one satisfies that is by opening none at all — five lines, five different threads, and every
+    /// node hung between two that were already there.
     func testTheSweepOpenedNoNewLines() {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 80, "four Champions and both new Perfects")
-        XCTAssertEqual(sizes["penc-vb"], 47, "Mikemon and Nefertimon X")
-        XCTAssertEqual(sizes["penc-ds"], 38, "MoriShellmon")
-        XCTAssertEqual(sizes["penc-nso"], 44, "Musyamon")
-        XCTAssertEqual(sizes["penc-wg"], 35, "RedV-dramon")
+        XCTAssertEqual(sizes["dmc-v1"], 30, "Tyrannomon")
+        XCTAssertEqual(sizes["dmc-v3"], 48, "Tyrannomon X and MetalGreymon X")
+        XCTAssertEqual(sizes["dmc-v4"], 27, "Saberdramon")
+        XCTAssertEqual(sizes["penc-nso"], 44, "ShimaUnimon")
+        XCTAssertEqual(sizes["tamers"], 80, "Siesamon X")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
     }
 
-    /// **The four X-Antibody Champions all went to `tamers`, and the variants sit with their base
-    /// form's LINE rather than beside their base form.** Meramon, Monochromon and Pteranomon's base
-    /// nodes are on other lines entirely; what carries the four is the X-Antibody Rookie each hangs
-    /// off, which is where every X variant in this file lives. Stated as the shape rather than as a
-    /// comment: each of the four hangs off a Child whose own id ends in `_x`, or off Monodramon and
-    /// Blucomon, the two `tamers` Rookies the X device draws into them.
-    func testTheFourXAntibodyChampionsFollowedTheXThreadRatherThanTheirBaseForms() throws {
-        let onTheXThread = ["meramon_x", "monochromon_x", "pegasmon_x", "pteranomon_x"]
-        for (adult, parent, _) in swept where onTheXThread.contains(adult) {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: adult)).line, "tamers")
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).line, "tamers")
-        }
+    /// **The two X-Antibody Champions did NOT both go to `tamers`, and the reason is the citation
+    /// rather than the suffix.** US-154's rule was that an X variant follows the X thread; what
+    /// actually decides is which Rookie Wikimon draws it from. Siesamon X comes from DORUmon on
+    /// `tamers`, so it lands there beside every other X Digimon and away from the base Siesamon on
+    /// `algomon`. Tyranomon X comes from Agumon (X-Antibody), which US-148 put on `dmc-v3`, so it
+    /// lands one line over from the base Tyranomon this same story put on `dmc-v1` — the two
+    /// Agumon, the two Tyranomon, on the two lines their own devices drew.
+    func testTheTwoXAntibodyChampionsFollowedTheirCitedRookieRatherThanTheirBaseForm() throws {
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "siesamon_x")).line, "tamers")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "dorumon")).line, "tamers")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "siesamon")).line, "algomon",
+                       "the base Siesamon moved, so the variant's placement wants re-arguing")
+
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "tyrannomon_x")).line, "dmc-v3")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "agumon_x")).line, "dmc-v3")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "tyrannomon")).line, "dmc-v1")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "agumon")).line, "dmc-v1")
+
         XCTAssertEqual(swept.map(\.adult).filter { $0.hasSuffix("_x") }.sorted(),
-                       (onTheXThread + ["nefertimon_x"]).sorted(),
+                       ["siesamon_x", "tyrannomon_x"],
                        "an X-Antibody Champion appeared that this claim does not account for")
-
-        // The base forms really are elsewhere, which is what makes this a line rule and not a
-        // coincidence. Pegasmon and Nefertimon have no base node at all — only the X sheets exist.
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "meramon")).line, "dmc-v1")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "monochromon")).line, "dmc-v4")
-        XCTAssertNil(graph.node(id: "pteranomon"))
-        for id in ["pegasmon", "nefertimon"] {
-            XCTAssertNil(roster.entry(id: id), "\(id) has a sheet now, so its X form has a base")
-        }
-
-        // Nefertimon X is the exception that proves the rule and the reason it is not on `tamers`:
-        // its cited Rookie is Plotmon X, which US-150 put on `penc-vb` because `penc-ds` had no
-        // room — so the variant followed the citation onto the holy line, not the X line.
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "nefertimon_x")).line, "penc-vb")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "plotmon_x")).line, "penc-vb")
     }
 
-    /// **The one Champion whose out-edge could not be a named citation, and the class citation that
-    /// carries it instead.** Every Digimon Wikimon names in Mikemon's `Evolves To` is unusable in
-    /// this pack — Bastemon and Betsumon have no sheet, Majiramon is idle-only and
-    /// `edgeToDexOnlyNode` forbids the edge, Zudomon is on a line no cited parent of Mikemon
-    /// reaches. What is left is the same page's CLASS clause, "Any Yellow Lv.5 Digimon from the
-    /// Digimon Card Game", which US-151 established is a real citation when it wired Deckerdramon.
-    /// Pinned in all four directions so that the day a Bastemon sheet appears this test says so.
-    func testMikemonsOutEdgeRestsOnTheClassCitationBecauseEveryNamedOneIsUnusable() throws {
-        for id in ["bastemon", "betsumon"] {
-            XCTAssertNil(roster.entry(id: id),
-                         "\(id) is on disk now — Mikemon has a named Perfect after all")
+    /// **The pairing that made four of the five free, restated as a check on the DATA rather than
+    /// on the prose.** For each of the four, the Rookie below and the Perfect above were both on
+    /// the chosen line BEFORE this story — which is exactly what "the intersection was non-empty"
+    /// means, and the property a later reader can re-derive.
+    func testTheFourFreePlacementsPutTheRookieAndThePerfectOnOneLine() throws {
+        for (adult, parent, perfect) in swept where perfect != "metalgreymon_x" {
+            let line = try XCTUnwrap(graph.node(id: adult)).line
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).line, line,
+                           "\(parent) is not on \(adult)'s line")
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: perfect)).line, line,
+                           "\(perfect) is not on \(adult)'s line")
+            XCTAssertGreaterThan(graph.parents(of: perfect).count, 1,
+                                 "\(perfect) had no parent before this story, so it was not free")
         }
-        XCTAssertEqual(roster.entry(id: "majiramon")?.dexOnly, true,
-                       "Majiramon animates now, so Mikemon's bolded arrow is drawable")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "zudomon")).line, "penc-ds")
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "mikemon")).line, "penc-vb")
 
-        let comment = try authoredComment(on: "mikemon")
-        XCTAssertTrue(comment.contains("Digimon Card Game"),
-                      "the class citation Mikemon's out-edge rests on is not written down")
-        XCTAssertTrue(comment.contains("Bastemon"), "the arrow that was NOT taken is not named")
+        // Tyranomon X is the fifth, and the one where the intersection really was empty: every
+        // other Perfect its page names is on a line Agumon X cannot reach, or has no sheet.
+        for id in ["mametyramon", "metaltyranomon", "extyranomon"] {
+            XCTAssertNotEqual(try XCTUnwrap(graph.node(id: id)).line, "dmc-v3",
+                              "\(id) is on Tyrannomon X's line now, so the new Perfect was avoidable")
+        }
+        for id in ["metaltyranomon_x", "yatagaramon_2006"] {
+            XCTAssertNil(graph.node(id: id),
+                         "\(id) is wired now — Tyrannomon X had a cheaper arrow after all")
+        }
     }
 
     // MARK: - AC: the sprites are real, and nothing on an edge is dexOnly
 
     /// Stronger than "the file exists": an idle-only 16x16 sprite fails here rather than shipping as
-    /// a Digimon that cannot animate. Applied to the two new Perfects as well as the nine Champions,
-    /// since this is the first Adult sweep since US-151 to author a node above its own rung.
+    /// a Digimon that cannot animate. Applied to the new Perfect as well as the five Champions.
     func testEveryNodeThisStoryAddedIsASliceableSheet() throws {
         for id in swept.map(\.adult) + authoredPerfects.map(\.perfect) {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -478,45 +475,44 @@ final class AdultSweepMToRTests: XCTestCase {
                             || comment.contains("no citation"),
                           "\(id)'s comment neither cites a source nor says it has none")
         }
+
+        // The rejected readings are written down too, so the story that revisits one is told which
+        // arrow was considered and why it lost, rather than having to re-derive it.
+        XCTAssertTrue(try authoredComment(on: "saberdramon").contains("Vamdemon"),
+                      "Saberdramon's rejected `penc-nso` reading is not named")
+        XCTAssertTrue(try authoredComment(on: "shimaunimon").contains("Asuramon"),
+                      "ShimaUnimon's rejected `penc-nsp` reading is not named")
+        XCTAssertTrue(try authoredComment(on: "tyrannomon_x").contains("Herissmon"),
+                      "Tyrannomon X's rejected `penc-vb` reading is not named")
     }
 
-    /// **The handover to US-155 and US-156, in the shape US-151 through US-153 established: a
-    /// claim, not a note.** Two of this story's Champions cite Perfects that are sheets on disk with
-    /// no node — Meramon X names Cyberdramon X, Mamemon X and OmegaShoutmon X, Pegasmon X names
-    /// Angewomon X, Hisyaryumon and Monzaemon X — and all six were left to the Perfect sweeps
-    /// rather than spent here. When one is wired this test fails, and whoever wires it has to say
-    /// which arrow they drew.
-    ///
-    /// WezenGammamon is the other half: US-153 expected it in THIS story's range, but its display
-    /// name starts with W, so it is US-156's. Gammamon is full, so US-156 has to take the Gabumon
-    /// citation US-153 found — the claim that Gammamon is untouched is what keeps that honest.
-    func testThePerfectSheetsLeftForTheLaterSweepsAreStillUnwired() throws {
-        for id in ["cyberdramon_x", "mamemon_x", "omegashoutmon_x",
-                   "angewomon_x", "hisyaryumon", "monzaemon_x"] {
+    /// **The handover to US-156, in the shape US-151 through US-154 established: a claim, not a
+    /// note.** The last five orphaned Champions are all U-Z, and two of them carry advice that has
+    /// now been passed along twice — WezenGammamon cannot hang off Gammamon, which is full, so
+    /// US-156 has to take the Gabumon citation US-153 found. Pinned rather than written in prose so
+    /// that the day Gammamon grows a fifth branch this test says so.
+    func testTheFiveChampionsLeftForUS156AreStillUnwired() throws {
+        for id in ["v-dramon_black", "wezengammamon", "xv-mon_black", "xiquemon", "youkomon"] {
             XCTAssertNotNil(roster.entry(id: id), "\(id) is on disk, which is why it is owed")
             XCTAssertNil(graph.node(id: id),
-                         "\(id) is wired now — say which of this story's arrows it is")
+                         "\(id) is wired now — it was US-156's, so say which story took it")
         }
-        XCTAssertTrue(try authoredComment(on: "meramon_x").contains("Cyberdramon"),
-                      "the arrows that were NOT taken are not written down")
-        XCTAssertTrue(try authoredComment(on: "pegasmon_x").contains("Hisyaryumon"))
-
-        XCTAssertNil(graph.node(id: "wezengammamon"),
-                     "WezenGammamon is a W, so it is US-156's rather than this story's")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "gammamon")).evolutions.count, 4,
                        "Gammamon grew a branch; US-156 was told it is full and must use Gabumon")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "pencvb_gabumon")).line, "penc-vb",
+                       "the parent US-156 was handed has moved line")
     }
 
     // MARK: - AC: the orphan count, and the whole file still validates
 
-    /// NINE Champions plus TWO Perfects, counted with Appendix B of the PRD over a regenerated
-    /// `roster.generated.json`: 311 before, 300 after; the Adult bucket falls 19 -> 10 and the
-    /// Perfect bucket 110 -> 108, because the two Perfects this story opened were orphans too.
+    /// FIVE Champions plus ONE Perfect, counted with Appendix B of the PRD over a regenerated
+    /// `roster.generated.json`: 300 before, 294 after; the Adult bucket falls 10 -> 5 and the
+    /// Perfect bucket 108 -> 107, because the Perfect this story opened was an orphan too.
     /// Asserted rather than only noted, because the count is the one claim in `notes` a later
     /// reader cannot re-derive from the diff.
-    func testTheElevenOrphansThisStoryRemovedAreAllPlainRosterIds() throws {
-        XCTAssertEqual(swept.count, 9)
-        XCTAssertEqual(authoredPerfects.count, 2)
+    func testTheSixOrphansThisStoryRemovedAreAllPlainRosterIds() throws {
+        XCTAssertEqual(swept.count, 5)
+        XCTAssertEqual(authoredPerfects.count, 1)
 
         for id in swept.map(\.adult) + authoredPerfects.map(\.perfect) {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -525,7 +521,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 635, "618 before this story")
+        XCTAssertEqual(graph.nodes.count, 635, "629 before this story")
     }
 
     func testTheGraphValidatesWithNoFindings() {
@@ -535,8 +531,9 @@ final class AdultSweepMToRTests: XCTestCase {
     // MARK: - Helpers
 
     /// A context that satisfies `edge`'s criteria, derived FROM the edge rather than shared — the
-    /// helper US-151 wrote, kept because one of this story's edges asks for FEW overfeeds and a
-    /// blanket "did everything right" context is the one thing that cannot take an `atMost`.
+    /// helper US-151 wrote, kept because two of this story's edges ask for FEW overfeeds or FEW
+    /// sleep disturbances and a blanket "did everything right" context is the one thing that cannot
+    /// take an `atMost`.
     private func context(for edge: EvolutionEdge) -> ConditionContext {
         var values = met.stageTotals?.values ?? [:]
         var training = 30
@@ -559,7 +556,7 @@ final class AdultSweepMToRTests: XCTestCase {
     }
 
     /// `comment` is documentation the decoder drops, so it is read out of the raw JSON — the same
-    /// helper US-144 through US-153 use.
+    /// helper US-144 through US-154 use.
     private func authoredComment(on id: String) throws -> String {
         let url = try XCTUnwrap(Bundle.main.url(forResource: "evolutions", withExtension: "json"))
         let raw = try XCTUnwrap(

@@ -425,7 +425,7 @@ final class AdultSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 629, "615 before this story, 618 after it, 629 after US-154")
+        XCTAssertEqual(graph.nodes.count, 635, "615 before this story, 618 after it, 629 after US-154")
     }
 
     func testTheGraphValidatesWithNoFindings() {

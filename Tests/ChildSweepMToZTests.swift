@@ -375,7 +375,7 @@ final class ChildSweepMToZTests: XCTestCase {
         // Thirteen of the twenty-one grew, `tamers` and `vital` by a dozen and eleven. These are
         // the FILE's sizes rather than this story's, so US-148's and US-149's nodes are in them.
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 79,
+        XCTAssertEqual(sizes["tamers"], 80,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung")
         XCTAssertEqual(sizes["vital"], 33)
         XCTAssertEqual(sizes["penc-me"], 44, "US-151 hung Deckerdramon on Hagurumon")
@@ -591,7 +591,7 @@ final class ChildSweepMToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 629,
+        XCTAssertEqual(graph.nodes.count, 635,
                        "548 before this story, 599 after it, 610 after US-151, 615 after US-152, "
                            + "618 after US-153")
     }

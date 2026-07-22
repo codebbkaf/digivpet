@@ -21,6 +21,27 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **PHASE E: a "no sheet for this name" claim from an EARLIER story can be a SPELLING miss — check
+  the roster before inheriting it.** `DMCVersion1TreeTests` recorded since US-133 that the Version 1
+  document's Tyranomon had "no colour sheet at all, only `Black and White Sprites/Adult/
+  Tyranomon.png`". The pack writes the colour sheet with TWO n's — `Adult/Tyrannomon.png`, roster id
+  `tyrannomon`, playable — so an arrow the seed tree called undrawable had been drawable the whole
+  time, and US-155 drew it. Wikimon's spelling and the sprite pack's differ often enough (Tyranomon/
+  Tyrannomon, Ex-Tyranomon/extyranomon) that "no entry for `<wikimon spelling>`" proves nothing.
+  Resolve a name through `roster.entries` by DISPLAY NAME normalised, never by guessing the id.
+- **PHASE E ADULT SWEEPS: the four-Rookie ceiling is reached from BELOW, and a sweep can spend three
+  of them at once.** US-155 filled Agumon, Bakumon and Muchomon — each took its LAST free energy —
+  because the cheap placements all hung off Rookies that already had three earned branches. That is
+  the normal shape late in the rung, not a warning sign: a Child with one energy left is exactly the
+  Child whose line already holds both ends. But it closes the node for good, so say which Rookies a
+  story filled in a test (`testTheThreeRookiesThisStoryFilledHaveAnEnergyForEveryEarnedBranch`) and
+  expect the knock-on to reach the SEED tests — `SeedRosterTests`, `EnergyBarsTests`,
+  `DexScreenTests`, `ConditionRevealTests` and `EvolutionTreeTests` all pin Agumon's branch list.
+- **PHASE E: the `SeedRosterTests` per-line "verified-available set" is APPENDED to, never widened.**
+  `patamonLineVerifiedSet` and `piyomonLineVerifiedSet` are closed lists of display names that every
+  Adult-and-up node on `dmc-v3`/`dmc-v4` must be in. US-148 through US-151 each added their names
+  with a comment saying which sweep and why; US-155 did the same. Do not relax the containment
+  check — the list IS the record of which sheets were eyeballed.
 - **PHASE E: grep the WHOLE tree markdown before spending an orphan on an invented junk node.** A
   later device section may draw it as an earned branch (US-140 lost WaruMonzaemon to US-142's V5
   section this way). The same grep is what the story's own "this name is not in the document" test
@@ -3730,4 +3751,96 @@ The nine, with the citation each rests on:
   Armor-Hybrid one. The seven lines still with no Perfect rung - `xros`, `vital`, `adventure02`,
   `algomon`, `commandramon`, `diablomon`, `penc-sw` - are untouched, and the 101 leaves in
   `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge by whichever story claims them.
+---
+
+## 2026-07-22 - US-155 - Orphan sweep: Adult S-T
+Wired the FIVE playable Champions whose display name begins S-T that had no edge at all: Saberdramon,
+ShimaUnimon, Siesamon X, Tyrannomon and Tyrannomon X. Each gained one earned in-edge from a Child of
+its own line and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk
+fallback. ONE new Perfect was opened, on `dmc-v3`. Orphans 300 -> 294 (Appendix B over a regenerated
+`roster.generated.json`): Adult 10 -> 5 AND Perfect 108 -> 107. 629 -> 635 nodes.
+
+Files: `Resources/evolutions.json` (5 new Champions, 5 new Child branches, 1 new Perfect),
+`Resources/elements.json` and `Resources/moves.json` (6 entries each), new
+`Tests/AdultSweepSToTTests.swift` (22 tests), and the knock-on edits listed below.
+Full suite 2159 tests green (2137 before), build green.
+
+The five, with the citation each rests on:
+  saberdramon   dmc-v4    muchomon  -> megadramon     (Da-511 in, Digimon World -next 0rder- out)
+  shimaunimon   penc-nso  bakumon   -> mammon         (Digimon World 2, BOTH arrows)
+  siesamon_x    tamers    dorumon   -> grademon       (Digital Monster X Ver.3, both arrows)
+  tyrannomon    dmc-v1    agumon    -> mamemon        (Digital Monster Ver. 1, both arrows)
+  tyrannomon_x  dmc-v3    agumon_x  -> metalgreymon_x (Digital Monster X, both arrows; NEW Perfect)
+
+**Learnings for future iterations:**
+
+- **US-133's "Tyranomon has no colour sheet at all" WAS WRONG, and the reason is worth the note more
+  than the fix is.** `DMCVersion1TreeTests.testTheTwoUndrawableNamesAppearNowhere` had carried, since
+  the very first device tree, that the Version 1 document's Tyranomon could not be drawn - only
+  `Black and White Sprites/Adult/Tyranomon.png` existed. The pack spells the COLOUR sheet with two
+  n's: `Adult/Tyrannomon.png`, roster id `tyrannomon`, playable, animated. So the arrow was drawable
+  the whole time and Agumon shipped with four of the document's five Champions for twenty-two
+  stories. The test is now `testTheOneUndrawableNameAppearsNowhereAndTyranomonIsASpelling` and pins
+  BOTH halves - the one-n id must never be a node (it would duplicate art), and the two-n one must be
+  playable and on this line. Betamon is genuinely still idle-only. **Wikimon's spelling is not the
+  pack's; resolve every name through the roster's display names before believing an absence.**
+
+- **FOUR OF FIVE PLACEMENTS COST NOTHING ONE RUNG UP, WHICH IS THE HIGHEST RATE OF THE FIVE ADULT
+  SWEEPS, AND IT IS NOT LUCK.** US-152's rule - intersect `Evolves From` AND `Evolves To` against the
+  graph before choosing the line - gets CHEAPER as the file fills, because more Perfects are nodes
+  each time. Saberdramon had sixteen cited parents and twenty-odd cited children and exactly one line
+  held a node at both ends. ShimaUnimon's Bakumon and Mammon are both cited to Digimon World 2, one
+  source for both arrows. Do the intersection before pricing anything; the orphan-by-orphan version
+  is enough at this point and US-154's pairwise-across-the-range trick was not needed once.
+
+- **A SWEEP CAN FILL THREE ROOKIES AT ONCE, AND THE KNOCK-ON REACHES THE SEED TESTS.** Agumon,
+  Bakumon and Muchomon each spent their LAST free energy here (four earned branches plus junk = five
+  edges, the `EvolutionCriteriaTests` ceiling). That is expected late in the rung - a Rookie with one
+  energy left is exactly the one whose line already holds both ends - but Agumon is the seed, so its
+  branch list is pinned in FIVE places outside the sweep files: `SeedRosterTests` (twice),
+  `EnergyBarsTests` (which asserted vitality had NOTHING to reach for), `DexScreenTests`,
+  `ConditionRevealTests` and `EvolutionTreeTests` (node count, Adult column, rowCount AND connector
+  count). `grep -rn '"agumon"' Tests` before branching a seed Rookie.
+
+- **`SeedRosterTests`' per-line verified-available SETS are a third knock-on family nobody listed.**
+  `patamonLineVerifiedSet` (dmc-v3) and `piyomonLineVerifiedSet` (dmc-v4) are closed lists of display
+  names that every Adult-and-up node on those lines must be in - US-148 through US-151 appended to
+  them, and so did this story. They are the record of which sheets were actually eyeballed, so append
+  with a comment naming the sweep; never relax the containment check.
+
+- **AN ADULT'S JUNK ENERGY MUST MATCH ITS DOMINANT FOR `evolutionTarget`, BUT NOT FOR
+  `scheduledEvolutionTarget`.** A first draft of `AdultSweepSToTTests` asserted a neglected vitality
+  Agumon X falls to Scumon through `EvolutionEngine.evolutionTarget` and got `nil`: that entry point
+  matches on the dominant energy, and Scumon's junk edge is on strength. US-154's Musyamon test
+  worked only because its junk edge and its dominant were the same energy. The path the app actually
+  takes is `scheduledEvolutionTarget`, which falls to `isDefault` whatever the dominant is - use that
+  for every "neglect" assertion and keep `evolutionTarget` for the earned ones.
+
+- **The knock-on list for this rung, all sixteen files:** node count in `ElementCatalogTests`,
+  `EvolutionGraphValidatorTests`, `AdultSweepAToDTests`, `AdultSweepEToGTests`, `AdultSweepHToLTests`,
+  `AdultSweepMToRTests`, `ChildSweepAToFTests`, `ChildSweepGToLTests` and `ChildSweepMToZTests`
+  (629 -> 635); the per-line dict in `EvolutionGraphTests` (`dmc-v1` 29->30, `dmc-v3` 46->48, `dmc-v4`
+  26->27, `penc-nso` 43->44, `tamers` 79->80) and the same lines' `sizes[...]` rows in
+  `AdultSweepAToDTests`, `AdultSweepEToGTests`, `AdultSweepMToRTests`, `BabyIISweepTests`,
+  `ChildSweepAToFTests`, `ChildSweepGToLTests`, `ChildSweepMToZTests` and `DigitamaSweepTests`;
+  `branchedByALaterSweep` in `ChildSweepAToFTests` (`agumon_x` and `dorumon`, both 2->3); `sweepEggs`
+  AND `inLine.count` in `PendulumNightmareSoldiersTreeTests`; Grademon's exact parent set in
+  `AdultSweepMToRTests` (a FIFTH `Set(graph.parents(of:))` equality); the dead-end ledger in
+  `ChildSweepAToFTests` (101 -> 102, the one new Perfect); `targets(of:)` for Agumon in
+  `DMCVersion1TreeTests` and for Muchomon in `DMCVersion4TreeTests`; the two verified-available sets
+  and Agumon's branch list in `SeedRosterTests`; and the Agumon rows in `ConditionRevealTests`,
+  `DexScreenTests`, `EnergyBarsTests` and `EvolutionTreeTests`. `EvolutionCriteriaTests.junkIds`,
+  `MinigameAssignmentTests`, `EggHatchingTests`, `DexModel.lineTitles` and both `lineDefaults` did
+  NOT move: no new line, and the one new Perfect is a leaf, so no thread newly reached an Ultimate.
+
+- REMAINS: US-156 onward (42/56 passing). ONE Adult sweep holds the last five orphaned Champions
+  (U-Z: V-dramon Black, WezenGammamon, XV-mon Black, Xiquemon, Youkomon - pinned as still-unwired in
+  `AdultSweepSToTTests.testTheFiveChampionsLeftForUS156AreStillUnwired`, which also re-pins Gammamon
+  at four edges so US-156 is still told to take the `pencvb_gabumon` citation for WezenGammamon).
+  Then twelve Perfect and Ultimate sweeps and the Armor-Hybrid one, against 107 orphaned Perfect,
+  166 orphaned Ultimate and 16 Armor-Hybrid. The seven lines still with no Perfect rung - `xros`,
+  `vital`, `adventure02`, `algomon`, `commandramon`, `diablomon`, `penc-sw` - are untouched, and the
+  102 leaves in `ChildSweepAToFTests`' dead-end ledger are still owed an out-edge by whichever story
+  claims them. Greymon X is one of them and is the obvious second parent for this story's new
+  MetalGreymon X.
 ---

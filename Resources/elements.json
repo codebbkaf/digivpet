@@ -2516,6 +2516,30 @@
     "mametyramon": {
       "element": "earth",
       "attribute": "data"
+    },
+    "saberdramon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "shimaunimon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "siesamon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "tyrannomon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "tyrannomon_x": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "metalgreymon_x": {
+      "element": "machine",
+      "attribute": "vaccine"
     }
   },
   "lineDefaults": {

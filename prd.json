@@ -873,8 +873,8 @@
         "Typecheck passes"
       ],
       "priority": 42,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired the FIVE playable Champions whose display name begins S-T that had no edge at all: Saberdramon, ShimaUnimon, Siesamon X, Tyrannomon and Tyrannomon X. Orphans 300 -> 294 (Appendix B over a regenerated roster.generated.json): Adult 10 -> 5 AND Perfect 108 -> 107. 618 -> 629 -> 635 nodes. Four of the five cost NOTHING one rung up - the Rookie below and the Perfect above were already on one line in each case (muchomon/megadramon on dmc-v4, bakumon/mammon on penc-nso both cited to Digimon World 2, dorumon/grademon on tamers off Digital Monster X Ver.3, agumon/mamemon on dmc-v1 off Digital Monster Ver. 1). Only Tyrannomon X needed a Perfect opened, MetalGreymon X on dmc-v3, and that cost one node because Etemon has been that line's junk floor since US-133. Found and corrected a false claim: DMCVersion1TreeTests said the V1 document's Tyranomon had 'no colour sheet at all' - it was a SPELLING miss (the pack writes Tyrannomon with two n's), so the arrow was drawable all along and is now drawn. Full suite 2159 tests green (2137 before), build green."
     },
     {
       "id": "US-156",

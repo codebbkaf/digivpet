@@ -529,12 +529,14 @@ final class DexEvolutionCandidateTests: XCTestCase {
     }
 
     /// The shipped graph, not a fixture: the real Agumon branch is the screen this story is for.
-    /// US-133 gave it a fourth candidate, Devimon, so this is also the two-row case.
-    func testTheShippedAgumonBranchListsItsFourTargets() {
+    /// US-133 gave it a fourth candidate, Devimon, and US-155 a fifth, Tyrannomon — which spends
+    /// Agumon's last free energy, so five is where this list stops for good.
+    func testTheShippedAgumonBranchListsItsFiveTargets() {
         let candidates = DexRow.evolutionCandidates(
             of: "agumon", in: .bundled, resolvedAgainst: [:])
 
-        XCTAssertEqual(candidates.map(\.id), ["greymon", "meramon", "devimon", "numemon"])
+        XCTAssertEqual(candidates.map(\.id),
+                       ["greymon", "meramon", "devimon", "tyrannomon", "numemon"])
     }
 
     // MARK: - AC: discovered candidates show art and name; undiscovered are withheld
