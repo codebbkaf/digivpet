@@ -337,7 +337,43 @@
     "commandra_digitama": { "element": "steel", "attribute": "free" },
     "bommon": { "element": "machine", "attribute": "free" },
     "ghost_digitama": { "element": "dark", "attribute": "free" },
-    "algomon_babyi": { "element": "machine", "attribute": "free" }
+    "algomon_babyi": { "element": "machine", "attribute": "free" },
+
+    "lala_digitama": { "element": "plant", "attribute": "free" },
+    "lioll_digitama": { "element": "fire", "attribute": "free" },
+    "lop_digitama": { "element": "ice", "attribute": "free" },
+    "luce_digitama": { "element": "light", "attribute": "free" },
+    "ludo_digitama": { "element": "steel", "attribute": "free" },
+    "meicoo_digitama": { "element": "dark", "attribute": "free" },
+    "monodra_digitama": { "element": "dark", "attribute": "free" },
+    "morpho_digitama": { "element": "wind", "attribute": "free" },
+    "mush_digitama": { "element": "plant", "attribute": "free" },
+    "pawnchessblack_digitama": { "element": "dark", "attribute": "free" },
+    "pawnchesswhite_digitama": { "element": "light", "attribute": "free" },
+    "phasco_digitama": { "element": "dark", "attribute": "free" },
+    "picodevi_digitama": { "element": "dark", "attribute": "free" },
+    "plot_digitama": { "element": "light", "attribute": "free" },
+    "pulse_digitama": { "element": "electric", "attribute": "free" },
+    "rena_digitama": { "element": "fire", "attribute": "free" },
+    "sunariza_digitama": { "element": "earth", "attribute": "free" },
+    "swim_digitama": { "element": "water", "attribute": "free" },
+    "terrier_digitama": { "element": "wind", "attribute": "free" },
+    "v_digitama": { "element": "fire", "attribute": "free" },
+    "vorvo_digitama": { "element": "fire", "attribute": "free" },
+    "worm_digitama": { "element": "plant", "attribute": "free" },
+    "zuba_digitama": { "element": "steel", "attribute": "free" },
+    "pipimon": { "element": "plant", "attribute": "free" },
+    "tsubumon": { "element": "light", "attribute": "free" },
+    "relemon": { "element": "light", "attribute": "free" },
+    "ketomon": { "element": "dark", "attribute": "free" },
+    "tomorimon": { "element": "dark", "attribute": "free" },
+    "zerimon": { "element": "plant", "attribute": "free" },
+    "chicomon": { "element": "water", "attribute": "free" },
+    "leafmon": { "element": "plant", "attribute": "free" },
+    "dokimon": { "element": "electric", "attribute": "free" },
+    "bubbmon": { "element": "water", "attribute": "free" },
+    "sunamon": { "element": "earth", "attribute": "free" },
+    "cotsucomon": { "element": "steel", "attribute": "free" }
   },
 
   "lineDefaults": {
@@ -357,7 +393,9 @@
     "wanyamon": { "element": "earth", "attribute": "free" },
     "diablomon": { "element": "dark", "attribute": "free" },
     "commandramon": { "element": "steel", "attribute": "free" },
-    "algomon": { "element": "machine", "attribute": "free" }
+    "algomon": { "element": "machine", "attribute": "free" },
+    "adventure02": { "element": "fire", "attribute": "free" },
+    "vital": { "element": "steel", "attribute": "free" }
   },
 
   "keywordRules": [

@@ -255,7 +255,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // one-node line for a species this tree already reaches. The line's OWN egg is still the
         // first of them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id, "kuda_digitama", "kuda2006_digitama"])
+                       [egg.id, "kuda_digitama", "kuda2006_digitama", "plot_digitama"])
 
         // The default Rookie's own egg was not available: it roots the Digital Monster Ver.1 tree.
         XCTAssertEqual(try node("agu_digitama").line, "dmc-v1")
@@ -281,7 +281,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 32)
+        XCTAssertEqual(inLine.count, 33)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -355,7 +355,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         // US-144 hung `kuda_digitama` and `kuda2006_digitama` on this line. That egg is not one of this story's nodes, so it is
         // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
         // story's notes made, and a total quietly one higher would no longer be that claim.
-        let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama"]
+        let sweepEggs: Set<String> = ["kuda_digitama", "kuda2006_digitama", "plot_digitama"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

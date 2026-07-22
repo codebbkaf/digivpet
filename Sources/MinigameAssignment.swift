@@ -130,6 +130,15 @@ enum MinigameAssignment {
         "diablomon": .sequenceRecall,
         "algomon": .reflexStrike,
         "wanyamon": .buttonMasher,
+        // US-145 opens two more, and the tie-break is the same one every story since US-138 has
+        // run: fewest Digimon behind the game. Counting the file as this story leaves it, Reflex
+        // Strike was carrying the fewest (56) and Sequence Recall the next fewest (57), so `vital`
+        // — the larger of the two new lines — goes to Reflex Strike and `adventure02` to Sequence
+        // Recall. Flavour agrees on both: a Vital Bracelet is a band you shake, and Reflex Strike
+        // is the quick game; and an Armor evolution is picking the right Digimental out of a set,
+        // which is what remembering a sequence is.
+        "vital": .reflexStrike,
+        "adventure02": .sequenceRecall,
     ]
 
     /// The game for a Digimon in no shipped line — decided by how far up the ladder it is, so the

@@ -219,7 +219,7 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         // one-node line for a species this tree already reaches. The line's OWN egg is still the
         // first of them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id, "cand_digitama"])
+                       [egg.id, "cand_digitama", "picodevi_digitama", "vorvo_digitama"])
     }
 
     /// Since US-144 the seed is every Digitama of the line, not just this tree's own: the first
@@ -241,7 +241,7 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 32)
+        XCTAssertEqual(inLine.count, 34)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -628,7 +628,8 @@ final class PendulumNightmareSoldiersTreeTests: XCTestCase {
         }
 
         // `cand_digitama` is US-144's, not this story's, so it is excluded rather than counted.
-        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "cand_digitama" }.count, 31)
+        let sweepEggs: Set<String> = ["cand_digitama", "picodevi_digitama", "vorvo_digitama"]
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        10, "the ten aliases, which remove no orphan")
     }

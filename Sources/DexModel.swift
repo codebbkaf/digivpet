@@ -354,6 +354,8 @@ final class DexModel: ObservableObject {
         "diablomon": "Network Virus",
         "commandramon": "Special Forces",
         "algomon": "Algomon Signal",
+        "adventure02": "Adventure 02",
+        "vital": "Vital Bracelet",
     ]
 
     /// A line's heading. Either an authored title above, or — by the older convention — a node id

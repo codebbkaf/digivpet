@@ -44,8 +44,8 @@ final class MinigameAssignmentTests: XCTestCase {
 
         XCTAssertEqual(sharers, [.timingBar: ["palmon", "penc-nsp", "tamers"],
                                  .crownSprint: ["commandramon", "dmc-v3", "penc-ds"],
-                                 .sequenceRecall: ["diablomon", "dmc-v5", "penc-nso"],
-                                 .reflexStrike: ["algomon", "dmc-v4", "penc-wg"],
+                                 .sequenceRecall: ["adventure02", "diablomon", "dmc-v5", "penc-nso"],
+                                 .reflexStrike: ["algomon", "dmc-v4", "penc-wg", "vital"],
                                  .buttonMasher: ["dmc-v1", "penc-me", "wanyamon"],
                                  .powerMeter: ["dmc-v2", "penc-vb"]])
     }

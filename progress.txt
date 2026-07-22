@@ -53,6 +53,11 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   (`DigitamaSweepTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened`) that fails in
   BOTH directions: a ninth dead end fails it, and so does wiring one of the eight onward. The next
   sweep is meant to edit that list down and is told to rather than having to notice.
+- **PHASE E SWEEPS: THE DIGITAMA ARE SPENT AS OF US-145 — all 57 carry their one hatch edge.** A
+  Baby I's only possible in-edge is an egg, so **13 playable Baby I can never be reached** and no
+  later story can author that away. The count and the "no unspent egg" half are pinned by
+  `DigitamaSweepLToZTests.testTheBabyIStillOrphanedCannotBeReachedByAnyRemainingEgg`. Read it
+  before promising an in-edge at Baby I.
 - **PHASE E SWEEPS: 45 free Digitama and 33 free Baby I is the allocation the whole phase rests on.**
   `EggHatcher.hatchTarget` reads `node.evolutions.first`, so an egg has exactly ONE hatch edge and a
   later story CANNOT give a new Baby I an in-edge by adding a second edge to an already-spent egg.
@@ -2678,4 +2683,73 @@ files. Build green, 1936 tests, 0 failures, validator zero findings.
   still-orphaned Baby I — read the allocation pattern at the top of this file BEFORE choosing
   targets, because doubling up an egg there permanently strands a Baby I. Orphans by stage now:
   Ultimate 166, Adult 129, Perfect 114, Child 88, Baby II 37, Baby I 25, Digitama 23, Armor-Hybrid 16.
+---
+
+## 2026-07-22 - US-145 - Orphan sweep: Digitama L-Z
+
+The second of Phase E's 26 sweeps, and the one that CLOSES the Digitama stage: 23 eggs wired, all
+57 playable eggs now carry their single hatch edge. 35 nodes, 330 -> 365. Digitama orphans 23 -> 0;
+Baby I 25 -> 13; whole-file 598 -> 563.
+
+Files: `Resources/evolutions.json` (+35 nodes), `Resources/elements.json` and `Resources/moves.json`
+(+35 entries and 2 `lineDefaults` each), `Sources/DexModel.swift` (2 line titles),
+`Sources/MinigameAssignment.swift` (2 assignments), new `Tests/DigitamaSweepLToZTests.swift` (15
+tests), `docs/evolutions-schema.md`, and NINE existing test files. Build green, 1951 tests, 0
+failures, validator zero findings.
+
+**Learnings for future iterations:**
+
+- **THE SWEEP'S RULE HAD TO BE TIGHTENED, and the arithmetic is what tightened it.** US-144's rule
+  was "an egg whose species is already a node joins that species' line and adds no rung". That is
+  the wrong default once the eggs are nearly gone: `EggHatcher.hatchTarget` reads
+  `evolutions.first`, so an egg has ONE hatch edge and a Baby I's only possible in-edge is an egg.
+  Every egg spent on an already-reachable Baby I is a Baby I nobody can ever hatch. The rule that
+  ships is: **an egg opens the Baby I Wikimon puts two rungs below its species, and doubles up only
+  when it has no choice** — and "no choice" is one of five checked facts, not a preference:
+  species already wired (4), species idle-only (3), species has NO sheet at all (1, Liollmon), the
+  species' own Baby I is idle-only (1, Meicoomon), every candidate Baby I is already in the graph
+  (2, Phascomon and Vorvomon). `testEveryDoubledUpEggSaysWhyItHadNoChoice` checks each reason
+  against the roster and the graph, so a lazy doubling cannot hide behind a comment.
+- **PROVE THE CEILING BEFORE APOLOGISING FOR IT.** Twelve looks short against 25 orphaned Baby I,
+  so the story computes the maximum instead of asserting one: build the bipartite graph of "egg's
+  species descends from this Baby I" off Wikimon and find the largest matching. Only 13 of the 25
+  are on a thread reaching any of these 23 species, and Leafmon and Pururumon are BOTH reachable
+  only through `worm_digitama` — so 12 is the most any authoring could have opened. That number is
+  now a test (`testTheBabyIStillOrphanedCannotBeReachedByAnyRemainingEgg`, paired with "no unspent
+  egg exists"), which is what turns "we ran out" into a handover US-146 is told about.
+- **A BABY I WHOSE BABY II IS ALREADY ON THE LINE IS WORTH TWO THAT ARE NOT.** `pipimon` went to
+  `palmon` and `tsubumon` to `dmc-v3` because Tanemon and Tokomon are already those lines' Baby II,
+  so US-147 closes those dead ends with an EDGE and no new node — and no new line was needed for
+  either. Check `Baby I -> Evolves To` against the nodes already in the graph before opening a line;
+  it is the cheapest line-count saving in the phase.
+- **TWO NEW LINES FOR TWELVE THREADS, and grouping is what bought that.** Four of the twelve are
+  Tamers partners (Lopmon, Monodramon, Renamon, Terriermon) and joined US-144's `tamers`, which is
+  now 15 nodes. Five more share a device: Wikimon's **Virtual Pets section is machine-readable**
+  (`<span class="mw-headline" id="Vital_Bracelet_Digital_Monster">`), so "these five are Vital
+  Bracelet Digimon" is a checked fact and not a vibe — that is what `vital` is. Grouping by a
+  franchise or a device you can VERIFY beats naming a line after each species.
+- **Wikimon parsing, refined from US-144's recipe.** `re.split(r'<span class="mw-headline" id="([^"]+)"', html)`
+  gives id/body pairs for the WHOLE page including h3/h4 — US-144's `<h2>` split misses
+  `Evolves_From`/`Evolves_To`, which sit under h3, and silently returns empty lists. Read names out
+  of `title="..."` and drop anything containing "Card Game" (the Digimon Card Game colour tables
+  inject Greymon/Scumon/Koromon into every Evolves From list and they are not evolutions).
+  **Fetch the middle rung's page, not the top one**: 50 `curl`s on the Baby II gave the whole
+  Baby I -> Baby II -> Child map in one pass, which is what the matching needed.
+- **A "one egg per line" assertion can survive US-144 and still bite.** `PendulumWindGuardiansTree
+  Tests` seeded its reachability BFS from `flora_digitama` alone; US-144 generalised the other five
+  tree tests and missed that one, because no egg had landed on `penc-wg` yet. When a story adds an
+  egg to a line, grep that line's test file for BOTH the egg list and the BFS seed.
+- **A ledger belongs in the newest story that changed it.** The whole-file dead-end list moved from
+  `DigitamaSweepTests` to `DigitamaSweepLToZTests` (8 -> 20 entries) and US-144's version was
+  narrowed to "my eight are still dead ends" with a pointer. The next sweep looks at the newest
+  sweep; a ledger left in an older file gets edited by nobody.
+- **US-144's marker test worked exactly as advertised** — `testTheDigitamaOrphansLeftAreExactly
+  TheLToZOnesForUS145` failed on the first run of this story, explained itself, and was rewritten
+  into the claim it guarded. Keep leaving them.
+- REMAINS: US-146 onward (33/56 passing). US-146 is Baby I, and it inherits a HARD fact: 13
+  playable Baby I can never be given an in-edge, because every Digitama is spent. Its AC "every
+  Digimon in the range gets at least one in-edge" therefore cannot be met literally either — say
+  which reading is taken, the way US-144 and US-145 both did. `ketomon` and `bommon` are the two
+  Baby I whose canonical Baby II is idle-only and which need a stand-in from US-147. Orphans by
+  stage now: Ultimate 166, Adult 129, Perfect 114, Child 88, Baby II 37, Armor-Hybrid 16, Baby I 13.
 ---

@@ -238,15 +238,20 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         let slots = MapCatalog.bundled.maps.flatMap { $0.digitamaSlots.map(\.digitamaId) }
         XCTAssertTrue(slots.contains(egg.id), "no map drops \(egg.id), so the line is unstartable")
 
+        // One egg per line until US-145, which hangs `mush_digitama` off this line rather than
+        // opening a one-node line: Mushmon is already a Child here and Wikimon draws it from
+        // Nyokimon, this line's Baby I. The line's OWN egg is still the first of them.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id], "one egg per line")
+                       [egg.id, "mush_digitama"])
 
         // The egg this line could NOT have: it belongs to the other Piyomon tree.
         XCTAssertEqual(try node("piyo_digitama").line, "dmc-v4")
     }
 
     func testEveryNodeInTheLineIsReachableFromItsDigitama() throws {
-        var reached: Set<String> = ["flora_digitama"]
+        // Seeded from EVERY egg of the line rather than from Flora's alone: since US-144 a line may
+        // carry several, and US-145's `mush_digitama` is a second root of this one.
+        var reached = Set(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id))
         var frontier = Array(reached)
         while let id = frontier.popLast() {
             for edge in graph.node(id: id)?.evolutions ?? [] where !reached.contains(edge.to) {
@@ -256,9 +261,9 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 31)
+        XCTAssertEqual(inLine.count, 32)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
-                       "unreachable from Flora Digitama, so not playable end to end")
+                       "unreachable from any egg of the line, so not playable end to end")
     }
 
     func testTheLineCoversEveryRungOfTheLadder() {
@@ -653,7 +658,7 @@ final class PendulumWindGuardiansTreeTests: XCTestCase {
                            "\(id) is still an orphan")
         }
 
-        XCTAssertEqual(graph.nodes.filter { $0.line == line }.count, 31)
+        XCTAssertEqual(graph.nodes.filter { $0.line == line && $0.id != "mush_digitama" }.count, 31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        6, "the six aliases, which remove no orphan")
     }

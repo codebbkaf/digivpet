@@ -9022,6 +9022,482 @@
       "spriteFile": "Algomon_BabyI",
       "comment": "Algomon's Baby I, the bottom of the Algomon spine. A LEAF for now: Algomon (Baby II) is US-147's.",
       "evolutions": []
+    },
+    {
+      "id": "lala_digitama",
+      "displayName": "Lala Digitama",
+      "stage": "Digitama",
+      "line": "palmon",
+      "spriteFile": "Lala_Digitama",
+      "comment": "Lalamon's egg, and the first of US-145's threads to join a line by its Baby II rather than by its Baby I. Wikimon: Pipimon evolves to Tanemon, and Lalamon evolves from Tanemon - and `tanemon` is already this line's Baby II, so `pipimon` is authored here as a SECOND Baby I of the plant line and US-147 closes the gap with an edge to a node that already exists. Lalamon is a plant Digimon, so the line is right on flavour as well as on the arrow.",
+      "evolutions": [
+        {
+          "to": "pipimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "lioll_digitama",
+      "displayName": "Lioll Digitama",
+      "stage": "Digitama",
+      "line": "wanyamon",
+      "spriteFile": "Lioll_Digitama",
+      "comment": "Liollmon's egg. Liollmon has NO sheet in `16x16 Digimon Sprites` at all, so the species can never be on an edge and the egg is placed by where that species belongs: Wikimon draws Liollmon from Frimon, and Frimon from Popomon, which is this line's Baby I. Doubles up on `popomon` beside bear_digitama and koe_digitama rather than opening a rung nothing can climb.",
+      "evolutions": [
+        {
+          "to": "popomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "lop_digitama",
+      "displayName": "Lop Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Lop_Digitama",
+      "comment": "Lopmon's egg. US-144 predicted this egg would double up on `cocomon`; it does not, and the reason is the allocation: 23 eggs were left for 25 orphaned Baby I, so an egg that CAN open one must. Wikimon: Relemon evolves to Moonmon, and Lopmon evolves from Moonmon - the arrow is drawn in both directions on both pages. Lopmon is Suzie's Tamers partner, which is the line.",
+      "evolutions": [
+        {
+          "to": "relemon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "luce_digitama",
+      "displayName": "Luce Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v3",
+      "spriteFile": "Luce_Digitama",
+      "comment": "Lucemon's egg. Wikimon: Tsubumon evolves to Tokomon, and Lucemon evolves from Tokomon - and `tokomon` is already this line's Baby II, so `tsubumon` joins as a second Baby I of Ver.3 and US-147 can close the dead end with an edge to a node that exists.",
+      "evolutions": [
+        {
+          "to": "tsubumon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "ludo_digitama",
+      "displayName": "Ludo Digitama",
+      "stage": "Digitama",
+      "line": "vital",
+      "spriteFile": "Ludo_Digitama",
+      "comment": "Ludomon's egg, and the root of the Vital Bracelet line. Wikimon: Cotsucomon evolves to Kakkinmon, and Ludomon evolves from Kakkinmon. Ludomon is drawn on Digimon Pendulum Ver.20th and Vital Bracelet Digital Monster, which is what this line collects.",
+      "evolutions": [
+        {
+          "to": "cotsucomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "meicoo_digitama",
+      "displayName": "Meicoo Digitama",
+      "stage": "Digitama",
+      "line": "diablomon",
+      "spriteFile": "Meicoo_Digitama",
+      "comment": "Meicoomon's egg. Meicoomon's OWN Baby I, `meicoo_baby`, is one of the 157 idle-only Digimon, so this thread cannot be opened at the bottom however much the allocation would like it to be. Wikimon lists Keramon first among Meicoomon's Evolves From, and Keramon's Baby I here is `kuramon`, so the egg joins the network-virus line rather than inventing a rung.",
+      "evolutions": [
+        {
+          "to": "kuramon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "monodra_digitama",
+      "displayName": "Monodra Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Monodra_Digitama",
+      "comment": "Monodramon's egg. Wikimon: Ketomon evolves to Hopmon, and Monodramon evolves from Hopmon. Monodramon is Ryo's Tamers partner, which is the line. NOTE FOR US-147: Ketomon's only Evolves To is Hopmon and `hopmon` is idle-only, so this Baby I needs a stand-in Baby II rather than a straight lookup - the same problem `bommon` has.",
+      "evolutions": [
+        {
+          "to": "ketomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "morpho_digitama",
+      "displayName": "Morpho Digitama",
+      "stage": "Digitama",
+      "line": "vital",
+      "spriteFile": "Morpho_Digitama",
+      "comment": "Morphomon's egg. Wikimon: Bubbmon evolves to Mochimon, and Morphomon evolves from Mochimon. Morphomon is drawn on Pendulum Z Nature Spirits and Vital Bracelet BE.",
+      "evolutions": [
+        {
+          "to": "bubbmon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "mush_digitama",
+      "displayName": "Mush Digitama",
+      "stage": "Digitama",
+      "line": "penc-wg",
+      "spriteFile": "Mush_Digitama",
+      "comment": "Mushmon's egg. Mushmon is already a Child of this line, so by the sweep's first rule the egg roots the line that reaches it and adds no rung; Wikimon draws Mushmon from Nyokimon, which is this line's Baby I, so the arrow agrees with the placement.",
+      "evolutions": [
+        {
+          "to": "nyokimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pawnchessblack_digitama",
+      "displayName": "PawnChessBlack Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v1",
+      "spriteFile": "PawnChessBlack_Digitama",
+      "comment": "PawnChessmon (Black)'s egg. Both PawnChessmon colours are idle-only, so neither species can be on an edge. Wikimon draws BOTH from Budmon, and Budmon from Botamon, which is this line's Baby I - so the pair is placed together on Ver.1 rather than split by colour.",
+      "evolutions": [
+        {
+          "to": "botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pawnchesswhite_digitama",
+      "displayName": "PawnChessWhite Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v1",
+      "spriteFile": "PawnChessWhite_Digitama",
+      "comment": "PawnChessmon (White)'s egg, beside pawnchessblack_digitama by the variant rule and by the same Wikimon arrow: Budmon evolves to both colours, and Budmon evolves from Botamon.",
+      "evolutions": [
+        {
+          "to": "botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "phasco_digitama",
+      "displayName": "Phasco Digitama",
+      "stage": "Digitama",
+      "line": "penc-me",
+      "spriteFile": "Phasco_Digitama",
+      "comment": "Phascomon's egg. Wikimon: Choromon evolves to Caprimon, and Phascomon evolves from Caprimon - `caprimon` is this line's Baby II and `choromon` its Baby I, so the whole arrow is already drawn here.",
+      "evolutions": [
+        {
+          "to": "choromon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "picodevi_digitama",
+      "displayName": "PicoDevi Digitama",
+      "stage": "Digitama",
+      "line": "penc-nso",
+      "spriteFile": "PicoDevi_Digitama",
+      "comment": "PicoDevimon's egg. PicoDevimon is already a Child of this line, so the egg adds no rung; Wikimon draws PicoDevimon from Peti Meramon, and Peti Meramon from Mokumon, which are this line's Baby II and Baby I.",
+      "evolutions": [
+        {
+          "to": "mokumon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "plot_digitama",
+      "displayName": "Plot Digitama",
+      "stage": "Digitama",
+      "line": "penc-vb",
+      "spriteFile": "Plot_Digitama",
+      "comment": "Plotmon's egg. Plotmon is already a Child of this line, so the egg adds no rung; Wikimon lists Yukimi Botamon among Plotmon's Evolves From directly, and `yukimibotamon` is this line's Baby I.",
+      "evolutions": [
+        {
+          "to": "yukimibotamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pulse_digitama",
+      "displayName": "Pulse Digitama",
+      "stage": "Digitama",
+      "line": "vital",
+      "spriteFile": "Pulse_Digitama",
+      "comment": "Pulsemon's egg. Wikimon: Dokimon evolves to Bibimon, and Pulsemon evolves from Bibimon. Pulsemon is drawn on Vital Bracelet Digital Monster and Vital Bracelet BE, which is this line.",
+      "evolutions": [
+        {
+          "to": "dokimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "rena_digitama",
+      "displayName": "Rena Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Rena_Digitama",
+      "comment": "Renamon's egg. Renamon's best-known Baby I is Relemon, which lop_digitama took; Wikimon also draws Renamon from Onibimon, and Onibimon from Tomorimon, so this thread is a real arrow and not a leftover. Renamon is Ruki's Tamers partner.",
+      "evolutions": [
+        {
+          "to": "tomorimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "sunariza_digitama",
+      "displayName": "Sunariza Digitama",
+      "stage": "Digitama",
+      "line": "vital",
+      "spriteFile": "Sunariza_Digitama",
+      "comment": "Sunarizamon's egg. Wikimon: Sunamon evolves to Goromon, and Goromon's only Evolves To is Sunarizamon - the tightest thread in this sweep. Sunarizamon is drawn on Pendulum Z Nature Spirits and Vital Bracelet Digital Monster.",
+      "evolutions": [
+        {
+          "to": "sunamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "swim_digitama",
+      "displayName": "Swim Digitama",
+      "stage": "Digitama",
+      "line": "dmc-v1",
+      "spriteFile": "Swim_Digitama",
+      "comment": "Swimmon's egg. Swimmon is already a Child of this line, so the egg adds no rung; Wikimon draws Swimmon from Pinamon, and Pinamon from Botamon, which is this line's Baby I.",
+      "evolutions": [
+        {
+          "to": "botamon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "terrier_digitama",
+      "displayName": "Terrier Digitama",
+      "stage": "Digitama",
+      "line": "tamers",
+      "spriteFile": "Terrier_Digitama",
+      "comment": "Terriermon's egg. Wikimon: Zerimon evolves to Gummymon, and Terriermon evolves from Gummymon. Terriermon is Jenrya's Tamers partner, beside Guilmon and Renamon on this line.",
+      "evolutions": [
+        {
+          "to": "zerimon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "v_digitama",
+      "displayName": "V Digitama",
+      "stage": "Digitama",
+      "line": "adventure02",
+      "spriteFile": "V_Digitama",
+      "comment": "V-mon's egg, and the root of the Adventure 02 partners' line. Wikimon: Chicomon evolves to Chibimon, and V-mon evolves from Chibimon.",
+      "evolutions": [
+        {
+          "to": "chicomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "vorvo_digitama",
+      "displayName": "Vorvo Digitama",
+      "stage": "Digitama",
+      "line": "penc-nso",
+      "spriteFile": "Vorvo_Digitama",
+      "comment": "Vorvomon's egg. Wikimon draws Vorvomon from Peti Meramon, and Peti Meramon from Mokumon - this line's Baby II and Baby I - so the egg joins Nightmare Soldiers beside picodevi_digitama rather than opening a thread for a species that is already reachable through no rung of its own.",
+      "evolutions": [
+        {
+          "to": "mokumon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "worm_digitama",
+      "displayName": "Worm Digitama",
+      "stage": "Digitama",
+      "line": "adventure02",
+      "spriteFile": "Worm_Digitama",
+      "comment": "Wormmon's egg. Wikimon: Leafmon evolves to Minomon, and Wormmon evolves from Minomon. Wormmon is Ken's Adventure 02 partner, beside V-mon.",
+      "evolutions": [
+        {
+          "to": "leafmon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "zuba_digitama",
+      "displayName": "Zuba Digitama",
+      "stage": "Digitama",
+      "line": "vital",
+      "spriteFile": "Zuba_Digitama",
+      "comment": "Zubamon's egg. Zubamon is idle-only and can never be on an edge, so the egg is placed by where the species belongs: Wikimon draws Zubamon from Kakkinmon, which is exactly what `cotsucomon` leads to, so it doubles up on the Baby I ludo_digitama opened rather than taking one a species with a sheet still needs.",
+      "evolutions": [
+        {
+          "to": "cotsucomon",
+          "minEnergy": 50,
+          "maxCareMistakes": 99,
+          "isDefault": true
+        }
+      ]
+    },
+    {
+      "id": "pipimon",
+      "displayName": "Pipimon",
+      "stage": "Baby I",
+      "line": "palmon",
+      "spriteFile": "Pipimon",
+      "comment": "Lalamon's Baby I. A LEAF for now, but the shortest one in the file: its Baby II is Tanemon, which is ALREADY on this line, so US-147 closes this dead end with an edge rather than a node.",
+      "evolutions": []
+    },
+    {
+      "id": "tsubumon",
+      "displayName": "Tsubumon",
+      "stage": "Baby I",
+      "line": "dmc-v3",
+      "spriteFile": "Tsubumon",
+      "comment": "Lucemon's Baby I. A LEAF for now, and the same shape as `pipimon`: its Baby II is Tokomon, which is already this line's, so US-147 needs only the edge.",
+      "evolutions": []
+    },
+    {
+      "id": "relemon",
+      "displayName": "Relemon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Relemon",
+      "comment": "Lopmon's Baby I. A LEAF for now: its Baby II is Moonmon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "ketomon",
+      "displayName": "Ketomon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Ketomon",
+      "comment": "Monodramon's Baby I. A LEAF for now, and the one whose canonical Baby II (Hopmon) is idle-only - US-147 has to pick a stand-in rather than a straight lookup, the same problem `bommon` has.",
+      "evolutions": []
+    },
+    {
+      "id": "tomorimon",
+      "displayName": "Tomorimon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Tomorimon",
+      "comment": "Renamon's Baby I by way of Onibimon. A LEAF for now: its Baby II is Onibimon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "zerimon",
+      "displayName": "Zerimon",
+      "stage": "Baby I",
+      "line": "tamers",
+      "spriteFile": "Zerimon",
+      "comment": "Terriermon's Baby I. A LEAF for now: its Baby II is Gummymon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "chicomon",
+      "displayName": "Chicomon",
+      "stage": "Baby I",
+      "line": "adventure02",
+      "spriteFile": "Chicomon",
+      "comment": "V-mon's Baby I. A LEAF for now: its Baby II is Chibimon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "leafmon",
+      "displayName": "Leafmon",
+      "stage": "Baby I",
+      "line": "adventure02",
+      "spriteFile": "Leafmon",
+      "comment": "Wormmon's Baby I. A LEAF for now: its Baby II is Minomon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "dokimon",
+      "displayName": "Dokimon",
+      "stage": "Baby I",
+      "line": "vital",
+      "spriteFile": "Dokimon",
+      "comment": "Pulsemon's Baby I. A LEAF for now: its Baby II is Bibimon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "bubbmon",
+      "displayName": "Bubbmon",
+      "stage": "Baby I",
+      "line": "vital",
+      "spriteFile": "Bubbmon",
+      "comment": "Morphomon's Baby I. A LEAF for now: its Baby II is Mochimon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "sunamon",
+      "displayName": "Sunamon",
+      "stage": "Baby I",
+      "line": "vital",
+      "spriteFile": "Sunamon",
+      "comment": "Sunarizamon's Baby I. A LEAF for now: its Baby II is Goromon, which US-147 wires.",
+      "evolutions": []
+    },
+    {
+      "id": "cotsucomon",
+      "displayName": "Cotsucomon",
+      "stage": "Baby I",
+      "line": "vital",
+      "spriteFile": "Cotsucomon",
+      "comment": "Ludomon's and Zubamon's Baby I - two eggs on one Baby I, which is what the sweep does when the second species is idle-only. A LEAF for now: its Baby II is Kakkinmon, which US-147 wires.",
+      "evolutions": []
     }
   ]
 }

@@ -223,13 +223,14 @@ prose — 196 nodes have one today, in the `dmc-v1`, `dmc-v2`, `dmc-v3`, `dmc-v4
 
 ## Current contents
 
-`Resources/evolutions.json` holds 330 nodes across seventeen `line` values — `dmc-v1` (22 nodes),
-`dmc-v2` (25), `dmc-v3` (21), `dmc-v4` (22), `dmc-v5` (20), `palmon` (10), `penc-nsp` (31),
-`penc-ds` (33), `penc-nso` (32), `penc-wg` (31), `penc-me` (33) and `penc-vb` (32) — each a
-complete line from Digitama through Ultimate — plus US-144's five sweep lines: `tamers` (7),
-`wanyamon` (5), `diablomon` (2), `commandramon` (2) and `algomon` (2). With `penc-vb` every one of
-the eleven device sections in `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` has
-a line here.
+`Resources/evolutions.json` holds 365 nodes across nineteen `line` values — `dmc-v1` (25 nodes),
+`dmc-v2` (25), `dmc-v3` (23), `dmc-v4` (22), `dmc-v5` (20), `palmon` (12), `penc-nsp` (31),
+`penc-ds` (33), `penc-nso` (34), `penc-wg` (32), `penc-me` (34) and `penc-vb` (33) — each a
+complete line from Digitama through Ultimate — plus the seven sweep lines: US-144's `tamers`
+(15 after US-145 added four Tamers partners), `wanyamon` (6), `diablomon` (3), `commandramon` (2)
+and `algomon` (2), and US-145's `adventure02` (4) and `vital` (9). With `penc-vb` every one of the
+eleven device sections in `Resources/Digimon_Color_And_Pendulum_Color_Evolution_Trees.md` has a
+line here.
 
 ### Two things a sweep line breaks that a device line did not
 
@@ -237,20 +238,29 @@ Phase E's orphan sweeps (US-144 onward) author ONE RUNG of the ladder per story,
 longer has the two properties every device tree had:
 
 - **A line may have several Digitama.** US-144 hangs an alternate egg on the line whose species it
-  belongs to rather than opening a one-node line for it, so `dmc-v2` has three eggs and `tamers`
-  has four. `EggHatcher` still reads exactly one hatch edge per egg (`evolutions.first`), which is
-  what `DigitamaSweepTests.testNoDigitamaHasMoreThanOneHatchEdge` pins — an egg with two hatch
-  edges is data the engine silently ignores.
-- **A node below Ultimate may be a dead end.** The eight Baby I US-144 opened have nothing above
-  them until US-146/US-147 wire their Baby II. The ledger of which ones is
-  `DigitamaSweepTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened`, and it fails in
-  both directions on purpose. `MainScreenModel.startingDigitamaId` keeps a brand-new game off an
-  egg on one of those threads, via `EvolutionGraph.reachesUltimate(from:)`.
+  belongs to rather than opening a one-node line for it, so `dmc-v2` has three eggs, `dmc-v1` has
+  five and `tamers` has eight. `EggHatcher` still reads exactly one hatch edge per egg
+  (`evolutions.first`), which is what `DigitamaSweepTests.testNoDigitamaHasMoreThanOneHatchEdge`
+  pins — an egg with two hatch edges is data the engine silently ignores.
+- **A node below Ultimate may be a dead end.** The eight Baby I US-144 opened and the twelve
+  US-145 opened have nothing above them until US-146/US-147 wire their Baby II. The whole-file
+  ledger of which ones is
+  `DigitamaSweepLToZTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesTheTwoDigitamaSweepsOpened` —
+  it moved to the newer sweep when the list grew, so the next one looks at the newest — and it
+  fails in both directions on purpose. `MainScreenModel.startingDigitamaId` keeps a brand-new game
+  off an egg on one of those threads, via `EvolutionGraph.reachesUltimate(from:)`.
+- **The Digitama are spent, and that is now a permanent constraint.** All 57 playable eggs carry
+  their one hatch edge as of US-145, and a Baby I's only possible in-edge is an egg. Thirteen
+  playable Baby I therefore have no way to be reached at all; the count is pinned by
+  `DigitamaSweepLToZTests.testTheBabyIStillOrphanedCannotBeReachedByAnyRemainingEgg`, which US-146
+  should read before planning around them.
 
 A sweep line's heading goes in `DexModel.lineTitles` like a device slug's, even when the key looks
 like a Digimon id: `diablomon`, `commandramon` and `algomon` name where the thread is GOING, and
 none of those Digimon is a node yet, so the older name-it-after-the-namesake-node convention would
-resolve to nil.
+resolve to nil. US-145's two are named for what they collect rather than for a Digimon at all —
+`adventure02` holds V-mon's and Wormmon's threads, `vital` holds the five species Wikimon draws on
+a Vital Bracelet device (Ludomon, Zubamon, Morphomon, Pulsemon, Sunarizamon).
 
 `palmon` is what is left of US-008's seed. `dmc-v1` was the second of them: US-008
 authored it as `agumon`, a pruned Digital Monster Color Version 1 tree, and US-133 renamed it and

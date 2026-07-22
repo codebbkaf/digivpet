@@ -119,9 +119,11 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         let layout = EvolutionTreeLayout(nodes: nodes)
 
         // Twenty-two since US-144, which hung `agu2006_digitama` on this line as a second egg —
-        // Agumon (2006) being Agumon under another sheet. It adds a node and a connector and
-        // nothing else: the branch shape below is untouched.
-        XCTAssertEqual(nodes.count, 22)
+        // Agumon (2006) being Agumon under another sheet — and twenty-five since US-145 added
+        // three more onto Botamon: Swimmon's, and PawnChessmon's two colours. Every one of them
+        // adds a node and a connector in the Digitama column and nothing else: the branch shape
+        // below is untouched, which is what the rest of this test still checks.
+        XCTAssertEqual(nodes.count, 25)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
@@ -131,6 +133,6 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 32)
+        XCTAssertEqual(layout.connectors.count, 35)
     }
 }

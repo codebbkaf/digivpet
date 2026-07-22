@@ -98,21 +98,22 @@ final class DigitamaSweepTests: XCTestCase {
         XCTAssertEqual(orphans, [], "still orphaned: \(orphans)")
     }
 
-    /// The other half of the count that `notes` claims: L–Z is US-145's, and this story must not
-    /// have quietly done any of it. Pinned so that "45 before, 23 after" is auditable from the
+    /// This began as US-144's marker for the half it did not do: 23 Digitama were left over, all of
+    /// them L–Z, and the test said so in order to fail the day US-145 landed. US-145 has landed, so
+    /// the marker is rewritten into the claim it was guarding — there is now no orphaned Digitama
+    /// at all, and "45 before US-144, 23 between the two sweeps, 0 after" is auditable from the
     /// suite rather than only from a script.
-    func testTheDigitamaOrphansLeftAreExactlyTheLToZOnesForUS145() {
+    func testNoPlayableDigitamaIsOrphanedAnyMore() {
         let sources = Set(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let targets = Set(graph.nodes.flatMap { $0.evolutions.map(\.to) })
         let connected = sources.union(targets)
 
         let stillOrphaned = roster.entries
             .filter { $0.stage == .digitama && !$0.dexOnly && !connected.contains($0.id) }
-        XCTAssertEqual(stillOrphaned.count, 23)
-        for entry in stillOrphaned {
-            XCTAssertFalse(("A"..."K").contains(String(entry.displayName.prefix(1))),
-                           "\(entry.displayName) is in US-144's range and was left orphaned")
-        }
+            .map(\.displayName)
+        XCTAssertEqual(stillOrphaned, [], "still orphaned: \(stillOrphaned)")
+        XCTAssertEqual(roster.entries.filter { $0.stage == .digitama && !$0.dexOnly }.count, 57,
+                       "all 57 playable Digitama are wired; a 58th sprite would land here")
     }
 
     // MARK: - AC: the hatches themselves
@@ -185,8 +186,11 @@ final class DigitamaSweepTests: XCTestCase {
         for line in newLines {
             XCTAssertGreaterThan(sizes[line] ?? 0, 1, "line \(line) is a single node")
         }
-        XCTAssertEqual(sizes["tamers"], 7)
-        XCTAssertEqual(sizes["wanyamon"], 5)
+        // Both grew in US-145: `tamers` took four more Tamers partners with a Baby I apiece and
+        // `wanyamon` took Liollmon's egg. The numbers are the file's, not this story's, and are
+        // pinned here rather than in the newer sweep because this is where the lines were opened.
+        XCTAssertEqual(sizes["tamers"], 15)
+        XCTAssertEqual(sizes["wanyamon"], 6)
     }
 
     /// Twelve of the twenty-two eggs added no rung at all, because their species is already wired.
@@ -223,18 +227,16 @@ final class DigitamaSweepTests: XCTestCase {
     /// with no way onward; a sweep that authors a rung at a time cannot keep that, because the Baby
     /// I an egg hatches into has to exist before the Baby II above it does.
     ///
-    /// So the invariant becomes a ledger instead of a zero: these eight and no others. It fails in
-    /// both directions on purpose — a ninth dead end added by anybody fails here, and so does
-    /// wiring one of the eight onward, which is the point. The next sweep is meant to edit this
-    /// list down, and being told to is better than having to notice.
-    func testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened() {
-        let deadEnds = graph.nodes
-            .filter { $0.evolutions.isEmpty && $0.stage != .ultimate }
-            .map(\.id)
-            .sorted()
-
-        XCTAssertEqual(deadEnds, openedBabyI,
-                       "the dead-end ledger has drifted; US-146/US-147 should be shrinking it")
+    /// So the invariant becomes a ledger instead of a zero. US-145 opened twelve more Baby I the
+    /// same way, so the WHOLE-FILE ledger now lives in `DigitamaSweepLToZTests` — one list, in the
+    /// newest sweep, which is where the next one will look. What is left here is this story's own
+    /// half of it: its eight are all still dead ends, so wiring one onward without editing US-144's
+    /// notes fails, and the whole-file check upstairs catches a ninth appearing anywhere.
+    func testTheBabyIThisSweepOpenedAreStillDeadEnds() {
+        for id in openedBabyI {
+            XCTAssertEqual(graph.node(id: id)?.evolutions.isEmpty, true,
+                           "\(id) now leads somewhere — shrink the ledger in DigitamaSweepLToZTests too")
+        }
     }
 
     /// Each opened Baby I is really reachable — it is not enough that it exists, something has to

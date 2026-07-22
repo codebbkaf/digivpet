@@ -267,10 +267,11 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
                       "06_industrial does not drop \(egg.id), so the line is unstartable")
 
         // One egg per line until US-144, which hangs `espi_digitama` off this line rather than opening a
-        // one-node line for a species this tree already reaches. The line's OWN egg is still the
-        // first of them, and still the one the rest of this file reasons about.
+        // one-node line for a species this tree already reaches; US-145 added `phasco_digitama` the
+        // same way, Phascomon evolving from Caprimon. The line's OWN egg is still the first of
+        // them, and still the one the rest of this file reasons about.
         XCTAssertEqual(graph.nodes(at: .digitama).filter { $0.line == line }.map(\.id),
-                       [egg.id, "espi_digitama"])
+                       [egg.id, "espi_digitama", "phasco_digitama"])
 
         // No Rookie of this tree has an egg of its own, which is why the choice went outside it.
         for rookie in ["toyagumon", "kokuwamon", "hagurumon", "junkmon"] {
@@ -300,7 +301,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 33)
+        XCTAssertEqual(inLine.count, 34)
         XCTAssertEqual(inLine.filter { !reached.contains($0) }, [],
                        "unreachable from any egg of the line, so not playable end to end")
     }
@@ -365,7 +366,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         // US-144 hung `espi_digitama` on this line. That egg is not one of this story's nodes, so it is
         // excluded by NAME rather than by bumping the totals: the numbers below are the claim this
         // story's notes made, and a total quietly one higher would no longer be that claim.
-        let sweepEggs: Set<String> = ["espi_digitama"]
+        let sweepEggs: Set<String> = ["espi_digitama", "phasco_digitama"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

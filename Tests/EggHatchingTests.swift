@@ -168,12 +168,18 @@ final class EggHatchingTests: XCTestCase {
                         "flora_digitama", "funbee_digitama", "heriss_digitama",
                         "agu2006_digitama", "gabublack_digitama", "elec_digitama", "kune_digitama",
                         "hyoko_digitama", "angora_digitama", "cand_digitama", "beta_digitama",
-                        "kame_digitama", "kuda_digitama", "kuda2006_digitama", "espi_digitama"],
-                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, and US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate")
+                        "kame_digitama", "kuda_digitama", "kuda2006_digitama", "espi_digitama",
+                        "mush_digitama", "pawnchessblack_digitama", "pawnchesswhite_digitama",
+                        "phasco_digitama", "picodevi_digitama", "plot_digitama", "swim_digitama",
+                        "vorvo_digitama"],
+                       "every seeded egg is a candidate — US-044's Pata, US-045's Piyo and US-046's Gazi Digitama joined the three US-008 ones, US-138's Tento, US-139's Goma, US-140's Baku, US-141's Flora, US-142's Funbee and US-143's Heriss Digitama root the six Pendulum trees, US-144's sweep added twelve alternate eggs onto lines that already reach an Ultimate, and US-145's added eight more")
 
-        // The other ten eggs US-144 authored are deliberately NOT candidates: each opens a thread
-        // whose Baby I is still the top of it, and a new game must not start on one. That filter
-        // lives in `MainScreenModel.startingDigitamaId` and is the reason `reachesUltimate` exists.
+        // The rest are deliberately NOT candidates: each hatches into a Baby I that is still the
+        // top of its thread, and a new game must not start on one. That filter lives in
+        // `MainScreenModel.startingDigitamaId` and is the reason `reachesUltimate` exists. Ten are
+        // US-144's; the fifteen US-145 added are the twelve eggs that opened a brand-new Baby I,
+        // `zuba_digitama` which doubles up on one of them, and `lioll_digitama`/`meicoo_digitama`,
+        // whose species has no usable sheet and which therefore hatch onto a leaf US-144 left.
         let unraisable = graph.nodes(at: .digitama)
             .filter { !$0.dexOnly && !graph.reachesUltimate(from: $0.id) }
             .map(\.id)
@@ -181,7 +187,11 @@ final class EggHatchingTests: XCTestCase {
         XCTAssertEqual(unraisable,
                        ["bear_digitama", "blackguil_digitama", "bluco_digitama", "commandra_digitama",
                         "gao_digitama", "ghost_digitama", "guil_digitama", "imp_digitama",
-                        "kera_digitama", "koe_digitama"])
+                        "kera_digitama", "koe_digitama", "lala_digitama", "lioll_digitama",
+                        "lop_digitama", "luce_digitama", "ludo_digitama", "meicoo_digitama",
+                        "monodra_digitama", "morpho_digitama", "pulse_digitama", "rena_digitama",
+                        "sunariza_digitama", "terrier_digitama", "v_digitama", "worm_digitama",
+                        "zuba_digitama"])
 
         var seen: Set<String> = []
         for _ in 0..<200 {
