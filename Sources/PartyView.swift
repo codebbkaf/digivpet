@@ -89,10 +89,15 @@ extension PartyRow {
     ///     holds IS a saved `GameState` at `.digitama`, which is why tapping one is the same act as
     ///     tapping any other row and is what starts it hatching (AC6).
     ///   - graph: what turns a saved id into a name and a sprite. A record the graph does not know
-    ///     still draws a row — see `presentation(for:in:)`.
-    static func rows(for states: [GameState], in graph: EvolutionGraph) -> [PartyRow] {
+    ///     still draws a row — see `presentation(for:in:roster:)`.
+    ///   - roster: consulted when the graph cannot name the id, which since US-132 is the ORDINARY
+    ///     case for a Jogress result: `omegamon` is one of the 780 orphans no line reaches, so a
+    ///     graph-only lookup would list the Digimon the player had just fused as "omegamon" with no
+    ///     art. Defaulted so every existing caller is untouched.
+    static func rows(for states: [GameState], in graph: EvolutionGraph,
+                     roster: Roster = .bundled) -> [PartyRow] {
         states.enumerated().map { index, state in
-            let presentation = presentation(for: state, in: graph)
+            let presentation = presentation(for: state, in: graph, roster: roster)
             return PartyRow(
                 id: index,
                 displayName: presentation.displayName,
@@ -112,8 +117,10 @@ extension PartyRow {
     /// The id itself is the honest name for it, exactly as `MainScreenModel.memorial` uses it, and
     /// `IdleSpriteView` draws its own missing-art box when the file is not there either.
     private static func presentation(for state: GameState,
-                                     in graph: EvolutionGraph) -> DigimonPresentation {
+                                     in graph: EvolutionGraph,
+                                     roster: Roster) -> DigimonPresentation {
         graph.presentation(forId: state.currentDigimonId)
+            ?? roster.presentation(forId: state.currentDigimonId)
             ?? DigimonPresentation(displayName: state.currentDigimonId,
                                    stage: state.stage,
                                    spriteFile: state.currentDigimonId)
@@ -154,15 +161,42 @@ enum PartyRowLayout {
 struct PartyView: View {
     let rows: [PartyRow]
 
+    /// What can be fused right now, or why nothing can (US-132). Carried on the party screen rather
+    /// than on a screen of its own because a Jogress is a thing you do WITH the box — the pairs it
+    /// offers are rows of this very list.
+    let board: JogressBoard
+
     /// Puts this Digimon out. `MainScreenModel.activate(_:)` in the app, which moves the whole
     /// switch — both `isActive` flags and both freeze clocks — in ONE saved transaction (US-124).
     let activate: (PartyRow) -> Void
+
+    /// Performs a fusion. `MainScreenModel.performJogress(_:)` in the app (US-132).
+    let fuse: (JogressOffer) -> Void
+
+    /// Whether the Jogress list is up. Owned here rather than expressed as a `NavigationLink` for
+    /// `MapListView`'s reason: fusing has to drop BOTH levels — the pair list and this screen — so
+    /// the player lands back on the main screen where the ceremony plays, and that needs a binding
+    /// this view can clear.
+    @State private var showsJogress = false
 
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         ScrollViewReader { scroller in
             List {
+                // The way to a fusion, above the box it fuses from — and drawn whether or not there
+                // is one, since with nothing to fuse this row is the only thing that says why (AC2).
+                if board.isAvailable {
+                    Button {
+                        showsJogress = true
+                    } label: {
+                        JogressEntryRow(board: board)
+                    }
+                    .buttonStyle(.plain)
+                } else {
+                    JogressEntryRow(board: board)
+                }
+
                 ForEach(rows) { row in
                     Button {
                         tap(row)
@@ -201,6 +235,22 @@ struct PartyView: View {
             #endif
         }
         .navigationTitle("Party")
+        .navigationDestination(isPresented: $showsJogress) {
+            JogressView(offers: board.offers) { offer in
+                perform(offer)
+            }
+        }
+    }
+
+    /// Fuses the pair, then goes back to the game — for `tap`'s reason and `MapListView.travel`'s:
+    /// the point of the tap is the Digimon now standing on the screen behind this one, and the
+    /// ceremony that announces it plays there.
+    ///
+    /// Both levels are dropped, the pair list first and then the box.
+    private func perform(_ offer: JogressOffer) {
+        fuse(offer)
+        showsJogress = false
+        dismiss()
     }
 
     /// Take this one out, and go back to the game — the box is an errand, like the map list, and
@@ -298,6 +348,7 @@ private struct PartyRowView: View {
                      spriteStage: "Digitama", spriteFile: "Gabu_Digitama", status: .frozen),
             PartyRow(id: 2, displayName: "Greymon", stageName: "Adult",
                      spriteStage: "Adult", spriteFile: "Greymon", status: .dead),
-        ], activate: { _ in })
+        ], board: JogressBoard(offers: [], reason: JogressWording.noRecipe),
+           activate: { _ in }, fuse: { _ in })
     }
 }

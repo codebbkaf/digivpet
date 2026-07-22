@@ -20,7 +20,16 @@ struct ContentView: View {
     /// US-126's party screen. Same reason as the map list: `simctl` cannot tap the strip's trailing
     /// button, so the only way to photograph the screen behind it is to push it from the launch
     /// command. `MainScreenModel.seedPartyDemoIfRequested` is what fills the box it draws.
+    /// US-132's Jogress entry point lives on that same screen, so `-jogressDemo` pushes it too —
+    /// what AC10 asks to be photographed is the entry point IN `PartyView`, not a screen of its own.
     @State private var showsPartyDemo = CommandLine.arguments.contains("-partyDemo")
+        || CommandLine.arguments.contains("-jogressDemo")
+    /// US-132's pair list, one level below the entry point above. Same reason as US-121's map
+    /// detail: the list is what a tap on the entry row opens, and `simctl` cannot tap a row — so
+    /// the only way to photograph `JogressOfferRow`'s three-sprite layout is to open it from the
+    /// launch command. `MainScreenModel.seedJogressDemoIfRequested` is what fills the box it offers
+    /// from, so this flag implies `-jogressDemo`'s seed.
+    @State private var showsJogressListDemo = CommandLine.arguments.contains("-jogressListDemo")
     /// US-121's map detail. Same reason as the list above, one level deeper: the detail is what a
     /// tap on a row opens, and `simctl` cannot tap a row.
     @State private var showsMapDetailDemo = CommandLine.arguments.contains("-mapDetailDemo")
@@ -344,7 +353,15 @@ struct ContentView: View {
             // screenshot photographs is the real destination the strip's button leads to, seeded
             // box and all, rather than a preview of it.
             .navigationDestination(isPresented: $showsPartyDemo) {
-                PartyView(rows: model.partyRows) { model.activate($0) }
+                PartyView(rows: model.partyRows, board: model.jogressBoard,
+                          activate: { model.activate($0) },
+                          fuse: { model.performJogress($0) })
+            }
+            // US-132's pair list, pushed straight past the entry row for the same reason the map
+            // detail is pushed past its list. Fusing from here still goes through the real
+            // `performJogress`, so the ceremony it raises is a real one.
+            .navigationDestination(isPresented: $showsJogressListDemo) {
+                JogressView(offers: model.jogressBoard.offers) { model.performJogress($0) }
             }
             // US-121's detail, pushed straight rather than through the list: `simctl` has no tap
             // command, so the only way to photograph the screen a tap opens is to open it from the
@@ -585,7 +602,9 @@ struct ContentView: View {
                     }, party: {
                         // The box of Digimon (US-126), off the strip's trailing button — the other
                         // way out of this screen, and the one that changes which Digimon is on it.
-                        PartyView(rows: model.partyRows) { model.activate($0) }
+                        PartyView(rows: model.partyRows, board: model.jogressBoard,
+                                  activate: { model.activate($0) },
+                                  fuse: { model.performJogress($0) })
                     })
                 }
 

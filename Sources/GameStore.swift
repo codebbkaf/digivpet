@@ -8,6 +8,16 @@ enum GameStoreError: Error, Equatable {
     /// activating a record the store cannot see would freeze the player's real Digimon and leave
     /// nothing active in its place.
     case stateNotInStore
+
+    /// `performJogress` was handed two records that cannot fuse: the same record twice, a dead one,
+    /// or a pair whose ids are not the recipe's. Refused before anything is mutated, so a stale
+    /// offer costs the player nothing (US-132 AC6).
+    case jogressPairNotFusable
+
+    /// `performJogress`'s recipe names a result the roster does not hold, so there is no stage to
+    /// save it at and no sprite to draw it with. Unreachable for shipped data — the US-130 validator
+    /// rejects it — and refused rather than guessed at.
+    case jogressResultUnknown
 }
 
 /// Owns the SwiftData stack and the player's saved `GameState` records.
@@ -257,6 +267,126 @@ final class GameStore {
         try loadOrCreateProfile().record(ownedDigitama: digitamaId)
         try context.save()
         return egg
+    }
+
+    /// Fuses two owned Digimon into a third, and hands one of their eggs back — ONE transaction
+    /// (US-132).
+    ///
+    /// Everything happens against the context before a single `save()`, so the file goes straight
+    /// from "two parents in the box" to "the fusion in the box", with no instant at which the player
+    /// has lost a Digimon and not yet gained one. That is AC6, and it is why this is a store method
+    /// rather than a sequence of the calls it resembles: `grantDigitama` saves, and three saves are
+    /// three chances to crash between them.
+    ///
+    /// **EVERY REFUSAL IS DECIDED BEFORE THE FIRST MUTATION.** A record from another store, the same
+    /// record twice, a dead parent, a pair that is not this recipe's, a result the roster cannot
+    /// draw — all throw with the box untouched, so the ineligible case needs no rollback at all. The
+    /// only thing that can fail afterwards is the write itself, and that is what `context.rollback()`
+    /// in the `catch` is for: it discards the pending inserts and deletes, leaving both parents
+    /// alive and intact. (It discards ANY other unsaved change in the context too — safe here
+    /// because every other path in this class saves as it goes, and stated because a future one that
+    /// did not would lose work.)
+    ///
+    /// WHAT IT WRITES:
+    /// - both parents are deleted, which releases their origin Digitama ids from `heldDigitamaIds()`
+    ///   for free — the set is derived from the box (US-127), so there is nothing to remember here;
+    /// - ONE of the two origins, chosen with the injected `generator` (AC4), is inserted as a fresh
+    ///   unhatched Digitama, frozen and inactive exactly as a dropped one is (`grantDigitama`);
+    /// - the result is inserted ACTIVE (AC3) and every other record in the box is frozen, so US-124's
+    ///   one-active invariant holds even when neither parent was the Digimon that was out;
+    /// - the result and the returned egg are both recorded in the Dex (AC5), and the egg is noted on
+    ///   the profile as ever-owned, like any Digitama the player is handed.
+    ///
+    /// **THE RESULT INHERITS THE RETURNED EGG'S ORIGIN**, which is the one judgement call in here.
+    /// AC4 says both parents' ids stop being held and one comes back; if the fusion carried the
+    /// OTHER parent's origin instead, both ids would still be held afterwards and nothing would have
+    /// been released — the criterion would be true of the delete and false of the box. Carrying the
+    /// returned egg's id means the box holds exactly one of the two ids when this returns, and the
+    /// other is free to be found on a map again, which is what fusing two Digimon buys.
+    ///
+    /// - Parameters:
+    ///   - recipe: the recipe the two parents matched. Re-checked against their current ids here, so
+    ///     a stale offer cannot fuse a pair into something else's result.
+    ///   - parents: the two records to consume, both of which must belong to this store.
+    ///   - roster: where the result's stage and existence come from; the shipped one by default.
+    ///   - generator: which of the two eggs comes back. `inout` and injected so a seeded run is
+    ///     deterministic (AC9).
+    ///   - flush: how the transaction is committed. Injected ONLY so a test can fail the write and
+    ///     prove the rollback — there is no other way to make SwiftData throw on demand, and AC6's
+    ///     "a failure part-way leaves the box exactly as it was" is otherwise unobservable. The app
+    ///     never passes it.
+    @discardableResult
+    func performJogress<G: RandomNumberGenerator>(
+        _ recipe: JogressRecipe,
+        parents: (GameState, GameState),
+        roster: Roster = .bundled,
+        now: Date = Date(),
+        using generator: inout G,
+        flush: (() throws -> Void)? = nil
+    ) throws -> JogressOutcome {
+        let (a, b) = parents
+        // Before anything is mutated, and before the first insert: this can itself save (it creates
+        // the profile on a store that has never had one), and a save in the middle of the fusion
+        // would be exactly the half-written transaction AC6 forbids.
+        let profile = try loadOrCreateProfile()
+        let states = try allStates()
+        let known = Set(states.map(\.persistentModelID))
+        guard known.contains(a.persistentModelID), known.contains(b.persistentModelID) else {
+            throw GameStoreError.stateNotInStore
+        }
+        guard a.persistentModelID != b.persistentModelID else {
+            throw GameStoreError.jogressPairNotFusable
+        }
+        guard !a.isDead, !b.isDead else { throw GameStoreError.jogressPairNotFusable }
+        guard recipe.pair == JogressPair(a.currentDigimonId, b.currentDigimonId) else {
+            throw GameStoreError.jogressPairNotFusable
+        }
+        guard let entry = roster.entry(id: recipe.result) else {
+            throw GameStoreError.jogressResultUnknown
+        }
+
+        // AC4: one of the two, at random. Both origins are offered even when they are the same id —
+        // the answer is the same either way, and a special case would be a branch nothing tests.
+        let returned = [a.originDigitamaId, b.originDigitamaId].randomElement(using: &generator)
+            ?? a.originDigitamaId
+        let consumed = [a.currentDigimonId, b.currentDigimonId]
+        let survivors = states.filter {
+            $0.persistentModelID != a.persistentModelID && $0.persistentModelID != b.persistentModelID
+        }
+
+        let result = GameState(currentDigimonId: recipe.result, stage: entry.stage, isActive: true,
+                               originDigitamaId: returned, now: now)
+        let egg = GameState(currentDigimonId: returned, isActive: false, now: now)
+        // Frozen at the grant, for `grantDigitama`'s reason: an egg left in the box would otherwise
+        // age while it waited and hatch stale.
+        egg.freeze(at: now)
+
+        context.delete(a)
+        context.delete(b)
+        // Written explicitly rather than left alone: if the player fused two FROZEN Digimon, the one
+        // they had out is still active and the result would be a second. Read off the list fetched
+        // before the deletes, so this never has to ask what a half-mutated context would answer.
+        for survivor in survivors {
+            survivor.isActive = false
+            survivor.freeze(at: now)
+        }
+        context.insert(result)
+        context.insert(egg)
+        recordDiscovery(id: recipe.result, now: now)
+        recordDiscovery(id: returned, now: now)
+        profile.record(ownedDigitama: returned)
+
+        do {
+            if let flush {
+                try flush()
+            } else {
+                try context.save()
+            }
+        } catch {
+            context.rollback()
+            throw error
+        }
+        return JogressOutcome(result: result, returnedDigitamaId: returned, consumedIds: consumed)
     }
 
     /// Hands the player `agu_digitama` if the box has left them with nothing to raise (US-129).

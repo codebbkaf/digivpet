@@ -1463,3 +1463,76 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   Perfect-stage parents (Angewomon/LadyDevimon, Vamdemon) mean a fusable pair is not always two
   Ultimates.
 ---
+
+## 2026-07-22 - US-132 (Perform a Jogress)
+- **Fusing two owned Digimon now works end to end.** New `Sources/Jogress.swift` (`JogressOffer`,
+  `JogressBoard`, `JogressWording`, `JogressOutcome`), new `Sources/JogressView.swift` (the pair list
+  and `JogressEntryRow`), `GameStore.performJogress` as one transaction, and
+  `MainScreenModel.jogressBoard` / `performJogress(_:)` joining them to `PartyView`. Build green,
+  **1690 tests (1659 + 31 new), 0 failures.**
+- Files changed: `Sources/Jogress.swift` (new), `Sources/JogressView.swift` (new),
+  `Tests/JogressFusionTests.swift` (new, 31 tests), `Sources/GameStore.swift`,
+  `Sources/MainScreenModel.swift`, `Sources/PartyView.swift`, `Sources/ContentView.swift`.
+- **THE STORY'S REAL TRAP WAS NOT THE FUSION, IT WAS DRAWING THE RESULT.** Every Jogress result is
+  one of the 780 orphans no authored line reaches, so the pre-existing `graph.presentation(forId:)`
+  answers **nil for every fusion in the game**. Left alone, the player who fused two Ultimates would
+  have got `SavedGameUnavailableView` over the Digimon they had just earned, a party row reading
+  `omegamon` with no art, and "No Digimon to fight with" from Battle. Fixed with a roster fallback in
+  `MainScreenModel.presentation(forId:)`, `PartyRow.rows` and the battle guard. **The graph is still
+  asked FIRST** — for a wired id the two agree on name and sprite, but the graph's stage is where the
+  ART lives, and that is the one field a disagreement draws a placeholder for.
+- **AC6 is the SHAPE of the store method, not a cleanup path.** Every refusal — a record from another
+  store, the same record twice, a dead parent, a pair that is not the recipe's, a result the roster
+  cannot draw — is decided *before the first mutation*, so the ineligible case needs no rollback at
+  all. The only thing that can fail afterwards is the write. `loadOrCreateProfile()` is called up
+  front deliberately: it can itself `save()`, and a save in the middle of the fusion would be exactly
+  the half-written transaction the AC forbids.
+- **AC4's judgement call, worth knowing because it is not forced by the wording:** the result inherits
+  the RETURNED egg's origin. Carrying the *other* parent's would leave both ids still held afterwards
+  and nothing actually released — the criterion would be true of the delete and false of the box.
+- **AC1 strictness:** a recipe condition must hold for BOTH parents. Inert today (all 14 shipped
+  recipes have empty conditions), so the choice is about what a later authored gate would MEAN — and
+  the strict reading cannot accidentally offer a fusion the data meant to gate.
+- **VERIFIED ON BOTH SIMULATORS, clean installs each time** (46mm Series 11, 41mm Series 9):
+  entry row reads `Jogress / 1 pair ready` over the seeded pair; the **unavailable** form is present,
+  not a button, and reads "None of your Digimon fuse with each other." over an ordinary box (AC2
+  observed on screen, not just unit-tested); the pair list fits three sprites, the arrow and
+  "WarGreymon + MetalGarurumon" on one line even at 41mm; and `-jogressCeremonyDemo` drove the REAL
+  `performJogress`, where a 14-frame burst caught `EvolutionCeremonyView` mid-play (WarGreymon
+  full-screen on black, then the white flash) settling to **"Omegamon · Ultimate"** out on the main
+  screen with real art.
+- **Learnings for future iterations:**
+  - **THE BUNDLE ID IS `com.digivpet.DigiVPet`, NOT `com.digivpet.app`.** A wrong id fails with
+    `FBSOpenApplicationServiceErrorDomain code=4`, which reads like a crash-on-launch and is not.
+    `simctl` then happily screenshots the *previous* screen, so the burst looks plausible and is
+    stale. Cost ~10 minutes. Read it from the built app:
+    `/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$APP/Info.plist"`.
+  - **`simctl erase` REFUSES on a booted device** (`code=405, Unable to erase contents and settings
+    in current state: Booted`) and the script carries on regardless. The sequence that works is
+    `terminate` → `shutdown` → `sleep 3` → `erase` → `boot` → `sleep 25-30` → `install` → `launch`.
+    Both sims are usually already booted at the start of an iteration, so this bites immediately.
+  - **A ceremony needs a burst with NO sleep between frames.** The existing pattern's `sleep 1` is
+    right for a walk cycle but far too slow here — 14 back-to-back `simctl io screenshot` calls
+    caught the flash; the same count at 1s apart would have landed entirely after it. Then take a
+    SECOND, slower burst for the settled screen.
+  - **When a value type makes two states exclusive, say so in the initialiser.** `JogressBoard`'s
+    init nils `reason` when there are offers and substitutes one when there are none, so "the entry
+    point never draws an empty list with nothing to explain it" (AC2) is unrepresentable rather than
+    tested. Same move as `JogressPair` sorting its ids in US-130.
+  - **An offer that CONSUMES what it indexes must be re-derived from the live box before it acts.**
+    `performJogress` re-checks the offer against `jogressBoard.offers` and re-matches the recipe on
+    the parents' current ids. Taking a Digimon out reorders the box (US-125's thaw moves a birth
+    date), so a party screen held across one switch could otherwise fuse two Digimon the player never
+    chose — worse than `activate(_:)`'s stale-row bug, which only put the wrong one out.
+  - **Inject the COMMIT, not just the clock, when a story says "a failure part-way rolls back".**
+    There is no other way to make SwiftData throw on demand, and the AC is otherwise unobservable.
+    `flush: (() throws -> Void)? = nil`, defaulting to `context.save()`; the app never passes it.
+  - **`-jogressListDemo` was added on the US-121 `-mapDetailDemo` precedent.** Whenever a story's new
+    UI sits one tap below an existing screen, it is unphotographable without a flag — `simctl` has no
+    tap command. Budget for the flag as part of the story, not as an afterthought.
+- REMAINS: US-133 onward (19/56 passing). Phase D is DONE; Phase E is the roster wiring — 11 device
+  trees then 26 orphan sweeps. **Phase E must read the two PDFs in `Resources/`, not Part 2 of the
+  `.md` beside them** (US-131 found the `.md`'s Pendulum half is wrong); the page map and the
+  `CGPDFDocument` render/crop tooling are in US-131's entry above. Note for it: the roster fallback
+  this story added means a newly wired orphan already draws correctly before its edge exists.
+---

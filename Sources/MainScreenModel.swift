@@ -38,6 +38,20 @@ extension EvolutionGraph {
     }
 }
 
+extension Roster {
+    /// How to draw the Digimon with this id, or nil if the roster has none.
+    ///
+    /// The roster's answer to `EvolutionGraph.presentation(forId:)`, and the one to reach for when
+    /// the id might be any of the 1,025 rather than one of the 88 the graph authors — a Jogress
+    /// participant (US-132) is an Ultimate no line reaches, so asking the graph about one answers
+    /// nil and the screen silently draws nothing.
+    func presentation(forId id: String) -> DigimonPresentation? {
+        entry(id: id).map {
+            DigimonPresentation(displayName: $0.displayName, stage: $0.stage, spriteFile: $0.spriteFile)
+        }
+    }
+}
+
 /// Drives the main screen: opens the saved game, and turns health data into energy every time the
 /// app comes to the front.
 @MainActor
@@ -198,6 +212,10 @@ final class MainScreenModel: ObservableObject {
     /// test drives step accrual against a two-map fixture catalog rather than against whatever
     /// `maps.json` currently says a map is worth.
     private let maps: MapCatalog
+    /// The fourteen Jogress recipes (US-131). Injected beside `roster` for its reason: a test builds
+    /// a two-recipe fixture catalog over fixture Digimon rather than fusing whatever `jogress.json`
+    /// currently ships.
+    private let jogress: JogressCatalog
     private let energySource: HealthEnergySource
     private let calendar: Calendar
     private let now: () -> Date
@@ -210,6 +228,10 @@ final class MainScreenModel: ObservableObject {
     /// and freshly seeded per check in the app so a map with several ready eggs does not always hand
     /// back the first one.
     private let makeDropGenerator: () -> SeededGenerator
+    /// The seeded RNG that decides WHICH of a fusion's two eggs comes back (US-132 AC4). Its own
+    /// generator for `makeDropGenerator`'s reason: a test that pins the returned egg must not have
+    /// to pin the next battle roll as well to do it.
+    private let makeJogressGenerator: () -> SeededGenerator
     private let notifications: NotificationDispatcher
     /// The three notification toggles, handed to `NotificationSettingsView`. Owned here rather than
     /// created by the settings screen so the screen and the dispatcher read the same object — a
@@ -299,6 +321,7 @@ final class MainScreenModel: ObservableObject {
         graph: EvolutionGraph = .bundled,
         roster: Roster = .bundled,
         maps: MapCatalog = .bundled,
+        jogress: JogressCatalog = .bundled,
         energySource: HealthEnergySource = HealthEnergySource(),
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init,
@@ -312,6 +335,9 @@ final class MainScreenModel: ObservableObject {
         makeDropGenerator: @escaping () -> SeededGenerator = {
             SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
         },
+        makeJogressGenerator: @escaping () -> SeededGenerator = {
+            SeededGenerator(seed: UInt64.random(in: UInt64.min...UInt64.max))
+        },
         notificationSettings: NotificationSettings? = nil,
         notificationDeliverer: PetNotificationDelivering? = nil
     ) {
@@ -319,6 +345,7 @@ final class MainScreenModel: ObservableObject {
         self.graph = graph
         self.roster = roster
         self.maps = maps
+        self.jogress = jogress
         self.energySource = energySource
         self.calendar = calendar
         self.now = now
@@ -328,6 +355,7 @@ final class MainScreenModel: ObservableObject {
         self.actionDuration = actionDuration
         self.makeBattleGenerator = makeBattleGenerator
         self.makeDropGenerator = makeDropGenerator
+        self.makeJogressGenerator = makeJogressGenerator
         let settings = notificationSettings ?? NotificationSettings()
         self.notificationSettings = settings
         self.notifications = NotificationDispatcher(
@@ -336,9 +364,27 @@ final class MainScreenModel: ObservableObject {
         )
     }
 
-    /// How to draw the Digimon currently being raised, or nil if the graph does not know it.
+    /// How to draw the Digimon currently being raised, or nil if neither the graph nor the roster
+    /// knows it.
     var presentation: DigimonPresentation? {
-        state.flatMap { graph.presentation(forId: $0.currentDigimonId) }
+        state.flatMap { presentation(forId: $0.currentDigimonId) }
+    }
+
+    /// How to draw a saved id: from the GRAPH where a line reaches it, and from the ROSTER
+    /// otherwise.
+    ///
+    /// The bridge US-122 built for opponents, applied to the Digimon the player has out — and
+    /// US-132 is what makes it necessary rather than tidy. A Jogress result is an Ultimate no
+    /// authored line reaches (`omegamon` is one of the 780 orphans until Phase E wires it), so a
+    /// graph-only lookup answers nil for every fusion in the game and the main screen would draw
+    /// `SavedGameUnavailableView` over a Digimon the player had just earned.
+    ///
+    /// The graph is asked FIRST and not merely preferred: for a wired id the two agree on the name
+    /// and the sprite, but the graph's stage is where the ART lives (see
+    /// `EvolutionGraph.presentation(forId:)`), and that is the one field a disagreement would draw
+    /// a placeholder for.
+    func presentation(forId id: String) -> DigimonPresentation? {
+        graph.presentation(forId: id) ?? roster.presentation(forId: id)
     }
 
     /// The four energy bars for the Digimon currently being raised, or nil if the graph does not
@@ -406,6 +452,7 @@ final class MainScreenModel: ObservableObject {
         seedMapDemoIfRequested()
         seedMapListDemoIfRequested()
         seedPartyDemoIfRequested()
+        seedJogressDemoIfRequested()
         // Every seed above runs AFTER the refresh that published, so the snapshot on disk still
         // describes the pre-demo game — a `-sickDemo -complicationDemo` run would screenshot an idle
         // pose. Republishing here is the same rule as `clean()`'s, applied to the demos: the state
@@ -974,6 +1021,53 @@ final class MainScreenModel: ObservableObject {
         try? store.save()
     }
 
+    /// Debug-only: puts a fusable PAIR in the box so US-132's entry point and the ceremony it plays
+    /// can be screenshotted. Nothing on the Simulator can raise two Ultimates, and a real save there
+    /// never holds a pair any recipe names.
+    ///
+    /// - `-jogressDemo` — WarGreymon and MetalGarurumon, both frozen, which is the shipped
+    ///   `wargreymon + metalgarurumon -> omegamon` recipe. Photographs the entry point offering it.
+    /// - `-jogressListDemo` — the same box, with `ContentView` pushing the pair list on top of the
+    ///   entry point, so `JogressOfferRow`'s three-sprite layout can be photographed on both screens.
+    /// - `-jogressCeremonyDemo` — the same box, then the fusion PERFORMED through the real
+    ///   `performJogress`, so what is photographed is the ceremony a real Jogress raises rather than
+    ///   a hand-set `pendingEvolution` (which is what `-evolutionCeremonyDemo` is for).
+    ///
+    /// Deliberately leaves the Digimon the player has OUT alone, so the pair are two FROZEN records
+    /// and the fusion exercises the case where neither parent was active — the one that would leave
+    /// two Digimon out if `performJogress` did not freeze the survivors.
+    ///
+    /// IDEMPOTENT, like `-partyDemo` and for the reason US-119's screenshot found the hard way:
+    /// this flag WRITES TO THE SAVE, so a second launch without the clear would stack a second pair
+    /// into the box and the entry point would read "4 pairs ready".
+    private func seedJogressDemoIfRequested() {
+        let ceremony = CommandLine.arguments.contains("-jogressCeremonyDemo")
+        let wants = ceremony
+            || CommandLine.arguments.contains("-jogressDemo")
+            // The pair list has nothing to draw without the same seeded box the entry point needs.
+            || CommandLine.arguments.contains("-jogressListDemo")
+        guard wants, let store else { return }
+        let context = store.container.mainContext
+        for stale in ((try? store.allStates()) ?? []) where !stale.isActive {
+            context.delete(stale)
+        }
+        let day: TimeInterval = 86_400
+        // Stages and sprites off the ROSTER rather than typed here, so the seed cannot disagree with
+        // the file the offer is built from. Origins are the two eggs these two really hatch from,
+        // which is what makes the returned egg meaningful in the shot.
+        let pair = [("wargreymon", "agu_digitama"), ("metalgarurumon", "gabu_digitama")]
+        for (index, (id, origin)) in pair.enumerated() {
+            guard let entry = roster.entry(id: id) else { continue }
+            context.insert(GameState(currentDigimonId: id, stage: entry.stage, isActive: false,
+                                     originDigitamaId: origin,
+                                     now: now().addingTimeInterval(-Double(3 - index) * day)))
+        }
+        try? store.save()
+
+        guard ceremony, let offer = jogressBoard.offers.first else { return }
+        performJogress(offer)
+    }
+
     /// How long `-poopCleanDemo` waits before cleaning. Long enough to launch, settle and start
     /// taking screenshots; short enough that a burst does not have to run for a minute.
     private static let poopCleanDemoDelay: TimeInterval = 10
@@ -1214,7 +1308,7 @@ final class MainScreenModel: ObservableObject {
     /// builds this inside `body` redraws when a Digimon in the box changes. The fetch behind it is
     /// a handful of records, and the party screen is not a place the player stays.
     var partyRows: [PartyRow] {
-        PartyRow.rows(for: boxedStates, in: graph)
+        PartyRow.rows(for: boxedStates, in: graph, roster: roster)
     }
 
     /// Every saved Digimon, in the order `PartyRow.id` indexes. One accessor, so the list the rows
@@ -1247,7 +1341,7 @@ final class MainScreenModel: ObservableObject {
         // span it spent frozen — so taking one out really does reorder the list. A tap carried over
         // from a stale list would otherwise activate whichever Digimon had moved into that slot.
         guard row.id >= 0, row.id < states.count,
-              PartyRow.rows(for: states, in: graph)[row.id] == row else { return false }
+              PartyRow.rows(for: states, in: graph, roster: roster)[row.id] == row else { return false }
         let target = states[row.id]
         do {
             try store.activate(target, now: now())
@@ -1267,6 +1361,86 @@ final class MainScreenModel: ObservableObject {
             // the screen still shows the Digimon that is really out. Worth a line, not worth taking
             // the screen away from the player.
             Self.log.error("Could not change which Digimon is out: \(String(describing: error))")
+            return false
+        }
+    }
+
+    /// What the party screen's Jogress entry point offers (US-132): every pair in the box that
+    /// matches a recipe, is both alive and has its conditions met — or the one line saying why there
+    /// is none.
+    ///
+    /// Computed rather than published, for `partyRows`' reason: the catalog and the roster are
+    /// constants and each `GameState` is a `@Model`, so a screen that builds this inside `body`
+    /// redraws when the box changes.
+    var jogressBoard: JogressBoard {
+        JogressBoard.make(for: boxedStates, catalog: jogress, roster: roster) {
+            ConditionContext(state: $0, now: self.now(), calendar: self.calendar)
+        }
+    }
+
+    /// Fuses the pair on this offer (US-132): both parents leave the box, the result comes out as the
+    /// Digimon the player has out, and one of the two eggs comes back.
+    ///
+    /// The transaction itself is `GameStore.performJogress` and nothing here — one save, so a crash
+    /// cannot land between losing two Digimon and gaining one. All this adds is which records the
+    /// offer means, the ceremony the screen plays, and the failsafe check afterwards.
+    ///
+    /// THE OFFER IS RE-DERIVED FROM THE LIVE BOX BEFORE IT IS ACTED ON, which is `activate(_:)`'s
+    /// staleness rule applied to a pair rather than to a row — and it matters more here, because
+    /// this CONSUMES what it indexes. Taking a Digimon out reorders the box (US-125's thaw moves a
+    /// birth date), so a party screen held across one switch could otherwise offer up two Digimon
+    /// the player never chose. An offer the box no longer makes is refused, not adjusted.
+    ///
+    /// AC7: the ceremony is `EvolutionCeremonyView`'s, raised the same way a hatch or an evolution
+    /// raises it — the fusion is a "you are now something new" moment and the screen already knows
+    /// how to play one. Both forms come through `presentation(forId:)`, which falls back to the
+    /// roster: every Jogress participant is an Ultimate the 88-node graph has never heard of (the
+    /// Codebase Patterns' first rule), so a graph-only lookup would be nil for all of them and the
+    /// ceremony would be skipped on every fusion in the game.
+    ///
+    /// - Returns: whether the fusion happened.
+    @discardableResult
+    func performJogress(_ offer: JogressOffer) -> Bool {
+        guard let store, jogressBoard.offers.contains(offer) else { return false }
+        let states = boxedStates
+        guard offer.first.rowId < states.count, offer.second.rowId < states.count else { return false }
+        let first = states[offer.first.rowId]
+        let second = states[offer.second.rowId]
+        guard let recipe = jogress.recipe(for: first.currentDigimonId,
+                                          and: second.currentDigimonId) else { return false }
+        var generator = makeJogressGenerator()
+        do {
+            let outcome = try store.performJogress(recipe, parents: (first, second), roster: roster,
+                                                   now: now(), using: &generator)
+            state = outcome.result
+            // Kept in step with the store the way `advance` and the drop check do, so the Dex and
+            // US-121's map detail reveal both the fusion and the returned egg at once rather than at
+            // the next launch.
+            discoveredDigimonIds.insert(outcome.result.currentDigimonId)
+            discoveredDigimonIds.insert(outcome.returnedDigitamaId)
+            // The form left behind is the FIRST parent — the one nearer the top of the party list,
+            // so the ceremony fades out of the Digimon the player picked first rather than out of
+            // whichever id happened to sort earlier.
+            if let from = presentation(forId: offer.first.digimonId),
+               let to = presentation(forId: outcome.result.currentDigimonId) {
+                pendingEvolution = EvolutionEvent(from: from, to: to)
+            }
+            // The screen is holding a pose belonging to a Digimon that no longer exists.
+            animation = restingAnimation
+            // AC8. A no-op by construction — the fusion is alive and in the box, so the player is
+            // not stranded — and called anyway, because "the box just changed shape" is exactly the
+            // moment US-129 exists for and a later change to what a Jogress consumes must not have
+            // to remember to add it.
+            checkForStranding()
+            publishComplicationSnapshot()
+            Self.log.info("Jogress: \(outcome.consumedIds.joined(separator: " + ")) -> \(outcome.result.currentDigimonId), \(outcome.returnedDigitamaId) returned")
+            return true
+        } catch {
+            // The store left the box exactly as it stood — every refusal is decided before the first
+            // mutation, and a failed write is rolled back — so the two parents are still there and
+            // the screen is still true. Worth a line, not worth taking the screen away from the
+            // player.
+            Self.log.error("Could not perform the Jogress: \(String(describing: error))")
             return false
         }
     }
@@ -1750,7 +1924,10 @@ final class MainScreenModel: ObservableObject {
             show(nil, message: BattleCost.insufficientEnergyReason)
             return nil
         }
-        guard let player = graph.presentation(forId: state.currentDigimonId) else {
+        // Through the roster fallback, for the reason `presentation(forId:)` gives: a Jogress result
+        // (US-132) is on no authored line, and a graph-only lookup would tell the player who had
+        // just fused two Ultimates that they have "No Digimon to fight with".
+        guard let player = presentation(forId: state.currentDigimonId) else {
             show(nil, message: "No Digimon to fight with.")
             return nil
         }
