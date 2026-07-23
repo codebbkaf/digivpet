@@ -5032,3 +5032,26 @@ The thirty, `Perfect -> Ultimate`:
     precedent); jougamon/jumbogamemon land stranded on penc-sw (no Digitama) -> strandedUltimate.
 - REMAINS: US-167 (N-R), US-168 (S-Z), US-169 (Armor-Hybrid). 39 Ultimate orphans (N-Z) + 16
   Armor-Hybrid = 55 total. Ogudomon still pinned for US-167 (display name O). 53/56 passing.
+
+## 2026-07-23 - US-170 - Metric-to-game conversion config file
+- Shipped the single conversion-constant config that US-171..US-192 will read.
+- Files (were untracked from a prior interrupted iteration; verified, regenerated, tested, committed):
+  - Resources/consumption.json (rides the existing Resources folder reference)
+  - Sources/ConsumptionConfig.swift (structs: ConsumptionConfig, MeatRange, HitRateCoefficients,
+    ElementDamageMultipliers, StageStats; `bundled` fatalErrors on bad data like MapCatalog.bundled;
+    `stats(for: Stage)` keyed on rawValue; `rates`/`caps` shared lists)
+  - Sources/ConsumptionConfigValidator.swift (ConsumptionValidationError + validate() returns all
+    findings: nonPositiveRate, negativeMax, emptyStatTable)
+  - Tests/ConsumptionConfigTests.swift (11 tests)
+- Verified: `xcodegen generate` re-run AFTER the test file existed (grep -c ConsumptionConfigTests
+  pbxproj == 4); full `xcodebuild test` => TEST SUCCEEDED, all 11 ConsumptionConfig tests passed.
+- **Learnings for future iterations:**
+  - stageStats is keyed on `Stage.rawValue` strings ("Baby I", "Ultimate-Super Ultimate", "Armor-Hybrid"),
+    NOT enum case names. Digitama is deliberately absent (an egg never battles); the test asserts
+    `stats(for: .digitama) == nil`.
+  - AC#3 ("no constant reworked by US-171..192 stays hard-coded") is a STANDING constraint on the
+    later stories, not this one — each of US-171..192 that touches FeedAction/TrainAction/Battle must
+    read ConsumptionConfig instead of a literal, or it violates US-170's AC retroactively.
+  - `rates` (must be > 0) and `caps` (must be >= 0) are exposed on ConsumptionConfig so the validator
+    and the test check the SAME list — add any new numeric field to one of those two lists.
+---

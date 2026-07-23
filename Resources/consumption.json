@@ -1,0 +1,30 @@
+{
+  "kcalPerTrain": 50,
+  "stepsPerBattleCharge": 300,
+  "maxBattleCharges": 10,
+  "handwashPerCleanCharge": 1,
+  "maxCleanCharges": 2,
+  "meatPerBattleWin": { "min": 1, "max": 3 },
+  "meatCap": 20,
+  "hitRate": {
+    "base": 0.85,
+    "agilityWeight": 0.03,
+    "floor": 0.30,
+    "ceiling": 0.98
+  },
+  "elementDamage": {
+    "advantage": 1.5,
+    "neutral": 1.0,
+    "disadvantage": 0.5,
+    "minimum": 1
+  },
+  "stageStats": {
+    "Baby I": { "baseHP": 3, "baseAttack": 1, "baseAgility": 1, "trainingCap": 2 },
+    "Baby II": { "baseHP": 4, "baseAttack": 2, "baseAgility": 2, "trainingCap": 3 },
+    "Child": { "baseHP": 5, "baseAttack": 3, "baseAgility": 3, "trainingCap": 4 },
+    "Adult": { "baseHP": 7, "baseAttack": 5, "baseAgility": 4, "trainingCap": 6 },
+    "Perfect": { "baseHP": 9, "baseAttack": 7, "baseAgility": 5, "trainingCap": 8 },
+    "Ultimate-Super Ultimate": { "baseHP": 12, "baseAttack": 10, "baseAgility": 6, "trainingCap": 10 },
+    "Armor-Hybrid": { "baseHP": 8, "baseAttack": 6, "baseAgility": 6, "trainingCap": 7 }
+  }
+}
