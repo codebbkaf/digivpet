@@ -468,6 +468,8 @@ struct DexDetailView: View {
             .font(.system(size: 10))
             .foregroundStyle(.secondary)
 
+        sleepBar
+
         if candidates.isEmpty {
             // Said out loud rather than left as a bare heading. Most of the roster has no authored
             // line, so an empty section here would be the common case and would read as a bug.
@@ -493,6 +495,25 @@ struct DexDetailView: View {
             }
 
             hints
+        }
+    }
+
+    /// The accumulated-sleep gate as a dash bar (US-183): `required` dashes, `earned` solid, the
+    /// rest outline, no numbers — so the player reads how much sleep this Digimon still owes its next
+    /// form. Drawn only when a branch out of here gates on accumulated sleep (`SleepGate`); every
+    /// other Digimon shows nothing here. `earned` comes from the SAME lifetime total the gate
+    /// compares, so the bar and the branch's green check can never disagree.
+    @ViewBuilder
+    private var sleepBar: some View {
+        if let required = SleepGate.requiredHours(in: candidates.flatMap(\.conditions)) {
+            HStack(spacing: 4) {
+                Image(systemName: "moon.zzz.fill")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                DashBar(filled: SleepGate.earnedHours(in: context), total: required, tint: .indigo)
+            }
+            .padding(.horizontal, 4)
+            .accessibilityLabel("Sleep to evolve")
         }
     }
 

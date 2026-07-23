@@ -226,6 +226,11 @@ final class ConditionRevealTests: XCTestCase {
     /// The exact scenario `-dexRevealDemo` puts on screen, asserted here so the screenshot is
     /// checking the layout and not the arithmetic: Greymon's steps warm, its training cold, and
     /// both of Meramon's criteria met so its cell draws as earned and Greymon's does not.
+    ///
+    /// US-183 gave Greymon a third criterion — an accumulated-sleep gate — which this scenario
+    /// leaves cold: it credits no lifetime sleep, so that condition reads `.far` like the training
+    /// one. The demo still shows all three levels across the two cells; the sleep gate just adds a
+    /// second cold row to Greymon's.
     func testTheDemoScenarioProducesAllThreeLevels() {
         let candidates = DexRow.candidates(of: "agumon", in: .bundled, resolvedAgainst: [:])
         let scenario = ConditionContext(
@@ -238,7 +243,7 @@ final class ConditionRevealTests: XCTestCase {
 
         let greymon = candidates[0]
         XCTAssertEqual(greymon.conditions.map { ConditionReveal.level(of: $0, in: scenario) },
-                       [.close, .far])
+                       [.close, .far, .far])
         XCTAssertFalse(ConditionReveal.allMet(greymon.conditions, in: scenario))
 
         let meramon = candidates[1]

@@ -132,6 +132,13 @@
               "comparison": "atLeast",
               "value": 6,
               "hint": "Train it often"
+            },
+            {
+              "metric": "health.sleep",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 960,
+              "hint": "Let it bank a good long stretch of sleep"
             }
           ]
         },
