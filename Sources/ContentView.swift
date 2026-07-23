@@ -609,7 +609,8 @@ struct ContentView: View {
                 }
 
                 if let progress = model.energyProgress {
-                    EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType)
+                    EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType,
+                                   sleepHours: model.sleepHours, sleepHoursTotal: model.sleepHoursCap)
                 }
 
                 if model.state != nil {

@@ -101,6 +101,13 @@ struct EnergyBarsView: View {
     /// than crowning whichever type happens to sort first.
     let dominant: EnergyType?
 
+    /// The active Digimon's accumulated sleep, in whole hours (US-182). The Zz slot is drawn as a
+    /// sleep DashBar (US-171) filling `sleepHours` of `sleepHoursTotal` rather than as a spirit-energy
+    /// bar: sleep is now surfaced as the lifetime hours the evolution gate reads (US-181/US-183), not
+    /// as the nightly spirit energy that still accrues underneath.
+    var sleepHours: Int = 0
+    var sleepHoursTotal: Int = 0
+
     var body: some View {
         // Two by two rather than four stacked rows (US-039). Measured on a 42mm screen, four rows
         // cost 44 of the 136 points the whole screen has; the same four bars in two rows cost 22,
@@ -115,11 +122,17 @@ struct EnergyBarsView: View {
             ForEach(Array(rowPairs.enumerated()), id: \.offset) { _, pair in
                 HStack(spacing: 6) {
                     ForEach(pair) { goal in
-                        EnergyBarRow(
-                            goal: goal,
-                            fraction: progress.fraction(of: goal),
-                            isDominant: goal.type == dominant
-                        )
+                        // The Zz slot shows accumulated sleep as a DashBar (US-182); the other three
+                        // stay energy bars. Same cell width, so the 2×2 grid keeps its shape.
+                        if goal.type == .spirit {
+                            SleepDashBarRow(hours: sleepHours, total: sleepHoursTotal)
+                        } else {
+                            EnergyBarRow(
+                                goal: goal,
+                                fraction: progress.fraction(of: goal),
+                                isDominant: goal.type == dominant
+                            )
+                        }
                     }
                 }
             }
@@ -256,5 +269,34 @@ private struct EnergyBarRow: View {
     private var accessibilityValue: String {
         let amount = goal.target.map { "\(goal.earned) of \($0)" } ?? "\(goal.earned)"
         return isDominant ? "\(amount), dominant" : amount
+    }
+}
+
+/// The Zz slot (US-182): the "Zz" name column of an energy bar, but the bar itself is a `DashBar`
+/// (US-171) filled with the active Digimon's accumulated sleep HOURS rather than an energy capsule
+/// with a number. Shares `EnergyBarLayout`'s name width and bar height so it lines up with the three
+/// energy bars it sits among, and shows no digits — the dashes are the whole reading.
+private struct SleepDashBarRow: View {
+    let hours: Int
+    let total: Int
+
+    var body: some View {
+        HStack(spacing: EnergyBarLayout.columnSpacing) {
+            // The same "Zz" label the spirit energy bar carried (US-113), in `.secondary` — the sleep
+            // bar is never the highlighted-dominant one, so it takes the plain weight and hue.
+            Text(EnergyType.spirit.shortName)
+                .font(.system(size: EnergyBarLayout.nameFontSize))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .frame(width: EnergyBarLayout.nameWidth, alignment: .leading)
+
+            // The dashes fill the rest of the cell — no value column, because a DashBar shows no
+            // number. `.secondary` to match the un-highlighted energy bars beside it.
+            DashBar(filled: hours, total: total, tint: .secondary,
+                    dashHeight: EnergyBarLayout.barHeight, spacing: 1)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(EnergyType.spirit.displayName)
+        .accessibilityValue("\(min(max(hours, 0), max(total, 0))) of \(total) hours slept")
     }
 }

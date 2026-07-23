@@ -496,6 +496,88 @@ final class MainScreenEnergyBarsTests: XCTestCase {
     }
 }
 
+// MARK: - The Zz sleep bar on the main screen (US-182)
+
+/// The main-screen Zz DashBar reads the ACTIVE Digimon's accumulated sleep (US-181), so switching
+/// which Digimon is out shows its own rest. The bar's fill is `sleepHours` of the fixed `sleepHoursCap`
+/// — no number — and the model is what feeds both to `EnergyBarsView`.
+@MainActor
+final class MainScreenSleepBarTests: XCTestCase {
+    private var storeDirectory: URL!
+    private var storeURL: URL { storeDirectory.appendingPathComponent("Sleep.store") }
+    private let now = Date(timeIntervalSince1970: 1_784_000_000)
+
+    override func setUpWithError() throws {
+        try super.setUpWithError()
+        storeDirectory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: storeDirectory, withIntermediateDirectories: true)
+    }
+
+    override func tearDownWithError() throws {
+        try? FileManager.default.removeItem(at: storeDirectory)
+        try super.tearDownWithError()
+    }
+
+    /// No health fetchers: the accumulation is written into the saved record directly, so the bar is
+    /// tested on stored sleep rather than on a live reading.
+    private func makeModel() -> MainScreenModel {
+        MainScreenModel(
+            makeStore: { [storeURL] in try GameStore(url: storeURL) },
+            graph: .bundled,
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: EmptyFetcher()),
+                sleepReader: LastNightSleepReader(fetcher: EmptySleepFetcher())
+            ),
+            now: { [now] in now }
+        )
+    }
+
+    /// AC1: the bar shows the active Digimon's accumulated sleep in whole hours. 405 minutes is
+    /// 6.75 h, floored to the six dashes the bar can fill.
+    func testTheZzBarShowsTheActiveDigimonsAccumulatedSleepInWholeHours() async throws {
+        let store = try GameStore(url: storeURL)
+        let state = try store.loadOrCreate(digitamaId: "agu_digitama", now: now)
+        state.currentDigimonId = "agumon"
+        state.stage = .child
+        state.creditSleep(minutes: 405)
+        try store.save()
+
+        let model = makeModel()
+        await model.start()
+
+        XCTAssertEqual(model.sleepHours, 6, "6.75 h floors to the six whole-hour dashes")
+        XCTAssertGreaterThan(model.sleepHoursCap, 0, "the bar has a fixed number of dashes to fill")
+    }
+
+    /// AC2: switching the active Digimon re-reads the bar off the new record. Two box-mates with
+    /// different stored sleep give different fills — the crux the screenshot AC confirms visually.
+    func testSwitchingTheActiveDigimonUpdatesTheZzBar() async throws {
+        let store = try GameStore(url: storeURL)
+        let first = try store.loadOrCreate(digitamaId: "agu_digitama", now: now)
+        first.currentDigimonId = "agumon"
+        first.stage = .child
+        first.creditSleep(minutes: 8 * 60)              // 8 h out
+        let second = try store.grantDigitama("agu_digitama", now: now)
+        second.creditSleep(minutes: 2 * 60)             // 2 h frozen
+        try store.save()
+
+        let model = makeModel()
+        await model.start()
+        XCTAssertEqual(model.sleepHours, 8, "the Digimon that is out reads its own eight hours")
+
+        let secondRow = try XCTUnwrap(model.partyRows.first { $0.isSelectable })
+        XCTAssertTrue(model.activate(secondRow), "the box-mate is taken out")
+        XCTAssertEqual(model.sleepHours, 2, "and the Zz bar now reads the two hours it banked")
+    }
+
+    /// Before a game is loaded there is no active Digimon, so the bar reads empty rather than crashing
+    /// on a nil state.
+    func testTheZzBarIsEmptyBeforeAGameIsLoaded() {
+        XCTAssertEqual(makeModel().sleepHours, 0)
+    }
+}
+
 private struct EmptyFetcher: HealthSampleFetching {
     func samples(of metric: QuantityMetric, in interval: DateInterval) async throws -> [HealthSample] { [] }
 }

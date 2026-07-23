@@ -464,6 +464,7 @@ final class MainScreenModel: ObservableObject {
         seedFeedDemoIfRequested()
         seedTrainDemoIfRequested()
         seedSleepDemoIfRequested()
+        seedSleepBarDemoIfRequested()
         seedWanderDemoIfRequested()
         seedSickDemoIfRequested()
         seedDeathDemoIfRequested()
@@ -607,6 +608,29 @@ final class MainScreenModel: ObservableObject {
             state.stageEnteredDate = now()
         }
         forceAsleepForDemo()
+        animation = restingAnimation
+    }
+
+    /// Debug-only: puts a Child on the main screen with a known accumulated-sleep total so the Zz
+    /// DashBar (US-182) can be screenshotted with a real fill — the Simulator has no HealthKit sleep
+    /// to bank, so the accumulation is seeded directly.
+    ///
+    /// - `-sleepBarDemo` — 6 accumulated hours, so the Zz bar reads 6 of `sleepHoursCap` dashes.
+    /// - `-sleepBarFullDemo` — 14 hours, a nearly-full bar, for the "two Digimon, different fill"
+    ///   comparison AC3 asks for.
+    private func seedSleepBarDemoIfRequested() {
+        let arguments = CommandLine.arguments
+        let full = arguments.contains("-sleepBarFullDemo")
+        guard arguments.contains("-sleepBarDemo") || full, let state else { return }
+
+        // Off the starting egg so the bar sits under a real Digimon rather than the placeholder.
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        forceAwakeForDemo()
+        state.accumulatedSleepMinutes = Double((full ? 14 : 6) * 60)
         animation = restingAnimation
     }
 
@@ -1414,6 +1438,23 @@ final class MainScreenModel: ObservableObject {
     /// The most charges the train bar shows, and so its total (US-177). Off the shipped
     /// `ConsumptionConfig`, the same source `battleChargeCap` reads.
     var trainChargeCap: Int { ConsumptionConfig.bundled.maxTrainCharges }
+
+    /// The active Digimon's accumulated HealthKit sleep in whole hours (US-182), what the main-screen
+    /// Zz DashBar fills. Off `state`, so switching which Digimon is out shows ITS lifetime sleep
+    /// (US-181) and never another's. Floored to a whole hour because the bar counts hour dashes; the
+    /// fractional part lives on until it rounds up. Zero before `start()` has opened a Digimon.
+    var sleepHours: Int { Int(state?.accumulatedSleepHours ?? 0) }
+
+    /// The total of the main-screen Zz DashBar (US-182): a nominal display ceiling in hours, so the
+    /// bar reads as an at-a-glance "how rested is this Digimon" rather than the exact evolution gate.
+    /// The precise `required`-vs-`earned` sleep bar belongs to the detail view (US-183); this one just
+    /// needs a fixed number of dashes to fill, and 16 is the headline requirement the PRD authors
+    /// against (Agumon needs 16 h). A constant and not a `GameState` value — every Digimon's main-screen
+    /// bar is the same length, only its fill differs.
+    var sleepHoursCap: Int { Self.sleepHoursDisplayCap }
+
+    /// The nominal full-bar sleep in hours for the main-screen Zz DashBar — see `sleepHoursCap`.
+    static let sleepHoursDisplayCap = 16
 
     /// Every Digitama the player currently HOLDS (US-127) — an unhatched egg in the box, or any
     /// living Digimon that hatched from one. The seam US-128's drop engine filters a map's slots
