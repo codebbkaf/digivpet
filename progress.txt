@@ -5055,3 +5055,32 @@ The thirty, `Perfect -> Ultimate`:
   - `rates` (must be > 0) and `caps` (must be >= 0) are exposed on ConsumptionConfig so the validator
     and the test check the SAME list — add any new numeric field to one of those two lists.
 ---
+
+## 2026-07-23 - US-171 - Reusable dash-bar component
+- Shipped Sources/DashBar.swift: the single visual language every value bar (meat, charges, sleep,
+  US-172..192) will render through. `DashBar(filled:total:tint:)` draws `total` equal-width dashes,
+  the first `filled` solid (RoundedRectangle.fill) and the rest outline-only (strokeBorder, 1pt),
+  NO digits. Pure `DashBarLayout.dashes(filled:total:) -> [Dash]` holds all the clamping so a test
+  counts solid vs outline without a view graph.
+- Files: Sources/DashBar.swift (new), Tests/DashBarTests.swift (new, 4 tests).
+- Verified: full `xcodebuild test` on Series 11 (46mm) => TEST SUCCEEDED, 2472 tests 0 failures.
+  DashBar tests cover counts across filled in {0, half, total, total+1}, total==0/negative empties,
+  and solid-leads-outline-follows order. Visual AC verified on the 41mm sim (Series 9, 10.4) with a
+  throwaway ImageRenderer probe at 162pt content width: the PNG showed exactly 6 solid + 10 outline
+  dashes, no number, no horizontal overflow (174pt wide). Probe deleted after; not shipped.
+- **Learnings for future iterations:**
+  - The narrowest CURRENT-OS sim is 42mm (Series 11); a true 41mm needs Series 9 on watchOS 10.4,
+    which was SHUTDOWN and unmatchable by name — boot it and pass `-destination 'id=<UDID>'`
+    (FB045EDB-DEB9-40AA-B8FB-819E9E742517). Deployment target is 10.0, so 10.4 devices are valid.
+  - To screenshot a bare SwiftUI view (no app run): a gated XCTest using `@MainActor ImageRenderer`
+    -> `uiImage.pngData()` written to an ABSOLUTE path. Simulator processes run on the host, so
+    "/tmp/foo.png" lands on the HOST /tmp (NOT under CoreSimulator/Devices) — read it there.
+    Pass the env var to the test host with the `TEST_RUNNER_` prefix (TEST_RUNNER_DASHBAR_RENDER=1).
+  - `strokeBorder` (not `stroke`) for the outline dash: it insets the 1pt line so it stays inside
+    the dash frame instead of bleeding onto its neighbour. RoundedRectangle is InsettableShape so it
+    has strokeBorder.
+  - The xcodegen "generate AFTER the test file exists" rule (US-166) held again: generated once
+    after both DashBar.swift + DashBarTests.swift existed; `grep -c DashBarTests pbxproj == 4` and
+    the count climbed. Re-generated a THIRD time after deleting the probe to drop it from the target.
+- REMAINS: US-172..US-192 (24 stories). US-172 (bottom-align action row) is next by priority.
+---
