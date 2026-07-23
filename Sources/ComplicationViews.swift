@@ -195,8 +195,9 @@ private struct ComplicationSprite: View {
         .frame(width: side, height: side)
         // The entry transition (US-049). WidgetKit animates between timeline entries, but only where
         // view IDENTITY changed — without the `.id` the two frames are the same `Image` node with new
-        // contents and it cuts hard. A cross-fade rather than a slide or a scale: the sprite is 24pt
-        // of pixel art in a 52pt circle, and anything that moves it lands it outside the circle. What
+        // contents and it cuts hard. A cross-fade rather than a slide or a scale: the sprite fills
+        // the inscribed square of the circle (US-173), and anything that moves it lands it outside
+        // the bezel. What
         // is being softened is the seam, not the sprite; the motion is carried by the two frames
         // differing, which is what a two-frame V-Pet walk has always been.
         .id(step)
@@ -204,6 +205,20 @@ private struct ComplicationSprite: View {
         // Keeps the Digimon in the face's accent colour rather than the dimmed layer, so it stays
         // the thing you see first.
         .widgetAccentable()
+    }
+}
+
+/// Sizing for the circular family's sprite (US-173).
+enum CircularComplicationLayout {
+    /// The side of the largest square that fits INSIDE a circle of the given diameter without its
+    /// corners crossing the bezel: the square inscribed in the circle, `diameter / √2`.
+    ///
+    /// A centered square of this side has its corners exactly on the circle, so the sprite frame
+    /// grows to fill as much of the face as it can while never clipping the round bezel — and the
+    /// pixel art, `.scaledToFit()` inside that frame, comes with it. US-173 replaced the flat 24pt
+    /// frame this returned ~37pt for on a 52pt circle, i.e. more than half again as big.
+    static func spriteSide(diameter: CGFloat) -> CGFloat {
+        diameter / CGFloat(2).squareRoot()
     }
 }
 
@@ -215,9 +230,18 @@ struct CircularComplicationView: View {
     var step: Int = 0
 
     var body: some View {
-        ZStack {
-            AccessoryWidgetBackground()
-            ComplicationSprite(snapshot: snapshot, step: step, side: 24)
+        // Read the whole face's size (US-173) and grow the sprite to the inscribed square of it,
+        // rather than the flat 24pt frame that stayed small on every watch. The GeometryReader
+        // wraps the ZStack — as a sibling of the background it negotiated down to the sprite's own
+        // size and never saw the full circle. This reads at watch-face size on a 42mm and a 46mm
+        // alike and clips on neither, since the frame corners just touch the bezel.
+        GeometryReader { proxy in
+            let diameter = min(proxy.size.width, proxy.size.height)
+            ZStack {
+                AccessoryWidgetBackground()
+                ComplicationSprite(snapshot: snapshot, step: step,
+                                   side: CircularComplicationLayout.spriteSide(diameter: diameter))
+            }
         }
         .accessibilityLabel(Text(snapshot.accessibilityLabel))
     }
@@ -253,8 +277,8 @@ struct RectangularComplicationView: View {
             // static label, which would make the button unreachable to VoiceOver — an interactive
             // widget nobody can activate.
             information
-            // US-050. The rectangular family and not the circular one: circular is a 24pt sprite
-            // in a 52pt circle with no room for a second target, and a button crammed in there
+            // US-050. The rectangular family and not the circular one: circular is a lone sprite
+            // filling the circle with no room for a second target, and a button crammed in there
             // would be missed as often as it was hit.
             if snapshot.needsCleaning {
                 CleanComplicationButton()

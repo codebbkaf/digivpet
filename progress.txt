@@ -5134,3 +5134,37 @@ The thirty, `Perfect -> Ultimate`:
     load-bearing and pinned; do not pad the action row further without re-measuring the slot.
 - REMAINS: US-173..US-192 (20 stories). US-173 (bigger widget sprite) is next by priority.
 ---
+
+## 2026-07-23 — US-173: Enlarge the Digimon image in the circular complication
+- CircularComplicationView drew the sprite at a flat `side: 24` inside a ~52pt circle, so it read
+  small at watch-face size. Now the view is a `GeometryReader` wrapping the ZStack, and the sprite
+  gets `CircularComplicationLayout.spriteSide(diameter:) = diameter / √2` — the side of the square
+  inscribed in the circle. That frame is as big as it can be while its corners only just touch the
+  bezel, so the sprite grows to fill the face and clips on no watch size (37pt on a 52pt face, and
+  proportionally smaller on a 41mm where a fixed 36pt would have clipped). `.scaledToFit()` and
+  `.interpolation(.none)` are untouched, so the pixel art stays crisp.
+- New `CircularComplicationLayout` enum beside the view; pinned by
+  `ComplicationTests.testTheCircularSpriteFillsTheCircleWithoutClipping` (corner distance == radius,
+  and side > the old 24). Updated two stale "24pt sprite in a 52pt circle" comments.
+- Files: Sources/ComplicationViews.swift, Tests/ComplicationTests.swift.
+- Build green (Series 11 46mm). 2474 tests (2473 + 1 new), 0 failures.
+- VISUAL AC verified with `-complicationDemo` before/after screenshots (HEAD build vs this build,
+  same 46mm sim). The circular egg goes from ~35% of its AccessoryWidgetBackground square to ~65%,
+  well inside the square so a real circular face won't clip it. Confirmed the frame really is the
+  inscribed square with a throwaway red `Text("\(Int(diameter))")` overlay: it printed 52, i.e. the
+  demo hands the view the full 52pt face and side resolves to ~37pt. Overlay removed before shipping.
+- **Learnings for future iterations:**
+  - THE SCREENSHOT TRAP THAT COST THE MOST HERE: `xcrun simctl install` was silently installing a
+    STALE app from the wrong DerivedData folder, so four rounds of before/after looked byte-identical
+    and I nearly concluded the change did nothing. The main project builds to a DerivedData hash you
+    must read from `xcodebuild -showBuildSettings | grep BUILT_PRODUCTS_DIR`, NOT the newest
+    `DigiVPet-*` dir (a git worktree build creates its own hash and pollutes an `ls -td` guess). Always
+    resolve BUILT_PRODUCTS_DIR per build; `simctl uninstall` before `install`; and prove the running
+    binary is yours with a temporary on-screen marker before trusting any pixel measurement.
+  - A `GeometryReader` as a *sibling* inside a ZStack (`ZStack { background; GeometryReader {...} }`)
+    negotiates its size DOWN to the other children and does not report the container size — it read
+    ~34pt not 52. Wrap the whole ZStack in the GeometryReader instead to read the real face size.
+  - The `-complicationDemo` screen republishes a LIVE snapshot each launch, so the Digimon (an egg in
+    the Simulator, HealthKit empty) differs run to run — compare sprite-to-square RATIO, not absolute
+    pixels, across a before/after pair.
+- REMAINS: US-174..US-192 (19 stories). US-174 is next by priority.

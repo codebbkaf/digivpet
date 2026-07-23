@@ -710,4 +710,20 @@ final class ComplicationTimelineTests: XCTestCase {
         }
     }
 
+    // MARK: - Circular sprite sizing (US-173)
+
+    /// The enlarged circular sprite fills the inscribed square of the face and its corners land
+    /// exactly on the bezel, so it is as big as it can be without clipping the round complication.
+    func testTheCircularSpriteFillsTheCircleWithoutClipping() {
+        let diameter: CGFloat = 52
+        let side = CircularComplicationLayout.spriteSide(diameter: diameter)
+
+        // The corner of a centered square of this side sits at `side/√2` from the centre; that has
+        // to be no further out than the bezel's radius, or the sprite clips.
+        let cornerDistance = side / CGFloat(2).squareRoot()
+        XCTAssertLessThanOrEqual(cornerDistance, diameter / 2 + 0.001)
+        // And it really is bigger than the flat 24pt frame US-173 replaced — visibly more circle.
+        XCTAssertGreaterThan(side, 24)
+    }
+
 }
