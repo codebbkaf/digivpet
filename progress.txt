@@ -5782,3 +5782,46 @@ The thirty, `Perfect -> Ultimate`:
   - `.ips` crash reports in `~/Library/Logs/DiagnosticReports/DigiVPet-*.ips` are gold for pinpointing SwiftData use-after-reset traps — the triggered thread's `frames` name the exact source lines.
   - Simulator smoke test recipe for the Dex: install the Debug-watchsimulator .app, `xcrun simctl launch <sim> com.digivpet.DigiVPet -dexDemo -healthAnswered`, then check `launchctl list | grep digivpet` for survival + `find ~/Library/Logs/DiagnosticReports -name 'DigiVPet*.ips' -mmin -5` for fresh crashes. A system notification prompt overlays the app but does not block SwiftUI rendering behind it.
 ---
+
+## 2026-07-24 - US-194 (Shorter room, and the action row sits 12 from the bottom)
+- Changed `MainScreenLayout.actionRowBottomInset` from 4 to 12 (Sources/ContentView.swift). This one
+  constant satisfies BOTH acceptance criteria: the action row now sits exactly 12pt off the physical
+  bottom (AC2), and because the inset is padded INSIDE `.ignoresSafeArea(.container, edges: .bottom)`
+  and the sprite `GeometryReader` is the only row claiming `maxHeight: .infinity`, all 8 added points
+  come straight out of the play area (AC1 — the deliberate room reduction). Documented before/after in
+  the constant's comment and in the padding-application comment.
+- RE-MEASURED both slots on the Simulator with `-wanderDemo` (Agumon walks; measured yellow-body
+  pixel bbox, calibrated against progress.txt's "2*scale screenshot-px per sprite-px"):
+  * 46mm (Series 11, 416x496 @2x): sprite body ~90px tall = 15 sprite-rows x 6px = scale 3. Was
+    scale 4. Slot 64.0 -> 56.0pt.
+  * 41mm (Series 9, 352x430 @2x): sprite body ~44-48px = 11-12 rows x 4px = scale 2. Was scale 3.
+    Slot 49.5 -> 41.5pt.
+  Both dropped exactly one deliberate scale step and now sit MID-BAND (41mm 9.5pt down-slack to 32,
+  46mm 8pt to 48) rather than on a scale edge, so the old razor-thin font ceiling is now looser.
+- Files: Sources/ContentView.swift (inset constant + two comments: MainScreenLayout, MainScreenTypography,
+  and the padding-application block), Tests/MainScreenLayoutTests.swift (renamed
+  testTheActionRowKeepsExactlyTwelvePointsBelowIt -> asserts ==12; re-measured slot evidence in
+  testTheMainScreenFontsStaySmallEnoughToKeepTheSpriteScale to 41.5->2 and 56.0->3).
+- Verified: build green (46mm); full suite 2598 tests pass; layout confirmed in
+  /tmp/us194/wander46_*.png and wander41_*.png — action row 12pt off bottom, all rows fit, sprite
+  walks inside its slot (scrim/map still track SpriteSlotBoundsKey unchanged, so they cover only that
+  slot, AC3).
+- **Learnings for future iterations:**
+  - `actionRowBottomInset` and the sprite-slot height are ONE degree of freedom, not two: every point
+    of that inset is subtracted from the flexible sprite `GeometryReader`. You cannot both grow the
+    inset and keep the sprite scale — US-194's whole point was to spend the room. A future story that
+    wants the buttons closer to the edge again would GIVE the sprite that height back.
+  - The `-wanderDemo` flag is the right seed for measuring the sprite slot: it puts a walking Agumon
+    (asymmetric, scalable art) on the main screen where every other demo suspends motion and the
+    default egg is near-symmetric. Take a burst of ~4-6 and measure the yellow body bbox; the
+    calibration is 2*scale screenshot-px per 16px sprite-px (@2x), so body-height/(2*scale) ~= the
+    Agumon content rows (~11-15).
+  - Screenshot recipe that worked this iteration: `simctl erase` the device FIRST (a stale
+    notification-authorization alert from a prior session survives terminate+uninstall and fully
+    covers the screen, even though `-noNotificationPrompt` suppresses the real ask), then boot,
+    install the SAME Debug-watchsimulator .app, launch with `-healthAnswered -noNotificationPrompt
+    -wanderDemo`. 46mm sim BA425DD4-8856-4933-8198-0E4B89960E48, 41mm FB045EDB-DEB9-40AA-B8FB-819E9E742517.
+  - When you change the main-screen layout, `MainScreenLayoutTests`'s slot-evidence numbers (49.5/64.0
+    historically) are EVIDENCE not arithmetic — re-measure and update them, or they silently describe
+    a screen that no longer exists.
+---

@@ -1546,8 +1546,8 @@
         "Build green; verify layout in the simulator with a screenshot"
       ],
       "priority": 79,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "actionRowBottomInset 4->12 (Sources/ContentView.swift): one constant sets the action row 12pt off the bottom AND, because it is padded inside .ignoresSafeArea(.bottom) and the sprite GeometryReader is the one flexible row, takes 8pt straight out of the play area. Re-measured on the Simulator with -wanderDemo: slot 64.0->56.0 on 46mm (scale 4->3) and 49.5->41.5 on 41mm (scale 3->2); both now sit mid-band. Sprite still walks within its slot and the scrim tracks it. MainScreenLayoutTests updated to the new inset and measured slots. Build green; 2598 tests pass; layout verified in 46mm+41mm screenshots."
     },
     {
       "id": "US-195",

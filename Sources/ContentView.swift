@@ -735,9 +735,10 @@ struct ContentView: View {
             // whole band empty under the buttons. `.ignoresSafeArea(.container, edges: .bottom)` lets
             // this stack draw into it, and because the sprite's `GeometryReader` is the one row that
             // claims `maxHeight: .infinity`, every reclaimed point lands on the play area — and, off
-            // `SpriteSlotBoundsKey`, on the map behind it. The 4pt bottom padding is what stops the
+            // `SpriteSlotBoundsKey`, on the map behind it. The bottom padding is what stops the
             // row landing flush on the display edge; applied INSIDE the ignore, so the stack fills the
-            // full height less those 4 points and the row ends exactly 4pt from the physical bottom.
+            // full height less that inset and the row ends exactly `actionRowBottomInset` (12 since
+            // US-194) from the physical bottom — the extra 8pt over US-172's 4 shortens the room.
             // Applied here, after the map and scrim preference layers, so those keep tracking the
             // sprite slot's bounds unchanged — only the height the slot is offered grows.
             .padding(.bottom, MainScreenLayout.actionRowBottomInset)
@@ -761,13 +762,14 @@ struct ContentView: View {
 /// The two text sizes on the main screen that the sprite's scale depends on (US-120).
 ///
 /// Named rather than left as literals in a `body` for `MapStripLayout.fontSize`'s reason: these are
-/// not taste, they are load-bearing. `SpriteScale.fitting` FLOORS `slotHeight / 16`, and after the
-/// map strip took a sixth row the slot lands at 49.5pt on 41mm and 64.0pt on 46mm — 0.5pt and 0.0pt
-/// above the scale boundary. Both numbers were measured on the Simulator, not derived.
+/// not taste, they are load-bearing. `SpriteScale.fitting` FLOORS `slotHeight / 16`. Before US-194
+/// the slot sat right on a scale boundary — 49.5pt on 41mm, 64.0pt on 46mm, 0.5pt and 0.0pt of slack
+/// — so a point of font silently cost the Digimon a whole scale step. US-194's shorter room (the
+/// action row's inset grew 4 -> 12, all of it out of this one flexible slot) re-measured to 41.5pt
+/// on 41mm and 56.0pt on 46mm, dropping the sprite one deliberate step and, as a side effect, moving
+/// both slots to mid-band with real slack. The ceiling stays as a conservative guard even so.
 ///
-/// Growing either of these by a point pushes the slot back under a multiple of 16 and costs the
-/// Digimon a THIRD of its size on 41mm, silently — the layout does not break, the sprite just gets
-/// small. `MainScreenLayoutTests` holds them here so that change fails a test instead.
+/// `MainScreenLayoutTests` holds these here so a change that would shrink the sprite fails a test.
 enum MainScreenTypography {
     /// The Digimon's name and stage, and the action message that replaces it.
     static let nameFontSize: CGFloat = 9
@@ -776,10 +778,11 @@ enum MainScreenTypography {
     /// height is its tallest element, and these were it.
     static let statValueFontSize: CGFloat = 9
 
-    /// The largest either may be before the 41mm slot drops below `3 * 16` and the sprite shrinks.
+    /// The largest either may be before a font point starts costing the sprite a scale step.
     ///
-    /// Not a style rule — a measured ceiling. The 41mm slot has 0.5pt of slack and a point of font
-    /// costs it about 1.2pt of height, so there is no room above 9 for either of them.
+    /// Not a style rule — a measured ceiling. It bought the razor-thin 0.5pt of 41mm slack the map
+    /// strip left; US-194's shorter room since moved both slots mid-band, so the ceiling is looser
+    /// than it must be now, but it stays pinned so a future row that eats the new slack fails a test.
     static let maximumSafeFontSize: CGFloat = 9
 }
 
@@ -790,9 +793,15 @@ enum MainScreenTypography {
 /// bottom — quietly taking height back from the play area US-172 just handed it — fails a test.
 enum MainScreenLayout {
     /// The gap between the action row and the physical bottom of the display. US-172 pins the row to
-    /// the screen bottom and hands the safe-area band it used to sit above to the sprite slot; 4pt is
-    /// the margin that keeps the circles off the very edge without giving that band back.
-    static let actionRowBottomInset: CGFloat = 4
+    /// the screen bottom and hands the safe-area band it used to sit above to the sprite slot.
+    ///
+    /// US-194 grows this from 4 to 12. Because the inset is padded INSIDE `.ignoresSafeArea(.bottom)`
+    /// and the sprite `GeometryReader` is the one row claiming `maxHeight: .infinity`, every point
+    /// added here comes straight back out of the play area — so this single constant is BOTH "the
+    /// action row sits 12 from the bottom" and "the room is a little shorter": the sprite slot loses
+    /// exactly the 8pt this gained (before: slot 49.5pt/64.0pt on 41mm/46mm with a 4pt inset; after:
+    /// 8pt shorter, re-measured on the Simulator — see `MainScreenLayoutTests` and progress.txt).
+    static let actionRowBottomInset: CGFloat = 12
 }
 
 enum SpriteScale {
