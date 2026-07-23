@@ -265,4 +265,20 @@ struct HealthMetricReader {
         guard let readable = ReadableHealthMetric(metric) else { return nil }
         return await read(readable, in: interval)
     }
+
+    /// Reads every metric in `metrics` over `interval`, keyed by its `ConditionMetric`.
+    ///
+    /// Sequential, matching `TodayHealthReader.readToday`: the fixture fetchers a test drives this
+    /// with answer instantly, and a real read happens on scene activation or when the Dex opens,
+    /// not in a hot loop. The caller that wants every readable metric passes `ReadableHealthMetric.all`.
+    func readings(
+        of metrics: [ReadableHealthMetric],
+        in interval: DateInterval
+    ) async -> [ConditionMetric: HealthReading] {
+        var result: [ConditionMetric: HealthReading] = [:]
+        for metric in metrics {
+            result[metric.metric] = await read(metric, in: interval)
+        }
+        return result
+    }
 }

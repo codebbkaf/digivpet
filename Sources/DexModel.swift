@@ -215,17 +215,33 @@ final class DexModel: ObservableObject {
     private let roster: Roster
     private let graph: EvolutionGraph
     private let makeStore: @MainActor () throws -> GameStore
+    /// Reads a `health.*` metric over a window (US-179). Held so `loadHealthReadings` can answer a
+    /// standing measurement — a resting heart rate, say — that no running total can hold. Injected so
+    /// a test drives it from a fixture fetcher; the Simulator has no health data.
+    private let metricReader: HealthMetricReader
+    private let calendar: Calendar
+    /// The most recent `.value` reads, `.unknown`-safe: only real numbers are kept, so a `.noData` or
+    /// `.unavailable` neither answers a standing metric nor switches on `ConditionContext`'s
+    /// accumulating-metric override — the same discipline `MainScreenModel.conditionReadings` keeps.
+    private var readings: [ConditionMetric: HealthReading] = [:]
+    /// True once `loadHealthReadings` has read the day, so re-entering the screen does not re-query:
+    /// the day's totals do not change while the Dex is open.
+    private var hasReadHealth = false
 
     private static let log = Logger(subsystem: "com.digivpet.DigiVPet", category: "dex")
 
     init(
         roster: Roster = .bundled,
         graph: EvolutionGraph = .bundled,
-        makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() }
+        makeStore: @escaping @MainActor () throws -> GameStore = { try GameStore() },
+        metricReader: HealthMetricReader = HealthMetricReader(),
+        calendar: Calendar = .current
     ) {
         self.roster = roster
         self.graph = graph
         self.makeStore = makeStore
+        self.metricReader = metricReader
+        self.calendar = calendar
     }
 
     /// How many of the roster have been met, and how many there are — the header's count.
@@ -250,7 +266,11 @@ final class DexModel: ObservableObject {
             // `savedState` and not `loadOrCreate`: see `GameStore.savedState`. Nil is an ordinary
             // first launch, not an error, and leaves every hint at its coldest.
             if let state = try store.savedState() {
-                context = ConditionContext(state: state, now: now)
+                // `readings` is empty until `loadHealthReadings` runs — that async pass reads the
+                // day's metrics and re-resolves this context, so a standing measurement answers on
+                // the detail sheet. Synchronous `load` still answers every accumulating and `care.*`
+                // condition off the saved state, exactly as before US-179.
+                context = ConditionContext(state: state, now: now, readings: readings)
             }
         } catch {
             Self.log.error("Could not read the Dex: \(String(describing: error))")
@@ -266,6 +286,30 @@ final class DexModel: ObservableObject {
             .sorted(by: Self.discoveredFirstThenAlphabetical)
         sections = Self.sections(of: graph, discoveries: discoveries)
         isLoaded = true
+    }
+
+    /// Reads today's health metrics and re-resolves the hint context against them (US-179).
+    ///
+    /// Kept off the synchronous `load` — the grid and its discoveries must not wait on a health read
+    /// — and driven from `DexView`'s `.task`, so the detail sheet's hints can answer a standing
+    /// measurement no running total can hold. A no-op after its first run and while a `-dexRevealDemo`
+    /// context is forced: the day's totals do not change while the screen is up, and the demo's
+    /// literal context must not be overwritten by an empty Simulator read.
+    func loadHealthReadings(now: Date = Date()) async {
+        guard !hasReadHealth else { return }
+        #if DEBUG
+        if Self.revealDemoContext != nil { hasReadHealth = true; return }
+        #endif
+        let interval = HealthDay.interval(containing: now, calendar: calendar)
+        let read = await metricReader.readings(of: ReadableHealthMetric.all, in: interval)
+        readings = read.filter { if case .value = $0.value { return true } else { return false } }
+        hasReadHealth = true
+        do {
+            conditionContext = try makeStore().savedState()
+                .map { ConditionContext(state: $0, now: now, readings: readings) } ?? .unknown
+        } catch {
+            Self.log.error("Could not re-read the Dex hint context: \(String(describing: error))")
+        }
     }
 
     /// The flat grid's order: what the player has met, then everything else, alphabetical within

@@ -284,6 +284,14 @@ final class MainScreenModel: ObservableObject {
     /// The de-duplication baseline for raw health readings. Held for US-118's step accrual: the map
     /// is credited the delta this ledger claims, never the day's total.
     private var metricLedger: MetricLedger?
+    /// The most recent refresh's real per-metric reads (US-179), kept so the ConditionContext an
+    /// evolution, a Jogress offer, a map's hints and a Digitama drop are judged on can answer a
+    /// standing measurement — a resting heart rate is not something a running total can hold. Only
+    /// `.value` reads are kept: a `.noData`/`.unavailable` answers nothing and, for an accumulating
+    /// metric, must not switch on `ConditionContext`'s "we were never allowed to look" override,
+    /// which is US-180's decision to make and not this story's. Empty until the first refresh, which
+    /// is exactly what these build points saw before.
+    private var conditionReadings: [ConditionMetric: HealthReading] = [:]
     /// The player: lifetime energy, map progress, and the Digitama ever owned (US-123). Nil only
     /// before `start()`.
     private(set) var profile: PlayerProfile?
@@ -1161,19 +1169,34 @@ final class MainScreenModel: ObservableObject {
         let readings = dayReadings.byEnergyType
         let credited = EnergyCreditor.credit(readings, to: state, profile: profile,
                                              ledger: ledger, now: now(), calendar: calendar)
-        // Beside the energy credit and off the SAME read, because a map records the steps that
-        // bought that energy — see `creditMapSteps`. Before the evolution and hatch checks below
+
+        // US-179: the day's per-metric health reads, banked into the stage / lifetime / best-day
+        // totals every `health.*` evolution condition is compared against. This is the ONE claimer of
+        // these metrics off `MetricLedger` — the map, battle, train and clean charges below spend the
+        // deltas `MetricCreditor` hands back rather than claiming a second time, so a step is
+        // de-duplicated once and shared, never counted twice (AC3). The three daily quantities and
+        // last night's sleep are seeded from the read the energy path already made, so nothing is read
+        // from HealthKit twice in one refresh.
+        let metrics = await healthReadings(dayReadings: dayReadings)
+        conditionReadings = metrics
+        // Nil only on a store that would not open its metric ledger, which is the same story that
+        // leaves the map and charge paths idle below; `creditedMetrics` is then empty and every
+        // consumer credits nothing, exactly as before this was wired.
+        let creditedMetrics = metricLedger.map {
+            MetricCreditor.credit(metrics, to: state, ledger: $0, now: now(), calendar: calendar)
+        } ?? .zero
+        // Beside the metric credit and off the SAME claimed deltas, because a map records the steps
+        // that bought that energy — see `creditMapSteps`. Before the evolution and hatch checks below
         // only because everything is; nothing here depends on it.
-        creditMapSteps(dayReadings.quantities[.steps] ?? .noData)
+        creditMapSteps(creditedMetrics[.healthSteps])
         // The exercise-to-training loop (US-177): the active calories this same read brought in buy
-        // training charges on the Digimon that burned them. Off the SAME read as the Vitality energy
-        // above, so a calorie is spent once as energy and once as a charge, never read twice.
-        creditTrainCharges(dayReadings.quantities[.activeEnergy] ?? .noData)
-        // The clean-to-handwash loop (US-178): the day's handwashing buys global cleaning charges.
-        // Read here rather than off `dayReadings`, because handwashing is a category event and not one
-        // of the three daily quantities that read carries — a separate query, claimed off the same
-        // `MetricLedger` so the day's washes are counted once.
-        await creditCleanCharges()
+        // training charges on the Digimon that burned them, spent off the same claimed delta so a
+        // calorie counts once as energy and once as a charge, never read twice.
+        creditTrainCharges(creditedMetrics[.healthActiveEnergy])
+        // The clean-to-handwash loop (US-178): the day's handwashing buys global cleaning charges,
+        // off the same claimed delta as everything else — handwashing is a category event, read into
+        // `metrics` alongside the rest rather than by a query of its own.
+        creditCleanCharges(creditedMetrics[.healthHandwashing])
         // After crediting and before evolving, because `careMistakeCount` is one of the things an
         // edge is gated on — an audit run after `evolveIfReady` would let a neglected Digimon take
         // a branch it had just disqualified itself from, one refresh late.
@@ -1239,80 +1262,82 @@ final class MainScreenModel: ObservableObject {
         publishComplicationSnapshot()
     }
 
+    /// Reads today's health metrics for `refresh`, seeded from the read the energy path already made.
+    ///
+    /// The three daily quantities (`health.steps` / `health.activeEnergy` / `health.exerciseMinutes`)
+    /// and last night's sleep come straight off `dayReadings`, so a metric is not read from HealthKit
+    /// twice in one refresh and the map, battle and train charges spend the SAME step and calorie
+    /// totals the ledger banks. Everything else readable over today's window — distance, flights,
+    /// stand hours, handwashing, and the standing measurements a running total cannot hold — is read
+    /// here so a `health.*` condition on it has data too.
+    ///
+    /// Only `.value` reads are kept. A `.noData`/`.unavailable` answers nothing: it credits no total
+    /// (`MetricCreditor` skips it anyway) and it must not be handed to `ConditionContext` as an
+    /// `.unavailable`, which would switch on the "we were never allowed to look" override that turns
+    /// an accumulating `atMost` gate to `.unknown` — that is US-180's call, not this story's.
+    private func healthReadings(dayReadings: HealthDayReadings) async -> [ConditionMetric: HealthReading] {
+        var raw: [ConditionMetric: HealthReading] = [
+            .healthSteps: dayReadings.quantities[.steps] ?? .noData,
+            .healthActiveEnergy: dayReadings.quantities[.activeEnergy] ?? .noData,
+            .healthExerciseMinutes: dayReadings.quantities[.exercise] ?? .noData,
+            .healthSleep: dayReadings.sleep,
+        ]
+        let interval = HealthDay.interval(containing: now(), calendar: calendar)
+        let rest = ReadableHealthMetric.all.filter { raw[$0.metric] == nil }
+        for (metric, reading) in await metricReader.readings(of: rest, in: interval) {
+            raw[metric] = reading
+        }
+        return raw.filter { if case .value = $0.value { return true } else { return false } }
+    }
+
     /// Accrues the steps this read brought in to the map the player is adventuring in (US-118).
     ///
-    /// The delta is claimed off `MetricLedger`, which is the ledger that remembers what of today's
-    /// STEP TOTAL has already been banked. That is the whole story of this method: a health reading
-    /// is a cumulative day total — 4,000 steps at noon and still those same 4,000 at 18:00 — so a
-    /// map credited the reading would gain 4,000 more every time the app was opened. It is claimed
-    /// through the shared `claim` rather than against a private baseline of its own, so the day a
-    /// second consumer of `health.steps` arrives the two are spending one delta and not two.
+    /// `steps` is the delta `MetricCreditor` already claimed off `MetricLedger` this refresh — the
+    /// ledger that remembers what of today's STEP TOTAL has been banked. That shared claim is the
+    /// whole point: a health reading is a cumulative day total — 4,000 steps at noon and still those
+    /// same 4,000 at 18:00 — so crediting the reading each refresh would gain 4,000 every launch. The
+    /// metric totals, the map and the battle charges all spend this one delta rather than each
+    /// claiming its own.
     ///
     /// Called from `refresh` alone, so the map is credited from the same read that bought the
     /// energy — and only ever the map that is selected AT THE MOMENT OF THE READ. Steps banked
     /// while a different map was selected stay where they were put: nothing here can reach them,
     /// because the ledger has already spent them and only the counter they landed on remembers.
-    ///
-    /// Nothing accrues from `noData` or `unavailable`. Being told nothing is not being told zero —
-    /// the same rule as everywhere else here — and a zero would in any case credit nothing.
-    private func creditMapSteps(_ stepsToday: HealthReading) {
-        guard let metricLedger, let profile else { return }
-        guard case .value(let dayTotal) = stepsToday else { return }
-        let delta = metricLedger.claim(.healthSteps, dayTotal: dayTotal, now: now(),
-                                       calendar: calendar)
-        MapStepCreditor.credit(steps: delta, to: profile, catalog: maps, now: now())
-        // The SAME claimed delta also buys battle charges (US-176) — one claim, two consumers, which
-        // is the arrangement `MetricLedger.claim` requires. Credited to `state`, the Digimon that is
-        // OUT, so charges are per-Digimon and the one who walked them is the one who keeps them; a
-        // frozen Digimon does not refresh and so accrues nothing.
+    private func creditMapSteps(_ steps: Double) {
+        guard let profile else { return }
+        MapStepCreditor.credit(steps: steps, to: profile, catalog: maps, now: now())
+        // The SAME claimed delta also buys battle charges (US-176). Credited to `state`, the Digimon
+        // that is OUT, so charges are per-Digimon and the one who walked them is the one who keeps
+        // them; a frozen Digimon does not refresh and so accrues nothing.
         let config = ConsumptionConfig.bundled
-        state?.creditBattleCharges(steps: delta, stepsPerCharge: config.stepsPerBattleCharge,
+        state?.creditBattleCharges(steps: steps, stepsPerCharge: config.stepsPerBattleCharge,
                                    maxCharges: config.maxBattleCharges)
     }
 
     /// Converts the active calories this read brought in into training charges (US-177).
     ///
-    /// The shape mirrors `creditMapSteps`'s battle-charge credit exactly, with active energy in the
-    /// place of steps: the day total is claimed off the shared `MetricLedger` so nothing double-
-    /// counts it, and the resulting delta buys charges at `kcalPerTrain` on `state` — the Digimon
-    /// that is OUT, so a charge is per-Digimon and a frozen Digimon (which does not refresh) accrues
-    /// nothing. `.healthActiveEnergy` has no other `claim` caller today, so this is its sole
-    /// consumer; the day it gains one, they share this one delta rather than each keeping a baseline.
-    ///
-    /// Nothing accrues from `noData` or `unavailable`: being told nothing is not being told zero, the
-    /// same rule the energy path holds to.
-    private func creditTrainCharges(_ activeEnergyToday: HealthReading) {
-        guard let metricLedger, let state else { return }
-        guard case .value(let dayTotal) = activeEnergyToday else { return }
-        let delta = metricLedger.claim(.healthActiveEnergy, dayTotal: dayTotal, now: now(),
-                                       calendar: calendar)
+    /// `kcal` is the delta `MetricCreditor` claimed off the shared `MetricLedger` this refresh, so
+    /// nothing double-counts it, and it buys charges at `kcalPerTrain` on `state` — the Digimon that
+    /// is OUT, so a charge is per-Digimon and a frozen Digimon (which does not refresh) accrues
+    /// nothing.
+    private func creditTrainCharges(_ kcal: Double) {
+        guard let state else { return }
         let config = ConsumptionConfig.bundled
-        state.creditTrainCharges(kcal: delta, kcalPerCharge: config.kcalPerTrain,
+        state.creditTrainCharges(kcal: kcal, kcalPerCharge: config.kcalPerTrain,
                                  maxCharges: config.maxTrainCharges)
     }
 
     /// Converts the day's handwashing count into global cleaning charges (US-178).
     ///
-    /// The one place handwashing is read. It is a category event — not a `QuantityMetric` — so it
-    /// comes from `HealthMetricReader` over today's window rather than from the `dayReadings` the
-    /// energy, map, battle and train paths share. The whole-day count is claimed off the same
-    /// `MetricLedger` under `.healthHandwashing`, so refreshing twice does not count the same washes
-    /// again — the identical de-duplication the step and calorie paths lean on. The delta buys charges
-    /// at `handwashPerCleanCharge` on the PROFILE, not on `state`: a habit is the player's, so every
+    /// `events` is the handwashing delta `MetricCreditor` claimed off the same `MetricLedger` as
+    /// every other metric this refresh, so refreshing twice does not count the same washes again —
+    /// the identical de-duplication the step and calorie paths lean on. It buys charges at
+    /// `handwashPerCleanCharge` on the PROFILE, not on `state`: a habit is the player's, so every
     /// Digimon in the box cleans out of the one banked larder of washes.
-    ///
-    /// Nothing accrues from `noData`, `unavailable`, or a metric HealthKit cannot read: being told
-    /// nothing is not being told zero, the same rule the energy path holds to.
-    private func creditCleanCharges() async {
-        guard let metricLedger, let profile,
-              let handwashing = ReadableHealthMetric(.healthHandwashing) else { return }
-        let interval = HealthDay.interval(containing: now(), calendar: calendar)
-        let reading = await metricReader.read(handwashing, in: interval)
-        guard case .value(let dayTotal) = reading else { return }
-        let delta = metricLedger.claim(.healthHandwashing, dayTotal: dayTotal, now: now(),
-                                       calendar: calendar)
+    private func creditCleanCharges(_ events: Double) {
+        guard let profile else { return }
         let config = ConsumptionConfig.bundled
-        profile.creditCleanCharges(events: delta, eventsPerCharge: config.handwashPerCleanCharge,
+        profile.creditCleanCharges(events: events, eventsPerCharge: config.handwashPerCleanCharge,
                                    maxCharges: config.maxCleanCharges)
     }
 
@@ -1487,7 +1512,8 @@ final class MainScreenModel: ObservableObject {
     /// redraws when the box changes.
     var jogressBoard: JogressBoard {
         JogressBoard.make(for: boxedStates, catalog: jogress, roster: roster) {
-            ConditionContext(state: $0, now: self.now(), calendar: self.calendar)
+            ConditionContext(state: $0, now: self.now(), calendar: self.calendar,
+                             readings: self.conditionReadings)
         }
     }
 
@@ -1603,7 +1629,8 @@ final class MainScreenModel: ObservableObject {
         if let demo = Self.mapDetailDemoContext { return demo }
         #endif
         guard let state else { return .unknown }
-        return ConditionContext(state: state, now: now(), calendar: calendar)
+        return ConditionContext(state: state, now: now(), calendar: calendar,
+                                readings: conditionReadings)
     }
 
     #if DEBUG
@@ -2371,9 +2398,11 @@ final class MainScreenModel: ObservableObject {
                 stageEnteredAt: state.stageEnteredDate,
                 now: now(),
                 // US-060: the edge's own `conditions`, answered off the totals US-058 banks and the
-                // counters US-084 keeps. No live HealthKit read here — `refresh()` must not block
-                // on one, and everything an evolution asks about is already in the saved state.
-                conditions: ConditionContext(state: state, now: now(), calendar: calendar)),
+                // counters US-084 keeps, plus US-179's `conditionReadings` for a standing measurement
+                // no total can hold. No live HealthKit read here — `refresh()` already made this
+                // refresh's read before it reached here, so nothing blocks.
+                conditions: ConditionContext(state: state, now: now(), calendar: calendar,
+                                             readings: conditionReadings)),
               let next = graph.node(id: target) else { return }
         advance(state, to: next)
         Self.log.info("Evolved \(node.id) into \(next.id)")
@@ -2585,7 +2614,8 @@ final class MainScreenModel: ObservableObject {
     /// on one, and this is belt to their braces.
     private func checkForDigitamaDrop() {
         guard let state, let store, let profile, state.healthStatus != .dead else { return }
-        let context = ConditionContext(state: state, now: now(), calendar: calendar)
+        let context = ConditionContext(state: state, now: now(), calendar: calendar,
+                                       readings: conditionReadings)
         let held = (try? store.heldDigitamaIds()) ?? []
         var generator = makeDropGenerator()
         guard let dropId = DigitamaDropEngine.award(

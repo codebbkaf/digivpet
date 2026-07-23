@@ -45,6 +45,12 @@ struct DexView: View {
             .onAppear {
                 if !model.isLoaded { model.load() }
             }
+            // US-179: reads today's health metrics off the wrist and re-resolves the hint context, so
+            // the detail sheet can answer a standing measurement a running total cannot hold. Off the
+            // synchronous `load` above, which paints the grid without waiting on a health read.
+            .task {
+                await model.loadHealthReadings()
+            }
     }
 
     /// A line gets its tree; `Others` has no edges to draw, so it gets a flat grid.
