@@ -117,6 +117,14 @@ final class MainScreenModel: ObservableObject {
     /// foreground — and cleared by `acceptWildEncounter` (BATTLE) or `fleeWildEncounter` (FLEE).
     @Published private(set) var pendingWildEncounter: WildEncounter?
 
+    /// The map's boss, blocking the next map until it is beaten (US-203), or nil when none is pending.
+    /// Set by `checkForBossEncounter` at the tail of a refresh — the app foreground — the first time
+    /// the player has crossed the map's total AND met every resident, and cleared by
+    /// `acceptBossEncounter` (BATTLE, the only action it offers). A win stamps the map finished and
+    /// opens the next; a loss knocks 1,000 steps off the counter and lets the boss be re-challenged
+    /// once the total is reached again.
+    @Published private(set) var pendingBossEncounter: BossEncounter?
+
     /// The PRE-BATTLE round currently being played on screen, or nil when none is (US-093).
     ///
     /// A third state beside `pendingTraining` and `pendingBattle`, and deliberately not either of them:
@@ -480,6 +488,7 @@ final class MainScreenModel: ObservableObject {
         seedSleepBarDemoIfRequested()
         seedWanderDemoIfRequested()
         seedWildEncounterDemoIfRequested()
+        seedBossEncounterDemoIfRequested()
         seedSickDemoIfRequested()
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
@@ -696,6 +705,35 @@ final class MainScreenModel: ObservableObject {
         selectMap(map.id)
         profile.record(steps: 600, forMap: map.id)
         checkForWildEncounter()
+    }
+
+    /// Debug-only: sets the first map up as done-but-for-the-boss so US-203's boss dialog can be
+    /// screenshotted. The Simulator has no HealthKit steps, so a real game there can never walk a whole
+    /// map or meet its residents, and the boss would never appear on its own.
+    ///
+    /// - `-bossEncounterDemo` — the first map walked past its total, every resident met, so the shipped
+    ///   `checkForBossEncounter` finds the map complete and rolls its real boss (the highest-stage
+    ///   resident). The dialog on screen is the one the rule produces, not a staged one.
+    ///
+    /// Recorded straight onto the map's counter and met-set (the same fields the real triggers write),
+    /// then the shipped check runs — so what is screenshotted is the real gate over a real map pool.
+    private func seedBossEncounterDemoIfRequested() {
+        guard CommandLine.arguments.contains("-bossEncounterDemo"),
+              let state, let profile, let map = maps.maps.first else { return }
+
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        forceAwakeForDemo()
+        selectMap(map.id)
+        profile.record(steps: Double(map.totalSteps) + 500, forMap: map.id)
+        for resident in MapOpponentBand.residents(of: map, graph: graph, roster: roster,
+                                                  excluding: state.currentDigimonId) {
+            profile.recordMet(resident.id, forMap: map.id)
+        }
+        checkForBossEncounter()
     }
 
     /// Debug-only: makes the Digimon ill so the sick pose can be screenshotted. The Simulator has no
@@ -1061,8 +1099,10 @@ final class MainScreenModel: ObservableObject {
     ///   SAVE. A demo flag with no way back poisons every screenshot taken on that container
     ///   afterwards, silently; see `seedMapDemoIfRequested`, which learned it the expensive way.
     ///
-    /// Credited through the shipped `MapStepCreditor` rather than by assignment, so the finish
-    /// stamps are the ones the real rule sets rather than ones this flag invented.
+    /// Steps are credited through the shipped `MapStepCreditor`, and each fully walked map is then
+    /// stamped finished with `markFinished` — because since US-203 walking a map to its total no
+    /// longer finishes it (its boss does), and this demo is FOR the finished/unlocked list rather than
+    /// for the boss fight. The stamp is the same one a boss win writes; the demo just skips the fight.
     private func seedMapListDemoIfRequested() {
         let arguments = CommandLine.arguments
         guard let profile else { return }
@@ -1088,14 +1128,17 @@ final class MainScreenModel: ObservableObject {
         // still looks plausible, which is what makes it worth a line of code rather than a note.
         profile.clearForDemo()
 
-        // Walked one map at a time through the real creditor, because it is the creditor that
-        // stamps a finish — crediting the whole lot against one selection would bank every step on
-        // that one map and finish nothing else.
+        // Walked one map at a time through the real creditor — crediting the whole lot against one
+        // selection would bank every step on that one map. Each fully walked map is then stamped
+        // finished directly (US-203 moved the finish to the boss, and this demo stands in for the win),
+        // so the unlock chain opens exactly as it does after a real boss is beaten.
         for (index, map) in maps.maps.enumerated() {
             if partial && index > 2 { break }
             profile.selectedMapId = map.id
-            let steps = partial && index == 2 ? Double(map.totalSteps) / 3 : Double(map.totalSteps)
+            let fullyWalked = !(partial && index == 2)
+            let steps = fullyWalked ? Double(map.totalSteps) : Double(map.totalSteps) / 3
             MapStepCreditor.credit(steps: steps, to: profile, catalog: maps, now: now())
+            if fullyWalked { profile.markFinished(map.id, at: now()) }
         }
         if widest {
             selectMap(maps.maps.last?.id)
@@ -1364,10 +1407,16 @@ final class MainScreenModel: ObservableObject {
         // Last, once every rule above has settled: the complication must never show a Digimon
         // mid-refresh — hatched but not yet evolved, or sick but not yet dead.
         publishComplicationSnapshot()
+        // US-203, checked BEFORE the wild encounter so the boss takes precedence when both are due:
+        // once the player has walked the whole map and met every resident, the boss is what stands in
+        // the way, and a wild foe should not appear over it. Like the wild check it persists nothing
+        // (the encounter is not saved), so it runs after the flush above.
+        checkForBossEncounter()
         // US-201, after the step accrual above credited this refresh's walking to the map: a wild
         // encounter greets the player if they have crossed 500 steps into it since the last one. It
         // sets no saved state (the encounter is not persisted), so it needs no flush of its own — it
-        // runs after the save, over the settled game the snapshot above describes.
+        // runs after the save, over the settled game the snapshot above describes. Silent while a boss
+        // is pending (its own guard), so the two dialogs never stack.
         checkForWildEncounter()
     }
 
@@ -1893,7 +1942,7 @@ final class MainScreenModel: ObservableObject {
     var isWandering: Bool {
         animation == .idle && pendingEvolution == nil && pendingBattle == nil
             && pendingTraining == nil && pendingBattleRound == nil && memorial == nil
-            && pendingWildEncounter == nil
+            && pendingWildEncounter == nil && pendingBossEncounter == nil
     }
 
     /// Every pose `settleRestingPose` is allowed to swap out. Exactly the poses `restingAnimation`
@@ -2506,8 +2555,9 @@ final class MainScreenModel: ObservableObject {
     /// should not raise a second foe while the first is unanswered. Silent with no map selected, with
     /// a dead Digimon, and when the map's pool offers nobody the roster knows.
     func checkForWildEncounter() {
-        guard pendingWildEncounter == nil, pendingBattle == nil, pendingBattleRound == nil,
-              pendingTraining == nil, pendingEvolution == nil, memorial == nil,
+        guard pendingWildEncounter == nil, pendingBossEncounter == nil, pendingBattle == nil,
+              pendingBattleRound == nil, pendingTraining == nil, pendingEvolution == nil,
+              memorial == nil,
               let state, state.healthStatus != .dead,
               let profile, let map = selectedMap else { return }
         let recorded = profile.recorded(forMap: map.id)
@@ -2603,6 +2653,106 @@ final class MainScreenModel: ObservableObject {
             try store?.save()
         } catch {
             Self.log.error("Could not save after a wild battle: \(String(describing: error))")
+        }
+        return bout
+    }
+
+    // MARK: - Boss encounters (US-203)
+
+    /// How many steps a lost boss costs the map — 1,000, double a wild loss (US-203). Knocked off the
+    /// counter so the player has to keep walking before the boss can be re-challenged, which is what
+    /// makes losing it matter rather than being a free retry.
+    static let bossLossStepPenalty: Double = 1_000
+
+    /// Whether the current selection's map is done EXCEPT for the boss: the counter has crossed the
+    /// total and every meetable resident has been met, but the boss has not yet been beaten (US-203).
+    ///
+    /// Pure and read off the profile, so a test can assert the trigger conditions without raising the
+    /// dialog. Nil-safe: no profile, no map, an unfinished-by-anything map — every one of those is
+    /// "not ready", so this only ever answers true when a boss genuinely stands in the way.
+    private func mapAwaitsBoss(_ map: AdventureMap) -> Bool {
+        guard let state, let profile else { return false }
+        guard !profile.isFinished(forMap: map.id) else { return false }
+        guard profile.recorded(forMap: map.id) >= Double(map.totalSteps) else { return false }
+        let residents = MapOpponentBand.residents(of: map, graph: graph, roster: roster,
+                                                  excluding: state.currentDigimonId)
+        guard !residents.isEmpty else { return false }
+        let met = profile.metDigimon(forMap: map.id)
+        return residents.allSatisfy { met.contains($0.id) }
+    }
+
+    /// Raises the map's boss the first time the player has walked the whole map AND met every resident
+    /// of it, and it has not yet been beaten (US-203).
+    ///
+    /// Called at the tail of every `refresh()`, ahead of `checkForWildEncounter`, so the boss greets
+    /// the player the moment the last resident is met and the map is complete. Internal rather than
+    /// private so a test can drive the trigger against a seeded counter and met-set without a whole
+    /// health read — the step source (the map's recorded total) and the clock are both injected.
+    ///
+    /// Silent when anything is already on screen — a pending boss, wild encounter, battle, round,
+    /// ceremony or memorial — because its BATTLE-only dialog must not stack over one of those. Silent
+    /// with no map selected, a dead Digimon, a map already finished, and a map whose boss cannot be
+    /// resolved (no meetable resident at all).
+    func checkForBossEncounter() {
+        guard pendingBossEncounter == nil, pendingWildEncounter == nil, pendingBattle == nil,
+              pendingBattleRound == nil, pendingTraining == nil, pendingEvolution == nil,
+              memorial == nil,
+              let state, state.healthStatus != .dead,
+              let map = selectedMap, mapAwaitsBoss(map) else { return }
+        guard let bossNode = MapOpponentBand.boss(of: map, graph: graph, roster: roster,
+                                                  excluding: state.currentDigimonId) else { return }
+        // Drawn and CARRIED, exactly as the wild encounter carries its generator: the boss is rolled
+        // now and the fight, if accepted, replays from the same sequence, so one seed pins one bout.
+        var generator = nextBattleGenerator()
+        let opponent = BattleMatchmaker.rolled(bossNode, using: &generator)
+        pendingBossEncounter = BossEncounter(
+            opponent: opponent,
+            presentation: DigimonPresentation(displayName: opponent.node.displayName,
+                                              stage: opponent.node.stage,
+                                              spriteFile: opponent.node.spriteFile),
+            mapId: map.id,
+            generator: generator)
+    }
+
+    /// BATTLE: fights the map's boss and settles the map on the outcome (US-203).
+    ///
+    /// The one action the boss dialog offers — there is no flee, a boss being a gate the player must
+    /// pass rather than an ambush. The fight is resolved through the same `resolveBattle` core the wild
+    /// encounter uses, graded `.good` (no minigame), and handed to the screen on `pendingBattle` to
+    /// replay a decided outcome. The consequence is read off that decided report:
+    /// - WIN: the map is stamped TRULY finished (`markFinished`), which is what opens the next map —
+    ///   the boss is the gate US-203 puts on the unlock chain.
+    /// - LOSS: the map loses `bossLossStepPenalty` (1,000) steps, so the counter drops back below the
+    ///   total and the boss can only be re-challenged once the player has walked it up again.
+    ///
+    /// `finishBattle` still files the win/loss record when the replay ends, exactly as a chosen or wild
+    /// battle does. A no-op with no boss pending, or before a game is loaded.
+    @discardableResult
+    func acceptBossEncounter() -> BattleBout? {
+        guard let encounter = pendingBossEncounter, let state, let profile,
+              let player = presentation(forId: state.currentDigimonId) else { return nil }
+        pendingBossEncounter = nil
+
+        var generator = encounter.generator
+        guard let bout = resolveBattle(player: player, opponent: encounter.opponent,
+                                       result: .good, using: &generator) else { return nil }
+
+        if bout.report.playerWon {
+            profile.markFinished(encounter.mapId, at: now())
+        } else {
+            profile.reduceRecorded(steps: Self.bossLossStepPenalty, forMap: encounter.mapId)
+        }
+
+        pendingBattle = bout
+        Self.log.info("""
+            Boss battle on \(encounter.mapId) vs \(encounter.opponent.node.id): \
+            \(bout.report.playerWon ? "won — map finished" : "lost")
+            """)
+
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save after a boss battle: \(String(describing: error))")
         }
         return bout
     }

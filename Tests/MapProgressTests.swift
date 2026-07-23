@@ -104,10 +104,11 @@ final class MapStepCreditorTests: XCTestCase {
         XCTAssertEqual(progress.recordedByMap, [:])
     }
 
-    /// THE AC: finished the first time recorded >= totalSteps, WITH a timestamp. Checked at the
-    /// boundary in both directions, so the rule is pinned to 1,000 rather than to "something near
-    /// a thousand".
-    func testAMapIsFinishedTheFirstTimeItsTotalIsReached() {
+    /// US-203 supersedes US-118 here: reaching the total no longer FINISHES the map. Crossing 1,000
+    /// leaves the counter uncapped and climbing toward the boss gate, but the map is not finished and
+    /// carries no stamp — only a boss win writes one (`MainScreenModel.acceptBossEncounter`). Checked
+    /// at the boundary in both directions, so it is pinned to 1,000 rather than "something near it".
+    func testReachingTheTotalDoesNotFinishTheMap() {
         let progress = progress(selecting: "first")
 
         MapStepCreditor.credit(steps: 999, to: progress, catalog: Fixture.catalog, now: Fixture.morning)
@@ -115,14 +116,13 @@ final class MapStepCreditorTests: XCTestCase {
         XCTAssertNil(progress.finishedAt(forMap: "first"))
 
         MapStepCreditor.credit(steps: 1, to: progress, catalog: Fixture.catalog, now: Fixture.evening)
-        XCTAssertTrue(progress.isFinished(forMap: "first"), "exactly the total finishes it")
-        XCTAssertEqual(progress.finishedAt(forMap: "first"), Fixture.evening)
+        XCTAssertFalse(progress.isFinished(forMap: "first"), "the total is walked, but the boss is not beaten")
+        XCTAssertNil(progress.finishedAt(forMap: "first"), "no finish until the boss falls")
     }
 
-    /// THE AC: crossing the total again does not re-fire. The stamp is the moment it was FIRST
-    /// crossed — a stamp rewritten on every later refresh would tell the player they finished the
-    /// grassland this morning, forever.
-    func testCrossingTheTotalAgainDoesNotRestampTheFinish() {
+    /// Walking far past the total still finishes nothing — the boss gate is not a step count, so no
+    /// amount of extra walking crosses it. The stamp stays empty until a boss win.
+    func testWalkingPastTheTotalStillDoesNotFinishTheMap() {
         let progress = progress(selecting: "first")
 
         MapStepCreditor.credit(steps: 1_000, to: progress, catalog: Fixture.catalog, now: Fixture.morning)
@@ -130,20 +130,19 @@ final class MapStepCreditorTests: XCTestCase {
         MapStepCreditor.credit(steps: 5_000, to: progress, catalog: Fixture.catalog,
                                now: Fixture.nextMorning)
 
-        XCTAssertEqual(progress.finishedAt(forMap: "first"), Fixture.morning,
-                       "the first crossing, not the last")
+        XCTAssertFalse(progress.isFinished(forMap: "first"))
+        XCTAssertNil(progress.finishedAt(forMap: "first"))
     }
 
-    /// THE AC: the counter is not capped at the total. `totalSteps` is a finish line, not a
-    /// ceiling — a capped counter would make a finished map's progress figure stop moving, which
-    /// US-119 draws.
+    /// THE AC (US-118, untouched by US-203): the counter is not capped at the total. `totalSteps` is a
+    /// finish line, not a ceiling — a capped counter would make the progress figure US-119 draws stop
+    /// moving, and the boss gate needs the counter to keep climbing past the total.
     func testRecordedStepsAreNotCappedAtTheTotal() {
         let progress = progress(selecting: "first")
 
         MapStepCreditor.credit(steps: 4_500, to: progress, catalog: Fixture.catalog, now: Fixture.morning)
 
         XCTAssertEqual(progress.recorded(forMap: "first"), 4_500, "past the 1,000 total, uncapped")
-        XCTAssertTrue(progress.isFinished(forMap: "first"))
     }
 
     /// A zero or negative delta is not progress. Nothing produces a negative one — `claim` floors
@@ -348,8 +347,9 @@ final class MapAccrualTests: XCTestCase {
         XCTAssertEqual(progress.recorded(forMap: "second"), 400, "only the new ones follow")
     }
 
-    /// AC: recorded steps and the finish stamp persist across launches. A second model over the
-    /// same store file is what a cold launch is.
+    /// AC: recorded steps and the selection persist across launches. A second model over the same
+    /// store file is what a cold launch is. Since US-203 walking the total does NOT finish the map, so
+    /// nothing is stamped here — a launch after 1,200 of 1,000 steps is unfinished and awaiting a boss.
     func testProgressAndSelectionSurviveALaunch() async throws {
         let first = makeModel()
         await first.start()
@@ -357,7 +357,7 @@ final class MapAccrualTests: XCTestCase {
 
         walked(1_200)
         await first.refresh()
-        let finishedAt = try XCTUnwrap(first.profile?.finishedAt(forMap: "first"))
+        XCTAssertNil(first.profile?.finishedAt(forMap: "first"), "the total is walked, but no boss beaten")
 
         let second = makeModel()
         await second.start()
@@ -365,26 +365,28 @@ final class MapAccrualTests: XCTestCase {
         let progress = try XCTUnwrap(second.profile)
         XCTAssertEqual(progress.recorded(forMap: "first"), 1_200)
         XCTAssertEqual(progress.selectedMapId, "first", "and the player is still where they were")
-        XCTAssertEqual(progress.finishedAt(forMap: "first"), finishedAt)
+        XCTAssertFalse(progress.isFinished(forMap: "first"), "still unfinished across a launch")
         XCTAssertEqual(second.selectedMapAsset, "01_grassland",
                        "so US-115 draws the saved map on a cold launch")
     }
 
-    /// The finish fires through the real path, once, and the counter keeps climbing past it.
-    func testAMapFinishesOnceAndKeepsCounting() async throws {
+    /// The counter keeps climbing past the total through the real refresh path, and the map stays
+    /// unfinished the whole way — US-203 moved the finish to the boss, so no amount of walking stamps
+    /// one.
+    func testReachingTheTotalKeepsCountingAndDoesNotFinish() async throws {
         let model = makeModel()
         await model.start()
         model.selectMap("first")
 
         walked(1_000)
         await model.refresh()
-        let stamp = try XCTUnwrap(model.profile?.finishedAt(forMap: "first"))
+        XCTAssertNil(model.profile?.finishedAt(forMap: "first"), "the total alone does not finish it")
 
         walked(4_000)
         await model.refresh()
 
         let progress = try XCTUnwrap(model.profile)
-        XCTAssertEqual(progress.finishedAt(forMap: "first"), stamp, "not re-stamped")
+        XCTAssertNil(progress.finishedAt(forMap: "first"), "still no finish")
         XCTAssertEqual(progress.recorded(forMap: "first"), 4_000, "and not capped at 1,000")
     }
 

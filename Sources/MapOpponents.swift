@@ -150,6 +150,47 @@ enum MapOpponentBand {
     }
 }
 
+extension MapOpponentBand {
+    /// Every playable resident of a map the player can actually MEET (US-203): the opponent pool
+    /// resolved to nodes, minus the `dexOnly` (no animated sheet, so a wild encounter never surfaces
+    /// one) and the player's own Digimon (you do not walk into yourself), de-duplicated in pool order.
+    ///
+    /// This is the set the boss gate asks "have you met all of?", and it is deliberately the same
+    /// universe `candidates` draws a wild foe from — so every resident this returns is one a 500-step
+    /// meeting or a wild battle can turn from a "?" into met. A resident that could never be met would
+    /// gate the boss shut forever, which is why the two filters match.
+    static func residents(
+        of map: AdventureMap,
+        graph: EvolutionGraph,
+        roster: Roster,
+        excluding playerId: String
+    ) -> [EvolutionNode] {
+        var seen: Set<String> = []
+        return nodes(for: map.opponentPool, graph: graph, roster: roster)
+            .filter { !$0.dexOnly && $0.id != playerId && seen.insert($0.id).inserted }
+    }
+
+    /// The map's BOSS (US-203): the highest-stage resident, ties broken by pool order — the first the
+    /// author placed at that top rung, so the boss is a fixed Digimon and not a roll.
+    ///
+    /// Highest STAGE is measured with `BattlePower.battleRung`, the same ladder banding uses, so an
+    /// Armor-Hybrid boss is ranked by the rung it fights at rather than dropping out. Nil only for a
+    /// map with no meetable resident at all — a fully `dexOnly` or self-only pool, which the US-117
+    /// validator already rules out of the shipped catalog.
+    static func boss(
+        of map: AdventureMap,
+        graph: EvolutionGraph,
+        roster: Roster,
+        excluding playerId: String
+    ) -> EvolutionNode? {
+        let residents = residents(of: map, graph: graph, roster: roster, excluding: playerId)
+        guard let topRung = residents.map({ BattlePower.battleRung($0.stage) }).max() else {
+            return nil
+        }
+        return residents.first { BattlePower.battleRung($0.stage) == topRung }
+    }
+}
+
 extension BattleMatchmaker {
     /// Picks an opponent from the SELECTED map's pool, banded by how far across it the player is
     /// (US-122), or from the whole roster when they have chosen nowhere to go.

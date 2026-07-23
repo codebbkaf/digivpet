@@ -1689,8 +1689,8 @@
         "Build green; verify in the simulator with a screenshot"
       ],
       "priority": 88,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Boss gates the next map. MapStepCreditor no longer finishes a map by steps; the finish stamp now means the boss was beaten. MapOpponentBand.boss/.residents resolve the highest-stage resident and the meetable set. MainScreenModel gains pendingBossEncounter, checkForBossEncounter (fires when recorded>=total AND every resident met AND not yet finished), and acceptBossEncounter (BATTLE-only: win -> markFinished which unlocks the next map, loss -> reduceRecorded 1000). BossEncounterView is a BATTLE-only dialog. Wired into ContentView and refresh (boss checked before wild). BossEncounterTests cover trigger, boss identity, win-unlock, 1000-step loss + re-challenge, and guards. Updated the 5 US-118 MapProgressTests that asserted step-based finishing. Verified in sim (-bossEncounterDemo): dialog reads Boss: Patamon! with a single Battle button. Full suite 2633 tests green."
     },
     {
       "id": "US-204",

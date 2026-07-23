@@ -69,9 +69,10 @@ final class PlayerProfile {
     /// Backing store for the per-map step counters. Absent means zero; nothing writes an explicit 0.
     private var recordedStorage: [String: Double]
 
-    /// Backing store for the finish stamps. A map is finished if and only if it has one, so this
-    /// doubles as the "already fired" marker that keeps a finish from re-firing every refresh once
-    /// the counter is past the total.
+    /// Backing store for the finish stamps. A map is finished if and only if it has one, and since
+    /// US-203 a finish means its BOSS was beaten — not merely that the step counter crossed the total.
+    /// This doubles as the "already fired" marker that keeps the boss gate from re-raising once the
+    /// map is truly done (`checkForBossEncounter` skips a map that already carries a stamp).
     private var finishedAtStorage: [String: Date]
 
     /// Backing store for `ownedDigitamaIds`. An array because that is what SwiftData stores
@@ -161,8 +162,9 @@ extension PlayerProfile {
         recordedStorage[id] = max(0, recorded(forMap: id) - steps)
     }
 
-    /// Stamps a map finished, once. A second call is ignored, so the stamp is the moment the map
-    /// was first crossed rather than the last time anything looked.
+    /// Stamps a map TRULY finished — its boss beaten (US-203) — once. A second call is ignored, so the
+    /// stamp is the moment the boss first fell rather than the last time anything looked. This stamp is
+    /// what `MapListView.isUnlocked` reads to open the next map, so nothing but a boss win reaches it.
     func markFinished(_ id: String, at date: Date) {
         guard finishedAtStorage[id] == nil else { return }
         finishedAtStorage[id] = date
@@ -295,9 +297,13 @@ enum MapStepCreditor {
     /// for a real map's progress. It is NOT put back on the ledger: the reading it came from is
     /// already banked, and un-banking it would credit those steps again on the next refresh.
     ///
-    /// A map is marked finished the first time its counter reaches `totalSteps`, with `now` as the
-    /// stamp. The counter is not capped there — `totalSteps` is a finish line, not a ceiling — and
-    /// `markFinished` ignores a second crossing, so passing the total again cannot re-fire it.
+    /// Reaching `totalSteps` no longer FINISHES the map — since US-203 a map is finished only when its
+    /// boss is beaten, and `MainScreenModel.checkForBossEncounter` is what raises that fight once the
+    /// counter has crossed the total AND every resident has been met. This still validates `mapId`
+    /// against the catalog (a delta for a map the catalog does not know is dropped) but no longer
+    /// stamps a finish of its own; the counter is uncapped, so it keeps climbing past the total toward
+    /// the boss gate. `now` is kept in the signature for the US-118 call sites though the finish it
+    /// used to stamp has moved to the boss.
     @discardableResult
     static func credit(
         steps: Double,
@@ -307,12 +313,9 @@ enum MapStepCreditor {
     ) -> Double {
         guard steps > 0,
               let mapId = profile.selectedMapId,
-              let map = catalog.map(id: mapId) else { return 0 }
+              catalog.map(id: mapId) != nil else { return 0 }
 
         profile.record(steps: steps, forMap: mapId)
-        if profile.recorded(forMap: mapId) >= Double(map.totalSteps) {
-            profile.markFinished(mapId, at: now)
-        }
         return steps
     }
 }

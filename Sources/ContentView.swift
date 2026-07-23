@@ -429,6 +429,19 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingWildEncounter)
+        // The boss dialog (US-203) sits with the wild encounter and the battle: it is a moment the
+        // player must answer, so the Feed and Train buttons under it must not be tappable through it.
+        // Its only action is BATTLE — a boss is a gate, not an ambush — which clears it and raises
+        // `pendingBattle` (the fight replays over the same spot). Mutually exclusive with the wild and
+        // battle overlays above; the model never raises two at once, so their order never shows.
+        .overlay {
+            if let boss = model.pendingBossEncounter {
+                BossEncounterView(encounter: boss,
+                                  onBattle: { model.acceptBossEncounter() })
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingBossEncounter)
         // The training round sits with the battle, above the ceremony, and for the same reasons: it
         // is a moment rather than a place, and the Feed and Train buttons underneath must not be
         // tappable through it — a second Train tap during a round would charge for a second one.

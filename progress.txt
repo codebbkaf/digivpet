@@ -6093,3 +6093,43 @@ The thirty, `Perfect -> Ultimate`:
     (a context/met literal unioned at read time, like `mapDetailDemoMet`/`mapDetailDemoDiscoveries`),
     exactly so they leave no residue for the next screenshot.
 ---
+
+## 2026-07-24 - US-203 (Each map has a boss that gates the next map)
+- Implemented the per-map boss gate. Reaching a map's step total no longer FINISHES it; the
+  finish stamp (PlayerProfile.finishedAt/markFinished) now means the boss was beaten, and that
+  stamp is what MapListRow.isUnlocked reads to open the next map.
+- Files changed:
+  - Sources/PlayerProfile.swift — MapStepCreditor.credit no longer markFinished by steps (kept the
+    catalog guard + `now` param); doc updates on finishedAtStorage/markFinished.
+  - Sources/MapOpponents.swift — added MapOpponentBand.residents(...) (meetable pool: non-dexOnly,
+    excluding player, deduped in pool order) and .boss(...) (highest-rung resident, ties by pool
+    order).
+  - Sources/BossEncounterView.swift (new) — BossEncounter struct + BATTLE-only dialog.
+  - Sources/MainScreenModel.swift — pendingBossEncounter, bossLossStepPenalty=1000, mapAwaitsBoss,
+    checkForBossEncounter (fires when recorded>=total AND every resident met AND not finished),
+    acceptBossEncounter (win->markFinished, loss->reduceRecorded 1000). Wired into refresh BEFORE
+    checkForWildEncounter; added pendingBossEncounter to the wild guard and isWandering. Fixed the
+    -mapListDemo seed to markFinished each fully-walked map. Added seedBossEncounterDemoIfRequested
+    (-bossEncounterDemo).
+  - Sources/ContentView.swift — boss overlay beside the wild-encounter overlay.
+  - Tests/BossEncounterTests.swift (new) — trigger conditions, boss identity, win-unlock,
+    1000-step loss + re-challenge, and guards.
+  - Tests/MapProgressTests.swift — updated the 5 US-118 tests that asserted step-based finishing
+    to the new "steps alone never finish a map" truth.
+- Verified: full suite 2633 tests pass; build green; sim screenshot with -bossEncounterDemo shows
+  "Boss: Patamon!" with a single Battle button (no flee).
+- **Learnings for future iterations:**
+  - "Finished" (PlayerProfile.finishedAt/isFinished/markFinished) now means BOSS BEATEN, not step
+    total. UI unlock/checkmark tests set finishedAt directly and are unaffected; only US-118's
+    step-finish tests changed.
+  - A map's "residents to meet" and its "boss" come from MapOpponentBand.residents/.boss — the same
+    non-dexOnly, exclude-player universe wild encounters draw from, so every gate condition is
+    actually reachable.
+  - Sim screenshot recipe for a game screen: launch with `-noNotificationPrompt -healthAnswered`
+    (StubHealthAuthorizer .answered skips the health gate straight to .ready) plus the demo flag.
+    Without -healthAnswered you hit the un-scriptable HealthKit system sheet; without
+    -noNotificationPrompt you hit the un-scriptable notification prompt. Each demo seed runs in
+    start(), i.e. after the health gate.
+  - A boss/wild loss sets pendingBattle (the loss replays); checkForBossEncounter is guarded against
+    a pending battle, so a test must finishBattle() before re-checking the trigger.
+---
