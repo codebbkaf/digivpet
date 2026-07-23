@@ -126,6 +126,14 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     var cleanCharges: Int = 0
     var cleanChargeCap: Int = 0
 
+    /// The meat larder, ringed around Feed in orange (US-208). It joined the other three a story
+    /// late: US-199 left meat as a lone `DashBar` on the currency row because it is a POOL rather
+    /// than a per-tap charge, which made it the one reading a player had to look somewhere else for.
+    /// A pool still has a count and a cap, so it rings the same way — and the row it was alone on is
+    /// gone. Defaulted to 0/0 like the rest, so no ring draws for a call site that says nothing.
+    var meat: Int = 0
+    var meatCap: Int = 0
+
     let feed: () -> Void
     let train: () -> Void
     let clean: () -> Void
@@ -172,7 +180,11 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                     ActionButtonFace(systemImage: "fork.knife", tint: .orange)
                 }
                 .buttonStyle(.plain)
+                // The larder, orange, ringed around the button that spends it (US-208) — the same
+                // overlay the other three carry, so meat reads where it is used like they do.
+                .overlay { DashRing(filled: meat, total: meatCap, tint: .orange) }
                 .accessibilityLabel("Feed")
+                .accessibilityValue(chargeValue(meat, meatCap))
 
                 Button(action: train) {
                     ActionButtonFace(systemImage: "dumbbell", tint: .red)

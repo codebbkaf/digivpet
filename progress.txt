@@ -6479,3 +6479,48 @@ The thirty, `Perfect -> Ultimate`:
   a held egg may have been reset by a hatch since. Value-level tests all passed. Forcing the level
   with `isSatisfied` is the fix; prefer a defaulted parameter on the shared row over a second row type.
 ---
+
+## 2026-07-24 - US-208 (The Feed button wears a meat ring like the others)
+- The last currency that read somewhere other than its own button now reads on it. `ActionControls`
+  gained `meat`/`meatCap` (defaulted 0/0, like US-199's six charge params, so every older call site
+  compiles unchanged and simply draws no ring), an `.overlay { DashRing(filled: meat, total: meatCap,
+  tint: .orange) }` on Feed, and `.accessibilityValue(chargeValue(meat, meatCap))` — the SAME helper
+  the three charges speak through, not a second phrasing.
+- `Sources/ContentView.swift`: the standalone `DashBar(filled: model.meat, ...)` is GONE. US-199 had
+  left meat alone on a row of one because a pool is not a per-tap charge; a pool still has a count and
+  a cap, so the row itself is now empty and deleted. Two reading bars remain above the grid (map steps,
+  sleep), and the vertical space the row took goes back to the sprite.
+- `-chargesDemo` seeds `profile.meat = min(13, config.meatCap)` so the orange ring is screenshottable
+  beside the red/purple/blue three.
+- Files: Sources/ActionControls.swift, Sources/ContentView.swift, Sources/MainScreenModel.swift,
+  Tests/ActionControlsTests.swift, Tests/FeedingTests.swift.
+- Verified: build green; FULL suite **2709 tests, 0 failures** (+4). AC5 screenshotted on 46mm
+  (/tmp/us208/rings.png, and feed_zoom.png cropped 6x): an orange 20-segment ring around `fork.knife`
+  with 13 solid ticks marching clockwise from 12 o'clock and 7 faint ones, and no meat bar anywhere.
+- Tests added: `testFeedSpeaksItsMeatThroughTheSharedChargeValue` (7 of 20, the 0/full boundaries, an
+  overshoot clamped to "20 of 20", and a 0-cap economy staying silent), `testTheMeatRingIsTheSameRing
+  TheChargesUse` (diameter/lineWidth/gapDegrees equal to a charge ring's, diameter = face + 4),
+  `testARowBuiltWithoutMeatCarriesNoRing`, and in FeedingTests `testTheMeatRingOnFeedFallsAsItIsSpent
+  AndRisesAsItIsRefilled` — a real `model.feed()` through the real store, asserted on the numbers the
+  ring is BUILT from (4 -> 3 on a meal, 20 on a refill, 0 when the larder blocks with "No meat").
+
+**Learnings for future iterations:**
+- **A ring's segment count is its CAP, and `meatCap` is 20 — twice any charge cap.** At the shipped
+  8° gap on a 34pt ring that is 20 ticks of ~10° each: legible as a fill on screen, but visibly finer
+  than the 8- and 10-segment rings beside it. US-212 ("every ring is 10 segments") is the story that
+  reconciles this; do not "fix" the density by retuning `Resources/consumption.json`, which would move
+  the economy to serve the drawing.
+- **`accessibilityValue` is where a decorative ring speaks.** `DashRing` is `accessibilityHidden`, so
+  a new ring that does not also add `chargeValue(...)` to its button is silently mute to VoiceOver —
+  there is no test that catches this by construction, only one that asserts the string.
+- **The currency row above the action grid no longer exists.** A future reading that wants a bar there
+  is adding a row back, not appending to one; the `if model.state != nil` block now opens straight
+  onto `ActionControls`.
+- `FeedOutcome` has no `.noMeat` case — an empty larder is `.blocked(reason: "No meat — go battle.")`,
+  and the funds check sits AFTER the refusal check, so a full Digimon refuses for free.
+- Screenshot recipe held again, with the DerivedData rule that matters: `-derivedDataPath /tmp/dd208`
+  on the build, install THAT bundle, `simctl shutdown` -> `erase` -> `boot` -> `install` -> `launch
+  com.digivpet.DigiVPet -healthAnswered -noNotificationPrompt -chargesDemo`, then throw away the first
+  few screenshots (the app shows a spinner for several seconds). `sips -c H W --cropOffset Y X` then
+  `sips -Z 400` is enough to eyeball a 30pt ring's fill without leaving the shell.
+---

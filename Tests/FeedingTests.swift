@@ -1,5 +1,6 @@
 import Foundation
 import SwiftData
+import SwiftUI
 import XCTest
 
 @testable import DigiVPet
@@ -392,5 +393,40 @@ final class FeedApplyTests: XCTestCase {
         XCTAssertEqual(model.state?.stageSleepDisturbances, 1, "already awake, so not disturbed again")
         XCTAssertEqual(model.state?.careMistakeCount, mistakes)
         XCTAssertEqual(model.state?.awakeUntil, awakeUntil, "and the grace is not extended")
+    }
+
+    /// US-208 AC3: the larder moved off its own `DashBar` row onto a ring around Feed, and it still
+    /// falls as it is spent and rises as it is refilled. Driven through the numbers the ring is
+    /// BUILT from — the row is constructed from the model between taps, the way `ContentView` does
+    /// it — so a ring wired to the wrong count fails here rather than only on a screenshot.
+    func testTheMeatRingOnFeedFallsAsItIsSpentAndRisesAsItIsRefilled() async throws {
+        let model = try await startedModel(named: "ring", hunger: 5, vitality: 20, meat: 4)
+        XCTAssertEqual(ring(of: model).filled, 4)
+        XCTAssertEqual(ring(of: model).total, ConsumptionConfig.bundled.meatCap)
+
+        XCTAssertEqual(model.feed(), .fed)
+        XCTAssertEqual(ring(of: model).filled, 3, "a meal came out of the larder the ring shows")
+
+        // The refill a battle win banks (US-176), read back through the same seam.
+        model.profile?.meat = ConsumptionConfig.bundled.meatCap
+        XCTAssertEqual(ring(of: model).filled, ConsumptionConfig.bundled.meatCap, "a full ring")
+
+        model.profile?.meat = 0
+        XCTAssertEqual(model.feed(), .blocked(reason: "No meat — go battle."),
+                       "and an empty ring means an empty larder")
+        XCTAssertEqual(ring(of: model).filled, 0)
+    }
+
+    /// The meat numbers `ContentView` hands `ActionControls`, as the ring the Feed button wears.
+    private func ring(of model: MainScreenModel) -> DashRing {
+        let controls = ActionControls(canAffordBattle: model.canAffordBattle,
+                                      poopCount: model.poopCount,
+                                      lightState: model.lightState,
+                                      meat: model.meat, meatCap: model.meatCap,
+                                      feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                                      mapDestination: { EmptyView() },
+                                      partyDestination: { EmptyView() },
+                                      dexDestination: { EmptyView() })
+        return DashRing(filled: controls.meat, total: controls.meatCap, tint: .orange)
     }
 }

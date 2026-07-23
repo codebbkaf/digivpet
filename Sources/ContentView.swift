@@ -651,15 +651,12 @@ struct ContentView: View {
                 }
 
                 if model.state != nil {
-                    // The meat larder, alone on its row (US-199). It was one of four currency bars
-                    // (US-174, US-176, US-177, US-178); US-199 moved the OTHER three — train red,
-                    // battle purple, clean blue — onto segmented rings around the very buttons that
-                    // spend them, so each charge now reads where it is used. Meat has no single button
-                    // that spends it (it feeds through Feed but is a pool, not a per-tap charge), so it
-                    // stays as the row's `DashBar` — the app's one value language (US-171), no number,
-                    // orange for the fork-and-knife it feeds.
-                    DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
-
+                    // The currency row is GONE (US-208). It held four bars (US-174, US-176, US-177,
+                    // US-178); US-199 moved train, battle and clean onto rings around the buttons
+                    // that spend them and left meat alone on a row of one, and this story rings meat
+                    // around Feed too. Every currency now reads on its own button, so there is no
+                    // row left to draw — and the vertical space it took goes back to the sprite.
+                    //
                     // The eight actions in a two-row grid (US-197): Feed, Train, Clean, Battle on
                     // top; Map, Party, Light, Dex below. Light and Dex moved in off the toolbar and
                     // Map and Party in off the strip, so every way out of the room is one consistent
@@ -677,6 +674,8 @@ struct ContentView: View {
                                    battleChargeCap: model.battleChargeCap,
                                    cleanCharges: model.cleanCharges,
                                    cleanChargeCap: model.cleanChargeCap,
+                                   meat: model.meat,
+                                   meatCap: model.meatCap,
                                    feed: { model.feed() },
                                    train: { model.train() },
                                    clean: { model.clean() },

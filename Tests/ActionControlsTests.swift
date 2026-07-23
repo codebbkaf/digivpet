@@ -114,4 +114,54 @@ final class ActionControlsTests: XCTestCase {
         let width = CGFloat(buttons) * ActionButtonFace.diameter + CGFloat(buttons - 1) * spacing
         XCTAssertLessThanOrEqual(width, 176)
     }
+
+    // MARK: - US-208: the meat ring on Feed
+
+    /// AC4: Feed speaks its larder the way the other three speak their charges — through the SAME
+    /// `chargeValue`, so the four buttons cannot drift into two phrasings. Asserted at the boundaries
+    /// the shared rule owns: a full larder, an empty one, an overshoot clamped to the cap, and an
+    /// economy with no cap at all staying silent rather than saying "0 of 0".
+    func testFeedSpeaksItsMeatThroughTheSharedChargeValue() {
+        let controls = ringed(meat: 7, meatCap: 20)
+        XCTAssertEqual(controls.chargeValue(controls.meat, controls.meatCap), "7 of 20")
+
+        XCTAssertEqual(controls.chargeValue(0, 20), "0 of 20")
+        XCTAssertEqual(controls.chargeValue(20, 20), "20 of 20")
+        XCTAssertEqual(controls.chargeValue(21, 20), "20 of 20", "an overshoot cannot say 21 of 20")
+        XCTAssertEqual(controls.chargeValue(3, 0), "", "no larder, so nothing to announce")
+    }
+
+    /// AC1: the ring Feed carries is built the same way Train's, Clean's and Battle's are — same
+    /// `DashRing`, same defaults, only the count and the hue differ. Built here rather than reached
+    /// for inside `body`, which is unreachable outside a view graph, so what is pinned is that a
+    /// meat ring and a charge ring are the same object with different numbers.
+    func testTheMeatRingIsTheSameRingTheChargesUse() {
+        let meatRing = DashRing(filled: 7, total: 20, tint: .orange)
+        let trainRing = DashRing(filled: 3, total: 8, tint: .red)
+
+        XCTAssertEqual(meatRing.diameter, trainRing.diameter)
+        XCTAssertEqual(meatRing.lineWidth, trainRing.lineWidth)
+        XCTAssertEqual(meatRing.gapDegrees, trainRing.gapDegrees)
+        XCTAssertEqual(meatRing.diameter, ActionButtonFace.diameter + 4,
+                       "it encircles the face rather than resizing the button")
+    }
+
+    /// A call site that says nothing about meat draws no ring, so every pre-US-208 construction of
+    /// this view — the fixtures above, and every test that predates the rings — is unchanged.
+    func testARowBuiltWithoutMeatCarriesNoRing() {
+        let controls = self.controls(strength: 5, stamina: 5)
+        XCTAssertEqual(controls.meat, 0)
+        XCTAssertEqual(controls.meatCap, 0)
+        XCTAssertEqual(controls.chargeValue(controls.meat, controls.meatCap), "")
+    }
+
+    /// A row carrying a larder, for the ring assertions above.
+    private func ringed(meat: Int, meatCap: Int) -> ActionControls<EmptyView, EmptyView, EmptyView> {
+        ActionControls(canAffordBattle: true, poopCount: 0, lightState: .on,
+                       meat: meat, meatCap: meatCap,
+                       feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                       mapDestination: { EmptyView() },
+                       partyDestination: { EmptyView() },
+                       dexDestination: { EmptyView() })
+    }
 }

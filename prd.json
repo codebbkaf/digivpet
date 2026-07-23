@@ -1771,8 +1771,8 @@
         "Build green. Verify in the simulator with a screenshot that the Feed button shows a filled ring"
       ],
       "priority": 95,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Feed now wears an orange DashRing (model.meat/model.meatCap) exactly like Train/Clean/Battle, and the standalone meat DashBar row is GONE from ContentView — the currency row is now empty of bars entirely, every currency reads on the button that spends it. ActionControls gained defaulted meat/meatCap params (0/0 = no ring, so every pre-existing call site compiles unchanged) plus accessibilityValue(chargeValue(meat, meatCap)) — the SAME helper the three charges speak through, so the four buttons cannot drift into two phrasings. -chargesDemo now seeds meat 13/20 so the orange ring is screenshottable beside the other three. Build green; FULL suite 2709 tests, 0 failures (+4: three in ActionControlsTests pinning the spoken value/clamp/silence at 0 cap, the ring being the same DashRing the charges use, and a meatless row drawing nothing; one in FeedingTests driving the real feed and asserting the ring's numbers fall 4->3 as a meal is eaten, rise to a full 20 on a refill, and read 0 when the larder blocks). AC5 screenshotted on 46mm (/tmp/us208/rings.png + feed_zoom.png): an orange 20-segment ring around fork.knife, 13 solid ticks from 12 o'clock clockwise and 7 faint, and only the map/sleep bars left above the grid."
     },
     {
       "id": "US-209",

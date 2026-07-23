@@ -1009,8 +1009,8 @@ final class MainScreenModel: ObservableObject {
     /// drawing whatever this banks. It seeds its own awake Agumon, funds a battle so that button is
     /// enabled, and drops a little poop so Clean is enabled too.
     ///
-    /// - `-chargesDemo` — Train 4/10 (red), Battle 7/10 (purple), Clean 5/8 (blue): three partly
-    ///   filled rings on the action grid at once.
+    /// - `-chargesDemo` — Feed 13/20 (orange), Train 4/10 (red), Battle 7/10 (purple), Clean 5/8
+    ///   (blue): four partly filled rings on the action grid at once (meat joined in US-208).
     private func seedChargesDemoIfRequested() {
         guard CommandLine.arguments.contains("-chargesDemo"), let state else { return }
 
@@ -1025,6 +1025,8 @@ final class MainScreenModel: ObservableObject {
         state.trainCharges = min(4, config.maxTrainCharges)
         state.battleCharges = min(7, config.maxBattleCharges)
         profile?.cleanCharges = min(5, config.maxCleanCharges)
+        // The larder Feed's own ring reads (US-208), off the same cap the ring is drawn to.
+        profile?.meat = min(13, config.meatCap)
 
         // Fund a battle so the purple ring sits on an ENABLED button rather than a greyed one, and
         // stage some mess so the blue ring's Clean button is enabled too.
