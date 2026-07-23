@@ -32,6 +32,7 @@ xcodebuild test -project DigiVPet.xcodeproj -scheme DigiVPet \
 | `Resources/roster.json` | All 1,022 Digimon, for the Dex — **generated**, see below. Never hand-edit. |
 | `16x16 Digimon Sprites/` | Sprite tree, bundled as a folder reference (not an asset catalog). |
 | `docs/evolutions-schema.md` | The graph file format, field by field. |
+| `docs/metric-accounting.md` | How steps/calories/exercise/sleep are credited once, never doubled. |
 | `scripts/` | Dev tools. Not shipped, not part of the build. |
 
 ## Sprites

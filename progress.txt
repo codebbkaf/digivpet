@@ -6133,3 +6133,37 @@ The thirty, `Perfect -> Ultimate`:
   - A boss/wild loss sets pendingBattle (the loss replays); checkForBossEncounter is guarded against
     a pending battle, so a test must finishBattle() before re-checking the trigger.
 ---
+
+## 2026-07-24 - US-204 (Step/metric accounting is never doubled, and it is documented)
+- Documentation + verification story. Double-checked the accounting: no gap found. Steps,
+  calories, exercise and sleep are already credited by today's DELTA against a stored, persisted
+  baseline (never the raw daily total), so re-opening within a day credits zero and a day rollover
+  re-baselines without back-crediting yesterday.
+- Files changed:
+  - docs/metric-accounting.md (new) — the today's-delta rule; the two ledgers (EnergyLedger for the
+    four energy currencies with EnergyRates caps, MetricLedger for raw ConditionMetric totals with
+    no cap); why two ledgers reading one metric is NOT double counting (a step is 1 Strength-energy
+    AND 1 map-step, different units); MetricLedger.claim as the single de-dup site; the one-read /
+    one-claim wiring in MainScreenModel.refresh() (map/train/clean/sleep spend the deltas
+    MetricCreditor returns, never claim twice); the widget-reads-the-snapshot rule
+    (ComplicationSnapshot.swift:101); a per-metric table for steps/calories/exercise/sleep; and the
+    full list of tests that pin each AC.
+  - README.md — Layout-table pointer to the new doc.
+- Verified: xcodegen + build green (Series 11 46mm). Accounting test classes all pass:
+  MetricCreditingTests, MetricTotalsPersistenceTests, MetricLedgerWiringTests, EnergyCreditingTests,
+  EnergyLedgerPersistenceTests.
+- **Learnings for future iterations:**
+  - TEST CLASS NAMES DO NOT MATCH FILE NAMES. `-only-testing:DigiVPetTests/<Class>` filters by
+    CLASS, so filtering by the file's basename silently runs a subset (or nothing). Map:
+    Tests/MetricTotalsTests.swift -> classes MetricCreditingTests + MetricTotalsPersistenceTests;
+    Tests/MetricWiringTests.swift -> MetricConditionReachTests + MetricLedgerWiringTests;
+    Tests/EnergyCreditingTests.swift -> EnergyRatesTests + EnergyCreditingTests +
+    EnergyLedgerPersistenceTests + HealthEnergySourceTests. Grep `final class .*: XCTestCase` to get
+    the real names before using -only-testing.
+  - The double-credit guarantee lives in TWO persisted @Model ledgers, each with its own per-day
+    baseline: EnergyLedger (currency, capped by EnergyRates.dailyCapPerEnergyType) and MetricLedger
+    (raw metric totals, uncapped). MetricLedger.claim(_:dayTotal:now:) is the single place the metric
+    de-dup rule lives — map/train/clean/sleep all SPEND the deltas MetricCreditor.credit returns
+    rather than claiming a second baseline. Adding any new consumer of a metric must spend a returned
+    delta, never call claim itself.
+---
