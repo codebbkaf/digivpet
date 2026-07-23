@@ -555,36 +555,57 @@ final class BattleRecordTests: XCTestCase {
         XCTAssertEqual(state.battleLosses, 1)
     }
 
-    /// AC5, stated directly: a loss touches the record and NOTHING else. Every field a loss could
-    /// plausibly have been made to punish is asserted unchanged — a Digimon must never be killed or
-    /// marked as neglected for losing a fight it was allowed to pick.
-    func testLosingCausesNeitherDeathNorACareMistake() {
+    /// US-192 AC1: a loss taken while healthy is a care mistake now, reversing US-031. Only the care
+    /// record moves — `hunger` is untouched, because a lost fight is neglect, not starvation.
+    func testLosingWhileHealthyChargesACareMistake() {
         let state = makeState()
         state.careMistakeCount = 2
         state.hunger = 1
 
         state.recordBattle(report(playerWon: false))
 
-        XCTAssertEqual(state.healthStatus, .healthy, "losing never kills and never sickens")
-        XCTAssertNil(state.sickSince, "and never starts the illness that would")
-        XCTAssertNil(state.diedAt)
-        XCTAssertEqual(state.careMistakeCount, 2, "losing is not neglect")
-        XCTAssertEqual(state.hunger, 1, "and does not starve it either")
+        XCTAssertEqual(state.careMistakeCount, 3, "a healthy loss is a care mistake")
+        XCTAssertNil(state.diedAt, "the mistake alone does not kill — a refresh settles that")
+        XCTAssertEqual(state.hunger, 1, "and a loss does not starve it")
     }
 
-    /// A losing STREAK is still not fatal. The single-loss test above could pass on a rule that kills
-    /// after five, which is exactly the sort of "fair" punishment AC5 rules out.
-    func testALosingStreakStillCausesNeitherDeathNorACareMistake() {
+    /// US-192 AC1: a loss taken while the Digimon is already sick HEALS it instead of charging a
+    /// mistake, clearing the count and the death countdown. This is the "or healed" fork, and the
+    /// reason a Digimon the player keeps healing does not die.
+    func testLosingWhileSickHealsInsteadOfCharging() {
+        let state = makeState()
+        state.healthStatus = .sick
+        state.careMistakeCount = 3
+        state.sickSince = Date(timeIntervalSinceReferenceDate: 500_000)
+
+        state.recordBattle(report(playerWon: false))
+
+        XCTAssertEqual(state.healthStatus, .healthy, "a loss while sick heals")
+        XCTAssertEqual(state.careMistakeCount, 0, "and wipes the care record, as any cure does")
+        XCTAssertNil(state.sickSince, "and stops the death countdown")
+        XCTAssertEqual(state.battleLosses, 1, "the loss is still recorded")
+    }
+
+    /// US-192 AC2/AC3: enough healthy losses accrue care mistakes that the ordinary neglect ladder
+    /// carries the Digimon to sickness and then, left untreated, to death on the existing schedule.
+    /// A healed one does not get there.
+    func testEnoughLosingAccruesCareMistakesThatLeadToDeath() {
         let state = makeState()
 
-        for _ in 0..<25 {
+        // Three healthy losses is the sickness threshold — the same count any neglect reaches.
+        for _ in 0..<Sickness.careMistakesUntilSick {
             state.recordBattle(report(playerWon: false))
         }
+        XCTAssertEqual(state.careMistakeCount, Sickness.careMistakesUntilSick)
 
-        XCTAssertEqual(state.battleLosses, 25)
-        XCTAssertEqual(state.healthStatus, .healthy)
-        XCTAssertEqual(state.careMistakeCount, 0)
-        XCTAssertNil(state.diedAt)
+        let fellSick = Date(timeIntervalSinceReferenceDate: 1_000_000)
+        state.updateSickness(energyEarnedToday: 0)
+        XCTAssertEqual(state.healthStatus, .sick, "three losing care mistakes make it sick")
+
+        // The illness runs its full 72 hours untreated, exactly as neglect's would.
+        state.updateDeath(now: fellSick)
+        state.updateDeath(now: fellSick.addingTimeInterval(Death.secondsSickUntilDeath))
+        XCTAssertEqual(state.healthStatus, .dead, "a repeatedly-losing, unhealed Digimon dies")
     }
 
     /// A battle is resolved from the power US-030 computes, so training really does change the fight.
@@ -746,9 +767,10 @@ final class BattleApplyTests: XCTestCase {
         XCTAssertEqual(saved.battleWins + saved.battleLosses, 1)
     }
 
-    /// AC5 through the whole shipped path: a Digimon that LOSES a battle it really fought is left
-    /// alive, healthy and unmarked. The seed is chosen so the underdog genuinely loses.
-    func testLosingAFoughtBattleLeavesTheDigimonAliveAndUnmarked() async throws {
+    /// US-192 through the whole shipped path: a Digimon that LOSES a battle it really fought, while
+    /// healthy, is charged a care mistake — and the charge survives the refresh that settles the
+    /// audits. The seed is chosen so the underdog genuinely loses.
+    func testLosingAFoughtBattleWhileHealthyChargesACareMistake() async throws {
         // An untrained Child against an Adult: the pinned seed below produces a loss.
         let (model, _) = try makeModel(strength: 0, seed: 3)
         await model.start()
@@ -761,15 +783,14 @@ final class BattleApplyTests: XCTestCase {
 
         let state = try XCTUnwrap(model.state)
         XCTAssertEqual(state.battleLosses, 1)
-        XCTAssertEqual(state.healthStatus, .healthy, "losing never kills or sickens")
-        XCTAssertEqual(state.careMistakeCount, 0, "and is never a care mistake")
-        XCTAssertNil(state.diedAt)
+        XCTAssertEqual(state.careMistakeCount, 1, "a healthy loss is now a care mistake (US-192)")
+        XCTAssertNil(state.diedAt, "one mistake is well short of death")
 
-        // A refresh is where sickness and death are actually settled (US-028/US-029), so the loss
-        // must survive one — a punishment deferred to the next foregrounding is still a punishment.
+        // A refresh is where sickness and death are actually settled (US-028/US-029), so the charged
+        // mistake must survive one — a single mistake keeps the Digimon healthy but on the record.
         await model.refresh()
         XCTAssertEqual(state.healthStatus, .healthy)
-        XCTAssertEqual(state.careMistakeCount, 0)
+        XCTAssertEqual(state.careMistakeCount, 1)
     }
 
     /// A sleeping Digimon IS dragged into a fight since US-110 — the same treatment feeding and

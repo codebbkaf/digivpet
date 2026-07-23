@@ -435,15 +435,15 @@ final class BattleCostApplyTests: XCTestCase {
         XCTAssertTrue(qualifies(), "the persisted record is what opens the edge")
     }
 
-    /// AC10: LOSING STILL COSTS NOTHING. `recordBattle` is untouched by this story — the energy is
-    /// spent by the tap, not by the outcome, so a lost fight charges no care mistake and changes no
-    /// health.
-    func testLosingCostsNothingBeyondTheEnergyTheTapSpent() async throws {
+    /// AC10 stood on US-031's "losing is not neglect"; US-192 reverses that, so what this now pins is
+    /// that the ENERGY cost is still only the tap's — the outcome charges no extra energy — while each
+    /// healthy loss adds exactly one care mistake and nothing else. No refresh runs between the bouts,
+    /// so the Digimon stays healthy throughout and every loss charges, giving an exact count.
+    func testLosingChargesOneCareMistakePerLossAndNoExtraEnergy() async throws {
         let (model, _) = try makeModel(strength: 0)
         await model.start()
         let state = try XCTUnwrap(model.state)
-        let mistakes = state.careMistakeCount
-        let health = state.healthStatus
+        let mistakesBefore = state.careMistakeCount
 
         for _ in 0..<6 {
             model.battle()
@@ -452,8 +452,8 @@ final class BattleCostApplyTests: XCTestCase {
         }
 
         XCTAssertGreaterThan(state.battleLosses, 0, "an untrained Digimon loses at least one of six")
-        XCTAssertEqual(state.careMistakeCount, mistakes, "losing is not neglect")
-        XCTAssertEqual(state.healthStatus, health)
+        XCTAssertEqual(state.careMistakeCount, mistakesBefore + state.battleLosses,
+                       "one care mistake per healthy loss (US-192), and only that")
     }
 
     /// Being broke is not a care mistake either — it is a rule of the game, not neglect. (Prodding a

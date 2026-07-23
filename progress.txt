@@ -5680,3 +5680,40 @@ The thirty, `Perfect -> Ultimate`:
     in consumption.json (US-170).** US-191 authored no config — it only read the table, exactly as
     US-189/190 read hitRate/elementDamage. The cap grows with stage (Child 4 -> Perfect 8 -> Ult 10).
 ---
+
+## 2026-07-23 - US-192 (Losing a battle heals or costs a care mistake, and can kill)
+- Reversed US-031's "losing never causes a care mistake" in `GameState.recordBattle`
+  (Sources/Battle.swift). A WIN is unchanged (record only). A LOSS now forks on current health:
+  - sick  -> HEALED: the exact cure `Sickness.updateSickness` applies (healthStatus=.healthy,
+    careMistakeCount=0) PLUS the death-clock reset `Death.updateDeath` does on becoming healthy
+    (sickSince=nil, deathWarningSentAt=nil). No care mistake. This is the "or healed" fork.
+  - healthy -> care mistake: `careMistakeCount += 1`, which rides the existing neglect ladder
+    (>=3 -> sick via updateSickness on refresh -> dead after 72h via updateDeath).
+- Updated the doc comment on `MainScreenModel.finishBattle` (was "losing never kills / never a
+  care mistake (US-031)").
+- Tests: rewrote the 5 that pinned the OLD rule and added coverage for the new one:
+  - BattleTests: split the old "neither death nor care mistake" pair into
+    testLosingWhileHealthyChargesACareMistake, testLosingWhileSickHealsInsteadOfCharging,
+    testEnoughLosingAccruesCareMistakesThatLeadToDeath (3 losses -> updateSickness -> sick ->
+    +72h updateDeath -> dead); renamed the fought-battle test to
+    testLosingAFoughtBattleWhileHealthyChargesACareMistake (asserts +1, survives a refresh).
+  - LightNeglectTests.testLosingBattlesChargeCareMistakesWithoutTrippingTheLightAudit (25 losses
+    -> 25 mistakes, lightAuditedNight still nil).
+  - BattleCostTests.testLosingChargesOneCareMistakePerLossAndNoExtraEnergy (careMistakeCount ==
+    before + battleLosses; no refresh between bouts so all losses land while healthy).
+- Full suite: 2577 tests, 0 failures. Build green (watchOS Series 11 46mm).
+- **Learnings for future iterations:**
+  - The death path is care mistakes -> sickness (Sickness.careMistakesUntilSick=3) -> death
+    (Death.secondsSickUntilDeath=72h). Care mistakes do NOT shorten the 72h clock once sick; they
+    only get you TO sick. So any "battles cause death" wiring must charge the mistake while HEALTHY.
+  - Do NOT add a random draw inside `BattleEngine.resolve` for loss consequences: dozens of tests
+    pin literal outcomes off `SeededGenerator` seeds, so any extra draw shifts the whole sequence.
+    Keep loss-consequence logic in `recordBattle` off deterministic GameState instead.
+  - Curing (updateSickness) resets careMistakeCount=0 but NOT the per-spell markers
+    (starvationMistakesCharged/poopMistakesCharged); the heal branch mirrors that exactly, so a
+    still-starving Digimon is not instantly re-charged for the same spell.
+  - Several tests fight real battles via model.battle()/finishBattle() without asserting care
+    state (WanderingTests, PreBattleRoundTests grade loop, BackgroundRefreshTests battle-count) —
+    they were unaffected because no refresh runs between bouts, so the Digimon stays healthy and
+    the accrued mistakes never tip it into sickness within the test.
+---

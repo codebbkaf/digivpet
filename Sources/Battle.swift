@@ -391,18 +391,45 @@ enum BattleCost {
 }
 
 extension GameState {
-    /// Files a finished battle in the win/loss record — and does NOTHING else.
+    /// Files a finished battle in the win/loss record — and, on a LOSS, makes the loss matter.
     ///
-    /// That "nothing else" is US-031's acceptance criterion, not an omission: LOSING NEVER KILLS AND
-    /// NEVER COUNTS AS A CARE MISTAKE. `healthStatus`, `careMistakeCount`, `hunger` and `sickSince`
-    /// are all deliberately untouched here, so a losing streak can never cost a Digimon its life —
-    /// the only thing that does that is neglect (US-027/US-028/US-029). Battling is meant to be
-    /// something a user can try without risking the pet they have raised for a week.
+    /// **This deliberately reverses US-031's "losing never causes a care mistake."** That rule made
+    /// battling risk-free, which is what US-192 changes: now a loss either heals the Digimon or costs
+    /// it a care mistake, and enough care mistakes run the ordinary neglect ladder all the way to
+    /// death (`careMistakeCount` → sick at `Sickness.careMistakesUntilSick` → dead after
+    /// `Death.secondsSickUntilDeath`). Battles are meant to pay off training; a fight you can only
+    /// ever win-or-shrug-off does not.
+    ///
+    /// The heal-or-mistake fork is the whole point of "losses matter," and it hangs on the Digimon's
+    /// current health:
+    /// - A loss taken while the Digimon is **already sick** HEALS it — the same cure `updateSickness`
+    ///   applies for a well-fed day: `healthStatus` back to `.healthy`, `careMistakeCount` wiped, the
+    ///   death countdown (`sickSince`) and its warning cleared. A loss cannot push an already-ailing
+    ///   Digimon further toward death; instead the setback is where it recovers, which is why "a
+    ///   healed loss does not increment" and why a Digimon the player keeps healing does not die.
+    /// - A loss taken while **healthy** is a care mistake (`careMistakeCount += 1`). That is the path
+    ///   that bites: three of them and the next refresh's `updateSickness` finds the Digimon sick, and
+    ///   a repeatedly-losing, otherwise-neglected Digimon that is never healed rides that to death.
+    ///
+    /// A WIN is still only a win — it moves the record and nothing else. `hunger` is untouched on
+    /// either outcome: losing is a care mistake, not starvation.
     func recordBattle(_ report: BattleReport) {
-        if report.playerWon {
+        guard !report.playerWon else {
             battleWins += 1
+            return
+        }
+
+        battleLosses += 1
+        if healthStatus == .sick {
+            // Healed — the exact cure `Sickness.updateSickness` applies, plus the death-clock reset
+            // `Death.updateDeath` performs on becoming healthy, so the countdown really stops rather
+            // than resuming its 72 hours the next time the Digimon falls ill.
+            healthStatus = .healthy
+            careMistakeCount = 0
+            sickSince = nil
+            deathWarningSentAt = nil
         } else {
-            battleLosses += 1
+            careMistakeCount += 1
         }
     }
 }

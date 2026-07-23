@@ -378,15 +378,16 @@ final class LightsOutChargeTests: XCTestCase {
         XCTAssertEqual(model.state?.currentDigimonId, "grown", "a spotless record still evolves")
     }
 
-    // MARK: AC7 — battles are not neglect
+    // MARK: AC7 — the light audit does not double-charge for battle losses
 
-    /// US-031 stands: losing costs nothing, and this story added no path from a fight to the care
-    /// record. Twenty-five losses and the refresh that settles every audit, in a dark room where the
-    /// only rule that could charge anything is the one this story wired up.
+    /// Since US-192 losing a fight IS a care mistake (reversing US-031), but it must ride the same
+    /// counter every other mistake does rather than tripping this story's light audit. Twenty-five
+    /// losses charge twenty-five mistakes; the refresh that settles every audit adds nothing of its
+    /// own and never records a light-neglect night, so the count is exactly the losses.
     ///
-    /// `BattleTests.testLosingAFoughtBattleLeavesTheDigimonAliveAndUnmarked` covers the same claim
-    /// through a battle actually fought; what this adds is that the new audit does not change it.
-    func testLosingBattlesStillCostsNothing() async throws {
+    /// `BattleTests.testLosingAFoughtBattleWhileHealthyChargesACareMistake` covers the charge through
+    /// a battle actually fought; what this adds is that the light audit does not pile on top of it.
+    func testLosingBattlesChargeCareMistakesWithoutTrippingTheLightAudit() async throws {
         try seedGame(born: NeglectClock.at("2026-03-10 21:00"), light: .off)
         let model = makeModel(now: NeglectClock.at("2026-03-11 08:00"))
         await model.start()
@@ -402,8 +403,7 @@ final class LightsOutChargeTests: XCTestCase {
         await model.refresh()
 
         XCTAssertEqual(state.battleLosses, 25)
-        XCTAssertEqual(state.careMistakeCount, 0, "losing is not neglect, and never will be")
-        XCTAssertNil(state.lightAuditedNight)
-        XCTAssertEqual(state.healthStatus, .healthy)
+        XCTAssertEqual(state.careMistakeCount, 25, "each healthy loss is one care mistake (US-192)")
+        XCTAssertNil(state.lightAuditedNight, "and the light audit adds no night of its own")
     }
 }

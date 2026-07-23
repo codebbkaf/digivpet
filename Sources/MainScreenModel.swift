@@ -2316,9 +2316,10 @@ final class MainScreenModel: ObservableObject {
 
     /// Files the battle's result and takes the screen down, so a battle is recorded exactly once.
     ///
-    /// `recordBattle` moves the win/loss counters and NOTHING else — losing never kills and never
-    /// counts as a care mistake (US-031), which is why this does not touch `healthStatus` or run any
-    /// of the audits `refresh()` does.
+    /// `recordBattle` moves the win/loss counters and, since US-192, makes a LOSS matter: it heals a
+    /// sick Digimon or charges a healthy one a care mistake (reversing US-031). It settles no clocks
+    /// of its own — the care mistake it may add rides the ordinary neglect ladder to sickness and
+    /// death on the next `refresh()`, exactly as a mistake from any other source does.
     func finishBattle() {
         guard let bout = pendingBattle else { return }
         pendingBattle = nil

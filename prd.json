@@ -997,8 +997,8 @@
         "Typecheck passes"
       ],
       "priority": 53,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "recordBattle now makes a loss matter (reverses US-031): a loss while sick HEALS (cure - healthStatus healthy, careMistakeCount 0, sickSince/deathWarningSentAt cleared); a loss while healthy charges careMistakeCount +=1, which rides the existing neglect ladder (3 -> sick -> 72h -> dead). Updated 5 tests that pinned the old rule and added heal/death-threshold tests. Full suite 2577 pass, build green."
     },
     {
       "id": "US-144",
