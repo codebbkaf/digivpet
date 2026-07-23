@@ -5984,3 +5984,46 @@ The thirty, `Perfect -> Ultimate`:
   - `ActionControls` now carries the three spend charges. Its charge params are DEFAULTED 0/0 on
     purpose so the older `ActionControlsTests` constructors (which don't pass them) still compile and
     simply draw no ring — add-with-defaults beats touching every call site.
+
+## 2026-07-24 - US-200: A Digimon's age shown as '1Y' beside the battle record
+- New persisted `hatchedDate: Date?` on `GameState` (`Sources/GameState.swift`): the instant the
+  Digitama hatched into Baby I, distinct from `birthDate` (stamped when the EGG is created — an egg
+  spends real time accruing energy before it cracks). OPTIONAL for the standard SwiftData
+  migration reason; `nil` reads as 0Y (an egg not yet hatched, a save from before this, or a
+  Jogress result born past the egg stage).
+- `GameState.ageYears(now:)`: whole elapsed 24-hour periods since `hatchedDate` (matching `Death`'s
+  lifespan reckoning), clamped to 0 for nil/backward clock. One "year" per real day.
+- `MainScreenModel.hatchIfReady` stamps `state.hatchedDate = now()` right after `advance(...)` — in
+  the ONE hatch-specific path, NOT in the shared `advance`, so an evolution never resets age.
+- `Freeze.shiftTimeline` shifts `hatchedDate` with the rest of the timeline, so a frozen Digimon
+  does not age.
+- `MainScreenModel.ageYears` computed off the injected clock; `StatsStrip` (`Sources/ContentView.swift`)
+  gained a defaulted `ageYears` param and draws `\(ageYears)Y` right after the `0W 0L` record with a
+  matching `accessibilityValue` ("... N years old"). `-wanderDemo` now stamps hatchedDate to 3 days
+  ago so the strip screenshots a real `3Y`.
+- Tests: `GameStateTests` age suite (0Y fresh + unhatched, increments once per whole day, clamps on a
+  backward clock, `hatchedDate` round-trips through disk) and `EggHatchingTests`
+  testHatchingStampsTheHatchDateAndAgeCountsFromIt (real hatch stamps the date; a mutable clock wound
+  one day forward makes `model.ageYears` read 1) + an unhatched-egg control.
+- Verified: build green (Series 11 46mm); full suite 2610 tests, 0 failures. Screenshot
+  /tmp/us200/age5.png shows `STR 0  PWR 25  0W 0L  3Y`.
+- **Learnings for future iterations:**
+  - **DerivedData ambiguity wasted a screenshot loop.** This checkout has THREE
+    `~/Library/Developer/Xcode/DerivedData/DigiVPet-*` directories, and `find ... DigiVPet.app | head -1`
+    (and even `ls -dt`) can pick a STALE bundle from a different one, so `simctl install` installs old
+    code and the change looks missing on screen while the source is correct. Fix: build AND install
+    from an explicit `-derivedDataPath` (e.g. `-derivedDataPath /tmp/dd`) so the installed `.app` is
+    provably the one just built. Do this for every screenshot verification.
+  - The watch simulator also gates the main screen behind a HealthKit authorization intro screen
+    ("Feed Your Digimon ... Never leaves this watch"). Launch with `-healthAnswered` (a
+    `StubHealthAuthorizer.Outcome` in `Sources/HealthAuthorization.swift`; siblings `-healthDenied`,
+    `-healthUnavailable`) to walk straight onto the main screen. Combine with `-wanderDemo`
+    `-noNotificationPrompt`.
+  - Adding a time-derived `GameState` field is a THREE-line contract: the optional property, a line
+    in `Freeze.shiftTimeline` (or a frozen Digimon keeps aging/hungering), and a stamp at the one
+    lifecycle moment that owns it. `advance` is shared by hatch AND evolve — stamp hatch-only fields
+    in `hatchIfReady`, not `advance`.
+  - `xcodebuild`'s incremental builder here intermittently serves a STALE module to the test target
+    ("Value of type 'GameState' has no member ...") even though the app target compiled the new
+    member. A `xcodebuild clean` before the test run fixes it.
+---

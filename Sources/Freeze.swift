@@ -115,6 +115,7 @@ extension GameState {
     private func shiftTimeline(by span: TimeInterval) {
         birthDate += span
         stageEnteredDate += span
+        hatchedDate = hatchedDate.map { $0 + span }
         hungerUpdatedAt = hungerUpdatedAt.map { $0 + span }
         poopUpdatedAt = poopUpdatedAt.map { $0 + span }
         healthDataLastSeen = healthDataLastSeen.map { $0 + span }

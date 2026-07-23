@@ -38,6 +38,7 @@ final class GameStateTests: XCTestCase {
             let state = GameState(currentDigimonId: "greymon", stage: .adult, now: t0)
             state.stageEnergy = EnergyTotals(strength: 11, vitality: 22, spirit: 33, stamina: 44)
             state.stageEnteredDate = t1
+            state.hatchedDate = t1
             state.careMistakeCount = 2
             state.hunger = 3
             state.strengthStat = 17
@@ -63,6 +64,7 @@ final class GameStateTests: XCTestCase {
                        EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88))
         XCTAssertEqual(loaded.birthDate, t0)
         XCTAssertEqual(loaded.stageEnteredDate, t1)
+        XCTAssertEqual(loaded.hatchedDate, t1)
         XCTAssertEqual(loaded.careMistakeCount, 2)
         XCTAssertEqual(loaded.hunger, 3)
         XCTAssertEqual(loaded.strengthStat, 17)
@@ -94,6 +96,45 @@ final class GameStateTests: XCTestCase {
         XCTAssertEqual(second.currentDigimonId, "agu_digitama")
         XCTAssertEqual(second.hunger, 3)
         XCTAssertEqual(second.birthDate, t0)
+    }
+
+    // MARK: - Age (US-200)
+
+    /// AC1 + AC3: age is whole real days since the HATCH, read off the injectable clock. A freshly
+    /// hatched Digimon reads 0Y; an egg that has not hatched (nil `hatchedDate`) reads 0Y too, so it
+    /// is never shown a stale or placeholder age.
+    func testAgeIsZeroYearsAtTheHatchAndForAnUnhatchedEgg() {
+        let egg = GameState(currentDigimonId: "agu_digitama", now: t0)
+        XCTAssertNil(egg.hatchedDate)
+        XCTAssertEqual(egg.ageYears(now: t0.addingTimeInterval(3 * Death.secondsPerDay)), 0,
+                       "an unhatched egg has no age yet, even days later")
+
+        egg.hatchedDate = t0
+        XCTAssertEqual(egg.ageYears(now: t0), 0, "freshly hatched reads 0Y")
+    }
+
+    /// AC4: driving the clock forward, the year increments exactly once per whole elapsed day — a
+    /// year is a completed 24-hour period since the hatch, not a started one.
+    func testAgeIncrementsOncePerDay() {
+        let state = GameState(currentDigimonId: "botamon", stage: .babyI, now: t0)
+        state.hatchedDate = t0
+
+        XCTAssertEqual(state.ageYears(now: t0.addingTimeInterval(23 * 3600)), 0, "not a full day yet")
+        XCTAssertEqual(state.ageYears(now: t0.addingTimeInterval(Death.secondsPerDay)), 1,
+                       "one injected day is 1Y")
+        XCTAssertEqual(state.ageYears(now: t0.addingTimeInterval(1.5 * Death.secondsPerDay)), 1,
+                       "a day and a half is still 1Y")
+        XCTAssertEqual(state.ageYears(now: t0.addingTimeInterval(2 * Death.secondsPerDay)), 2,
+                       "the next whole day makes it 2Y")
+        XCTAssertEqual(state.ageYears(now: t0.addingTimeInterval(365 * Death.secondsPerDay)), 365)
+    }
+
+    /// A clock that ran backward — a device time correction after the hatch — never shows a negative
+    /// age; it clamps to 0Y.
+    func testAgeClampsToZeroForAClockBeforeTheHatch() {
+        let state = GameState(currentDigimonId: "botamon", stage: .babyI, now: t1)
+        state.hatchedDate = t1
+        XCTAssertEqual(state.ageYears(now: t1.addingTimeInterval(-Death.secondsPerDay)), 0)
     }
 
     // MARK: - Reset

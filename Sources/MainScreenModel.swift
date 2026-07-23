@@ -660,6 +660,9 @@ final class MainScreenModel: ObservableObject {
             // Restamped for the same reason the other demos restamp it: an old `stageEnteredDate`
             // lets the next refresh evolve the demo out from under the screenshot.
             state.stageEnteredDate = now()
+            // Hatched three days ago, so the strip reads a real `3Y` (US-200) rather than the `0Y`
+            // a freshly seeded demo would show.
+            state.hatchedDate = now().addingTimeInterval(-3 * Death.secondsPerDay)
         }
     }
 
@@ -1439,6 +1442,11 @@ final class MainScreenModel: ObservableObject {
     /// honest reading of it: a player whose profile has not been opened has earned nothing yet as
     /// far as this screen can tell.
     var lifetimeEnergy: EnergyTotals { profile?.lifetimeEnergy ?? .zero }
+
+    /// The active Digimon's age in "years" against the injectable clock (US-200): one per whole real
+    /// day since it hatched, 0 before there is a state to read. Computed here so the view reads the
+    /// same clock the model settles the game on, rather than reaching for `Date()` of its own.
+    var ageYears: Int { state?.ageYears(now: now()) ?? 0 }
 
     /// The global meat larder (US-174), or zero before `start()` has opened the profile — the
     /// number the feed DashBar fills and `FeedAction` spends. Zero is the honest reading: a player
@@ -2504,6 +2512,10 @@ final class MainScreenModel: ObservableObject {
               let target = EggHatcher.hatchTarget(for: node, stageEnergy: state.stageEnergy),
               let baby = graph.node(id: target) else { return }
         advance(state, to: baby)
+        // Stamps the moment age is counted from (US-200). Set here, in the one hatch-specific path,
+        // rather than in `advance`, which is shared with evolution — an evolution must not reset the
+        // Digimon's age. `now()` is the same instant `advance` stamped `stageEnteredDate` with.
+        state.hatchedDate = now()
         Self.log.info("Hatched \(node.id) into \(baby.id)")
     }
 

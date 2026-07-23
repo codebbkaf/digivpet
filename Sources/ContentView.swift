@@ -516,7 +516,8 @@ struct ContentView: View {
                                strengthStat: state.strengthStat,
                                power: state.battlePower(lifetimeEnergy: model.lifetimeEnergy),
                                wins: state.battleWins,
-                               losses: state.battleLosses)
+                               losses: state.battleLosses,
+                               ageYears: model.ageYears)
                 }
 
                 // The pose comes from the model, so a feed shows the eat loop and a refusal the
@@ -852,6 +853,10 @@ struct StatsStrip: View {
     let power: Int
     let wins: Int
     let losses: Int
+    /// One year per real day since the Digitama hatched (US-200), shown as `1Y` right after the W/L
+    /// record. Defaulted to 0 so a preview or a future call site that has no age to hand simply draws
+    /// `0Y` rather than needing to plumb the clock through.
+    var ageYears: Int = 0
 
     var body: some View {
         HStack(spacing: 6) {
@@ -877,10 +882,17 @@ struct StatsStrip: View {
                 Text("\(wins)W \(losses)L")
                     .font(.system(size: 9))
                     .foregroundStyle(.secondary)
+
+                // The age, immediately after the W/L record (US-200): one year per real day since
+                // the Digitama hatched. Same size and secondary tint as the record beside it — it is
+                // another small at-a-glance fact on this line, not a value to be read against a bar.
+                Text("\(ageYears)Y")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel("Battle power")
-            .accessibilityValue("\(power), \(wins) wins, \(losses) losses")
+            .accessibilityValue("\(power), \(wins) wins, \(losses) losses, \(ageYears) years old")
         }
         // The strip is one line on both watch sizes; on the narrower one it shrinks rather than
         // wrapping, since a second line would come straight back out of the sprite's height.

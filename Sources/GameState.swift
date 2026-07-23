@@ -201,6 +201,15 @@ final class GameState {
     private var energyLastEarnedStorage: EnergyRecency?
     var birthDate: Date
     var stageEnteredDate: Date
+    /// The instant the Digitama hatched into its Baby I form (US-200), from which age is counted —
+    /// one "year" per whole real day since. Distinct from `birthDate`, which is stamped when the
+    /// EGG is created: an egg spends real time accruing energy before it cracks, and age is measured
+    /// from the hatch, not from that first moment. Optional for the same migration reason as every
+    /// other field added after v1 — an optional attribute is the one shape SwiftData migrates into an
+    /// already-shipped store without a default. `nil` reads as 0Y: a Digimon still in its egg, a save
+    /// from before this was tracked, or a Jogress result born past the egg stage. Moved with the rest
+    /// of the timeline on a freeze/thaw so a frozen Digimon does not age (see `Freeze`).
+    var hatchedDate: Date?
     var careMistakeCount: Int
     /// Units of hunger, 0...`HungerClock.maximumHunger`. Grown by elapsed time, never by a tick —
     /// `hungerUpdatedAt` is what it is derived from.
@@ -1005,6 +1014,19 @@ extension GameState {
         stageOverfeeds = 0
         stageSleepDisturbances = 0
         stageEnteredDate = now
+    }
+
+    /// The Digimon's age in "years" (US-200): one per whole real day elapsed since it hatched from
+    /// its Digitama. A freshly hatched Digimon reads 0; each further 24-hour period since the hatch
+    /// adds one. `nil hatchedDate` — an egg not yet cracked, or a save from before this was tracked —
+    /// reads 0, and a `hatchedDate` in the future (a clock that ran backward) is clamped to 0 too.
+    ///
+    /// Elapsed 24-hour periods rather than calendar days, matching `Death`'s lifespan reckoning, so a
+    /// single injected day is exactly one year regardless of local midnights or time zones.
+    func ageYears(now: Date) -> Int {
+        guard let hatchedDate else { return 0 }
+        let elapsed = now.timeIntervalSince(hatchedDate)
+        return max(0, Int((elapsed / Death.secondsPerDay).rounded(.down)))
     }
 
     /// Counts one refused feed against the local day containing `now`.

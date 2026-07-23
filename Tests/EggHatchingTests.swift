@@ -464,6 +464,51 @@ final class EggHatchingTests: XCTestCase {
                       "the hatch's Dex entry reached disk")
     }
 
+    // MARK: Age (US-200)
+
+    /// AC2 + AC3, through the real hatch: hatching stamps `hatchedDate` with the clock's instant, so
+    /// a Digimon that hatches at `morning` reads 0Y right then and 1Y after one injected day. The
+    /// clock is a mutable reference so the same model can be wound forward without waiting.
+    func testHatchingStampsTheHatchDateAndAgeCountsFromIt() async throws {
+        walk(5_000) // 50 energy — enough to hatch at the first read
+        // A local mutable clock, since `makeModel` pins `now` to a constant.
+        var currentNow = Fixture.morning
+        let model = MainScreenModel(
+            makeStore: { [storeURL] in try GameStore(url: storeURL) },
+            graph: .bundled,
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: steps, calendar: Fixture.losAngeles),
+                sleepReader: LastNightSleepReader(fetcher: FixtureSleepFetcher(),
+                                                  calendar: Fixture.losAngeles)
+            ),
+            calendar: Fixture.losAngeles,
+            now: { currentNow },
+            chooseStartingDigitama: { $0.first }
+        )
+        await model.start()
+
+        let state = try XCTUnwrap(model.state)
+        XCTAssertEqual(state.currentDigimonId, "botamon", "it hatched")
+        XCTAssertEqual(state.hatchedDate, Fixture.morning, "the hatch instant was stamped")
+        XCTAssertEqual(model.ageYears, 0, "freshly hatched reads 0Y")
+
+        // Wind the clock forward one day — the age the screen reads increments to 1Y.
+        currentNow = Fixture.morning.addingTimeInterval(Death.secondsPerDay)
+        XCTAssertEqual(model.ageYears, 1, "after one injected day, 1Y")
+    }
+
+    /// An egg that has NOT hatched has no age yet: `hatchedDate` stays nil and `ageYears` reads 0,
+    /// so the strip never shows an egg a stale year.
+    func testAnUnhatchedEggHasNoHatchDateAndReadsZeroYears() async throws {
+        walk(4_900) // 49 — not enough to hatch
+        let model = makeModel()
+        await model.start()
+
+        XCTAssertEqual(model.state?.currentDigimonId, "agu_digitama", "still an egg")
+        XCTAssertNil(model.state?.hatchedDate, "an egg has not hatched, so nothing is stamped")
+        XCTAssertEqual(model.ageYears, 0)
+    }
+
     // MARK: Migration
 
     /// A store written before the Dex existed still opens under the new schema. Adding an ENTITY is
