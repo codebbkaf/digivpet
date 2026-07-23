@@ -1290,3 +1290,102 @@ final class BattleAgilityDodgeTests: XCTestCase {
                        "the attacker still swings")
     }
 }
+
+/// Element matchup scales the real damage a landed swing lands (US-190).
+///
+/// Two proofs, one deterministic and one over a resolved fight: the `scaled` formula orders
+/// advantage > neutral > disadvantage and never drops below the one-dash floor (AC1), and a full-length
+/// battle with equal Attack lands strictly more dashes when the attacker is advantaged than neutral than
+/// disadvantaged, every landed hit removing at least one (AC3). A neutral matchup is pinned equal to the
+/// pre-US-190 model so no earlier seeded outcome shifts.
+final class BattleElementDamageTests: XCTestCase {
+    /// The shipped multipliers, so the test asserts against the numbers the game actually fights with.
+    private let multipliers = ConsumptionConfig.bundled.elementDamage
+
+    // fire beats plant, so fire-vs-plant is an advantage and plant-vs-fire the mirror disadvantage;
+    // fire-vs-fire is even. Three matchups that differ ONLY on which multiplier the attacker's swing
+    // earns, so the ordering they produce is the element effect and nothing else.
+    private func elements(_ player: DigimonElement, _ opponent: DigimonElement) -> BattleElements {
+        BattleElements(player: player, opponent: opponent, multipliers: multipliers)
+    }
+
+    // MARK: AC1 — the scaling formula and its floor
+
+    /// `scaled` never lets an advantaged hit dent softer than a neutral one, nor a neutral softer than a
+    /// disadvantaged one, and floors every result at the config minimum so a hit always removes a dash.
+    func testScaledDamageOrdersByMatchupAndFloorsAtTheMinimum() {
+        let advantaged = elements(.fire, .plant)
+        let neutral = elements(.fire, .fire)
+        let disadvantaged = elements(.plant, .fire)
+
+        for base in 1...12 {
+            let a = advantaged.scaled(base, attacker: .player, defender: .opponent)
+            let n = neutral.scaled(base, attacker: .player, defender: .opponent)
+            let d = disadvantaged.scaled(base, attacker: .player, defender: .opponent)
+            XCTAssertGreaterThanOrEqual(a, n, "base \(base): advantage never dents softer than neutral")
+            XCTAssertGreaterThanOrEqual(n, d, "base \(base): neutral never dents softer than disadvantage")
+            XCTAssertGreaterThanOrEqual(d, multipliers.minimum, "base \(base): a hit floors at one dash")
+            XCTAssertGreaterThanOrEqual(a, multipliers.minimum)
+            XCTAssertGreaterThanOrEqual(n, multipliers.minimum)
+        }
+
+        // A roll big enough to separate all three tiers keeps the ordering STRICT.
+        XCTAssertGreaterThan(advantaged.scaled(4, attacker: .player, defender: .opponent),
+                             neutral.scaled(4, attacker: .player, defender: .opponent))
+        XCTAssertGreaterThan(neutral.scaled(4, attacker: .player, defender: .opponent),
+                             disadvantaged.scaled(4, attacker: .player, defender: .opponent))
+    }
+
+    // MARK: AC3 — more dashes removed in a resolved fight, every hit >= one
+
+    /// Total damage the PLAYER lands across a full-length fight from `seed`. Both sides carry equal
+    /// power and HP high enough that nobody falls, so the fight runs the whole turn cap and all three
+    /// matchups roll the IDENTICAL base hits off the same seed — the only thing that moves the total is
+    /// the element multiplier applied to the player's swings.
+    private func playerDamage(_ player: DigimonElement, vs opponent: DigimonElement,
+                              seed: UInt64) -> Int {
+        var generator = SeededGenerator(seed: seed)
+        let report = BattleEngine.resolve(
+            playerPower: 20, opponentPower: 20,
+            playerMaxHitPoints: 100_000, opponentMaxHitPoints: 100_000,
+            elements: elements(player, opponent), using: &generator)
+        XCTAssertEqual(report.turns.count, BattleEngine.maximumTurns,
+                       "with HP this high nobody falls, so the fight hits the turn cap")
+        for turn in report.turns where !turn.dodged {
+            XCTAssertGreaterThanOrEqual(turn.damage, multipliers.minimum,
+                                        "every landed hit removes at least one dash")
+        }
+        return report.turns.filter { $0.attacker == .player }.reduce(0) { $0 + $1.damage }
+    }
+
+    /// With equal Attack, an advantaged attacker removes MORE dashes than a neutral one, which removes
+    /// MORE than a disadvantaged one — and it feeds straight into the HP bar (`defenderRemainingHitPoints`).
+    func testAdvantageOutDamagesNeutralOutDamagesDisadvantage() {
+        for seed in UInt64(0)..<20 {
+            let advantage = playerDamage(.fire, vs: .plant, seed: seed)
+            let neutral = playerDamage(.fire, vs: .fire, seed: seed)
+            let disadvantage = playerDamage(.plant, vs: .fire, seed: seed)
+            XCTAssertGreaterThan(advantage, neutral,
+                                 "seed \(seed): an advantaged attacker removes more dashes than neutral")
+            XCTAssertGreaterThan(neutral, disadvantage,
+                                 "seed \(seed): a disadvantaged attacker removes fewer dashes than neutral")
+        }
+    }
+
+    // MARK: back-compat — a neutral matchup is the old model exactly
+
+    /// A neutral matchup (multiplier 1.0, floor never biting a >=1 roll) resolves BIT-for-bit like the
+    /// pre-US-190 always-neutral engine, so no earlier seeded battle outcome shifts under this story.
+    func testANeutralMatchupResolvesIdenticallyToNoElements() {
+        for seed in UInt64(0)..<40 {
+            var plainGenerator = SeededGenerator(seed: seed)
+            let plain = BattleEngine.resolve(playerPower: 34, opponentPower: 30, using: &plainGenerator)
+
+            var elementGenerator = SeededGenerator(seed: seed)
+            let neutral = BattleEngine.resolve(playerPower: 34, opponentPower: 30,
+                                               elements: elements(.fire, .fire), using: &elementGenerator)
+
+            XCTAssertEqual(plain, neutral, "a neutral matchup dents exactly as the pre-US-190 model did")
+        }
+    }
+}

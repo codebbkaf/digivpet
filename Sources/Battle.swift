@@ -104,6 +104,48 @@ struct BattleAgility: Equatable {
     }
 }
 
+/// The two combatants' elements and the matchup damage multipliers, handed to `BattleEngine.resolve`
+/// so every LANDED swing is scaled by whether the attacker's element beats, ties or loses to the
+/// defender's (US-190).
+///
+/// Optional and defaulted `nil` for the same back-compat reason as `BattleAgility`: a caller that
+/// predates element damage — every test and preview before this story — passes `nil` and each landed
+/// hit keeps its rolled value, drawing no extra randomness and shifting no seed. The multipliers are a
+/// SEPARATE, stronger table than `BattleModifiers`' power factors: those nudge who wins by scaling
+/// power (±25% pre-battle), this one scales the real dents a swing lands (×1.5 / ×1.0 / ×0.5), so a
+/// good matchup is meant to be felt blow by blow.
+struct BattleElements: Equatable {
+    let player: DigimonElement
+    let opponent: DigimonElement
+    let multipliers: ElementDamageMultipliers
+
+    /// This side's element, indexed the same way the engine's arrays are.
+    fileprivate func element(_ side: BattleSide) -> DigimonElement {
+        side == .player ? player : opponent
+    }
+
+    /// The multiplier for `attacker`'s landed damage against `defender`, from the attacker-vs-defender
+    /// element matchup (`ElementCatalog`/`elements.json`). Advantage / neutral / disadvantage — the
+    /// three the effectiveness axis already reads, so a mutual pairing (light vs dark) lands BOTH sides
+    /// on advantage, each hitting harder, exactly as the vocabulary type reports it.
+    fileprivate func multiplier(attacker: BattleSide, defender: BattleSide) -> Double {
+        switch element(attacker).effectiveness(against: element(defender)) {
+        case .advantage: return multipliers.advantage
+        case .disadvantage: return multipliers.disadvantage
+        case .even: return multipliers.neutral
+        }
+    }
+
+    /// `damage` scaled by the attacker-vs-defender matchup and floored at `multipliers.minimum`, so an
+    /// advantaged hit dents harder, a disadvantaged one softer, and every landed hit still removes at
+    /// least one HP dash. Pure arithmetic on the already-rolled value — it draws no randomness, so the
+    /// seed is unchanged whether or not elements are supplied.
+    func scaled(_ damage: Int, attacker: BattleSide, defender: BattleSide) -> Int {
+        let value = Double(damage) * multiplier(attacker: attacker, defender: defender)
+        return max(multipliers.minimum, Int(value.rounded()))
+    }
+}
+
 /// Turn-based battle resolution (PRD FR-32).
 ///
 /// PURE, and driven entirely by an injected `RandomNumberGenerator`: the same seed and the same two
@@ -178,6 +220,7 @@ enum BattleEngine {
         playerMaxHitPoints: Int = startingHitPoints,
         opponentMaxHitPoints: Int = startingHitPoints,
         agility: BattleAgility? = nil,
+        elements: BattleElements? = nil,
         using generator: inout G
     ) -> BattleReport {
         let power = [max(1, playerPower), max(1, opponentPower)]
@@ -210,7 +253,14 @@ enum BattleEngine {
 
             let ceiling = maximumDamage(attacker: power[attacker.index],
                                         defender: power[defender.index])
-            let damage = Int.random(in: minimumDamage...ceiling, using: &generator)
+            // The rolled hit — the draw happens whether or not elements are supplied, so a battle
+            // resolved the pre-US-190 way rolls exactly the same numbers off the same seed. When
+            // elements ARE supplied, the landed value is then scaled by the attacker-vs-defender
+            // matchup and floored at its minimum (US-190), which is pure arithmetic on the roll.
+            var damage = Int.random(in: minimumDamage...ceiling, using: &generator)
+            if let elements {
+                damage = elements.scaled(damage, attacker: attacker, defender: defender)
+            }
             hitPoints[defender.index] = max(0, hitPoints[defender.index] - damage)
             turns.append(BattleTurn(attacker: attacker,
                                     damage: damage,

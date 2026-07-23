@@ -2227,12 +2227,20 @@ final class MainScreenModel: ObservableObject {
             agility = nil
         }
 
+        // Each landed swing is scaled by the attacker-vs-defender element matchup (US-190): the two
+        // typings the matchup already resolved feed a separate, stronger damage table than the power
+        // factors above, so a good element is felt blow by blow while still denting at least one dash.
+        let elements = BattleElements(player: matchup.playerType.element,
+                                      opponent: matchup.opponentType.element,
+                                      multipliers: config.elementDamage)
+
         var generator = round.generator
         let report = BattleEngine.resolve(playerPower: matchup.playerPower,
                                           opponentPower: matchup.opponentPower,
                                           playerMaxHitPoints: playerMaxHP,
                                           opponentMaxHitPoints: opponentMaxHP,
                                           agility: agility,
+                                          elements: elements,
                                           using: &generator)
         // The win's meat drop (US-175), rolled off the SAME generator the fight was resolved from so
         // the seed pins it too, and credited to the global larder here rather than in `finishBattle`

@@ -5598,3 +5598,47 @@ The thirty, `Perfect -> Ultimate`:
     OWN ask (DEBUG only) but not a stale alert already on screen. Fix: screenshot on a CLEAN device
     that never showed it, not the one a prior iteration left dirty.
 ---
+
+## 2026-07-23 - US-190: Element matchup scales real damage
+- Every landed swing is now scaled by the attacker-vs-defender element matchup (US-190). The dodge
+  and HP model from US-188/189 are untouched; this only changes what a landed hit dents.
+- Files changed:
+  - Sources/Battle.swift — new `BattleElements` bundle (player element + opponent element +
+    ElementDamageMultipliers) with `scaled(_:attacker:defender:)` = max(minimum, round(damage *
+    matchupMultiplier)), the multiplier read from `DigimonElement.effectiveness(against:)` mapped to
+    config advantage/neutral/disadvantage. `resolve` gained `elements: BattleElements? = nil`
+    (defaulted, back-compat) and, when non-nil, scales the ROLLED landed damage AFTER the draw — no
+    extra randomness, so every pre-US-190 seed is byte-stable.
+  - Sources/MainScreenModel.swift — finishBattleRound builds BattleElements from
+    `matchup.playerType.element` / `matchup.opponentType.element` (already resolved by
+    BattleModifiers.matchup) + `config.elementDamage`, and passes it to resolve. Always supplied (no
+    optional): an unauthored type resolves to `.neutral`, which nets the neutral multiplier.
+  - Tests/BattleTests.swift — new BattleElementDamageTests (3): (1) `scaled` orders advantage>=neutral
+    >=disadvantage and floors at minimum over base 1..12, strict at base 4; (2) a full-length fight
+    (equal power, huge HP -> runs to maximumTurns so all three matchups roll IDENTICAL base hits off
+    one seed) has the player deal strictly more total dashes advantaged than neutral than disadvantaged
+    over seeds 0..19, every landed hit >= minimum; (3) a neutral matchup (mult 1.0) resolves
+    bit-for-bit like the no-elements engine over seeds 0..39.
+- VERIFIED: build green; full suite 2568 tests, 0 failures (Series 11 46mm, +3 over US-189's 2565).
+- **Learnings for future iterations:**
+  - **THE ELEMENT DAMAGE MULTIPLIER IS A SECOND, STRONGER ELEMENT AXIS — DISTINCT FROM
+    BattleModifiers.** BattleModifiers.elementAdvantage (1.25/0.8) scales POWER pre-battle (who wins);
+    ConsumptionConfig.elementDamage (1.5/1.0/0.5, minimum 1) scales the REAL per-swing dent. Both fire
+    on the same matchup, both were already in place (struct + consumption.json from US-170); US-190
+    only wired the damage one into resolve. Do not collapse them.
+  - **BattleElements uses `DigimonElement.effectiveness(against:)`, NOT BattleModifiers net
+    arithmetic.** That means a MUTUAL pairing (light vs dark) lands BOTH attackers on `.advantage`
+    (each hits harder), where BattleModifiers nets the power factor to 1.0. This is deliberate and
+    matches the AC's "advantage/neutral/disadvantage from ElementCatalog". If US-192+ ever needs the
+    netted behaviour for damage, that is a separate decision.
+  - **SCALE THE ROLL AFTER THE DRAW, NEVER BEFORE, to keep seeds stable.** The third defaulted-optional
+    back-compat seam in a row (US-188 HP, US-189 agility, US-190 elements): every one adds capability
+    only when its optional is non-nil AND draws no randomness on the nil path. A neutral BattleElements
+    is byte-identical to nil (pinned by testANeutralMatchupResolvesIdenticallyToNoElements) — mult 1.0
+    and floor never bites a >=1 roll.
+  - **TESTING A PER-SWING MULTIPLIER: EQUAL POWER + HUGE HP RUNS THE FIGHT TO maximumTurns, so all
+    matchups share the exact base-roll sequence off one seed** and the ONLY difference is the
+    multiplier. Sum the attacker-side turns; do not compare single turns (round(r*1.5) vs r vs
+    round(r*0.5) can tie at r=1). US-191 (train caps -> effective stats) and US-192 will read the same
+    stage stat table; the battle plumbing (HP/agility/elements) is now all in resolve's defaulted args.
+---
