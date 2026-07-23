@@ -244,7 +244,7 @@ final class MainScreenModel: ObservableObject {
     /// to pin the next battle roll as well to do it.
     private let makeJogressGenerator: () -> SeededGenerator
     private let notifications: NotificationDispatcher
-    /// The three notification toggles, handed to `NotificationSettingsView`. Owned here rather than
+    /// The three notification toggles, handed to the Settings screen (`SettingsView`). Owned here rather than
     /// created by the settings screen so the screen and the dispatcher read the same object — a
     /// second `NotificationSettings` would work (both read `UserDefaults`) but would not redraw the
     /// toggles, and would defeat the injected-defaults suite a test relies on.

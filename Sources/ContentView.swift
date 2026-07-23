@@ -8,10 +8,18 @@ struct ContentView: View {
     @StateObject private var model: MainScreenModel
     @Environment(\.scenePhase) private var scenePhase
 
+    /// Whether the Settings screen (US-198) is showing. Driven by the top-right gear, and — so the
+    /// screen stays screenshottable, since `simctl` cannot tap the toolbar — by the DEBUG
+    /// `-settingsDemo` launch flag.
+    #if DEBUG
+    @State private var showsSettings = CommandLine.arguments.contains("-settingsDemo")
+    #else
+    @State private var showsSettings = false
+    #endif
+
     #if DEBUG
     @State private var showsDexDemo = CommandLine.arguments.contains("-dexDemo")
     @State private var showsComplicationDemo = CommandLine.arguments.contains("-complicationDemo")
-    @State private var showsSettingsDemo = CommandLine.arguments.contains("-settingsDemo")
     @State private var showsTreeDemo = CommandLine.arguments.contains("-dexTreeDemo")
     /// US-119's map list. Pushed from the launch command because nothing on the main screen reaches
     /// it yet — the strip that will is US-120 — and because `simctl` could not tap it if it did.
@@ -295,8 +303,24 @@ struct ContentView: View {
                 }
             }
             // The room light and the Dex both moved out of the toolbar and into the action grid in
-            // US-197 (`ActionControls`), so the toolbar is now empty until US-198 puts a settings
-            // gear in its trailing slot.
+            // US-197 (`ActionControls`); US-198 fills the trailing slot with a settings gear that
+            // opens the Settings screen (notification toggles for now). The gear is the only thing
+            // in the toolbar.
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showsSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            // The Settings screen, pushed onto this stack so it keeps a back button. Reached by the
+            // gear above, and by the DEBUG `-settingsDemo` flag that seeds `showsSettings` true.
+            .navigationDestination(isPresented: $showsSettings) {
+                SettingsView(settings: model.notificationSettings)
+            }
             #if DEBUG
             // Debug-only: `simctl` cannot tap the toolbar button, so the Dex is unscreenshottable
             // without a way to push it from the launch command. Compiled out of release builds.
@@ -310,11 +334,6 @@ struct ContentView: View {
             // published the snapshot this draws.
             .navigationDestination(isPresented: $showsComplicationDemo) {
                 ComplicationDemoView()
-            }
-            // Same reason again: since US-039 the bell is on screen without scrolling, but `simctl`
-            // still cannot tap it.
-            .navigationDestination(isPresented: $showsSettingsDemo) {
-                NotificationSettingsView(settings: model.notificationSettings)
             }
             // US-041's tree in isolation, on a fixture line. Since US-042 the Dex opens the real
             // thing (`-dexDemo -dexLineDemo`); this stays as the layout's own screenshot path,

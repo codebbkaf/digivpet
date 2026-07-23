@@ -5914,3 +5914,39 @@ The thirty, `Perfect -> Ultimate`:
   - Screenshot recipe still: `simctl erase` first (clears stale notif alert), install Debug-watchsimulator .app, launch `-healthAnswered -noNotificationPrompt` + a seed demo (`-wanderDemo`/`-poopDemo`/`-battleAffordableDemo`) + optional `-mapDemo=01_grassland`. Demos each seed their own state so don't expect two unrelated seeds to compose fully.
   - US-197 removed the bell/notifications from the action row per its explicit 8-button spec; notifications are reachable via DEBUG `-settingsDemo` until US-198 adds the top-right settings gear.
 ---
+
+## 2026-07-24 - US-198: A settings gear in the top-right holds notification settings
+- Added a `gearshape` button to the main screen's `.toolbar` (`.topBarTrailing`) that opens a new
+  Settings screen. The toolbar had been empty since US-197 stripped the light/Dex out of it.
+- New `Sources/SettingsView.swift`: a `List` with one titled `Section("Notifications")`, titled
+  "Settings", built to hold more sections later.
+- Refactored `Sources/NotificationSettingsView.swift`: extracted the toggle rows into a reusable
+  `NotificationSettingsSection` (List rows only, no List of its own, `.id(kind)` preserved) so
+  `SettingsView`'s Section can embed them without nesting a List in a List. The standalone
+  `NotificationSettingsView` wrapper struct was REMOVED — after the bell went away (US-197) and the
+  gear replaced its DEBUG `-settingsDemo` push, nothing reached it, so it was dead. Its
+  `-settingsBottomDemo` scroll hook moved into `SettingsView`.
+- `Sources/ContentView.swift`: added `@State showsSettings` (seeded true by DEBUG `-settingsDemo` so
+  the gear's screen is screenshottable — `simctl` cannot tap the toolbar), the `.toolbar { gear }`,
+  a `.navigationDestination(isPresented: $showsSettings) { SettingsView(...) }`, and removed the old
+  `showsSettingsDemo` state + its `NotificationSettingsView` push.
+- The bell was already absent from the action row (US-197 removed it), so AC3 needed no code change —
+  verified by grep and by the main-screen screenshot.
+- Files: Sources/SettingsView.swift (new), Sources/NotificationSettingsView.swift, Sources/ContentView.swift,
+  Sources/MainScreenModel.swift (doc comment), prd.json, progress.txt.
+- Verified: build green (Series 11 46mm); full suite 2605 tests, 0 failures. Screenshots on Series 11
+  46mm: /tmp/us198/settings.png (title "Settings", "Notifications" section, toggles on) via
+  `-settingsDemo`; /tmp/us198/main.png shows the top-right gear + the bell-free 8-button action grid.
+- **Learnings for future iterations:**
+  - `Sources` is a folder reference in project.yml — a new .swift file there needs no project.yml edit,
+    just `xcodegen generate` (which the build step runs anyway).
+  - The app bundle id is `com.digivpet.DigiVPet` (NOT com.example.*). Get it from the built .app's
+    Info.plist with PlistBuddy if a `simctl launch` returns FBSOpenApplicationServiceErrorDomain code 4.
+  - Screenshot recipe held: `simctl erase` device BA425DD4-8856-4933-8198-0E4B89960E48, boot, install
+    the Debug-watchsimulator .app, `simctl launch com.digivpet.DigiVPet -healthAnswered
+    -noNotificationPrompt` + a seed flag. `-settingsDemo` now opens the gear's SettingsView (was the
+    standalone NotificationSettingsView before this story); `-wanderDemo` seeds the main screen.
+  - Do NOT nest a `List` inside a `List` on watchOS. When a second screen needs an existing List
+    screen's rows, extract the rows into a rows-only `View` (a `ForEach`/section body) and let each
+    container supply its own `List`.
+---

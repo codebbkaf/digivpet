@@ -1607,8 +1607,8 @@
         "Build green; verify in the simulator with a screenshot"
       ],
       "priority": 83,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Gearshape button in top-right toolbar opens SettingsView; its one 'Notifications' Section reuses the toggle rows via new NotificationSettingsSection (extracted from the old NotificationSettingsView) off the same MainScreenModel.notificationSettings, so persistence/behaviour are unchanged. Bell was already gone from the action row (US-197). -settingsDemo seeds the gear's screen open for screenshots; -settingsBottomDemo scroll hook moved into SettingsView. Build green, 2605 tests pass, /tmp/us198/settings.png shows title 'Settings' + Notifications section, /tmp/us198/main.png shows the top-right gear and a bell-free action grid."
     },
     {
       "id": "US-199",

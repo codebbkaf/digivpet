@@ -1,48 +1,34 @@
 import SwiftUI
 
-/// The settings screen: one switch per kind of notification, all on to begin with (AC3).
+/// The notification toggles, one row per kind, all on to begin with (AC3) — the reusable content.
 ///
-/// A plain `List` of toggles rather than anything cleverer, because there is a handful of them and
-/// they are the whole screen. Driven off `NotificationKind.allCases`, so a new kind gets its row for
-/// free — and cannot be added without a way to turn it off. US-100's lights-out nudge is the fifth.
-struct NotificationSettingsView: View {
+/// Was the whole of `NotificationSettingsView`, the screen behind the action row's bell, until US-197
+/// cleared that row down to the eight game actions and US-198 moved settings behind a top-right gear.
+/// Extracted here as `List` rows only — no `List` of its own — so `SettingsView` can drop it into a
+/// `Section` without nesting one list in another, and so the toggles keep drawing off the exact same
+/// `NotificationSettings` and persist and behave exactly as they did off the bell.
+///
+/// Driven off `NotificationKind.allCases`, so a new kind gets its row for free — and cannot be added
+/// without a way to turn it off. US-100's lights-out nudge is the fifth.
+struct NotificationSettingsSection: View {
     @ObservedObject var settings: NotificationSettings
 
     var body: some View {
-        ScrollViewReader { proxy in
-            List {
-                ForEach(NotificationKind.allCases) { kind in
-                    Toggle(isOn: binding(for: kind)) {
-                        VStack(alignment: .leading, spacing: 1) {
-                            Text(kind.displayName)
-                                .font(.caption)
-                            Text(kind.settingsDetail)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
-                                // Two lines, not one: a 41mm screen truncates "24 hours before an
-                                // untreated illness kills it" to nonsense on a single line.
-                                .lineLimit(2)
-                        }
-                    }
-                    .id(kind)
+        ForEach(NotificationKind.allCases) { kind in
+            Toggle(isOn: binding(for: kind)) {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(kind.displayName)
+                        .font(.caption)
+                    Text(kind.settingsDetail)
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        // Two lines, not one: a 41mm screen truncates "24 hours before an
+                        // untreated illness kills it" to nonsense on a single line.
+                        .lineLimit(2)
                 }
             }
-            #if DEBUG
-            // Screenshot hook, and the same reason as every other one in this project: `simctl` can
-            // neither tap nor scroll, and since US-054 there is a fourth toggle that starts below
-            // the fold on every watch size. Without this the last row cannot be photographed at all.
-            // It moves the scroll position and nothing else — no toggle, no default, no rule.
-            .task {
-                guard CommandLine.arguments.contains("-settingsBottomDemo"),
-                      let last = NotificationKind.allCases.last else { return }
-                // After a beat, not immediately: `.task` runs before the rows have been measured,
-                // and scrolling to an item whose height is not settled lands short of it.
-                try? await Task.sleep(nanoseconds: 500_000_000)
-                proxy.scrollTo(last, anchor: .bottom)
-            }
-            #endif
+            .id(kind)
         }
-        .navigationTitle("Notifications")
     }
 
     /// A binding onto one toggle.
