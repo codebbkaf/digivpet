@@ -65,8 +65,8 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
     /// per lifetime but never per stage. `ConditionEvaluator.isSatisfied` fails an unknown value
     /// whichever way the comparison points, so the branch is silently dead: the `isDefault` fallback
     /// keeps the Digimon unstuck, but this edge can never be the one taken. This is the same bug
-    /// class the mis-windowed Digitama slots in `maps.json` carry — see
-    /// `MapValidationError.unanswerableConditionWindow` and `ConditionMetric.canBeAnswered(over:)`.
+    /// class `MapValidationError.unanswerableConditionWindow` guards for Digitama slots (US-186 fixed
+    /// the last of those in `maps.json`) — see also `ConditionMetric.canBeAnswered(over:)`.
     case unanswerableConditionWindow(from: String, to: String, metric: String, window: ConditionWindow)
 
     /// A condition threshold below zero. No metric in either family can go negative, so this only

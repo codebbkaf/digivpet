@@ -159,6 +159,92 @@ final class DigitamaDropEngineTests: XCTestCase {
     }
 }
 
+// MARK: - The light-off map condition (US-186)
+
+/// US-186 — a map can reveal a dark Digimon only when the light is off.
+///
+/// The whole feature rides on US-185's `care.lightOff` metric being ordinary condition vocabulary:
+/// `DigitamaSlot` reuses `EvolutionCondition`, and `DigitamaDropEngine` reads it through
+/// `ConditionReveal.allMet` against a `ConditionContext` — the same context that already carries
+/// `lightState`. So there is no new plumbing to test, only that a light-off gate is honoured (off →
+/// available, on → withheld) and that the shipped Dungeon authors one that actually resolves.
+final class LightOffMapConditionTests: XCTestCase {
+    private func lightOff() -> EvolutionCondition {
+        EvolutionCondition(metric: .careLightOff, window: .stage,
+                           comparison: .atLeast, value: 1,
+                           hint: "Seek it in the dark, with the light off")
+    }
+
+    private func map(slots: [DigitamaSlot]) -> AdventureMap {
+        AdventureMap(id: "dark", displayName: "Dark", assetName: "15_dungeon",
+                     tier: 5, totalSteps: 38_000, digitamaSlots: slots)
+    }
+
+    /// THE AC (pure engine): the gated slot is eligible with the light OFF and withheld with it ON.
+    func testALightOffSlotIsEligibleOnlyWhenTheLightIsOff() {
+        let map = map(slots: [DigitamaSlot(digitamaId: "ghost_digitama", conditions: [lightOff()])])
+
+        let offEligible = DigitamaDropEngine.eligibleSlots(
+            in: map, context: ConditionContext(lightState: .off), held: [])
+        XCTAssertEqual(offEligible.map(\.digitamaId), ["ghost_digitama"],
+                       "the dark Digimon shows itself with the light off")
+
+        let onEligible = DigitamaDropEngine.eligibleSlots(
+            in: map, context: ConditionContext(lightState: .on), held: [])
+        XCTAssertTrue(onEligible.isEmpty, "and stays hidden with the light on")
+    }
+
+    /// Dimmed and never-read are both "not off", so the slot stays hidden — the gate is `light == off`,
+    /// not `light != on`.
+    func testASemiOrUnknownLightWithholdsTheSlot() {
+        let map = map(slots: [DigitamaSlot(digitamaId: "ghost_digitama", conditions: [lightOff()])])
+
+        XCTAssertTrue(DigitamaDropEngine.eligibleSlots(
+            in: map, context: ConditionContext(lightState: .semi), held: []).isEmpty)
+        XCTAssertTrue(DigitamaDropEngine.eligibleSlots(
+            in: map, context: .unknown, held: []).isEmpty)
+    }
+
+    /// AC3, against the REAL data: the shipped Dungeon's `ghost_digitama` slot carries a light-off
+    /// gate, and it is honoured — met (twenty battles fought) it drops with the light off and is held
+    /// back with it on.
+    func testTheShippedDungeonGhostIsGatedOnTheLightBeingOff() throws {
+        let catalog = try MapCatalog.load()
+        let dungeon = try XCTUnwrap(catalog.map(id: "15_dungeon"))
+        let ghost = try XCTUnwrap(dungeon.digitamaSlots.first { $0.digitamaId == "ghost_digitama" })
+        XCTAssertTrue(ghost.conditions.contains { $0.metric == ConditionMetric.careLightOff.rawValue },
+                      "at least one authored map uses the light-off condition")
+
+        // Its other gate is twenty lifetime battles; satisfy that and vary only the light.
+        func context(light: LightState) -> ConditionContext {
+            ConditionContext(battlesLifetime: 20, lightState: light)
+        }
+
+        XCTAssertTrue(ConditionReveal.allMet(ghost.conditions, in: context(light: .off)),
+                      "twenty battles fought and the light off — the ghost appears")
+        XCTAssertFalse(ConditionReveal.allMet(ghost.conditions, in: context(light: .on)),
+                       "same battles, light on — it stays hidden")
+    }
+
+    /// AC2: the validator accepts the light-off condition — a slot gated on it is a finding of no
+    /// kind (a known metric, answerable over `.stage`, and not empty-on-hardware).
+    func testTheValidatorAcceptsALightOffSlot() {
+        let roster = Roster(entries: [
+            RosterEntry(id: "ghost_digitama", displayName: "Ghost Digitama",
+                        stage: .digitama, spriteFile: "Ghost_Digitama", dexOnly: false),
+        ])
+        let catalog = MapCatalog(maps: [
+            AdventureMap(id: "dark", displayName: "Dark", assetName: "15_dungeon",
+                         tier: 5, totalSteps: 38_000,
+                         digitamaSlots: [DigitamaSlot(digitamaId: "ghost_digitama",
+                                                      conditions: [lightOff()])]),
+        ])
+
+        XCTAssertEqual(catalog.validate(roster: roster, assetExists: { _ in true }), [],
+                       "a light-off gate is a clean condition")
+    }
+}
+
 // MARK: - The validator's empty-on-hardware rule (US-128 AC7)
 
 final class DigitamaDropValidatorTests: XCTestCase {

@@ -5452,3 +5452,42 @@ The thirty, `Perfect -> Ultimate`:
   - `care.lightOff` is a `care.*` STATE, so it needs no HealthKit grant and is excluded from
     `conditionHealthMetrics`/`HealthReadSet` automatically by the `health.` prefix routing.
 ---
+
+## 2026-07-23 - US-186 (Light-off map condition)
+- Made the light off a MAP condition too: a dark Digimon a map reveals only with the light out.
+- The feature needed NO new engine code. `care.lightOff` (US-185) is ordinary condition vocabulary,
+  `DigitamaSlot` reuses `EvolutionCondition`, and `DigitamaDropEngine` reads it through
+  `ConditionReveal.allMet` against a `ConditionContext` that already carries `lightState`. So a
+  light-off gate on a slot is honoured out of the box (off -> eligible, on/semi/unknown -> withheld).
+- Files changed:
+  - Resources/maps.json:
+    - 15_dungeon/ghost_digitama now carries `care.lightOff` (window stage, atLeast 1, hint
+      "Seek it in the dark, with the light off") in place of its old care.battleWinRatio — AC3.
+    - AC2 required the shipped catalog to validate to ZERO findings, but it still carried the 20
+      unanswerable-window slots US-184 deliberately deferred. Did that data-fix pass here: every
+      `care.battleCount`/`care.battleWinRatio` authored per `stage` (windows neither counter is kept
+      over, so those eggs could NEVER drop) is re-windowed to `lifetime`, and the lone
+      `care.trainingSessions` per `lifetime` to `stage`. maps.json now validates clean (0 findings).
+  - Tests/MapCatalogValidatorTests.swift: replaced testTheShippedCatalogHasOnlyTheKnownMisWindowedSlotFindings
+    (the US-184 allowlist) with testTheShippedCatalogHasNoFindings asserting `validate() == []`.
+  - Tests/DigitamaDropTests.swift: new LightOffMapConditionTests — pure-engine off/on eligibility,
+    semi+unknown withhold, the shipped ghost slot honoured (20 lifetime battles + light off drops it,
+    light on holds it), and the validator accepts a light-off slot with no finding.
+  - Sources/EvolutionGraphValidator.swift: refreshed a doc comment that claimed maps.json still
+    carries mis-windowed slots (US-186 fixed the last of them).
+- Tests: 2546 total, 0 failures (Series 11 46mm), ~48s. Build green.
+- **Learnings for future iterations:**
+  - **A new evolution/map condition TYPE added as `ConditionMetric` vocabulary (US-185) is
+    automatically a MAP condition too.** DigitamaSlot conditions ARE EvolutionConditions, the drop
+    engine reuses ConditionReveal.allMet, and MainScreenModel builds the ConditionContext from
+    GameState (lightState included) — so US-186 was authoring + tests, not plumbing. The seam to
+    build a context by hand in tests is `ConditionContext(lightState:battlesLifetime:...)`.
+  - **The 20 mis-windowed map slots US-184 flagged are now GONE — maps.json validates to `== []`.**
+    care.battleCount/care.battleWinRatio live over {day|lifetime}/{lifetime}; care.trainingSessions/
+    overfeeds/sleepDisturbances over {stage} only; care.lightOff over {stage} only. Author map slot
+    conditions accordingly or the US-184 validator rejects them.
+  - **Those slots were DEAD before the fix** (unanswerable window -> .unknown -> never met -> egg
+    never dropped), so re-windowing them broke no drop-behaviour test — it made ~10 eggs reachable.
+    If a future test wants to pin one of those eggs dropping, its context must satisfy the NEW window
+    (e.g. battlesLifetime for care.battleCount, not a stage total).
+---

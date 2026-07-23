@@ -273,28 +273,14 @@ final class MapCatalogValidatorTests: XCTestCase {
     /// THE AC, and the reason the rest of this file exists: the catalog that ships is sound —
     /// against the REAL roster and the REAL asset catalog, not a stub.
     ///
-    /// US-184 added the unanswerable-window rule but NOT the data fix: today's `maps.json` still
-    /// carries mis-windowed Digitama slots (`care.battleCount`/`care.battleWinRatio` over `stage`,
-    /// `care.trainingSessions` over `lifetime`). Those `unanswerableConditionWindow` findings are
-    /// EXPECTED to report until the separate data-fix pass re-authors the slots — so this test
-    /// allowlists that ONE class and asserts no OTHER kind of problem has crept in. When the slots
-    /// are fixed, the allowlist below should be deleted and this returned to `== []`.
-    func testTheShippedCatalogHasOnlyTheKnownMisWindowedSlotFindings() throws {
+    /// US-184 added the unanswerable-window rule but deferred the data fix; US-186 did it — the
+    /// `care.battleCount`/`care.battleWinRatio` slots that were windowed per `stage` (a window neither
+    /// counter is kept over, so their eggs could never drop) are now `lifetime`, and the lone
+    /// `care.trainingSessions` slot windowed per `lifetime` is now `stage`. So the shipped catalog
+    /// reports NOTHING — the allowlist that tracked those findings is gone and this is `== []` again.
+    func testTheShippedCatalogHasNoFindings() throws {
         let found = try MapCatalog.load().validate()
-
-        let unexpected = found.filter {
-            if case .unanswerableConditionWindow = $0 { return false }
-            return true
-        }
-        XCTAssertEqual(unexpected, [], unexpected.map(\.description).joined(separator: "\n"))
-
-        let misWindowed = found.filter {
-            if case .unanswerableConditionWindow = $0 { return true }
-            return false
-        }
-        XCTAssertFalse(
-            misWindowed.isEmpty,
-            "expected today's maps.json to still report mis-windowed slots until the data-fix pass")
+        XCTAssertEqual(found, [], found.map(\.description).joined(separator: "\n"))
     }
 
     /// And the real asset check is a check: a name that ships resolves, one that does not, does

@@ -48,7 +48,7 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 1,
               "hint": "Fight one battle"
@@ -119,7 +119,7 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 3,
               "hint": "Fight three battles"
@@ -189,14 +189,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 5,
               "hint": "Fight five battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 0.5,
               "hint": "Win half of them"
@@ -326,14 +326,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 10,
               "hint": "Fight ten battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 0.5,
               "hint": "Win half of them"
@@ -439,14 +439,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 15,
               "hint": "Fight fifteen battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 0.6,
               "hint": "Win more than you lose"
@@ -629,7 +629,7 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 25,
               "hint": "Fight twenty-five battles"
@@ -754,14 +754,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 30,
               "hint": "Fight thirty battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 0.7,
               "hint": "Win seven of every ten"
@@ -773,14 +773,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 30,
               "hint": "Fight thirty battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atMost",
               "value": 0.4,
               "hint": "And lose more of them than you win"
@@ -904,17 +904,17 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 20,
               "hint": "Fight twenty battles"
             },
             {
-              "metric": "care.battleWinRatio",
+              "metric": "care.lightOff",
               "window": "stage",
               "comparison": "atLeast",
-              "value": 0.6,
-              "hint": "Win more than you lose"
+              "value": 1,
+              "hint": "Seek it in the dark, with the light off"
             }
           ]
         },
@@ -993,14 +993,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 40,
               "hint": "Fight forty battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 0.7,
               "hint": "Win seven of every ten"
@@ -1065,14 +1065,14 @@
           "conditions": [
             {
               "metric": "care.battleCount",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 50,
               "hint": "Fight fifty battles"
             },
             {
               "metric": "care.battleWinRatio",
-              "window": "stage",
+              "window": "lifetime",
               "comparison": "atLeast",
               "value": 0.75,
               "hint": "Win three of every four"
@@ -1120,7 +1120,7 @@
           "conditions": [
             {
               "metric": "care.trainingSessions",
-              "window": "lifetime",
+              "window": "stage",
               "comparison": "atLeast",
               "value": 100,
               "hint": "Train it a hundred times in its life"
