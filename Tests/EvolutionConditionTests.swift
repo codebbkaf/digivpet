@@ -150,9 +150,9 @@ final class EvolutionConditionTests: XCTestCase {
           "to": "greymon", "requiredEnergy": "strength", "minEnergy": 60, "maxCareMistakes": 2,
           "minBattleWins": 3,
           "conditions": [
-            {"metric": "care.battleCount", "window": "stage", "comparison": "atLeast",
+            {"metric": "care.battleCount", "window": "lifetime", "comparison": "atLeast",
              "value": 15, "hint": "Fight at least 15 battles"},
-            {"metric": "care.battleWinRatio", "window": "stage", "comparison": "atLeast",
+            {"metric": "care.battleWinRatio", "window": "lifetime", "comparison": "atLeast",
              "value": 0.8, "hint": "Win 80% of them"}
           ]
         }
@@ -227,7 +227,7 @@ final class EvolutionConditionTests: XCTestCase {
     /// `80` is the mistake: it is a fraction, so an edge gated on it could never be taken.
     func testRejectsBattleWinRatioAboveOne() {
         let condition = EvolutionCondition(
-            metric: .careBattleWinRatio, window: .stage, comparison: .atLeast,
+            metric: .careBattleWinRatio, window: .lifetime, comparison: .atLeast,
             value: 80, hint: "Win 80% of battles")
 
         XCTAssertEqual(errors(graph(with: [condition])), [
@@ -238,7 +238,7 @@ final class EvolutionConditionTests: XCTestCase {
     /// A negative ratio is one error naming the real rule, not two naming half of it each.
     func testRejectsNegativeBattleWinRatioAsARangeErrorOnly() {
         let condition = EvolutionCondition(
-            metric: .careBattleWinRatio, window: .stage, comparison: .atLeast,
+            metric: .careBattleWinRatio, window: .lifetime, comparison: .atLeast,
             value: -0.5, hint: "Win battles")
 
         XCTAssertEqual(errors(graph(with: [condition])), [
@@ -249,7 +249,7 @@ final class EvolutionConditionTests: XCTestCase {
     func testAcceptsBattleWinRatioAtBothBounds() {
         for value in [0.0, 1.0] {
             let condition = EvolutionCondition(
-                metric: .careBattleWinRatio, window: .stage, comparison: .atLeast,
+                metric: .careBattleWinRatio, window: .lifetime, comparison: .atLeast,
                 value: value, hint: "Win battles")
             XCTAssertEqual(errors(graph(with: [condition])), [], "ratio \(value) should be legal")
         }

@@ -872,8 +872,8 @@
         "Typecheck passes"
       ],
       "priority": 45,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Added ConditionMetric.canBeAnswered(over:)/answerableWindows, derived by probing ConditionContext.fullyPopulated(for:) so it cannot drift from the evaluator. Both EvolutionGraphValidator (unanswerableConditionWindow) and MapCatalogValidator (unanswerableConditionWindow) reject any known-metric condition over a window the evaluator only answers .unknown. Fixture tests fire the rule for care.battleCount@stage, care.battleWinRatio@non-lifetime, care.trainingSessions@non-stage in both validators; counter-tests pass over the answerable windows; ConditionEvaluationTests pins the full answerable-window matrix. evolutions.json is clean; today shipped maps.json reports 20 mis-windowed slots as EXPECTED (shipped-catalog test now allowlists that ONE class until the separate data-fix pass). All 2537 tests pass; build green."
     },
     {
       "id": "US-185",

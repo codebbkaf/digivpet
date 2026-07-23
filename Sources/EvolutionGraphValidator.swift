@@ -60,6 +60,15 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
     /// because an unknown metric can never be satisfied: the edge is silently dead.
     case unknownConditionMetric(from: String, to: String, metric: String)
 
+    /// A condition whose (metric, window) pair the evaluator answers ONLY with `.unknown`, whatever
+    /// the game state — `care.battleCount` over a `stage` window, say, a counter kept per day and
+    /// per lifetime but never per stage. `ConditionEvaluator.isSatisfied` fails an unknown value
+    /// whichever way the comparison points, so the branch is silently dead: the `isDefault` fallback
+    /// keeps the Digimon unstuck, but this edge can never be the one taken. This is the same bug
+    /// class the mis-windowed Digitama slots in `maps.json` carry — see
+    /// `MapValidationError.unanswerableConditionWindow` and `ConditionMetric.canBeAnswered(over:)`.
+    case unanswerableConditionWindow(from: String, to: String, metric: String, window: ConditionWindow)
+
     /// A condition threshold below zero. No metric in either family can go negative, so this only
     /// ever means a sign typo — and on an `atMost` condition it makes the edge permanently unusable.
     case negativeConditionValue(from: String, to: String, metric: String, value: Double)
@@ -98,6 +107,8 @@ enum GraphValidationError: Error, Equatable, CustomStringConvertible {
             return "\(from) -> \(to): a hatch must not be gated on \(energy.rawValue) — US-018 hatches on total energy"
         case let .unknownConditionMetric(from, to, metric):
             return "\(from) -> \(to): condition metric '\(metric)' is not in the vocabulary — the edge can never qualify"
+        case let .unanswerableConditionWindow(from, to, metric, window):
+            return "\(from) -> \(to): condition '\(metric)' cannot be answered over a \(window.rawValue) window — the edge can never qualify"
         case let .negativeConditionValue(from, to, metric, value):
             return "\(from) -> \(to): condition '\(metric)' has a negative value (\(value))"
         case let .emptyConditionHint(from, to, metric):
@@ -226,6 +237,11 @@ extension EvolutionGraph {
             // point the author at the wrong field.
             return errors + [.unknownConditionMetric(
                 from: node.id, to: edge.to, metric: condition.metric)]
+        }
+
+        if !metric.canBeAnswered(over: condition.window) {
+            errors.append(.unanswerableConditionWindow(
+                from: node.id, to: edge.to, metric: condition.metric, window: condition.window))
         }
 
         if metric == .careBattleWinRatio {

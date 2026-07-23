@@ -423,4 +423,33 @@ final class ConditionEvaluationTests: XCTestCase {
             }
         }
     }
+
+    // MARK: - US-184: the answerable-window vocabulary the validators enforce
+
+    /// Every health metric is kept over all three windows; each `care.*` counter over ONLY the
+    /// window it lives in. `answerableWindows` is derived by probing a fully-populated context, so
+    /// this test is what pins that probe to the intended vocabulary — the validators reject any
+    /// (metric, window) pair outside these sets.
+    func testAnswerableWindowsMatchesTheKeptVocabulary() {
+        let allWindows = Set(ConditionWindow.allCases)
+        for metric in ConditionMetric.allCases {
+            let expected: Set<ConditionWindow>
+            switch metric {
+            case .careTrainingSessions, .careOverfeeds, .careSleepDisturbances:
+                expected = [.stage]
+            case .careBattleCount:
+                expected = [.day, .lifetime]
+            case .careBattleWinRatio:
+                expected = [.lifetime]
+            default:
+                expected = allWindows // the health family
+            }
+            XCTAssertEqual(metric.answerableWindows, expected, "\(metric.rawValue)")
+            for window in allWindows {
+                XCTAssertEqual(
+                    metric.canBeAnswered(over: window), expected.contains(window),
+                    "\(metric.rawValue) over \(window)")
+            }
+        }
+    }
 }

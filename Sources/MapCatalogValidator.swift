@@ -48,6 +48,13 @@ enum MapValidationError: Error, Equatable, CustomStringConvertible {
     /// evolution edge, and the reason `DigitamaSlot` reuses `EvolutionCondition` at all.
     case emptyConditionHint(map: String, digitamaId: String, metric: String)
 
+    /// A slot condition whose (metric, window) pair the evaluator answers ONLY with `.unknown`,
+    /// whatever the game state — a `care.battleCount` gated per `stage`, say, a counter kept per day
+    /// and per lifetime but never per stage. The condition can never hold, so the slot never awards
+    /// its egg. This is the Digitama-slot bug class US-184 exists to catch; see
+    /// `ConditionMetric.canBeAnswered(over:)`, the same check `EvolutionGraphValidator` runs on edges.
+    case unanswerableConditionWindow(map: String, digitamaId: String, metric: String, window: ConditionWindow)
+
     /// A slot every one of whose conditions is a metric that is usually empty on real hardware
     /// (handwashing, toothbrushing, dietary water, daylight, audio exposure and the two rare
     /// events — see `ConditionMetric.isSparseOnHardware`). US-128's rule, and the same one
@@ -74,6 +81,8 @@ enum MapValidationError: Error, Equatable, CustomStringConvertible {
             return "unlock cycle: \(maps.joined(separator: " -> ")) — none of them is reachable"
         case let .emptyConditionHint(map, digitamaId, metric):
             return "\(map)/\(digitamaId): condition '\(metric)' has an empty hint — the player cannot discover it"
+        case let .unanswerableConditionWindow(map, digitamaId, metric, window):
+            return "\(map)/\(digitamaId): condition '\(metric)' cannot be answered over a \(window.rawValue) window — the slot can never award its egg"
         case let .soleSparseCondition(map, digitamaId):
             return "\(map)/\(digitamaId): every condition is a metric that is usually empty on real hardware — the egg would be unreachable"
         }
@@ -151,6 +160,18 @@ extension MapCatalog {
         var errors: [MapValidationError] = slot.conditions
             .filter { $0.hint.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .map { .emptyConditionHint(map: map.id, digitamaId: slot.digitamaId, metric: $0.metric) }
+
+        // Also roster-independent: a known metric authored over a window it is never kept in is a
+        // condition that can never hold, so the slot never awards its egg (US-184). Guarded on a
+        // KNOWN metric — an unrecognised one has no answerable-window set to judge, and its own
+        // failure mode is a separate concern.
+        errors += slot.conditions.compactMap { condition in
+            guard let metric = condition.knownMetric,
+                  !metric.canBeAnswered(over: condition.window) else { return nil }
+            return .unanswerableConditionWindow(
+                map: map.id, digitamaId: slot.digitamaId,
+                metric: condition.metric, window: condition.window)
+        }
 
         // Also independent of the roster: a slot gated SOLELY on empty-on-hardware metrics is an
         // egg no watch-only player can earn, whatever the id resolves to. Fires only when there IS

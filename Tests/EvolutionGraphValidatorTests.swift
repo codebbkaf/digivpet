@@ -276,6 +276,54 @@ final class EvolutionGraphValidatorTests: XCTestCase {
         XCTAssertEqual(errors(graph), [.edgeToDexOnlyNode(from: "egg", to: "poyomon")])
     }
 
+    // MARK: - US-184: rejects a condition over a window the evaluator can never answer
+
+    /// Each of the three unanswerable pairs the PRD names fires the rule: `care.battleCount` keeps
+    /// no per-STAGE counter, `care.battleWinRatio` is LIFETIME-only, and `care.trainingSessions` is
+    /// STAGE-only. Authored over any other window the evaluator answers `.unknown` no matter the
+    /// game state, so the edge could never be the one taken.
+    func testReportsConditionsAuthoredOverAnUnanswerableWindow() {
+        let graph = EvolutionGraph(nodes: [
+            EvolutionNode(
+                id: "child", displayName: "Child", stage: .child, spriteFile: "Agumon",
+                evolutions: [EvolutionEdge(
+                    to: "adult", requiredEnergy: .strength, minEnergy: 20, maxCareMistakes: 5,
+                    isDefault: true,
+                    conditions: [
+                        EvolutionCondition(metric: .careBattleCount, window: .stage, comparison: .atLeast, value: 5, hint: "Battle 5 times"),
+                        EvolutionCondition(metric: .careBattleWinRatio, window: .stage, comparison: .atLeast, value: 0.5, hint: "Win half your battles"),
+                        EvolutionCondition(metric: .careTrainingSessions, window: .lifetime, comparison: .atLeast, value: 3, hint: "Train 3 times"),
+                    ])]),
+            EvolutionNode(id: "adult", displayName: "Adult", stage: .adult, spriteFile: "Greymon"),
+        ])
+
+        XCTAssertEqual(errors(graph), [
+            .unanswerableConditionWindow(from: "child", to: "adult", metric: "care.battleCount", window: .stage),
+            .unanswerableConditionWindow(from: "child", to: "adult", metric: "care.battleWinRatio", window: .stage),
+            .unanswerableConditionWindow(from: "child", to: "adult", metric: "care.trainingSessions", window: .lifetime),
+        ])
+    }
+
+    /// The same three metrics over the window each IS kept in draw no finding — the rule rejects the
+    /// mis-windowing, not the metric.
+    func testAcceptsTheSameCareMetricsOverTheirAnswerableWindows() {
+        let graph = EvolutionGraph(nodes: [
+            EvolutionNode(
+                id: "child", displayName: "Child", stage: .child, spriteFile: "Agumon",
+                evolutions: [EvolutionEdge(
+                    to: "adult", requiredEnergy: .strength, minEnergy: 20, maxCareMistakes: 5,
+                    isDefault: true,
+                    conditions: [
+                        EvolutionCondition(metric: .careBattleCount, window: .lifetime, comparison: .atLeast, value: 5, hint: "Battle 5 times"),
+                        EvolutionCondition(metric: .careBattleWinRatio, window: .lifetime, comparison: .atLeast, value: 0.5, hint: "Win half your battles"),
+                        EvolutionCondition(metric: .careTrainingSessions, window: .stage, comparison: .atLeast, value: 3, hint: "Train 3 times"),
+                    ])]),
+            EvolutionNode(id: "adult", displayName: "Adult", stage: .adult, spriteFile: "Greymon"),
+        ])
+
+        XCTAssertEqual(errors(graph), [])
+    }
+
     // MARK: - Reporting every error, not just the first
 
     /// Fixing a roster one error per test run would be miserable, so errors accumulate.

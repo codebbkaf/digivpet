@@ -101,7 +101,7 @@ enum ConditionMetric: String, CaseIterable {
 }
 
 /// The span of history a condition's value is measured over.
-enum ConditionWindow: String, Codable, Equatable {
+enum ConditionWindow: String, Codable, Equatable, CaseIterable {
     /// Since the Digimon entered its current stage. The default reading of an evolution criterion:
     /// what you did to EARN this evolution, not what you did two forms ago.
     case stage

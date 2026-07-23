@@ -154,6 +154,29 @@ struct ConditionContext: Equatable {
 }
 
 extension ConditionContext {
+    /// A context with EVERY field populated, so that `value(for:window:)` returns `.known` for a
+    /// (metric, window) pair whenever any game state at all could answer it.
+    ///
+    /// This is the probe `ConditionMetric.answerableWindows` runs: a pair still `.unknown` against a
+    /// context this full is one the evaluator can *never* answer — the metric is simply not kept over
+    /// that window (e.g. `care.battleCount` per stage) — not merely one this player's data is missing.
+    /// Deriving the rule from the evaluator itself is deliberate: a hand-authored table of answerable
+    /// windows would drift the day `careValue`/`healthValue` gains a case, and this cannot.
+    static func fullyPopulated(for metric: ConditionMetric) -> ConditionContext {
+        let totals = MetricTotals(values: [metric.rawValue: 1])
+        return ConditionContext(
+            stageTotals: totals,
+            lifetimeTotals: totals,
+            bestDayThisStage: totals,
+            trainingSessionsThisStage: 1,
+            overfeedsThisStage: 1,
+            sleepDisturbancesThisStage: 1,
+            battlesToday: 1,
+            battlesLifetime: 1,
+            battleWinRatioLifetime: 0.5,
+            readings: [metric: .value(1)])
+    }
+
     /// The context describing `state` right now.
     ///
     /// - Parameter readings: direct reads for the metrics no running total can answer — see
@@ -177,6 +200,32 @@ extension ConditionContext {
             battlesLifetime: state.battleWins + state.battleLosses,
             battleWinRatioLifetime: state.battleWinRatio,
             readings: readings)
+    }
+}
+
+extension ConditionMetric {
+    /// The windows over which the evaluator can EVER return a `.known` value for this metric.
+    ///
+    /// The health family is kept over all three windows (a running total per stage/lifetime, a best
+    /// day, or a direct read for a standing measurement), so every health metric answers all three.
+    /// The `care.*` counters are each kept over ONLY the window they live in — training/overfeeds/
+    /// sleep-disturbances per stage, `care.battleCount` per day and per lifetime, `care.battleWinRatio`
+    /// lifetime only — and are `.unknown` over the rest.
+    ///
+    /// Computed by probing `ConditionContext.fullyPopulated(for:)`, so it can never disagree with the
+    /// evaluator it is meant to describe.
+    var answerableWindows: Set<ConditionWindow> {
+        let probe = ConditionContext.fullyPopulated(for: self)
+        return Set(ConditionWindow.allCases.filter { probe.value(for: self, window: $0) != .unknown })
+    }
+
+    /// Whether the evaluator can ever answer this metric over `window`.
+    ///
+    /// False for a (metric, window) pair that is `.unknown` no matter how much data is present — an
+    /// edge or Digitama slot authored on such a pair can never qualify, and both `EvolutionGraph`
+    /// and `MapCatalog` validation reject it (US-184).
+    func canBeAnswered(over window: ConditionWindow) -> Bool {
+        answerableWindows.contains(window)
     }
 }
 
