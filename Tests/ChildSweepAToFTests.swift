@@ -100,7 +100,10 @@ final class ChildSweepAToFTests: XCTestCase {
         trainingSessionsThisStage: 30,
         overfeedsThisStage: 0,
         sleepDisturbancesThisStage: 0,
-        battlesLifetime: 20)
+        battlesLifetime: 20,
+        // Lights-out, so a dark-line edge gated on `care.lightOff` (US-185) is reachable — part of
+        // what "did everything right" means for a Digimon that only evolves in the dark.
+        lightState: .off)
 
     // MARK: - AC1/AC2: every Digimon in range has an in-edge and an out-edge
 

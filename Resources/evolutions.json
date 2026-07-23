@@ -598,11 +598,11 @@
               "hint": "Keep the mask out of the sun until it fuses"
             },
             {
-              "metric": "care.sleepDisturbances",
+              "metric": "care.lightOff",
               "window": "stage",
               "comparison": "atLeast",
-              "value": 6,
-              "hint": "And break its rest until the wings come in black"
+              "value": 1,
+              "hint": "And let the wings come in black, in the dark"
             }
           ]
         },
@@ -14126,11 +14126,11 @@
               "hint": "Drill the rage into a weapon"
             },
             {
-              "metric": "care.battleCount",
-              "window": "lifetime",
+              "metric": "care.lightOff",
+              "window": "stage",
               "comparison": "atLeast",
-              "value": 6,
-              "hint": "Let it fight until the mark burns"
+              "value": 1,
+              "hint": "Let the mark burn in where no light falls"
             }
           ]
         },
@@ -18177,11 +18177,11 @@
               "hint": "Keep the long vigil, and do not sleep it off"
             },
             {
-              "metric": "care.battleCount",
-              "window": "lifetime",
+              "metric": "care.lightOff",
+              "window": "stage",
               "comparison": "atLeast",
-              "value": 24,
-              "hint": "And hunt through fight after fight"
+              "value": 1,
+              "hint": "And hunt only where no light falls"
             }
           ]
         },

@@ -44,6 +44,10 @@ struct ConditionContext: Equatable {
     /// `GameState.battleWinRatio`, a 0.0–1.0 fraction. Lifetime, like the record it derives from.
     var battleWinRatioLifetime: Double?
 
+    /// The room light right now, for `care.lightOff` (US-185). A NOW reading, not a window total —
+    /// nil is `.unknown` and fails the condition, exactly like every other field here.
+    var lightState: LightState?
+
     /// Directly-read health metrics, for the ones a running total cannot answer.
     ///
     /// A resting heart rate or a VO2 max is a standing measurement, not something that adds up —
@@ -69,6 +73,7 @@ struct ConditionContext: Equatable {
         battlesToday: Int? = nil,
         battlesLifetime: Int? = nil,
         battleWinRatioLifetime: Double? = nil,
+        lightState: LightState? = nil,
         readings: [ConditionMetric: HealthReading] = [:]
     ) {
         self.stageTotals = stageTotals
@@ -80,6 +85,7 @@ struct ConditionContext: Equatable {
         self.battlesToday = battlesToday
         self.battlesLifetime = battlesLifetime
         self.battleWinRatioLifetime = battleWinRatioLifetime
+        self.lightState = lightState
         self.readings = readings
     }
 
@@ -145,6 +151,12 @@ struct ConditionContext: Equatable {
         case .careBattleWinRatio:
             guard window == .lifetime, let ratio = battleWinRatioLifetime else { return .unknown }
             return .known(ratio)
+        case .careLightOff:
+            // A NOW reading with no span: answerable only over the canonical `.stage` window, so an
+            // edge that windows it any other way is `.unknown` and the validator rejects it (US-184).
+            // 1 while the light is out, 0 otherwise, so `atLeast 1` is "light must be off".
+            guard window == .stage, let light = lightState else { return .unknown }
+            return .known(light == .off ? 1 : 0)
         default:
             // Unreachable while `isHealthMetric` routes the health family away, and a failure
             // rather than a crash if a later story adds a `care.*` case and forgets this switch.
@@ -174,6 +186,7 @@ extension ConditionContext {
             battlesToday: 1,
             battlesLifetime: 1,
             battleWinRatioLifetime: 0.5,
+            lightState: .off,
             readings: [metric: .value(1)])
     }
 
@@ -199,6 +212,7 @@ extension ConditionContext {
             battlesToday: state.battlesFought(now: now, calendar: calendar),
             battlesLifetime: state.battleWins + state.battleLosses,
             battleWinRatioLifetime: state.battleWinRatio,
+            lightState: state.lightState,
             readings: readings)
     }
 }

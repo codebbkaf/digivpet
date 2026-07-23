@@ -90,6 +90,8 @@ extension ConditionMetric {
             return "It goes looking for a fight."
         case .careBattleWinRatio:
             return "Losing shames it."
+        case .careLightOff:
+            return "It comes alive when the lights go out."
         }
     }
 }

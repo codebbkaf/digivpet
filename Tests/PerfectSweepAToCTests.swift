@@ -778,7 +778,9 @@ final class PerfectSweepAToCTests: XCTestCase {
             overfeedsThisStage: 0,
             sleepDisturbancesThisStage: 0,
             battlesLifetime: 40,
-            battleWinRatioLifetime: 1.0)
+            battleWinRatioLifetime: 1.0,
+            // Lights-out, so a dark-line edge gated on `care.lightOff` (US-185) is reachable.
+            lightState: .off)
     }
 
     /// `comment` is documentation the decoder drops, so it is read out of the raw JSON — the same

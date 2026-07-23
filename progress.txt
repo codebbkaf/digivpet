@@ -5419,3 +5419,36 @@ The thirty, `Perfect -> Ultimate`:
   - GOTCHA: existing EvolutionConditionTests fixtures had also been authored with care.battleWinRatio/care.battleCount over window=stage. They tripped the new rule (5 failures). Fixed by moving them to window=lifetime (each metric's answerable window) so they exercise only their intended range rules. grep the Tests tree for care.battle* window=stage / care.trainingSessions window!=stage before adding a similar rule.
   - The answerable windows: health.* = {stage,day,lifetime}; care.trainingSessions/overfeeds/sleepDisturbances = {stage}; care.battleCount = {day,lifetime}; care.battleWinRatio = {lifetime}.
 ---
+
+## 2026-07-23 - US-185 (Light-off evolution condition)
+- Added `care.lightOff` to `ConditionMetric` (EvolutionCondition.swift): the one `care.*`
+  member that is a STATE, not a counter. Reads 1 while `LightState.off`, 0 otherwise, so an
+  edge says "light must be off" as `care.lightOff atLeast 1` — no new field on EvolutionCondition.
+- `ConditionContext` gained a `lightState: LightState?` field (nil = unknown = fails, like every
+  other field). Populated by `init(state:now:)` from `GameState.lightState` and by
+  `fullyPopulated(for:)` (as `.off`). `careValue` answers it ONLY over the canonical `.stage`
+  window; day/lifetime are `.unknown`, so the US-184 validator rejects an edge windowed otherwise.
+- Handled the new case in every exhaustive switch: `ConditionMetric.defaultHint` (ConditionHints),
+  `HealthMetricReader.source(for:)` (not readable — no HK grant). `readObjectType`/
+  `accumulatesOverTime`/`conditionHealthMetrics` need no change (all key off `health.` prefix).
+- Authored into 3 dark-line edges by REPLACING one care criterion each (kept count + family
+  invariants): devimon->neodevimon, icedevimon->baalmon, blackguilmon->blackgrowmon.
+- New Tests/LightOffConditionTests.swift: off evolves / on+semi+unknown blocked, `.stage`-only
+  window, bundled graph uses it and validates to zero findings.
+- Files: Sources/EvolutionCondition.swift, Sources/ConditionEvaluator.swift, Sources/ConditionHints.swift,
+  Sources/HealthMetricReader.swift, Resources/evolutions.json, Tests/LightOffConditionTests.swift,
+  Tests/ConditionEvaluationTests.swift (answerable-window table), and the three sweep-test context
+  builders (ChildSweepAToF `met`, PerfectSweepAToC/NToR `context(for:)`) set `lightState: .off`.
+- **Learnings for future iterations:**
+  - New evolution condition TYPES are added as new `ConditionMetric` vocabulary (a JSON edit),
+    NOT as a new shape on `EvolutionCondition` — that is the documented growth path, and the
+    exhaustive `defaultHint` switch (no `default:`) forces you to give the new metric a hint.
+  - A non-numeric/boolean condition fits the metric/comparison/value model as 1/0 with `atLeast 1`;
+    restrict its answerable window to `.stage` so US-184's validator enforces one canonical spelling.
+  - Adding a condition to an edge in a sweep's range breaks that sweep's "every earned branch fires"
+    test (its context builder does not satisfy the new criterion) AND, for PerfectSweepN-R, the
+    strict "2 conditions = 1 health + 1 care" invariant. REPLACING a care criterion (not ADDING)
+    preserves the count/family invariants; then only the context builder needs `lightState: .off`.
+  - `care.lightOff` is a `care.*` STATE, so it needs no HealthKit grant and is excluded from
+    `conditionHealthMetrics`/`HealthReadSet` automatically by the `health.` prefix routing.
+---

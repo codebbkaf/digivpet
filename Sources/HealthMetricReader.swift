@@ -137,7 +137,7 @@ struct ReadableHealthMetric: Equatable {
         case .healthSleep:
             return nil
         case .careTrainingSessions, .careOverfeeds, .careSleepDisturbances,
-             .careBattleCount, .careBattleWinRatio:
+             .careBattleCount, .careBattleWinRatio, .careLightOff:
             return nil
         }
     }

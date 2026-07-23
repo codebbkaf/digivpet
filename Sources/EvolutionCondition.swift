@@ -14,9 +14,10 @@ import Foundation
 ///   `lowCardioFitnessEvent`, `appleWalkingSteadinessEvent`); an edge gated on one of those must
 ///   be a bonus branch, never the only way out of a node, or an empty metric on real hardware
 ///   makes that Digimon unreachable.
-/// - `care.*` — game counters the engine keeps itself. These exist because nothing in the edge
-///   schema could express them before: `minEnergy`, `maxCareMistakes` and `minBattleWins` are the
-///   whole of the old vocabulary.
+/// - `care.*` — game state the engine keeps itself, mostly counters. These exist because nothing in
+///   the edge schema could express them before: `minEnergy`, `maxCareMistakes` and `minBattleWins`
+///   are the whole of the old vocabulary. All but one are counters; `care.lightOff` is a NOW reading
+///   of the room light (US-185), the one member that does not accumulate.
 ///
 /// `care.careMistakes` is deliberately ABSENT. The edge's existing `maxCareMistakes` field already
 /// gates on that counter, and two ways to say one thing invites a later iteration to delete one of
@@ -73,6 +74,20 @@ enum ConditionMetric: String, CaseIterable {
     /// `care.battleWinRatio atLeast 0.8`, where a win COUNT alone would let 15 wins in 200 battles
     /// through. `minBattleWins` stays and keeps working; an edge may use either or both.
     case careBattleWinRatio = "care.battleWinRatio"
+
+    /// The room light being OUT, right now. The one `care.*` member that is a STATE rather than a
+    /// counter (US-185): dark-side Digimon only evolve in the dark, so this gates their branch on
+    /// `LightState.off` at evaluation time. It reads 1 while the light is off and 0 otherwise, so an
+    /// edge says "light must be off" as `care.lightOff atLeast 1` — the same numeric shape every
+    /// other condition uses, with no new field on `EvolutionCondition`.
+    ///
+    /// Kept under `care.*` because leaving the light on over a sleeping Digimon is already a care
+    /// mistake (`LightsOutRule`), so the light is a care concern the game owns — not a HealthKit
+    /// reading. It needs no read grant (`readObjectType` is nil) and accumulates over nothing
+    /// (`accumulatesOverTime` is false), exactly like the counters beside it. Unlike them it is a NOW
+    /// reading with no meaningful span, so `ConditionContext` answers it ONLY over the canonical
+    /// `.stage` window and the validator rejects an edge that windows it any other way (US-184).
+    case careLightOff = "care.lightOff"
 
     /// True for the HealthKit-backed family. Used by the validator's range rules and by US-061
     /// when it decides which criteria need an authorization grant.

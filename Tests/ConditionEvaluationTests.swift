@@ -441,6 +441,9 @@ final class ConditionEvaluationTests: XCTestCase {
                 expected = [.day, .lifetime]
             case .careBattleWinRatio:
                 expected = [.lifetime]
+            case .careLightOff:
+                // A NOW reading, not a span — kept only over the canonical .stage window (US-185).
+                expected = [.stage]
             default:
                 expected = allWindows // the health family
             }
