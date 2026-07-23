@@ -20,17 +20,23 @@ final class ActionControlsTests: XCTestCase {
         var called: [String] = []
         let controls = ActionControls(canAffordBattle: true,
                                       poopCount: 1,
+                                      lightState: .on,
                                       feed: { called.append("feed") },
                                       train: { called.append("train") },
                                       clean: { called.append("clean") },
-                                      battle: { called.append("battle") }) { EmptyView() }
+                                      battle: { called.append("battle") },
+                                      cycleLight: { called.append("light") },
+                                      mapDestination: { EmptyView() },
+                                      partyDestination: { EmptyView() },
+                                      dexDestination: { EmptyView() })
 
         controls.feed()
         controls.train()
         controls.clean()
         controls.battle()
+        controls.cycleLight()
 
-        XCTAssertEqual(called, ["feed", "train", "clean", "battle"])
+        XCTAssertEqual(called, ["feed", "train", "clean", "battle", "light"])
     }
 
     /// US-052 AC4: Clean is disabled with nothing to clean, and enabled the moment there is.
@@ -40,7 +46,11 @@ final class ActionControlsTests: XCTestCase {
         for count in 0...PoopClock.maximumPoops {
             let controls = ActionControls(canAffordBattle: true,
                                           poopCount: count,
-                                          feed: {}, train: {}, clean: {}, battle: {}) { EmptyView() }
+                                          lightState: .on,
+                                          feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                                          mapDestination: { EmptyView() },
+                                          partyDestination: { EmptyView() },
+                                          dexDestination: { EmptyView() })
             XCTAssertEqual(controls.isCleanDisabled, count == 0, "wrong at \(count) poops")
         }
     }
@@ -78,7 +88,8 @@ final class ActionControlsTests: XCTestCase {
 
     /// A row whose Battle button reads the affordability of the energies it is given, asked the same
     /// way `MainScreenModel.canAffordBattle` asks it.
-    private func controls(strength: Int, stamina: Int) -> ActionControls<EmptyView> {
+    private func controls(strength: Int, stamina: Int)
+        -> ActionControls<EmptyView, EmptyView, EmptyView> {
         let state = GameState(currentDigimonId: "hero", now: Date(timeIntervalSince1970: 0))
         state.stageEnergy.strength = strength
         state.stageEnergy.stamina = stamina
@@ -86,15 +97,19 @@ final class ActionControlsTests: XCTestCase {
                                              from: BattleCost.payableWith, in: state) != nil
 
         return ActionControls(canAffordBattle: canAfford, poopCount: 0,
-                              feed: {}, train: {}, clean: {}, battle: {}) { EmptyView() }
+                              lightState: .on,
+                              feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                              mapDestination: { EmptyView() },
+                              partyDestination: { EmptyView() },
+                              dexDestination: { EmptyView() })
     }
 
-    /// US-052 AC2: five circles and their gaps still fit the narrowest supported screen (176pt at
-    /// 41mm). This is the arithmetic that forced the diameter down from 32 — without it, a later
-    /// sixth button or a bumped diameter would silently clip the row at both ends, which no unit
-    /// test would otherwise catch and only a screenshot on the SMALL watch would show.
-    func testTheRowOfFiveFitsTheNarrowestScreen() {
-        let buttons = 5
+    /// US-197 AC6: a row of four circles and their gaps fits the narrowest supported screen (176pt
+    /// at 41mm). US-197 split the old row of five into two rows of four, so each row is now narrower
+    /// than before — but the guard stays, so a later fifth button or a bumped diameter that would
+    /// clip a row at both ends fails here rather than only on a screenshot of the SMALL watch.
+    func testARowOfFourFitsTheNarrowestScreen() {
+        let buttons = 4
         let spacing: CGFloat = 4
         let width = CGFloat(buttons) * ActionButtonFace.diameter + CGFloat(buttons - 1) * spacing
         XCTAssertLessThanOrEqual(width, 176)

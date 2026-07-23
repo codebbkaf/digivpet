@@ -294,33 +294,9 @@ struct ContentView: View {
                     SavedGameUnavailableView(detail: detail)
                 }
             }
-            .toolbar {
-                // The room light (US-114). Here rather than in the room it lights: it used to hang
-                // in the sprite slot's top-leading corner, where the Digimon — which walks the full
-                // width — passed underneath it. Opposite the Dex book, which is the other piece of
-                // chrome that frames the room, and never dimmed for the same reason the book is not.
-                ToolbarItem(placement: .topBarLeading) {
-                    LightButton(state: model.lightState) {
-                        model.cycleLight()
-                    }
-                }
-
-                ToolbarItem(placement: .topBarTrailing) {
-                    NavigationLink {
-                        // The DEX REUSES THE GAME'S ONE STORE (US-193), never opening a second
-                        // `GameStore` on the same file: two live contexts invalidate each other's
-                        // records on reset, the `ModelContext.reset` crash. See
-                        // `MainScreenModel.sharedStore`.
-                        DexView(model: DexModel(makeStore: model.sharedStore))
-                    } label: {
-                        Label("Dex", systemImage: "book")
-                    }
-                    // Never dimmed (US-112). US-099 matched it to `dimOpacity` because the scrim
-                    // then covered the whole game and a bright Dex button would have been the one
-                    // lit thing on a dark screen; now the scrim covers the sprite's slot alone,
-                    // and the Dex is chrome outside the room like the action row.
-                }
-            }
+            // The room light and the Dex both moved out of the toolbar and into the action grid in
+            // US-197 (`ActionControls`), so the toolbar is now empty until US-198 puts a settings
+            // gear in its trailing slot.
             #if DEBUG
             // Debug-only: `simctl` cannot tap the toolbar button, so the Dex is unscreenshottable
             // without a way to push it from the launch command. Compiled out of release builds.
@@ -651,22 +627,35 @@ struct ContentView: View {
                                 tint: .teal, dashHeight: 5)
                     }
 
-                    // All four actions in one row (US-038), Notifications among them: a
-                    // preference is something you visit once, but it is still a destination
-                    // like the others, and a fourth circle costs less room than the labelled
-                    // link below the fold that it replaces.
+                    // The eight actions in a two-row grid (US-197): Feed, Train, Clean, Battle on
+                    // top; Map, Party, Light, Dex below. Light and Dex moved in off the toolbar and
+                    // Map and Party in off the strip, so every way out of the room is one consistent
+                    // circle here rather than scattered around the screen's edges.
                     //
                     // The 2pt top padding this used to carry went to the sprite in US-120. The
                     // circles are 30pt discs with their own visual margin, so the gap above them
                     // was decoration; the Digimon needed it more.
                     ActionControls(canAffordBattle: model.canAffordBattle,
                                    poopCount: model.poopCount,
+                                   lightState: model.lightState,
                                    feed: { model.feed() },
                                    train: { model.train() },
                                    clean: { model.clean() },
-                                   battle: { model.battle() }) {
-                        NotificationSettingsView(settings: model.notificationSettings)
-                    }
+                                   battle: { model.battle() },
+                                   cycleLight: { _ = model.cycleLight() },
+                                   mapDestination: {
+                                       MapListView(rows: model.mapRows,
+                                                   detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
+                                   },
+                                   partyDestination: {
+                                       PartyView(rows: model.partyRows, board: model.jogressBoard,
+                                                 activate: { model.activate($0) },
+                                                 fuse: { model.performJogress($0) })
+                                   },
+                                   dexDestination: {
+                                       // Reuses the game's one store (US-193), never a second one.
+                                       DexView(model: DexModel(makeStore: model.sharedStore))
+                                   })
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

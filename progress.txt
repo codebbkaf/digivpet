@@ -5899,3 +5899,18 @@ The thirty, `Perfect -> Ultimate`:
     with accessibilityElement(.ignore) + label/value) whenever the bar needs a spoken meaning.
   - `MainReadingBarLayout.dashes` is deliberately == `MainScreenModel.sleepHoursDisplayCap` (16) and a
     test pins the equality — the two reading lines must stay the same length to read as a pair.
+
+## 2026-07-24 - US-197: A two-row action grid with new icons and a circular Light
+- Rebuilt `ActionControls` as a two-row grid: Row 1 Feed/Train/Clean/Battle, Row 2 Map/Party/Light/Dex. All eight buttons are `ActionButtonFace` circles.
+- New icons: Clean is a brown three-ellipse waste coil (`WasteGlyph`, driven by new `ActionGlyph` enum — `.symbol(String)` vs `.waste`); Battle is `figure.martial.arts` (a fighter) instead of `bolt.fill`.
+- Light moved OUT of the toolbar into the grid (calls `cycleLight`, glyph = `lightState.symbolName`, yellow tint). Dex moved out of the toolbar too. The `.toolbar {}` block was removed from `ContentView` (empty until US-198 adds a settings gear).
+- `ActionControls` is now generic over `<MapDestination, PartyDestination, DexDestination>` with lazy `@ViewBuilder` destination closures; the old `Settings` bell generic and the `NotificationSettings` bell button were removed.
+- Files changed: `Sources/ActionControls.swift` (rewrite), `Sources/ContentView.swift` (call site + toolbar removal), `Tests/ActionControlsTests.swift` (constructor updates, row-of-four fit test).
+- Verified: `xcodebuild build` green; `xcodebuild test` 2605 tests, 0 failures. Simulator screenshots on Series 11 46mm: /tmp/us197/grid.png (Clean+Battle disabled/grey) and /tmp/us197/grid_enabled.png (brown Clean coil + purple martial-arts Battle, via -poopDemo -battleAffordableDemo).
+- **Learnings for future iterations:**
+  - SF Symbols has NO poop/droppings glyph — naming one renders a blank square. The Clean button draws its own three-ellipse coil (`WasteGlyph`) tinted with the button colour (brown when enabled, secondary when disabled at 0 poop). `figure.martial.arts` (2022) is a valid combat symbol.
+  - To check whether an SF Symbol name exists for this SDK: `plutil -convert json` the CoreGlyphs `name_availability.plist` at `/System/Library/PrivateFrameworks/SFSymbols.framework/.../CoreGlyphs.bundle/Contents/Resources/name_availability.plist` and look up the key (its value is the intro year). A build does NOT catch a bad symbol name — it silently renders blank — so verify names this way or by screenshot.
+  - `ActionButtonFace.diameter` is referenced by ActionControlsTests AND MainScreenLayoutTests, so `ActionButtonFace` was kept NON-generic (glyph via `ActionGlyph` enum, not a generic label) so that static stays a plain lookup.
+  - Screenshot recipe still: `simctl erase` first (clears stale notif alert), install Debug-watchsimulator .app, launch `-healthAnswered -noNotificationPrompt` + a seed demo (`-wanderDemo`/`-poopDemo`/`-battleAffordableDemo`) + optional `-mapDemo=01_grassland`. Demos each seed their own state so don't expect two unrelated seeds to compose fully.
+  - US-197 removed the bell/notifications from the action row per its explicit 8-button spec; notifications are reachable via DEBUG `-settingsDemo` until US-198 adds the top-right settings gear.
+---
