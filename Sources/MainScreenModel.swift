@@ -1197,6 +1197,12 @@ final class MainScreenModel: ObservableObject {
         // off the same claimed delta as everything else — handwashing is a category event, read into
         // `metrics` alongside the rest rather than by a query of its own.
         creditCleanCharges(creditedMetrics[.healthHandwashing])
+        // US-181: last night's sleep this read brought in accumulates on the Digimon that is OUT —
+        // per-Digimon, off the SAME claimed delta as everything else, so a frozen Digimon accrues
+        // nothing and last night's minutes are never counted twice. Distinct from the nightly sleep
+        // energy `EnergyCreditor.credit` already banked above: this is the lifetime total the sleep
+        // evolution gate (US-183) reads, that was a stage-energy top-up.
+        state.creditSleep(minutes: creditedMetrics[.healthSleep])
         // After crediting and before evolving, because `careMistakeCount` is one of the things an
         // edge is gated on — an audit run after `evolveIfReady` would let a neglected Digimon take
         // a branch it had just disqualified itself from, one refresh late.

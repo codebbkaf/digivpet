@@ -247,6 +247,16 @@ final class GameState {
     /// "nothing banked yet".
     private var trainChargesStorage: Int?
     private var trainChargeKcalStorage: Double?
+    /// Backing store for `accumulatedSleepMinutes` (US-181): the lifetime HealthKit sleep this
+    /// Digimon has banked, in minutes, credited from the same US-179 `MetricLedger` delta the
+    /// nightly sleep *energy* is read from but kept SEPARATE from it — this is the running total the
+    /// sleep evolution gate (US-183) and the Zz dash bar (US-182) read, not the nightly energy top-up.
+    /// Per-Digimon in the same sense as `battleChargesStorage`: it lives on the record, so switching
+    /// which Digimon is out shows its own accumulation and a frozen Digimon (which never refreshes,
+    /// US-125) accrues nothing. Optional for the same migration reason as every other storage property
+    /// here — an optional attribute is the one shape SwiftData migrates into an already-shipped store
+    /// without a default. `nil` reads as "nothing slept yet".
+    private var accumulatedSleepMinutesStorage: Double?
     /// Backing store for the four care-mistake markers (US-027). All optional for the same migration
     /// reason as `energyLastEarnedStorage` — an optional attribute is the one shape SwiftData
     /// migrates into an already-shipped store without a default.
@@ -413,6 +423,7 @@ final class GameState {
         self.battleChargeStepsStorage = 0
         self.trainChargesStorage = 0
         self.trainChargeKcalStorage = 0
+        self.accumulatedSleepMinutesStorage = 0
         // Stamped with `now` rather than left nil, or a brand new game would be charged for every
         // day between the epoch and today the first time the audit ran.
         self.healthDataLastSeenStorage = now
@@ -584,6 +595,37 @@ extension GameState {
             trainCharges += 1
         }
         trainChargeKcal = trainCharges < maxCharges ? progress : 0
+    }
+
+    /// Lifetime HealthKit sleep banked for THIS Digimon, in minutes (US-181). Distinct from the
+    /// nightly sleep *energy*: that tops up `stageEnergy` and resets, this only ever grows, so it is
+    /// the running total the sleep evolution gate (US-183) reads. Kept in minutes because that is the
+    /// unit `MetricLedger` credits `health.sleep` in; `accumulatedSleepHours` is the hours view the
+    /// gate and dash bar compare against.
+    ///
+    /// Computed for the same reason `battleCharges` is: the optionality persistence needs stops at
+    /// the model boundary, so a save written before sleep was accumulated reads as 0 rather than as a
+    /// `nil` every caller has to unwrap.
+    var accumulatedSleepMinutes: Double {
+        get { accumulatedSleepMinutesStorage ?? 0 }
+        set { accumulatedSleepMinutesStorage = newValue }
+    }
+
+    /// `accumulatedSleepMinutes` expressed in hours — the unit a sleep evolution requirement is
+    /// authored in (Agumon needs 16 h) and the dash bar (US-182/US-183) fills against.
+    var accumulatedSleepHours: Double {
+        accumulatedSleepMinutes / 60
+    }
+
+    /// Adds newly slept `minutes` to this Digimon's lifetime accumulation (US-181).
+    ///
+    /// `minutes` is a DELTA — last night's sleep this read brought in, claimed off the shared
+    /// `MetricLedger` (US-179) so no other consumer of `health.sleep` double-counts it. Unlike the
+    /// battle/train charges there is no cap: the accumulation just climbs, exactly as a map's recorded
+    /// steps climb past its total, because the gate compares it against a required number of hours.
+    func creditSleep(minutes: Double) {
+        guard minutes > 0 else { return }
+        accumulatedSleepMinutes += minutes
     }
 
     /// The last instant HealthKit gave a real number for any metric, or nil on a save written
