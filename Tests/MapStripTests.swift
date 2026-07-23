@@ -1,16 +1,16 @@
 import Foundation
 import SwiftData
+import SwiftUI
 import XCTest
 
 @testable import DigiVPet
 
-/// US-120 — the map strip on the main screen.
+/// US-120 — where the Digimon is adventuring, and how far across it it has walked.
 ///
-/// What arithmetic can reach: what the row says in each of its two states, the exact spelling of
-/// the counter, that the party button is not a live-looking dead target yet, and that choosing a map
-/// moves the strip, the background and the save together. The rest of the story — that the row is
-/// readable and untruncated on a 41mm watch, and what it costs the sprite — is a Simulator
-/// measurement, recorded in progress.txt. Same split as `MapListTests`.
+/// The ROW this was written for is gone (US-210): the map's name and the way to the box were a thin
+/// strip under the sprite until the action grid grew its own Map and Party circles. What survives is
+/// the value — which map it names in each of its two states, the exact spelling of the counter, and
+/// that choosing a map moves the reading, the background and the save together.
 private enum Fixture {
     /// Two maps, deliberately NOT the shipped catalog: a test that pinned `01_grassland`'s real
     /// 3,000 steps would start failing the day someone retunes it, which is a data edit and not a
@@ -125,28 +125,6 @@ final class MapStripTests: XCTestCase {
         XCTAssertFalse(text.contains("\u{00A0}"))
     }
 
-    /// The two states are tellable apart at a glance, without reading the counter — which says
-    /// `0 / 25000` in both of them on a fresh save.
-    func testTheTravellingAndPromptStatesUseDifferentGlyphs() {
-        let travelling = Fixture.strip(PlayerProfile(selectedMapId: "first"))
-        let prompting = Fixture.strip(PlayerProfile())
-
-        XCTAssertNotEqual(travelling.symbol, prompting.symbol)
-        XCTAssertEqual(travelling.symbol, MapStripMarks.travellingSymbol)
-        XCTAssertEqual(prompting.symbol, MapStripMarks.promptSymbol)
-        XCTAssertFalse(MapStripMarks.travellingSymbol.isEmpty)
-        XCTAssertFalse(MapStripMarks.promptSymbol.isEmpty)
-    }
-
-    /// And apart to VoiceOver, which cannot see a glyph at all.
-    func testTheTwoStatesReadDifferentlyToVoiceOver() {
-        let travelling = Fixture.strip(PlayerProfile(selectedMapId: "first"))
-        let prompting = Fixture.strip(PlayerProfile())
-
-        XCTAssertEqual(travelling.accessibilityLabel, "Adventuring in First")
-        XCTAssertEqual(prompting.accessibilityLabel, "Choose a map. First")
-    }
-
     /// An empty catalog has no map to name, so there is no strip — the row is absent rather than
     /// drawn blank. Impossible in the shipped file (US-117 would reject it) and reachable from a
     /// fixture, which is exactly when a `guard` earns its keep.
@@ -164,37 +142,23 @@ final class MapStripTests: XCTestCase {
     }
 }
 
-// MARK: - The controls
+// MARK: - What the strip left behind (US-210)
 
-final class MapStripLayoutTests: XCTestCase {
-    /// US-126 AC1: the party button leads somewhere, and so is drawn at full strength. The inverse
-    /// of what this asserted while `PartyView` was unbuilt, which is what US-120 left it here for —
-    /// the button must never be bright and inert, nor faded and live.
-    func testThePartyButtonLeadsSomewhereAndIsDrawnAtFullStrength() {
-        XCTAssertTrue(MapStripLayout.isPartyReachable)
-        // The fade the button no longer wears is still the fade a disabled control would wear, and
-        // is still neither invisible nor invisible-by-another-name: a control that vanishes takes
-        // the row's shape with it.
-        XCTAssertLessThan(MapStripLayout.disabledOpacity, 1)
-        XCTAssertGreaterThan(MapStripLayout.disabledOpacity, 0)
-    }
+/// The row itself — `MapStripView`, `MapStripLayout` and `MapStripMarks` — is deleted, along with
+/// the name it drew under the sprite and its party button. Absence is not directly assertable, so
+/// what stands in for those tests is the one reading that survived the row: the map-step `DashBar`,
+/// which must no longer speak a map's name (AC1). That both ways out of the room still work is
+/// `MapStripSelectionTests`' last test, driven through the grid.
+final class MapStripRemovalTests: XCTestCase {
+    /// AC1: the map name is off this area of the screen entirely, spoken as well as drawn. The bar's
+    /// VoiceOver label names the READING, so no shipped map's name can appear in it.
+    func testTheMapStepBarNoLongerNamesTheMap() {
+        XCTAssertFalse(MainReadingBarLayout.mapLabel.isEmpty, "a bar with no label says nothing spoken")
 
-    /// AC3: one line, at a size that is still a size. The row's whole cost to the screen is its
-    /// font, so a later edit that grows it is one a test should argue with.
-    func testTheRowIsOneLegibleLine() {
-        XCTAssertGreaterThanOrEqual(MapStripLayout.fontSize, 9)
-        // Smaller than the name line above it (12pt in `ContentView`), which is the row this one
-        // must not compete with for attention or for height.
-        XCTAssertLessThan(MapStripLayout.fontSize, 12)
-        XCTAssertLessThan(MapStripLayout.iconSize, 12)
-    }
-
-    /// The party glyph is a real symbol name, and not the same as either map glyph — three marks on
-    /// one row that could be confused with each other would be worse than none.
-    func testThePartyGlyphIsItsOwn() {
-        XCTAssertFalse(MapStripMarks.partySymbol.isEmpty)
-        XCTAssertNotEqual(MapStripMarks.partySymbol, MapStripMarks.travellingSymbol)
-        XCTAssertNotEqual(MapStripMarks.partySymbol, MapStripMarks.promptSymbol)
+        for map in MapCatalog.bundled.maps {
+            XCTAssertFalse(MainReadingBarLayout.mapLabel.contains(map.displayName),
+                           "the reading must not name \(map.displayName)")
+        }
     }
 }
 
@@ -300,5 +264,51 @@ final class MapStripSelectionTests: XCTestCase {
 
         XCTAssertEqual(model.mapStrip?.mapName, "First")
         XCTAssertFalse(try XCTUnwrap(model.mapStrip).isPrompt)
+    }
+
+    /// US-210 AC3/AC4: the strip is gone and both ways out of the room it held are the action
+    /// grid's. Driven through the very expressions `ContentView` hands `ActionControls`, so a
+    /// rewiring that dropped the model on the way to either screen fails here rather than in a tap.
+    func testTheGridsMapAndPartyButtonsCarryTheStripsTwoDestinations() async throws {
+        // A box-mate, so the party screen has something to take out — activating the Digimon that is
+        // already out proves nothing about the wiring.
+        let store = try GameStore(url: storeURL)
+        let first = try store.loadOrCreate(digitamaId: "agu_digitama", now: Fixture.morning)
+        first.currentDigimonId = "agumon"
+        first.stage = .child
+        _ = try store.grantDigitama("agu_digitama", now: Fixture.morning)
+        try store.save()
+
+        let model = makeModel()
+        await model.start()
+
+        let controls = ActionControls(canAffordBattle: true,
+                                      poopCount: 0,
+                                      lightState: .on,
+                                      feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                                      mapDestination: {
+                                          MapListView(rows: model.mapRows,
+                                                      detail: { model.mapDetail(for: $0) }) {
+                                              model.selectMap($0)
+                                          }
+                                      },
+                                      partyDestination: {
+                                          PartyView(rows: model.partyRows, board: model.jogressBoard,
+                                                    activate: { model.activate($0) },
+                                                    fuse: { model.performJogress($0) })
+                                      },
+                                      dexDestination: { EmptyView() })
+
+        // AC3: choosing on the list the Map button opens still moves the save.
+        let list = controls.mapDestination()
+        XCTAssertEqual(list.rows.map(\.id), model.mapRows.map(\.id))
+        list.select("second")
+        XCTAssertEqual(model.mapStrip?.mapId, "second")
+
+        // AC4: the box the Party button opens still takes a Digimon out through the same `activate`.
+        let party = controls.partyDestination()
+        let mate = try XCTUnwrap(party.rows.first { $0.isSelectable })
+        party.activate(mate)
+        XCTAssertEqual(model.partyRows.first { $0.status == .active }?.id, mate.id)
     }
 }

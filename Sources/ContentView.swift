@@ -343,15 +343,15 @@ struct ContentView: View {
             }
             // US-119's map list, on the same footing and for the same reason: it is pushed onto
             // THIS stack — the one the Dex uses — so what the screenshot photographs is the real
-            // destination, back button and all, and not a preview of it. US-120's strip is what
-            // will push it with a tap.
+            // destination, back button and all, and not a preview of it. The action grid's Map
+            // button is what pushes it with a tap.
             .navigationDestination(isPresented: $showsMapListDemo) {
                 MapListView(rows: model.mapRows,
                             detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
             }
             // US-126's party screen, pushed for the same reason and onto the same stack: what the
-            // screenshot photographs is the real destination the strip's button leads to, seeded
-            // box and all, rather than a preview of it.
+            // screenshot photographs is the real destination the grid's Party button leads to,
+            // seeded box and all, rather than a preview of it.
             .navigationDestination(isPresented: $showsPartyDemo) {
                 PartyView(rows: model.partyRows, board: model.jogressBoard,
                           activate: { model.activate($0) },
@@ -615,38 +615,23 @@ struct ContentView: View {
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
 
-                // Where the Digimon is adventuring, and the way to the box (US-120). Directly above
-                // the energy bars rather than in the toolbar — watchOS gives a screen two slots and
-                // US-114 spent the second on the room light — and rather than in the action row,
-                // which is the five things you DO to the Digimon.
+                // The map strip is GONE (US-210). US-120 put the map's name and the way to the box
+                // in a thin row here, above the readings; US-197 then gave the action grid its own
+                // Map and Party circles, which left this row saying a name nothing was gated on and
+                // drawing a second door to a screen the grid already opens. Both ways through are
+                // the grid's now, so the row is deleted and the line of height it cost — plus the
+                // map name that floated under the sprite — goes back to the Digimon.
                 //
-                // Drawn whether or not a map has been chosen: with nothing selected it names the
-                // first map as an invitation, and nothing on this screen is gated on having taken
-                // it (AC6).
-                if let strip = model.mapStrip {
-                    MapStripView(strip: strip, destination: {
-                        MapListView(rows: model.mapRows,
-                                    detail: { model.mapDetail(for: $0) }) { model.selectMap($0) }
-                    }, party: {
-                        // The box of Digimon (US-126), off the strip's trailing button — the other
-                        // way out of this screen, and the one that changes which Digimon is on it.
-                        PartyView(rows: model.partyRows, board: model.jogressBoard,
-                                  activate: { model.activate($0) },
-                                  fuse: { model.performJogress($0) })
-                    })
-                }
-
                 // The two readings that still matter after US-196 retired the STEP/KCAL/EXER energy
                 // bars: how far the active Digimon has walked the current map, and how much it has
                 // slept — each a DashBar (US-171), stacked as exactly two lines above the action
                 // area. Steps, calories and exercise left the screen because they are already spent
                 // into train points and battle time; map progress and sleep are what a glance at the
                 // raising screen still needs. Gated on `state` like the currency row below, so no lone
-                // bar draws before a Digimon is out; the map numbers come from the same `MapStrip`
-                // the strip above reads, so a step credited to the map moves both together.
+                // bar draws before a Digimon is out; the map numbers still come off `MapStrip`, which
+                // outlived the row it was named for and is now read only for its two step counts.
                 if let strip = model.mapStrip, model.state != nil {
                     MainReadingBars(mapRecorded: strip.recordedSteps, mapTotal: strip.totalSteps,
-                                    mapName: strip.mapName,
                                     sleepHours: model.sleepHours, sleepTotal: model.sleepHoursCap)
                 }
 
@@ -797,7 +782,7 @@ struct ContentView: View {
 /// nothing useful here and a test should not have to build a view graph to check the arithmetic.
 /// The two text sizes on the main screen that the sprite's scale depends on (US-120).
 ///
-/// Named rather than left as literals in a `body` for `MapStripLayout.fontSize`'s reason: these are
+/// Named rather than left as literals in a `body` for `MainReadingBarLayout`'s reason: these are
 /// not taste, they are load-bearing. `SpriteScale.fitting` FLOORS `slotHeight / 16`. Before US-194
 /// the slot sat right on a scale boundary — 49.5pt on 41mm, 64.0pt on 46mm, 0.5pt and 0.0pt of slack
 /// — so a point of font silently cost the Digimon a whole scale step. US-194's shorter room (the

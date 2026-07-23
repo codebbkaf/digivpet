@@ -14,9 +14,6 @@ struct MainReadingBars: View {
     let mapRecorded: Int
     let mapTotal: Int
 
-    /// The map the steps cross, for VoiceOver: a bare "12 of 16" dash reading says nothing spoken.
-    let mapName: String
-
     /// The active Digimon's accumulated sleep hours and the nominal full-bar ceiling (US-182), the
     /// same values the Zz `DashBar` filled while it lived among the energy bars.
     let sleepHours: Int
@@ -32,7 +29,7 @@ struct MainReadingBars: View {
                                                   dashes: MainReadingBarLayout.dashes),
                        total: MainReadingBarLayout.dashes,
                        tint: .green,
-                       accessibilityLabel: "Adventuring in \(mapName)",
+                       accessibilityLabel: MainReadingBarLayout.mapLabel,
                        accessibilityValue: "\(mapRecorded) of \(mapTotal) steps") {
                 // The walking figure the strip used to carry (US-120) makes its home here in US-196,
                 // labelling the reading it actually measures rather than sitting redundantly beside
@@ -104,6 +101,14 @@ enum MainReadingBarLayout {
 
     /// The map-step bar's leading glyph — the walking figure that used to mark the travelling strip.
     static let mapSymbol = "figure.walk"
+
+    /// What the map-step bar is called to VoiceOver: a bare "12 of 16" dash reading says nothing
+    /// spoken. It names the READING rather than the map since US-210 took the map's name off this
+    /// area of the screen entirely — the strip that carried it is gone, and a spoken "Adventuring in
+    /// Grassland" would have been the only place under the sprite that still said which map it is,
+    /// which is exactly what the story removes. Which map you are on is read off the grid's Map
+    /// button and the map list.
+    static let mapLabel = "Map progress"
 }
 
 /// One reading line: a leading label and a `DashBar`, sharing `MainReadingBarLayout`'s label width so
@@ -135,7 +140,6 @@ private struct ReadingRow<Label: View>: View {
 }
 
 #Preview {
-    MainReadingBars(mapRecorded: 1_500, mapTotal: 25_000, mapName: "Grassland",
-                    sleepHours: 6, sleepTotal: 16)
+    MainReadingBars(mapRecorded: 1_500, mapTotal: 25_000, sleepHours: 6, sleepTotal: 16)
         .padding()
 }

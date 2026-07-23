@@ -1802,8 +1802,8 @@
         "Build green. Verify in the simulator: no map name and no party icon under the sprite"
       ],
       "priority": 97,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Map strip deleted: MapStripView/MapStripLayout/MapStripMarks and MapStrip.symbol/accessibilityLabel are gone, Sources/MapStripView.swift renamed to MapStrip.swift (the value survives — MainReadingBars fills the map-step DashBar from its recordedSteps/totalSteps). MainReadingBars no longer takes mapName; its bar speaks MainReadingBarLayout.mapLabel (\"Map progress\"). Map and Party are the grid's buttons only. Build green, 2707 tests 0 failures; 46mm screenshot shows no map name and no party icon under the sprite."
     },
     {
       "id": "US-211",

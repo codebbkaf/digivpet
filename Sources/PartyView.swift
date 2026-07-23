@@ -138,7 +138,7 @@ extension PartyRow {
 
 /// The party screen's sizes and tints.
 ///
-/// Named rather than left as literals in the `body`, for `MapStripLayout`'s reason: what a row is
+/// Named rather than left as literals in the `body`, for `MainReadingBarLayout`'s reason: what a row is
 /// allowed to cost is a decision, and a decision a test can argue with is one that stays made.
 enum PartyRowLayout {
     /// Screen points per sprite pixel, so a row's Digimon is 32pt square. Twice the Dex grid's
@@ -154,10 +154,11 @@ enum PartyRowLayout {
 
 /// Every Digimon the player owns, and the one they have out (US-126).
 ///
-/// Pushed onto `ContentView`'s existing `NavigationStack` from the map strip's trailing button,
-/// exactly as `MapListView` is pushed from its leading one — so it keeps a back button, and so a
+/// Pushed onto `ContentView`'s existing `NavigationStack` from the action grid's Party button,
+/// exactly as `MapListView` is pushed from its Map button — so it keeps a back button, and so a
 /// tap that changes which Digimon is out lands the player back on the screen that Digimon is drawn
-/// on.
+/// on. Both used to be pushed from the map strip's two ends; US-210 deleted that row and left the
+/// grid as the one way out of the room.
 struct PartyView: View {
     let rows: [PartyRow]
 

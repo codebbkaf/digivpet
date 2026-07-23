@@ -1670,15 +1670,18 @@ final class MainScreenModel: ObservableObject {
         MapListRow.rows(in: maps, progress: profile)
     }
 
-    /// What the main screen's map strip says (US-120): the selected map's name and counter, or the
-    /// first map's as a prompt when the player has chosen nowhere.
+    /// Where the Digimon is adventuring and how far across it it has walked (US-120): the selected
+    /// map, or the first map as a prompt when the player has chosen nowhere.
+    ///
+    /// Named for the strip it once fed, which US-210 deleted; what reads it now is the map-step
+    /// `DashBar` in `MainReadingBars`, off `recordedSteps`/`totalSteps`.
     ///
     /// Computed off the same injected catalog and the same `PlayerProfile` as `mapRows`, and for the
     /// same reason: both are already observable, so a step credited to the selected map moves the
-    /// strip and the list together rather than through two published copies that can drift.
+    /// bar and the list together rather than through two published copies that can drift.
     ///
-    /// Nil only for an empty catalog, which the shipped file cannot be — the strip simply is not
-    /// drawn, rather than drawing a row with nothing in it.
+    /// Nil only for an empty catalog, which the shipped file cannot be — the bar simply is not
+    /// drawn, rather than drawing a reading with nothing behind it.
     var mapStrip: MapStrip? {
         MapStrip.make(in: maps, progress: profile)
     }

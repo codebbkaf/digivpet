@@ -6567,3 +6567,58 @@ The thirty, `Perfect -> Ultimate`:
   shots (multi-second spinner), then `sips -c H W --cropOffset Y X` + `sips -Z 500` to eyeball a 30pt
   glyph. The action grid's row 1 sits at roughly y=350, x=210 in a 46mm screenshot.
 ---
+
+## 2026-07-24 - US-210 (The map name and Party button move off the sprite area into the grid)
+- The map strip is deleted. `ContentView`'s `if let strip = model.mapStrip { MapStripView(...) }` block
+  is gone, and with it the map's name floating under the sprite and the small `person.2.fill` beside
+  it. US-197 had already given the action grid its own Map and Party circles, so this row was a second
+  door to a screen the grid already opens plus a label nothing is gated on; the line of height it cost
+  goes back to the Digimon.
+- `Sources/MapStripView.swift` -> `Sources/MapStrip.swift` (git mv; `project.yml` globs `Sources`, so
+  only a re-`xcodegen generate` was needed). The VIEW layer is deleted — `MapStripView`,
+  `MapStripLayout`, `MapStripMarks`, and `MapStrip.symbol` / `MapStrip.accessibilityLabel`, which only
+  the view read — and `import SwiftUI` became `import Foundation`. The VALUE survives because
+  `MainReadingBars` fills the map-step `DashBar` from `strip.recordedSteps`/`strip.totalSteps`.
+- `mapName` stays on `MapStrip`, undrawn, documented for the reason `progressText` already was (US-196
+  left that one behind the same way): it is the single place this feature decides which map a save with
+  no selection is invited towards (US-120 AC6), and what `MapStripTests` pins that rule against. AC5's
+  "no dead mapName plumbing" is read as the view plumbing — the parameter chain — and that is all gone.
+- `MainReadingBars` no longer takes `mapName`. Its map bar was the second place the name appeared under
+  the sprite (spoken, as "Adventuring in Grassland"), so AC1's "remove the `mapName:` reading from that
+  area" takes it too; the bar now speaks `MainReadingBarLayout.mapLabel` = "Map progress", which names
+  the READING. Which map you are on is read off the map list.
+- Stale comments repointed in `PartyView` ("pushed from the map strip's trailing button" -> "from the
+  action grid's Party button"), `MainScreenModel.mapStrip`, and two `MapStripLayout`-referencing
+  "named rather than left as literals" asides in `ContentView`/`PartyView`.
+- Files: Sources/MapStrip.swift (renamed), Sources/ContentView.swift, Sources/MainReadingBars.swift,
+  Sources/MainScreenModel.swift, Sources/PartyView.swift, Tests/MapStripTests.swift.
+- Verified: build green; FULL suite **2707 tests, 0 failures** (-5 view-layer tests, +2). AC6
+  screenshotted on 46mm (/tmp/us210/s3.png): "Agumon · Child" runs straight into the two reading bars —
+  no map name, no party glyph — and the teal two-people button appears only in grid row 2.
+- Tests: deleted `testTheTravellingAndPromptStatesUseDifferentGlyphs`,
+  `testTheTwoStatesReadDifferentlyToVoiceOver` and the whole `MapStripLayoutTests` class (3 tests) with
+  the code they described. Added `MapStripRemovalTests.testTheMapStepBarNoLongerNamesTheMap` (the bar's
+  spoken label contains NO shipped map's `displayName` — absence made assertable) and
+  `testTheGridsMapAndPartyButtonsCarryTheStripsTwoDestinations`, which builds `ActionControls` with the
+  exact `mapDestination`/`partyDestination` expressions `ContentView` uses, then calls
+  `list.select("second")` and `party.activate(mate)` and asserts the model moved.
+
+**Learnings for future iterations:**
+- **A destination closure is testable: call it and drive the view it returns.** `controls
+  .mapDestination()` hands back a real `MapListView` whose `select` is the model's `selectMap`, and
+  `controls.partyDestination().activate(row)` really takes a Digimon out. That is how "no navigation
+  is lost" stops being a screenshot-only claim — build the destinations with the SAME expressions
+  `ContentView` passes, or the test proves nothing about the app.
+- **Deleting a view leaves its value behind, and that is not automatically dead code.** `MapStrip` is
+  now a pure reading with no strip; `mapName`/`progressText` are undrawn but are where the feature's
+  wording and its "which map when none is chosen" rule live. The rule this codebase follows: delete a
+  helper when its last CALLER goes (US-209), keep a value property when it is still the single place a
+  DECISION is made — and say which, in the doc comment, so the next sweep does not re-litigate it.
+- **A removal story's test is the thing that must now be ABSENT, restated as something assertable.**
+  "No map name under the sprite" is a screenshot; "the map bar's VoiceOver label contains no shipped
+  map's displayName" is a test, and it catches the regression that a screenshot would not (a name that
+  is spoken but not drawn).
+- **`xcrun simctl io <device> screenshot` silently writes nothing if `DEVELOPER_DIR` is not exported
+  in THAT shell invocation.** Each Bash call starts a fresh shell, so a screenshot loop in a second
+  command needs its own `export` — the failure is a zero-file directory, not an error message.
+---
