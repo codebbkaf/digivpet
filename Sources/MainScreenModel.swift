@@ -2020,6 +2020,20 @@ final class MainScreenModel: ObservableObject {
         let report = BattleEngine.resolve(playerPower: matchup.playerPower,
                                           opponentPower: matchup.opponentPower,
                                           using: &generator)
+        // The win's meat drop (US-175), rolled off the SAME generator the fight was resolved from so
+        // the seed pins it too, and credited to the global larder here rather than in `finishBattle`
+        // because this is the only half with a generator in hand. Zero on a loss and zero at a full
+        // larder — `MeatReward` clamps to the room under the cap, so the number banked below and the
+        // number the result screen shows are one value. The credit is in-memory until `finishBattle`
+        // saves alongside the win/loss record, exactly as the energy cost is.
+        var meatGained = 0
+        if report.playerWon, let profile {
+            let config = ConsumptionConfig.bundled
+            meatGained = MeatReward.rolled(from: config.meatPerBattleWin,
+                                           current: profile.meat, cap: config.meatCap,
+                                           using: &generator)
+            profile.meat += meatGained
+        }
         // Each side's attack identity (US-070), resolved here where both ids and their nodes are in
         // hand, so the pure core answers without a second roster lookup. The opponent's node may be
         // a roster-only one promoted by `MapOpponentBand` since US-122 — it carries an empty line,
@@ -2036,7 +2050,8 @@ final class MainScreenModel: ObservableObject {
                                      line: playerNode?.line, stage: playerNode?.stage),
             opponentMove: catalog.move(forId: round.opponent.node.id,
                                        line: round.opponent.node.line, stage: round.opponent.node.stage),
-            matchup: matchup
+            matchup: matchup,
+            meatGained: meatGained
         )
 
         pendingBattle = bout

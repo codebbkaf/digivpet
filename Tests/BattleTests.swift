@@ -797,6 +797,84 @@ final class BattleApplyTests: XCTestCase {
         XCTAssertEqual(model.state?.battleWins, 0)
         XCTAssertEqual(model.state?.battleLosses, 0)
     }
+
+    /// US-175 AC1/AC3 through the shipped path: a WIN credits meat from the config range to the
+    /// global larder, in range and never above the cap, and the bout carries the same figure for the
+    /// result screen. Fought on the first seed the strong Hero actually wins on, so a real fight —
+    /// not a hand-built report — drives the credit.
+    func testAWonBattleCreditsMeatWithinRangeToTheGlobalLarder() async throws {
+        let config = ConsumptionConfig.bundled
+        for seed in UInt64(1)...50 {
+            let (model, _) = try makeModel(storeName: "MeatWin\(seed)", strength: 40, seed: seed)
+            await model.start()
+            let before = model.meat
+            model.battle()
+            let bout = try XCTUnwrap(model.finishBattleRound(.good))
+            guard bout.report.playerWon else { continue }
+
+            XCTAssertGreaterThanOrEqual(bout.meatGained, config.meatPerBattleWin.min,
+                                        "the drop is at least the range minimum")
+            XCTAssertLessThanOrEqual(bout.meatGained, config.meatPerBattleWin.max,
+                                     "and at most its maximum")
+            XCTAssertEqual(model.meat, before + bout.meatGained,
+                           "the larder rose by exactly what the bout reports")
+            XCTAssertLessThanOrEqual(model.meat, config.meatCap, "never above the cap")
+
+            // It survives the dismissal that saves the win, so the credited meat is not undone.
+            model.finishBattle()
+            XCTAssertEqual(model.meat, before + bout.meatGained)
+            return
+        }
+        XCTFail("no winning seed found to exercise the meat drop")
+    }
+
+    /// US-175: a LOSS drops no meat — the currency is the reward for winning, not for fighting.
+    func testALostBattleDropsNoMeat() async throws {
+        let (model, _) = try makeModel(strength: 0, seed: 3)
+        await model.start()
+        model.battle()
+        let bout = try XCTUnwrap(model.finishBattleRound(.good))
+        XCTAssertFalse(bout.report.playerWon, "this fixture is meant to be a loss")
+        XCTAssertEqual(bout.meatGained, 0, "a loss banks nothing")
+        XCTAssertEqual(model.meat, 0)
+    }
+}
+
+/// US-175 — the meat-drop arithmetic, tested pure so the range and cap rules hold without a fight.
+final class MeatRewardTests: XCTestCase {
+    /// An uncapped larder banks exactly the roll, and the roll is always in `min...max`.
+    func testUncappedDropIsTheRollWithinRange() {
+        for seed in UInt64(0)..<300 {
+            var generator = SeededGenerator(seed: seed)
+            let drop = MeatReward.rolled(from: MeatRange(min: 1, max: 3),
+                                         current: 0, cap: 100, using: &generator)
+            XCTAssertTrue((1...3).contains(drop), "the drop \(drop) is out of the range")
+        }
+    }
+
+    /// The room under the cap is the ceiling on the drop: a full larder banks nothing, and a larder
+    /// one short of full banks at most one however high the roll is.
+    func testDropIsClampedToTheRoomUnderTheCap() {
+        var full = SeededGenerator(seed: 7)
+        XCTAssertEqual(MeatReward.rolled(from: MeatRange(min: 1, max: 3),
+                                         current: 20, cap: 20, using: &full), 0,
+                       "a full larder drops nothing")
+
+        var oneShort = SeededGenerator(seed: 7)
+        XCTAssertEqual(MeatReward.rolled(from: MeatRange(min: 3, max: 3),
+                                         current: 19, cap: 20, using: &oneShort), 1,
+                       "a roll of 3 with one unit of room banks one")
+
+        // Never above the cap, over many rolls at every fill level near it.
+        for current in 0...20 {
+            for seed in UInt64(0)..<50 {
+                var g = SeededGenerator(seed: seed)
+                let drop = MeatReward.rolled(from: MeatRange(min: 1, max: 3),
+                                             current: current, cap: 20, using: &g)
+                XCTAssertLessThanOrEqual(current + drop, 20)
+            }
+        }
+    }
 }
 
 /// US-091 — the pacing of an exchange. All four of these are arithmetic on the shipped constants, so

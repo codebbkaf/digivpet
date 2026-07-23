@@ -27,6 +27,11 @@ struct BattleBout: Equatable {
     /// only cares about the frames.
     var matchup: BattleMatchup?
 
+    /// How much meat this win dropped into the global larder (US-175), already clamped to the cap.
+    /// Zero for a loss and for any bout built without one — a preview or a test that only cares
+    /// about the frames — so the result screen's meat line is present exactly when a win banked meat.
+    var meatGained: Int = 0
+
     /// The attacking side's move, so the projectile is tinted and shaped by whoever is swinging.
     func move(for side: BattleSide) -> Move {
         side == .player ? playerMove : opponentMove
@@ -384,6 +389,16 @@ struct BattleView: View {
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.7)
                 .lineLimit(2)
+
+            // The meat this win dropped into the larder (US-175), shown only when a win actually
+            // banked some — a loss and a win at a full larder both bank nothing, and a "+0" would
+            // read as a reward that never came. Orange fork-and-knife to match the meat DashBar and
+            // the Feed button it will buy a meal at.
+            if bout.meatGained > 0 {
+                Label("+\(bout.meatGained)", systemImage: "fork.knife")
+                    .font(.system(size: 10, weight: .semibold))
+                    .foregroundStyle(.orange)
+            }
 
             breakdown
 

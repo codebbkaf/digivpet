@@ -5206,3 +5206,31 @@ The thirty, `Perfect -> Ultimate`:
     the model is the pattern to copy; per-Digimon charges live on GameState, not the profile.
 - REMAINS: US-175..US-192, US-167..US-169 (orphan sweep tail). US-175 (battle wins drop meat) is
   next by priority and is the earning half of this larder.
+
+## 2026-07-23 - US-175 (Battle wins drop meat)
+- MeatReward.rolled (Sources/ConsumptionConfig.swift): rolls meatPerBattleWin off an injected
+  generator, clamps to max(0, cap - current). The banked value and the displayed value are one thing.
+- MainScreenModel.finishBattleRound: on a WIN only, rolls from the SAME generator the fight was
+  resolved from (the only half with a generator in hand) and credits profile.meat; the in-memory
+  credit persists on finishBattle's existing save beside recordBattle, exactly as the energy cost does.
+- BattleBout gains meatGained (default 0); BattleView result screen shows orange fork-and-knife '+N'
+  only when >0.
+- Tests added to Tests/BattleTests.swift (reused BattleApplyTests.makeModel/fixtureGraph, so no new
+  file and no xcodegen-glob trap): MeatRewardTests (pure range/cap arithmetic) +
+  testAWonBattleCreditsMeatWithinRangeToTheGlobalLarder (shipped path, first winning seed) +
+  testALostBattleDropsNoMeat.
+- Build green, 2478 tests, 0 failures.
+- **Learnings for future iterations:**
+  - "Winning (or completing)" in the AC was read as WIN-only, matching the title "Battle wins drop
+    meat" and the reward framing; a loss dropping meat would make losing free. If US-176+ expect
+    completion-credit, revisit finishBattleRound's `if report.playerWon`.
+  - The battle flow has TWO halves: battle() charges energy + picks opponent + sets pendingBattleRound;
+    finishBattleRound(result) resolves the report, builds BattleBout, sets pendingBattle. The generator
+    lives on PendingBattleRound and is only alive in finishBattleRound - anything seeded off the fight
+    (meat, future drops) must roll there, not in finishBattle.
+  - To exercise a WIN through the model without guessing a seed: loop seeds with a strong Digimon
+    (strength 40) and `guard bout.report.playerWon else { continue }`. The known loss fixture is
+    strength 0, seed 3.
+  - profile.meat is surfaced by MainScreenModel.meat / the ContentView DashBar (US-174) and spent by
+    FeedAction; US-175 is the earner that closes the walk->battle->feed loop.
+---

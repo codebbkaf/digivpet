@@ -729,8 +729,8 @@
         "Typecheck passes"
       ],
       "priority": 36,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MeatReward.rolled (ConsumptionConfig.swift) rolls meatPerBattleWin off an injected generator and clamps to max(0, cap - current), so the number banked and the number shown are ONE value that can never exceed meatCap. MainScreenModel.finishBattleRound credits it to profile.meat on a WIN only (title is 'Battle wins drop meat'; a loss banks nothing), rolled from the SAME generator the fight was resolved from so the seed pins it too - this is the only half with a generator in hand, and the in-memory credit rides to disk on finishBattle's existing save beside recordBattle, exactly as the energy cost does. BattleBout gains meatGained (default 0), and BattleView's result screen shows an orange fork-and-knife '+N' only when >0 - a loss or a win at a full larder shows nothing rather than a '+0' that reads as a reward that never came. Build green, 2478 tests, 0 failures. NEW TESTS: MeatRewardTests pins the pure arithmetic (uncapped drop is the roll in 1...3 over 300 seeds; a full larder drops 0; one unit of room caps a roll of 3 at 1; current+drop never exceeds 20 over every fill level x50 seeds). testAWonBattleCreditsMeatWithinRangeToTheGlobalLarder drives the SHIPPED path - battle() -> finishBattleRound(.good) on the first of 50 seeds the strong Hero actually wins - and asserts bout.meatGained in [1,3], model.meat rose by exactly that, never above cap, and it survives finishBattle's save. testALostBattleDropsNoMeat pins the loss fixture (strength 0, seed 3) banks 0. Shipped config: meatPerBattleWin {1,3}, meatCap 20. Added to BattleTests.swift (reusing BattleApplyTests.makeModel/fixtureGraph) rather than a new file, so no xcodegen-glob trap. NOTE for US-176/US-177: this reads profile.meat, which the DashBar in ContentView already shows (US-174); a Feed spends it (FeedAction). The walk->battle->feed loop closes with this."
     },
     {
       "id": "US-176",

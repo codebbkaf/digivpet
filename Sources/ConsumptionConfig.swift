@@ -8,6 +8,22 @@ struct MeatRange: Codable, Equatable {
     let max: Int
 }
 
+/// Rolls a battle-win meat drop and returns how much can actually be banked (US-175).
+///
+/// The drop is a whole number in `range.min...range.max` inclusive, drawn from an injected
+/// generator so a test pins the roll without waiting on real randomness. What is RETURNED is that
+/// drop clamped to the room left under `cap` — `max(0, cap - current)` — so a win at a full larder
+/// drops nothing rather than pushing the pool past its ceiling. The number shown on the result
+/// screen and the number added to the pool are this ONE value, so they can never disagree.
+enum MeatReward {
+    static func rolled<G: RandomNumberGenerator>(
+        from range: MeatRange, current: Int, cap: Int, using generator: inout G
+    ) -> Int {
+        let drop = Int.random(in: range.min...range.max, using: &generator)
+        return min(drop, max(0, cap - current))
+    }
+}
+
 /// The agility dodge / hit-rate formula's constants (US-186).
 ///
 /// The chance an attack LANDS is `base` when the two combatants have equal Agility, adjusted by
