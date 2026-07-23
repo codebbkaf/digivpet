@@ -102,6 +102,18 @@ struct ConsumptionConfig: Codable, Equatable {
     func stats(for stage: Stage) -> StageStats? {
         stageStats[stage.rawValue]
     }
+
+    /// The base battle stats for a roster entry, or nil when it never fights (US-187).
+    ///
+    /// Nil for a `dexOnly` entry — an idle-only Digimon is never playable — and nil for a Digitama,
+    /// which resolves through `stats(for:)` returning nil for the one stage the table omits (an egg
+    /// has no combat stats). Every other playable Digimon reads its HP/Attack/Agility straight off
+    /// its stage's row, so a Perfect out-stats a Child by construction and no per-Digimon table is
+    /// needed to give all 868 playable entries all three stats.
+    func stats(for entry: RosterEntry) -> StageStats? {
+        guard !entry.dexOnly else { return nil }
+        return stats(for: entry.stage)
+    }
 }
 
 extension ConsumptionConfig {

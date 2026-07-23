@@ -258,6 +258,10 @@ struct DexDetailView: View {
     /// them throwing something.
     var roster: Roster = .bundled
 
+    /// Where the stat block's HP/Attack/Agility come from (US-187). Resolved off the entry's stage,
+    /// so the same injected config a test hands `DexStatBars` is what the sheet draws.
+    var config: ConsumptionConfig = .bundled
+
     /// The totals the hints are resolved against. `.unknown` shows every hint at its coldest,
     /// which is what a preview or a grid with no model gets.
     var context: ConditionContext = .unknown
@@ -378,6 +382,8 @@ struct DexDetailView: View {
 
                 attackRow
 
+                statBars
+
                 evolutions
 
                 lineTreeLink
@@ -449,6 +455,17 @@ struct DexDetailView: View {
     private var attackRow: some View {
         if let move = DexMoveRow.move(for: row, in: graph, roster: roster, catalog: moves) {
             MoveRow(move: move)
+        }
+    }
+
+    /// This Digimon's HP, Attack and Agility as three labelled dash bars (US-187) — the last of the
+    /// "what is this in a fight" identity block, under the attack it throws. Absent entirely for an
+    /// unmet entry, a `dexOnly` one and a Digitama, all of which have no combat stats to show; see
+    /// `DexStatBars.stats(for:)`.
+    @ViewBuilder
+    private var statBars: some View {
+        if let stats = DexStatBars.stats(for: row, roster: roster, config: config) {
+            StatBarsRow(stats: stats)
         }
     }
 

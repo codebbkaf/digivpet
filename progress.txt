@@ -5491,3 +5491,49 @@ The thirty, `Perfect -> Ultimate`:
     If a future test wants to pin one of those eggs dropping, its context must satisfy the NEW window
     (e.g. battlesLifetime for care.battleCount, not a stage total).
 ---
+
+## 2026-07-23 - US-187 (Every Digimon has HP, Attack and Agility)
+- The per-stage base stat table (`StageStats` struct + `stageStats` in ConsumptionConfig.swift and
+  Resources/consumption.json) was already SHIPPED by US-170's groundwork and pinned by
+  ConsumptionConfigTests (covers every playable stage, strictly climbing base up the ladder). So the
+  config half of this story needed nothing new. This story added the per-Digimon resolution, the UI,
+  and the roster-wide guarantee.
+- Sources/ConsumptionConfig.swift: added `stats(for entry: RosterEntry) -> StageStats?` — nil for a
+  `dexOnly` entry (never playable) and nil for a Digitama (an egg has no combat stats, resolves
+  through `stats(for: .digitama)` returning nil since the table omits that one stage), the stage row
+  otherwise. So all 868 playable entries get all three stats off their stage with no companion file,
+  and a Perfect out-stats a Child by construction.
+- Sources/StatBarsView.swift (new): `StatBarsLayout` (budget), `BattleStat` enum (hp/attack/agility
+  → value/symbol/tint/accessibilityName), `DexStatBars.stats(for:roster:config:)` resolver (nil for
+  undiscovered/dexOnly/Digitama, mirroring DexMoveRow's discovery gate), and `StatBarsRow` view —
+  three stacked labelled DashBars (heart red / burst orange / hare green), each `filled==total==base`
+  so the bar length is the stat's magnitude, NO numbers drawn.
+- Sources/DexView.swift: DexDetailView gained a `config: ConsumptionConfig = .bundled` injectable and
+  a `statBars` @ViewBuilder placed after `attackRow` (the "what is this in a fight" identity block),
+  before the Evolves-into divider.
+- Tests/DexStatBarsTests.swift (new, 7 tests): AC3 whole-roster coverage (every non-dexOnly,
+  non-Digitama entry resolves all three stats, each >0; guarded with a >700 battler floor so it can't
+  pass vacuously), eggs/dexOnly resolve nil, sheet presence == discovered&battler over the whole
+  roster, three labelled stats, layout budget.
+- VERIFIED: `xcodebuild build` green; full `xcodebuild test` on Series 11 (46mm) => 2553 tests, 0
+  failures. AC4 screenshot: rendered the real StatBarsRow for Child (Agumon 5/3/3) and Perfect
+  (9/7/5) via a gated ImageRenderer probe (RENDER_STATBARS) -> /tmp/us187/agumon_detail.png; showed
+  three labelled dash bars, no numbers, Perfect visibly longer than Child. Probe deleted after, not
+  shipped.
+- **Learnings for future iterations:**
+  - **The battle-stat CONFIG (StageStats/stageStats) already ships from US-170 and is tested by
+    ConsumptionConfigTests.** US-188..US-192 (HP bar in battle, agility dodge, element damage, train
+    caps) should READ `ConsumptionConfig.stats(for: entry)` / `stats(for: stage)`, not re-author a
+    table. `trainingCap` is already on `StageStats` waiting for US-192.
+  - **`ConsumptionConfig.stats(for: RosterEntry)` is the one place that knows a Digimon's base
+    stats** — dexOnly and Digitama both resolve nil there. Anything that needs a battler's stats
+    should go through it so the "eggs/idle-only never fight" rule stays in one place.
+  - **The `-dexDemo` screenshot path is currently CRASHING on a freshly-erased sim** — SwiftData
+    `ModelContext.reset` fatal in `DexModel.loadHealthReadings` -> `GameState.stageMetricTotals`
+    (reads a GameState off a reset context). Pre-existing, unrelated to stat bars. To screenshot a
+    Dex detail view, the reliable route is the gated ImageRenderer probe (US-171 DashBar pattern):
+    render the sub-views (name + StatBarsRow) in a plain VStack, NOT the whole DexDetailView — its
+    body is a `ScrollView`, and ImageRenderer renders a ScrollView as an all-black blank.
+  - `BattleStat` is a plain (no-associated-value) enum, so it's Hashable for free — `ForEach(...,
+    id: \.self)` needs no manual conformance.
+---
