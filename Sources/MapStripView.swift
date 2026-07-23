@@ -16,7 +16,17 @@ struct MapStrip: Equatable {
     /// space, no abbreviation, no rounding up and no grouping separator. The same string on both
     /// screens is the point — a figure that reads `1222 / 25000` in the list and `1.2k` here would
     /// be two answers to one question.
+    ///
+    /// No longer drawn on the strip itself since US-196 moved the step reading into the map-step
+    /// `DashBar` (`MainReadingBars`); kept because it is still the strip's single spelled counter and
+    /// what `MapStripTests` pins the counter's exact wording against.
     let progressText: String
+
+    /// The floored step counter and the map's length, the raw numbers the map-step `DashBar` fills
+    /// (US-196). The same values `progressText` spells, exposed as integers so `MainReadingBars` can
+    /// draw them as a proportional bar rather than re-parse the string.
+    let recordedSteps: Int
+    let totalSteps: Int
 
     /// The map this strip is about, or nil when the player has chosen nowhere yet. What the strip's
     /// own tap does NOT depend on — the list is always reachable — but what the label means does.
@@ -78,6 +88,8 @@ extension MapStrip {
             // Floored, never rounded, for `MapListRow.recordedSteps`' reason: a counter must not
             // read as a step the player has not taken.
             progressText: "\(recorded) / \(map.totalSteps)",
+            recordedSteps: recorded,
+            totalSteps: map.totalSteps,
             mapId: selected?.id,
             isPrompt: selected == nil
         )
@@ -136,30 +148,27 @@ struct MapStripView<Destination: View, Party: View>: View {
         HStack(spacing: 4) {
             NavigationLink(destination: destination) {
                 HStack(spacing: 3) {
-                    Image(systemName: strip.symbol)
-                        .font(.system(size: MapStripLayout.iconSize))
-                        .foregroundStyle(strip.isPrompt ? Color.secondary : Color.orange)
-
+                    // Just the map's name now (US-196): the `figure.walk` travelling icon and the
+                    // "recorded / total" step-count wording both left the strip, because the step
+                    // reading moved into the map-step `DashBar` below (`MainReadingBars`) and a
+                    // counter spelled in two places is two answers to one question. The name still
+                    // carries the two states in its colour — orange when adventuring, secondary as a
+                    // prompt — and to VoiceOver through `accessibilityLabel`.
                     Text(strip.mapName)
                         .font(.system(size: MapStripLayout.fontSize, weight: .semibold))
                         .foregroundStyle(strip.isPrompt ? Color.secondary : Color.primary)
 
-                    Text(strip.progressText)
-                        .font(.system(size: MapStripLayout.fontSize).monospacedDigit())
-                        .foregroundStyle(.secondary)
-
                     Spacer(minLength: 0)
                 }
                 // One line, shrinking rather than wrapping: a second line here would come straight
-                // out of the Digimon, and the widest this row ever reads — "Factory Town" beside
-                // "50000 / 50000" — is what the 41mm screenshot was taken to settle.
+                // out of the Digimon, and the widest this row ever reads — "Factory Town" — is what
+                // the 41mm screenshot was taken to settle.
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(strip.accessibilityLabel)
-            .accessibilityValue(strip.progressText)
 
             NavigationLink(destination: party) {
                 Image(systemName: MapStripMarks.partySymbol)

@@ -5857,3 +5857,45 @@ The thirty, `Perfect -> Ultimate`:
   - destinationOut + compositingGroup is the clean way to draw a "divider that shows the background"
     in a segmented bar without hardcoding a background colour.
 ---
+
+## 2026-07-24 - US-196: Energy bars leave the screen; map-step and Zz dash bars stay
+- Replaced the three STEP/KCAL/EXER energy bars on the main screen with two stacked DashBar lines.
+  - New Sources/MainReadingBars.swift: `MainReadingBars` draws line 1 = map steps (green, figure.walk
+    leading label) and line 2 = Zz sleep (secondary). `MainStepBar.filled(recorded:total:dashes:)` is
+    free-standing testable arithmetic — a map is tens of thousands of steps across, so the reading is
+    the fraction walked drawn over a FIXED 16 dashes (matched to `sleepHoursDisplayCap` so the two
+    lines are the same length), floored so it never reads a step early, clamped so an overshoot
+    (finished maps are not capped at totalSteps) can't draw a phantom dash. `MainReadingBarLayout`
+    holds the sizes (label width 21 matches EnergyBarLayout.nameWidth, barHeight 5 matches the
+    currency bars).
+  - Sources/ContentView.swift: the `if let progress = model.energyProgress { EnergyBarsView(...) }`
+    block became `if let strip = model.mapStrip, model.state != nil { MainReadingBars(...) }`. Gated on
+    state like the currency row so no lone bar draws pre-hatch; map numbers come from the same
+    MapStrip the strip reads, so a credited step moves both.
+  - Sources/MapStripView.swift: MapStrip gained `recordedSteps`/`totalSteps` Ints (the numbers
+    progressText spelled). The strip view dropped `Image(systemName: strip.symbol)` (the figure.walk
+    travelling icon) AND the `Text(strip.progressText)` step count — the strip is now just the map
+    name (colour still carries prompt vs travelling) + party button. Removed the now-redundant
+    `.accessibilityValue(strip.progressText)`.
+- EnergyBarsView.swift is UNCHANGED and its `EnergyBarsView` view struct is now unused by the app, but
+  the file stays: `EnergyProgress`, `EnergyGoal`, `EnergyBarLayout`, the `EvolutionNode.energyProgress`
+  extension and `model.energyProgress` are all still live model+test API (EnergyBarsTests, the detail
+  view's sleep bar). Deleting only the view struct would orphan its private EnergyBarRow/SleepDashBarRow.
+- Files: Sources/MainReadingBars.swift (new), Sources/ContentView.swift, Sources/MapStripView.swift,
+  Tests/MainReadingBarsTests.swift (new, 8 tests), prd.json, progress.txt.
+- Verified: build green (Series 11 46mm); full suite 2605 pass (was 2598). Screenshots at
+  /tmp/us196/{main,desert,cyber}.png + zoom /tmp/us196/{bars,d,c}_big.png show exactly two dash-bar
+  lines above the action area (map walk bar, then Zz), the strip reading just "Grassland"/"Desert"/
+  "Cyberpunk" with no walk icon and no count, and no STEP/KCAL/EXER bars anywhere.
+- **Learnings for future iterations:**
+  - The map-step bar reads FULL in every -mapDemo screenshot (grassland 3000, desert 16000, cyberpunk
+    50000 all fill 16/16), because with -healthAnswered the sim credits a large synthetic STEP total to
+    the currently-selected map via US-118's MapStepCreditor. It is NOT an always-full bug: the Zz bar,
+    the same DashBar component with a different value, renders 6/16 in the same shot, and the arithmetic
+    (empty/half/full/overshoot) plus an end-to-end MapStrip.make→bar no-swap check are pinned in
+    MainReadingBarsTests. If a future story needs a PARTIAL map-bar screenshot, no shipped map is large
+    enough to out-scale the sim's step credit — you'd need a demo flag that seeds recorded < total.
+  - A `DashBar`'s own accessibilityLabel is only "N of M"; wrap it (as MainReadingBars' ReadingRow does
+    with accessibilityElement(.ignore) + label/value) whenever the bar needs a spoken meaning.
+  - `MainReadingBarLayout.dashes` is deliberately == `MainScreenModel.sleepHoursDisplayCap` (16) and a
+    test pins the equality — the two reading lines must stay the same length to read as a pair.

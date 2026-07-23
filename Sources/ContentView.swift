@@ -613,9 +613,18 @@ struct ContentView: View {
                     })
                 }
 
-                if let progress = model.energyProgress {
-                    EnergyBarsView(progress: progress, dominant: model.state?.dominantEnergyType,
-                                   sleepHours: model.sleepHours, sleepHoursTotal: model.sleepHoursCap)
+                // The two readings that still matter after US-196 retired the STEP/KCAL/EXER energy
+                // bars: how far the active Digimon has walked the current map, and how much it has
+                // slept — each a DashBar (US-171), stacked as exactly two lines above the action
+                // area. Steps, calories and exercise left the screen because they are already spent
+                // into train points and battle time; map progress and sleep are what a glance at the
+                // raising screen still needs. Gated on `state` like the currency row below, so no lone
+                // bar draws before a Digimon is out; the map numbers come from the same `MapStrip`
+                // the strip above reads, so a step credited to the map moves both together.
+                if let strip = model.mapStrip, model.state != nil {
+                    MainReadingBars(mapRecorded: strip.recordedSteps, mapTotal: strip.totalSteps,
+                                    mapName: strip.mapName,
+                                    sleepHours: model.sleepHours, sleepTotal: model.sleepHoursCap)
                 }
 
                 if model.state != nil {
