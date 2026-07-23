@@ -1532,8 +1532,8 @@
         "Build green; existing tests pass"
       ],
       "priority": 78,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Routed DexModel.makeStore to the app-wide store via new MainScreenModel.sharedStore(); ContentView now builds DexView(model: DexModel(makeStore: model.sharedStore)) at all three sites. Both DexModel.load and .loadHealthReadings now use one ModelContext, so no second GameStore opens on the live file (DigiVPetApp GameSession invariant holds). The 17:41 crash report confirmed the bug: DexModel.loadHealthReadings -> ConditionContext.init -> GameState.stageMetricTotals getter -> _assertionFailure (use-after-reset). Added SideScreenStoreError.notOpen so the Dex degrades gracefully if opened before start(). Regression test testTheDexSharesTheGameStoreSoAStateStaysValidAfterWork. Build green; 2598 tests pass; simulator run with -dexDemo -healthAnswered stayed alive with no new crash report."
     },
     {
       "id": "US-194",

@@ -230,6 +230,11 @@ final class DexModel: ObservableObject {
 
     private static let log = Logger(subsystem: "com.digivpet.DigiVPet", category: "dex")
 
+    /// - Parameter makeStore: how the Dex reaches the saved game. THE LIVE APP MUST PASS
+    ///   `MainScreenModel.sharedStore` (US-193): the default opens a SECOND `GameStore` on the same
+    ///   file, and two live contexts invalidate each other's `GameState` records on reset — the
+    ///   `ModelContext.reset` crash. The default survives only for the `#Preview` and for tests,
+    ///   which each run against their own store, never the live game's.
     init(
         roster: Roster = .bundled,
         graph: EvolutionGraph = .bundled,

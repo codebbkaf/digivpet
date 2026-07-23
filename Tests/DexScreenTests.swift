@@ -492,6 +492,39 @@ final class DexModelTests: XCTestCase {
         XCTAssertEqual(model.totalCount, Roster.bundled.entries.count)
         XCTAssertEqual(model.discoveredCount, 0)
     }
+
+    // MARK: - US-193: the Dex reuses the game's ONE store, never opening a second
+
+    /// The crash this story fixes: `DexModel` used to default `makeStore` to `{ try GameStore() }`,
+    /// opening a SECOND `ModelContext` on the live file — and a `GameState` fetched through one is
+    /// invalidated when the other resets (the `ModelContext.reset` fatal error). The app now hands
+    /// the Dex the main screen's ONE store (`MainScreenModel.sharedStore`), so a state read through
+    /// that shared context stays live after the game does normal work on it.
+    func testTheDexSharesTheGameStoreSoAStateStaysValidAfterWork() throws {
+        // The one store the app opens for the game.
+        let store = try makeStore()
+        let state = try store.loadOrCreate(digitamaId: "agu_digitama", now: Self.met)
+
+        // The Dex reuses THAT store, exactly as ContentView now wires it via `sharedStore`, rather
+        // than constructing its own second `GameStore` on the same file.
+        let dex = DexModel(makeStore: { store })
+        dex.load(now: Self.met)
+        XCTAssertTrue(dex.isLoaded)
+
+        // The main screen does normal work through the same context and saves.
+        store.recordDiscovery(id: "agumon", now: Self.met)
+        try store.save()
+
+        // The state the game holds is still live — its fields read back rather than trapping — and
+        // it is the same record, not one orphaned by a reset.
+        XCTAssertFalse(state.isDead)
+        XCTAssertEqual(try store.savedState()?.persistentModelID, state.persistentModelID)
+
+        // Re-reading the Dex through the shared store still sees the game's discoveries, proving the
+        // two are reading one context and not two copies drifting apart.
+        dex.load(now: Self.met)
+        XCTAssertTrue(dex.rows.first { $0.id == "agumon" }?.isDiscovered ?? false)
+    }
 }
 
 /// US-064: what the detail sheet lists under "Evolves into".

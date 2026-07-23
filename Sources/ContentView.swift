@@ -307,7 +307,11 @@ struct ContentView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     NavigationLink {
-                        DexView(model: DexModel())
+                        // The DEX REUSES THE GAME'S ONE STORE (US-193), never opening a second
+                        // `GameStore` on the same file: two live contexts invalidate each other's
+                        // records on reset, the `ModelContext.reset` crash. See
+                        // `MainScreenModel.sharedStore`.
+                        DexView(model: DexModel(makeStore: model.sharedStore))
                     } label: {
                         Label("Dex", systemImage: "book")
                     }
@@ -321,7 +325,8 @@ struct ContentView: View {
             // Debug-only: `simctl` cannot tap the toolbar button, so the Dex is unscreenshottable
             // without a way to push it from the launch command. Compiled out of release builds.
             .navigationDestination(isPresented: $showsDexDemo) {
-                DexView(model: DexModel())
+                // As above (US-193): the demo Dex reads the live game's store, not a second one.
+                DexView(model: DexModel(makeStore: model.sharedStore))
             }
             // Same reason, and one more: `simctl` cannot add a complication to a watch face either,
             // so this pushes the extension's own views inside the app where a screenshot can reach

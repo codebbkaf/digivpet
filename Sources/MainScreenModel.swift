@@ -5,6 +5,14 @@ import SwiftUI
 import WatchKit
 #endif
 
+/// Something a side screen asked of the main model that it cannot yet answer.
+enum SideScreenStoreError: Error, Equatable {
+    /// `sharedStore()` was called before `start()` opened the store. Unreachable from the app — the
+    /// Dex is only reachable once the game is `.playing` — but a catchable condition rather than a
+    /// crash, so the Dex degrades to an all-undiscovered grid instead of taking the app down.
+    case notOpen
+}
+
 /// Everything the main screen needs to draw one Digimon: what to call it, and where its art is.
 ///
 /// Derived from the graph rather than read off `GameState`, which saves only an id. The graph is
@@ -1461,6 +1469,21 @@ final class MainScreenModel: ObservableObject {
     /// against so a held egg is never dropped a second time. Empty before `start()` has opened the
     /// store, which is the honest reading: nothing is held until the box exists.
     var heldDigitamaIds: Set<String> { (try? store?.heldDigitamaIds()) ?? [] }
+
+    /// The one open `GameStore`, handed to the side screens (the Dex) so they read the live game
+    /// through THIS model's context instead of opening a second `GameStore` on the same file. Two
+    /// live contexts on one store is the US-193 crash: a `GameState` fetched through one is
+    /// invalidated when the other resets, the `ModelContext.reset` fatal error. See `GameSession`
+    /// in `DigiVPetApp` — one model, one store, one context — which is the invariant this preserves.
+    ///
+    /// Throws before `start()` has opened the store, which the Dex never hits: its toolbar button
+    /// only draws in `.playing`, and the store is open by then. A `throws` rather than a force
+    /// unwrap so the Dex, which already degrades a store failure to an all-undiscovered grid, keeps
+    /// that graceful fallback instead of crashing.
+    func sharedStore() throws -> GameStore {
+        guard let store else { throw SideScreenStoreError.notOpen }
+        return store
+    }
 
     /// The sixteen maps as `MapListView` draws them (US-119): catalog order, with the save's
     /// counters, finish stamps and selection folded in.

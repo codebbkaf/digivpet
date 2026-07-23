@@ -5771,3 +5771,14 @@ The thirty, `Perfect -> Ultimate`:
   (BabyII/ChildAToF/DigitamaBabyI membership tests check that).
 - Fast dev loop: a Python replica of EvolutionGraphValidator + the Appendix B count catches most data
   errors in <1s before the ~1-minute watchOS build/test.
+
+## 2026-07-23 - US-193 (Fix the Dex crash: reuse the one GameStore, never open a second)
+- Added `MainScreenModel.sharedStore() throws -> GameStore` (returns the model's one open store, or throws `SideScreenStoreError.notOpen`) and wired ContentView's three DexView build sites to `DexModel(makeStore: model.sharedStore)` (toolbar link + both DEBUG demo navigationDestinations).
+- DexModel's `makeStore` default `{ try GameStore() }` is retained but documented as preview/test-only — the live app must pass the shared store. Both DexModel.load and DexModel.loadHealthReadings now run on the single app-wide ModelContext, so no second GameStore opens on the live file (DigiVPetApp GameSession single-store invariant holds).
+- Files: Sources/MainScreenModel.swift (new error enum + sharedStore()), Sources/ContentView.swift (3 sites), Sources/DexModel.swift (doc), Tests/DexScreenTests.swift (regression test).
+- Verified: build green; full suite 2598 tests pass (incl. new testTheDexSharesTheGameStoreSoAStateStaysValidAfterWork). Simulator run with `-dexDemo -healthAnswered` pushed the Dex and stayed alive with no new crash report. Pre-fix crash report DigiVPet-2026-07-23-174142.ips confirmed the exact bug: DexModel.loadHealthReadings -> ConditionContext.init(state:) -> GameState.stageMetricTotals.getter -> _assertionFailure (use-after-reset on an invalidated GameState).
+- **Learnings for future iterations:**
+  - The Dex crash lived in TWO DexModel store opens, not one: `load()` (line 261) AND `loadHealthReadings()` (line 309). The visible crash was in the async loadHealthReadings path reading a persisted GameState property. Any side screen that needs the saved game must take the store via `MainScreenModel.sharedStore`, never `try GameStore()`.
+  - `.ips` crash reports in `~/Library/Logs/DiagnosticReports/DigiVPet-*.ips` are gold for pinpointing SwiftData use-after-reset traps — the triggered thread's `frames` name the exact source lines.
+  - Simulator smoke test recipe for the Dex: install the Debug-watchsimulator .app, `xcrun simctl launch <sim> com.digivpet.DigiVPet -dexDemo -healthAnswered`, then check `launchctl list | grep digivpet` for survival + `find ~/Library/Logs/DiagnosticReports -name 'DigiVPet*.ips' -mmin -5` for fresh crashes. A system notification prompt overlays the app but does not block SwiftUI rendering behind it.
+---
