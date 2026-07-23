@@ -8,6 +8,10 @@ struct ContentView: View {
     @StateObject private var model: MainScreenModel
     @Environment(\.scenePhase) private var scenePhase
 
+    /// What the health gate decided at launch, carried down to the Settings screen's status row
+    /// (US-215). Passed in rather than read here, so this view still knows nothing about HealthKit.
+    let healthStatus: HealthCollectionStatus
+
     /// Whether the Settings screen (US-198) is showing. Driven by the top-right gear, and — so the
     /// screen stays screenshottable, since `simctl` cannot tap the toolbar — by the DEBUG
     /// `-settingsDemo` launch flag.
@@ -295,8 +299,10 @@ struct ContentView: View {
     /// The model is always passed in rather than defaulted: building one is a `@MainActor` call,
     /// and a default argument would be evaluated in this `init`'s non-isolated context. Same
     /// reason as `HealthAuthorizationGate`.
-    init(model: @autoclosure @escaping () -> MainScreenModel) {
+    init(model: @autoclosure @escaping () -> MainScreenModel,
+         healthStatus: HealthCollectionStatus) {
         _model = StateObject(wrappedValue: model())
+        self.healthStatus = healthStatus
     }
 
     var body: some View {
@@ -330,7 +336,7 @@ struct ContentView: View {
             // The Settings screen, pushed onto this stack so it keeps a back button. Reached by the
             // gear above, and by the DEBUG `-settingsDemo` flag that seeds `showsSettings` true.
             .navigationDestination(isPresented: $showsSettings) {
-                SettingsView(settings: model.notificationSettings)
+                SettingsView(settings: model.notificationSettings, healthStatus: healthStatus)
             }
             #if DEBUG
             // Debug-only: `simctl` cannot tap the toolbar button, so the Dex is unscreenshottable
@@ -988,5 +994,5 @@ struct SavedGameUnavailableView: View {
 }
 
 #Preview {
-    ContentView(model: MainScreenModel())
+    ContentView(model: MainScreenModel(), healthStatus: .collecting)
 }

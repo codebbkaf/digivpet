@@ -51,8 +51,10 @@ struct DigiVPetApp: App {
         // The gate explains health access before the system prompt and shows the blocked
         // state if the request fails. The main screen only ever runs behind it, so it never
         // has to read health data that was never asked for.
-        HealthAuthorizationGate(model: Self.makeAuthorizationModel()) {
-            ContentView(model: GameSession.model)
+        // The gate hands down the status it derived, which is what US-215's Settings row reports —
+        // one authorization source for the gate and the row both.
+        HealthAuthorizationGate(model: Self.makeAuthorizationModel()) { healthStatus in
+            ContentView(model: GameSession.model, healthStatus: healthStatus)
                 // BEHIND THE GATE, so the observers are registered only once the user has
                 // answered the health prompt — registering one before that fails outright with
                 // "Authorization not determined", and a failed observer is never retried.

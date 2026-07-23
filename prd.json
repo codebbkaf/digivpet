@@ -1883,8 +1883,8 @@
         "Build green. Verify each status in the simulator via the three launch flags with screenshots"
       ],
       "priority": 102,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Settings gained a Health section: a status row driven by HealthCollectionStatus, a pure view of HealthAuthorizationModel.Phase handed down from HealthAuthorizationGate. Collecting / Not collecting / Unavailable verified on 46mm and 42mm via -settingsDemo with each of -healthAnswered / -healthDenied / -healthUnavailable (-settingsDemo also waves the gate through in DEBUG, since two of the three states otherwise never reach the app). Privacy line shares HealthCopy.neverLeavesTheWatch with the onboarding screen. Build green, 2744 tests, 0 failures."
     },
     {
       "id": "US-216",

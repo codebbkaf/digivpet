@@ -29,6 +29,12 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   -> `io <id> screenshot <path>`. Devices: 46mm `BA425DD4-8856-4933-8198-0E4B89960E48`, 42mm
   `F4A12A1C-1C5E-4B83-8278-341634CDE4F5`; both stay booted, so no shutdown/erase/boot cycle is needed
   (that costs ~30 s and forces a reinstall).
+- **SCREENSHOT THE DEVICE BEFORE YOU LAUNCH ANYTHING ON IT (US-215).** A system permission alert left
+  over from an earlier session survives `terminate`, `uninstall` AND a reinstall, and every screenshot
+  after that photographs the alert rather than the app — `-noNotificationPrompt` cannot help, since
+  the alert is already up. A bare `xcrun simctl io <id> screenshot /tmp/probe.png` costs a second and
+  says which of the two watches is clean. Clearing one needs the full `shutdown` + `erase` + `boot`
+  (~90 s, app reinstalled afterwards), so switching watches is usually the cheaper move.
 - **A DERIVED-PER-DIGIMON VALUE USES A PINNED SEED FUNCTION, NEVER `hashValue` (US-214).** Swift seeds
   `Hasher` per process, so anything derived from it changes on every relaunch while still passing
   `XCTAssertEqual(f(id), f(id))`. `SleepRoutine.seed(for:)` is FNV-1a over the id's UTF-8 bytes, fed to
@@ -6913,4 +6919,51 @@ The thirty, `Perfect -> Ultimate`:
   -noNotificationPrompt -<flag>` -> `sleep 20` -> `io <id> screenshot`. A `shutdown`/`erase`/`boot`
   cycle needs ~30 s AND the app reinstalled after it; `bootstatus` on an already-booted device is
   instant and skips all of that.
+---
+
+## 2026-07-24 - US-215 (Settings shows the data-collection status)
+- New `Sources/HealthCollectionStatus.swift`: `HealthCollectionStatus` (.collecting / .notCollecting /
+  .unavailable / .checking) with `init(phase: HealthAuthorizationModel.Phase)`, `title`, `detail`,
+  `symbolName`, `tint` — plus `HealthCopy.neverLeavesTheWatch`, the one privacy string both the
+  onboarding screen and Settings now say. `HealthAuthorizationModel.collectionStatus` is the bridge.
+- **It is a VIEW of the gate's phase, not a second authorization source.** `HealthAuthorizationGate`'s
+  content closure now takes a `HealthCollectionStatus` (`(HealthCollectionStatus) -> Content`), which
+  `DigiVPetApp` forwards into `ContentView(model:healthStatus:)` and on into
+  `SettingsView(settings:healthStatus:)`. A plain VALUE, not the model: the gate observes the model,
+  so a phase change re-renders and pushes a fresh status down, and nothing below the gate has to know
+  HealthKit exists. `.ready` -> collecting; `.explaining`/`.requesting`/`.denied` -> not collecting;
+  `.unavailable` -> unavailable.
+- **`-settingsDemo` now also waves the gate through, in DEBUG only.** Two of the three statuses are
+  states the gate NEVER runs the app in, so `-healthDenied` / `-healthUnavailable` alone photograph
+  the onboarding and unavailable screens and can never reach the Settings row. The flag that already
+  pushes Settings does the bypass too (US-213's one-flag rule); `showsContentRegardless(_:)` is a
+  static pure function so a test can pin that it cannot fire without the argument. Nothing else moves
+  — the status shown is still what the real state machine computed from the injected authorizer.
+- Files: Sources/HealthCollectionStatus.swift (new), Sources/HealthAuthorizationView.swift,
+  Sources/SettingsView.swift, Sources/ContentView.swift, Sources/DigiVPetApp.swift,
+  Tests/SettingsHealthStatusTests.swift (new).
+- Verified: build green; FULL suite **2744 tests, 0 failures** (+8, all in `SettingsHealthStatusTests`).
+  Screenshots on BOTH watches, `-settingsDemo -noNotificationPrompt -<flag>`:
+  /tmp/us215/healthAnswered-{46,42}.png (green heart, "Collecting health data", "Your Digimon is
+  earning energy."), healthDenied-{46,42}.png (orange slashed heart, "Not collecting", "Your Digimon
+  can't earn energy without it."), healthUnavailable-{46,42}.png (grey triangle, "Unavailable", "This
+  device has no Health data."). "Never leaves this watch." is on all six.
+
+**Learnings for future iterations:**
+- **A `Label` will not wrap inside a watchOS list row, whatever line limit you give it.**
+  "Collecting health data" truncated to "Collecting health…" on the 42mm — losing the only word that
+  says what is collected — with `.lineLimit(2)` set on the `Label`. The fix is an
+  `HStack(alignment: .firstTextBaseline) { Image; Text.lineLimit(2).fixedSize(horizontal: false,
+  vertical: true) }`. Budget ~40 characters for a single-line caption row on a 42mm screen; that is
+  also why the collecting detail says "earning energy" instead of naming the four metrics.
+- **A stale system permission alert survives terminate, uninstall AND reinstall on a booted
+  simulator.** The 46mm sat behind the notification alert from an earlier session, so all three of
+  the first screenshots photographed the alert; `-noNotificationPrompt` cannot help, because the
+  alert was already up. `shutdown` + `erase` + `boot` (~90 s, and the app must be reinstalled after)
+  is the only thing that cleared it. Check the device with a bare `simctl io <id> screenshot` BEFORE
+  launching — if something is already on screen, the other watch is the cheaper fix.
+- **A screenshot AC can ask for a state the app's own gating makes unreachable.** Two of US-215's
+  three statuses are exactly that. The honest fix is a DEBUG bypass on the flag that already opens
+  the screen, pinned by a test that it needs its argument — not weakening the gate, and not
+  photographing a preview and calling it the screen.
 ---

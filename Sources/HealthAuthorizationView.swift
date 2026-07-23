@@ -4,32 +4,52 @@ import SwiftUI
 ///
 /// The order is the point: `HealthOnboardingView` explains what is read and where it goes, and
 /// only its Continue button raises the system prompt. Nothing here prompts on launch.
+///
+/// The content is handed the `HealthCollectionStatus` this gate derived, because US-215's Settings
+/// row has to say what the gate decided rather than ask a second time. A plain value, not the
+/// model: the gate observes the model, so a phase change re-renders and passes a fresh status down
+/// on its own, and nothing below here needs to know HealthKit exists.
 struct HealthAuthorizationGate<Content: View>: View {
     @StateObject private var model: HealthAuthorizationModel
-    private let content: () -> Content
+    private let content: (HealthCollectionStatus) -> Content
 
     /// The model is always passed in rather than defaulted: constructing one reaches
     /// `HKHealthStore()`, and a default argument is evaluated off the main actor.
     init(model: @autoclosure @escaping () -> HealthAuthorizationModel,
-         @ViewBuilder content: @escaping () -> Content) {
+         @ViewBuilder content: @escaping (HealthCollectionStatus) -> Content) {
         _model = StateObject(wrappedValue: model())
         self.content = content
     }
 
+    #if DEBUG
+    /// Whether the gate shows the app regardless of the phase.
+    ///
+    /// US-215's screenshot problem: two of the three statuses Settings can show are states the gate
+    /// NEVER lets the app run in, so `-healthDenied` and `-healthUnavailable` alone photograph the
+    /// onboarding and unavailable screens and never the Settings row. `-settingsDemo` — the flag
+    /// that already pushes Settings, per US-213's "one flag per story" — waves the gate through as
+    /// well, so `-settingsDemo -healthDenied` reaches the row it is meant to photograph.
+    ///
+    /// It moves nothing else: the status shown is still the one the real state machine computed
+    /// from the injected authorizer, so what the screenshot proves about the row stays true.
+    static func showsContentRegardless(
+        _ arguments: [String] = CommandLine.arguments
+    ) -> Bool {
+        arguments.contains("-settingsDemo")
+    }
+    #endif
+
     var body: some View {
         Group {
-            switch model.phase {
-            case .checking, .requesting:
-                ProgressView()
-            case .explaining:
-                HealthOnboardingView(readSet: model.readSet) { await model.confirmAndRequest() }
-            case .ready:
-                content()
-            case .denied:
-                HealthAccessBlockedView(detail: model.failureDetail) { await model.start() }
-            case .unavailable:
-                HealthUnavailableView()
+            #if DEBUG
+            if Self.showsContentRegardless() {
+                content(model.collectionStatus)
+            } else {
+                phaseBody
             }
+            #else
+            phaseBody
+            #endif
         }
         .task {
             await model.start()
@@ -43,6 +63,22 @@ struct HealthAuthorizationGate<Content: View>: View {
                 await model.confirmAndRequest()
             }
             #endif
+        }
+    }
+
+    @ViewBuilder
+    private var phaseBody: some View {
+        switch model.phase {
+        case .checking, .requesting:
+            ProgressView()
+        case .explaining:
+            HealthOnboardingView(readSet: model.readSet) { await model.confirmAndRequest() }
+        case .ready:
+            content(model.collectionStatus)
+        case .denied:
+            HealthAccessBlockedView(detail: model.failureDetail) { await model.start() }
+        case .unavailable:
+            HealthUnavailableView()
         }
     }
 }
@@ -81,7 +117,9 @@ struct HealthOnboardingView: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Text("Never leaves this watch.")
+                // The one promise, said in one place: `SettingsView` repeats this string after the
+                // prompt has been answered, and the two must not drift (US-215).
+                Text(HealthCopy.neverLeavesTheWatch)
                     .font(.caption2)
                     .foregroundStyle(.secondary)
 
