@@ -297,12 +297,16 @@ final class BabyIISweepTests: XCTestCase {
             .sorted()
         XCTAssertEqual(stillLeaves, [], "every Child this sweep opened should lead somewhere now")
 
-        // And each one is a Child with a real Champion above it, rather than merely non-empty.
+        // And each one is a Child with a real Champion above it, rather than merely non-empty. The
+        // one exception is an off-ladder Armor-Hybrid branch: US-169 hung its sixteen Armor-Hybrid
+        // apex forms on Children — several of them here — as EARNED side branches, which land on the
+        // Armor-Hybrid stage rather than the Champion rung. Everything else must still be a Champion.
         for id in authoredChild {
             let node = try XCTUnwrap(graph.node(id: id))
             for edge in node.evolutions {
-                XCTAssertEqual(graph.node(id: edge.to)?.stage, .adult,
-                               "\(id) -> \(edge.to) does not land on the Champion rung")
+                let toStage = graph.node(id: edge.to)?.stage
+                XCTAssertTrue(toStage == .adult || toStage == .armorHybrid,
+                              "\(id) -> \(edge.to) does not land on the Champion or Armor-Hybrid rung")
             }
         }
     }
@@ -342,7 +346,7 @@ final class BabyIISweepTests: XCTestCase {
         XCTAssertEqual(sizes["tamers"], 123,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["vital"], 42, "plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["vital"], 49, "plus US-163's one Ultimate")
         XCTAssertEqual(sizes["wanyamon"], 33, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`, plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
     }
 

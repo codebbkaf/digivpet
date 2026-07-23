@@ -424,11 +424,11 @@ final class PerfectSweepSToZTests: XCTestCase {
         XCTAssertEqual(sizes["penc-nso"], 86,
                        "SaviorHackmon, Vamdemon X and WereGarurumon X, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["penc-wg"], 53, "both Yatagaramon")
-        XCTAssertEqual(sizes["commandramon"], 16,
+        XCTAssertEqual(sizes["commandramon"], 19,
                        "SkullBaluchimon, Triceramon X, Chaosdramon X and the Karakurumon floor")
-        XCTAssertEqual(sizes["adventure02"], 18,
+        XCTAssertEqual(sizes["adventure02"], 24,
                        "Vermillimon, BlackWarGreymon and the Jyagamon floor")
-        XCTAssertEqual(sizes["vital"], 42, "Shishimamon, Sirenmon and Regalecusmon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["vital"], 49, "Shishimamon, Sirenmon and Regalecusmon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["dmc-v2"], 32, "WereGarurumon Black")
         XCTAssertEqual(sizes["dmc-v3"], 58, "Sekkamon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["dmc-v4"], 36, "Triceramon")
@@ -780,7 +780,7 @@ final class PerfectSweepSToZTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       58, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       74, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
         // Ogudomon is still the one US-159 pinned in Lucemon Falldown's comment, and it is an
         // Ultimate, so it belongs to the sweeps after this one rather than to this one.
@@ -812,7 +812,7 @@ final class PerfectSweepSToZTests: XCTestCase {
             XCTAssertNil(roster.entry(id: id), "\(id) removed an orphan after all")
         }
 
-        XCTAssertEqual(graph.nodes.count, 915, "760 before this story")
+        XCTAssertEqual(graph.nodes.count, 931, "760 before this story")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "165 before this story")
         XCTAssertEqual(graph.nodes(at: .ultimate).count, 236, "105 before this story, 138 after US-163")
     }

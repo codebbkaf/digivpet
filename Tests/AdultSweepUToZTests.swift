@@ -680,7 +680,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 915, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
+        XCTAssertEqual(graph.nodes.count, 931, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
     func testTheGraphValidatesWithNoFindings() {

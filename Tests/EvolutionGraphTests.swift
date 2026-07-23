@@ -310,9 +310,11 @@ final class EvolutionGraphTests: XCTestCase {
                        ["dmc-v1": 42, "dmc-v2": 32, "dmc-v3": 58, "dmc-v4": 36, "dmc-v5": 28,
                         "palmon": 32, "penc-nsp": 47, "penc-ds": 48, "penc-nso": 86,
                         "penc-wg": 53, "penc-me": 75, "penc-vb": 62,
-                        "tamers": 123, "wanyamon": 33, "diablomon": 24, "commandramon": 16,
-                        "algomon": 12, "adventure02": 18, "vital": 42,
-                        "xros": 22, "penc-sw": 26])
+                        "tamers": 123, "wanyamon": 33, "diablomon": 24, "commandramon": 19,
+                        "algomon": 12, "adventure02": 24, "vital": 49,
+                        "xros": 22, "penc-sw": 26],
+                       "US-169 hung the 16 Armor-Hybrid orphans on adventure02 (+6), "
+                           + "commandramon (+3) and vital (+7)")
         XCTAssertEqual(graph_lineOf(nodes, "meramon"), "dmc-v1")
         XCTAssertEqual(graph_lineOf(nodes, "agu_digitama"), "dmc-v1")
         XCTAssertEqual(graph_lineOf(nodes, "metalgarurumon"), "dmc-v2")

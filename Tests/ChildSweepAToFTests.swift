@@ -235,7 +235,8 @@ final class ChildSweepAToFTests: XCTestCase {
     /// named exception list: a Child of this story that grows a third earned branch nobody wrote
     /// down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
-        let branchedByALaterSweep = ["agumon_x": 3, "blucomon": 3, "clearagumon": 3, "dorumon": 3]
+        let branchedByALaterSweep = ["agumon_x": 3, "blucomon": 3, "clearagumon": 3, "dorumon": 3,
+                                     "commandramon": 5]  // US-169 hung three Armor forms on Commandramon
 
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -644,6 +645,13 @@ final class ChildSweepAToFTests: XCTestCase {
         let clearedByUS162 = ["damemon", "garurumon_black", "ginryumon", "hookmon", "lianpumon",
                               "nisedrimogemon", "reppamon", "tsuchidarumon"]
         let perfectsFromUS162 = ["adventure02_jyagamon", "commandramon_karakurumon"]
+        // **US-169 ADDS SIXTEEN**, the Armor-Hybrid sweep and the last of them all: every one of the
+        // sixteen Armor-Hybrid forms is a terminal apex, so each lands on this ledger the moment it
+        // is wired in. Net 58 -> 74.
+        let armorHybridFromUS169 = ["beowolfmon", "bitmon", "daipenmon", "duskmon", "goldv-dramon",
+                                    "kaisergreymon", "kaiserleomon", "lynxmon", "manbomon", "raihimon",
+                                    "rapidmon_armor", "rhinomon", "shadramon", "sheepmon", "submarimon",
+                                    "velgrmon"]
 
         // **US-163 CLEARS FIVE AND ADDS NONE BACK, WHICH IS WHAT AN ULTIMATE SWEEP IS.** The top
         // rung is TERMINAL, so a story that authors thirty Ultimates authors thirty leaves the
@@ -673,10 +681,11 @@ final class ChildSweepAToFTests: XCTestCase {
                        (childrenLeftForUS150 + authoredAdults + championsFromUS149
                            + championsFromUS150 + perfectsFromUS151 + perfectsFromUS154
                            + perfectsFromUS155 + perfectsFromUS156 + perfectsFromUS157
-                           + perfectsFromUS160 + perfectsFromUS161 + perfectsFromUS162)
+                           + perfectsFromUS160 + perfectsFromUS161 + perfectsFromUS162
+                           + armorHybridFromUS169)
                            .filter { !cleared.contains($0) }.sorted(),
                        "the dead-end ledger has drifted")
-        XCTAssertEqual(deadEnds.count, 58)
+        XCTAssertEqual(deadEnds.count, 74)
 
         // And the twenty-five really did leave because they lead somewhere now, not because they
         // vanished.
@@ -706,7 +715,7 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 915,
+        XCTAssertEqual(graph.nodes.count, 931,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "

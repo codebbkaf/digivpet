@@ -360,7 +360,7 @@ final class UltimateSweepSToZTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 915, "898 before this story, 915 after it")
+        XCTAssertEqual(graph.nodes.count, 931, "898 before this story, 915 after it")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
         XCTAssertEqual(graph.nodes(at: .ultimate).count, 236, "219 before this story, 236 after it")
     }
@@ -374,8 +374,8 @@ final class UltimateSweepSToZTests: XCTestCase {
 
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 2,
                        "the Ultimate edge-orphan bucket is now the two pinned Chaos nodes only")
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
-                       "the Armor-Hybrid bucket is US-169's and must not have moved")
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 0,
+                       "US-169 cleared the Armor-Hybrid bucket, the last of the sweeps")
         XCTAssertEqual(stillOrphaned.filter { $0.stage != .ultimate && $0.stage != .armorHybrid },
                        [], "a rung below Ultimate is orphaned again")
     }

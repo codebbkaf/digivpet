@@ -677,10 +677,14 @@ final class PerfectSweepMTests: XCTestCase {
     /// and on flavour, and the node admits it.
     func testMephismonXHadNoDrawableCitedParentAndSaysSo() throws {
         // Velgrmon is on disk and off the ladder — Armor-Hybrid has no `ladderIndex`, so the
-        // validator's one-rung rule cannot place it — and it is not a node at all, which is what
-        // makes it unusable as a parent rather than merely a bad one.
-        XCTAssertEqual(try XCTUnwrap(roster.entry(id: "velgrmon")).stage, .armorHybrid)
-        XCTAssertNil(graph.node(id: "velgrmon"))
+        // validator's one-rung rule cannot place it as any Perfect's in-edge. US-169 finally made
+        // it a node (a terminal apex on the `vital` line), but that only sharpens the point: an edge
+        // from it to Mephismon X would BOTH skip a rung and cross a line, so it is still unusable as
+        // a parent rather than merely a bad one.
+        let velgrmon = try XCTUnwrap(graph.node(id: "velgrmon"))
+        XCTAssertEqual(velgrmon.stage, .armorHybrid)
+        XCTAssertNotEqual(velgrmon.line, try XCTUnwrap(graph.node(id: "mephismon_x")).line,
+                          "Velgrmon shares Mephismon X's line, so the cross-line reason no longer holds")
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "mephismon")).stage, .perfect)
 
         let comment = try authoredComment(on: "mephismon_x")
@@ -715,7 +719,7 @@ final class PerfectSweepMTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       58, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       74, "the dead-end ledger in `ChildSweepAToFTests` has moved")
 
         // `vital` was all leaves when this story ran, which was the claim behind "cheapest rung
         // left to open" — and US-161 took the advice: it branched Kokeshimon and Tia Ludomon and
@@ -749,7 +753,7 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertNil(roster.entry(id: "diablomon_gerbemon"),
                      "the junk floor gained a roster entry, so it removes an orphan after all")
 
-        XCTAssertEqual(graph.nodes.count, 915, "709 before this story")
+        XCTAssertEqual(graph.nodes.count, 931, "709 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "126 before this story")

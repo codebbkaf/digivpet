@@ -3660,6 +3660,70 @@
     "yukinamon": {
       "element": "ice",
       "attribute": "data"
+    },
+    "goldv-dramon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "submarimon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "rapidmon_armor": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "daipenmon": {
+      "element": "ice",
+      "attribute": "data"
+    },
+    "manbomon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "shadramon": {
+      "element": "fire",
+      "attribute": "virus"
+    },
+    "bitmon": {
+      "element": "machine",
+      "attribute": "data"
+    },
+    "raihimon": {
+      "element": "electric",
+      "attribute": "data"
+    },
+    "rhinomon": {
+      "element": "earth",
+      "attribute": "vaccine"
+    },
+    "beowolfmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "kaisergreymon": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "duskmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "velgrmon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "lynxmon": {
+      "element": "fire",
+      "attribute": "data"
+    },
+    "kaiserleomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "sheepmon": {
+      "element": "light",
+      "attribute": "data"
     }
   },
   "lineDefaults": {

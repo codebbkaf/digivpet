@@ -5490,6 +5490,102 @@
       "tint": "red",
       "signatureName": "Blizzard Fang",
       "signatureSymbol": "snowflake"
+    },
+    "goldv-dramon": {
+      "projectileSymbol": "sun.max.fill",
+      "tint": "yellow",
+      "signatureName": "Golden Rapid Fire",
+      "signatureSymbol": "sun.max.fill"
+    },
+    "submarimon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "teal",
+      "signatureName": "Oxygen Torpedo",
+      "signatureSymbol": "drop.fill"
+    },
+    "rapidmon_armor": {
+      "projectileSymbol": "shield.fill",
+      "tint": "green",
+      "signatureName": "Twin Missile",
+      "signatureSymbol": "shield.fill"
+    },
+    "daipenmon": {
+      "projectileSymbol": "snowflake",
+      "tint": "cyan",
+      "signatureName": "Beak Buster",
+      "signatureSymbol": "snowflake"
+    },
+    "manbomon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "cyan",
+      "signatureName": "Sunfish Splash",
+      "signatureSymbol": "drop.fill"
+    },
+    "shadramon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "orange",
+      "signatureName": "Flame Fist",
+      "signatureSymbol": "flame.fill"
+    },
+    "bitmon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "gray",
+      "signatureName": "Byte Storm",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "raihimon": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "yellow",
+      "signatureName": "Thunder Lance",
+      "signatureSymbol": "bolt.fill"
+    },
+    "rhinomon": {
+      "projectileSymbol": "mountain.2.fill",
+      "tint": "brown",
+      "signatureName": "Atomic Burst",
+      "signatureSymbol": "mountain.2.fill"
+    },
+    "beowolfmon": {
+      "projectileSymbol": "sun.max.fill",
+      "tint": "white",
+      "signatureName": "Cleansing Light",
+      "signatureSymbol": "sun.max.fill"
+    },
+    "kaisergreymon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "yellow",
+      "signatureName": "Pyro Dragons",
+      "signatureSymbol": "flame.fill"
+    },
+    "duskmon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "purple",
+      "signatureName": "Deadly Gaze",
+      "signatureSymbol": "moon.fill"
+    },
+    "velgrmon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "indigo",
+      "signatureName": "Dark Vortex",
+      "signatureSymbol": "moon.fill"
+    },
+    "lynxmon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "cyan",
+      "signatureName": "Wildfire Tackle",
+      "signatureSymbol": "flame.fill"
+    },
+    "kaiserleomon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "gray",
+      "signatureName": "Ebony Blast",
+      "signatureSymbol": "moon.fill"
+    },
+    "sheepmon": {
+      "projectileSymbol": "sun.max.fill",
+      "tint": "yellow",
+      "signatureName": "Holy Fleece",
+      "signatureSymbol": "sun.max.fill"
     }
   },
   "lineDefaults": {

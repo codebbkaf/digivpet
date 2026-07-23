@@ -1517,8 +1517,8 @@
         "Typecheck passes"
       ],
       "priority": 92,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired all 16 Armor-Hybrid orphans as terminal apex forms, each an EARNED in-edge from a Digitama-reachable Child on that Child's line so no edge crosses a line: 6 Digi-Egg armors on adventure02 (V-mon, Wormmon), 3 on commandramon, and the 5 Frontier Hybrids plus 2 more armors on vital (Pulsemon, Kokabuterimon, Sunarizamon). Armor-Hybrid is off the ladder and the top of its own branch, so like the terminal Ultimates (US-163..168) each is an in-edge and nothing above. Appendix B orphan count for stage Armor-Hybrid: BEFORE 16, AFTER 0. Overall playable orphans 18 -> 2 (only the two device-pinned Chaos Ultimates remain). Validator ZERO findings; 2678 tests pass."
     },
     {
       "id": "US-193",

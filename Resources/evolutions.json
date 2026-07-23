@@ -15077,6 +15077,72 @@
           ]
         },
         {
+          "to": "goldv-dramon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 28,
+              "hint": "Polish the golden crest until it shines"
+            },
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 24000,
+              "hint": "and let a Miracle's worth of fire pour in"
+            }
+          ]
+        },
+        {
+          "to": "submarimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.distanceSwimming",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 300,
+              "hint": "Take the dive the surface partner cannot"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 20,
+              "hint": "and earn the reef's trust in battle"
+            }
+          ]
+        },
+        {
+          "to": "rapidmon_armor",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 60000,
+              "hint": "Run the long patrol without tiring"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drill the twin shot straight"
+            }
+          ]
+        },
+        {
           "to": "nisedrimogemon",
           "requiredEnergy": "strength",
           "minEnergy": 0,
@@ -15112,6 +15178,72 @@
               "comparison": "atMost",
               "value": 1,
               "hint": "Let it lie undisturbed"
+            }
+          ]
+        },
+        {
+          "to": "daipenmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 24,
+              "hint": "Charge the ice like a battering beak"
+            },
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 40,
+              "hint": "and never stop climbing higher"
+            }
+          ]
+        },
+        {
+          "to": "manbomon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 90,
+              "hint": "Drift the open water with an easy heart"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "never overfed, always light in the current"
+            }
+          ]
+        },
+        {
+          "to": "shadramon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 26000,
+              "hint": "Stoke the insect flame white-hot"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 26,
+              "hint": "and temper the shell in daily drill"
             }
           ]
         },
@@ -15256,6 +15388,72 @@
               "comparison": "atLeast",
               "value": 20000,
               "hint": "March it the distance a soldier marches"
+            }
+          ]
+        },
+        {
+          "to": "bitmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "Compile every drill into clean code"
+            },
+            {
+              "metric": "health.standHours",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 10,
+              "hint": "and keep the watch all day"
+            }
+          ]
+        },
+        {
+          "to": "raihimon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 80,
+              "hint": "Store the storm in every stride"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 22,
+              "hint": "and let the lance fall in battle"
+            }
+          ]
+        },
+        {
+          "to": "rhinomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 70000,
+              "hint": "March the armored charge for miles"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "and rest sound between the runs"
             }
           ]
         },
@@ -15494,6 +15692,72 @@
           ]
         },
         {
+          "to": "beowolfmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.7,
+              "hint": "Carry the Beast Spirit of Light nearly unbeaten"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 28,
+              "hint": "and drill the wolf's blade true"
+            }
+          ]
+        },
+        {
+          "to": "kaisergreymon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30000,
+              "hint": "Fuse the five flames into one crown"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 26,
+              "hint": "forged over many battles"
+            }
+          ]
+        },
+        {
+          "to": "duskmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 65000,
+              "hint": "Walk the long night the Spirit demands"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3,
+              "hint": "its rest broken by the darkness within"
+            }
+          ]
+        },
+        {
           "to": "kokeshimon",
           "requiredEnergy": "vitality",
           "minEnergy": 0,
@@ -15529,6 +15793,50 @@
               "comparison": "atLeast",
               "value": 230,
               "hint": "Keep it digging"
+            }
+          ]
+        },
+        {
+          "to": "kaiserleomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.65,
+              "hint": "Tame the lion's fury into a champion's"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 26,
+              "hint": "honed over many drills"
+            }
+          ]
+        },
+        {
+          "to": "sheepmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 420,
+              "hint": "Gather calm from long, deep sleep"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "and win gently, more than you lose"
             }
           ]
         },
@@ -18072,6 +18380,50 @@
               "comparison": "atLeast",
               "value": 8,
               "hint": "Butt it against something that gives"
+            }
+          ]
+        },
+        {
+          "to": "velgrmon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 85,
+              "hint": "Beat the raven's wings until they thunder"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "kept lean enough to take flight"
+            }
+          ]
+        },
+        {
+          "to": "lynxmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 60,
+          "maxCareMistakes": 3,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 22000,
+              "hint": "Kindle the beast's inner blaze"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 24,
+              "hint": "and sharpen the pounce in drill"
             }
           ]
         },
@@ -26936,6 +27288,150 @@
       "line": "dmc-v3",
       "spriteFile": "Yukinamon",
       "comment": "Wikimon BOLDS Sekkamon (Digimon Alysion, Pendulum COLOR 7 Toho Braves) as the ice fox's `Evolves From`, and Sekkamon is `dmc-v3`'s, so Yukinamon lands on an existing line for nothing. Its other citations, Karakurumon and Marin Bullmon, are off this thread. Strength; Sekkamon spends spirit on its Ryugumon climb."
+    },
+    {
+      "id": "goldv-dramon",
+      "displayName": "GoldV-dramon",
+      "stage": "Armor-Hybrid",
+      "line": "adventure02",
+      "spriteFile": "GoldV-dramon",
+      "comment": "GoldVeedramon is V-mon's Golden Armor (Digi-Egg of Miracles), so it lands on adventure02 beside V-mon. Terminal apex form.",
+      "evolutions": []
+    },
+    {
+      "id": "submarimon",
+      "displayName": "Submarimon",
+      "stage": "Armor-Hybrid",
+      "line": "adventure02",
+      "spriteFile": "Submarimon",
+      "comment": "Submarimon, a Digi-Egg armor; hung on V-mon's adventure02 Digi-Egg line as a coherent group. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "rapidmon_armor",
+      "displayName": "Rapidmon",
+      "stage": "Armor-Hybrid",
+      "line": "adventure02",
+      "spriteFile": "Rapidmon_Armor",
+      "comment": "The Armor Rapidmon (Digi-Egg of Destiny); grouped on the adventure02 Digi-Egg line. Distinct id from the Tamers Rapidmon. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "daipenmon",
+      "displayName": "Daipenmon",
+      "stage": "Armor-Hybrid",
+      "line": "adventure02",
+      "spriteFile": "Daipenmon",
+      "comment": "Daipenmon, a penguin armor; grouped on Wormmon's adventure02 Digi-Egg branch. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "manbomon",
+      "displayName": "Manbomon",
+      "stage": "Armor-Hybrid",
+      "line": "adventure02",
+      "spriteFile": "Manbomon",
+      "comment": "Manbomon, a sunfish water armor; grouped on Wormmon's adventure02 Digi-Egg branch. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "shadramon",
+      "displayName": "Shadramon",
+      "stage": "Armor-Hybrid",
+      "line": "adventure02",
+      "spriteFile": "Shadramon",
+      "comment": "Shadramon (Digi-Egg of Courage), an insect flame armor; grouped on Wormmon's adventure02 Digi-Egg branch. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "bitmon",
+      "displayName": "Bitmon",
+      "stage": "Armor-Hybrid",
+      "line": "commandramon",
+      "spriteFile": "Bitmon",
+      "comment": "Bitmon, a machine armor; grouped on the commandramon line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "raihimon",
+      "displayName": "Raihimon",
+      "stage": "Armor-Hybrid",
+      "line": "commandramon",
+      "spriteFile": "Raihimon",
+      "comment": "Raihimon, a thunder armor; grouped on the commandramon line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "rhinomon",
+      "displayName": "Rhinomon",
+      "stage": "Armor-Hybrid",
+      "line": "commandramon",
+      "spriteFile": "Rhinomon",
+      "comment": "Rhinomon, an earth charge armor; grouped on the commandramon line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "beowolfmon",
+      "displayName": "Beowolfmon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "Beowolfmon",
+      "comment": "Beowolfmon, the Beast Spirit of Light warrior; grouped with the Frontier Hybrids on the vital line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "kaisergreymon",
+      "displayName": "KaiserGreymon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "KaiserGreymon",
+      "comment": "KaiserGreymon (EmperorGreymon), the Fusion Spirit of Flame; grouped with the Frontier Hybrids on the vital line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "duskmon",
+      "displayName": "Duskmon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "Duskmon",
+      "comment": "Duskmon, the Human Spirit of Darkness; grouped with the Frontier Hybrids on the vital line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "velgrmon",
+      "displayName": "Velgrmon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "Velgrmon",
+      "comment": "Velgrmon (Velgemon), the Beast Spirit of Darkness; grouped with the Frontier Hybrids on the vital line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "lynxmon",
+      "displayName": "Lynxmon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "Lynxmon",
+      "comment": "Lynxmon (Digi-Egg of Courage), a fire beast armor; grouped on the vital line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "kaiserleomon",
+      "displayName": "KaiserLeomon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "KaiserLeomon",
+      "comment": "KaiserLeomon (JagerLoweemon), the purified Beast Spirit of Darkness; grouped with the Frontier Hybrids on the vital line. Terminal apex.",
+      "evolutions": []
+    },
+    {
+      "id": "sheepmon",
+      "displayName": "Sheepmon",
+      "stage": "Armor-Hybrid",
+      "line": "vital",
+      "spriteFile": "Sheepmon",
+      "comment": "Sheepmon, a holy light armor; grouped on the vital line. Terminal apex.",
+      "evolutions": []
     }
   ]
 }

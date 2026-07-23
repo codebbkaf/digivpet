@@ -690,7 +690,7 @@ final class PerfectSweepAToCTests: XCTestCase {
                        "a line has Perfects and no Mega above them again — US-158 closed the last")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       58, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       74, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -711,7 +711,7 @@ final class PerfectSweepAToCTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 915,
+        XCTAssertEqual(graph.nodes.count, 931,
                        "643 before this story, 672 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.

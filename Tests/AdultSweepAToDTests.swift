@@ -401,7 +401,7 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 915,
+        XCTAssertEqual(graph.nodes.count, 931,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
                            + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")

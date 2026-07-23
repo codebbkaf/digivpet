@@ -6272,3 +6272,44 @@ The thirty, `Perfect -> Ultimate`:
 - vamdemon already had a duplicate-energy-free set of 3; etemon (dmc-v3) ships with TWO vitality
   edges (bancholeomon + kingetemon), so DO NOT fork etemon - `testNoPerfectThisStoryForkedOffers...`
   would inherit its pre-existing collision. Check the parent's own energies before choosing it.
+
+## 2026-07-24 - US-169 (Orphan sweep: Armor-Hybrid)
+- Wired all 16 playable Armor-Hybrid orphans into the evolution graph as terminal apex forms.
+- Each takes an EARNED in-edge (2 hinted criteria, requiredEnergy the parent had free) from a
+  Digitama-REACHABLE Child on that Child's line, so no edge crosses a line and every form is
+  genuinely obtainable, not stranded behind a parent with no egg.
+  - adventure02: goldv-dramon, submarimon, rapidmon_armor (V-mon); daipenmon, manbomon, shadramon (Wormmon)
+  - commandramon: bitmon, raihimon, rhinomon (Commandramon)
+  - vital: beowolfmon, kaisergreymon, duskmon (Pulsemon); velgrmon, lynxmon (Kokabuterimon); kaiserleomon, sheepmon (Sunarizamon)
+- Armor-Hybrid is off the ladder (Stage.armorHybrid.ladderIndex == nil) and the top of its own side
+  branch, so — exactly like the terminal Ultimates US-163..US-168 — each is an in-edge and nothing
+  above. No out-edges: a fallback out-edge would have to be an unconditional junk edge to nowhere.
+- Appendix B orphan count, stage Armor-Hybrid: BEFORE 16, AFTER 0. Overall playable orphans 18 -> 2
+  (only the two device-pinned Chaos Ultimates remain).
+- Files: Resources/{evolutions,elements,moves}.json (+16 nodes / element / move entries, +16 earned
+  parent edges), scripts/us169_wire_armor_hybrid.py (data authoring), Tests/ArmorHybridSweepTests.swift
+  (new), plus pinned-test updates across ~30 test files (node count 915->931, line sizes
+  adventure02 24 / commandramon 19 / vital 49, dead-end ledger 58->74, Armor-Hybrid orphan bucket
+  16->0, ChildSweep branch counts, BabyII onward-rung, PerfectSweepM's Velgrmon-is-now-a-node claim).
+- EvolutionGraphValidator: ZERO findings. Full suite: 2678 tests, 0 failures.
+
+**Learnings for future iterations:**
+- `UltimateSweepSToZTests.testNoEdgeCrossesALine` is a GLOBAL invariant: every edge's target must
+  share its source's `line`. A new node's line MUST equal its parent's line; out-edges can only point
+  within the same line. This is why the Armor forms group by parent line, not by theme.
+- `SeedRosterTests` global rules a sweep must satisfy: every node with edges has exactly one
+  isDefault edge; a fallback (isDefault) edge must have EMPTY conditions ("a junk fallback may not be
+  gated" — also pinned in DMCVersion5TreeTests); every non-Digitama edge names a requiredEnergy.
+  So a conditioned isDefault edge is illegal — I dropped an intended Duskmon->Velgemon chain over it.
+- The "dead-end ledger" (`graph.nodes.filter { evolutions.isEmpty && stage != .ultimate }.count`) is
+  asserted as a literal in ~10 Perfect/Ultimate sweep tests AND as an explicit id LIST in
+  `ChildSweepAToFTests.testTheOnlyDeadEndsBelowUltimate...`. Any new terminal non-Ultimate node lands
+  on both; update the count everywhere and add the ids to the list.
+- Line node counts are pinned in `EvolutionGraphTests.testBundledNodesAreTaggedWithTheirLine` and in
+  per-sweep `sizes[...]` assertions. Adding to a line means updating both.
+- Device-tree lines (dmc-v1..v5, penc-*) have full tree-shape tests (targets/counts per Rookie); the
+  "extra" lines (adventure02, commandramon, vital, tamers, wanyamon, ...) do not, so they are the
+  safest parents to extend — but their Children are still counted in the ChildSweep `branchedByALater
+  Sweep` dicts and `EvolutionCriteria`'s Digitama-reachability (avoid stranded parents like ryudamon).
+- Signature names in moves.json must be GLOBALLY unique; projectileSymbol+tint pairs unique PER LINE.
+---

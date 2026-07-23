@@ -695,7 +695,7 @@ final class PerfectSweepDToGTests: XCTestCase {
                            + "over Meicoomon, and gave it Rasielmon and Raguelmon in the same edit")
 
         XCTAssertEqual(graph.nodes.filter { $0.evolutions.isEmpty && $0.stage != .ultimate }.count,
-                       58, "the dead-end ledger in `ChildSweepAToFTests` has moved")
+                       74, "the dead-end ledger in `ChildSweepAToFTests` has moved")
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -717,7 +717,7 @@ final class PerfectSweepDToGTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 915, "672 before this story, 693 after it, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
+        XCTAssertEqual(graph.nodes.count, 931, "672 before this story, 693 after it, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "101 before this story, 115 after it, 126 after US-159, 148 after US-160, 165 after US-161, 189 after US-162")

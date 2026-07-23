@@ -290,7 +290,9 @@ final class ChildSweepMToZTests: XCTestCase {
     /// count is now a named exception list: a Child of this story that grows a third earned branch
     /// nobody wrote down still fails here.
     func testEveryChildInRangeHasOneEarnedBranchAndOneUnconditionedFallback() throws {
-        let branchedByALaterSweep = ["monodramon": 4, "plotmon_x": 3, "renamon": 3]
+        let branchedByALaterSweep = ["monodramon": 4, "plotmon_x": 3, "renamon": 3,
+                                     // US-169 hung Armor-Hybrid forms on these four Children.
+                                     "v-mon": 5, "wormmon": 5, "pulsemon": 5, "sunarizamon": 4]
 
         for id in sweptChildren {
             let node = try XCTUnwrap(graph.node(id: id))
@@ -378,9 +380,9 @@ final class ChildSweepMToZTests: XCTestCase {
         XCTAssertEqual(sizes["tamers"], 123,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["vital"], 42, "plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["vital"], 49, "plus US-163's one Ultimate")
         XCTAssertEqual(sizes["penc-me"], 75, "US-151 hung Deckerdramon on Hagurumon, US-157 six more nodes, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
-        XCTAssertEqual(sizes["adventure02"], 18)
+        XCTAssertEqual(sizes["adventure02"], 24)
         XCTAssertEqual(sizes["dmc-v2"], 32, "the dmc-v2 line gained no node here")
     }
 
@@ -592,7 +594,7 @@ final class ChildSweepMToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 915,
+        XCTAssertEqual(graph.nodes.count, 931,
                        "548 before this story, 599 after it, 610 after US-151, 615 after US-152, "
                            + "618 after US-153, 635 after US-155, 672 after US-157, "
                            + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
