@@ -146,6 +146,8 @@ final class LightButtonModelTests: XCTestCase {
         model.isAsleep = false
         // Feeding spends meat since US-174; stock the larder so the feed-in-the-dark test eats.
         model.profile?.meat = 10
+        // Battling spends a charge since US-176; stock it so the battle-in-the-dark test fights.
+        model.state?.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         return model
     }
 

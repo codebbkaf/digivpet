@@ -75,6 +75,10 @@ final class PreBattleRoundTests: XCTestCase {
         state.stage = .child
         state.strengthStat = strength
         state.stageEnergy[.strength] = strengthEnergy
+        // US-176: a battle now spends a charge walked up from steps, and the empty readers walk none.
+        // Stocked past what these tests spend, since what they are about is the round rather than the
+        // walking that pays for it.
+        state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         // US-027: the empty readers would otherwise have the audit charge a mistake for every day
         // since the epoch, which would sicken the Digimon before a single battle.
         state.healthDataLastSeen = Self.now

@@ -1247,6 +1247,13 @@ final class MainScreenModel: ObservableObject {
         let delta = metricLedger.claim(.healthSteps, dayTotal: dayTotal, now: now(),
                                        calendar: calendar)
         MapStepCreditor.credit(steps: delta, to: profile, catalog: maps, now: now())
+        // The SAME claimed delta also buys battle charges (US-176) — one claim, two consumers, which
+        // is the arrangement `MetricLedger.claim` requires. Credited to `state`, the Digimon that is
+        // OUT, so charges are per-Digimon and the one who walked them is the one who keeps them; a
+        // frozen Digimon does not refresh and so accrues nothing.
+        let config = ConsumptionConfig.bundled
+        state?.creditBattleCharges(steps: delta, stepsPerCharge: config.stepsPerBattleCharge,
+                                   maxCharges: config.maxBattleCharges)
     }
 
     /// Chooses the map the Digimon is adventuring in, from here on.
@@ -1288,6 +1295,15 @@ final class MainScreenModel: ObservableObject {
     /// shipped `ConsumptionConfig` rather than hard-coded so retuning the economy is a data edit,
     /// the same source the drop range and the caps come from.
     var meatCap: Int { ConsumptionConfig.bundled.meatCap }
+
+    /// The active Digimon's spendable battle charges (US-176) — the number the charge DashBar fills
+    /// and `battle()` spends. Off `state`, so switching which Digimon is out shows ITS charges and
+    /// never another's. Zero before `start()` has opened a Digimon.
+    var battleCharges: Int { state?.battleCharges ?? 0 }
+
+    /// The most charges the bar shows, and so the total of the battle DashBar (US-176). Off the
+    /// shipped `ConsumptionConfig`, the same source `meatCap` reads, so the economy retunes as data.
+    var battleChargeCap: Int { ConsumptionConfig.bundled.maxBattleCharges }
 
     /// Every Digitama the player currently HOLDS (US-127) — an unhatched egg in the box, or any
     /// living Digimon that hatched from one. The seam US-128's drop engine filters a map's slots
@@ -1936,6 +1952,15 @@ final class MainScreenModel: ObservableObject {
         // about the energy below, and has still been charged the disturbance — being dragged out of
         // bed for a fight that then does not happen is exactly the neglect the mistake is for.
         wakeIfAsleep()
+        // The battle currency since US-176: a fight spends one charge, walked up from steps at
+        // `stepsPerBattleCharge`. Asked before matchmaking, like the energy guard below, so an
+        // out-of-charges Digimon hears why rather than hearing about an opponent it cannot fight.
+        // Mirrors the meat larder's "go battle" affordance — the purple dash bar shows the count and
+        // an empty one plus this message is the whole reason Battle did nothing.
+        guard state.battleCharges > 0 else {
+            show(nil, message: "No charge — go walk.")
+            return nil
+        }
         // Asked BEFORE matchmaking and answered by the same `EnergyPurchase` rule that charges below,
         // so a Digimon that cannot afford a fight hears why instead of hearing about opponents.
         guard EnergyPurchase.payer(for: BattleCost.energy,
@@ -1969,6 +1994,10 @@ final class MainScreenModel: ObservableObject {
         // Charged where the allowance used to be spent, and never refunded: a round dismissed halfway
         // has still been paid for, exactly as `TrainAction.begin` documents.
         EnergyPurchase.charge(BattleCost.energy, from: BattleCost.payableWith, in: state)
+        // Spent where the energy is and saved by the same flush, so a round dismissed halfway has
+        // still cost its charge — a walk earned the fight, and walking away from it does not refund
+        // the walk. The `> 0` guard above ran before matchmaking, so this never dips below zero.
+        state.battleCharges -= 1
         state.recordBattleStarted(now: now(), calendar: calendar)
         do {
             try store?.save()

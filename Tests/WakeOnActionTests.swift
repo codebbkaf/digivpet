@@ -122,6 +122,8 @@ final class WakeOnActionTests: XCTestCase {
         XCTAssertEqual(model.phase, .playing)
         // Feeding spends meat since US-174; stock the larder so a fed test eats rather than blocks.
         model.profile?.meat = 10
+        // Battling spends a charge since US-176; stock it so a battle test fights rather than blocks.
+        model.state?.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         return (model, url, { now = $0 })
     }
 

@@ -613,14 +613,22 @@ struct ContentView: View {
                 }
 
                 if model.state != nil {
-                    // The meat larder (US-174), directly above the Feed button it pays for. A
-                    // DashBar — the app's one visual language for a value (US-171) — filled to the
-                    // meat on hand and totalled at `meatCap`, orange to match the fork-and-knife it
-                    // feeds. No number: a glance reads how many meals are in the box, and an empty
-                    // bar plus the "No meat — go battle" message on a tap is the whole affordance for
-                    // why Feed did nothing at zero. Kept short so it costs the play area only its own
-                    // 5 points and the Digimon keeps the scale US-172 grew it to.
-                    DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
+                    // The two spendable-currency bars, side by side in ONE row (US-174, US-176). A
+                    // DashBar each — the app's one visual language for a value (US-171) — with no
+                    // number, so a glance reads how many meals and how many fights are banked, and an
+                    // empty bar plus the button's own "go battle" / "go walk" message is the whole
+                    // affordance for why the action did nothing at zero. Meat is orange to match the
+                    // fork-and-knife it feeds; battle charges are purple to match the Battle bolt.
+                    //
+                    // Co-located rather than stacked on purpose: a second full-height row would cost
+                    // the play area another 5 points and drop the 41mm sprite below the scale US-172
+                    // grew it to. One HStack costs the height of one bar, so the Digimon keeps its
+                    // size while both currencies show.
+                    HStack(spacing: 6) {
+                        DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
+                        DashBar(filled: model.battleCharges, total: model.battleChargeCap,
+                                tint: .purple, dashHeight: 5)
+                    }
 
                     // All four actions in one row (US-038), Notifications among them: a
                     // preference is something you visit once, but it is still a destination

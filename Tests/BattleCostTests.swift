@@ -270,6 +270,9 @@ final class BattleCostApplyTests: XCTestCase {
         state.stage = .child
         state.strengthStat = strength
         state.stageEnergy.strength = strengthEnergy
+        // US-176: a battle also spends a charge walked up from steps, and the empty readers walk
+        // none. Ten is enough for the six-in-a-day case this file's headline test drives.
+        state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         // US-027: without these the audit charges a mistake per day since the epoch and sickens the
         // Digimon before the sixth battle is ever reached.
         state.healthDataLastSeen = Self.morning

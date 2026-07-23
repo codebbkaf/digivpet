@@ -495,6 +495,9 @@ final class ClosedAppRecomputeTests: XCTestCase {
         // The Simulator's own problem, in a test: no health data means no energy, and since US-108 a
         // battle has to be paid for. Funded here so the fights below actually happen.
         game.state.stageEnergy[.strength] = 100
+        // US-176: a battle also spends a charge walked up from steps; the empty readers walk none, so
+        // stock the five this test fights.
+        game.state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
 
         for _ in 0..<5 {
             game.model.battle()
@@ -527,6 +530,19 @@ final class ClosedAppRecomputeTests: XCTestCase {
 
         XCTAssertGreaterThan(game.model.lifetimeEnergy.total, atLaunch,
                              "the day the app came back to is credited, not skipped")
+    }
+
+    /// US-176: walking is what earns battles. A refresh that reads steps banks battle charges on the
+    /// Digimon that walked them — 300 steps to a charge — off the SAME read the energy came from, so
+    /// the wiring in `creditMapSteps` is exercised end to end and not just the arithmetic under it.
+    func testWalkingCreditsBattleChargesToTheDigimon() async throws {
+        let game = try Fixture.make(directory: directory, name: "Charges",
+                                    fetcher: DailyStepFetcher(steps: 900),
+                                    clock: { Fixture.start })
+        await game.model.start()
+
+        XCTAssertEqual(game.state.battleCharges, 3, "nine hundred steps is three charges")
+        XCTAssertEqual(game.model.battleCharges, 3, "and the bar reads them off the active Digimon")
     }
 
     /// The known, deliberate exception to the headline test, pinned so it cannot change unnoticed.

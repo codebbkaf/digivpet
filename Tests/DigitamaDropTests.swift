@@ -305,6 +305,8 @@ final class DigitamaDropModelTests: XCTestCase {
         state.stage = .child
         state.currentDigimonId = "hero"
         state.stageEnergy[.strength] = 100
+        // US-176: a battle also spends a charge walked up from steps; the empty readers walk none.
+        state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         state.healthDataLastSeen = Fixture.morning
         state.hungerUpdatedAt = Fixture.morning
         state.stageEnteredDate = Fixture.morning

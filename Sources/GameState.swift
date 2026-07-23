@@ -230,6 +230,14 @@ final class GameState {
     /// permanently retire a Digimon that fought five times last month.
     private var battleCountStorage: Int?
     private var battleDayStorage: Date?
+    /// Backing store for `battleCharges`/`battleChargeSteps` (US-176): the spendable battle charges
+    /// this Digimon has banked from walking, and the steps walked toward the next one. Per-Digimon —
+    /// "battle time is stored in the specific Digimon" — so switching which Digimon is out shows its
+    /// own count, never another's. Both optional for the same migration reason as every other storage
+    /// property here: an optional attribute is the one shape SwiftData migrates into an
+    /// already-shipped store without a default. Both `nil` reads as "nothing banked yet".
+    private var battleChargesStorage: Int?
+    private var battleChargeStepsStorage: Double?
     /// Backing store for the four care-mistake markers (US-027). All optional for the same migration
     /// reason as `energyLastEarnedStorage` — an optional attribute is the one shape SwiftData
     /// migrates into an already-shipped store without a default.
@@ -392,6 +400,8 @@ final class GameState {
         self.refusalDayStorage = nil
         self.battleCountStorage = 0
         self.battleDayStorage = nil
+        self.battleChargesStorage = 0
+        self.battleChargeStepsStorage = 0
         // Stamped with `now` rather than left nil, or a brand new game would be charged for every
         // day between the epoch and today the first time the audit ran.
         self.healthDataLastSeenStorage = now
@@ -485,6 +495,45 @@ extension GameState {
     var battleDay: Date? {
         get { battleDayStorage }
         set { battleDayStorage = newValue }
+    }
+
+    /// Spendable battle charges (US-176), 0...`ConsumptionConfig.maxBattleCharges`. Earned from steps
+    /// by `creditBattleCharges` and spent one at a time by starting a battle, this is the currency
+    /// that gates fighting since US-176 replaced US-032's per-day cap.
+    ///
+    /// Computed for the same reason `refusalCount` is: the optionality persistence needs stops at the
+    /// model boundary, so a save written before charges existed reads as 0 rather than as a `nil`
+    /// every caller has to unwrap.
+    var battleCharges: Int {
+        get { battleChargesStorage ?? 0 }
+        set { battleChargesStorage = newValue }
+    }
+
+    /// Steps walked toward the NEXT battle charge, `0..<stepsPerBattleCharge`. Kept so sub-threshold
+    /// walking is not thrown away between refreshes — 200 steps now and 200 later is a charge, not
+    /// two forgotten remainders — because a health reading arrives as many small deltas across a day.
+    var battleChargeSteps: Double {
+        get { battleChargeStepsStorage ?? 0 }
+        set { battleChargeStepsStorage = newValue }
+    }
+
+    /// Converts newly walked `steps` into battle charges (US-176).
+    ///
+    /// `steps` is a DELTA — the steps this read brought in, already claimed off the shared
+    /// `MetricLedger` so the map and the charges spend one delta and not two. Every `stepsPerCharge`
+    /// steps buys one charge, up to `maxCharges`; the sub-threshold remainder is banked on
+    /// `battleChargeSteps` so a day of short walks still earns. At the cap the remainder is dropped —
+    /// holding steps toward an uncollectable eleventh charge would hand one out the instant another
+    /// was spent.
+    func creditBattleCharges(steps: Double, stepsPerCharge: Int, maxCharges: Int) {
+        guard steps > 0, stepsPerCharge > 0 else { return }
+        var progress = battleChargeSteps + steps
+        let threshold = Double(stepsPerCharge)
+        while battleCharges < maxCharges && progress >= threshold {
+            progress -= threshold
+            battleCharges += 1
+        }
+        battleChargeSteps = battleCharges < maxCharges ? progress : 0
     }
 
     /// The last instant HealthKit gave a real number for any metric, or nil on a save written

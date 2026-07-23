@@ -663,6 +663,9 @@ final class BattleApplyTests: XCTestCase {
         // Funded well past the cost, since what these tests are about is the fight rather than the
         // affording of it.
         state.stageEnergy[.strength] = 100
+        // US-176: a battle also spends a charge walked up from steps, and the empty readers walk
+        // none. Stocked to the cap so the fight, not the affording of it, is what these tests drive.
+        state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         // US-027: the empty readers would otherwise have the audit charge a mistake for every day
         // since the epoch, which would sicken the Digimon before a single battle.
         state.healthDataLastSeen = Self.now
@@ -838,6 +841,43 @@ final class BattleApplyTests: XCTestCase {
         XCTAssertEqual(bout.meatGained, 0, "a loss banks nothing")
         XCTAssertEqual(model.meat, 0)
     }
+
+    /// US-176 AC2: starting a battle spends exactly one charge — the makeModel helper stocks the
+    /// cap, so this reads the decrement off a known start and proves the spend, not the affording.
+    func testStartingABattleSpendsExactlyOneCharge() async throws {
+        let (model, _) = try makeModel(strength: 8, seed: 1)
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        let before = state.battleCharges
+        XCTAssertGreaterThan(before, 0, "the fixture starts with charges to spend")
+
+        XCTAssertNotNil(model.battle(), "the round opens on a charge")
+        XCTAssertEqual(state.battleCharges, before - 1, "exactly one charge, spent at the tap")
+        XCTAssertEqual(model.battleCharges, before - 1, "and the bar reads the same figure")
+
+        // A second fight spends a second charge — the count is not a one-shot flag.
+        model.finishBattleRound(.good)
+        model.finishBattle()
+        XCTAssertNotNil(model.battle())
+        XCTAssertEqual(state.battleCharges, before - 2)
+    }
+
+    /// US-176 AC2: a battle is unavailable at 0 charges and says so, even with energy to burn — the
+    /// charge is the gate now, so a well-fed Digimon that has not walked cannot fight.
+    func testBattleIsUnavailableAtZeroChargesAndSaysSo() async throws {
+        let (model, _) = try makeModel(strength: 8, seed: 1)
+        await model.start()
+        let state = try XCTUnwrap(model.state)
+        state.battleCharges = 0
+        XCTAssertGreaterThan(state.stageEnergy[.strength], BattleCost.energy,
+                             "energy is not what is short here")
+
+        XCTAssertNil(model.battle(), "no charge, no fight")
+        XCTAssertEqual(model.actionMessage, "No charge — go walk.")
+        XCTAssertNil(model.pendingBattleRound, "and the blocked tap opens no round")
+        XCTAssertNil(model.pendingBattle)
+        XCTAssertEqual(state.battleWins + state.battleLosses, 0, "nothing was fought")
+    }
 }
 
 /// US-175 — the meat-drop arithmetic, tested pure so the range and cap rules hold without a fight.
@@ -874,6 +914,71 @@ final class MeatRewardTests: XCTestCase {
                 XCTAssertLessThanOrEqual(current + drop, 20)
             }
         }
+    }
+}
+
+/// US-176 — steps into battle charges, tested pure so the conversion, cap and remainder-carry rules
+/// hold without a fight. 300 steps buys one charge, up to a ceiling of 10.
+final class BattleChargeCreditTests: XCTestCase {
+    private func freshState() -> GameState {
+        GameState(currentDigimonId: "hero", now: Date(timeIntervalSince1970: 0))
+    }
+
+    /// The headline case: 900 steps is three charges.
+    func test900StepsYieldsThreeCharges() {
+        let state = freshState()
+        state.creditBattleCharges(steps: 900, stepsPerCharge: 300, maxCharges: 10)
+        XCTAssertEqual(state.battleCharges, 3)
+        XCTAssertEqual(state.battleChargeSteps, 0, "nine hundred is a clean three, no remainder")
+    }
+
+    /// The ceiling: 3,300 steps would be eleven charges, so it caps at ten and drops the overflow
+    /// rather than banking a remainder toward an uncollectable eleventh.
+    func test3300StepsCapsAtTen() {
+        let state = freshState()
+        state.creditBattleCharges(steps: 3_300, stepsPerCharge: 300, maxCharges: 10)
+        XCTAssertEqual(state.battleCharges, 10, "capped, not eleven")
+        XCTAssertEqual(state.battleChargeSteps, 0, "no remainder is hoarded at the cap")
+    }
+
+    /// Sub-threshold walks are not thrown away between reads: 200 steps now and 200 later is a
+    /// charge, which is what the remainder store is for — a health reading arrives as many deltas.
+    func testSubThresholdWalksAccumulateAcrossReads() {
+        let state = freshState()
+        state.creditBattleCharges(steps: 200, stepsPerCharge: 300, maxCharges: 10)
+        XCTAssertEqual(state.battleCharges, 0, "two hundred steps is not yet a charge")
+        XCTAssertEqual(state.battleChargeSteps, 200, "but they are banked toward the next one")
+
+        state.creditBattleCharges(steps: 200, stepsPerCharge: 300, maxCharges: 10)
+        XCTAssertEqual(state.battleCharges, 1, "and the two reads together cross the threshold")
+        XCTAssertEqual(state.battleChargeSteps, 100, "with the change carried on")
+    }
+
+    /// A spent charge does not disturb the remainder, and later steps refill from where they were.
+    func testSpendingAChargeLeavesTheRemainderStanding() {
+        let state = freshState()
+        state.creditBattleCharges(steps: 700, stepsPerCharge: 300, maxCharges: 10)
+        XCTAssertEqual(state.battleCharges, 2)
+        XCTAssertEqual(state.battleChargeSteps, 100)
+
+        state.battleCharges -= 1 // a battle spends one
+        state.creditBattleCharges(steps: 200, stepsPerCharge: 300, maxCharges: 10)
+        XCTAssertEqual(state.battleCharges, 2, "100 carried + 200 new = one more charge")
+        XCTAssertEqual(state.battleChargeSteps, 0)
+    }
+
+    /// Per-Digimon, by construction: two Digimon credited different walks keep different counts —
+    /// the store lives on each `GameState`, so one is never spending the other's.
+    func testTwoDigimonChargesAreIndependent() {
+        let walker = freshState()
+        let idler = freshState()
+        walker.creditBattleCharges(steps: 900, stepsPerCharge: 300, maxCharges: 10)
+        idler.creditBattleCharges(steps: 100, stepsPerCharge: 300, maxCharges: 10)
+
+        XCTAssertEqual(walker.battleCharges, 3)
+        XCTAssertEqual(idler.battleCharges, 0, "the one that stayed home earned nothing")
+        walker.battleCharges -= 1
+        XCTAssertEqual(idler.battleCharges, 0, "and spending the walker's does not touch the idler's")
     }
 }
 

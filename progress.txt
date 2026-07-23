@@ -5234,3 +5234,45 @@ The thirty, `Perfect -> Ultimate`:
   - profile.meat is surfaced by MainScreenModel.meat / the ContentView DashBar (US-174) and spent by
     FeedAction; US-175 is the earner that closes the walk->battle->feed loop.
 ---
+
+## 2026-07-23 - US-176 (Battle charges accrue from steps, per Digimon)
+- GameState: added `battleCharges` (0..10) and `battleChargeSteps` (remainder toward the next
+  charge), both migration-safe optional storage like every other field here. `creditBattleCharges(
+  steps:stepsPerCharge:maxCharges:)` adds whole charges from a step delta, banks the sub-300
+  remainder so short walks across many refreshes are not lost, and drops the remainder at the cap.
+- Wiring: `MainScreenModel.creditMapSteps` now credits charges from the SAME `MetricLedger.claim`
+  step delta it credits the map from — one claim, two consumers, as the ledger's own doc requires.
+  Credited to `state` (the Digimon that is OUT), so charges are per-Digimon; frozen Digimon don't
+  refresh and so accrue nothing.
+- battle(): a `guard state.battleCharges > 0` (message "No charge — go walk.") sits after
+  wakeIfAsleep and before the energy guard; a started battle spends one charge beside
+  `EnergyPurchase.charge`, saved by the same flush. The energy cost was KEPT.
+- UI: `MainScreenModel.battleCharges`/`battleChargeCap`; ContentView draws a purple charge DashBar
+  co-located with the orange meat bar in one HStack (not a second stacked row) to protect US-172/173.
+- Tests: BattleChargeCreditTests (pure: 900->3, 3300->cap10, remainder carry, spend-keeps-remainder,
+  two-Digimon independence); two model tests in the battle apply class (spends exactly one charge;
+  unavailable at 0 charges and says so); one end-to-end in BackgroundRefreshTests (900 stepped
+  refresh banks 3 charges). Seeded `state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges`
+  in every battle-driving test helper (PreBattleRound, Battle, BattleCost, DigitamaDrop, Wandering,
+  WakeOnAction, LightSwitch, BackgroundRefresh).
+- Build green (Series 11 46mm). 2486 tests, 0 failures.
+- **Learnings for future iterations:**
+  - THE RIPPLE (again): adding a hard gate to `battle()` breaks every apply-suite that drives
+    `model.battle()` and does not seed the new resource — 8 files. Same cheap fix as US-174's meat:
+    seed the resource right where each helper already stocks energy/meat (before `save()` for the
+    build-a-state helpers, after `await start()` for the post-start `startedModel` ones). Placing the
+    charge guard AFTER the death/training/wake guards and keeping the energy guard means all existing
+    REFUSAL tests (dead, broke, training-in-progress) still fire unchanged once charges are seeded.
+  - DECISION: US-176's AC says "spends exactly one charge" but — unlike US-177 for train — never says
+    "replacing the energy cost". So the energy cost was KEPT and the charge is an ADDITIONAL gate.
+    Removing energy would have gutted US-108's BattleCostTests/PreBattleRoundTests for no AC. If a
+    later story wants charges to be the SOLE battle cost, that is a separate, explicit change.
+  - The shared `MetricLedger.claim(.healthSteps,...)` SPENDS the delta — a second independent claimer
+    gets 0. Any future step-derived consumer (US-179's MetricCreditor) must read the delta
+    `creditMapSteps` already claims, not claim its own. Charges follow that rule; copy it.
+  - Play-area budget: co-locate new currency bars in the existing meat HStack (US-174), never add a
+    stacked row — the 41mm sprite has no more scale slack after meat spent its ~5pt.
+- REMAINS: US-177..US-192 (consumption/battle-stats/polish tail), US-167..US-169 (orphan sweep tail).
+  US-177 (train charges from calories) is next by priority and per its AC DOES replace the train
+  energy cost — mirror this story's GameState field + creditFromDelta pattern, but remove the
+  TrainAction energy spend rather than keep it.
