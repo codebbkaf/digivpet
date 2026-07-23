@@ -74,11 +74,12 @@ private enum Fixture {
     /// The detail of the first map, which is unlocked on any save.
     static func detail(
         discovered: Set<String> = [],
+        met: Set<String> = [],
         context: ConditionContext = .unknown,
         progress: PlayerProfile? = PlayerProfile()
     ) -> MapDetail {
         MapDetail.make(for: row("first", progress), in: catalog, roster: roster,
-                       discovered: discovered, context: context)!
+                       discovered: discovered, met: met, context: context)!
     }
 
     static func slot(_ id: String, in detail: MapDetail) -> MapDetail.DigitamaSlotDetail {
@@ -151,6 +152,32 @@ final class MapDetailContentsTests: XCTestCase {
                                     discovered: [], context: .unknown)
 
         XCTAssertEqual(detail?.opponents.map(\.id), ["agumon"])
+    }
+
+    /// US-202 AC1/AC4: a resident the player has not met is withheld — `isMet` false, which the row
+    /// draws as a "?" — while a met one carries its art. Both states, same map, from one met set.
+    func testAnUnmetResidentIsWithheldAndAMetOneShowsItsArt() {
+        // `agumon` met, the rest of the pool not — so one row shows art and the others show "?".
+        let detail = Fixture.detail(met: ["agumon"])
+
+        let agumon = detail.opponents.first { $0.id == "agumon" }
+        XCTAssertEqual(agumon?.isMet, true, "a met resident shows its art")
+        // Its name and sprite are still resolved off the roster — the view withholds them, the model
+        // carries them, which is what lets the row flip to art the instant `isMet` turns true.
+        XCTAssertEqual(agumon?.spriteFile, "Agumon")
+
+        for opponent in detail.opponents where opponent.id != "agumon" {
+            XCTAssertFalse(opponent.isMet, "\(opponent.id) is unmet and renders '?'")
+        }
+    }
+
+    /// With no met set (the fresh-save default), every resident is a "?": the player has walked into
+    /// none of them yet, so the whole pool is withheld.
+    func testWithNoMeetingsEveryResidentIsWithheld() {
+        let detail = Fixture.detail()
+
+        XCTAssertFalse(detail.opponents.isEmpty)
+        XCTAssertTrue(detail.opponents.allSatisfy { !$0.isMet })
     }
 
     /// AC1: every Digitama slot is listed, in the order the catalog authors them.

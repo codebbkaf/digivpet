@@ -144,6 +144,37 @@ final class WildEncounterTests: XCTestCase {
         XCTAssertNotNil(model.pendingWildEncounter, "the refresh raised the encounter")
     }
 
+    // MARK: - US-202: the 500-step meeting itself meets the foe
+
+    /// The moment the encounter surfaces the resident is MET — the "500-step meeting" of US-202 —
+    /// so its "?" on the map detail turns to art before the player has answered the dialog at all.
+    func testTheSurfacingEncounterMeetsTheFoe() async throws {
+        let model = try makeModel()
+        await model.start()
+        walked(500, into: Self.winMap, on: model)
+
+        let profile = try XCTUnwrap(model.profile)
+        XCTAssertFalse(profile.hasMet(Self.weakling, forMap: Self.winMap), "unmet until it surfaces")
+
+        model.checkForWildEncounter()
+        XCTAssertNotNil(model.pendingWildEncounter)
+        XCTAssertTrue(profile.hasMet(Self.weakling, forMap: Self.winMap), "surfacing is a meeting")
+    }
+
+    /// A meeting recorded at surface survives a FLEE and its save — the player met the foe by walking
+    /// into it, and turning away does not un-meet it.
+    func testFleeingLeavesTheFoeMet() async throws {
+        let model = try makeModel()
+        await model.start()
+        walked(800, into: Self.winMap, on: model)
+        model.checkForWildEncounter()
+
+        model.fleeWildEncounter()
+
+        let profile = try XCTUnwrap(model.profile)
+        XCTAssertTrue(profile.hasMet(Self.weakling, forMap: Self.winMap), "a fled foe stays met")
+    }
+
     // MARK: - AC3: fleeing costs the map 500 steps and plays the refuse pose
 
     func testFleeReducesTheMapBy500AndTurnsAway() async throws {
@@ -210,7 +241,10 @@ final class WildEncounterTests: XCTestCase {
 
         let profile = try XCTUnwrap(model.profile)
         XCTAssertEqual(profile.recorded(forMap: Self.lossMap), 200, "700 minus the 500 loss penalty")
-        XCTAssertFalse(profile.hasMet(Self.titan, forMap: Self.lossMap), "a loss does not meet the foe")
+        // US-202 supersedes US-201 here: fighting the foe is a meeting whichever way it goes, so a
+        // loss meets it too (and the surfacing already had). The penalty is the loss's cost, not a
+        // refusal to acknowledge you met it.
+        XCTAssertTrue(profile.hasMet(Self.titan, forMap: Self.lossMap), "a fought foe is met, win or lose")
         XCTAssertEqual(profile.encounterMarker(forMap: Self.lossMap), 200)
     }
 

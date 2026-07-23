@@ -52,6 +52,13 @@ struct MapDetail: Equatable, Identifiable {
         /// folder.
         let spriteFile: String
         let stage: Stage
+
+        /// Whether the player has MET this resident — fought it (US-202/US-201) or had a 500-step
+        /// meeting surface it. False draws the row as a "?": the name and the art carried here are
+        /// resolved off the roster so grouping and counting still work, but the view withholds them
+        /// until this turns true. Read off `PlayerProfile.metDigimon(forMap:)`, which survives a
+        /// death and a rebirth, so a met resident stays met across launches.
+        let isMet: Bool
     }
 
     /// The opponents of one stage, drawn under one heading.
@@ -147,12 +154,17 @@ extension MapDetail {
     ///   - discovered: every Digimon id the player has ever raised — `GameStore.dexIds()`. The Dex
     ///     is the record of "has ever owned" the game already keeps, and it survives death and
     ///     rebirth, which is exactly the span AC4 names.
+    ///   - met: the residents of THIS map the player has met — `PlayerProfile.metDigimon(forMap:)`.
+    ///     Distinct from `discovered`: the Dex records eggs the player has RAISED, while an opponent
+    ///     is met by fighting or a 500-step meeting (US-202), which is a different record and a
+    ///     different span. An opponent not in this set draws as a "?".
     ///   - context: the player's counters, for the reveal levels of the hint lines.
     static func make(
         for row: MapListRow,
         in catalog: MapCatalog = .bundled,
         roster: Roster = .bundled,
         discovered: Set<String>,
+        met: Set<String> = [],
         context: ConditionContext
     ) -> MapDetail? {
         guard !row.isLocked, let map = catalog.map(id: row.id) else { return nil }
@@ -163,7 +175,7 @@ extension MapDetail {
             recordedSteps: row.recordedSteps,
             totalSteps: map.totalSteps,
             isSelected: row.isSelected,
-            opponentGroups: groups(of: map, roster: roster),
+            opponentGroups: groups(of: map, roster: roster, met: met),
             digitama: map.digitamaSlots.map { slot(from: $0, roster: roster,
                                                   discovered: discovered, context: context) },
             context: context)
@@ -179,12 +191,14 @@ extension MapDetail {
     /// already rejects one, so it cannot reach a shipped map, and a row with no name and no art is
     /// worse than an opponent the player never sees. Duplicates collapse to their first mention —
     /// two rows with one id are one row to `ForEach`, which silently loses whichever it likes.
-    private static func groups(of map: AdventureMap, roster: Roster) -> [OpponentGroup] {
+    private static func groups(of map: AdventureMap, roster: Roster,
+                               met: Set<String>) -> [OpponentGroup] {
         var seen: Set<String> = []
         let opponents = map.opponentPool.compactMap { id -> Opponent? in
             guard seen.insert(id).inserted, let entry = roster.entry(id: id) else { return nil }
             return Opponent(id: entry.id, displayName: entry.displayName,
-                            spriteFile: entry.spriteFile, stage: entry.stage)
+                            spriteFile: entry.spriteFile, stage: entry.stage,
+                            isMet: met.contains(entry.id))
         }
         let byStage = Dictionary(grouping: opponents, by: \.stage)
         return Stage.allCases.compactMap { stage in
@@ -383,19 +397,33 @@ private struct DigitamaSlotRow: View {
     }
 }
 
-/// One opponent: its idle sprite and its name. Nothing is withheld here — an opponent is what the
-/// map throws at the player, and a "?" would be hiding the one thing the section is for.
+/// One opponent: its idle sprite and its name once MET, a "?" until then (US-202).
+///
+/// The same withholding `DigitamaSlotRow` does, and for the same reason: a resident the player has
+/// not met yet is a spoiler, so the row draws the "?" tile and no name until a fight or a 500-step
+/// meeting reveals it. The stage heading over the section still shows — the map does not hide which
+/// rungs it fields, only which faces — and that is the same information the grouping already carries.
 private struct OpponentRow: View {
     let opponent: MapDetail.Opponent
 
     var body: some View {
         HStack(spacing: 6) {
-            IdleSpriteView(stage: opponent.stage.rawValue, name: opponent.spriteFile)
+            if opponent.isMet {
+                // Met: the real art, `.interpolation(.none)` and all, and its name.
+                IdleSpriteView(stage: opponent.stage.rawValue, name: opponent.spriteFile)
 
-            Text(opponent.displayName)
-                .font(.caption)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+                Text(opponent.displayName)
+                    .font(.caption)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            } else {
+                // Unmet: the "?" tile alone, exactly as an unrevealed Digitama draws — no name
+                // beside it, because a name would be the very thing this row is withholding.
+                Text(MapDetailMarks.unknownName)
+                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 32, height: 32)
+            }
 
             Spacer(minLength: 0)
         }

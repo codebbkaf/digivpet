@@ -6059,3 +6059,37 @@ The thirty, `Perfect -> Ultimate`:
   - To share the fight between two entry points, resolve into a replayable `BattleBout` and set
     `pendingBattle`; the encounter carries the same `SeededGenerator` it drew the opponent from
     (mirrors `PendingBattleRound`), so one seed pins one whole bout across pick-then-fight.
+
+## 2026-07-24 - US-202: Map residents are '?' until you meet them
+- Map opponents in `MapDetailView` now draw a "?" (the same tile a withheld Digitama uses) until the
+  player has MET them, then their idle sprite + name. `MapDetail.Opponent` gained `isMet`;
+  `MapDetail.make` gained a `met: Set<String> = []` param threaded into `groups(of:roster:met:)`;
+  `OpponentRow` branches on `isMet`. `MainScreenModel.mapDetail(for:)` reads
+  `PlayerProfile.metDigimon(forMap:)` (per-map, survives death/rebirth) via a new `mapDetailMet(for:)`.
+- "Met" is now set on BOTH paths the AC names: the 500-step MEETING itself (`checkForWildEncounter`
+  records met the instant the encounter surfaces) and FIGHTING it (`acceptWildEncounter` records met
+  whether you win OR lose — previously win-only). Flee keeps the surface-meeting and saves it.
+- Screenshot demo: new instance `mapDetailDemoMet(for:)` marks every-other resident of the viewed map
+  met under the existing `-mapDetailFoesDemo` flag (Simulator earns no steps, so a real save has met
+  nobody), guaranteeing the met/'?' mix in the pool shot.
+- Files: Sources/MapDetailView.swift, Sources/MainScreenModel.swift, Tests/MapDetailTests.swift,
+  Tests/WildEncounterTests.swift.
+- Tests: MapDetailContentsTests gained testAnUnmetResidentIsWithheldAndAMetOneShowsItsArt +
+  testWithNoMeetingsEveryResidentIsWithheld; WildEncounterTests gained
+  testTheSurfacingEncounterMeetsTheFoe + testFleeingLeavesTheFoeMet, and its old US-201
+  "a loss does not meet the foe" assertion was FLIPPED (US-202 supersedes: a fought foe is met win or
+  lose, and the surfacing already met it).
+- Verified: build green (Series 11 46mm); full suite 2623 tests, 0 failures. Screenshot
+  /tmp/us202/foes2.png shows Tokomon and Patamon with art beside a "?" row under the Child heading.
+- **Learnings for future iterations:**
+  - US-203 (map boss) builds directly on this: "met every resident of the map" is now readable as
+    `PlayerProfile.metDigimon(forMap:).isSuperset(of: map.opponentPool)` (mind that a wild encounter
+    only surfaces residents `BattleMatchmaker.choose` can pick — a resident that is never rollable
+    would never be met, which would soft-lock the boss gate; worth checking against the pool).
+  - When adding a screenshot demo that needs SAVED state (steps, encounters), the Simulator's app
+    CONTAINER persists across launches — a leftover `-wildEncounterDemo` save (600 steps on grassland)
+    fired a real wild-encounter overlay on top of the map-detail shot. `simctl uninstall` then
+    reinstall clears the container for a clean demo. Prefer demo hooks that DON'T write to the save
+    (a context/met literal unioned at read time, like `mapDetailDemoMet`/`mapDetailDemoDiscoveries`),
+    exactly so they leave no residue for the next screenshot.
+---

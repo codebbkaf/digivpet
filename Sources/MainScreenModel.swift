@@ -1752,7 +1752,20 @@ final class MainScreenModel: ObservableObject {
     /// `MapDetail.make` reads it rather than deciding it a second way.
     func mapDetail(for row: MapListRow) -> MapDetail? {
         MapDetail.make(for: row, in: maps, roster: roster,
-                       discovered: mapDetailDiscoveries, context: mapDetailContext)
+                       discovered: mapDetailDiscoveries, met: mapDetailMet(for: row),
+                       context: mapDetailContext)
+    }
+
+    /// The residents of `row`'s map the player has met (US-202), plus whatever `-mapDetailFoesDemo`
+    /// pretends to. Read off the profile per map — a meeting on one map does not reveal the same
+    /// Digimon on another, which is why this is keyed and not a flat Dex read.
+    private func mapDetailMet(for row: MapListRow) -> Set<String> {
+        let saved = profile?.metDigimon(forMap: row.id) ?? []
+        #if DEBUG
+        return saved.union(mapDetailDemoMet(for: row))
+        #else
+        return saved
+        #endif
     }
 
     /// The ids a map detail treats as met. The Dex, plus whatever `-mapDetailDemo` pretends to.
@@ -1824,6 +1837,21 @@ final class MainScreenModel: ObservableObject {
     /// Nothing here reaches disk, so there is nothing to undo.
     private static var mapDetailDemoDiscoveries: Set<String> {
         isMapDetailDemo ? ["agu_digitama"] : []
+    }
+
+    /// Debug-only: the residents `-mapDetailFoesDemo` pretends the player has met, so the pool shot
+    /// shows the US-202 MIX — real art beside withheld "?" rows — every time rather than a wall of
+    /// "?" (the Simulator earns no steps, so a real save there has met nobody).
+    ///
+    /// Every OTHER resident of the map, by pool order, so any stage group with two or more members
+    /// straddles the two states. Instance rather than static because the mix is a fact about the
+    /// map being viewed, and read off the catalog rather than typed so it cannot name a resident the
+    /// map does not field. Nothing here reaches disk, matching `mapDetailDemoDiscoveries`.
+    private func mapDetailDemoMet(for row: MapListRow) -> Set<String> {
+        guard Self.isMapDetailDemo, let map = maps.map(id: row.id) else { return [] }
+        return Set(map.opponentPool.enumerated()
+            .filter { $0.offset.isMultiple(of: 2) }
+            .map(\.element))
     }
     #endif
 
@@ -2501,6 +2529,12 @@ final class MainScreenModel: ObservableObject {
                                               spriteFile: opponent.node.spriteFile),
             mapId: map.id,
             generator: generator)
+        // The 500-step meeting itself is a meeting (US-202): the moment the encounter surfaces, this
+        // resident is MET and its "?" on the map detail becomes its art. Recorded on the profile
+        // now; the flee/accept that answers this modal both save, so the meeting reaches disk
+        // whichever way the player resolves it. `recordMet` is idempotent, so meeting the same foe
+        // again is one meeting.
+        profile.recordMet(opponent.node.id, forMap: map.id)
     }
 
     /// FLEE: the Digimon turns away and the map loses 500 steps (US-201).
@@ -2531,7 +2565,10 @@ final class MainScreenModel: ObservableObject {
     /// `.good`, since a wild encounter has no minigame to earn a grade from — and handed to the screen
     /// on `pendingBattle`, so it replays a decided outcome exactly as a chosen battle does. The
     /// consequence is read off that decided report:
-    /// - WIN: no step penalty, and the wild Digimon counts as MET on this map (US-202/US-203).
+    /// - The wild Digimon counts as MET on this map whichever way it goes (US-202/US-203) — fighting
+    ///   it is a meeting; `checkForWildEncounter` already met it at surface, this is the fight path
+    ///   owning it too.
+    /// - WIN: no step penalty.
     /// - LOSS: the map loses 500 steps, the same penalty a flee costs.
     ///
     /// The marker is moved to the map's total AFTER any penalty, so the next 500 is measured from where
@@ -2547,9 +2584,12 @@ final class MainScreenModel: ObservableObject {
         guard let bout = resolveBattle(player: player, opponent: encounter.opponent,
                                        result: .good, using: &generator) else { return nil }
 
-        if bout.report.playerWon {
-            profile.recordMet(encounter.opponent.node.id, forMap: encounter.mapId)
-        } else {
+        // Fighting it is a meeting whatever the result (US-202): win OR loss, you have now met this
+        // resident, so it is recorded either way rather than only on a win. Idempotent, and usually
+        // already true — `checkForWildEncounter` met it the moment the dialog surfaced — but kept
+        // explicit so the fight path owns the meeting and does not lean on the surface having.
+        profile.recordMet(encounter.opponent.node.id, forMap: encounter.mapId)
+        if !bout.report.playerWon {
             profile.reduceRecorded(steps: Self.wildEncounterStepInterval, forMap: encounter.mapId)
         }
         profile.setEncounterMarker(profile.recorded(forMap: encounter.mapId), forMap: encounter.mapId)
