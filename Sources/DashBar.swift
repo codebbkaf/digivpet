@@ -42,6 +42,10 @@ struct DashBar: View {
     /// row of ticks rather than a stack of pills.
     var dashHeight: CGFloat = 6
 
+    /// The width of the divider line drawn between adjacent segments (US-195). NOT layout spacing —
+    /// the segments themselves touch (`HStack` spacing 0) so the bar reads as one solid rule; this
+    /// `divider`-many points are then *carved out* of each fill at its trailing edge so the boundary
+    /// between two segments stays legible as a thin line rather than a gap that spaces the dashes out.
     var spacing: CGFloat = 2
 
     private var dashes: [Dash] { DashBarLayout.dashes(filled: filled, total: total) }
@@ -53,25 +57,43 @@ struct DashBar: View {
 
     var body: some View {
         // GeometryReader so the dash width is DERIVED from the width the bar is handed, never a
-        // fixed 16pt that would overflow the moment `total` climbs. Sixteen sleep dashes on the
-        // narrowest 41mm content width each come out ~9pt wide — tight but unclipped — because the
-        // spacing is subtracted first and the remainder split evenly. This is the "scale for large
-        // totals" half of the AC; the shape stays one row rather than wrapping.
+        // fixed 16pt that would overflow the moment `total` climbs. The segments now TOUCH — the
+        // HStack spacing is 0 and the full width is split evenly — so the bar reads as one solid
+        // rule (US-195) rather than a row of spaced-out pills. The `spacing`-wide divider is not
+        // added as layout space; it is punched out of each fill's trailing edge below.
         GeometryReader { geometry in
             let count = dashes.count
-            let dashWidth = count > 0
-                ? max(0, (geometry.size.width - spacing * CGFloat(count - 1)) / CGFloat(count))
-                : 0
+            let dashWidth = count > 0 ? geometry.size.width / CGFloat(count) : 0
 
-            HStack(spacing: spacing) {
-                ForEach(Array(dashes.enumerated()), id: \.offset) { _, dash in
+            HStack(spacing: 0) {
+                ForEach(Array(dashes.enumerated()), id: \.offset) { index, dash in
                     dashShape(for: dash)
                         .frame(width: dashWidth)
+                        // The divider between this segment and the next: a `spacing`-wide line
+                        // carved out of a SOLID fill's trailing edge so the background shows through
+                        // as a thin rule. `destinationOut` erases rather than paints, so the divider
+                        // reads against any container colour and never spaces the dashes apart.
+                        // Only solid fills need it — two touching outline boxes already show a 2pt
+                        // boundary where their inset `strokeBorder`s meet, so punching them too would
+                        // just knock the right wall off every empty tick.
+                        .overlay(alignment: .trailing) {
+                            if index < count - 1, dash == .solid {
+                                Rectangle()
+                                    .frame(width: spacing)
+                                    .blendMode(.destinationOut)
+                            }
+                        }
                 }
             }
             // Left-aligned within the reader so a bar handed more width than its dashes need does
             // not float in the middle of the column.
             .frame(maxWidth: .infinity, alignment: .leading)
+            // Flatten so the divider punch-out composites against the dashes alone, not the whole
+            // view tree behind the bar.
+            .compositingGroup()
+            // Round only the outer ends: interior segments butt together as square rectangles so
+            // the run of solids reads as one continuous bar split by the divider lines.
+            .clipShape(RoundedRectangle(cornerRadius: dashHeight / 3))
         }
         .frame(height: dashHeight)
         // total==0 renders nothing: no dashes, no border, and — for VoiceOver — no bar element at
@@ -84,14 +106,15 @@ struct DashBar: View {
 
     @ViewBuilder
     private func dashShape(for dash: Dash) -> some View {
-        let shape = RoundedRectangle(cornerRadius: dashHeight / 3)
+        // Square-cornered so touching segments form one continuous bar; the whole row is clipped to
+        // a rounded rect in `body`, which rounds only the two outer ends.
         switch dash {
         case .solid:
-            shape.fill(tint)
+            Rectangle().fill(tint)
         case .outline:
             // strokeBorder, not stroke: the border is inset so a 1pt line does not spill past the
             // dash's own frame and touch its neighbour.
-            shape.strokeBorder(tint, lineWidth: 1)
+            Rectangle().strokeBorder(tint, lineWidth: 1)
         }
     }
 }

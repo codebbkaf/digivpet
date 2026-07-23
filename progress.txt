@@ -5825,3 +5825,35 @@ The thirty, `Perfect -> Ultimate`:
     historically) are EVIDENCE not arithmetic — re-measure and update them, or they silently describe
     a screen that no longer exists.
 ---
+
+## 2026-07-24 - US-195: Dash bars read as one solid bar split by 2pt lines
+- Reworked Sources/DashBar.swift so segments TOUCH instead of being spaced pills.
+  - HStack spacing is now 0; the full width is split evenly (dashWidth = width/count), no layout gap.
+  - Dashes are square-cornered Rectangles (was per-dash RoundedRectangle) so a run of solids butts
+    into one continuous bar; the whole row is clipped to a RoundedRectangle(cornerRadius: h/3) so
+    only the two OUTER ends are rounded.
+  - The 2pt divider is carved out of each SOLID fill's trailing edge with a Rectangle().frame(width:2)
+    .blendMode(.destinationOut) under a .compositingGroup(); destinationOut erases to whatever is
+    behind the bar, so the divider reads against any container colour (watchOS canvas is black).
+  - Divider is applied ONLY to solid dashes (guarded `dash == .solid`): two touching outline boxes
+    already show a 2pt boundary where their inset strokeBorders meet, so punching them too just knocked
+    the right wall off every empty tick (first attempt looked like open "C" boxes — fixed).
+  - `spacing` property kept (default 2) but repurposed as the divider width, not HStack spacing.
+- No test changes: DashBarTests only pin DashBarLayout.dashes arithmetic, untouched.
+- Files changed: Sources/DashBar.swift, prd.json, progress.txt.
+- Verified: build green (Series 11 46mm), full suite 2598 tests pass. Screenshot recipe (see below)
+  at /tmp/us195_final.png + zoom /tmp/zz2_big.png confirm STEP/KCAL/Zz/EXER and the four currency
+  bars all render as one solid bar split by thin lines, empty portion as closed touching ticks.
+- **Learnings for future iterations:**
+  - SCREENSHOT RECIPE that worked: on a freshly `xcrun simctl erase`d Series 11 46mm
+    (BA425DD4-8856-4933-8198-0E4B89960E48), launch with `-noNotificationPrompt -healthAnswered
+    -sleepBarDemo`. `-noNotificationPrompt` alone is NOT enough on a device with a stale pending
+    notification alert — you must ERASE first (the alert survives reinstall). `-healthAnswered`
+    bypasses the HealthKit onboarding gate (the "Feed Your Digimon / Steps → Strength" intro screen),
+    `-sleepBarDemo` seeds a Child Agumon with 6 banked sleep hours so the main screen (with all dash
+    bars) renders. GUI clicking via AppleScript/System Events does NOT work here — the Mac screen is
+    not capturable (`screencapture` fails) and System Events sees 0 Simulator windows, so the ONLY way
+    to reach a screen is a launch-arg demo, never a tap. Crop/zoom with `sips -c H W --cropOffset TOP LEFT`.
+  - destinationOut + compositingGroup is the clean way to draw a "divider that shows the background"
+    in a segmented bar without hardcoding a background colour.
+---
