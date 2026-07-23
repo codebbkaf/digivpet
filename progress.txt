@@ -6842,3 +6842,62 @@ The thirty, `Perfect -> Ultimate`:
   legible at 30pt because the glyphs differ completely; a tenth button should take a hue from the
   warm end rather than adding a third blue.
 ---
+
+## 2026-07-24 - US-214 (The Sleep Time view: total sleep and a per-Digimon sleep / wake / nap schedule)
+- New `Sources/SleepRoutine.swift`: `WatchTime` (minutes since midnight, normalised into `0..<1440`,
+  `formatted` = zero-padded 24-hour, `adding(minutes:)` and `minutes(until:)` both wrapping midnight)
+  and `SleepRoutine` (bedtime, wakeTime, napStart, napEnd, nightMinutes, napMinutes, totalMinutes).
+- **The derivation is FNV-1a over the id's UTF-8 bytes -> `SeededGenerator` (SplitMix64) -> four
+  draws**, each a count of quarter-hour slots inside an authored band (`SleepRoutine.Bands`): bedtime
+  20:00–24:00, night 7–10 h, nap start 12:00–16:00, nap 30–90 m. 18,785 possible routines; measured
+  996 distinct across the 1,022 bundled roster ids, the rest being the birthday bound.
+- **Not `String.hashValue`, and the test says so out loud.** Swift seeds that per process, so a
+  routine built on it looks right in one run and changes on the next launch — which is precisely what
+  AC3 forbids. `testTheSeedIsAFixedFunctionOfTheIdAndNotSwiftsHash` pins three literal seeds, and
+  `testTwoShippedDigimonHaveTheirTimesPinned` pins agumon's and gabumon's four times.
+- **`SleepSchedule` ALREADY EXISTS and means something else** — the user's HealthKit-inferred sleep
+  window, which decides whether the Digimon is actually asleep (`isAsleep(at:wokenUntil:)`). The new
+  type is `SleepRoutine`: the Digimon's own habit, display-only, driving nothing in the simulation.
+  Both doc comments now point at each other so nobody wires the flavour into the sleep gate.
+- `SleepTimeView` gained `digimonId` (defaulted `""`, so every pre-existing call site still compiles)
+  and a `routine` computed property. Under the existing total: a `Divider`, a "SCHEDULE" header,
+  three `scheduleRow`s (moon/sun/zzz, monospaced-digit trailing times, `.accessibilityElement(
+  children: .combine)` so VoiceOver says "Bed, 22:30"), then "7 h 30 m a day" and the split
+  "7 h night + 30 m nap" — AC4's labelling, the nap counted INTO the day rather than beside it.
+- `MainScreenModel.activeDigimonId` (`state?.currentDigimonId ?? ""`) is what both `ContentView` call
+  sites pass. A String, not an optional, because `SleepRoutine.forDigimon(id:)` is total.
+- New `-sleepBottomDemo`: pushes the screen AND banks the 6 hours AND scrolls to the last line, off
+  `ScrollViewReader` + a keyed `.task` — `SettingsView`'s `-settingsBottomDemo` hook, copied whole.
+  One flag, per US-213's learning.
+- Files: Sources/SleepRoutine.swift (new), Sources/SleepTimeView.swift, Sources/ContentView.swift,
+  Sources/MainScreenModel.swift, Tests/SleepRoutineTests.swift (new), Tests/SleepTimeViewTests.swift.
+- Verified: build green; FULL suite **2736 tests, 0 failures** (+13: 11 `SleepRoutineTests`, 2 in
+  `SleepTimeViewTests`). Screenshots /tmp/us214/sleep46.png, sleep42.png (top: "6 h / of 16 h / Slept
+  so far." then Bed 23:15, Wake 06:15, Nap 14:15 – 14:45) and bottom46.png, bottom42.png (scrolled:
+  "7 h 30 m a day", "7 h night + 30 m nap"). Agumon is out in all four, and every time on screen is
+  the number `testTwoShippedDigimonHaveTheirTimesPinned` asserts — the screen and the pure function
+  are provably the same one.
+
+**Learnings for future iterations:**
+- **A per-Digimon derived value is a seed function, and the seed function must be PINNED to literals.**
+  Determinism-within-one-run is what `XCTAssertEqual(f(id), f(id))` proves, and it passes for
+  `hashValue` too. The failure this feature can actually have — times that change between launches —
+  is only caught by a pinned literal. Any future "derive something per Digimon" story should copy
+  `SleepRoutine.seed(for:)` rather than reach for `Hasher`.
+- **`SleepSchedule` was taken.** Two things in this codebase are "when the Digimon sleeps": the health
+  window (real, gating) and the routine (flavour, display). Grep for the name before adding a type in
+  a domain this old — the collision was found by the compiler, but naming the new one `SleepSchedule2`
+  or, worse, merging them, would have put a cosmetic bedtime in charge of the sleep gate.
+- **`simctl launch` needs `com.digivpet.DigiVPet`, NOT `com.example.DigiVPet`.** Half an hour went to
+  `FBSOpenApplicationServiceErrorDomain code=4` before `xcrun simctl listapps <id> | grep Bundle`
+  settled it. The install succeeds and only the launch fails, so it reads like a crash on launch.
+- **A "scrolls on the 42mm" AC is a `-xBottomDemo` flag, not an argument.** `simctl` can neither tap
+  nor scroll, so the only proof is a `ScrollViewReader` + a DEBUG `.task` that scrolls to a `.id()`d
+  last row after a 500 ms beat (the beat matters — `.task` runs before the rows are measured).
+  `SettingsView` and `PartyView` both already carry this exact hook; copy one.
+- **Screenshot recipe, corrected end to end** (one Bash call, `DEVELOPER_DIR` exported in it):
+  `xcrun simctl bootstatus <id> -b` -> `install` -> `launch <id> com.digivpet.DigiVPet -healthAnswered
+  -noNotificationPrompt -<flag>` -> `sleep 20` -> `io <id> screenshot`. A `shutdown`/`erase`/`boot`
+  cycle needs ~30 s AND the app reinstalled after it; `bootstatus` on an already-booted device is
+  instant and skips all of that.
+---

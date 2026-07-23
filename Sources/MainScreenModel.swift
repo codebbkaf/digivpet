@@ -645,11 +645,14 @@ final class MainScreenModel: ObservableObject {
     /// - `-sleepTimeDemo` — the same 6 hours, seeded for US-213: the bar became an indigo ring around
     ///   the new Sleep button, and the flag that pushes the screen behind it (`ContentView`) needs the
     ///   same hours banked, or the ring photographs empty and the screen reads "0 h".
+    /// - `-sleepBottomDemo` — US-214's push-and-scroll, which needs the same hours for the same
+    ///   reason. Seeded here rather than by a second flag, so the shot is one argument.
     private func seedSleepBarDemoIfRequested() {
         let arguments = CommandLine.arguments
         let full = arguments.contains("-sleepBarFullDemo")
         guard arguments.contains("-sleepBarDemo") || full
-                || arguments.contains("-sleepTimeDemo"), let state else { return }
+                || arguments.contains("-sleepTimeDemo")
+                || arguments.contains("-sleepBottomDemo"), let state else { return }
 
         // Off the starting egg so the bar sits under a real Digimon rather than the placeholder.
         if let agumon = graph.node(id: "agumon") {
@@ -1673,6 +1676,14 @@ final class MainScreenModel: ObservableObject {
 
     /// The nominal full-bar sleep in hours for the main-screen Zz DashBar — see `sleepHoursCap`.
     static let sleepHoursDisplayCap = 16
+
+    /// The id of the Digimon currently out, or `""` before `start()` has opened one (US-214).
+    ///
+    /// The Sleep Time screen's schedule is derived from this and nothing else, so switching who is
+    /// out switches the bedtime shown alongside that Digimon's own banked hours. A String rather
+    /// than an optional because `SleepRoutine.forDigimon(id:)` is total: there is no id for which
+    /// the screen would rather show nothing.
+    var activeDigimonId: String { state?.currentDigimonId ?? "" }
 
     /// Every Digitama the player currently HOLDS (US-127) — an unhatched egg in the box, or any
     /// living Digimon that hatched from one. The seam US-128's drop engine filters a map's slots

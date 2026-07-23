@@ -1868,8 +1868,8 @@
         "Build green. Verify the Sleep view in the simulator with a screenshot (add a demo flag if needed)"
       ],
       "priority": 101,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SleepRoutine.forDigimon(id:) derives bedtime / wake / one afternoon nap from an FNV-1a seed over the id fed to SeededGenerator — pure, no clock, no hashValue; SleepTimeView shows them under the total with the day's split. 11 new SleepRoutineTests + 2 view tests; suite 2736/0. Screenshotted on 46mm and 42mm via -sleepBottomDemo (scrolls to the last line)."
     },
     {
       "id": "US-215",

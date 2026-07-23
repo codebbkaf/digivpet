@@ -84,7 +84,12 @@ struct ContentView: View {
     /// to push it from the launch command. The same flag seeds the hours — see
     /// `MainScreenModel.seedSleepBarDemoIfRequested` — so one launch gives both the ringed button and
     /// the screen it opens.
+    ///
+    /// `-sleepBottomDemo` (US-214) is the same push, and additionally scrolls the pushed screen to
+    /// its last line — one flag, because a bottom-of-screen shot that ALSO needed `-sleepTimeDemo`
+    /// and `-sleepBarDemo` is three arguments and two of them silently do nothing on their own.
     @State private var showsSleepTimeDemo = CommandLine.arguments.contains("-sleepTimeDemo")
+        || CommandLine.arguments.contains("-sleepBottomDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -384,7 +389,8 @@ struct ContentView: View {
             // list: it is the real destination the grid's Sleep button leads to, built from the same
             // two model values the button's ring is drawn from.
             .navigationDestination(isPresented: $showsSleepTimeDemo) {
-                SleepTimeView(sleptHours: model.sleepHours, goalHours: model.sleepHoursCap)
+                SleepTimeView(sleptHours: model.sleepHours, goalHours: model.sleepHoursCap,
+                              digimonId: model.activeDigimonId)
             }
             #endif
         }
@@ -702,9 +708,10 @@ struct ContentView: View {
                                    sleepDestination: {
                                        // The same two numbers the ring is drawn from (US-213), so
                                        // the screen a tap opens spells out exactly what the ring
-                                       // showed.
+                                       // showed — plus whose schedule to show under them (US-214).
                                        SleepTimeView(sleptHours: model.sleepHours,
-                                                     goalHours: model.sleepHoursCap)
+                                                     goalHours: model.sleepHoursCap,
+                                                     digimonId: model.activeDigimonId)
                                    })
                 }
             }

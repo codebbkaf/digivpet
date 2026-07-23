@@ -8,8 +8,9 @@ import XCTest
 /// What can be asserted here is the arithmetic the screen speaks with: the clamp, the "fully rested"
 /// condition, and that the numbers it is built from are the SAME pair the button's ring is drawn
 /// from. That the screen actually pushes and reads well on a watch is a Simulator screenshot,
-/// recorded in progress.txt rather than faked here. US-214 adds the per-Digimon schedule beneath the
-/// total and will test its own pure function alongside these.
+/// recorded in progress.txt rather than faked here. US-214's per-Digimon schedule is tested as a
+/// pure function in `SleepRoutineTests`; what is asserted here is only that this screen shows the
+/// ACTIVE Digimon's one.
 @MainActor
 final class SleepTimeViewTests: XCTestCase {
     private var storeDirectory: URL!
@@ -71,6 +72,46 @@ final class SleepTimeViewTests: XCTestCase {
         XCTAssertEqual(SleepTimeView(sleptHours: -1, goalHours: 16).clampedHours, 0)
         XCTAssertEqual(SleepTimeView(sleptHours: 6, goalHours: 0).clampedHours, 0,
                        "no ceiling is an empty screen, not a negative one")
+    }
+
+    /// US-214: the schedule under the total belongs to the Digimon that is OUT. Driven through
+    /// `model.activeDigimonId`, the expression `ContentView` hands the screen, and asserted against
+    /// the routine that id derives — so a call site that started passing the wrong id (or the egg's
+    /// id after a hatch) shows the wrong bedtime here rather than only on someone's wrist.
+    func testTheScheduleIsTheActiveDigimonsOwn() async throws {
+        let store = try GameStore(url: storeURL)
+        let state = try store.loadOrCreate(digitamaId: "agu_digitama", now: now)
+        state.currentDigimonId = "gabumon"
+        state.stage = .child
+        try store.save()
+
+        let model = MainScreenModel(
+            makeStore: { [storeURL] in try GameStore(url: storeURL) },
+            graph: .bundled,
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: EmptySampleFetcher()),
+                sleepReader: LastNightSleepReader(fetcher: EmptySleepFetcher())
+            ),
+            now: { [now] in now }
+        )
+        await model.start()
+
+        XCTAssertEqual(model.activeDigimonId, "gabumon")
+        let view = SleepTimeView(sleptHours: model.sleepHours, goalHours: model.sleepHoursCap,
+                                 digimonId: model.activeDigimonId)
+        XCTAssertEqual(view.routine, SleepRoutine.forDigimon(id: "gabumon"))
+        XCTAssertEqual(view.routine.bedtime.formatted, "21:45")
+        XCTAssertNotEqual(view.routine, SleepRoutine.forDigimon(id: "agumon"),
+                          "a different Digimon would be shown different hours")
+    }
+
+    /// A screen built without an id still has a schedule: `SleepRoutine` is total, so the half of
+    /// this view US-214 added is never blank — the default is simply the empty id's own routine.
+    func testTheScheduleHalfIsNeverBlank() {
+        let view = SleepTimeView(sleptHours: 6, goalHours: 16)
+        XCTAssertEqual(view.digimonId, "")
+        XCTAssertEqual(view.routine, SleepRoutine.forDigimon(id: ""))
+        XCTAssertGreaterThan(view.routine.totalMinutes, 0)
     }
 
     /// "Fully rested" is the caption at the goal and past it, and nothing before it — including on a
