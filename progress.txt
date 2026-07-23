@@ -21,6 +21,19 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **THE SIMULATOR BUNDLE ID IS `com.digivpet.DigiVPet` (US-214).** `simctl launch` with anything else
+  fails as `FBSOpenApplicationServiceErrorDomain code=4`, which reads like a launch crash. The whole
+  screenshot recipe, in ONE Bash call with `DEVELOPER_DIR` exported in it:
+  `xcrun simctl bootstatus <id> -b` -> `install <id> <DerivedData>/.../DigiVPet.app` ->
+  `launch <id> com.digivpet.DigiVPet -healthAnswered -noNotificationPrompt -<demoFlag>` -> `sleep 20`
+  -> `io <id> screenshot <path>`. Devices: 46mm `BA425DD4-8856-4933-8198-0E4B89960E48`, 42mm
+  `F4A12A1C-1C5E-4B83-8278-341634CDE4F5`; both stay booted, so no shutdown/erase/boot cycle is needed
+  (that costs ~30 s and forces a reinstall).
+- **A DERIVED-PER-DIGIMON VALUE USES A PINNED SEED FUNCTION, NEVER `hashValue` (US-214).** Swift seeds
+  `Hasher` per process, so anything derived from it changes on every relaunch while still passing
+  `XCTAssertEqual(f(id), f(id))`. `SleepRoutine.seed(for:)` is FNV-1a over the id's UTF-8 bytes, fed to
+  `SeededGenerator` (SplitMix64) for the actual draws, and its tests pin LITERAL seeds — that literal
+  is the only assertion that catches the relaunch drift. Copy it for any future per-Digimon flavour.
 - **THREE SETS OF TOTALS EXIST AND THEY ARE NOT INTERCHANGEABLE (US-206).** `GameState.stage/lifetime
   MetricTotals` = the Digimon's life, what an EVOLUTION is gated on. `PlayerProfile.recorded(forMap:)`
   = progress toward a map's BOSS, which a flee/loss takes 500/1,000 off. `PlayerProfile.mapMetrics(
