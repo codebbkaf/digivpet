@@ -26,7 +26,7 @@ final class ConsumptionConfigTests: XCTestCase {
         XCTAssertEqual(config.maxTrainCharges, 10)
         XCTAssertEqual(config.stepsPerBattleCharge, 300)
         XCTAssertEqual(config.maxBattleCharges, 10)
-        XCTAssertEqual(config.maxCleanCharges, 2)
+        XCTAssertEqual(config.maxCleanCharges, 8)
         XCTAssertGreaterThan(config.handwashPerCleanCharge, 0)
         XCTAssertLessThanOrEqual(config.meatPerBattleWin.min, config.meatPerBattleWin.max)
         XCTAssertGreaterThanOrEqual(config.meatCap, 0)

@@ -623,28 +623,14 @@ struct ContentView: View {
                 }
 
                 if model.state != nil {
-                    // The four spendable-currency bars, side by side in ONE row (US-174, US-176,
-                    // US-177, US-178). A DashBar each — the app's one visual language for a value
-                    // (US-171) — with no number, so a glance reads how many meals, training rounds,
-                    // fights and cleans are banked, and an empty bar plus the button's own "go battle"
-                    // / "go exercise" / "go wash" message is the whole affordance for why the action
-                    // did nothing at zero. Each bar's tint matches its action: meat orange for the
-                    // fork-and-knife it feeds, training charges red for the Train dumbbell, battle
-                    // charges purple for the Battle bolt, cleaning charges teal for the Clean sparkles.
-                    //
-                    // Co-located rather than stacked on purpose: a stacked row would cost the play
-                    // area another 5 points and drop the 41mm sprite below the scale US-172 grew it
-                    // to. One HStack costs the height of one bar, so the Digimon keeps its size while
-                    // all four currencies show.
-                    HStack(spacing: 6) {
-                        DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
-                        DashBar(filled: model.trainCharges, total: model.trainChargeCap,
-                                tint: .red, dashHeight: 5)
-                        DashBar(filled: model.battleCharges, total: model.battleChargeCap,
-                                tint: .purple, dashHeight: 5)
-                        DashBar(filled: model.cleanCharges, total: model.cleanChargeCap,
-                                tint: .teal, dashHeight: 5)
-                    }
+                    // The meat larder, alone on its row (US-199). It was one of four currency bars
+                    // (US-174, US-176, US-177, US-178); US-199 moved the OTHER three — train red,
+                    // battle purple, clean blue — onto segmented rings around the very buttons that
+                    // spend them, so each charge now reads where it is used. Meat has no single button
+                    // that spends it (it feeds through Feed but is a pool, not a per-tap charge), so it
+                    // stays as the row's `DashBar` — the app's one value language (US-171), no number,
+                    // orange for the fork-and-knife it feeds.
+                    DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
 
                     // The eight actions in a two-row grid (US-197): Feed, Train, Clean, Battle on
                     // top; Map, Party, Light, Dex below. Light and Dex moved in off the toolbar and
@@ -657,6 +643,12 @@ struct ContentView: View {
                     ActionControls(canAffordBattle: model.canAffordBattle,
                                    poopCount: model.poopCount,
                                    lightState: model.lightState,
+                                   trainCharges: model.trainCharges,
+                                   trainChargeCap: model.trainChargeCap,
+                                   battleCharges: model.battleCharges,
+                                   battleChargeCap: model.battleChargeCap,
+                                   cleanCharges: model.cleanCharges,
+                                   cleanChargeCap: model.cleanChargeCap,
                                    feed: { model.feed() },
                                    train: { model.train() },
                                    clean: { model.clean() },

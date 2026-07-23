@@ -119,11 +119,95 @@ struct DashBar: View {
     }
 }
 
+/// One arc of a `DashRing` — the wedge of a circle segment `index` occupies out of `total`, drawn as
+/// a stroked arc with a small angular `gapDegrees` carved off each end so adjacent segments read as
+/// distinct ticks rather than one continuous ring.
+///
+/// `inset` is half the ring's line width, subtracted from the radius so the stroke — which straddles
+/// the path centreline — stays inside the frame rather than spilling past it.
+struct DashRingSegment: Shape {
+    let index: Int
+    let total: Int
+    let gapDegrees: Double
+    let inset: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        guard total > 0 else { return path }
+        let radius = max(0, min(rect.width, rect.height) / 2 - inset)
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        // Segments march clockwise from the top (12 o'clock, -90°), the same reading order a clock
+        // fills, so the first earned charge lights the top tick.
+        let sweep = 360.0 / Double(total)
+        let start = -90.0 + sweep * Double(index) + gapDegrees / 2
+        let end = -90.0 + sweep * Double(index + 1) - gapDegrees / 2
+        path.addArc(center: center, radius: radius,
+                    startAngle: .degrees(start), endAngle: .degrees(end), clockwise: false)
+        return path
+    }
+}
+
+/// A `DashBar` wrapped into a ring (US-199): `total` equal arcs around a circle, the first `filled`
+/// solid in `tint` and the rest a faint outline in the same hue, split by small gaps — the circular
+/// twin of `DashBar`, meant to sit AROUND the button that spends the charge it counts.
+///
+/// Used as an `.overlay` on a 30pt `ActionButtonFace`: the default `diameter` is a touch larger than
+/// the face so the ring encircles it, and because it is an overlay it never changes the button's own
+/// tap size or the grid's spacing. Decorative for VoiceOver — the button it wraps carries the spoken
+/// "N of M" value — so this view is `accessibilityHidden`.
+struct DashRing: View {
+    let filled: Int
+    let total: Int
+
+    /// The arc hue, matched to the button's action: red for Train, purple for Battle, blue for Clean.
+    var tint: Color = .primary
+
+    /// The ring's outer size. Four points wider than `ActionButtonFace.diameter` so the ring's outer
+    /// edge sits ~2pt beyond the face — clear of the glyph, and only just into the 4pt grid gap so two
+    /// adjacent rings meet rather than overlap.
+    var diameter: CGFloat = ActionButtonFace.diameter + 4
+
+    /// The arc weight. Thin, so the ring reads as a hairline of ticks rather than a second disc.
+    var lineWidth: CGFloat = 2.5
+
+    /// The angular gap carved between adjacent segments, in degrees — the ring's version of the
+    /// `DashBar`'s 2pt divider line.
+    var gapDegrees: Double = 8
+
+    /// The visible solid count: `filled` bounded by the ring it is drawn into, so a charge count read
+    /// mid-tick that overshoots the cap cannot light a phantom arc.
+    private var solid: Int { min(max(filled, 0), total) }
+
+    var body: some View {
+        ZStack {
+            ForEach(0..<max(total, 0), id: \.self) { index in
+                DashRingSegment(index: index, total: total,
+                                gapDegrees: gapDegrees, inset: lineWidth / 2)
+                    // A solid arc is the full tint; an unearned one is the same hue faint, the ring's
+                    // answer to the `DashBar` outline — present but plainly empty.
+                    .stroke(tint.opacity(index < solid ? 1 : 0.25),
+                            style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
+            }
+        }
+        .frame(width: diameter, height: diameter)
+        // total==0 draws nothing, matching `DashBar`: an absent charge economy is silence, not an
+        // empty ring.
+        .opacity(total > 0 ? 1 : 0)
+        .accessibilityHidden(true)
+    }
+}
+
 #Preview {
     VStack(spacing: 8) {
         DashBar(filled: 6, total: 16, tint: .orange)
         DashBar(filled: 3, total: 5, tint: .red)
         DashBar(filled: 0, total: 8)
+
+        HStack(spacing: 16) {
+            DashRing(filled: 3, total: 10, tint: .red)
+            DashRing(filled: 7, total: 10, tint: .purple)
+            DashRing(filled: 5, total: 8, tint: .blue)
+        }
     }
     .padding()
 }

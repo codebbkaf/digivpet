@@ -478,6 +478,7 @@ final class MainScreenModel: ObservableObject {
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
         seedPoopDemoIfRequested()
+        seedChargesDemoIfRequested()
         seedLightDemoIfRequested()
         seedMapDemoIfRequested()
         seedMapListDemoIfRequested()
@@ -927,6 +928,36 @@ final class MainScreenModel: ObservableObject {
                 self?.clean()
             }
         }
+    }
+
+    /// Debug-only: banks partial Train / Battle / Clean charges so US-199's three rings around those
+    /// buttons can be screenshotted with a real fill. `simctl` cannot walk, exercise or wash, so the
+    /// counts are what have to move — and only the counts: the rings are the shipped `DashRing`s
+    /// drawing whatever this banks. It seeds its own awake Agumon, funds a battle so that button is
+    /// enabled, and drops a little poop so Clean is enabled too.
+    ///
+    /// - `-chargesDemo` — Train 4/10 (red), Battle 7/10 (purple), Clean 5/8 (blue): three partly
+    ///   filled rings on the action grid at once.
+    private func seedChargesDemoIfRequested() {
+        guard CommandLine.arguments.contains("-chargesDemo"), let state else { return }
+
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        forceAwakeForDemo()
+
+        let config = ConsumptionConfig.bundled
+        state.trainCharges = min(4, config.maxTrainCharges)
+        state.battleCharges = min(7, config.maxBattleCharges)
+        profile?.cleanCharges = min(5, config.maxCleanCharges)
+
+        // Fund a battle so the purple ring sits on an ENABLED button rather than a greyed one, and
+        // stage some mess so the blue ring's Clean button is enabled too.
+        state.stageEnergy.strength = max(state.stageEnergy.strength, BattleCost.energy)
+        state.poopUpdatedAt = now().addingTimeInterval(-12 * 60 * 60)
+        state.advancePoop(isAsleep: isAsleep, now: now())
     }
 
     /// Debug-only: puts the room light into a state worth screenshotting. `simctl` cannot tap the

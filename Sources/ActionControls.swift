@@ -113,6 +113,19 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     let poopCount: Int
     /// What the light is doing now (US-114), so the Light button's glyph names the state it is IN.
     let lightState: LightState
+
+    /// The three spendable charges drawn as segmented rings AROUND their own buttons (US-199): Train
+    /// red, Battle purple, Clean blue. Each pair is the same count/cap a straight `DashBar` used to
+    /// read on the currency row before this story moved the reading onto the button that spends it.
+    /// Defaulted to 0/0 so a ring is simply absent — every test call site that predates the rings
+    /// compiles unchanged and draws no ring.
+    var trainCharges: Int = 0
+    var trainChargeCap: Int = 0
+    var battleCharges: Int = 0
+    var battleChargeCap: Int = 0
+    var cleanCharges: Int = 0
+    var cleanChargeCap: Int = 0
+
     let feed: () -> Void
     let train: () -> Void
     let clean: () -> Void
@@ -141,6 +154,15 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
         canAffordBattle ? nil : BattleCost.insufficientEnergyReason
     }
 
+    /// What a charge ring speaks for VoiceOver — the "N of M" a `DashBar` would have spoken, now voiced
+    /// on the button rather than on the (silent, decorative) ring around it. `filled` is bounded by the
+    /// cap so a mid-tick overshoot never says "11 of 10". An empty economy (`total <= 0`) speaks
+    /// nothing so the button reads as just its label.
+    func chargeValue(_ filled: Int, _ total: Int) -> String {
+        guard total > 0 else { return "" }
+        return "\(min(max(filled, 0), total)) of \(total)"
+    }
+
     var body: some View {
         VStack(spacing: 4) {
             // Row 1 — the things you do FOR the Digimon. Four points between four circles:
@@ -156,7 +178,10 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                     ActionButtonFace(systemImage: "dumbbell", tint: .red)
                 }
                 .buttonStyle(.plain)
+                // Training progress, red, ringed around the button that spends it (US-199).
+                .overlay { DashRing(filled: trainCharges, total: trainChargeCap, tint: .red) }
                 .accessibilityLabel("Train")
+                .accessibilityValue(chargeValue(trainCharges, trainChargeCap))
 
                 // A coil of droppings, not sparkles: the button that clears the mess should show the
                 // mess, not the sparkle that follows it (US-197).
@@ -165,7 +190,12 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 }
                 .buttonStyle(.plain)
                 .disabled(isCleanDisabled)
+                // Handwash/clean progress, blue, ringed around the Clean button (US-199). Drawn even
+                // when the button is disabled at zero poop — the ring reads banked washes, not whether
+                // there is a mess to spend them on.
+                .overlay { DashRing(filled: cleanCharges, total: cleanChargeCap, tint: .blue) }
                 .accessibilityLabel("Clean")
+                .accessibilityValue(chargeValue(cleanCharges, cleanChargeCap))
 
                 // A fighter, not a lightning bolt (US-197): a bolt reads as energy, which is what
                 // Battle spends, not the fight it buys.
@@ -174,7 +204,10 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 }
                 .buttonStyle(.plain)
                 .disabled(isBattleDisabled)
+                // Battle-time progress, purple, ringed around the Battle button (US-199).
+                .overlay { DashRing(filled: battleCharges, total: battleChargeCap, tint: .purple) }
                 .accessibilityLabel("Battle")
+                .accessibilityValue(chargeValue(battleCharges, battleChargeCap))
             }
 
             // Row 2 — the ways out of the room and the switch on its wall.

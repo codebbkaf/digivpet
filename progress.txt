@@ -5950,3 +5950,37 @@ The thirty, `Perfect -> Ultimate`:
     screen's rows, extract the rows into a rows-only `View` (a `ForEach`/section body) and let each
     container supply its own `List`.
 ---
+
+## 2026-07-24 - US-199: Consumption rings around the spending button; handwash goal 8
+- New `DashRing` (+ `DashRingSegment` Shape) in `Sources/DashBar.swift`: the circular twin of
+  `DashBar` — `total` equal arcs around a circle, first `filled` solid in `tint`, rest a faint
+  (0.25 opacity) outline in the same hue, split by 8° gaps. Default diameter = `ActionButtonFace.diameter + 4`
+  so it encircles the 30pt face without eating the 4pt grid gap; decorative (`accessibilityHidden`).
+- `Sources/ActionControls.swift`: added six defaulted charge params (train/battle/clean count+cap,
+  default 0/0 so pre-existing test call sites compile unchanged). Overlaid a `DashRing` on the Train
+  (red), Clean (blue), Battle (purple) buttons, and put the spoken "N of M" on each button as its
+  `accessibilityValue` (new `chargeValue` helper) since the ring itself is silent.
+- `Sources/ContentView.swift`: removed the train/battle/clean straight `DashBar`s from the currency
+  row — only the orange **meat** bar remains (meat has no single per-tap button to ring). Passed the
+  three charge pairs into `ActionControls`.
+- `Resources/consumption.json`: `maxCleanCharges` 2 -> 8 (AC5: clean ring drawn as 8 segments).
+  Updated the two tests that pinned 2: `ConsumptionConfigTests.testNamedConstantsMatchThePRD` and
+  `CleaningChargeTests.testTheBarReadsTheProfileCountAndTheConfigCap`.
+- Added DEBUG `-chargesDemo` seed in `MainScreenModel` (Train 4/10, Battle 7/10, Clean 5/8, funded
+  battle + a little poop so both spending buttons are enabled) so the rings are screenshottable.
+- Verified: `xcodebuild build` green (Series 11 46mm); full suite 2605 tests, 0 failures. Screenshot
+  /tmp/us199/rings.png shows red Train ring, blue Clean ring, purple Battle ring, and the single
+  remaining orange meat bar above the grid.
+- **Learnings for future iterations:**
+  - `simctl erase` FAILS silently-ish on a BOOTED device — the stale notification permission alert
+    then survives every relaunch and `-noNotificationPrompt` cannot help (the alert is a system modal
+    the app never requested this run, it just persisted). Recipe: `simctl shutdown` -> `erase` ->
+    `boot` -> `install` -> `launch ... -noNotificationPrompt`. Then wait ~10s: the app shows a
+    ProgressView spinner for several seconds before the main screen, so the first screenshot after
+    launch can catch the loading state.
+  - To draw a value bar AROUND a button without disturbing the grid: use `.overlay { DashRing(...) }`.
+    An overlay never changes the button's layout size or the HStack spacing; size the ring inside its
+    own `.frame` (slightly larger than the face) and it extends symmetrically past the content.
+  - `ActionControls` now carries the three spend charges. Its charge params are DEFAULTED 0/0 on
+    purpose so the older `ActionControlsTests` constructors (which don't pass them) still compile and
+    simply draw no ring — add-with-defaults beats touching every call site.

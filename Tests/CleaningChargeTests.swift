@@ -185,7 +185,7 @@ final class CleaningChargeTests: XCTestCase {
     func testTheBarReadsTheProfileCountAndTheConfigCap() async throws {
         let model = try await startedModel(named: "bar", handwashes: 0)
         XCTAssertEqual(model.cleanChargeCap, ConsumptionConfig.bundled.maxCleanCharges)
-        XCTAssertEqual(model.cleanChargeCap, 2)
+        XCTAssertEqual(model.cleanChargeCap, 8, "US-199 raised the handwash goal to 8")
 
         model.profile?.cleanCharges = 1
         XCTAssertEqual(model.cleanCharges, 1)
