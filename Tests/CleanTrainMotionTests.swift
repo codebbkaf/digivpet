@@ -343,6 +343,9 @@ final class CleanTrainMotionTests: XCTestCase {
         )
         await model.start()
         XCTAssertEqual(model.phase, .playing)
+        // US-178: cleaning now spends a handwash charge, and the empty readers wash none. Stocked to
+        // the cap so the pose/motion these tests drive is not blocked by the affording of it.
+        model.profile?.cleanCharges = ConsumptionConfig.bundled.maxCleanCharges
         return model
     }
 }

@@ -592,6 +592,9 @@ final class NotificationDeliveryTests: XCTestCase {
         await model.start()
         XCTAssertEqual(spy.kinds, [.poop])
         XCTAssertEqual(spy.cancelled, [], "nothing is withdrawn before it is cleaned")
+        // US-178: cleaning spends a handwash charge; stock one so the mess is cleared and the notice
+        // withdrawn.
+        model.profile?.cleanCharges = model.cleanChargeCap
 
         XCTAssertTrue(model.clean())
 
@@ -629,6 +632,8 @@ final class NotificationDeliveryTests: XCTestCase {
 
         await model.start()
         XCTAssertEqual(spy.kinds, [.poop])
+        // US-178: cleaning spends a handwash charge; stock one so the first clean happens.
+        model.profile?.cleanCharges = model.cleanChargeCap
 
         XCTAssertTrue(model.clean())
         // Twelve more hours: the clock restarted at the clean, so this fills the screen a second

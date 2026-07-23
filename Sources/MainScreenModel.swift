@@ -215,6 +215,11 @@ final class MainScreenModel: ObservableObject {
     /// currently ships.
     private let jogress: JogressCatalog
     private let energySource: HealthEnergySource
+    /// Reads a single `health.*` metric over an arbitrary window. Held for US-178's cleaning charges:
+    /// handwashing is a category event, not one of the three daily quantities `energySource` reads,
+    /// so it is read here instead. Injected so a test drives washes from a fixture fetcher — the
+    /// Simulator has no handwashing data, exactly as it has no steps.
+    private let metricReader: HealthMetricReader
     private let calendar: Calendar
     private let now: () -> Date
     private let chooseStartingDigitama: ([EvolutionNode]) -> EvolutionNode?
@@ -321,6 +326,7 @@ final class MainScreenModel: ObservableObject {
         maps: MapCatalog = .bundled,
         jogress: JogressCatalog = .bundled,
         energySource: HealthEnergySource = HealthEnergySource(),
+        metricReader: HealthMetricReader = HealthMetricReader(),
         calendar: Calendar = .current,
         now: @escaping () -> Date = Date.init,
         chooseStartingDigitama: @escaping ([EvolutionNode]) -> EvolutionNode? = { $0.randomElement() },
@@ -345,6 +351,7 @@ final class MainScreenModel: ObservableObject {
         self.maps = maps
         self.jogress = jogress
         self.energySource = energySource
+        self.metricReader = metricReader
         self.calendar = calendar
         self.now = now
         self.chooseStartingDigitama = chooseStartingDigitama
@@ -1162,6 +1169,11 @@ final class MainScreenModel: ObservableObject {
         // training charges on the Digimon that burned them. Off the SAME read as the Vitality energy
         // above, so a calorie is spent once as energy and once as a charge, never read twice.
         creditTrainCharges(dayReadings.quantities[.activeEnergy] ?? .noData)
+        // The clean-to-handwash loop (US-178): the day's handwashing buys global cleaning charges.
+        // Read here rather than off `dayReadings`, because handwashing is a category event and not one
+        // of the three daily quantities that read carries — a separate query, claimed off the same
+        // `MetricLedger` so the day's washes are counted once.
+        await creditCleanCharges()
         // After crediting and before evolving, because `careMistakeCount` is one of the things an
         // edge is gated on — an audit run after `evolveIfReady` would let a neglected Digimon take
         // a branch it had just disqualified itself from, one refresh late.
@@ -1279,6 +1291,31 @@ final class MainScreenModel: ObservableObject {
                                  maxCharges: config.maxTrainCharges)
     }
 
+    /// Converts the day's handwashing count into global cleaning charges (US-178).
+    ///
+    /// The one place handwashing is read. It is a category event — not a `QuantityMetric` — so it
+    /// comes from `HealthMetricReader` over today's window rather than from the `dayReadings` the
+    /// energy, map, battle and train paths share. The whole-day count is claimed off the same
+    /// `MetricLedger` under `.healthHandwashing`, so refreshing twice does not count the same washes
+    /// again — the identical de-duplication the step and calorie paths lean on. The delta buys charges
+    /// at `handwashPerCleanCharge` on the PROFILE, not on `state`: a habit is the player's, so every
+    /// Digimon in the box cleans out of the one banked larder of washes.
+    ///
+    /// Nothing accrues from `noData`, `unavailable`, or a metric HealthKit cannot read: being told
+    /// nothing is not being told zero, the same rule the energy path holds to.
+    private func creditCleanCharges() async {
+        guard let metricLedger, let profile,
+              let handwashing = ReadableHealthMetric(.healthHandwashing) else { return }
+        let interval = HealthDay.interval(containing: now(), calendar: calendar)
+        let reading = await metricReader.read(handwashing, in: interval)
+        guard case .value(let dayTotal) = reading else { return }
+        let delta = metricLedger.claim(.healthHandwashing, dayTotal: dayTotal, now: now(),
+                                       calendar: calendar)
+        let config = ConsumptionConfig.bundled
+        profile.creditCleanCharges(events: delta, eventsPerCharge: config.handwashPerCleanCharge,
+                                   maxCharges: config.maxCleanCharges)
+    }
+
     /// Chooses the map the Digimon is adventuring in, from here on.
     ///
     /// Not retroactive, and that is the design: steps already credited to the previous map stay
@@ -1318,6 +1355,16 @@ final class MainScreenModel: ObservableObject {
     /// shipped `ConsumptionConfig` rather than hard-coded so retuning the economy is a data edit,
     /// the same source the drop range and the caps come from.
     var meatCap: Int { ConsumptionConfig.bundled.meatCap }
+
+    /// The global cleaning charges (US-178), or zero before `start()` has opened the profile — the
+    /// number the clean DashBar fills and `clean()` spends. Global like `meat`, so it does not depend
+    /// on which Digimon is out. Zero is the honest reading before a profile exists.
+    var cleanCharges: Int { profile?.cleanCharges ?? 0 }
+
+    /// The most cleaning charges the bar shows, and so the total of the clean DashBar (US-178). Off
+    /// the shipped `ConsumptionConfig`, the same source `meatCap` reads, so the economy retunes as
+    /// data.
+    var cleanChargeCap: Int { ConsumptionConfig.bundled.maxCleanCharges }
 
     /// The active Digimon's spendable battle charges (US-176) — the number the charge DashBar fills
     /// and `battle()` spends. Off `state`, so switching which Digimon is out shows ITS charges and
@@ -1858,6 +1905,17 @@ final class MainScreenModel: ObservableObject {
     @discardableResult
     func clean() -> Bool {
         guard let state, state.poopCount > 0 else { return false }
+        // Cleaning draws on a real handwash (US-178), capped at two and shared across the whole box.
+        // Asked AFTER "is there a mess" so a Digimon with nothing to clean stays a silent no-op — the
+        // "go wash" affordance only makes sense when there is a mess it is refusing to clear. Spent
+        // through the profile so the count and the "was there one?" answer come from one place, and
+        // nothing below runs until a charge is actually taken: the mess stays, poop unchanged.
+        // Mirrors `battle()`'s "No charge — go walk." for the same reason it does not disable the
+        // button — the message is how a zero says why.
+        guard let profile, profile.spendCleanCharge() else {
+            show(nil, message: "No charge — go wash.")
+            return false
+        }
         state.poopCount = 0
         state.poopUpdatedAt = now()
         // The mess notice is withdrawn from the wrist, and the claim is re-armed here rather than

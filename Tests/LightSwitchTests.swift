@@ -150,6 +150,8 @@ final class LightButtonModelTests: XCTestCase {
         model.state?.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         // Training spends a charge since US-177; stock it so the train-in-the-dark test opens.
         model.state?.trainCharges = ConsumptionConfig.bundled.maxTrainCharges
+        // Cleaning spends a handwash charge since US-178; stock it so the clean-in-the-dark test clears.
+        model.profile?.cleanCharges = ConsumptionConfig.bundled.maxCleanCharges
         return model
     }
 

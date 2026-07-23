@@ -613,25 +613,27 @@ struct ContentView: View {
                 }
 
                 if model.state != nil {
-                    // The three spendable-currency bars, side by side in ONE row (US-174, US-176,
-                    // US-177). A DashBar each — the app's one visual language for a value (US-171) —
-                    // with no number, so a glance reads how many meals, fights and training rounds
-                    // are banked, and an empty bar plus the button's own "go battle" / "go exercise"
-                    // message is the whole affordance for why the action did nothing at zero. Each
-                    // bar's tint matches its action: meat orange for the fork-and-knife it feeds,
-                    // training charges red for the Train dumbbell, battle charges purple for the
-                    // Battle bolt.
+                    // The four spendable-currency bars, side by side in ONE row (US-174, US-176,
+                    // US-177, US-178). A DashBar each — the app's one visual language for a value
+                    // (US-171) — with no number, so a glance reads how many meals, training rounds,
+                    // fights and cleans are banked, and an empty bar plus the button's own "go battle"
+                    // / "go exercise" / "go wash" message is the whole affordance for why the action
+                    // did nothing at zero. Each bar's tint matches its action: meat orange for the
+                    // fork-and-knife it feeds, training charges red for the Train dumbbell, battle
+                    // charges purple for the Battle bolt, cleaning charges teal for the Clean sparkles.
                     //
                     // Co-located rather than stacked on purpose: a stacked row would cost the play
                     // area another 5 points and drop the 41mm sprite below the scale US-172 grew it
                     // to. One HStack costs the height of one bar, so the Digimon keeps its size while
-                    // all three currencies show.
+                    // all four currencies show.
                     HStack(spacing: 6) {
                         DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
                         DashBar(filled: model.trainCharges, total: model.trainChargeCap,
                                 tint: .red, dashHeight: 5)
                         DashBar(filled: model.battleCharges, total: model.battleChargeCap,
                                 tint: .purple, dashHeight: 5)
+                        DashBar(filled: model.cleanCharges, total: model.cleanChargeCap,
+                                tint: .teal, dashHeight: 5)
                     }
 
                     // All four actions in one row (US-038), Notifications among them: a

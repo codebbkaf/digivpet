@@ -356,6 +356,8 @@ final class MainScreenModelTests: XCTestCase {
         let model = makeModel()
         await model.start()
         let state = try XCTUnwrap(model.state)
+        // US-178: cleaning spends a handwash charge; stock one so the mess can be cleared.
+        model.profile?.cleanCharges = model.cleanChargeCap
         state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-12 * 60 * 60)
         state.advancePoop(isAsleep: false, now: Fixture.morning)
         XCTAssertEqual(state.poopCount, PoopClock.maximumPoops, "staged a full screen to clean")
@@ -375,6 +377,8 @@ final class MainScreenModelTests: XCTestCase {
         let model = makeModel()
         await model.start()
         let state = try XCTUnwrap(model.state)
+        // US-178: cleaning spends a handwash charge; stock one so the clean happens.
+        model.profile?.cleanCharges = model.cleanChargeCap
         state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-12 * 60 * 60)
         state.advancePoop(isAsleep: false, now: Fixture.morning)
         model.clean()
@@ -457,6 +461,8 @@ final class MainScreenModelTests: XCTestCase {
         let model = makeModel(now: { Fixture.morning })
         await model.start()
         let state = try XCTUnwrap(model.state)
+        // US-178: cleaning spends a handwash charge; stock one so the clean below happens.
+        model.profile?.cleanCharges = model.cleanChargeCap
         let before = state.careMistakeCount
         state.poopUpdatedAt = Fixture.morning.addingTimeInterval(-18 * 60 * 60)
         await model.refresh()

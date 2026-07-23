@@ -40,6 +40,25 @@ final class PlayerProfile {
     /// starting stock — you battle to earn the first meal, you are not handed one.
     var meat: Int = 0
 
+    /// Spendable cleaning charges (US-178), 0...`ConsumptionConfig.maxCleanCharges`. Earned from real
+    /// HealthKit handwashing by `creditCleanCharges` and spent one at a time by `MainScreenModel.clean`,
+    /// this is the currency that gates clearing the mess — the last arm of the care loop to draw on a
+    /// real-world action.
+    ///
+    /// Global rather than on `GameState`, and here beside `meat` for the same reason: a habit is the
+    /// player's, not one pet's. Putting one Digimon away to raise another must not strand the washes
+    /// you banked, and every Digimon in the box makes the same mess out of the same larder of washes.
+    ///
+    /// Inline default of 0 so an existing save migrates to no washes banked, the same lightweight
+    /// migration `meat` relies on — 0 is honest, you wash to earn the first clean.
+    var cleanCharges: Int = 0
+
+    /// Handwashing events banked toward the NEXT cleaning charge, `0..<handwashPerCleanCharge`. Kept
+    /// so sub-threshold washing is not thrown away between refreshes when a charge costs more than one
+    /// event — the same remainder `GameState.battleChargeSteps` keeps for steps. Default 0, migrated
+    /// like `cleanCharges`.
+    var handwashProgress: Double = 0
+
     /// The map the player's steps are accruing to, or nil for "nowhere chosen yet".
     ///
     /// Nil is a real state and not a stand-in for the first map: a save that has never opened the
@@ -63,6 +82,8 @@ final class PlayerProfile {
     init(
         lifetimeEnergy: EnergyTotals = .zero,
         meat: Int = 0,
+        cleanCharges: Int = 0,
+        handwashProgress: Double = 0,
         selectedMapId: String? = nil,
         recorded: [String: Double] = [:],
         finishedAt: [String: Date] = [:],
@@ -70,6 +91,8 @@ final class PlayerProfile {
     ) {
         self.lifetimeEnergy = lifetimeEnergy
         self.meat = meat
+        self.cleanCharges = cleanCharges
+        self.handwashProgress = handwashProgress
         self.selectedMapId = selectedMapId
         self.recordedStorage = recorded
         self.finishedAtStorage = finishedAt
@@ -154,6 +177,40 @@ extension PlayerProfile {
     func record(ownedDigitama id: String) {
         guard !ownedDigitamaStorage.contains(id) else { return }
         ownedDigitamaStorage.append(id)
+    }
+}
+
+// MARK: - Cleaning charges
+
+extension PlayerProfile {
+    /// Converts newly counted handwashing `events` into cleaning charges (US-178).
+    ///
+    /// `events` is a DELTA — the handwashes this read brought in, already claimed off the shared
+    /// `MetricLedger` under `.healthHandwashing` so a day's washes are counted once. Every
+    /// `eventsPerCharge` events buys one charge, up to `maxCharges`; the sub-threshold remainder is
+    /// banked on `handwashProgress` so a day of single washes still earns when a charge costs more
+    /// than one. At the cap the remainder is dropped — holding events toward an uncollectable charge
+    /// would hand one out the instant another was spent. Mirrors `GameState.creditBattleCharges`.
+    func creditCleanCharges(events: Double, eventsPerCharge: Int, maxCharges: Int) {
+        guard events > 0, eventsPerCharge > 0 else { return }
+        var progress = handwashProgress + events
+        let threshold = Double(eventsPerCharge)
+        while cleanCharges < maxCharges && progress >= threshold {
+            progress -= threshold
+            cleanCharges += 1
+        }
+        handwashProgress = cleanCharges < maxCharges ? progress : 0
+    }
+
+    /// Spends one cleaning charge, returning whether there was one to spend.
+    ///
+    /// The one place a charge leaves the larder, so `MainScreenModel.clean` can ask "did this cost a
+    /// charge?" without reaching into the count. A no-op at zero — cleaning is unavailable then, which
+    /// the caller turns into the "go wash" affordance.
+    func spendCleanCharge() -> Bool {
+        guard cleanCharges > 0 else { return false }
+        cleanCharges -= 1
+        return true
     }
 }
 

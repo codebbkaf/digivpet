@@ -344,6 +344,8 @@ final class ComplicationTests: XCTestCase {
         await model.start()
         let state = try XCTUnwrap(model.state)
         model.isAsleep = false
+        // US-178: cleaning spends a handwash charge; stock one so the mess can actually be cleared.
+        model.profile?.cleanCharges = model.cleanChargeCap
 
         state.poopCount = 4
         XCTAssertEqual(model.complicationSnapshot?.pose, .messy)
@@ -500,6 +502,8 @@ final class ComplicationTests: XCTestCase {
         await model.start()
         let state = try XCTUnwrap(model.state)
         model.isAsleep = false
+        // US-178: the face's clean runs the same charged `clean()`; stock one so the request applies.
+        model.profile?.cleanCharges = model.cleanChargeCap
 
         // Accrued by the real clock rather than hand-set: twelve hours is four 3h intervals, which
         // is the ceiling.
