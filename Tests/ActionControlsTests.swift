@@ -13,6 +13,15 @@ final class ActionControlsTests: XCTestCase {
         XCTAssertLessThanOrEqual(ActionButtonFace.diameter, 32)
     }
 
+    /// US-209 AC1/AC2: Clean and Battle wear their pre-US-197 glyphs again. Asserted against the
+    /// constants the two `ActionButtonFace`s are built from — the body itself is unreachable from a
+    /// test — so re-adopting the coil or the fighter fails here rather than only in a screenshot.
+    func testCleanAndBattleWearTheirPreUS197Glyphs() {
+        XCTAssertEqual(ActionSymbol.clean, "sparkles")
+        XCTAssertEqual(ActionSymbol.battle, "bolt.fill")
+        XCTAssertNotEqual(ActionSymbol.battle, "figure.martial.arts")
+    }
+
     /// Each button invokes the closure it was handed and no other — the row is a fan-out to three
     /// distinct model calls, and crossing two of them would be invisible until a user fed their
     /// Digimon and watched it train.

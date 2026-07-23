@@ -1786,8 +1786,8 @@
         "Build green. Verify both glyphs in the simulator with a screenshot"
       ],
       "priority": 96,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Glyph-only revert: Clean sparkles (was ActionGlyph.waste), Battle bolt.fill (was figure.martial.arts), names held in the new non-generic ActionSymbol enum with the full pre/post history in its doc comment. Tints (.brown/.purple), rings, disabled rules and labels untouched per AC3. The now-callerless ActionGlyph enum and WasteGlyph view were deleted, so ActionButtonFace holds a plain systemImage again. Build green; full suite 2710 tests, 0 failures; screenshotted on 46mm (/tmp/us209/s6.png, zoom.png)."
     },
     {
       "id": "US-210",

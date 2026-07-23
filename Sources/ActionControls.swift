@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// The circular face shared by every button in the action grid (US-038, generalised in US-197).
+/// The circular face shared by every button in the action grid (US-038).
 ///
 /// Shared rather than duplicated because the grid mixes `Button`s (Feed, Train, Clean, Battle,
 /// Light) with `NavigationLink`s (Map, Party, Dex) — different containers that must nevertheless
@@ -23,75 +23,39 @@ struct ActionButtonFace: View {
 
     @Environment(\.isEnabled) private var isEnabled
 
-    /// What the circle holds. Most buttons name an SF Symbol; Clean draws a coil of droppings, for
-    /// which SF Symbols has no glyph (US-197) — see `ActionGlyph`.
-    let glyph: ActionGlyph
+    /// The SF Symbol the circle holds. All eight buttons name one again as of US-209: the drawn
+    /// `ActionGlyph.waste` coil US-197 put on Clean lost its only caller when Clean went back to its
+    /// sparkle, so the enum and its `WasteGlyph` went with it.
+    let systemImage: String
     let tint: Color
-
-    /// The common case: a tinted SF Symbol. Kept as a distinct initialiser so the seven symbol
-    /// buttons read `ActionButtonFace(systemImage:tint:)` exactly as they did before US-197.
-    init(systemImage: String, tint: Color) {
-        self.init(glyph: .symbol(systemImage), tint: tint)
-    }
-
-    init(glyph: ActionGlyph, tint: Color) {
-        self.glyph = glyph
-        self.tint = tint
-    }
 
     var body: some View {
         let colour = isEnabled ? tint : Color.secondary
 
-        glyphView(colour)
+        Image(systemName: systemImage)
+            .font(.system(size: 14, weight: .semibold))
+            .foregroundStyle(colour)
             // The frame is the whole button: an exact size, not padding around a glyph whose
             // metrics differ per symbol, so all eight circles match and none exceeds the 32pt cap.
             .frame(width: Self.diameter, height: Self.diameter)
             .background(Circle().fill(colour.opacity(0.2)))
             .contentShape(Circle())
     }
-
-    @ViewBuilder private func glyphView(_ colour: Color) -> some View {
-        switch glyph {
-        case .symbol(let name):
-            Image(systemName: name)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(colour)
-        case .waste:
-            WasteGlyph(colour: colour)
-        }
-    }
 }
 
-/// What an `ActionButtonFace` draws inside its circle.
+/// The two glyph names US-209 reverted, named rather than inlined so the revert is auditable and a
+/// test can hold them still.
 ///
-/// An enum rather than a generic label so `ActionButtonFace.diameter` stays a plain static that the
-/// layout tests can read without specialising the type.
-enum ActionGlyph {
-    /// A tinted SF Symbol, named by string.
-    case symbol(String)
-    /// A little heap of droppings, for the Clean button. **SF Symbols has no poop glyph** — every
-    /// attempt to name one renders a blank square — so Clean draws the same three-ellipse coil
-    /// `PoopShape` puts on the ground.
-    case waste
-}
-
-/// The coil of droppings on the Clean button (US-197).
-///
-/// Three stacked ellipses widest at the base, the classic V-Pet heap `PoopShape` draws, sized up to
-/// read inside a 30pt circle. Tinted with the button's own colour rather than a fixed brown so it
-/// greys out with the rest of the face when there is nothing to clean.
-struct WasteGlyph: View {
-    let colour: Color
-
-    var body: some View {
-        // Negative spacing so the coils overlap into one solid heap instead of three separate blobs.
-        VStack(spacing: -2) {
-            Ellipse().frame(width: 5, height: 3.5)
-            Ellipse().frame(width: 8, height: 4)
-            Ellipse().frame(width: 11, height: 4.5)
-        }
-        .foregroundStyle(colour)
-    }
+/// A separate, non-generic enum for the same reason `ActionButtonFace.diameter` lives where it does:
+/// `ActionControls` is generic over three destination types, so `ActionControls.cleanSymbol` would
+/// not infer at a test's call site.
+enum ActionSymbol {
+    /// Clean. Was `"sparkles"` before US-197, `ActionGlyph.waste` (a drawn coil of droppings) from
+    /// US-197, and `"sparkles"` again from US-209.
+    static let clean = "sparkles"
+    /// Battle. Was `"bolt.fill"` before US-197, `"figure.martial.arts"` from US-197, and
+    /// `"bolt.fill"` again from US-209.
+    static let battle = "bolt.fill"
 }
 
 /// The action grid: Feed, Train, Clean, Battle on the top row and Map, Party, Light, Dex on the
@@ -195,10 +159,13 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 .accessibilityLabel("Train")
                 .accessibilityValue(chargeValue(trainCharges, trainChargeCap))
 
-                // A coil of droppings, not sparkles: the button that clears the mess should show the
-                // mess, not the sparkle that follows it (US-197).
+                // Back to the sparkle (US-209). US-197 had drawn `ActionGlyph.waste` — a coil of
+                // droppings — on the argument that the button should show the mess rather than what
+                // follows it; the sparkle is preferred, so the glyph reverts. Only the GLYPH does:
+                // the tint stays the `.brown` US-197 gave it, and the ring, the disabled rule and the
+                // label are untouched.
                 Button(action: clean) {
-                    ActionButtonFace(glyph: .waste, tint: .brown)
+                    ActionButtonFace(systemImage: ActionSymbol.clean, tint: .brown)
                 }
                 .buttonStyle(.plain)
                 .disabled(isCleanDisabled)
@@ -209,10 +176,12 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 .accessibilityLabel("Clean")
                 .accessibilityValue(chargeValue(cleanCharges, cleanChargeCap))
 
-                // A fighter, not a lightning bolt (US-197): a bolt reads as energy, which is what
-                // Battle spends, not the fight it buys.
+                // Back to the bolt (US-209), for the same reason Clean went back to its sparkle.
+                // US-197 had made this `figure.martial.arts` on the argument that a bolt reads as the
+                // energy Battle spends rather than the fight it buys; the bolt is preferred. The
+                // `.purple` tint never changed, so this is a glyph-only revert too.
                 Button(action: battle) {
-                    ActionButtonFace(systemImage: "figure.martial.arts", tint: .purple)
+                    ActionButtonFace(systemImage: ActionSymbol.battle, tint: .purple)
                 }
                 .buttonStyle(.plain)
                 .disabled(isBattleDisabled)

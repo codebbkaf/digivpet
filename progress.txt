@@ -6524,3 +6524,46 @@ The thirty, `Perfect -> Ultimate`:
   few screenshots (the app shows a spinner for several seconds). `sips -c H W --cropOffset Y X` then
   `sips -Z 400` is enough to eyeball a 30pt ring's fill without leaving the shell.
 ---
+
+## 2026-07-24 - US-209 (Clean and Battle go back to their previous glyphs)
+- A pure revert of US-197's two glyph choices, and ONLY the glyphs. Clean draws `"sparkles"` again
+  (US-197 had drawn `ActionGlyph.waste`, a three-ellipse coil of droppings) and Battle draws
+  `"bolt.fill"` again (US-197 had made it `figure.martial.arts`). AC3 is explicit that the tints stay
+  as they are, so Clean keeps the `.brown` US-197 gave it — a brown sparkle, not the pre-US-197 teal
+  one — and Battle keeps `.purple`, which never changed. Rings, `isCleanDisabled`/`isBattleDisabled`
+  and both accessibility labels are untouched.
+- AC4 ("recorded in a code comment so the revert is auditable") is answered with a named constant
+  rather than a bare comment: a new non-generic `enum ActionSymbol { clean, battle }` whose doc lines
+  carry the full three-step history (pre-US-197 -> US-197 -> US-209). Non-generic for the same reason
+  `ActionButtonFace.diameter` is: `ActionControls` is generic over three destination types, so
+  `ActionControls.cleanSymbol` would not infer at a test call site.
+- Deleting the coil left `ActionGlyph` with one case and `WasteGlyph` with no callers, so both are
+  gone and `ActionButtonFace` holds a plain `let systemImage: String` again — the exact shape it had
+  before US-197. `PoopShape` (the mess on the ground) is a different type and is unaffected.
+- Files: Sources/ActionControls.swift, Tests/ActionControlsTests.swift.
+- Verified: build green; FULL suite **2710 tests, 0 failures** (+1). AC5 screenshotted on 46mm
+  (/tmp/us209/s6.png, zoom.png cropped): a brown four-point sparkle inside its blue 8-segment ring
+  and a magenta bolt inside its purple one, side by side in row 1.
+- Test added: `testCleanAndBattleWearTheirPreUS197Glyphs`, asserting the two `ActionSymbol` constants
+  the faces are built from (a view body is unreachable from a test here).
+
+**Learnings for future iterations:**
+- **"Keep their existing tints" in a revert story means the tints AT THE TIME OF THE STORY, not the
+  ones from the era being reverted to.** US-197 changed Clean's glyph AND its tint (teal -> brown);
+  US-209's AC3 lists tints among the things to keep, so only half of that pair came back. Read a
+  revert AC for what it EXCLUDES — going "all the way back" would have failed AC3 and also collided
+  with Party, which is `.teal` in row 2.
+- **A view-body-only change still deserves a test, via the constant the body is built from.** There
+  is no way to assert `Image(systemName:)` inside a SwiftUI body in this suite, so the pattern is:
+  hoist the literal to a named non-generic constant, assert that. Same trick `ActionButtonFace
+  .diameter` uses for geometry. Cheap, and it makes an "I preferred the old one" story regression-safe.
+- **When a story removes the last caller of a helper, delete the helper in the same commit.** US-197's
+  `ActionGlyph`/`WasteGlyph` existed solely because SF Symbols has no poop glyph; leaving them would
+  have left a documented-as-used View that nothing draws. `ActionButtonFace(glyph:)` had no call site
+  outside this file — grep before assuming that of any other helper.
+- Screenshot recipe unchanged from US-208 and still reliable: build with `-derivedDataPath /tmp/ddNNN`,
+  install THAT bundle, `simctl shutdown` -> `erase` -> `boot` -> `install` -> `launch
+  com.digivpet.DigiVPet -healthAnswered -noNotificationPrompt -chargesDemo`, discard the first few
+  shots (multi-second spinner), then `sips -c H W --cropOffset Y X` + `sips -Z 500` to eyeball a 30pt
+  glyph. The action grid's row 1 sits at roughly y=350, x=210 in a 46mm screenshot.
+---
