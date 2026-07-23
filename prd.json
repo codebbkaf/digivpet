@@ -1,7 +1,7 @@
 {
   "project": "Digimon Health V-Pet",
   "branchName": "ralph/adventure-maps-party-and-jogress",
-  "description": "Adventure Maps, Multi-Digimon Party, Jogress and Full Roster Wiring - sixteen map backgrounds become places that accrue your steps, supply your battle opponents and hold the Digitama you can find; the save grows from one Digimon to a box of many with exactly one active and the rest frozen; two owned Digimon fuse by Jogress and hand one of their eggs back; the light button leaves the Digimon's play area; and the 780 playable Digimon that today have no evolution edge at all get wired into the graph. Source PRD: tasks/prd-adventure-maps-party-and-jogress.md || Prepended ahead of the Orphan sweep: sleep in evolution, the meat/steps/calories/handwash consumption loop as a config file, per-Digimon HP/Attack/Agility with dash-bar battle HP, agility dodges and element damage, light-off conditions, screen-layout polish, and wiring the dead MetricCreditor health pipeline. Source PRD: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+  "description": "Adventure Maps, Multi-Digimon Party, Jogress and Full Roster Wiring - sixteen map backgrounds become places that accrue your steps, supply your battle opponents and hold the Digitama you can find; the save grows from one Digimon to a box of many with exactly one active and the rest frozen; two owned Digimon fuse by Jogress and hand one of their eggs back; the light button leaves the Digimon's play area; and the 780 playable Digimon that today have no evolution edge at all get wired into the graph. Source PRD: tasks/prd-adventure-maps-party-and-jogress.md || Prepended ahead of the Orphan sweep: sleep in evolution, the meat/steps/calories/handwash consumption loop as a config file, per-Digimon HP/Attack/Agility with dash-bar battle HP, agility dodges and element damage, light-off conditions, screen-layout polish, and wiring the dead MetricCreditor health pipeline. Source PRD: tasks/prd-sleep-consumption-battle-stats-and-polish.md. || Prepended ahead of all remaining work: the urgent Dex crash (single shared GameStore), main-screen polish (shorter room, touching dash bars, two-row action grid, settings gear, consumption rings, energy bars removed for map-step and Zz dash bars), Digimon age, wild-battle and per-map-boss encounters gated on walked steps, met-or-'?' map residents, and metric double-count safeguards with a README. Source PRD: tasks/prd-screen-polish-wild-battle-and-boss.md.",
   "userStories": [
     {
       "id": "US-114",
@@ -1496,7 +1496,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 78,
+      "priority": 91,
       "passes": false,
       "notes": ""
     },
@@ -1516,7 +1516,210 @@
         "Tests pass",
         "Typecheck passes"
       ],
+      "priority": 92,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-193",
+      "title": "Fix the Dex crash: reuse the one GameStore, never open a second",
+      "description": "As a player, tapping the Dex book must not crash. DexModel (DexModel.swift:236) defaults makeStore to `{ try GameStore() }`, opening a SECOND ModelContext on the same file; a GameState fetched through one context is invalidated when the other is reset, which is the `ModelContext.reset` fatal error. DigiVPetApp.swift:10 documents why a second store is illegal. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-193.",
+      "acceptanceCriteria": [
+        "Opening the Dex from the top-right toolbar does not crash: verified in the simulator by tapping the book (or `-dexDemo`) and pushing/popping repeatedly",
+        "DexView/DexModel reuse the single app-wide GameStore/ModelContext (same source MainScreenModel uses) instead of constructing a fresh GameStore()",
+        "No runtime code path constructs a second GameStore on the live store file; the DigiVPetApp.swift:10 single-store invariant holds",
+        "A regression test proves a GameState read via the Dex path stays valid after the main screen's context does normal work (no use-after-reset)",
+        "Build green; existing tests pass"
+      ],
+      "priority": 78,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-194",
+      "title": "Shorter room, and the action row sits 12 from the bottom",
+      "description": "As a player, I want the Digimon play area a little shorter and the button row's bottom padding set to 12. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-194.",
+      "acceptanceCriteria": [
+        "The Digimon play-area (sprite slot) height is reduced by a small deliberate amount from its current value; document before/after in ContentView.swift",
+        "The action row's bottom padding is exactly 12",
+        "The Digimon still walks within its slot and the scrim (US-112) still covers only that slot",
+        "Build green; verify layout in the simulator with a screenshot"
+      ],
       "priority": 79,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-195",
+      "title": "Dash bars read as one solid bar split by 2pt lines",
+      "description": "As a player, I want dash bars to look like one bar divided by thin lines, not spaced-out dashes. DashBar.swift:45 uses spacing: 2. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-195.",
+      "acceptanceCriteria": [
+        "Dashes touch: segment spacing is 0, no gap between adjacent segments",
+        "Adjacent segments are separated by a 2pt divider line so the boundary stays legible",
+        "All existing DashBar callers (sleep Zz bar, stat bars, map-step bar) render correctly with the new look",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 80,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-196",
+      "title": "Energy bars leave the screen; map-step and Zz dash bars stay",
+      "description": "As a player, the main screen should show only the two readings that still matter (map steps and sleep), since STEP/KCAL/EXER are already converted into train points and battle time. EnergyBarsView.swift renders the three bars; MapStripView.swift:49 shows a figure.walk symbol and step count. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-196.",
+      "acceptanceCriteria": [
+        "The STEP, KCAL, and EXER energy bars are removed from the main screen",
+        "The current map's step progress is shown on the main screen as a DashBar (map recorded steps / map total steps)",
+        "The main screen shows exactly two dash-bar lines above the action area: line 1 map steps, line 2 Zz sleep",
+        "The figure.walk travelling icon and the step-count wording are removed from the map strip",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 81,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-197",
+      "title": "A two-row action grid with new icons and a circular Light",
+      "description": "As a player, I want the actions in two rows with clearer icons. ActionControls.swift currently renders one row (feed fork.knife, train dumbbell, clean sparkles, battle bolt.fill); Light is in the toolbar (US-114). Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-197.",
+      "acceptanceCriteria": [
+        "Row 1: Feed, Train, Clean, Battle",
+        "Clean uses a waste/'shit' icon instead of sparkles",
+        "Battle uses a 'fight'/combat icon instead of bolt.fill",
+        "Row 2: Map, Party, Light, Book (Dex)",
+        "The Light control is a circular button matching the other action buttons (same ActionButtonFace treatment), not the old toolbar switch",
+        "All eight buttons share one consistent circular look and spacing across the two rows",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 82,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-198",
+      "title": "A settings gear in the top-right holds notification settings",
+      "description": "As a player, I want a Settings screen behind a top-right gear, with notifications configured there instead of a bell in the action row. ActionControls.swift:114 and ContentView.swift:333/:654 place the bell. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-198.",
+      "acceptanceCriteria": [
+        "A gearshape button sits in the top-right toolbar and opens a Settings screen",
+        "The Settings screen contains the notification settings (reusing NotificationSettingsView) as its only section for now",
+        "The old bell notifications button is removed from the action row",
+        "Notification settings still persist and behave exactly as before, reached via the gear",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 83,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-199",
+      "title": "Consumption rings around the spending button; handwash goal 8",
+      "description": "As a player, I want each spendable resource shown as a segmented ring around its own button. Today the red (train) / purple (battle) / blue (handwash-clean) progress reads as dash bars on the row. ConsumptionConfig.swift:85 sets handwashPerCleanCharge. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-199.",
+      "acceptanceCriteria": [
+        "Train progress is a red ring around the Train button",
+        "Battle-time progress is a purple ring around the Battle button",
+        "Handwash/clean progress is a blue ring around the Clean button",
+        "Each ring is a circular (segmented) version of the dash bar surrounding its own button",
+        "The handwash goal is raised to 8, so the clean ring is drawn as 8 segments",
+        "The old straight dash bars for these three resources are gone from the row",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 84,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-200",
+      "title": "A Digimon's age shown as '1Y' beside the battle record",
+      "description": "As a player, I want to see my Digimon's age: one year per real day since it hatched, shown right after the battle win/loss numbers on the top line. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-200.",
+      "acceptanceCriteria": [
+        "Age = whole real days from the Digitama hatch time to now; each elapsed day is one year",
+        "Age is shown as e.g. `1Y` on the top line, immediately after the battle win/loss numbers",
+        "Age is computed from the injectable clock: freshly hatched reads 0Y; after one injected day, 1Y",
+        "A test drives the clock forward and asserts the year increments once per day",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 85,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-201",
+      "title": "A wild battle greets you after 500 more steps",
+      "description": "As a player, when I open the app having walked at least 500 steps since my last encounter, I want a wild battle I can accept or flee. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-201.",
+      "acceptanceCriteria": [
+        "On app foreground/open, if currentMapSteps - lastEncounterSteps >= 500, a dialog offers BATTLE or FLEE against a wild (non-GameState) Digimon from the current map",
+        "The 500-step threshold is measured against the map-step reading recorded at the previous encounter; the marker updates whenever an encounter resolves",
+        "FLEE: the Digimon plays its sad/refuse animation and the current map's recorded steps decrease by 500",
+        "BATTLE then losing: the current map's recorded steps decrease by 500",
+        "BATTLE then winning: no step penalty; the wild Digimon counts as met for this map",
+        "Clock and step source are injectable; tests drive the trigger, flee penalty, and loss penalty without real time",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 86,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-202",
+      "title": "Map residents are '?' until you meet them",
+      "description": "As a player, I want a map's Digimon shown as '?' until met (wild encounter or 500-step meeting), then their art. MapDetailView.swift already draws '?' for undiscovered slots. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-202.",
+      "acceptanceCriteria": [
+        "A map Digimon shows its sprite only once met; otherwise it shows '?'",
+        "'Met' is set both when you fight it (win or the encounter simply occurred) and when a 500-step meeting surfaces it; both paths count",
+        "Met state persists across launches (stored on the save, not view state)",
+        "A test asserts an unmet resident renders '?' and a met one renders art",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 87,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-203",
+      "title": "Each map has a boss that gates the next map",
+      "description": "As a player, once I have walked the whole map and met every resident, I want to fight the map's boss to truly finish the map and unlock the next. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-203.",
+      "acceptanceCriteria": [
+        "The boss dialog appears the first time the player has (a) reached the map's total steps AND (b) met every resident of the map",
+        "The dialog's only action is BATTLE (no flee)",
+        "The boss is the highest-stage Digimon of that map",
+        "Win: the map is marked truly finished and the next map unlocks",
+        "Lose: the current map's recorded steps decrease by 1000; the boss can be re-challenged once conditions hold again",
+        "Until the boss is beaten, the map is not counted as finished even if the step total was reached",
+        "Clock/step source injectable; tests cover the trigger conditions, the win-unlock, and the 1000-step loss penalty",
+        "Build green; verify in the simulator with a screenshot"
+      ],
+      "priority": 88,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-204",
+      "title": "Step/metric accounting is never doubled, and it is documented",
+      "description": "As a developer, I want a written, tested guarantee that steps/calories/exercise/sleep are credited once. EnergyLedger.swift, MetricLedger.swift, ComplicationSnapshot.swift:101 and GameSession already guard this. Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-204.",
+      "acceptanceCriteria": [
+        "Accounting reads today's cumulative metric, compares to the stored local baseline, and credits only the positive delta, never the raw total",
+        "Re-opening within the same day with an unchanged metric credits zero (proved by a test)",
+        "A metric that increases credits only the increase; a day rollover re-baselines without back-crediting yesterday",
+        "A README section (README.md or docs/metric-accounting.md) explains the today's-delta approach and how each of steps/calories/exercise/sleep avoids double counting, pointing at the ledger types",
+        "Any gap found while double-checking is fixed, or the note states the code already enforces it and cites the tests",
+        "Build green; accounting tests pass"
+      ],
+      "priority": 89,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-205",
+      "title": "Best-effort background step check raising a wild-battle notification",
+      "description": "As a player, I want the watch to occasionally notice 500+ steps and nudge me to battle before I open the app. watchOS gives NO guaranteed interval; this is opportunistic (BGAppRefreshTask/widget timeline, targeting ~30 min, no timing guarantee). Full reasoning: tasks/prd-screen-polish-wild-battle-and-boss.md, US-205.",
+      "acceptanceCriteria": [
+        "A background refresh (BGAppRefreshTask and/or widget timeline reload) reads current steps and, if >= 500 since the last encounter, schedules a local notification inviting the player to battle",
+        "The notification does not double-schedule for the same threshold crossing and does not fire while an encounter is already pending",
+        "The ~30-minute cadence is requested but documented as opportunistic/no-guarantee in code comments and the README",
+        "Tapping the notification opens the app to the wild-battle dialog (US-201)",
+        "Build green; manual note in progress.txt on simulator limitations for background verification"
+      ],
+      "priority": 90,
       "passes": false,
       "notes": ""
     }
