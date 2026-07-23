@@ -517,15 +517,16 @@ final class CareMistakeApplyTests: XCTestCase {
 
         let model = makeModel(url: url, now: CareClock.at("2026-03-11 01:00"), sleep: [night])
         await model.start()
+        model.profile?.meat = 10
         XCTAssertTrue(model.isAsleep)
         let before = try XCTUnwrap(model.state?.careMistakeCount)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.state?.careMistakeCount, before + 1)
         XCTAssertFalse(model.isAsleep, "and it is really awake, not merely charged for")
 
         // A second prod the same night costs nothing more.
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.state?.careMistakeCount, before + 1)
     }
 
@@ -546,10 +547,11 @@ final class CareMistakeApplyTests: XCTestCase {
 
         let model = makeModel(url: url, now: CareClock.at("2026-03-11 09:00"), sleep: [night])
         await model.start()
+        model.profile?.meat = 10
         XCTAssertFalse(model.isAsleep)
         let before = try XCTUnwrap(model.state?.careMistakeCount)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.state?.careMistakeCount, before)
     }
 }

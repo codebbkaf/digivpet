@@ -92,6 +92,8 @@ final class WanderingTests: XCTestCase {
         )
         await model.start()
         XCTAssertEqual(model.phase, .playing)
+        // Feeding spends meat since US-174; stock the larder so a fed test eats rather than blocks.
+        model.profile?.meat = 10
         return model
     }
 

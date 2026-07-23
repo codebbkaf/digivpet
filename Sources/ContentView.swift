@@ -613,6 +613,15 @@ struct ContentView: View {
                 }
 
                 if model.state != nil {
+                    // The meat larder (US-174), directly above the Feed button it pays for. A
+                    // DashBar — the app's one visual language for a value (US-171) — filled to the
+                    // meat on hand and totalled at `meatCap`, orange to match the fork-and-knife it
+                    // feeds. No number: a glance reads how many meals are in the box, and an empty
+                    // bar plus the "No meat — go battle" message on a tap is the whole affordance for
+                    // why Feed did nothing at zero. Kept short so it costs the play area only its own
+                    // 5 points and the Digimon keeps the scale US-172 grew it to.
+                    DashBar(filled: model.meat, total: model.meatCap, tint: .orange, dashHeight: 5)
+
                     // All four actions in one row (US-038), Notifications among them: a
                     // preference is something you visit once, but it is still a destination
                     // like the others, and a fourth circle costs less room than the labelled

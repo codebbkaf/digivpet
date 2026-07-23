@@ -120,6 +120,8 @@ final class WakeOnActionTests: XCTestCase {
         )
         await model.start()
         XCTAssertEqual(model.phase, .playing)
+        // Feeding spends meat since US-174; stock the larder so a fed test eats rather than blocks.
+        model.profile?.meat = 10
         return (model, url, { now = $0 })
     }
 
@@ -169,7 +171,7 @@ final class WakeOnActionTests: XCTestCase {
         let state = try XCTUnwrap(model.state)
         let before = state.careMistakeCount
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
 
         XCTAssertEqual(state.hunger, 2, "the meal was really eaten")
         XCTAssertEqual(state.careMistakeCount, before + 1)
@@ -304,7 +306,7 @@ final class WakeOnActionTests: XCTestCase {
         let state = try XCTUnwrap(model.state)
         let before = state.careMistakeCount
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
 
         setNow(Self.at("2026-03-11 02:10"))
         await model.refresh()
@@ -422,6 +424,6 @@ final class WakeOnActionTests: XCTestCase {
 
         // Feeding a sick Digimon was never blocked, and still is not — eating is how a neglected
         // Digimon is looked after.
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
     }
 }

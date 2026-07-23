@@ -37,46 +37,53 @@ private func makeState(hunger: Int, vitality: Int) -> GameState {
 
 final class FeedActionTests: XCTestCase {
 
-    // MARK: - AC1: costs Vitality, reduces hunger by one
-
-    func testFeedingSpendsVitalityAndRemovesOneUnitOfHunger() {
-        let state = makeState(hunger: 3, vitality: 20)
-
-        let outcome = FeedAction.feed(state, isAsleep: false, now: Clock.after(1),
-                                      calendar: Clock.calendar)
-
-        XCTAssertEqual(outcome, .fed(cost: FeedAction.vitalityCostPerFeed))
-        XCTAssertEqual(state.hunger, 2, "one unit, not all of it")
-        XCTAssertEqual(state.stageEnergy[.vitality], 20 - FeedAction.vitalityCostPerFeed)
+    /// A larder with `meat` in it, outside any store — enough for the pure rule, which only reads
+    /// and writes the count. Since US-174 a feed is bought from here, not from `stageEnergy`.
+    private func makeProfile(meat: Int) -> PlayerProfile {
+        PlayerProfile(meat: meat)
     }
 
-    /// Only Vitality is spent. Feeding must not quietly drain the other three, which are what steer
-    /// the evolution branch.
-    func testFeedingSpendsNothingButVitality() {
+    // MARK: - AC1: costs one meat, reduces hunger by one
+
+    func testFeedingSpendsMeatAndRemovesOneUnitOfHunger() {
+        let state = makeState(hunger: 3, vitality: 20)
+        let profile = makeProfile(meat: 5)
+
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.after(1),
+                                      calendar: Clock.calendar)
+
+        XCTAssertEqual(outcome, .fed)
+        XCTAssertEqual(state.hunger, 2, "one unit, not all of it")
+        XCTAssertEqual(profile.meat, 4, "one meat off the larder, not more")
+    }
+
+    /// No energy is spent at all now — feeding moved off the four energy types onto meat, so a meal
+    /// must not quietly drain any of them, least of all the ones that steer the evolution branch.
+    func testFeedingSpendsNoEnergy() {
         let state = makeState(hunger: 2, vitality: 20)
         state.stageEnergy[.strength] = 40
         state.stageEnergy[.spirit] = 30
         state.stageEnergy[.stamina] = 10
+        let profile = makeProfile(meat: 3)
 
-        FeedAction.feed(state, isAsleep: false, now: Clock.start, calendar: Clock.calendar)
+        FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.start,
+                        calendar: Clock.calendar)
 
+        XCTAssertEqual(state.stageEnergy[.vitality], 20)
         XCTAssertEqual(state.stageEnergy[.strength], 40)
         XCTAssertEqual(state.stageEnergy[.spirit], 30)
         XCTAssertEqual(state.stageEnergy[.stamina], 10)
     }
 
-    /// `lifetimeEnergy` is the record of what was ever EARNED, so spending must not rewrite it —
-    /// otherwise a well-fed Digimon would look like it had lived a less active life than it did.
-    ///
-    /// Since US-123 the total is on `PlayerProfile` and a feed is handed only the `GameState`, so
-    /// the guarantee is structural rather than a rule anybody has to keep. Pinned anyway: it is the
-    /// test that fails the day someone hands `FeedAction` the profile as well.
-    func testFeedingDoesNotTakeBackLifetimeEnergy() {
+    /// `lifetimeEnergy` is the record of what was ever EARNED, so a meal must not rewrite it —
+    /// meat spends against `profile.meat` and nothing else on the profile.
+    func testFeedingDoesNotTouchLifetimeEnergy() {
         let state = makeState(hunger: 2, vitality: 20)
-        let profile = PlayerProfile()
+        let profile = makeProfile(meat: 3)
         profile.lifetimeEnergy[.vitality] = 90
 
-        FeedAction.feed(state, isAsleep: false, now: Clock.start, calendar: Clock.calendar)
+        FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.start,
+                        calendar: Clock.calendar)
 
         XCTAssertEqual(profile.lifetimeEnergy[.vitality], 90)
     }
@@ -86,10 +93,12 @@ final class FeedActionTests: XCTestCase {
     /// `advanceHunger` and would look like it did nothing.
     func testFeedingAtMaximumHungerDoesNotImmediatelyReAccrue() {
         let state = makeState(hunger: HungerClock.maximumHunger, vitality: 20)
+        let profile = makeProfile(meat: 3)
         // Frozen 12h ago, which is three intervals' worth of stale time.
         state.hungerUpdatedAt = Clock.start
 
-        FeedAction.feed(state, isAsleep: false, now: Clock.after(12), calendar: Clock.calendar)
+        FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.after(12),
+                        calendar: Clock.calendar)
         XCTAssertEqual(state.hunger, HungerClock.maximumHunger - 1)
 
         state.advanceHunger(now: Clock.after(12))
@@ -100,15 +109,17 @@ final class FeedActionTests: XCTestCase {
     // MARK: - AC3 / AC5: refusing at zero hunger
 
     /// The story's headline assertion: a Digimon with nothing to eat off turns the food down, is
-    /// charged nothing for it, and the refusal is counted.
-    func testFeedingAtZeroHungerConsumesNoEnergyAndCountsTheRefusal() {
+    /// charged nothing for it, and the refusal is counted. A refusal costs no meat, even with a
+    /// full larder — a full Digimon is not a purchase.
+    func testFeedingAtZeroHungerConsumesNoMeatAndCountsTheRefusal() {
         let state = makeState(hunger: 0, vitality: 20)
+        let profile = makeProfile(meat: 5)
 
-        let outcome = FeedAction.feed(state, isAsleep: false, now: Clock.start,
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.start,
                                       calendar: Clock.calendar)
 
         XCTAssertEqual(outcome, .refused)
-        XCTAssertEqual(state.stageEnergy[.vitality], 20, "a refusal is free")
+        XCTAssertEqual(profile.meat, 5, "a refusal is free")
         XCTAssertEqual(state.hunger, 0, "and hunger cannot go negative")
         XCTAssertEqual(state.refusalCount, 1)
     }
@@ -117,9 +128,10 @@ final class FeedActionTests: XCTestCase {
     /// overfeeding mistake will read.
     func testRefusalsAccumulateWithinADay() {
         let state = makeState(hunger: 0, vitality: 20)
+        let profile = makeProfile(meat: 5)
 
         for hour in 0..<3 {
-            FeedAction.feed(state, isAsleep: false, now: Clock.after(Double(hour)),
+            FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.after(Double(hour)),
                             calendar: Clock.calendar)
         }
 
@@ -130,11 +142,12 @@ final class FeedActionTests: XCTestCase {
     /// And they roll over at midnight, so yesterday's refusals cannot trip today's mistake.
     func testRefusalsResetOnANewDay() {
         let state = makeState(hunger: 0, vitality: 20)
-        FeedAction.feed(state, isAsleep: false, now: Clock.start, calendar: Clock.calendar)
-        FeedAction.feed(state, isAsleep: false, now: Clock.after(1), calendar: Clock.calendar)
+        let profile = makeProfile(meat: 5)
+        FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.start, calendar: Clock.calendar)
+        FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.after(1), calendar: Clock.calendar)
         XCTAssertEqual(state.refusalCount, 2)
 
-        FeedAction.feed(state, isAsleep: false, now: Clock.after(30), calendar: Clock.calendar)
+        FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.after(30), calendar: Clock.calendar)
 
         XCTAssertEqual(state.refusalCount, 1, "a new day starts the count over")
         XCTAssertEqual(state.refusalDay, Clock.calendar.startOfDay(for: Clock.after(30)))
@@ -144,8 +157,9 @@ final class FeedActionTests: XCTestCase {
 
     func testFeedingIsBlockedWhileAsleep() {
         let state = makeState(hunger: 3, vitality: 20)
+        let profile = makeProfile(meat: 5)
 
-        let outcome = FeedAction.feed(state, isAsleep: true, now: Clock.start,
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: true, now: Clock.start,
                                       calendar: Clock.calendar)
 
         guard case .blocked(let reason) = outcome else {
@@ -153,45 +167,51 @@ final class FeedActionTests: XCTestCase {
         }
         XCTAssertFalse(reason.isEmpty, "the block has to be able to explain itself on screen")
         XCTAssertEqual(state.hunger, 3, "nothing was eaten")
-        XCTAssertEqual(state.stageEnergy[.vitality], 20, "and nothing was spent")
+        XCTAssertEqual(profile.meat, 5, "and nothing was spent")
     }
 
     /// Asleep is checked BEFORE hunger, so a sleeping Digimon that happens to be full is reported as
     /// asleep rather than being charged a refusal it never made.
     func testSleepingAndFullIsBlockedRatherThanCountedAsARefusal() {
         let state = makeState(hunger: 0, vitality: 20)
+        let profile = makeProfile(meat: 5)
 
-        let outcome = FeedAction.feed(state, isAsleep: true, now: Clock.start,
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: true, now: Clock.start,
                                       calendar: Clock.calendar)
 
         guard case .blocked = outcome else { return XCTFail("expected a block, got \(outcome)") }
         XCTAssertEqual(state.refusalCount, 0)
     }
 
-    // MARK: - Not enough energy
+    // MARK: - AC2 / AC4: no meat
 
-    /// Feeding is a purchase, so it can fail for want of funds — and that has to say so rather than
-    /// silently doing nothing or driving Vitality negative.
-    func testFeedingIsBlockedWithoutEnoughVitality() {
-        let state = makeState(hunger: 3, vitality: FeedAction.vitalityCostPerFeed - 1)
+    /// The AC's no-op: feeding a hungry Digimon with an empty larder blocks, spends nothing, and
+    /// leaves hunger exactly where it was — and the block names the way to refill (go battle).
+    func testFeedingAtZeroMeatIsANoOpThatDoesNotChangeHunger() {
+        let state = makeState(hunger: 3, vitality: 20)
+        let profile = makeProfile(meat: 0)
 
-        let outcome = FeedAction.feed(state, isAsleep: false, now: Clock.start,
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.start,
                                       calendar: Clock.calendar)
 
-        guard case .blocked = outcome else { return XCTFail("expected a block, got \(outcome)") }
-        XCTAssertEqual(state.stageEnergy[.vitality], FeedAction.vitalityCostPerFeed - 1)
-        XCTAssertEqual(state.hunger, 3)
+        guard case .blocked(let reason) = outcome else {
+            return XCTFail("expected a block, got \(outcome)")
+        }
+        XCTAssertFalse(reason.isEmpty, "the block has to explain itself on screen")
+        XCTAssertEqual(profile.meat, 0, "nothing was spent and nothing went negative")
+        XCTAssertEqual(state.hunger, 3, "and hunger is exactly where it was")
     }
 
-    /// Exactly the cost is enough — the guard is `>=`, not `>`.
-    func testExactlyTheCostIsEnoughToFeed() {
-        let state = makeState(hunger: 1, vitality: FeedAction.vitalityCostPerFeed)
+    /// Exactly one meat is enough — the guard is `>=`, not `>` — and it decrements the larder by one.
+    func testExactlyOneMeatIsEnoughToFeed() {
+        let state = makeState(hunger: 1, vitality: 20)
+        let profile = makeProfile(meat: FeedAction.meatCostPerFeed)
 
-        let outcome = FeedAction.feed(state, isAsleep: false, now: Clock.start,
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: false, now: Clock.start,
                                       calendar: Clock.calendar)
 
-        XCTAssertEqual(outcome, .fed(cost: FeedAction.vitalityCostPerFeed))
-        XCTAssertEqual(state.stageEnergy[.vitality], 0)
+        XCTAssertEqual(outcome, .fed)
+        XCTAssertEqual(profile.meat, 0)
     }
 }
 
@@ -259,10 +279,12 @@ final class FeedApplyTests: XCTestCase {
         )
     }
 
-    /// Seeds a saved game at "hero" with the given hunger and Vitality, then hands back a started
-    /// model reading it off disk.
-    private func startedModel(named name: String, hunger: Int, vitality: Int) async throws
-        -> MainScreenModel {
+    /// Seeds a saved game at "hero" with the given hunger and Vitality and a global larder of
+    /// `meat`, then hands back a started model reading it off disk. Vitality is kept only because
+    /// callers set it; since US-174 a feed is bought from `meat`, so that is the fund a fed test
+    /// stocks.
+    private func startedModel(named name: String, hunger: Int, vitality: Int, meat: Int = 10)
+        async throws -> MainScreenModel {
         let url = storeURL(name)
         let seeding = try GameStore(url: url)
         let state = try seeding.loadOrCreate(digitamaId: "hero", now: Clock.start)
@@ -275,6 +297,7 @@ final class FeedApplyTests: XCTestCase {
         let model = makeModel(url: url, now: Clock.start)
         await model.start()
         XCTAssertEqual(model.phase, .playing)
+        model.profile?.meat = meat
         return model
     }
 
@@ -283,7 +306,7 @@ final class FeedApplyTests: XCTestCase {
     func testFeedingPlaysTheEatLoopWithAHapticAndThenReturnsToIdle() async throws {
         let model = try await startedModel(named: "eat", hunger: 3, vitality: 20)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.animation, .eat, "the eat loop, i.e. frames eat1 <-> eat2")
         XCTAssertEqual(model.animation.stageFrames, [.eat1, .eat2])
         XCTAssertEqual(hapticCount, 1)
@@ -308,26 +331,28 @@ final class FeedApplyTests: XCTestCase {
     /// AC5 through the real model and the real store: the refusal is not just counted in memory, it
     /// survives to the next launch, which is what US-027 will read it on.
     func testARefusalIsPersisted() async throws {
-        let model = try await startedModel(named: "persist", hunger: 0, vitality: 20)
+        let model = try await startedModel(named: "persist", hunger: 0, vitality: 20, meat: 10)
         XCTAssertEqual(model.feed(), .refused)
-        XCTAssertEqual(model.state?.stageEnergy[.vitality], 20, "still free through the model")
+        XCTAssertEqual(model.profile?.meat, 10, "still free through the model")
 
         let reopened = try GameStore(url: storeURL("persist"))
         let saved = try reopened.loadOrCreate(digitamaId: "hero", now: Clock.start)
+        let profile = try reopened.loadOrCreateProfile()
         XCTAssertEqual(saved.refusalCount, 1)
-        XCTAssertEqual(saved.stageEnergy[.vitality], 20)
+        XCTAssertEqual(profile.meat, 10)
     }
 
     // MARK: - AC1 persistence
 
     func testAFedHungerAndItsCostArePersisted() async throws {
-        let model = try await startedModel(named: "fed", hunger: 3, vitality: 20)
+        let model = try await startedModel(named: "fed", hunger: 3, vitality: 20, meat: 10)
         model.feed()
 
         let reopened = try GameStore(url: storeURL("fed"))
         let saved = try reopened.loadOrCreate(digitamaId: "hero", now: Clock.start)
+        let profile = try reopened.loadOrCreateProfile()
         XCTAssertEqual(saved.hunger, 2)
-        XCTAssertEqual(saved.stageEnergy[.vitality], 20 - FeedAction.vitalityCostPerFeed)
+        XCTAssertEqual(profile.meat, 10 - FeedAction.meatCostPerFeed, "one meat off the larder, persisted")
         XCTAssertEqual(saved.hungerUpdatedAt, Clock.start, "restamped at the feed")
     }
 
@@ -342,7 +367,7 @@ final class FeedApplyTests: XCTestCase {
         model.isAsleep = true
         let mistakesBefore = try XCTUnwrap(model.state?.careMistakeCount)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertFalse(model.isAsleep, "prodding it woke it")
         XCTAssertEqual(model.animation, .eat, "and it is eating, not lying in the sleep loop")
         XCTAssertEqual(hapticCount, 1)

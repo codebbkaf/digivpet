@@ -77,6 +77,7 @@ final class PlayerProfileTests: XCTestCase {
             let store = try GameStore(url: storeURL)
             let profile = try store.loadOrCreateProfile()
             profile.lifetimeEnergy = EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88)
+            profile.meat = 12
             profile.selectedMapId = "08_jungle"
             profile.record(steps: 4_321, forMap: "08_jungle")
             profile.markFinished("01_grassland", at: t1)
@@ -88,6 +89,7 @@ final class PlayerProfileTests: XCTestCase {
         let profile = try reopened.loadOrCreateProfile()
         XCTAssertEqual(profile.lifetimeEnergy,
                        EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88))
+        XCTAssertEqual(profile.meat, 12, "the global larder survives to the next launch")
         XCTAssertEqual(profile.selectedMapId, "08_jungle")
         XCTAssertEqual(profile.recorded(forMap: "08_jungle"), 4_321)
         XCTAssertEqual(profile.finishedAt(forMap: "01_grassland"), t1)
@@ -212,6 +214,8 @@ final class PlayerProfileTests: XCTestCase {
         XCTAssertEqual(profile.lifetimeEnergy,
                        EnergyTotals(strength: 55, vitality: 66, spirit: 77, stamina: 88),
                        "the old save's lifetime energy is on the new profile")
+        XCTAssertEqual(profile.meat, 0,
+                       "US-174: an existing save migrates to an empty larder, not a full one")
     }
 
     /// The map fields moved too, and the record they came off is deleted — two answers to "where am

@@ -1279,6 +1279,16 @@ final class MainScreenModel: ObservableObject {
     /// far as this screen can tell.
     var lifetimeEnergy: EnergyTotals { profile?.lifetimeEnergy ?? .zero }
 
+    /// The global meat larder (US-174), or zero before `start()` has opened the profile — the
+    /// number the feed DashBar fills and `FeedAction` spends. Zero is the honest reading: a player
+    /// whose profile has not been opened has an empty larder as far as this screen can tell.
+    var meat: Int { profile?.meat ?? 0 }
+
+    /// The most meat the larder shows, and so the total of the feed DashBar (US-174). Read off the
+    /// shipped `ConsumptionConfig` rather than hard-coded so retuning the economy is a data edit,
+    /// the same source the drop range and the caps come from.
+    var meatCap: Int { ConsumptionConfig.bundled.meatCap }
+
     /// Every Digitama the player currently HOLDS (US-127) — an unhatched egg in the box, or any
     /// living Digimon that hatched from one. The seam US-128's drop engine filters a map's slots
     /// against so a held egg is never dropped a second time. Empty before `start()` has opened the
@@ -1642,12 +1652,13 @@ final class MainScreenModel: ObservableObject {
     /// is still flushed, because a refusal increments a counter US-027 will read on a later launch.
     @discardableResult
     func feed() -> FeedOutcome? {
-        guard let state else { return nil }
+        guard let state, let profile else { return nil }
         // FIRST, so the meal is really eaten rather than the user paying a care mistake for a block
         // (US-110). `FeedAction` is handed the woken answer, so its own sleep arm never fires from
         // here — see `wakeIfAsleep`, which is also where the dead case is kept out.
         wakeIfAsleep()
-        let outcome = FeedAction.feed(state, isAsleep: isAsleep, now: now(), calendar: calendar)
+        let outcome = FeedAction.feed(state, profile: profile, isAsleep: isAsleep,
+                                      now: now(), calendar: calendar)
 
         switch outcome {
         case .fed:

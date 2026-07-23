@@ -60,7 +60,7 @@ final class FeedMotionTests: XCTestCase {
     func testAFedDigimonPlaysTheEatLoopAndTheChewMotion() async throws {
         let model = try await startedModel(named: "fed", hunger: 3, vitality: 20)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.animation, .eat, "the pose US-024 already published")
         XCTAssertEqual(model.actionMotion?.kind, .chew)
     }
@@ -141,7 +141,7 @@ final class FeedMotionTests: XCTestCase {
         let model = try await startedModel(named: "asleep", hunger: 3, vitality: 20)
         model.isAsleep = true
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.animation, .eat, "awake and eating, not resting")
         XCTAssertEqual(model.actionMotion?.kind, .chew)
         XCTAssertNil(model.actionMessage, "a meal eaten needs no caption")
@@ -251,6 +251,8 @@ final class FeedMotionTests: XCTestCase {
         )
         await model.start()
         XCTAssertEqual(model.phase, .playing)
+        // Feeding spends meat since US-174; stock the larder so a fed test eats rather than blocks.
+        model.profile?.meat = 10
         return model
     }
 }

@@ -5168,3 +5168,41 @@ The thirty, `Perfect -> Ultimate`:
     the Simulator, HealthKit empty) differs run to run — compare sprite-to-square RATIO, not absolute
     pixels, across a before/after pair.
 - REMAINS: US-174..US-192 (19 stories). US-174 is next by priority.
+
+## 2026-07-23 — US-174: Meat is the global feed currency
+- Feeding moved off per-Digimon Vitality onto a global meat larder.
+  - `PlayerProfile` gained `var meat: Int = 0` (+ init param). The inline default is the migration:
+    SwiftData adds the new attribute with it, so every existing save opens with an empty larder.
+    Pinned by PlayerProfileTests — the round-trip test now writes/reads meat=12, and the
+    pre-migration-fixture test asserts the migrated profile's meat == 0.
+  - `FeedAction.feed` now takes `profile:` and spends `meatCostPerFeed` (1). The funds guard sits
+    AFTER the hunger>0 refusal guard (a full Digimon still refuses for free, even at 0 meat) and
+    blocks with "No meat — go battle." `stageEnergy`/`lifetimeEnergy` are untouched now.
+  - `FeedOutcome.fed(cost:)` -> `.fed` (the cost value was consumed by no production code; ~15 test
+    call sites updated).
+  - `MainScreenModel.feed()` passes `profile`; new `meat`/`meatCap` (=`ConsumptionConfig.bundled.meatCap`)
+    computed props. `ContentView` draws `DashBar(filled: meat, total: meatCap, tint: .orange,
+    dashHeight: 5)` above `ActionControls`. 5pt is deliberate — it keeps US-172's sprite scale
+    (41mm slot 71->66, floor(66/16)=4; 46mm 95.5->90.5, floor=5; both unchanged).
+- Files: Sources/PlayerProfile.swift, Sources/FeedAction.swift, Sources/TrainAction.swift (stale
+  comment), Sources/MainScreenModel.swift, Sources/ContentView.swift; Tests: FeedingTests,
+  CareMistakeTests, WanderingTests, SleepStateTests, LightSwitchTests, FeedMotionTests,
+  WakeOnActionTests, PlayerProfileTests.
+- Build green (Series 11 46mm). 2474 tests, 0 failures.
+- **Learnings for future iterations:**
+  - THE RIPPLE: changing a shared *action* (feed) touches every apply-layer suite that drives
+    `model.feed()`. They each have their own `startedModel`/`makeModel` helper — the cheap fix is to
+    seed `model.profile?.meat = 10` right after `await model.start()` in that ONE helper per file
+    (profile is `private(set)` but a class, so mutating its property from a @testable test is fine),
+    then only the `.fed(cost:)` -> `.fed` and any energy assertions remain per-test. `perl -0pi -e
+    's/\.fed\(cost: FeedAction\.vitalityCostPerFeed\)/.fed/g'` cleaned the mechanical ones.
+  - Adding a fixed-height row to the main VStack (spacing 0) costs the sprite slot exactly that
+    height, straight off US-172's play area. 41mm has ~7pt of slack over the scale-4 boundary (64pt)
+    and 46mm ~15pt over scale-5 (80pt); budget any new bar against that before adding it. The meat
+    bar spent 5 of the 41mm 7.
+  - Later consumption stories (battle charges, train charges, sleep, HP) each want their own bar.
+    There is NOT room for four more full rows without dropping the 41mm sprite a scale step — those
+    stories will likely need to co-locate bars or overlay them, not stack them. `meat`/`meatCap` on
+    the model is the pattern to copy; per-Digimon charges live on GameState, not the profile.
+- REMAINS: US-175..US-192, US-167..US-169 (orphan sweep tail). US-175 (battle wins drop meat) is
+  next by priority and is the earning half of this larder.

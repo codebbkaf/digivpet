@@ -28,6 +28,18 @@ final class PlayerProfile {
     /// `BattlePower` reads and the one a memorial reports.
     var lifetimeEnergy: EnergyTotals
 
+    /// Meat, the one global feed currency (US-174), shared across the whole box of Digimon.
+    ///
+    /// Earned by winning battles (US-175) and spent one unit per feed (`FeedAction.feed`), replacing
+    /// the per-Digimon Vitality that used to buy a meal. Global rather than on `GameState` because a
+    /// larder is the player's, not the pet's — putting one Digimon away to raise another must not
+    /// strand the meat you battled for. Capped in display at `ConsumptionConfig.meatCap`.
+    ///
+    /// Inline default of 0 so an existing save migrates to an empty larder: SwiftData adds the new
+    /// attribute with this default rather than needing a hand-written migration, and 0 is the honest
+    /// starting stock — you battle to earn the first meal, you are not handed one.
+    var meat: Int = 0
+
     /// The map the player's steps are accruing to, or nil for "nowhere chosen yet".
     ///
     /// Nil is a real state and not a stand-in for the first map: a save that has never opened the
@@ -50,12 +62,14 @@ final class PlayerProfile {
 
     init(
         lifetimeEnergy: EnergyTotals = .zero,
+        meat: Int = 0,
         selectedMapId: String? = nil,
         recorded: [String: Double] = [:],
         finishedAt: [String: Date] = [:],
         ownedDigitamaIds: Set<String> = []
     ) {
         self.lifetimeEnergy = lifetimeEnergy
+        self.meat = meat
         self.selectedMapId = selectedMapId
         self.recordedStorage = recorded
         self.finishedAtStorage = finishedAt

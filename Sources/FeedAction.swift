@@ -6,28 +6,27 @@ import Foundation
 /// plays the eat loop, a refusal holds the refuse frame, and a block shows a reason instead of
 /// animating anything. Returning an outcome rather than a `Bool` is what lets the view say WHY.
 enum FeedOutcome: Equatable {
-    /// The Digimon ate: `cost` Vitality spent, one unit of hunger gone.
-    case fed(cost: Int)
+    /// The Digimon ate: one meat spent from the global larder, one unit of hunger gone.
+    case fed
     /// It was not hungry, so it turned the food down. Nothing was spent; the refusal was counted.
     case refused
     /// The feed never happened, for a reason worth showing the user.
     case blocked(reason: String)
 }
 
-/// Feeding: the one place earned Vitality is spent, and the only thing that lowers hunger.
+/// Feeding: the one place earned meat is spent, and the only thing that lowers hunger.
 ///
 /// Pure and clock-injected like `HungerClock`, so the whole rule is testable without a screen, a
 /// store or a wait. The screen's job is only to render the outcome.
 enum FeedAction {
-    /// Vitality spent per feed — 5 points, i.e. 100 active kcal at `EnergyRates`' 20 kcal/point.
+    /// Meat spent per feed — one unit off the global larder (US-174).
     ///
-    /// The PRD fixes that feeding COSTS Vitality but not how much, so this is a game-balance number
-    /// chosen here: a starving Digimon (4 units) costs 20 Vitality to fill, a fifth of the 100/day
-    /// per-type cap. Cheap enough that an ordinary day feeds it comfortably, dear enough that the
-    /// energy is really being spent.
-    static let vitalityCostPerFeed = 5
+    /// A meal is one meat, flat: meat is the whole-box currency you battle to earn (US-175), so a
+    /// unit-per-feed price is what makes "go and win a battle" the answer to an empty larder rather
+    /// than an errand whose cost the player has to do arithmetic on.
+    static let meatCostPerFeed = 1
 
-    /// Spends Vitality to take one unit off `state.hunger`.
+    /// Spends one meat from the global larder to take one unit off `state.hunger`.
     ///
     /// Order matters and is deliberate: asleep is checked before hunger, so a sleeping Digimon that
     /// is also full is reported as asleep rather than being counted as a refusal it never made.
@@ -42,9 +41,14 @@ enum FeedAction {
     ///   reason this stays a pure function of what it is told rather than a rule with a policy in it.
     ///   Do not delete it as dead code: it is what makes "you may not feed a sleeping Digimon"
     ///   true of `FeedAction` itself rather than true only of one call site.
+    ///
+    /// - Parameter profile: the player's global larder. Passed in rather than read off `state`
+    ///   because meat is the box's, not this Digimon's (US-174) — a switch of the active Digimon
+    ///   must feed off the same larder. Its `meat` is the fund the meal is bought from.
     @discardableResult
     static func feed(
         _ state: GameState,
+        profile: PlayerProfile,
         isAsleep: Bool,
         now: Date,
         calendar: Calendar = .current
@@ -63,20 +67,23 @@ enum FeedAction {
             state.recordRefusal(now: now, calendar: calendar)
             return .refused
         }
-        guard state.stageEnergy[.vitality] >= vitalityCostPerFeed else {
-            return .blocked(reason: "Not enough Vitality. Move to earn more.")
+        // The funds check comes AFTER the refusal: a full Digimon turns food down for free, so an
+        // empty larder never stops a meal that would not have been eaten anyway. The block names the
+        // way to refill it — meat is earned in battle (US-175), not by moving.
+        guard profile.meat >= meatCostPerFeed else {
+            return .blocked(reason: "No meat — go battle.")
         }
 
-        // Spent from `stageEnergy` alone. `lifetimeEnergy` is the record of what was ever EARNED, so
-        // spending must not rewrite it — and the ledger keys on what was credited, not on what is
-        // held, so a spend can never be re-credited by the next health read.
-        state.stageEnergy[.vitality] -= vitalityCostPerFeed
+        // Spent from the global larder. `lifetimeEnergy` and the energy ledger are untouched — meat
+        // is its own currency now, so a meal no longer draws on the four energy types the evolution
+        // branch is steered by.
+        profile.meat -= meatCostPerFeed
         state.hunger -= 1
         // Restamping is REQUIRED, not cosmetic: `HungerClock` freezes `hungerUpdatedAt` at the
         // instant hunger hit the maximum, so feeding a starving Digimon without moving it forward
         // would immediately re-accrue every interval the stale timestamp sat there and the feed
         // would look like it did nothing. See `HungerClock.advance`.
         state.hungerUpdatedAt = now
-        return .fed(cost: vitalityCostPerFeed)
+        return .fed
     }
 }

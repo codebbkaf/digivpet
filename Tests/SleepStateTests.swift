@@ -214,6 +214,8 @@ final class SleepStateTests: XCTestCase {
         )
         await model.start()
         XCTAssertEqual(model.phase, .playing)
+        // Feeding spends meat since US-174; stock the larder so a fed test eats rather than blocks.
+        model.profile?.meat = 10
         return model
     }
 
@@ -315,10 +317,10 @@ final class SleepStateTests: XCTestCase {
         XCTAssertTrue(model.isAsleep)
         XCTAssertEqual(model.animation, .sleep)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertFalse(model.isAsleep, "the tap woke it")
         XCTAssertEqual(model.state?.hunger, 2, "and the meal was eaten")
-        XCTAssertEqual(model.state?.stageEnergy[.vitality], 30 - FeedAction.vitalityCostPerFeed)
+        XCTAssertEqual(model.profile?.meat, 10 - FeedAction.meatCostPerFeed, "one meat spent")
         XCTAssertEqual(model.animation, .eat)
 
         guard case .started = try XCTUnwrap(model.train()) else {
@@ -351,7 +353,7 @@ final class SleepStateTests: XCTestCase {
         let model = try await startedModel(named: "awakeFeed", now: SleepClock.at("2026-03-11 09:00"),
                                            samples: [SleepClock.night], vitality: 30)
         XCTAssertFalse(model.isAsleep)
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.animation, .eat)
     }
 
@@ -362,7 +364,7 @@ final class SleepStateTests: XCTestCase {
                                            samples: [SleepClock.night], vitality: 30)
         // Awake for a moment, long enough to eat.
         model.isAsleep = false
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
         XCTAssertEqual(model.animation, .eat)
 
         // The window reasserts itself while the eat loop is still playing.

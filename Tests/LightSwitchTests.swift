@@ -144,6 +144,8 @@ final class LightButtonModelTests: XCTestCase {
         state.stageEnergy[.vitality] = 30
         state.stageEnergy[.strength] = 30
         model.isAsleep = false
+        // Feeding spends meat since US-174; stock the larder so the feed-in-the-dark test eats.
+        model.profile?.meat = 10
         return model
     }
 
@@ -203,7 +205,7 @@ final class LightButtonModelTests: XCTestCase {
         model.cycleLight()
         XCTAssertEqual(model.lightState, .off)
 
-        XCTAssertEqual(model.feed(), .fed(cost: FeedAction.vitalityCostPerFeed))
+        XCTAssertEqual(model.feed(), .fed)
 
         model.state?.poopCount = 2
         XCTAssertTrue(model.clean())

@@ -32,9 +32,9 @@ enum TrainingStart: Equatable {
 /// Pure and clock-free like `FeedAction`, so the whole rule is testable without a screen or a store.
 /// The screen's job is only to render the outcome.
 enum TrainAction {
-    /// Energy spent per session — 5 points, matching `FeedAction.vitalityCostPerFeed` so the two
-    /// actions cost the same and neither is the obvious one to spam. At `EnergyRates`' 2000
-    /// steps/point that is 10,000 steps' worth of Strength, or 30 minutes of Stamina.
+    /// Energy spent per session — 5 points. At `EnergyRates`' 2000 steps/point that is 10,000
+    /// steps' worth of Strength, or 30 minutes of Stamina. (Feeding moved off energy onto the meat
+    /// larder in US-174; training still spends Strength or Stamina.)
     ///
     /// The PRD fixes that training COSTS Strength or Stamina but not how much; this is a
     /// game-balance number chosen here.
