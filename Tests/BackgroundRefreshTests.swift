@@ -77,6 +77,23 @@ private final class DailyStepFetcher: HealthSampleFetching, @unchecked Sendable 
     }
 }
 
+/// Active kilocalories recorded on whatever local day the read asks about — the US-177 counterpart of
+/// `DailyStepFetcher`, so a refresh reads a real active-energy total and the train-charge wiring is
+/// exercised rather than the arithmetic under it.
+private final class DailyActiveEnergyFetcher: HealthSampleFetching, @unchecked Sendable {
+    var kcal: Double
+
+    init(kcal: Double) {
+        self.kcal = kcal
+    }
+
+    func samples(of metric: QuantityMetric, in interval: DateInterval) async throws -> [HealthSample] {
+        guard metric == .activeEnergy else { return [] }
+        let start = interval.start.addingTimeInterval(60 * 60)
+        return [HealthSample(start: start, end: start.addingTimeInterval(60), value: kcal)]
+    }
+}
+
 // MARK: - A shared fixture game
 
 /// One saved game on disk, one model over it, and a clock the test moves by hand.
@@ -543,6 +560,19 @@ final class ClosedAppRecomputeTests: XCTestCase {
 
         XCTAssertEqual(game.state.battleCharges, 3, "nine hundred steps is three charges")
         XCTAssertEqual(game.model.battleCharges, 3, "and the bar reads them off the active Digimon")
+    }
+
+    /// US-177: exercise is what earns training. A refresh that reads active calories banks training
+    /// charges on the Digimon that burned them — 50 kcal to a charge — off the SAME read the energy
+    /// came from, so the `creditTrainCharges` wiring is exercised end to end.
+    func testExerciseCreditsTrainChargesToTheDigimon() async throws {
+        let game = try Fixture.make(directory: directory, name: "TrainCharges",
+                                    fetcher: DailyActiveEnergyFetcher(kcal: 150),
+                                    clock: { Fixture.start })
+        await game.model.start()
+
+        XCTAssertEqual(game.state.trainCharges, 3, "a hundred and fifty kcal is three charges")
+        XCTAssertEqual(game.model.trainCharges, 3, "and the bar reads them off the active Digimon")
     }
 
     /// The known, deliberate exception to the headline test, pinned so it cannot change unnoticed.

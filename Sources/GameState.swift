@@ -238,6 +238,15 @@ final class GameState {
     /// already-shipped store without a default. Both `nil` reads as "nothing banked yet".
     private var battleChargesStorage: Int?
     private var battleChargeStepsStorage: Double?
+    /// Backing store for `trainCharges`/`trainChargeKcal` (US-177): the spendable training charges
+    /// this Digimon has banked from active calories, and the kcal burned toward the next one.
+    /// Per-Digimon in the same sense and for the same reason as `battleChargesStorage` — switching
+    /// which Digimon is out shows its own count, never another's. Both optional for the same
+    /// migration reason as every other storage property here: an optional attribute is the one shape
+    /// SwiftData migrates into an already-shipped store without a default. Both `nil` reads as
+    /// "nothing banked yet".
+    private var trainChargesStorage: Int?
+    private var trainChargeKcalStorage: Double?
     /// Backing store for the four care-mistake markers (US-027). All optional for the same migration
     /// reason as `energyLastEarnedStorage` — an optional attribute is the one shape SwiftData
     /// migrates into an already-shipped store without a default.
@@ -402,6 +411,8 @@ final class GameState {
         self.battleDayStorage = nil
         self.battleChargesStorage = 0
         self.battleChargeStepsStorage = 0
+        self.trainChargesStorage = 0
+        self.trainChargeKcalStorage = 0
         // Stamped with `now` rather than left nil, or a brand new game would be charged for every
         // day between the epoch and today the first time the audit ran.
         self.healthDataLastSeenStorage = now
@@ -534,6 +545,45 @@ extension GameState {
             battleCharges += 1
         }
         battleChargeSteps = battleCharges < maxCharges ? progress : 0
+    }
+
+    /// Spendable training charges (US-177), 0...`ConsumptionConfig.maxTrainCharges`. Earned from
+    /// active calories by `creditTrainCharges` and spent one at a time by `TrainAction.begin`, this
+    /// is the currency that gates training since US-177 replaced the per-session Strength/Stamina
+    /// cost.
+    ///
+    /// Computed for the same reason `battleCharges` is: the optionality persistence needs stops at
+    /// the model boundary, so a save written before charges existed reads as 0 rather than as a
+    /// `nil` every caller has to unwrap.
+    var trainCharges: Int {
+        get { trainChargesStorage ?? 0 }
+        set { trainChargesStorage = newValue }
+    }
+
+    /// Active kilocalories burned toward the NEXT training charge, `0..<kcalPerTrain`. Kept for the
+    /// same reason `battleChargeSteps` is: a health reading arrives as many small deltas across a
+    /// day, so 30 kcal now and 30 later is a charge, not two forgotten remainders.
+    var trainChargeKcal: Double {
+        get { trainChargeKcalStorage ?? 0 }
+        set { trainChargeKcalStorage = newValue }
+    }
+
+    /// Converts newly burned active `kcal` into training charges (US-177).
+    ///
+    /// `kcal` is a DELTA — the active calories this read brought in, claimed off the shared
+    /// `MetricLedger` so no other consumer of `health.activeEnergy` double-counts it. Every
+    /// `kcalPerCharge` kilocalories buys one charge, up to `maxCharges`; the sub-threshold remainder
+    /// is banked on `trainChargeKcal` so a day of short efforts still earns. At the cap the remainder
+    /// is dropped, exactly as `creditBattleCharges` drops it, and for the same reason.
+    func creditTrainCharges(kcal: Double, kcalPerCharge: Int, maxCharges: Int) {
+        guard kcal > 0, kcalPerCharge > 0 else { return }
+        var progress = trainChargeKcal + kcal
+        let threshold = Double(kcalPerCharge)
+        while trainCharges < maxCharges && progress >= threshold {
+            progress -= threshold
+            trainCharges += 1
+        }
+        trainChargeKcal = trainCharges < maxCharges ? progress : 0
     }
 
     /// The last instant HealthKit gave a real number for any metric, or nil on a save written

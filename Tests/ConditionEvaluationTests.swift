@@ -324,7 +324,7 @@ final class ConditionEvaluationTests: XCTestCase {
     /// rather than off numbers the test made up.
     func testCareConditionsReadTheUS084CountersFromGameState() {
         let state = GameState(currentDigimonId: "greymon", stage: .adult, now: Fixture.morning)
-        state.stageEnergy[.strength] = 100
+        state.trainCharges = 2
         TrainAction.train(state, isAsleep: false)
         TrainAction.train(state, isAsleep: false)
         state.recordRefusal(now: Fixture.morning, calendar: Fixture.losAngeles)

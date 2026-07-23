@@ -307,6 +307,8 @@ final class DigitamaDropModelTests: XCTestCase {
         state.stageEnergy[.strength] = 100
         // US-176: a battle also spends a charge walked up from steps; the empty readers walk none.
         state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
+        // US-177: a training round spends a charge burned from active calories; stock it likewise.
+        state.trainCharges = ConsumptionConfig.bundled.maxTrainCharges
         state.healthDataLastSeen = Fixture.morning
         state.hungerUpdatedAt = Fixture.morning
         state.stageEnteredDate = Fixture.morning

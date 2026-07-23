@@ -318,7 +318,7 @@ final class CleanTrainMotionTests: XCTestCase {
         let state = try seeding.loadOrCreate(digitamaId: "hero", now: Clock.start)
         state.currentDigimonId = "hero"
         state.stage = .child
-        state.stageEnergy[.strength] = 20
+        state.trainCharges = 10
         try seeding.save()
 
         let model = MainScreenModel(

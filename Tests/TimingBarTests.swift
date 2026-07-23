@@ -250,7 +250,7 @@ final class TimingBarGameTests: XCTestCase {
     func testAGradeOffTheBarIsWhatTheActionPaysOut() {
         let state = GameState(currentDigimonId: "hero", stage: .babyI,
                               now: Date(timeIntervalSinceReferenceDate: 600_000))
-        state.stageEnergy[.strength] = 20
+        state.trainCharges = 1
         TrainAction.begin(state, isAsleep: false)
 
         TrainAction.finish(state, result: TimingBarGame.grade(at: 0.5, zoneWidth: 0.25))

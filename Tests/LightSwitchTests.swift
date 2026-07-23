@@ -148,6 +148,8 @@ final class LightButtonModelTests: XCTestCase {
         model.profile?.meat = 10
         // Battling spends a charge since US-176; stock it so the battle-in-the-dark test fights.
         model.state?.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
+        // Training spends a charge since US-177; stock it so the train-in-the-dark test opens.
+        model.state?.trainCharges = ConsumptionConfig.bundled.maxTrainCharges
         return model
     }
 

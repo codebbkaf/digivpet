@@ -124,6 +124,8 @@ final class WakeOnActionTests: XCTestCase {
         model.profile?.meat = 10
         // Battling spends a charge since US-176; stock it so a battle test fights rather than blocks.
         model.state?.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
+        // Training spends a charge since US-177; stock it so a train test opens rather than blocks.
+        model.state?.trainCharges = ConsumptionConfig.bundled.maxTrainCharges
         return (model, url, { now = $0 })
     }
 
@@ -413,14 +415,14 @@ final class WakeOnActionTests: XCTestCase {
         let (model, _, _) = try await startedModel(named: "sick", at: Self.at("2026-03-11 02:00"))
         let state = try XCTUnwrap(model.state)
         state.healthStatus = .sick
-        let strengthBefore = state.stageEnergy[.strength]
+        let chargesBefore = state.trainCharges
 
         guard case .blocked(let reason) = try XCTUnwrap(model.train()) else {
             return XCTFail("expected the sick block to stand")
         }
         XCTAssertEqual(reason, "Too sick to train.")
         XCTAssertNil(model.pendingTraining, "and no game either")
-        XCTAssertEqual(state.stageEnergy[.strength], strengthBefore, "nothing charged")
+        XCTAssertEqual(state.trainCharges, chargesBefore, "nothing charged")
         XCTAssertFalse(model.isAsleep, "but it was genuinely woken")
         XCTAssertEqual(state.stageSleepDisturbances, 1)
 

@@ -79,6 +79,9 @@ final class PreBattleRoundTests: XCTestCase {
         // Stocked past what these tests spend, since what they are about is the round rather than the
         // walking that pays for it.
         state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
+        // US-177: a training round now spends a charge burned from active calories; stock it likewise
+        // for the tests here that open one.
+        state.trainCharges = ConsumptionConfig.bundled.maxTrainCharges
         // US-027: the empty readers would otherwise have the audit charge a mistake for every day
         // since the epoch, which would sicken the Digimon before a single battle.
         state.healthDataLastSeen = Self.now

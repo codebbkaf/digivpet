@@ -1,5 +1,6 @@
 {
   "kcalPerTrain": 50,
+  "maxTrainCharges": 10,
   "stepsPerBattleCharge": 300,
   "maxBattleCharges": 10,
   "handwashPerCleanCharge": 1,

@@ -21,6 +21,26 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **CONSUMPTION WAVE: A "SPENDABLE CHARGE" HAS FIVE SEAMS, COPY THE BATTLE CHARGE (US-176) FOR EACH.**
+  (1) GameState optional storage `xChargesStorage`/`xProgressStorage` + computed getters (nil reads 0)
+  + `creditXCharges(amount:per:maxCharges:)` — the while-loop-with-remainder-dropped-at-cap shape;
+  (2) ConsumptionConfig `maxXCharges` in the struct AND consumption.json AND the `caps` validator list
+  AND ConsumptionConfigTests' 4 constructors; (3) refresh() claims the day-total off `MetricLedger`
+  via `metricLedger.claim(.healthMetric, dayTotal:, now:, calendar:)` — the SHARED delta, read from
+  `dayReadings.quantities[.<QuantityMetric>]` (steps/activeEnergy/exercise), never a second HealthKit
+  read; (4) a `DashBar(...dashHeight:5)` added to ContentView's currency HStack — SAME row, so sprite
+  scale (US-172/US-174) is untouched; (5) `model.xCharges`/`xChargeCap` computed off `state`/config.
+  US-177 (train charge from active calories) mirrored all five off US-176.
+- **CHANGING AN ACTION'S CURRENCY RIPPLES TO EVERY TEST THAT FUNDED IT.** US-177 moved training off
+  Strength/Stamina energy onto a charge; ~12 test files seeded strength energy to fund training and
+  had to seed `trainCharges` instead — the 0-charge default silently BLOCKS the round, and a blocked
+  round counts no session, so `stageTrainingSessions` assertions flip too. grep
+  `TrainAction.begin|TrainAction.train(|\.train()` before assuming a fixture is unaffected. Same trap
+  will hit feeding/cleaning if their currency is ever repriced.
+- **WHEN ACTION A BORROWS ACTION B's CONSTANTS AND B CHANGES, DECOUPLE A FIRST.** `BattleCost`
+  borrowed `TrainAction.energyCostPerTraining`/`payableWith`/`insufficientEnergyReason`; US-177
+  removed those from `TrainAction`, breaking Battle.swift's compile. Gave BattleCost its own copies.
+  `BackgroundRefreshTests`' refresh-level class is named `ClosedAppRecomputeTests` (not the file name).
 - **PHASE E, ULTIMATE SWEEP: RE-RUN `xcodegen generate` AFTER WRITING THE NEW TEST FILE, OR IT NEVER
   RUNS.** US-166 ran `xcodegen generate` FIRST (to pick up the JSON) then wrote
   `UltimateSweepIToMTests.swift` — the project glob had already been captured, so `build-for-testing`
@@ -5276,3 +5296,20 @@ The thirty, `Perfect -> Ultimate`:
   US-177 (train charges from calories) is next by priority and per its AC DOES replace the train
   energy cost — mirror this story's GameState field + creditFromDelta pattern, but remove the
   TrainAction energy spend rather than keep it.
+
+## 2026-07-23 - US-177 (Train charges accrue from active calories, per Digimon)
+- Repriced training onto a per-Digimon charge burned from active calories, mirroring US-176's battle charge exactly.
+- Source changes:
+  - GameState.swift: added trainCharges/trainChargeKcal (optional storage, nil reads as 0, migration-safe) + creditTrainCharges(kcal:kcalPerCharge:maxCharges:), a copy of creditBattleCharges' shape with kcal in place of steps.
+  - ConsumptionConfig.swift + Resources/consumption.json: added maxTrainCharges (10) and to the caps validator list. kcalPerTrain (50) already existed (US-170).
+  - TrainAction.swift: begin() now spends one trainCharge and NO Strength/Stamina energy; blocks at 0 with noChargeReason "No training charge — go exercise." Removed energyCostPerTraining/payableWith/insufficientEnergyReason and the EnergyPurchase call. TrainOutcome=.trained(gain:), TrainingStart=.started (dropped spent/cost).
+  - Battle.swift: BattleCost decoupled from TrainAction — now owns energy=5, payableWith=[.strength,.stamina], its own reason string. Battle is the last action that spends energy.
+  - MainScreenModel.swift: PendingTraining dropped spent/cost; finishTraining caption is "Grade +N STR"; refresh() calls new creditTrainCharges(_:) reading dayReadings.quantities[.activeEnergy] and claiming it off MetricLedger (shared delta, same rule the map steps use); added trainCharges/trainChargeCap computed props.
+  - ContentView.swift: third red DashBar (dashHeight 5) in the meat/battle HStack — same row, no added height, US-172/US-174 sprite scale untouched.
+- Tests: 2491 total, 0 failures (Series 11 46mm). New TrainChargeCreditTests (150 kcal->3, cap, remainder, two-Digimon independence + decrement) and ClosedAppRecomputeTests.testExerciseCreditsTrainChargesToTheDigimon (refresh end-to-end). Rewrote the three training suites for the charge currency; stocked trainCharges in ~10 fixture helpers that used to fund training with strength energy; replaced BattleCostTests' "identical to TrainAction" test with one pinning BattleCost's own numbers; added maxTrainCharges to ConsumptionConfigTests' 4 constructors.
+- **Learnings for future iterations:**
+  - **Battle charge is the template for every "spendable charge" story.** creditBattleCharges (GameState), the MetricLedger.claim shared delta in creditMapSteps, the DashBar in ContentView's currency HStack, and model.battleCharges/battleChargeCap are the exact five seams a new charge copies. US-177 mirrored all five.
+  - **Active energy day-total is dayReadings.quantities[.activeEnergy]; steps is [.steps].** Both come off the ONE HealthEnergySource.dayReadings read in refresh, keyed by QuantityMetric. Claim it via metricLedger.claim(.healthActiveEnergy, ...) — that is a ConditionMetric, distinct from the QuantityMetric key. .healthActiveEnergy has no other claim caller today, so it is a clean single consumer.
+  - **BackgroundRefreshTests' refresh-level class is ClosedAppRecomputeTests, not "BackgroundRefreshTests".** -only-testing:DigiVPetTests/BackgroundRefreshTests runs 0 tests. The DailyStepFetcher there filters by metric==.steps and returns [] otherwise; a calorie test needs its own fetcher filtering metric==.activeEnergy (added DailyActiveEnergyFetcher).
+  - **Changing an action's currency ripples to every test that funded it the old way.** Training was funded with strength energy in ~12 files; all had to seed trainCharges instead or the 0-charge default silently blocks the round (and blocked rounds count no session, so stageTrainingSessions assertions flip). grep 'TrainAction.begin|TrainAction.train(|model.train()' before assuming a fixture is unaffected.
+  - **When action A borrows action B's constants and B changes, decouple A first.** BattleCost borrowed TrainAction.energyCostPerTraining etc.; removing them from TrainAction broke Battle.swift's compile. Gave BattleCost its own copies.

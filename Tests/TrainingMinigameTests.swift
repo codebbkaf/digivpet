@@ -12,11 +12,14 @@ import XCTest
 ///
 /// Everything here is pure. No game is played, no view is hosted, and nothing waits.
 
-/// A saved game outside any store, funded enough to train. Copied from `TrainingTests`' fixture for
-/// the same reason its own fixtures are copied — that one is `private` to its file.
-private func makeState(strength: Int = 20, stamina: Int = 0) -> GameState {
+/// A saved game outside any store, stocked with training charges so a round can run. Copied from
+/// `TrainingTests`' fixture for the same reason its own fixtures are copied — that one is `private`
+/// to its file. Since US-177 training spends a charge rather than energy, so `trainCharges` is what
+/// funds a session; `strength`/`stamina` are kept only so a test can prove they are left alone.
+private func makeState(trainCharges: Int = 4, strength: Int = 20, stamina: Int = 0) -> GameState {
     let state = GameState(currentDigimonId: "hero", stage: .babyI,
                           now: Date(timeIntervalSinceReferenceDate: 600_000))
+    state.trainCharges = trainCharges
     state.stageEnergy[.strength] = strength
     state.stageEnergy[.stamina] = stamina
     return state
@@ -43,7 +46,7 @@ final class TrainingResultTests: XCTestCase {
         XCTAssertEqual(TrainingResult.perfect.strengthGain, 3)
     }
 
-    /// A miss must be worth nothing, never a penalty: the round already cost energy, and a negative
+    /// A miss must be worth nothing, never a penalty: the round already cost a charge, and a negative
     /// gain would make training something a careful player avoids.
     func testAMissIsWorthNothingAndNeverTakesAPointAway() {
         XCTAssertEqual(TrainingResult.miss.strengthGain, 0)
@@ -80,67 +83,62 @@ final class TrainingResultTests: XCTestCase {
 final class GradedTrainingTests: XCTestCase {
 
     /// AC2 end to end: a whole round at each grade buys exactly that grade's points, and always for
-    /// the same price.
+    /// the same price — one training charge.
     func testAWholeRoundPaysTheGradeAndAlwaysCostsTheSame() {
         for grade in TrainingResult.allCases {
-            let state = makeState(strength: 20)
+            let state = makeState(trainCharges: 4)
 
             let outcome = TrainAction.train(state, isAsleep: false, result: grade)
 
-            XCTAssertEqual(outcome, .trained(spent: .strength,
-                                             cost: TrainAction.energyCostPerTraining,
-                                             gain: grade.strengthGain),
+            XCTAssertEqual(outcome, .trained(gain: grade.strengthGain),
                            "\(grade) reported the wrong payout")
             XCTAssertEqual(state.strengthStat, grade.strengthGain, "\(grade) paid the wrong gain")
-            XCTAssertEqual(state.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining,
-                           "\(grade) was not charged the standard price")
+            XCTAssertEqual(state.trainCharges, 3, "\(grade) was not charged exactly one charge")
         }
     }
 
     /// AC3: the charge lands when the round is ENTERED, before any grade exists.
-    func testEnteringChargesTheEnergyBeforeAnythingIsPlayed() {
-        let state = makeState(strength: 20)
+    func testEnteringSpendsTheChargeBeforeAnythingIsPlayed() {
+        let state = makeState(trainCharges: 4)
 
-        XCTAssertEqual(TrainAction.begin(state, isAsleep: false),
-                       .started(spent: .strength, cost: TrainAction.energyCostPerTraining))
-        XCTAssertEqual(state.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(TrainAction.begin(state, isAsleep: false), .started)
+        XCTAssertEqual(state.trainCharges, 3)
         XCTAssertEqual(state.strengthStat, 0, "nothing is earned until the round is graded")
     }
 
     /// AC3, the half that matters: a lost round is still a paid round. If the miss refunded, walking
     /// out of a round going badly would be free.
     func testAMissIsNotRefunded() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 4)
 
         TrainAction.begin(state, isAsleep: false)
         TrainAction.finish(state, result: .miss)
 
-        XCTAssertEqual(state.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining,
-                       "the miss was refunded")
+        XCTAssertEqual(state.trainCharges, 3, "the miss was refunded")
         XCTAssertEqual(state.strengthStat, 0, "a miss buys nothing")
     }
 
     /// AC3: the charge is taken ONCE. Grading does not bill a second time, however good the round.
     func testGradingDoesNotChargeASecondTime() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 4)
 
         TrainAction.begin(state, isAsleep: false)
-        let afterEntering = state.stageEnergy[.strength]
+        let afterEntering = state.trainCharges
         TrainAction.finish(state, result: .perfect)
 
-        XCTAssertEqual(state.stageEnergy[.strength], afterEntering)
+        XCTAssertEqual(state.trainCharges, afterEntering)
         XCTAssertEqual(state.strengthStat, 3)
     }
 
     /// A round that is entered and never graded — dismissed, backgrounded — has still been paid for
     /// and has still happened. US-083 grades that case as a miss; this pins that even doing NOTHING
-    /// leaves the charge and the count standing.
+    /// leaves the charge spent and the count standing.
     func testAnAbandonedRoundStaysChargedAndStaysCounted() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 4)
 
         TrainAction.begin(state, isAsleep: false)
 
-        XCTAssertEqual(state.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(state.trainCharges, 3)
         XCTAssertEqual(state.stageTrainingSessions, 1)
         XCTAssertEqual(state.strengthStat, 0)
     }
@@ -178,44 +176,44 @@ final class GradedTrainingTests: XCTestCase {
 
         XCTAssertEqual(state.stageTrainingSessions, 4)
         XCTAssertEqual(state.strengthStat, 0 + 1 + 2 + 3)
-        XCTAssertEqual(state.stageEnergy[.strength], 40 - 4 * TrainAction.energyCostPerTraining)
+        XCTAssertEqual(state.trainCharges, 0, "four rounds, four charges")
     }
 
     // MARK: - AC5: eligibility is untouched, messages included
 
-    /// The three block reasons, verbatim. AC5 says "with their current messages", so this asserts
-    /// the strings rather than merely that something non-empty came back.
+    /// The four block reasons, verbatim. AC5 says "with their current messages", so this asserts
+    /// the strings rather than merely that something non-empty came back. The run-out message moved
+    /// from energy to charges in US-177.
     func testTheBlockReasonsAreUnchangedWordForWord() {
-        let asleep = makeState(strength: 20)
+        let asleep = makeState(trainCharges: 4)
         XCTAssertEqual(TrainAction.begin(asleep, isAsleep: true),
                        .blocked(reason: "Asleep — let it rest."))
 
-        let sick = makeState(strength: 20)
+        let sick = makeState(trainCharges: 4)
         sick.healthStatus = .sick
         XCTAssertEqual(TrainAction.begin(sick, isAsleep: false),
                        .blocked(reason: "Too sick to train."))
 
-        let dead = makeState(strength: 20)
+        let dead = makeState(trainCharges: 4)
         dead.healthStatus = .dead
         XCTAssertEqual(TrainAction.begin(dead, isAsleep: false),
                        .blocked(reason: "It cannot train."))
 
-        let broke = makeState(strength: TrainAction.energyCostPerTraining - 1,
-                              stamina: TrainAction.energyCostPerTraining - 1)
+        let broke = makeState(trainCharges: 0)
         XCTAssertEqual(TrainAction.begin(broke, isAsleep: false),
-                       .blocked(reason: "Not enough Strength or Stamina. Move to earn more."))
+                       .blocked(reason: "No training charge — go exercise."))
     }
 
-    /// A blocked round is not a round: nothing charged, and nothing counted. The count matters most
+    /// A blocked round is not a round: nothing spent, and nothing counted. The count matters most
     /// — a blocked tap that still counted would let a sleeping Digimon evolve on taps alone.
     func testABlockedRoundChargesNothingAndCountsNothing() {
         for (label, state, asleep) in blockedFixtures() {
-            let before = state.stageEnergy[.strength]
+            let before = state.trainCharges
 
             guard case .blocked = TrainAction.begin(state, isAsleep: asleep) else {
                 return XCTFail("\(label) was not blocked")
             }
-            XCTAssertEqual(state.stageEnergy[.strength], before, "\(label) was charged")
+            XCTAssertEqual(state.trainCharges, before, "\(label) was charged")
             XCTAssertEqual(state.stageTrainingSessions, 0, "\(label) counted as a session")
             XCTAssertEqual(state.strengthStat, 0, "\(label) paid out")
         }
@@ -234,23 +232,22 @@ final class GradedTrainingTests: XCTestCase {
     }
 
     private func blockedFixtures() -> [(String, GameState, Bool)] {
-        let sick = makeState(strength: 20)
+        let sick = makeState(trainCharges: 4)
         sick.healthStatus = .sick
-        let dead = makeState(strength: 20)
+        let dead = makeState(trainCharges: 4)
         dead.healthStatus = .dead
         return [
-            ("asleep", makeState(strength: 20), true),
+            ("asleep", makeState(trainCharges: 4), true),
             ("sick", sick, false),
             ("dead", dead, false),
-            ("broke", makeState(strength: TrainAction.energyCostPerTraining - 1,
-                                stamina: TrainAction.energyCostPerTraining - 1), false)
+            ("broke", makeState(trainCharges: 0), false)
         ]
     }
 
-    /// Grading is the only thing `finish` does — it must not touch the purse, the count, or the
+    /// Grading is the only thing `finish` does — it must not touch the charges, the count, or the
     /// lifetime record, because `begin` already settled all three.
     func testGradingTouchesTheStatAndNothingElse() {
-        let state = makeState(strength: 20, stamina: 7)
+        let state = makeState(trainCharges: 4, strength: 20, stamina: 7)
         // On the profile since US-123; `finish` is handed the state alone.
         let profile = PlayerProfile()
         profile.lifetimeEnergy[.strength] = 90
@@ -260,6 +257,7 @@ final class GradedTrainingTests: XCTestCase {
         TrainAction.finish(state, result: .great)
 
         XCTAssertEqual(state.strengthStat, 2)
+        XCTAssertEqual(state.trainCharges, 4, "grading spends no charge")
         XCTAssertEqual(state.stageEnergy[.strength], 20)
         XCTAssertEqual(state.stageEnergy[.stamina], 7)
         XCTAssertEqual(state.stageEnergy[.vitality], 40)
@@ -323,7 +321,7 @@ final class TrainingMinigameProtocolTests: XCTestCase {
     /// The loop closes: a grade off a game is the same value `TrainAction` pays out. Nothing here
     /// knows which game it was.
     func testAGradeFromAGameIsWhatTheActionPaysOut() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 4)
         TrainAction.begin(state, isAsleep: false)
 
         let game = makeGame(StubMinigame.self) { TrainAction.finish(state, result: $0) }
@@ -331,7 +329,7 @@ final class TrainingMinigameProtocolTests: XCTestCase {
 
         XCTAssertEqual(state.strengthStat, 3)
         XCTAssertEqual(state.stageTrainingSessions, 1)
-        XCTAssertEqual(state.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(state.trainCharges, 3)
     }
 
     /// Builds a game knowing nothing but the protocol — the compiler check that is the real point

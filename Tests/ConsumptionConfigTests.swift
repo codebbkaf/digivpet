@@ -23,6 +23,7 @@ final class ConsumptionConfigTests: XCTestCase {
     func testNamedConstantsMatchThePRD() throws {
         let config = try ConsumptionConfig.load()
         XCTAssertEqual(config.kcalPerTrain, 50)
+        XCTAssertEqual(config.maxTrainCharges, 10)
         XCTAssertEqual(config.stepsPerBattleCharge, 300)
         XCTAssertEqual(config.maxBattleCharges, 10)
         XCTAssertEqual(config.maxCleanCharges, 2)
@@ -91,6 +92,7 @@ final class ConsumptionConfigTests: XCTestCase {
     private func soundConfig() -> ConsumptionConfig {
         ConsumptionConfig(
             kcalPerTrain: 50,
+            maxTrainCharges: 10,
             stepsPerBattleCharge: 300,
             maxBattleCharges: 10,
             handwashPerCleanCharge: 1,
@@ -113,6 +115,7 @@ final class ConsumptionConfigTests: XCTestCase {
         var config = soundConfig()
         config = ConsumptionConfig(
             kcalPerTrain: 0,
+            maxTrainCharges: config.maxTrainCharges,
             stepsPerBattleCharge: config.stepsPerBattleCharge,
             maxBattleCharges: config.maxBattleCharges,
             handwashPerCleanCharge: config.handwashPerCleanCharge,
@@ -131,6 +134,7 @@ final class ConsumptionConfigTests: XCTestCase {
         let sound = soundConfig()
         let config = ConsumptionConfig(
             kcalPerTrain: sound.kcalPerTrain,
+            maxTrainCharges: sound.maxTrainCharges,
             stepsPerBattleCharge: sound.stepsPerBattleCharge,
             maxBattleCharges: -1,
             handwashPerCleanCharge: sound.handwashPerCleanCharge,
@@ -149,6 +153,7 @@ final class ConsumptionConfigTests: XCTestCase {
         let sound = soundConfig()
         let config = ConsumptionConfig(
             kcalPerTrain: sound.kcalPerTrain,
+            maxTrainCharges: sound.maxTrainCharges,
             stepsPerBattleCharge: sound.stepsPerBattleCharge,
             maxBattleCharges: sound.maxBattleCharges,
             handwashPerCleanCharge: sound.handwashPerCleanCharge,

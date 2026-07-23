@@ -75,6 +75,8 @@ struct StageStats: Codable, Equatable {
 struct ConsumptionConfig: Codable, Equatable {
     /// Active kcal that buy one training charge (US-173).
     let kcalPerTrain: Int
+    /// The most training charges a Digimon may bank at once (US-177).
+    let maxTrainCharges: Int
     /// Steps that buy one battle charge (US-176).
     let stepsPerBattleCharge: Int
     /// The most battle charges a Digimon may bank at once.
@@ -127,6 +129,7 @@ extension ConsumptionConfig {
     /// `meatCap` of 0 is a valid "no meat economy"), only negatives are rejected.
     var caps: [(name: String, value: Int)] {
         [
+            ("maxTrainCharges", maxTrainCharges),
             ("maxBattleCharges", maxBattleCharges),
             ("maxCleanCharges", maxCleanCharges),
             ("meatCap", meatCap),

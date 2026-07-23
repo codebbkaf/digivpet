@@ -4,7 +4,12 @@ import XCTest
 
 @testable import DigiVPet
 
-/// US-025 — training.
+/// US-025 / US-177 — training.
+///
+/// US-177 repriced training: a session no longer spends Strength/Stamina energy, it spends one
+/// training charge banked from active calories (`GameState.trainCharges`). These tests pin the new
+/// currency — one charge per session, blocked at zero, energy left untouched — while keeping the
+/// original pose/haptic/persistence coverage.
 ///
 /// Two layers, as in US-024's suite: `TrainActionTests` pins the pure rule against a hand-built
 /// `GameState`, and `TrainApplyTests` drives the real `MainScreenModel` and the real store, so the
@@ -25,8 +30,11 @@ private enum Clock {
 }
 
 /// A saved game outside any store — enough for the pure rule, which only reads and writes fields.
-private func makeState(strength: Int = 0, stamina: Int = 0) -> GameState {
+/// `strength`/`stamina` are seeded so the tests can prove training leaves them ALONE now that the
+/// currency is a charge rather than energy.
+private func makeState(trainCharges: Int = 0, strength: Int = 0, stamina: Int = 0) -> GameState {
     let state = GameState(currentDigimonId: "hero", stage: .babyI, now: Clock.start)
+    state.trainCharges = trainCharges
     state.stageEnergy[.strength] = strength
     state.stageEnergy[.stamina] = stamina
     return state
@@ -34,63 +42,41 @@ private func makeState(strength: Int = 0, stamina: Int = 0) -> GameState {
 
 final class TrainActionTests: XCTestCase {
 
-    // MARK: - AC1 / AC4: raises strengthStat, deducts the energy
+    // MARK: - AC2: raises strengthStat, spends one charge, no energy
 
-    func testTrainingRaisesStrengthStatAndDeductsStrengthEnergy() {
-        let state = makeState(strength: 20)
+    func testTrainingRaisesStrengthStatAndSpendsOneCharge() {
+        let state = makeState(trainCharges: 3, strength: 20, stamina: 20)
 
         let outcome = TrainAction.train(state, isAsleep: false)
 
-        XCTAssertEqual(outcome, .trained(spent: .strength,
-                                         cost: TrainAction.energyCostPerTraining,
-                                         gain: TrainAction.strengthGainPerTraining))
+        XCTAssertEqual(outcome, .trained(gain: TrainAction.strengthGainPerTraining))
         XCTAssertEqual(state.strengthStat, TrainAction.strengthGainPerTraining)
-        XCTAssertEqual(state.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(state.trainCharges, 2, "exactly one charge spent")
+        XCTAssertEqual(state.stageEnergy[.strength], 20, "no Strength energy spent")
+        XCTAssertEqual(state.stageEnergy[.stamina], 20, "no Stamina energy spent")
     }
 
-    /// The "or Stamina" half of the criterion: a Digimon with no Strength but plenty of exercise
-    /// minutes can still train, and pays with what it has.
-    func testTrainingSpendsStaminaWhenItIsTheRicherOfTheTwo() {
-        let state = makeState(strength: 1, stamina: 30)
-
-        let outcome = TrainAction.train(state, isAsleep: false)
-
-        XCTAssertEqual(outcome, .trained(spent: .stamina,
-                                         cost: TrainAction.energyCostPerTraining,
-                                         gain: TrainAction.strengthGainPerTraining))
-        XCTAssertEqual(state.stageEnergy[.stamina], 30 - TrainAction.energyCostPerTraining)
-        XCTAssertEqual(state.stageEnergy[.strength], 1, "the poorer currency was left alone")
-    }
-
-    /// A tie goes to Strength, by `payableWith` order. Pinned because "whichever it holds more of"
-    /// says nothing about equal holdings, and an unstable answer would make the caption flicker.
-    func testATieIsPaidWithStrength() {
-        let state = makeState(strength: 20, stamina: 20)
-
-        XCTAssertEqual(TrainAction.train(state, isAsleep: false),
-                       .trained(spent: .strength,
-                                cost: TrainAction.energyCostPerTraining,
-                                gain: TrainAction.strengthGainPerTraining))
-    }
-
-    /// Vitality is feeding's currency and Spirit is sleep; training must not quietly drain either,
-    /// or feeding and the evolution branch would silently pay for the gym.
-    func testTrainingSpendsNeitherVitalityNorSpirit() {
-        let state = makeState(strength: 20)
+    /// The energies training used to spend are now spent by nothing at all — Vitality is feeding's,
+    /// Spirit is sleep, and the physical pair is left standing for battling. Pins that a session
+    /// touches none of the four.
+    func testTrainingSpendsNoneOfTheFourEnergies() {
+        let state = makeState(trainCharges: 1, strength: 20, stamina: 15)
         state.stageEnergy[.vitality] = 40
         state.stageEnergy[.spirit] = 30
 
         TrainAction.train(state, isAsleep: false)
 
+        XCTAssertEqual(state.stageEnergy[.strength], 20)
+        XCTAssertEqual(state.stageEnergy[.stamina], 15)
         XCTAssertEqual(state.stageEnergy[.vitality], 40)
         XCTAssertEqual(state.stageEnergy[.spirit], 30)
     }
 
-    /// `lifetimeEnergy` is the record of what was ever EARNED, so spending must not rewrite it.
+    /// `lifetimeEnergy` is the record of what was ever EARNED, so training must not rewrite it.
     /// Since US-123 the total is on `PlayerProfile`, which `TrainAction` is never handed — so
     /// this pins the API shape as much as the arithmetic.
     func testTrainingDoesNotTakeBackLifetimeEnergy() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 1, strength: 20)
         let profile = PlayerProfile()
         profile.lifetimeEnergy[.strength] = 90
 
@@ -99,21 +85,21 @@ final class TrainActionTests: XCTestCase {
         XCTAssertEqual(profile.lifetimeEnergy[.strength], 90)
     }
 
-    /// Sessions accumulate — the stat is a running total, not a flag.
-    func testRepeatedTrainingAccumulates() {
-        let state = makeState(strength: 20)
+    /// Sessions accumulate — the stat is a running total, not a flag — and each spends a charge.
+    func testRepeatedTrainingAccumulatesAndSpendsACharge() {
+        let state = makeState(trainCharges: 3)
 
         TrainAction.train(state, isAsleep: false)
         TrainAction.train(state, isAsleep: false)
 
         XCTAssertEqual(state.strengthStat, 2 * TrainAction.strengthGainPerTraining)
-        XCTAssertEqual(state.stageEnergy[.strength], 20 - 2 * TrainAction.energyCostPerTraining)
+        XCTAssertEqual(state.trainCharges, 1, "two sessions, two charges")
     }
 
     // MARK: - AC3: blocked while asleep or sick
 
     func testTrainingIsBlockedWhileAsleep() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 3)
 
         let outcome = TrainAction.train(state, isAsleep: true)
 
@@ -122,11 +108,11 @@ final class TrainActionTests: XCTestCase {
         }
         XCTAssertFalse(reason.isEmpty, "the block has to be able to explain itself on screen")
         XCTAssertEqual(state.strengthStat, 0, "nothing was gained")
-        XCTAssertEqual(state.stageEnergy[.strength], 20, "and nothing was spent")
+        XCTAssertEqual(state.trainCharges, 3, "and no charge was spent")
     }
 
     func testTrainingIsBlockedWhileSick() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 3)
         state.healthStatus = .sick
 
         let outcome = TrainAction.train(state, isAsleep: false)
@@ -136,25 +122,26 @@ final class TrainActionTests: XCTestCase {
         }
         XCTAssertFalse(reason.isEmpty)
         XCTAssertEqual(state.strengthStat, 0)
-        XCTAssertEqual(state.stageEnergy[.strength], 20)
+        XCTAssertEqual(state.trainCharges, 3)
     }
 
     /// A dead Digimon cannot train either. US-029 owns death, but the rule already has to hold or
     /// a corpse would keep getting stronger between now and then.
     func testTrainingIsBlockedWhileDead() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 3)
         state.healthStatus = .dead
 
         guard case .blocked = TrainAction.train(state, isAsleep: false) else {
             return XCTFail("expected a block")
         }
         XCTAssertEqual(state.strengthStat, 0)
+        XCTAssertEqual(state.trainCharges, 3)
     }
 
     /// Asleep is checked before sickness, so a Digimon that is both is reported as asleep — the
     /// state that resolves itself by morning.
     func testAsleepAndSickIsReportedAsAsleep() {
-        let state = makeState(strength: 20)
+        let state = makeState(trainCharges: 3)
         state.healthStatus = .sick
 
         let sleeping = TrainAction.train(state, isAsleep: true)
@@ -164,31 +151,42 @@ final class TrainActionTests: XCTestCase {
         XCTAssertEqual(sleeping, awake, "the sleep reason wins either way")
     }
 
-    // MARK: - Not enough energy
+    // MARK: - AC2: no charge
 
-    /// Training is a purchase, so it can fail for want of funds — and that has to say so rather
-    /// than silently doing nothing or driving an energy total negative.
-    func testTrainingIsBlockedWithoutEnoughOfEitherEnergy() {
-        let cost = TrainAction.energyCostPerTraining
-        let state = makeState(strength: cost - 1, stamina: cost - 1)
+    /// Training is a purchase, so it can fail for want of a charge — and that has to say so rather
+    /// than silently doing nothing. The sleep and sickness checks run first, so a healthy waking
+    /// Digimon at zero charges is the one that reaches this arm.
+    func testTrainingIsBlockedWithoutACharge() {
+        let state = makeState(trainCharges: 0, strength: 100, stamina: 100)
 
-        guard case .blocked = TrainAction.train(state, isAsleep: false) else {
+        guard case .blocked(let reason) = TrainAction.train(state, isAsleep: false) else {
             return XCTFail("expected a block")
         }
-        XCTAssertEqual(state.stageEnergy[.strength], cost - 1)
-        XCTAssertEqual(state.stageEnergy[.stamina], cost - 1)
+        XCTAssertEqual(reason, TrainAction.noChargeReason,
+                       "the run-out says how to earn more, however much energy is on hand")
         XCTAssertEqual(state.strengthStat, 0)
+        XCTAssertEqual(state.trainCharges, 0, "cannot go negative")
     }
 
-    /// Exactly the cost is enough — the guard is `>=`, not `>`.
-    func testExactlyTheCostIsEnoughToTrain() {
-        let state = makeState(strength: TrainAction.energyCostPerTraining)
+    /// Exactly one charge is enough — the guard is `> 0`.
+    func testExactlyOneChargeIsEnoughToTrain() {
+        let state = makeState(trainCharges: 1)
 
         XCTAssertEqual(TrainAction.train(state, isAsleep: false),
-                       .trained(spent: .strength,
-                                cost: TrainAction.energyCostPerTraining,
-                                gain: TrainAction.strengthGainPerTraining))
-        XCTAssertEqual(state.stageEnergy[.strength], 0)
+                       .trained(gain: TrainAction.strengthGainPerTraining))
+        XCTAssertEqual(state.trainCharges, 0)
+    }
+
+    /// The session is counted only when the round actually starts — a zero-charge tap must not tick
+    /// `stageTrainingSessions`, which an evolution branch reads.
+    func testABlockedSessionIsNotCounted() {
+        let state = makeState(trainCharges: 0)
+        TrainAction.train(state, isAsleep: false)
+        XCTAssertEqual(state.stageTrainingSessions, 0)
+
+        state.trainCharges = 1
+        TrainAction.train(state, isAsleep: false)
+        XCTAssertEqual(state.stageTrainingSessions, 1, "a paid round is counted")
     }
 }
 
@@ -259,16 +257,16 @@ final class TrainApplyTests: XCTestCase {
         )
     }
 
-    /// Seeds a saved game at "hero" with the given Strength, then hands back a started model
+    /// Seeds a saved game at "hero" with the given training charges, then hands back a started model
     /// reading it off disk.
-    private func startedModel(named name: String, strength: Int,
+    private func startedModel(named name: String, trainCharges: Int,
                               healthStatus: HealthStatus = .healthy) async throws -> MainScreenModel {
         let url = storeURL(name)
         let seeding = try GameStore(url: url)
         let state = try seeding.loadOrCreate(digitamaId: "hero", now: Clock.start)
         state.currentDigimonId = "hero"
         state.stage = .babyI
-        state.stageEnergy[.strength] = strength
+        state.trainCharges = trainCharges
         state.healthStatus = healthStatus
         try seeding.save()
 
@@ -287,10 +285,9 @@ final class TrainApplyTests: XCTestCase {
     /// whole round: `train()` enters it and `finishTraining` grades it, which is exactly the pair the
     /// screen makes around the minigame.
     func testTrainingHoldsTheAttackFrameWithAHapticAndThenReturnsToIdle() async throws {
-        let model = try await startedModel(named: "attack", strength: 20)
+        let model = try await startedModel(named: "attack", trainCharges: 3)
 
-        XCTAssertEqual(model.train(), .started(spent: .strength,
-                                               cost: TrainAction.energyCostPerTraining))
+        XCTAssertEqual(model.train(), .started)
         model.finishTraining(.good)
 
         XCTAssertEqual(model.state?.strengthStat, TrainAction.strengthGainPerTraining)
@@ -304,26 +301,26 @@ final class TrainApplyTests: XCTestCase {
         XCTAssertEqual(model.animation, .idle, "the pose is held, not stuck")
     }
 
-    // MARK: - AC1 / AC4 persistence
+    // MARK: - AC1 / AC2 persistence
 
-    func testATrainedStatAndItsCostArePersisted() async throws {
-        let model = try await startedModel(named: "persist", strength: 20)
+    func testATrainedStatAndItsSpentChargeArePersisted() async throws {
+        let model = try await startedModel(named: "persist", trainCharges: 3)
         model.train()
         model.finishTraining(.good)
 
         let reopened = try GameStore(url: storeURL("persist"))
         let saved = try reopened.loadOrCreate(digitamaId: "hero", now: Clock.start)
         XCTAssertEqual(saved.strengthStat, TrainAction.strengthGainPerTraining)
-        XCTAssertEqual(saved.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(saved.trainCharges, 2, "the spent charge reached disk")
     }
 
     // MARK: - AC3: blocked with a visible reason
 
     /// US-025 AC3 used to read "blocked while asleep". US-110 reversed it for the same reason it
     /// reversed the feed: the mistake was being charged for an action that never happened. The round
-    /// now OPENS, the energy is charged, and the disturbance is charged too.
+    /// now OPENS, the charge is spent, and the disturbance is charged too.
     func testTrainingWhileAsleepWakesTheDigimonAndOpensTheRound() async throws {
-        let model = try await startedModel(named: "asleep", strength: 20)
+        let model = try await startedModel(named: "asleep", trainCharges: 3)
         model.isAsleep = true
         let mistakesBefore = try XCTUnwrap(model.state?.careMistakeCount)
 
@@ -332,14 +329,13 @@ final class TrainApplyTests: XCTestCase {
         }
         XCTAssertFalse(model.isAsleep, "prodding it woke it")
         XCTAssertNotNil(model.pendingTraining, "and the minigame is on screen")
-        XCTAssertEqual(model.state?.stageEnergy[.strength],
-                       20 - TrainAction.energyCostPerTraining, "the round was paid for")
+        XCTAssertEqual(model.state?.trainCharges, 2, "the round was paid for")
         XCTAssertEqual(model.state?.careMistakeCount, mistakesBefore + 1)
         XCTAssertEqual(model.state?.stageSleepDisturbances, 1)
     }
 
     func testTrainingWhileSickShowsAReasonAndDoesNotPlayTheAttackPose() async throws {
-        let model = try await startedModel(named: "sick", strength: 20, healthStatus: .sick)
+        let model = try await startedModel(named: "sick", trainCharges: 3, healthStatus: .sick)
 
         guard case .blocked = model.train() else { return XCTFail("expected a block") }
         XCTAssertNotNil(model.actionMessage)
@@ -349,6 +345,74 @@ final class TrainApplyTests: XCTestCase {
         // appears — showing it would read as the blocked training having half-worked.
         XCTAssertEqual(model.animation, .sick)
         XCTAssertEqual(trainHaptics, 0)
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20)
+        XCTAssertEqual(model.state?.trainCharges, 3, "nothing spent")
+    }
+
+    /// AC2: at zero charges the Train button is unavailable and says so — the round never opens and
+    /// nothing is spent.
+    func testTrainingAtZeroChargesIsBlockedAndSaysSo() async throws {
+        let model = try await startedModel(named: "broke", trainCharges: 0)
+
+        guard case .blocked(let reason) = try XCTUnwrap(model.train()) else {
+            return XCTFail("expected a block")
+        }
+        XCTAssertEqual(reason, TrainAction.noChargeReason)
+        XCTAssertNil(model.pendingTraining, "no round opened")
+        XCTAssertEqual(model.state?.strengthStat, 0)
+        XCTAssertEqual(trainHaptics, 0)
+    }
+}
+
+/// US-177 — active calories into training charges, tested pure so the conversion, cap and
+/// remainder-carry rules hold without a screen. 50 kcal buys one charge, up to a ceiling of 10.
+final class TrainChargeCreditTests: XCTestCase {
+    private func freshState() -> GameState {
+        GameState(currentDigimonId: "hero", now: Date(timeIntervalSince1970: 0))
+    }
+
+    /// THE AC headline: 150 injected kcal is three charges.
+    func test150KcalYieldsThreeCharges() {
+        let state = freshState()
+        state.creditTrainCharges(kcal: 150, kcalPerCharge: 50, maxCharges: 10)
+        XCTAssertEqual(state.trainCharges, 3)
+        XCTAssertEqual(state.trainChargeKcal, 0, "a hundred and fifty is a clean three, no remainder")
+    }
+
+    /// The ceiling: 550 kcal would be eleven charges, so it caps at ten and drops the overflow rather
+    /// than banking a remainder toward an uncollectable eleventh.
+    func test550KcalCapsAtTen() {
+        let state = freshState()
+        state.creditTrainCharges(kcal: 550, kcalPerCharge: 50, maxCharges: 10)
+        XCTAssertEqual(state.trainCharges, 10, "capped, not eleven")
+        XCTAssertEqual(state.trainChargeKcal, 0, "no remainder is hoarded at the cap")
+    }
+
+    /// Sub-threshold efforts are not thrown away between reads: 30 kcal now and 30 later is not yet a
+    /// charge but is banked toward one — a health reading arrives as many small deltas.
+    func testSubThresholdEffortsAccumulateAcrossReads() {
+        let state = freshState()
+        state.creditTrainCharges(kcal: 30, kcalPerCharge: 50, maxCharges: 10)
+        XCTAssertEqual(state.trainCharges, 0, "thirty kcal is not yet a charge")
+        XCTAssertEqual(state.trainChargeKcal, 30, "but it is banked toward the next one")
+
+        state.creditTrainCharges(kcal: 30, kcalPerCharge: 50, maxCharges: 10)
+        XCTAssertEqual(state.trainCharges, 1, "and the two reads together cross the threshold")
+        XCTAssertEqual(state.trainChargeKcal, 10, "with the change carried on")
+    }
+
+    /// AC: a second Digimon's charges are independent — the store lives on each `GameState`, so one
+    /// is never spending the other's.
+    func testTwoDigimonChargesAreIndependent() {
+        let mover = freshState()
+        let idler = freshState()
+        mover.creditTrainCharges(kcal: 150, kcalPerCharge: 50, maxCharges: 10)
+        idler.creditTrainCharges(kcal: 20, kcalPerCharge: 50, maxCharges: 10)
+
+        XCTAssertEqual(mover.trainCharges, 3)
+        XCTAssertEqual(idler.trainCharges, 0, "the one that sat still earned nothing")
+        // And spending from one leaves the other alone.
+        TrainAction.train(mover, isAsleep: false)
+        XCTAssertEqual(mover.trainCharges, 2, "training decremented by one")
+        XCTAssertEqual(idler.trainCharges, 0)
     }
 }

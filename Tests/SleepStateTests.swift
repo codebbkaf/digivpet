@@ -183,7 +183,8 @@ final class SleepStateTests: XCTestCase {
     /// A started model reading a saved game at "hero", with `samples` as the user's sleep history
     /// and the clock pinned at `now`.
     private func startedModel(named name: String, now: Date, samples: [SleepSample],
-                             error: Error? = nil, vitality: Int = 0, strength: Int = 0)
+                             error: Error? = nil, vitality: Int = 0, strength: Int = 0,
+                             trainCharges: Int = 0)
         async throws -> MainScreenModel {
         let url = storeDirectory.appendingPathComponent("\(name).store")
         let seeding = try GameStore(url: url)
@@ -193,6 +194,7 @@ final class SleepStateTests: XCTestCase {
         state.hunger = 3
         state.stageEnergy[.vitality] = vitality
         state.stageEnergy[.strength] = strength
+        state.trainCharges = trainCharges
         try seeding.save()
 
         let fetcher = FixtureSleepFetcher()
@@ -313,7 +315,8 @@ final class SleepStateTests: XCTestCase {
     /// what the wake overrides: the same fixture, the same 01:00, and the meal is eaten.
     func testASleepingDigimonIsWokenAndThenFedAndTrained() async throws {
         let model = try await startedModel(named: "woken", now: SleepClock.at("2026-03-11 01:00"),
-                                           samples: [SleepClock.night], vitality: 30, strength: 30)
+                                           samples: [SleepClock.night], vitality: 30, strength: 30,
+                                           trainCharges: 3)
         XCTAssertTrue(model.isAsleep)
         XCTAssertEqual(model.animation, .sleep)
 
@@ -326,7 +329,7 @@ final class SleepStateTests: XCTestCase {
         guard case .started = try XCTUnwrap(model.train()) else {
             return XCTFail("expected the round to open")
         }
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 30 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(model.state?.trainCharges, 2, "one training charge spent")
         // US-083: the minigame really is on screen, which is what a woken round means.
         XCTAssertNotNil(model.pendingTraining)
         // ONE disturbance for the two actions: the second landed inside the grace period, so the

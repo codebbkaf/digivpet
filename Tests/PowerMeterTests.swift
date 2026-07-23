@@ -287,14 +287,14 @@ final class PowerMeterGameTests: XCTestCase {
                                                                lowerBound: lower, upperBound: upper))
         XCTAssertEqual(burst.strengthStat, 0, "the overload paid out")
         XCTAssertEqual(burst.stageTrainingSessions, 1, "the burst round still happened")
-        XCTAssertEqual(burst.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining,
-                       "and was still charged for")
+        XCTAssertEqual(burst.trainCharges, 3, "and was still charged for")
     }
 
     private func makeState() -> GameState {
         let state = GameState(currentDigimonId: "hero", stage: .babyI,
                               now: Date(timeIntervalSinceReferenceDate: 600_000))
         state.stageEnergy[.strength] = 20
+        state.trainCharges = 4
         return state
     }
 

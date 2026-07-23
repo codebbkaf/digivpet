@@ -85,13 +85,14 @@ final class EnergyPurchaseTests: XCTestCase {
                      "and a point short is short")
     }
 
-    /// Training and battling charge the same cost from the same pair — the PRD's "identical to
-    /// `TrainAction`", asserted rather than assumed, so a change to one that is not made to the other
-    /// fails here.
-    func testABattleCostsExactlyWhatATrainingSessionCosts() {
-        XCTAssertEqual(BattleCost.energy, TrainAction.energyCostPerTraining)
-        XCTAssertEqual(BattleCost.payableWith, TrainAction.payableWith)
-        XCTAssertEqual(BattleCost.insufficientEnergyReason, TrainAction.insufficientEnergyReason)
+    /// A battle spends the physical energy pair, five points, richest first. Until US-177 this
+    /// borrowed `TrainAction`'s constants; training moved to a calorie-bought charge that spends no
+    /// energy, so battling is the last action that spends energy and pins the numbers itself now.
+    func testABattleSpendsFivePointsOfThePhysicalPair() {
+        XCTAssertEqual(BattleCost.energy, 5)
+        XCTAssertEqual(BattleCost.payableWith, [.strength, .stamina])
+        XCTAssertEqual(BattleCost.insufficientEnergyReason,
+                       "Not enough Strength or Stamina. Move to earn more.")
     }
 }
 

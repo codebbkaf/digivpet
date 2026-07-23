@@ -27,10 +27,12 @@ private enum Fixture {
         return date
     }
 
-    /// A trainable Digimon: awake, healthy, and holding enough Strength for several sessions.
+    /// A trainable Digimon: awake, healthy, and holding enough training charges (US-177) for several
+    /// sessions.
     static func trainable(on day: String = "2026-07-17 08:00") -> GameState {
         let state = GameState(currentDigimonId: "greymon", stage: .adult, now: date(day))
         state.stageEnergy[.strength] = 100
+        state.trainCharges = 10
         return state
     }
 }
@@ -60,11 +62,10 @@ final class CareCounterTests: XCTestCase {
     }
 
     /// A session that never ran must not be counted, or a broke Digimon could farm the counter by
-    /// tapping Train at an empty energy bar.
+    /// tapping Train at an empty charge bar.
     func testABlockedTrainingIsNotASession() {
         let state = Fixture.trainable()
-        state.stageEnergy[.strength] = 0
-        state.stageEnergy[.stamina] = 0
+        state.trainCharges = 0
 
         let outcome = TrainAction.train(state, isAsleep: false)
 

@@ -137,13 +137,11 @@ final class MainScreenModel: ObservableObject {
     /// already cost, so the caption at the end can name the currency the bar was taken from.
     @Published private(set) var pendingTraining: PendingTraining?
 
-    /// A training round in progress: the game being played, and what `TrainAction.begin` charged for
-    /// it. Not persisted — a round interrupted by a force-quit is simply over, and the charge that
-    /// already reached disk is what makes walking out of it cost something. See `train()`.
+    /// A training round in progress: the game being played. Not persisted — a round interrupted by a
+    /// force-quit is simply over, and the charge that already reached disk (US-177) is what makes
+    /// walking out of it cost something. See `train()`.
     struct PendingTraining: Equatable {
         let kind: MinigameKind
-        let spent: EnergyType
-        let cost: Int
     }
 
     /// What the Digimon is doing on screen. `.idle` except for the moment after an action — feeding
@@ -1160,6 +1158,10 @@ final class MainScreenModel: ObservableObject {
         // bought that energy — see `creditMapSteps`. Before the evolution and hatch checks below
         // only because everything is; nothing here depends on it.
         creditMapSteps(dayReadings.quantities[.steps] ?? .noData)
+        // The exercise-to-training loop (US-177): the active calories this same read brought in buy
+        // training charges on the Digimon that burned them. Off the SAME read as the Vitality energy
+        // above, so a calorie is spent once as energy and once as a charge, never read twice.
+        creditTrainCharges(dayReadings.quantities[.activeEnergy] ?? .noData)
         // After crediting and before evolving, because `careMistakeCount` is one of the things an
         // edge is gated on — an audit run after `evolveIfReady` would let a neglected Digimon take
         // a branch it had just disqualified itself from, one refresh late.
@@ -1256,6 +1258,27 @@ final class MainScreenModel: ObservableObject {
                                    maxCharges: config.maxBattleCharges)
     }
 
+    /// Converts the active calories this read brought in into training charges (US-177).
+    ///
+    /// The shape mirrors `creditMapSteps`'s battle-charge credit exactly, with active energy in the
+    /// place of steps: the day total is claimed off the shared `MetricLedger` so nothing double-
+    /// counts it, and the resulting delta buys charges at `kcalPerTrain` on `state` — the Digimon
+    /// that is OUT, so a charge is per-Digimon and a frozen Digimon (which does not refresh) accrues
+    /// nothing. `.healthActiveEnergy` has no other `claim` caller today, so this is its sole
+    /// consumer; the day it gains one, they share this one delta rather than each keeping a baseline.
+    ///
+    /// Nothing accrues from `noData` or `unavailable`: being told nothing is not being told zero, the
+    /// same rule the energy path holds to.
+    private func creditTrainCharges(_ activeEnergyToday: HealthReading) {
+        guard let metricLedger, let state else { return }
+        guard case .value(let dayTotal) = activeEnergyToday else { return }
+        let delta = metricLedger.claim(.healthActiveEnergy, dayTotal: dayTotal, now: now(),
+                                       calendar: calendar)
+        let config = ConsumptionConfig.bundled
+        state.creditTrainCharges(kcal: delta, kcalPerCharge: config.kcalPerTrain,
+                                 maxCharges: config.maxTrainCharges)
+    }
+
     /// Chooses the map the Digimon is adventuring in, from here on.
     ///
     /// Not retroactive, and that is the design: steps already credited to the previous map stay
@@ -1304,6 +1327,15 @@ final class MainScreenModel: ObservableObject {
     /// The most charges the bar shows, and so the total of the battle DashBar (US-176). Off the
     /// shipped `ConsumptionConfig`, the same source `meatCap` reads, so the economy retunes as data.
     var battleChargeCap: Int { ConsumptionConfig.bundled.maxBattleCharges }
+
+    /// The active Digimon's spendable training charges (US-177) — the number the train DashBar fills
+    /// and `TrainAction.begin` spends. Off `state`, so switching which Digimon is out shows ITS
+    /// charges and never another's. Zero before `start()` has opened a Digimon.
+    var trainCharges: Int { state?.trainCharges ?? 0 }
+
+    /// The most charges the train bar shows, and so its total (US-177). Off the shipped
+    /// `ConsumptionConfig`, the same source `battleChargeCap` reads.
+    var trainChargeCap: Int { ConsumptionConfig.bundled.maxTrainCharges }
 
     /// Every Digitama the player currently HOLDS (US-127) — an unhatched egg in the box, or any
     /// living Digimon that hatched from one. The seam US-128's drop engine filters a map's slots
@@ -1736,13 +1768,11 @@ final class MainScreenModel: ObservableObject {
         let start = TrainAction.begin(state, isAsleep: isAsleep)
 
         switch start {
-        case .started(let spent, let cost):
+        case .started:
             // No pose and no haptic yet: the Digimon is about to be covered by the game, and the
             // attack frame belongs to the round LANDING rather than to it starting.
             pendingTraining = PendingTraining(
-                kind: MinigameAssignment.game(for: state.currentDigimonId, in: graph, roster: roster),
-                spent: spent,
-                cost: cost
+                kind: MinigameAssignment.game(for: state.currentDigimonId, in: graph, roster: roster)
             )
         case .blocked(let reason):
             // No animation, as with a blocked feed: nothing happened to the Digimon, so it keeps
@@ -1767,7 +1797,7 @@ final class MainScreenModel: ObservableObject {
     ///
     /// A no-op without a round in progress, so a game that called back twice cannot be paid twice.
     func finishTraining(_ result: TrainingResult) {
-        guard let round = pendingTraining, let state else { return }
+        guard pendingTraining != nil, let state else { return }
         pendingTraining = nil
         let gain = TrainAction.finish(state, result: result)
 
@@ -1778,8 +1808,8 @@ final class MainScreenModel: ObservableObject {
         playTrainHaptic()
         // The attack frame for a round that bought something. A miss gets the angry frame instead —
         // the round happened and it was not enough, which is a different thing to show than a
-        // successful blow. The caption names the currency, because the Digimon picked that itself
-        // when the round opened and the bar dropping would otherwise be unexplained.
+        // successful blow. The caption names the grade and the STR it bought; the training charge it
+        // spent (US-177) is read off the bar, exactly as a battle's charge is.
         //
         // Both are `.pose`, so the sheet frame alternates with the walk frame and the Digimon is
         // seen swinging or bristling rather than being shoved about as one picture. The motion is
@@ -1787,7 +1817,7 @@ final class MainScreenModel: ObservableObject {
         // in the direction the sprite faces and home again, and a miss RECOILS backward.
         show(gain > 0 ? .pose(.attack) : .pose(.angry),
              motion: gain > 0 ? .lunge : .recoil,
-             message: "\(result.displayName) +\(gain) STR · -\(round.cost) \(round.spent.displayName)")
+             message: "\(result.displayName) +\(gain) STR")
 
         do {
             try store?.save()

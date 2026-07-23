@@ -241,17 +241,19 @@ enum BattleMatchmaker {
 /// taps used to cost nothing but time. The new brake is arguably the stronger one, and unlike a
 /// counter it is something the user can act on by moving rather than wait out.
 enum BattleCost {
-    /// Points spent per battle. `TrainAction`'s number rather than a second one of its own: a fight
-    /// asks the same of the Digimon as a workout, and neither should be the obvious one to spam.
-    static let energy = TrainAction.energyCostPerTraining
+    /// Points spent per battle — 5. Until US-177 this borrowed `TrainAction`'s number; training moved
+    /// to a calorie-bought charge that spends no energy, so the constant lives here now, where the
+    /// last energy cost of an action still is.
+    static let energy = 5
 
-    /// The energies a battle can be paid with — training's physical pair, for the same reasons
-    /// `TrainAction.payableWith` gives, and richest first at the point of spending.
-    static let payableWith = TrainAction.payableWith
+    /// The energies a battle can be paid with — the physical pair, Strength (steps) and Stamina
+    /// (exercise minutes), and richest first at the point of spending. Spirit (sleep) and Vitality
+    /// (calories) are excluded: Vitality is feeding's currency and sleep is not spent to fight.
+    static let payableWith: [EnergyType] = [.strength, .stamina]
 
-    /// Why a battle is refused when neither payable energy can cover it — training's wording, because
-    /// it is training's rule.
-    static let insufficientEnergyReason = TrainAction.insufficientEnergyReason
+    /// Why a battle is refused when neither payable energy can cover it. Names the remedy rather than
+    /// only the refusal — the energy comes from moving, so there is something to do about it.
+    static let insufficientEnergyReason = "Not enough Strength or Stamina. Move to earn more."
 }
 
 extension GameState {

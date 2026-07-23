@@ -165,7 +165,7 @@ final class ButtonMasherGameTests: XCTestCase {
     func testAGradeOffTheCounterIsWhatTheActionPaysOut() {
         let state = GameState(currentDigimonId: "hero", stage: .babyI,
                               now: Date(timeIntervalSinceReferenceDate: 600_000))
-        state.stageEnergy[.strength] = 20
+        state.trainCharges = 1
         TrainAction.begin(state, isAsleep: false)
 
         TrainAction.finish(state, result: ButtonMasherGame.grade(taps: 30, window: 5))

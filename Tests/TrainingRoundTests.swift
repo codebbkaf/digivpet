@@ -101,16 +101,16 @@ final class TrainingRoundTests: XCTestCase {
         )
     }
 
-    /// Seeds a saved game at "hero" with the given Strength, then hands back a started model reading
-    /// it off disk.
-    private func startedModel(named name: String, strength: Int,
+    /// Seeds a saved game at "hero" with the given training charges (US-177), then hands back a
+    /// started model reading it off disk.
+    private func startedModel(named name: String, trainCharges: Int,
                               healthStatus: HealthStatus = .healthy) async throws -> MainScreenModel {
         let url = storeURL(name)
         let seeding = try GameStore(url: url)
         let state = try seeding.loadOrCreate(digitamaId: "hero", now: Clock.start)
         state.currentDigimonId = "hero"
         state.stage = .child
-        state.stageEnergy[.strength] = strength
+        state.trainCharges = trainCharges
         state.healthStatus = healthStatus
         try seeding.save()
 
@@ -127,7 +127,7 @@ final class TrainingRoundTests: XCTestCase {
     /// assertion is the one that would catch a lookup wired to the stage floor by mistake: "hero" is a
     /// Child, whose fallback is Power Meter, and its line's game is not that.
     func testTrainingOpensTheGameTheDigimonIsAssigned() async throws {
-        let model = try await startedModel(named: "opens", strength: 20)
+        let model = try await startedModel(named: "opens", trainCharges: 4)
 
         XCTAssertNil(model.pendingTraining, "no round before the button")
         model.train()
@@ -146,7 +146,7 @@ final class TrainingRoundTests: XCTestCase {
     /// round cannot be entered twice, so even a tap that got through would not charge again. See
     /// `testASecondTrainTapDuringARoundChangesNothing`.
     func testAGameOnScreenSuspendsTheWalk() async throws {
-        let model = try await startedModel(named: "wander", strength: 20)
+        let model = try await startedModel(named: "wander", trainCharges: 4)
         XCTAssertTrue(model.isWandering)
 
         model.train()
@@ -158,14 +158,13 @@ final class TrainingRoundTests: XCTestCase {
     }
 
     func testASecondTrainTapDuringARoundChangesNothing() async throws {
-        let model = try await startedModel(named: "double", strength: 20)
+        let model = try await startedModel(named: "double", trainCharges: 4)
         model.train()
         let opened = model.pendingTraining
 
         XCTAssertNil(model.train(), "a round is already in play")
         XCTAssertEqual(model.pendingTraining, opened, "the same round, not a fresh one")
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining,
-                       "charged once")
+        XCTAssertEqual(model.state?.trainCharges, 3, "charged once")
         XCTAssertEqual(model.state?.stageTrainingSessions, 1, "counted once")
     }
 
@@ -176,7 +175,7 @@ final class TrainingRoundTests: XCTestCase {
     /// that the GRADE THE GAME REPORTED is what was paid — not that 3 happens to equal 3.
     func testEachGradePaysItsOwnGain() async throws {
         for (index, result) in TrainingResult.allCases.enumerated() {
-            let model = try await startedModel(named: "grade\(index)", strength: 20)
+            let model = try await startedModel(named: "grade\(index)", trainCharges: 4)
             model.train()
             model.finishTraining(result)
 
@@ -185,25 +184,23 @@ final class TrainingRoundTests: XCTestCase {
         }
     }
 
-    /// What the user reads afterwards: the grade by name, the stat it bought, and the energy the round
-    /// cost. The cost is in the caption because the bar dropped when the game OPENED, several seconds
-    /// before this line appears, and would otherwise be unexplained.
-    func testTheCaptionNamesTheGradeTheGainAndWhatItCost() async throws {
-        let model = try await startedModel(named: "caption", strength: 20)
+    /// What the user reads afterwards: the grade by name and the stat it bought. The training charge
+    /// it spent (US-177) is read off the bar rather than named in the caption, exactly as a battle's
+    /// charge is — so the caption is the grade and the gain.
+    func testTheCaptionNamesTheGradeAndTheGain() async throws {
+        let model = try await startedModel(named: "caption", trainCharges: 4)
         model.train()
         model.finishTraining(.great)
 
         let message = try XCTUnwrap(model.actionMessage)
         XCTAssertTrue(message.contains(TrainingResult.great.displayName), message)
         XCTAssertTrue(message.contains("+\(TrainingResult.great.strengthGain) STR"), message)
-        XCTAssertTrue(message.contains("-\(TrainAction.energyCostPerTraining)"), message)
-        XCTAssertTrue(message.contains(EnergyType.strength.displayName), message)
     }
 
     /// A miss is announced too, and does not wear the attack pose: the round happened and bought
     /// nothing, which is a different thing to show than a landed blow.
     func testAMissIsShownAsOneRatherThanAsALandedBlow() async throws {
-        let model = try await startedModel(named: "missPose", strength: 20)
+        let model = try await startedModel(named: "missPose", trainCharges: 4)
         model.train()
         model.finishTraining(.miss)
 
@@ -215,7 +212,7 @@ final class TrainingRoundTests: XCTestCase {
     /// A game that called back twice would otherwise be paid twice. `TrainingMinigame` promises one
     /// call; this is what makes the promise unnecessary.
     func testARoundIsPaidOnceEvenIfTheGameReportsTwice() async throws {
-        let model = try await startedModel(named: "twice", strength: 20)
+        let model = try await startedModel(named: "twice", trainCharges: 4)
         model.train()
         model.finishTraining(.perfect)
         model.finishTraining(.perfect)
@@ -226,7 +223,7 @@ final class TrainingRoundTests: XCTestCase {
     /// The count evolution reads is taken when the round OPENS, never when it is graded — see
     /// `GameState.stageTrainingSessions`. A missed round is still a session trained.
     func testTheSessionIsCountedOnceWhenTheRoundOpens() async throws {
-        let model = try await startedModel(named: "sessions", strength: 20)
+        let model = try await startedModel(named: "sessions", trainCharges: 4)
 
         model.train()
         XCTAssertEqual(model.state?.stageTrainingSessions, 1, "counted on entry")
@@ -240,7 +237,7 @@ final class TrainingRoundTests: XCTestCase {
     /// what this pins now is that the woken round is a whole real round — charged, counted and on
     /// screen — rather than a half-started one.
     func testTrainingWhileAsleepWakesTheDigimonAndOpensTheGame() async throws {
-        let model = try await startedModel(named: "asleep", strength: 20)
+        let model = try await startedModel(named: "asleep", trainCharges: 4)
         model.isAsleep = true
 
         guard case .started = try XCTUnwrap(model.train()) else {
@@ -248,13 +245,13 @@ final class TrainingRoundTests: XCTestCase {
         }
         XCTAssertFalse(model.isAsleep)
         XCTAssertNotNil(model.pendingTraining)
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(model.state?.trainCharges, 3)
         XCTAssertEqual(model.state?.stageTrainingSessions, 1, "and the session is counted")
         XCTAssertEqual(model.state?.stageSleepDisturbances, 1, "the disturbance is charged too")
     }
 
     func testTrainingWhileSickIsBlockedAndOpensNoGame() async throws {
-        let model = try await startedModel(named: "sick", strength: 20, healthStatus: .sick)
+        let model = try await startedModel(named: "sick", trainCharges: 4, healthStatus: .sick)
 
         guard case .blocked(let reason) = try XCTUnwrap(model.train()) else {
             return XCTFail("expected a block")
@@ -262,15 +259,14 @@ final class TrainingRoundTests: XCTestCase {
         XCTAssertFalse(reason.isEmpty)
         XCTAssertNil(model.pendingTraining)
         XCTAssertEqual(model.actionMessage, reason)
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20)
+        XCTAssertEqual(model.state?.trainCharges, 4)
         XCTAssertEqual(model.state?.stageTrainingSessions, 0)
     }
 
-    /// The third block, and the one a free game would be most tempting for: a player with no energy
+    /// The third block, and the one a free game would be most tempting for: a player with no charge
     /// left could otherwise mash Train for a stat all evening.
-    func testTrainingWithoutEnoughEnergyIsBlockedAndOpensNoGame() async throws {
-        let model = try await startedModel(named: "broke",
-                                           strength: TrainAction.energyCostPerTraining - 1)
+    func testTrainingWithoutAChargeIsBlockedAndOpensNoGame() async throws {
+        let model = try await startedModel(named: "broke", trainCharges: 0)
 
         guard case .blocked(let reason) = try XCTUnwrap(model.train()) else {
             return XCTFail("expected a block")
@@ -284,12 +280,12 @@ final class TrainingRoundTests: XCTestCase {
 
     /// Nothing to pay out when no round was ever entered, however `finishTraining` is reached.
     func testGradingWithNoRoundInPlayPaysNothing() async throws {
-        let model = try await startedModel(named: "nothing", strength: 20)
+        let model = try await startedModel(named: "nothing", trainCharges: 4)
 
         model.finishTraining(.perfect)
 
         XCTAssertEqual(model.state?.strengthStat, 0)
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20)
+        XCTAssertEqual(model.state?.trainCharges, 4)
         XCTAssertEqual(trainHaptics, 0)
         XCTAssertNil(model.actionMessage)
     }
@@ -297,26 +293,25 @@ final class TrainingRoundTests: XCTestCase {
     // MARK: - AC4: walking out mid-round grades a miss and refunds nothing
 
     func testAbandoningARoundGradesItAMissAndRefundsNothing() async throws {
-        let model = try await startedModel(named: "abandon", strength: 20)
+        let model = try await startedModel(named: "abandon", trainCharges: 4)
         model.train()
 
         model.abandonTraining()
 
         XCTAssertNil(model.pendingTraining, "the game comes down with the user")
         XCTAssertEqual(model.state?.strengthStat, 0, "a miss buys nothing")
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining,
-                       "and nothing is handed back")
+        XCTAssertEqual(model.state?.trainCharges, 3, "and nothing is handed back")
         XCTAssertEqual(model.state?.stageTrainingSessions, 1, "the session still happened")
     }
 
     /// Every ordinary backgrounding, which is most of them. Abandoning must not manufacture a miss
     /// out of a training that was never started.
     func testAbandoningWithNoRoundInPlayDoesNothing() async throws {
-        let model = try await startedModel(named: "idleAbandon", strength: 20)
+        let model = try await startedModel(named: "idleAbandon", trainCharges: 4)
 
         model.abandonTraining()
 
-        XCTAssertEqual(model.state?.stageEnergy[.strength], 20)
+        XCTAssertEqual(model.state?.trainCharges, 4)
         XCTAssertEqual(model.state?.stageTrainingSessions, 0)
         XCTAssertEqual(trainHaptics, 0)
         XCTAssertNil(model.actionMessage)
@@ -326,27 +321,26 @@ final class TrainingRoundTests: XCTestCase {
     /// before it could be graded has already reached disk poorer. Reopening the store is exactly what
     /// the next launch does, so this is that launch.
     func testTheChargeIsOnDiskBeforeTheRoundIsGraded() async throws {
-        let model = try await startedModel(named: "forceQuit", strength: 20)
+        let model = try await startedModel(named: "forceQuit", trainCharges: 4)
         model.train()
         XCTAssertNotNil(model.pendingTraining, "the round is still open — nothing has graded it")
 
         let reopened = try GameStore(url: storeURL("forceQuit"))
         let saved = try reopened.loadOrCreate(digitamaId: "hero", now: Clock.start)
-        XCTAssertEqual(saved.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining,
-                       "the energy went when the game opened")
+        XCTAssertEqual(saved.trainCharges, 3, "the charge went when the game opened")
         XCTAssertEqual(saved.stageTrainingSessions, 1)
         XCTAssertEqual(saved.strengthStat, 0, "and bought nothing, because nothing was played")
     }
 
     /// The whole round, persisted: what a relaunch after a training finds.
     func testAGradedRoundIsPersisted() async throws {
-        let model = try await startedModel(named: "persistGrade", strength: 20)
+        let model = try await startedModel(named: "persistGrade", trainCharges: 4)
         model.train()
         model.finishTraining(.perfect)
 
         let reopened = try GameStore(url: storeURL("persistGrade"))
         let saved = try reopened.loadOrCreate(digitamaId: "hero", now: Clock.start)
         XCTAssertEqual(saved.strengthStat, TrainingResult.perfect.strengthGain)
-        XCTAssertEqual(saved.stageEnergy[.strength], 20 - TrainAction.energyCostPerTraining)
+        XCTAssertEqual(saved.trainCharges, 3)
     }
 }
