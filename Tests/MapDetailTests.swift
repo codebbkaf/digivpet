@@ -220,15 +220,42 @@ final class MapDetailRevealTests: XCTestCase {
         XCTAssertEqual(slot.revealed?.stage, .digitama)
     }
 
-    /// AC4: "with no hint rows" — a revealed slot carries no criteria at all, so there is nothing
-    /// for the view to draw even if it tried.
-    func testARevealedSlotCarriesNoHintRows() {
+    /// **US-207 AC5, reversing US-121's AC4.** A revealed slot keeps its criteria: a map's slot is
+    /// the only place the game says what an egg is about, so the lines stay on screen once the egg
+    /// arrives instead of being deleted. Every slot carries its own, revealed or not.
+    func testARevealedSlotStillCarriesItsHintRows() {
         let detail = Fixture.detail(discovered: [Fixture.agu])
 
-        XCTAssertTrue(Fixture.slot(Fixture.agu, in: detail).conditions.isEmpty)
-        // And the withheld slot beside it still has its own, so the emptiness is the reveal and not
-        // a slot that lost its conditions on the way in.
+        XCTAssertEqual(Fixture.slot(Fixture.agu, in: detail).conditions, [Fixture.training])
+        // And the withheld slot beside it carries ITS own, so these are per-slot criteria and not
+        // one list handed to every row.
         XCTAssertEqual(Fixture.slot(Fixture.pata, in: detail).conditions, [Fixture.steps])
+    }
+
+    /// **US-207 AC6.** A held egg's row is marked "Found" — the finished seal, not the ready
+    /// sparkle — so the met checklist under it does not read as an outstanding task. Held is read
+    /// off the box, which is a different record from the Dex: the slot beside it is discovered but
+    /// no longer held, and it is NOT marked found.
+    func testAHeldSlotIsMarkedFoundAndKeepsItsConditions() {
+        let detail = MapDetail.make(for: Fixture.row("first", PlayerProfile()),
+                                    in: Fixture.catalog, roster: Fixture.roster,
+                                    discovered: [Fixture.agu, Fixture.pata], held: [Fixture.agu],
+                                    context: Fixture.context(steps: 2_000, sessions: 1))!
+
+        XCTAssertTrue(Fixture.slot(Fixture.agu, in: detail).isHeld)
+        XCTAssertEqual(Fixture.slot(Fixture.agu, in: detail).conditions, [Fixture.training],
+                       "and its criteria are still there to read")
+        XCTAssertFalse(Fixture.slot(Fixture.pata, in: detail).isHeld,
+                       "discovered but hatched out of the box is not held")
+    }
+
+    /// The found mark is the app's finished glyph and is distinct from the ready one — the two say
+    /// opposite things about the same row, so they must not be the same symbol.
+    func testTheFoundMarkIsTheFinishedGlyphAndNotTheReadyOne() {
+        XCTAssertFalse(MapDetailMarks.foundSymbol.isEmpty)
+        XCTAssertFalse(MapDetailMarks.foundLabel.isEmpty)
+        XCTAssertNotEqual(MapDetailMarks.foundSymbol, MapDetailMarks.readySymbol)
+        XCTAssertNotEqual(MapDetailMarks.foundLabel, MapDetailMarks.readyLabel)
     }
 
     /// Discovering one Digitama reveals that one and nothing else on the screen.

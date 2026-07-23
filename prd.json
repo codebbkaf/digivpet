@@ -1756,8 +1756,8 @@
         "Build green. Verify the map detail in the simulator: a held egg shows art plus its condition line"
       ],
       "priority": 94,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "A won battle is now the only moment an egg is found, and it is a 50% seeded roll (DigitamaDropEngine.findsTheEgg/winDropChance) even then; finishBattle gates the check on bout.report.playerWon, and the after-a-train / after-a-step checks are removed. A miss consumes nothing — the roll is drawn before award() and nothing is written until it passes — so the next win rolls again. MapDetail.DigitamaSlotDetail now always carries its slot's conditions (US-121's hide-once-revealed is gone) plus a new isHeld off GameStore.heldDigitamaIds(), drawn as a green checkmark.seal.fill 'Found' label with its hint rows forced to the satisfied style. Full suite 2705 tests, 0 failures; 46mm screenshot (-mapDetailSlotsDemo) shows the held Agu Digitama with art, 'Found', and a green-checked 'Train it once' under it."
     },
     {
       "id": "US-208",

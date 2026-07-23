@@ -229,23 +229,27 @@ final class MapScopedProgressModelTests: XCTestCase {
 
     /// `agu_digitama` hatches to `hero`, so the starting egg is pinned; `foe` gives a battle someone
     /// to fight. Copied from `DigitamaDropTests` — the same shape, because this is the same wiring.
+    /// `foe` is a Baby-I against a hero seeded Ultimate so that a fight here is decided by the power
+    /// gap: since US-207 an egg drops on a WIN, and a test about WHICH map drops must not also be a
+    /// test of the battle seed.
     private func fixtureGraph() -> EvolutionGraph {
         EvolutionGraph(nodes: [
             EvolutionNode(id: "agu_digitama", displayName: "Agu Digitama", stage: .digitama,
                           spriteFile: "Agu_Digitama",
                           evolutions: [EvolutionEdge(to: "hero", minEnergy: 50, maxCareMistakes: 99)]),
             EvolutionNode(id: "hero", displayName: "Hero", stage: .child, spriteFile: "Agumon"),
-            EvolutionNode(id: "foe", displayName: "Foe", stage: .adult, spriteFile: "Greymon"),
+            EvolutionNode(id: "foe", displayName: "Foe", stage: .babyI, spriteFile: "Botamon"),
         ])
     }
 
-    /// A model over a store seeded at a `hero` child fit to act, with charges stocked so training
-    /// and battling are affordable. The clock is `Fixture.morning` throughout — injected, so nothing
-    /// here waits.
+    /// A model over a store seeded at a `hero` fit to act and to win, with charges stocked so
+    /// training and battling are affordable. The clock is `Fixture.morning` throughout — injected,
+    /// so nothing here waits.
     private func makeModel(store: GameStore) throws -> MainScreenModel {
         let state = try store.loadOrCreate(digitamaId: "agu_digitama", now: Fixture.morning)
-        state.stage = .child
+        state.stage = .ultimate
         state.currentDigimonId = "hero"
+        state.strengthStat = 30
         state.stageEnergy[.strength] = 100
         state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
         state.trainCharges = ConsumptionConfig.bundled.maxTrainCharges
@@ -351,7 +355,11 @@ final class MapScopedProgressModelTests: XCTestCase {
     }
 
     /// AC4 at the drop: the egg is awarded on the map whose conditions were met, and the identical
-    /// slot on the other map is not — one train, one egg.
+    /// slot on the other map is not — one train, one won fight, one egg.
+    ///
+    /// The train meets alpha's condition and the WIN is what looks for the egg (US-207), so both
+    /// halves happen on alpha. Beta then gets its own won fight on the same hitting seed: the
+    /// training is banked on alpha, so beta's identical slot is unmet and finds nothing.
     func testOnlyTheMapTheWorkWasDoneOnDropsItsEgg() async throws {
         let store = try GameStore(url: storeURL)
         let model = try makeModel(store: store)
@@ -360,17 +368,26 @@ final class MapScopedProgressModelTests: XCTestCase {
         model.selectMap("alpha")
         XCTAssertNotNil(model.train())
         model.finishTraining(.good)
+        try fightToAWin(on: model)
 
         XCTAssertEqual(model.pendingDigitamaDrop?.id, "gabu_digitama", "alpha's egg")
         model.acknowledgeDigitamaDrop()
 
-        // Beta's slot carries the same condition and its egg must stay put: a refresh there, with
-        // the training already banked on alpha, awards nothing.
         model.selectMap("beta")
-        await model.refresh()
+        try fightToAWin(on: model)
 
         XCTAssertNil(model.pendingDigitamaDrop, "beta has not been trained in")
         XCTAssertFalse(try store.heldDigitamaIds().contains("pal_digitama"))
+    }
+
+    /// Fights the selected map's one resident and asserts the player won, so a test that is about
+    /// WHERE an egg drops is never quietly reading a lost fight instead. `hero` is seeded Ultimate
+    /// against a Baby-I pool, which decides it on power rather than on the battle seed.
+    private func fightToAWin(on model: MainScreenModel) throws {
+        model.battle()
+        let bout = try XCTUnwrap(model.finishBattleRound(.good), "grading fights the fight")
+        XCTAssertTrue(bout.report.playerWon, "the fight the drop check hangs off was won")
+        model.finishBattle()
     }
 
     /// AC1: the counters survive the app being closed and reopened — the same call the app makes on

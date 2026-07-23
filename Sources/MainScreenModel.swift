@@ -1396,11 +1396,12 @@ final class MainScreenModel: ObservableObject {
         // the same refresh is a natural no-op — never a double move.
         hatchIfReady(state)
         evolveIfReady(state)
-        // After the step accrual above and after the stage has settled (a hatch or evolution resets
-        // the stage counters a drop condition may read), the last of US-128's three drop checks: the
-        // one that fires for a day's walking. It saves for itself, before this refresh's own flush.
-        checkForDigitamaDrop()
-        // US-129, after `updateDeath` and after the drop check: the refresh that finds the last
+        // US-207 removed US-128's after-a-step drop check from here. A day's walking still moves the
+        // map's counters and can turn a slot "Ready to find", but a refresh no longer awards
+        // anything: an egg is found by winning a fight in the map, never by time or by steps
+        // passing. See `checkForDigitamaDrop`.
+        //
+        // US-129, after `updateDeath`: the refresh that finds the last
         // Digimon dead is the moment the player has nothing left, so the egg is waiting by the time
         // the memorial is drawn. A no-op on every other refresh — see
         // `GameStore.grantFailsafeDigitamaIfStranded`.
@@ -1849,7 +1850,19 @@ final class MainScreenModel: ObservableObject {
     func mapDetail(for row: MapListRow) -> MapDetail? {
         MapDetail.make(for: row, in: maps, roster: roster,
                        discovered: mapDetailDiscoveries, met: mapDetailMet(for: row),
-                       context: mapDetailContext(for: row.id))
+                       held: mapDetailHeld, context: mapDetailContext(for: row.id))
+    }
+
+    /// The Digitama in the box, for the "Found" mark US-207 puts over a held slot's conditions.
+    ///
+    /// The same `heldDigitamaIds` the drop engine is handed, so the screen cannot mark an egg found
+    /// that the engine would still drop — one read, one truth.
+    private var mapDetailHeld: Set<String> {
+        #if DEBUG
+        return heldDigitamaIds.union(Self.mapDetailDemoHeld)
+        #else
+        return heldDigitamaIds
+        #endif
     }
 
     /// The residents of `row`'s map the player has met (US-202), plus whatever `-mapDetailFoesDemo`
@@ -1940,6 +1953,18 @@ final class MainScreenModel: ObservableObject {
     /// poisoned for every screenshot taken on it afterwards, which US-119 learned the expensive way.
     /// Nothing here reaches disk, so there is nothing to undo.
     private static var mapDetailDemoDiscoveries: Set<String> {
+        isMapDetailDemo ? ["agu_digitama"] : []
+    }
+
+    /// Debug-only: the Digitama `-mapDetailDemo` pretends are in the box, so the screenshot has a
+    /// HELD slot — art, "Found", and its condition line still under it, which is US-207's whole
+    /// point — beside the ready one and the withheld one.
+    ///
+    /// The same egg `mapDetailDemoDiscoveries` reveals, because the two states stack: an egg can
+    /// only read "Found" on a row that has art to put it beside. A fresh save's own starting egg
+    /// hatches immediately, so nothing is really held on the Simulator and a real screen would
+    /// photograph the mark's absence. Unioned into the read, never written — same rule as above.
+    private static var mapDetailDemoHeld: Set<String> {
         isMapDetailDemo ? ["agu_digitama"] : []
     }
 
@@ -2162,10 +2187,10 @@ final class MainScreenModel: ObservableObject {
         pendingTraining = nil
         let gain = TrainAction.finish(state, result: result)
 
-        // A training session was just counted (`TrainAction.begin` recorded it), so a slot gated on
-        // `care.trainingSessions` may have newly come due — US-128's after-a-train drop check.
-        checkForDigitamaDrop()
-
+        // US-207 removed US-128's after-a-train drop check from here. A training session still
+        // MEETS a slot gated on `care.trainingSessions` — the map detail marks it "Ready to find"
+        // the moment the round is graded — but meeting it no longer hands the egg over; the next
+        // won battle in that map is what looks for it. See `checkForDigitamaDrop`.
         playTrainHaptic()
         // The attack frame for a round that bought something. A miss gets the angry frame instead —
         // the round happened and it was not enough, which is a different thing to show than a
@@ -2597,10 +2622,13 @@ final class MainScreenModel: ObservableObject {
             // but a lost save does not pass in silence.
             Self.log.error("Could not save after battling: \(String(describing: error))")
         }
-        // The battle counters just moved, so a slot gated on `care.battleCount` or
-        // `care.battleWinRatio` may have newly come due — US-128's after-a-battle drop check. After
-        // the save above so the recorded result is on disk whether or not an egg then drops.
-        checkForDigitamaDrop()
+        // US-207: a WIN is the one moment an egg is found, and it is a coin flip even then. After
+        // the save above so the recorded result is on disk whether or not an egg then drops — and
+        // gated on the result here rather than inside the check, because "a loss awards nothing" is
+        // a fact about this call site: there is no other way to reach the engine.
+        if bout.report.playerWon {
+            checkForDigitamaDrop()
+        }
     }
 
     // MARK: - Wild encounters (US-201)
@@ -3239,17 +3267,24 @@ final class MainScreenModel: ObservableObject {
         pendingEvolution = nil
     }
 
-    /// Checks the selected map for an egg the player has just earned, and awards at most one (US-128).
+    /// Looks for an egg in the map the player has just won a battle in, and awards at most one
+    /// (US-128, rewritten by US-207).
     ///
-    /// Run at the three moments a condition can newly hold — after a train, after a battle, after a
-    /// step accrual tick — and NEVER on a timer, because a drop is a reward for a thing the player
-    /// did rather than for time passing. The engine collects the slots whose conditions are all met
-    /// and whose egg is not already HELD (US-127), then hands back one; an empty set awards nothing.
+    /// **A won battle is the only moment an egg is found.** US-128 ran this after a train, after a
+    /// battle of either result, and after a step accrual tick, and it handed the egg over the
+    /// instant a condition held; US-207 narrows it to the win and makes the hand-over a coin flip.
+    /// The two changes are one rule: meeting a slot's conditions no longer GIVES you the egg, it
+    /// makes the egg findable, and each win in that map is one look for it.
+    ///
+    /// The engine collects the slots whose conditions are all met and whose egg is not already HELD
+    /// (US-127), then hands back one; an empty set awards nothing. A losing fight never reaches here
+    /// — `finishBattle` gates the call on the result — and a miss on the roll consumes nothing, so
+    /// the next win looks again.
     ///
     /// The context is the same `ConditionContext` an evolution and the map detail's hints are judged
     /// on, off the same saved state, so the egg that drops is exactly the one the detail promised was
-    /// "Ready to find". A dead active Digimon drops nothing — the three callers already refuse to run
-    /// on one, and this is belt to their braces.
+    /// "Ready to find". A dead active Digimon drops nothing — the caller already refuses to run on
+    /// one, and this is belt to its braces.
     private func checkForDigitamaDrop() {
         guard let state, let store, let profile, state.healthStatus != .dead else { return }
         guard let mapId = profile.selectedMapId, let map = maps.map(id: mapId) else { return }
@@ -3261,15 +3296,22 @@ final class MainScreenModel: ObservableObject {
                                                  readings: conditionReadings)
         let held = (try? store.heldDigitamaIds()) ?? []
         var generator = makeDropGenerator()
+        // US-207: the roll comes FIRST and is unconditional, so one win draws one Double whatever
+        // the map holds — a seeded generator then forces the same branch in a test whether or not a
+        // slot happens to be eligible, rather than the draw order depending on the fixture.
+        let findsIt = DigitamaDropEngine.findsTheEgg(using: &generator)
         guard let dropId = DigitamaDropEngine.award(
             in: map, context: context, held: held, using: &generator
         ) else { return }
+        // Nothing above this line wrote anything, so a miss leaves the conditions exactly as they
+        // were — the slot stays met, stays unheld, and the next win rolls again (AC4).
+        guard findsIt else { return }
 
         do {
             try store.grantDigitama(dropId, now: now())
         } catch {
-            // The egg simply is not awarded — the box is unchanged, so the same check next train or
-            // step will offer it again. Not worth interrupting the player over a failed flush.
+            // The egg simply is not awarded — the box is unchanged, so the same check on the next
+            // won battle will offer it again. Not worth interrupting the player over a failed flush.
             Self.log.error("Could not grant dropped Digitama: \(String(describing: error))")
             return
         }

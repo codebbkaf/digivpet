@@ -604,7 +604,18 @@ struct ConditionHintRow: View {
     let condition: EvolutionCondition
     let context: ConditionContext
 
-    private var level: RevealLevel { ConditionReveal.level(of: condition, in: context) }
+    /// Draw this row as complete whatever the context currently says (US-207).
+    ///
+    /// For the one case where the context is no longer the right judge: a map slot whose egg is
+    /// already in the box has HAD its criteria met — that is why the egg is there — and the counters
+    /// they were met against may since have been reset by a hatch or a death. Reading the live level
+    /// would then mark a finished slot as an outstanding task, which is the exact thing US-207's
+    /// "Found" mark exists to prevent. Defaulted off, so every Dex row is unaffected.
+    var isSatisfied: Bool = false
+
+    private var level: RevealLevel {
+        isSatisfied ? .met : ConditionReveal.level(of: condition, in: context)
+    }
 
     var body: some View {
         HStack(alignment: .top, spacing: 4) {
@@ -612,7 +623,10 @@ struct ConditionHintRow: View {
                 .font(.system(size: 9))
                 .foregroundStyle(tint)
 
-            Text(ConditionReveal.line(for: condition, in: context))
+            // At `.met` the line is the bare hint, so a satisfied row reads plainly rather than
+            // carrying a "getting closer" qualifier about work that is over.
+            Text(isSatisfied ? ConditionHint.resolve(for: condition)
+                             : ConditionReveal.line(for: condition, in: context))
                 .font(.system(size: 10))
                 .foregroundStyle(level == .far ? .secondary : .primary)
                 .fixedSize(horizontal: false, vertical: true)

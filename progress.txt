@@ -38,6 +38,30 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `MetricLedger.claim`.** Second SPENDER of one claim = fine; second CLAIM of one reading = the
   double-count bug. Four consumers are wired this way (map steps, map-scoped counters, train charges,
   clean charges). See `docs/metric-accounting.md`.
+- **THREE RECORDS OF "THE PLAYER HAS THIS EGG", ALSO NOT INTERCHANGEABLE (US-207).**
+  `GameStore.dexIds()` = has EVER owned, never shrinks, survives death — `MapDetail.make(discovered:)`
+  and `DigitamaSlotDetail.isRevealed`. `GameStore.heldDigitamaIds()` = in the BOX right now, empties
+  on hatch — `MapDetail.make(held:)`, `isHeld`, and the drop engine's refusal to drop a duplicate.
+  The slot's conditions being met = a third thing again. A held egg is always revealed; a revealed
+  one need not be held.
+- **AN EGG DROPS ONLY ON A BATTLE WON, AND ONLY AT A 50% ROLL (US-207).**
+  `MainScreenModel.checkForDigitamaDrop()` has exactly ONE caller — `finishBattle()`, gated on
+  `bout.report.playerWon`. Never re-add a call after a train, a refresh or a timer: "a drop is a
+  reward for a thing the player did" is the rule, and a miss must consume nothing (draw the roll
+  before `award`, write nothing until it passes). `DigitamaDropEngine.winDropChance` /
+  `findsTheEgg(chance:using:)` hold the chance.
+- **A MODEL TEST THAT HANGS OFF A BATTLE RESULT DECIDES THE FIGHT BY THE POWER GAP, NOT THE SEED.**
+  `BossEncounterTests`' pattern: player `stage`/`strengthStat` against a fixed one-node pool
+  (`.ultimate`/30 vs a Baby-I = sure win; `.babyI`/0 vs an Ultimate = sure loss), then ASSERT
+  `bout.report.playerWon` so a seed regression fails loudly instead of testing the other branch.
+  And `model.battle()` silently returns nil (so `finishBattleRound` does too) unless all three are
+  stocked: `battleCharges > 0`, `stageEnergy[.strength]` >= `BattleCost.energy` (5), no other
+  minigame pending.
+- **A SEEDED GENERATOR FACTORY IS CALLED ONCE PER CHECK, SO TWO OUTCOMES IN ONE RUN NEED A SEED
+  QUEUE.** `makeDropGenerator: () -> SeededGenerator` hands back a FRESH generator every time, so one
+  seed = one repeated outcome. A small class the escaping closure advances (see `SeedQueue` in
+  `Tests/DigitamaDropTests.swift`) is how "miss this one, hit the next" is said. Measured for
+  `Double.random(in: 0..<1)`: seed 1 -> 0.318, seed 2 -> 0.757.
 - **CONSUMPTION WAVE: A "SPENDABLE CHARGE" HAS FIVE SEAMS, COPY THE BATTLE CHARGE (US-176) FOR EACH.**
   (1) GameState optional storage `xChargesStorage`/`xProgressStorage` + computed getters (nil reads 0)
   + `creditXCharges(amount:per:maxCharges:)` — the while-loop-with-remainder-dropped-at-cap shape;
@@ -6393,4 +6417,65 @@ The thirty, `Perfect -> Ultimate`:
   `battleWins =` before assuming a fixture drives a map path.
 - `HealthSampleFetching`'s method is `samples(of: QuantityMetric, in: DateInterval)` — the stub
   fetchers copied between test files are easy to mistype as `HealthMetric` and fail only at compile.
+---
+
+## 2026-07-24 - US-207 (Win a battle to (maybe) find the egg, and the condition stays shown after you have it)
+- Meeting a map slot's conditions no longer GIVES you the egg — it makes the egg **findable**, and
+  each battle **won** in that map is one look for it, at a coin flip. Two changes, one rule.
+- THE ROLL (`Sources/DigitamaDrop.swift`): `DigitamaDropEngine.winDropChance = 0.5` and
+  `findsTheEgg(chance:using:)`, an `inout G: RandomNumberGenerator` draw kept SEPARATE from `award`
+  because the two answer different questions — `award` says WHICH egg is on offer, this says whether
+  the player gets a look at all.
+- THE GATE (`Sources/MainScreenModel.swift`): `checkForDigitamaDrop()` is called from ONE place now,
+  `finishBattle()`, wrapped in `if bout.report.playerWon`. The US-128 calls in `refresh()` (after the
+  step accrual) and in `finishTraining()` are gone. Inside the check the roll is drawn FIRST and
+  unconditionally — one win draws one Double whatever the map holds, so a seeded generator forces the
+  same branch regardless of the fixture — and the `guard findsIt` sits AFTER `award` but before any
+  write, which is what makes a miss consume nothing (AC4).
+- THE SCREEN (`Sources/MapDetailView.swift`): `DigitamaSlotDetail.conditions` is now always the
+  slot's own (US-121 emptied it once revealed; that is reversed), plus a new `isHeld` fed from
+  `GameStore.heldDigitamaIds()` via `MapDetail.make(held:)` and `MainScreenModel.mapDetailHeld`.
+  A held row draws `checkmark.seal.fill` + "Found" in green (the app's finished glyph, not the ready
+  sparkle) and its hint rows are drawn satisfied — `ConditionHintRow` gained an `isSatisfied: Bool =
+  false` that pins the level to `.met`, defaulted off so every Dex row is untouched.
+- Files: Sources/DigitamaDrop.swift, Sources/MainScreenModel.swift, Sources/MapDetailView.swift,
+  Sources/DexView.swift, Tests/DigitamaDropTests.swift, Tests/MapDetailTests.swift,
+  Tests/MapScopedProgressTests.swift.
+- Verified: build green; FULL suite **2705 tests, 0 failures**. AC9 screenshotted on 46mm
+  (`-mapDetailSlotsDemo`, /tmp/us207/slots2.png): the held Agu Digitama row shows its real sprite,
+  a green "Found", and a green-checked "Train it once" under it — art plus condition line, exactly
+  what the AC asks — beside a "?" marked "Ready to find" and a third "?" still working.
+- Tests added: engine — `testTheWinRollIsSeededAndAnswersBothWays`,
+  `testTheChanceIsOneInTwoAndTheExtremesAreAbsolute`, `testAboutHalfOfManyWinsFindTheEgg`; model —
+  forced-hit drops, forced-miss does not, miss-then-win drops (one model, seed QUEUE), a loss never
+  drops, a refresh no longer drops, a train no longer drops; view — a revealed slot KEEPS its hint
+  rows, a held slot is `isHeld` and keeps them, found glyph != ready glyph.
+
+**Learnings for future iterations:**
+- **A drop seed is drawn per CHECK, so a test that needs two different outcomes in one run needs a
+  seed QUEUE, not a seed.** `makeDropGenerator: () -> SeededGenerator` is called fresh at every
+  check, so `SeedQueue` (a small class the escaping closure advances, holding its last value once
+  exhausted) is how "miss this win, hit the next" is said. Measured seeds for `Double.random(in:
+  0..<1)`: seed 1 -> 0.318 (a hit at 50%), seed 2 -> 0.757 (a miss). Reuse them.
+- **Roll BEFORE you branch on the fixture.** Drawing the chance first and unconditionally makes the
+  generator's draw order independent of whether a slot happened to be eligible; if the roll had sat
+  inside the eligible branch, the same seed would mean different things in two tests.
+- **A model test that hangs off a battle RESULT must decide the fight by the power gap, not the
+  seed.** The pattern is `BossEncounterTests`': stage/strength on the player against a fixed pool
+  (`.ultimate`/30 vs a Baby-I = sure win; `.babyI`/0 vs an Ultimate = sure loss), then assert
+  `bout.report.playerWon` so a seed regression fails loudly instead of silently testing the other
+  branch. `MapScopedProgressTests`' `foe` was retuned from Adult to Baby-I for exactly this.
+- **`model.battle()` needs THREE things stocked or it silently returns nil and
+  `finishBattleRound` hands back nil:** `battleCharges > 0`, a payable energy (`BattleCost.energy` =
+  5 from `stageEnergy[.strength]`/`.stamina`), and no other minigame pending. Dropping the
+  `stageEnergy` line from a fixture cost a full test-run cycle here.
+- **THREE records of "the player has this egg" now exist and they are not interchangeable:**
+  `dexIds()` (has EVER owned — never shrinks, `MapDetail.make(discovered:)`), `heldDigitamaIds()`
+  (in the box RIGHT NOW — empties on hatch, `MapDetail.make(held:)` and the drop engine's refusal),
+  and the slot's own conditions being met. `isRevealed` and `isHeld` are the screen's names for the
+  first two; a held egg is always revealed, a revealed one need not be held.
+- **A screenshot caught the AC6 defect again** (the same lesson US-121 learned): the "Found" row's
+  hint drew an UNMET open circle, because `ConditionHintRow` was reading the live context — which for
+  a held egg may have been reset by a hatch since. Value-level tests all passed. Forcing the level
+  with `isSatisfied` is the fix; prefer a defaulted parameter on the shared row over a second row type.
 ---

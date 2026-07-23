@@ -22,6 +22,16 @@ enum MapDetailMarks {
     /// on, and a bare sparkle beside a "?" is decoration until something names it.
     static let readyLabel = "Ready to find"
 
+    /// An egg already in the box (US-207). The list's finished glyph and not the ready sparkle:
+    /// this is the one state on the slot that IS over, which is exactly what `checkmark.seal.fill`
+    /// means everywhere else in the app.
+    static let foundSymbol = "checkmark.seal.fill"
+
+    /// Said beside it, and the reason the conditions below stay on screen: US-207 keeps a held
+    /// egg's criteria visible so the player can still read what that egg is about, and without a
+    /// word saying so a met green checklist reads as an outstanding task that has come due.
+    static let foundLabel = "Found"
+
     /// The heading over the slots. "Digitama" and not "Eggs": the game calls them Digitama
     /// everywhere else the player can read, down to the roster's own display names.
     static let digitamaHeading = "Digitama"
@@ -89,16 +99,26 @@ struct MapDetail: Equatable, Identifiable {
         /// The art and the name, or nil while this egg is still a "?".
         let revealed: Revealed?
 
-        /// The criteria to draw as hint rows. **Empty on a revealed slot**, which is AC4's "with no
-        /// hint rows" said where a test can see it: an egg the player already has is not something
-        /// they are still working towards, and listing its conditions would read as a second copy
-        /// still to be earned.
+        /// The criteria to draw as hint rows. **Always the slot's own, held or not** (US-207).
+        ///
+        /// US-121 emptied this once the slot was revealed, on the reading that an egg you already
+        /// have is not a task. US-207 reverses that: a map's slot is the only place the game ever
+        /// says what an egg is ABOUT, and blanking it the moment the egg arrives deletes that for
+        /// good. `isHeld` is what stops the surviving lines reading as work still to do.
         let conditions: [EvolutionCondition]
 
-        /// Every condition holds, and the egg is not in hand yet — so the next drop check can hand
-        /// it over. Deliberately false once revealed: "ready" is a promise about something that has
-        /// not happened, and an egg already owned has had it happen.
+        /// Every condition holds, and the egg is not in hand yet — so the next won battle can hand
+        /// it over (US-207). Deliberately false once revealed: "ready" is a promise about something
+        /// that has not happened, and an egg already owned has had it happen.
         let isReady: Bool
+
+        /// The egg is in the player's box right now — `GameStore.heldDigitamaIds()`, the very set
+        /// `DigitamaDropEngine` refuses to drop a second time (US-127).
+        ///
+        /// Distinct from `isRevealed`, which is the DEX's "has ever owned" and stays true after the
+        /// egg hatches or its Digimon dies. This one is what turns the conditions below into a
+        /// finished checklist, so the mark tracks the thing the drop rule actually reads.
+        let isHeld: Bool
 
         var isRevealed: Bool { revealed != nil }
 
@@ -158,6 +178,9 @@ extension MapDetail {
     ///     Distinct from `discovered`: the Dex records eggs the player has RAISED, while an opponent
     ///     is met by fighting or a 500-step meeting (US-202), which is a different record and a
     ///     different span. An opponent not in this set draws as a "?".
+    ///   - held: the Digitama in the player's box right now — `GameStore.heldDigitamaIds()`, the
+    ///     very set `DigitamaDropEngine` refuses to drop a second time (US-207). A third record
+    ///     again: `discovered` never shrinks, this one empties as eggs hatch.
     ///   - context: the player's counters, for the reveal levels of the hint lines.
     static func make(
         for row: MapListRow,
@@ -165,6 +188,7 @@ extension MapDetail {
         roster: Roster = .bundled,
         discovered: Set<String>,
         met: Set<String> = [],
+        held: Set<String> = [],
         context: ConditionContext
     ) -> MapDetail? {
         guard !row.isLocked, let map = catalog.map(id: row.id) else { return nil }
@@ -176,8 +200,8 @@ extension MapDetail {
             totalSteps: map.totalSteps,
             isSelected: row.isSelected,
             opponentGroups: groups(of: map, roster: roster, met: met),
-            digitama: map.digitamaSlots.map { slot(from: $0, roster: roster,
-                                                  discovered: discovered, context: context) },
+            digitama: map.digitamaSlots.map { slot(from: $0, roster: roster, discovered: discovered,
+                                                   held: held, context: context) },
             context: context)
     }
 
@@ -213,10 +237,15 @@ extension MapDetail {
     /// the player has not met it, it is that there is no art and no name to draw. Its conditions
     /// are still listed, so a data fault shows up as an egg nobody can name rather than as a slot
     /// that quietly vanished.
+    ///
+    /// The conditions are now listed on EVERY slot, revealed or not (US-207). What used to be
+    /// withheld here is now said in words instead: `isHeld` marks the list "Found" rather than
+    /// deleting it, because a map's slot is the only place the game ever says what an egg is about.
     private static func slot(
         from slot: DigitamaSlot,
         roster: Roster,
         discovered: Set<String>,
+        held: Set<String>,
         context: ConditionContext
     ) -> DigitamaSlotDetail {
         let entry = roster.entry(id: slot.digitamaId)
@@ -227,8 +256,9 @@ extension MapDetail {
         return DigitamaSlotDetail(
             digitamaId: slot.digitamaId,
             revealed: revealed,
-            conditions: revealed == nil ? slot.conditions : [],
-            isReady: revealed == nil && ConditionReveal.allMet(slot.conditions, in: context))
+            conditions: slot.conditions,
+            isReady: revealed == nil && ConditionReveal.allMet(slot.conditions, in: context),
+            isHeld: held.contains(slot.digitamaId))
     }
 }
 
@@ -362,7 +392,15 @@ private struct DigitamaSlotRow: View {
                             .minimumScaleFactor(0.7)
                     }
 
-                    if slot.isReady {
+                    // Held wins over ready, and the two can never both draw: `isReady` is already
+                    // false on anything owned. Green and the seal, because this is the one state
+                    // on the row that is finished — see `MapDetailMarks.foundSymbol`.
+                    if slot.isHeld {
+                        Label(MapDetailMarks.foundLabel, systemImage: MapDetailMarks.foundSymbol)
+                            .font(.system(size: 10))
+                            .foregroundStyle(.green)
+                            .lineLimit(1)
+                    } else if slot.isReady {
                         Label(MapDetailMarks.readyLabel, systemImage: MapDetailMarks.readySymbol)
                             .font(.system(size: 10))
                             .foregroundStyle(.yellow)
@@ -373,9 +411,12 @@ private struct DigitamaSlotRow: View {
                 Spacer(minLength: 0)
             }
 
-            // A revealed slot carries none of these — see `DigitamaSlotDetail.conditions`.
+            // Every slot carries these now, held or not (US-207) — see
+            // `DigitamaSlotDetail.conditions`. The "Found" label above is what stops a held egg's
+            // met checklist reading as work still to do.
             ForEach(Array(slot.conditions.enumerated()), id: \.offset) { _, condition in
-                ConditionHintRow(condition: condition, context: context)
+                ConditionHintRow(condition: condition, context: context,
+                                 isSatisfied: slot.isHeld)
             }
         }
         .padding(.vertical, 2)

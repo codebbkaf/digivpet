@@ -21,8 +21,8 @@ struct DigitamaDropAnnouncement: Equatable, Identifiable {
 /// Pure and view-free, exactly like `MapOpponentBand` and the rest of the map arithmetic: it takes
 /// a map, the player's counters as a `ConditionContext`, and the set of Digitama already HELD, and
 /// answers with the one id to award — or nil for nothing. `MainScreenModel` is the only caller, and
-/// it runs this at the three moments a drop is earned (after a train, after a battle, after a step
-/// accrual tick), never on a timer.
+/// since US-207 it runs this at exactly ONE moment: a battle WON inside the map, never on a timer
+/// and no longer after a train or a step accrual tick.
 ///
 /// Reusing `ConditionReveal.allMet` — the very predicate the map detail's "Ready to find" mark and
 /// the evolution engine both read — is deliberate: a slot the player was PROMISED was ready on the
@@ -58,6 +58,28 @@ enum DigitamaDropEngine {
     /// run of a test, and a fresh random seed per check in the app makes it a real drop rather than
     /// always the first slot.
     ///
+    /// How likely a qualifying win is to actually hand the egg over (US-207) — one in two.
+    ///
+    /// The drop stopped being automatic here: meeting a slot's conditions makes the egg FINDABLE,
+    /// and each win in that map is one look for it. Half was chosen so a ready egg is normally two
+    /// fights away rather than one, without ever making a long-met condition feel abandoned.
+    static let winDropChance: Double = 0.5
+    /// Whether this win finds the egg (US-207).
+    ///
+    /// Separate from `award` rather than folded into it, because the two answer different questions
+    /// and the caller must be able to ask them apart: `award` says WHICH egg is on offer, this says
+    /// whether the player gets a look at all. A false consumes nothing — no condition is reset and
+    /// no counter is spent — so the very next qualifying win rolls again (AC4).
+    ///
+    /// `generator` is `inout` and injected for `award`'s reason: a seeded generator forces the hit
+    /// and the miss branch in a test rather than leaving either to luck.
+    static func findsTheEgg<G: RandomNumberGenerator>(
+        chance: Double = winDropChance,
+        using generator: inout G
+    ) -> Bool {
+        Double.random(in: 0..<1, using: &generator) < chance
+    }
+
     /// A nil `map` — the player has selected nowhere — awards nothing, so the caller need not special
     /// case "no map": there is no place for an egg to be found.
     static func award<G: RandomNumberGenerator>(

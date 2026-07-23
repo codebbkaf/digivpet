@@ -157,6 +157,53 @@ final class DigitamaDropEngineTests: XCTestCase {
 
         XCTAssertEqual(eligible.map(\.digitamaId), ["gabu_digitama"])
     }
+
+    // MARK: - US-207: a win is a LOOK for the egg, not the egg
+
+    /// US-207 AC1/AC2: the roll is a seeded draw against the chance, so both branches are forced
+    /// rather than waited for. Seed 1's first draw is 0.318 and seed 2's is 0.757 — either side of
+    /// the one-in-two, and the same two seeds the model tests below name.
+    func testTheWinRollIsSeededAndAnswersBothWays() {
+        var hit = SeededGenerator(seed: 1)
+        var miss = SeededGenerator(seed: 2)
+
+        XCTAssertTrue(DigitamaDropEngine.findsTheEgg(using: &hit))
+        XCTAssertFalse(DigitamaDropEngine.findsTheEgg(using: &miss))
+    }
+
+    /// The same seed answers the same way twice — which is what lets a test pin a whole run's worth
+    /// of wins rather than only its first.
+    func testTheWinRollIsDeterministicUnderOneSeed() {
+        var first = SeededGenerator(seed: 5)
+        var second = SeededGenerator(seed: 5)
+
+        XCTAssertEqual(DigitamaDropEngine.findsTheEgg(using: &first),
+                       DigitamaDropEngine.findsTheEgg(using: &second))
+    }
+
+    /// The chance is a stated constant and it is one in two (AC1's "~50%"), and the two extremes
+    /// pin the comparison's direction: at 0 nothing is ever found, at 1 every win finds.
+    func testTheChanceIsOneInTwoAndTheExtremesAreAbsolute() {
+        XCTAssertEqual(DigitamaDropEngine.winDropChance, 0.5)
+
+        for seed in UInt64(1)...25 {
+            var never = SeededGenerator(seed: seed)
+            var always = SeededGenerator(seed: seed)
+            XCTAssertFalse(DigitamaDropEngine.findsTheEgg(chance: 0, using: &never))
+            XCTAssertTrue(DigitamaDropEngine.findsTheEgg(chance: 1, using: &always))
+        }
+    }
+
+    /// Over many draws the rate really is about a half — the constant is used as a probability and
+    /// not merely stored. A wide band, because this is a sanity check on the formula and not a
+    /// test of the generator's statistics.
+    func testAboutHalfOfManyWinsFindTheEgg() {
+        var generator = SeededGenerator(seed: 2_026)
+        let hits = (0..<2_000).filter { _ in DigitamaDropEngine.findsTheEgg(using: &generator) }.count
+
+        XCTAssertGreaterThan(hits, 850)
+        XCTAssertLessThan(hits, 1_150)
+    }
 }
 
 // MARK: - The light-off map condition (US-186)
@@ -332,7 +379,7 @@ final class DigitamaDropValidatorTests: XCTestCase {
     }
 }
 
-// MARK: - The three drop checks, through the model
+// MARK: - The drop check, through the model
 
 private final class EmptySampleFetcher: HealthSampleFetching, @unchecked Sendable {
     func samples(of metric: QuantityMetric, in interval: DateInterval) async throws -> [HealthSample] { [] }
@@ -359,37 +406,57 @@ final class DigitamaDropModelTests: XCTestCase {
     }
 
     /// The graph the player is raised on — `agu_digitama` hatches to `hero`, so the starting egg is
-    /// pinned and known, and `foe` gives the battle an opponent. The drop eggs (`gabu_digitama`,
-    /// `pal_digitama`) are roster ids, resolved for the announcement off the bundled roster.
+    /// pinned and known. `weakling` and `titan` sit at the two ends of the ladder so a fight against
+    /// either is decided by the power gap rather than by the seed: US-207 is about what a WIN and a
+    /// LOSS do, and a test of that must be able to name which one it just had. The drop eggs
+    /// (`gabu_digitama`, `pal_digitama`) are roster ids, resolved for the announcement off the
+    /// bundled roster.
     private func fixtureGraph() -> EvolutionGraph {
         EvolutionGraph(nodes: [
             EvolutionNode(id: "agu_digitama", displayName: "Agu Digitama", stage: .digitama,
                           spriteFile: "Agu_Digitama",
                           evolutions: [EvolutionEdge(to: "hero", minEnergy: 50, maxCareMistakes: 99)]),
             EvolutionNode(id: "hero", displayName: "Hero", stage: .child, spriteFile: "Agumon"),
-            EvolutionNode(id: "foe", displayName: "Foe", stage: .adult, spriteFile: "Greymon"),
+            EvolutionNode(id: "weakling", displayName: "Weakling", stage: .babyI, spriteFile: "Botamon"),
+            EvolutionNode(id: "titan", displayName: "Titan", stage: .ultimate, spriteFile: "Metalgreymon"),
         ])
     }
 
     /// A one-map catalog whose only slot drops `digitama` when `conditions` are met. `01_grassland`
-    /// is a real asset; the pool is one real graph opponent so `battle()` has someone to fight.
-    private func catalog(slotId digitama: String, _ conditions: [EvolutionCondition]) -> MapCatalog {
+    /// is a real asset; the pool is one real graph opponent so `battle()` has someone to fight, and
+    /// naming it is how a test chooses whether the fight it is about to have is won or lost.
+    private func catalog(slotId digitama: String, _ conditions: [EvolutionCondition],
+                         opponent: String = "weakling") -> MapCatalog {
         MapCatalog(maps: [
             AdventureMap(id: "grass", displayName: "Grass", assetName: "01_grassland",
-                         tier: 3, totalSteps: 100_000, opponentPool: ["foe"],
+                         tier: 3, totalSteps: 100_000, opponentPool: [opponent],
                          digitamaSlots: [DigitamaSlot(digitamaId: digitama, conditions: conditions)]),
         ])
     }
 
-    /// The store and a model over it, seeded at a `hero` child fit to act — awake, fed, and with its
+    /// The store and a model over it, seeded at a `hero` fit to act — awake, fed, and with its
     /// health clocks stamped now so the empty readers do not sicken it before the test acts. Its
     /// origin egg is `agu_digitama`, so `gabu_digitama`/`pal_digitama` are unheld and can drop. The
     /// same store instance is returned so the box can be read back without opening a second one.
-    private func makeModel(maps: MapCatalog, dropSeed: UInt64 = 1) throws -> (MainScreenModel, GameStore) {
+    ///
+    /// `stage`/`strength` set the player's battle power, which against a fixed pool is what decides
+    /// the fight: the default Ultimate flattens `weakling`, and `.babyI`/0 loses to `titan`. The
+    /// same lever `BossEncounterTests` pulls, for the same reason.
+    ///
+    /// `dropSeeds` is a QUEUE, one seed per drop check, because the model builds a fresh generator
+    /// for every check — so a list is how a test says "miss this win, hit the next" (AC4). Seed 1's
+    /// first draw is 0.318 (a hit at a 50% chance) and seed 2's is 0.757 (a miss); the tests below
+    /// name which they mean.
+    private func makeModel(maps: MapCatalog, dropSeeds: [UInt64] = [1],
+                           stage: Stage = .ultimate,
+                           strength: Int = 30) throws -> (MainScreenModel, GameStore) {
         let store = try GameStore(url: storeDirectory.appendingPathComponent("Drop.store"))
         let state = try store.loadOrCreate(digitamaId: "agu_digitama", now: Fixture.morning)
-        state.stage = .child
+        state.stage = stage
         state.currentDigimonId = "hero"
+        state.strengthStat = strength
+        // A battle is paid for in Strength energy (`BattleCost.energy`, 5 a fight) as well as in a
+        // charge, so stock enough for every fight any test below has.
         state.stageEnergy[.strength] = 100
         // US-176: a battle also spends a charge walked up from steps; the empty readers walk none.
         state.battleCharges = ConsumptionConfig.bundled.maxBattleCharges
@@ -400,6 +467,7 @@ final class DigitamaDropModelTests: XCTestCase {
         state.stageEnteredDate = Fixture.morning
         try store.save()
 
+        let seeds = SeedQueue(dropSeeds)
         let model = MainScreenModel(
             makeStore: { [store] in store },
             graph: fixtureGraph(),
@@ -415,30 +483,63 @@ final class DigitamaDropModelTests: XCTestCase {
             now: { Fixture.morning },
             chooseStartingDigitama: { nodes in nodes.first { $0.id == "agu_digitama" } },
             makeBattleGenerator: { SeededGenerator(seed: 1) },
-            makeDropGenerator: { SeededGenerator(seed: dropSeed) }
+            makeDropGenerator: { SeededGenerator(seed: seeds.next()) }
         )
         return (model, store)
     }
 
-    // MARK: after a step accrual tick
+    /// The drop seeds a model hands out, in order, holding the last one once the list runs out.
+    ///
+    /// A class so the escaping `makeDropGenerator` closure can advance it — the model asks for a
+    /// generator once per drop check, so "which check am I on" is state the closure has to keep.
+    private final class SeedQueue {
+        private let seeds: [UInt64]
+        private var index = 0
 
-    /// THE AC (step path): a refresh whose conditions are unmet drops nothing; once they are met, one
-    /// refresh drops the egg, records it in the Dex and announces it — and it becomes held.
-    func testAStepRefreshDropsTheEggOnceItsConditionIsMet() async throws {
+        init(_ seeds: [UInt64]) {
+            self.seeds = seeds.isEmpty ? [1] : seeds
+        }
+
+        func next() -> UInt64 {
+            defer { index = min(index + 1, seeds.count - 1) }
+            return seeds[index]
+        }
+    }
+
+    /// Fights the map's one resident to a finish and hands back the report, so a test can say which
+    /// way it went. The three calls the screen makes, in the order it makes them.
+    @discardableResult
+    private func fight(_ model: MainScreenModel) throws -> BattleReport {
+        model.battle()
+        let bout = try XCTUnwrap(model.finishBattleRound(.good), "grading fights the fight")
+        model.finishBattle()
+        return bout.report
+    }
+
+    /// Whether the map's only slot still wears the "Ready to find" mark — which is to say the
+    /// condition is met and the egg is not in hand. What "nothing was consumed" looks like from
+    /// outside the model.
+    private func slotIsReady(in model: MainScreenModel) throws -> Bool {
+        let row = try XCTUnwrap(model.mapRows.first { $0.id == "grass" })
+        return try XCTUnwrap(model.mapDetail(for: row)).digitama[0].isReady
+    }
+
+    // MARK: AC1/AC2 — a won battle rolls for the egg
+
+    /// **THE AC.** A win in a map whose slot is met, on a seed that rolls under the 50% chance,
+    /// hands the egg over: it joins the box, enters the Dex, and is announced for the banner (AC7).
+    func testAWonBattleWithAMetConditionAndAHittingRollDropsTheEgg() async throws {
         let (model, store) = try makeModel(
-            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]))
+            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]),
+            dropSeeds: [1])
         await model.start()
         model.selectMap("grass")
-
-        // Condition unmet (no training sessions yet): a refresh drops nothing.
-        await model.refresh()
-        XCTAssertEqual(try store.allStates().count, 1, "no egg while the condition is unmet")
-        XCTAssertNil(model.pendingDigitamaDrop)
-
-        // Meet the condition and refresh again: the egg drops. US-206: the counter that matters is
-        // the MAP's, not the Digimon's stage-long one — a slot asks what has been done here.
+        // US-206: the counter that matters is the MAP's, not the Digimon's stage-long one.
         model.profile?.credit(.careTrainingSessions, forMap: "grass")
-        await model.refresh()
+        XCTAssertTrue(try slotIsReady(in: model), "the slot is ready before the fight")
+
+        let report = try fight(model)
+        XCTAssertTrue(report.playerWon, "the Ultimate flattens the Baby-I")
 
         XCTAssertEqual(try store.allStates().count, 2, "the found egg joined the box")
         XCTAssertEqual(model.pendingDigitamaDrop?.id, "gabu_digitama", "and the player is told")
@@ -448,9 +549,75 @@ final class DigitamaDropModelTests: XCTestCase {
         XCTAssertTrue(model.discoveredDigimonIds.contains("gabu_digitama"))
     }
 
-    /// AC5: at most one drop per check, and a held egg is never dropped twice. A second met refresh
-    /// after the drop adds nothing.
-    func testASecondRefreshDoesNotDropTheHeldEggAgain() async throws {
+    /// **AC2, the other branch.** The same win, the same met slot, a seed that rolls OVER the
+    /// chance: no egg. The pair is the whole point — one fixture, one line different, both outcomes
+    /// forced rather than waited for.
+    func testAWonBattleWithAMissingRollDropsNothing() async throws {
+        let (model, store) = try makeModel(
+            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]),
+            dropSeeds: [2])
+        await model.start()
+        model.selectMap("grass")
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
+
+        let report = try fight(model)
+        XCTAssertTrue(report.playerWon, "won all the same — the roll is what withheld the egg")
+
+        XCTAssertEqual(try store.allStates().count, 1, "the box is unchanged")
+        XCTAssertNil(model.pendingDigitamaDrop, "and no banner is raised")
+    }
+
+    /// **AC4.** A miss consumes nothing: the slot is still met, still unheld, still marked ready —
+    /// and the very next win, on a hitting seed, drops it. Two checks in one model, off a seed
+    /// queue, so this is the same run continuing rather than a second fixture.
+    func testAMissedRollConsumesNothingAndTheNextWinRollsAgain() async throws {
+        let (model, store) = try makeModel(
+            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]),
+            dropSeeds: [2, 1])
+        await model.start()
+        model.selectMap("grass")
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
+
+        try fight(model)
+        XCTAssertNil(model.pendingDigitamaDrop, "the first win missed")
+        XCTAssertTrue(try slotIsReady(in: model), "so the slot is untouched — met, unheld, ready")
+
+        try fight(model)
+
+        XCTAssertEqual(model.pendingDigitamaDrop?.id, "gabu_digitama", "the second win found it")
+        XCTAssertTrue(try store.heldDigitamaIds().contains("gabu_digitama"))
+        XCTAssertFalse(try slotIsReady(in: model), "and NOW the slot is done")
+    }
+
+    // MARK: AC3 — a loss never drops
+
+    /// **AC3.** A hopeless fight on a met slot with a hitting seed still awards nothing: the roll
+    /// is never reached, because the result gates the check. The ready mark afterwards is what says
+    /// the silence was the loss and not an unmet condition.
+    func testALostBattleNeverDropsTheEgg() async throws {
+        let (model, store) = try makeModel(
+            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()],
+                          opponent: "titan"),
+            dropSeeds: [1],
+            stage: .babyI, strength: 0)
+        await model.start()
+        model.selectMap("grass")
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
+        XCTAssertTrue(try slotIsReady(in: model), "the slot IS met — this is not a condition failure")
+
+        let report = try fight(model)
+        XCTAssertFalse(report.playerWon, "the Baby-I loses to the Ultimate")
+
+        XCTAssertEqual(try store.allStates().count, 1, "a loss awards nothing")
+        XCTAssertNil(model.pendingDigitamaDrop)
+        XCTAssertTrue(try slotIsReady(in: model), "and the slot is still waiting to be found")
+    }
+
+    // MARK: the paths US-207 closed
+
+    /// US-207: a refresh no longer drops. A day's walking still MOVES the map's counters — the slot
+    /// below is met and marked ready — but time passing is not a thing the player did, so no egg.
+    func testAStepRefreshNoLongerDropsTheEgg() async throws {
         let (model, store) = try makeModel(
             maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]))
         await model.start()
@@ -458,8 +625,43 @@ final class DigitamaDropModelTests: XCTestCase {
         model.profile?.credit(.careTrainingSessions, forMap: "grass")
 
         await model.refresh()
+
+        XCTAssertEqual(try store.allStates().count, 1, "a refresh finds nothing")
+        XCTAssertNil(model.pendingDigitamaDrop)
+        XCTAssertTrue(try slotIsReady(in: model), "the egg is findable, just not by refreshing")
+    }
+
+    /// US-207: finishing a training round no longer drops either, even though the round is exactly
+    /// what met this slot. Meeting a condition makes the egg findable; a win is what finds it.
+    func testFinishingATrainNoLongerDropsTheEgg() async throws {
+        let (model, store) = try makeModel(
+            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]))
+        await model.start()
+        model.selectMap("grass")
+
+        XCTAssertNotNil(model.train(), "the training round opened")
+        model.finishTraining(.good)
+
+        XCTAssertEqual(try store.allStates().count, 1, "the train met the slot but found no egg")
+        XCTAssertNil(model.pendingDigitamaDrop)
+        XCTAssertTrue(try slotIsReady(in: model), "it only turned the slot ready")
+    }
+
+    // MARK: unchanged by US-207
+
+    /// AC5 (US-128): at most one drop per check, and a held egg is never dropped twice. A second
+    /// won fight on a hitting seed adds nothing.
+    func testASecondWinDoesNotDropTheHeldEggAgain() async throws {
+        let (model, store) = try makeModel(
+            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]),
+            dropSeeds: [1, 1])
+        await model.start()
+        model.selectMap("grass")
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
+
+        try fight(model)
         model.acknowledgeDigitamaDrop()
-        await model.refresh()
+        try fight(model)
 
         XCTAssertEqual(try store.allStates().count, 2, "the egg is held, so it does not drop again")
         XCTAssertNil(model.pendingDigitamaDrop, "and nothing new is announced")
@@ -473,7 +675,7 @@ final class DigitamaDropModelTests: XCTestCase {
         await model.start()
         model.selectMap("grass")
         model.profile?.credit(.careTrainingSessions, forMap: "grass")
-        await model.refresh()
+        try fight(model)
 
         let egg = try XCTUnwrap(try store.allStates().first { $0.currentDigimonId == "gabu_digitama" })
         XCTAssertFalse(egg.isActive, "the running Digimon is still the one out")
@@ -481,32 +683,9 @@ final class DigitamaDropModelTests: XCTestCase {
         XCTAssertEqual(try store.allStates().filter(\.isActive).count, 1, "exactly one active")
     }
 
-    // MARK: after a train
-
-    /// THE AC (train path): finishing a training session — which counts a session — runs a drop check,
-    /// so a slot gated on `care.trainingSessions` drops the egg the moment the round is graded.
-    func testFinishingATrainDropsAConditionThatTheTrainMet() async throws {
-        let (model, store) = try makeModel(
-            maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]))
-        await model.start()
-        model.selectMap("grass")
-
-        // No session yet, so start's refresh dropped nothing.
-        XCTAssertEqual(try store.allStates().count, 1)
-
-        // One round: begin() counts the session, finish() runs the drop check.
-        XCTAssertNotNil(model.train(), "the training round opened")
-        model.finishTraining(.good)
-
-        XCTAssertEqual(try store.allStates().count, 2, "the train earned the egg")
-        XCTAssertEqual(model.pendingDigitamaDrop?.id, "gabu_digitama")
-    }
-
-    // MARK: after a battle
-
-    /// THE AC (battle path): filing a battle result runs a drop check, so a slot gated on
-    /// `care.battleCount` drops once the fight is recorded.
-    func testFinishingABattleDropsAConditionThatTheBattleMet() async throws {
+    /// A slot gated on the battle counters themselves: the fight that MEETS the condition is also
+    /// the fight that rolls for it, because `finishBattle` records the result before it checks.
+    func testAWinThatMeetsABattleGatedSlotDropsOnThatSameWin() async throws {
         let condition = EvolutionCondition(metric: .careBattleCount, window: .lifetime,
                                            comparison: .atLeast, value: 1, hint: "Fight a battle")
         let (model, store) = try makeModel(maps: catalog(slotId: "gabu_digitama", [condition]))
@@ -515,9 +694,8 @@ final class DigitamaDropModelTests: XCTestCase {
 
         XCTAssertEqual(try store.allStates().count, 1, "no battle fought yet")
 
-        model.battle()
-        _ = try XCTUnwrap(model.finishBattleRound(.good), "grading fights the fight")
-        model.finishBattle()
+        let report = try fight(model)
+        XCTAssertTrue(report.playerWon)
 
         XCTAssertEqual(try store.allStates().count, 2, "the battle earned the egg")
         XCTAssertEqual(model.pendingDigitamaDrop?.id, "gabu_digitama")
