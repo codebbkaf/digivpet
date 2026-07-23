@@ -79,6 +79,21 @@ final class PlayerProfile {
     /// duplicate-free.
     private var ownedDigitamaStorage: [String]
 
+    /// Backing store for the per-map wild-encounter markers (US-201): id -> the recorded-step total
+    /// at the moment that map's last encounter resolved. Absent means zero — the first encounter is
+    /// owed 500 steps from a standing start.
+    ///
+    /// Inline `[:]` default so an existing save migrates without a hand-written migration, the same
+    /// lightweight move `meat` relies on: a save written before wild battles existed simply has no
+    /// markers, which reads as "never met anything, first encounter is one walk away".
+    private var encounterMarkerStorage: [String: Double] = [:]
+
+    /// Backing store for the per-map "met" sets (US-201/US-202): id -> the roster ids of the map's
+    /// residents the player has met (fought a wild encounter with, and won). An array because that is
+    /// what SwiftData stores; `recordMet(_:forMap:)` keeps it duplicate-free. Migrated like the marker
+    /// store — an old save has met nobody, which is the honest starting point.
+    private var metStorage: [String: [String]] = [:]
+
     init(
         lifetimeEnergy: EnergyTotals = .zero,
         meat: Int = 0,
@@ -87,7 +102,9 @@ final class PlayerProfile {
         selectedMapId: String? = nil,
         recorded: [String: Double] = [:],
         finishedAt: [String: Date] = [:],
-        ownedDigitamaIds: Set<String> = []
+        ownedDigitamaIds: Set<String> = [],
+        encounterMarkers: [String: Double] = [:],
+        met: [String: [String]] = [:]
     ) {
         self.lifetimeEnergy = lifetimeEnergy
         self.meat = meat
@@ -97,6 +114,8 @@ final class PlayerProfile {
         self.recordedStorage = recorded
         self.finishedAtStorage = finishedAt
         self.ownedDigitamaStorage = ownedDigitamaIds.sorted()
+        self.encounterMarkerStorage = encounterMarkers
+        self.metStorage = met
     }
 }
 
@@ -131,6 +150,17 @@ extension PlayerProfile {
         recordedStorage[id] = recorded(forMap: id) + steps
     }
 
+    /// Takes `steps` off a map's counter, flooring at zero (US-201).
+    ///
+    /// The one place a map's progress goes DOWN: fleeing a wild encounter, or losing one, costs the
+    /// map 500 steps, and losing its boss costs 1,000 (US-203). Floored so a penalty against a barely
+    /// walked map cannot push the counter negative — the worst a loss can do is send the player back
+    /// to the start of the map, not into debt. A no-op for a non-positive amount, matching `record`.
+    func reduceRecorded(steps: Double, forMap id: String) {
+        guard steps > 0 else { return }
+        recordedStorage[id] = max(0, recorded(forMap: id) - steps)
+    }
+
     /// Stamps a map finished, once. A second call is ignored, so the stamp is the moment the map
     /// was first crossed rather than the last time anything looked.
     func markFinished(_ id: String, at date: Date) {
@@ -160,8 +190,46 @@ extension PlayerProfile {
         selectedMapId = nil
         recordedStorage = [:]
         finishedAtStorage = [:]
+        encounterMarkerStorage = [:]
+        metStorage = [:]
     }
     #endif
+}
+
+// MARK: - Wild encounters (US-201)
+
+extension PlayerProfile {
+    /// The recorded-step total this map's last wild encounter resolved at (US-201). Zero when the map
+    /// has never had one, so the first encounter is owed a full 500 steps from a standing start.
+    func encounterMarker(forMap id: String) -> Double {
+        encounterMarkerStorage[id] ?? 0
+    }
+
+    /// Moves this map's encounter marker to `steps` — always the map's recorded total at the moment an
+    /// encounter (a flee, a win or a loss) has just resolved, so the next 500 is measured from where
+    /// the last one left off rather than from zero.
+    func setEncounterMarker(_ steps: Double, forMap id: String) {
+        encounterMarkerStorage[id] = steps
+    }
+
+    /// The residents of this map the player has met (US-201/US-202): won a wild encounter against, or
+    /// surfaced by a 500-step meeting. A copy, so a caller cannot record a meeting by mutating it.
+    func metDigimon(forMap id: String) -> Set<String> {
+        Set(metStorage[id] ?? [])
+    }
+
+    func hasMet(_ digimonId: String, forMap id: String) -> Bool {
+        metStorage[id]?.contains(digimonId) ?? false
+    }
+
+    /// Records a resident as met on this map. Idempotent — meeting the same wild Digimon twice is one
+    /// meeting here — which is what makes it safe to call from every path that surfaces one.
+    func recordMet(_ digimonId: String, forMap id: String) {
+        var met = metStorage[id] ?? []
+        guard !met.contains(digimonId) else { return }
+        met.append(digimonId)
+        metStorage[id] = met
+    }
 }
 
 // MARK: - Digitama ever owned

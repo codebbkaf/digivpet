@@ -415,6 +415,20 @@ struct ContentView: View {
             }
         }
         .animation(.easeInOut, value: model.pendingBattle)
+        // The wild-encounter dialog (US-201) sits with the battle: it is a moment the player has to
+        // answer, so the Feed and Train buttons under it must not be tappable through it. Accepting
+        // clears it and raises `pendingBattle` (the fight replays over the same spot); fleeing clears
+        // it and turns the Digimon away. Mutually exclusive with the battle overlay above — only one
+        // is ever non-nil — so their order relative to each other never shows.
+        .overlay {
+            if let encounter = model.pendingWildEncounter {
+                WildEncounterView(encounter: encounter,
+                                  onBattle: { model.acceptWildEncounter() },
+                                  onFlee: { model.fleeWildEncounter() })
+                    .transition(.opacity)
+            }
+        }
+        .animation(.easeInOut, value: model.pendingWildEncounter)
         // The training round sits with the battle, above the ceremony, and for the same reasons: it
         // is a moment rather than a place, and the Feed and Train buttons underneath must not be
         // tappable through it — a second Train tap during a round would charge for a second one.

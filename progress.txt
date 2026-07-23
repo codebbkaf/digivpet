@@ -6027,3 +6027,35 @@ The thirty, `Perfect -> Ultimate`:
     ("Value of type 'GameState' has no member ...") even though the app target compiled the new
     member. A `xcodebuild clean` before the test run fixes it.
 ---
+
+## 2026-07-24 - US-201: A wild battle greets you after 500 more steps
+- A wild encounter now interrupts the main screen when the player has walked 500 steps into their
+  selected map since the last one. New `WildEncounter` value + `WildEncounterView` dialog
+  (`Sources/WildEncounterView.swift`) with FLEE/BATTLE buttons, shown as an overlay in
+  `ContentView` mutually exclusive with the battle overlay.
+- `PlayerProfile` (`Sources/PlayerProfile.swift`): per-map `encounterMarkerStorage` (recorded-step
+  total at the last encounter) and `metStorage` (residents met), both inline-`[:]` defaulted so old
+  saves migrate for free. New `reduceRecorded(steps:forMap:)` (floors at 0 — the one place map
+  progress goes DOWN), `encounterMarker`/`setEncounterMarker`, `metDigimon`/`hasMet`/`recordMet`.
+- `MainScreenModel`: `@Published pendingWildEncounter`; `checkForWildEncounter()` (runs at the tail
+  of every `refresh()`, gated on nothing-else-on-screen + alive + map selected + a met opponent from
+  the map pool via `BattleMatchmaker.choose`); `fleeWildEncounter()` (500 penalty, marker moves to
+  the new total, refuse+recoil pose, saves); `acceptWildEncounter()` (fights, win=recordMet + no
+  penalty, loss=500 penalty, hands the bout to `pendingBattle` to replay, saves).
+- Refactor: pulled the whole matchup/HP/agility/element/meat fight out of `finishBattleRound` into a
+  shared `resolveBattle(player:opponent:result:using:)` so the pre-battle round (US-093) and the wild
+  encounter fight the identical fight from a carried seed — no second copy that could drift.
+- New `-wildEncounterDemo` launch flag (Agumon on the first map, 600 steps recorded, shipped check
+  run) for the screenshot.
+- Verified: build green (Series 11 46mm); 9 WildEncounterTests pass; full suite 2619 tests, 0
+  failures. Screenshot /tmp/us201/wild.png shows "A wild Tsunomon!" with Flee/Battle.
+- **Learnings for future iterations:**
+  - The app bundle id is `com.digivpet.DigiVPet` (NOT com.example.*) — `simctl launch` needs the real
+    one; read it with `PlistBuddy -c "Print :CFBundleIdentifier" <app>/Info.plist` if unsure.
+  - US-202 ("map residents are '?' until met") is already half-built here: `PlayerProfile.hasMet` /
+    `recordMet` / `metDigimon(forMap:)` exist and a wild WIN already records a meeting. US-202 mostly
+    needs the "met on the encounter occurring" + 500-step-meeting paths and the `MapDetailView` art
+    gate + a render test.
+  - To share the fight between two entry points, resolve into a replayable `BattleBout` and set
+    `pendingBattle`; the encounter carries the same `SeededGenerator` it drew the opponent from
+    (mirrors `PendingBattleRound`), so one seed pins one whole bout across pick-then-fight.

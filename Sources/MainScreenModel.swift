@@ -112,6 +112,11 @@ final class MainScreenModel: ObservableObject {
     /// lands here — see `BattleBout` — so the screen replays a decided outcome rather than rolling.
     @Published private(set) var pendingBattle: BattleBout?
 
+    /// A wild Digimon the player has walked into and not yet answered (US-201), or nil when there is
+    /// no encounter pending. Set by `checkForWildEncounter` at the tail of a refresh — the app
+    /// foreground — and cleared by `acceptWildEncounter` (BATTLE) or `fleeWildEncounter` (FLEE).
+    @Published private(set) var pendingWildEncounter: WildEncounter?
+
     /// The PRE-BATTLE round currently being played on screen, or nil when none is (US-093).
     ///
     /// A third state beside `pendingTraining` and `pendingBattle`, and deliberately not either of them:
@@ -474,6 +479,7 @@ final class MainScreenModel: ObservableObject {
         seedSleepDemoIfRequested()
         seedSleepBarDemoIfRequested()
         seedWanderDemoIfRequested()
+        seedWildEncounterDemoIfRequested()
         seedSickDemoIfRequested()
         seedDeathDemoIfRequested()
         seedBattleDemoIfRequested()
@@ -664,6 +670,32 @@ final class MainScreenModel: ObservableObject {
             // a freshly seeded demo would show.
             state.hatchedDate = now().addingTimeInterval(-3 * Death.secondsPerDay)
         }
+    }
+
+    /// Debug-only: raises a wild encounter on launch so US-201's BATTLE/FLEE dialog can be
+    /// screenshotted. The Simulator earns no steps, so a real save there never crosses the 500-step
+    /// interval that summons one — and `simctl` cannot walk.
+    ///
+    /// - `-wildEncounterDemo` — a healthy Agumon on the first real map, with 600 steps recorded into
+    ///   it and no marker, so the shipped `checkForWildEncounter` finds the crossing and rolls a
+    ///   real opponent from that map's pool. The dialog on screen is the one the rule produces, not a
+    ///   staged one.
+    ///
+    /// Steps are recorded straight onto the map's counter (the "step source" US-201 injects), then
+    /// the shipped check runs — so what is screenshotted is the real trigger over a real map pool.
+    private func seedWildEncounterDemoIfRequested() {
+        guard CommandLine.arguments.contains("-wildEncounterDemo"),
+              let state, let profile, let map = maps.maps.first else { return }
+
+        if let agumon = graph.node(id: "agumon") {
+            state.currentDigimonId = agumon.id
+            state.stage = agumon.stage
+            state.stageEnteredDate = now()
+        }
+        forceAwakeForDemo()
+        selectMap(map.id)
+        profile.record(steps: 600, forMap: map.id)
+        checkForWildEncounter()
     }
 
     /// Debug-only: makes the Digimon ill so the sick pose can be screenshotted. The Simulator has no
@@ -1332,6 +1364,11 @@ final class MainScreenModel: ObservableObject {
         // Last, once every rule above has settled: the complication must never show a Digimon
         // mid-refresh — hatched but not yet evolved, or sick but not yet dead.
         publishComplicationSnapshot()
+        // US-201, after the step accrual above credited this refresh's walking to the map: a wild
+        // encounter greets the player if they have crossed 500 steps into it since the last one. It
+        // sets no saved state (the encounter is not persisted), so it needs no flush of its own — it
+        // runs after the save, over the settled game the snapshot above describes.
+        checkForWildEncounter()
     }
 
     /// Reads today's health metrics for `refresh`, seeded from the read the energy path already made.
@@ -1828,6 +1865,7 @@ final class MainScreenModel: ObservableObject {
     var isWandering: Bool {
         animation == .idle && pendingEvolution == nil && pendingBattle == nil
             && pendingTraining == nil && pendingBattleRound == nil && memorial == nil
+            && pendingWildEncounter == nil
     }
 
     /// Every pose `settleRestingPose` is allowed to swap out. Exactly the poses `restingAnimation`
@@ -2254,18 +2292,45 @@ final class MainScreenModel: ObservableObject {
     /// A no-op without a round in progress, so a game that called back twice cannot start two battles.
     @discardableResult
     func finishBattleRound(_ result: TrainingResult) -> BattleBout? {
-        guard let round = pendingBattleRound, let state else { return nil }
+        guard let round = pendingBattleRound else { return nil }
         pendingBattleRound = nil
+
+        var generator = round.generator
+        guard let bout = resolveBattle(player: round.player, opponent: round.opponent,
+                                       result: result, using: &generator) else { return nil }
+
+        pendingBattle = bout
+        Self.log.info("""
+            Battle vs \(round.opponent.node.id) after a \(result.displayName) round: \
+            \(bout.report.playerWon ? "won" : "lost")
+            """)
+        return bout
+    }
+
+    /// Resolves a fight between the loaded Digimon and `opponent` at grade `result`, into a replayable
+    /// `BattleBout` — the shared core of the pre-battle round (US-093) and the wild encounter (US-201).
+    ///
+    /// Split out of `finishBattleRound` so a wild encounter, which has no pre-battle minigame, fights
+    /// the exact same fight rather than spelling the matchup, HP, Agility, element and meat arithmetic
+    /// a second time — a second copy would let one path be quietly easier than the other. Every draw
+    /// happens in the same order off the caller's `generator`, so a seed still pins one whole bout.
+    ///
+    /// Nil only with no `state`, which is a game not yet loaded — every caller has already unwrapped it.
+    private func resolveBattle(player: DigimonPresentation,
+                               opponent: BattleOpponent,
+                               result: TrainingResult,
+                               using generator: inout SeededGenerator) -> BattleBout? {
+        guard let state else { return nil }
 
         let types = ElementCatalog.bundled
         let matchup = BattleModifiers.matchup(
             playerPower: state.battlePower(lifetimeEnergy: lifetimeEnergy),
             playerType: types.type(for: state.currentDigimonId, in: graph),
-            opponentPower: round.opponent.power,
+            opponentPower: opponent.power,
             // Off the node in hand rather than off a graph lookup: since US-122 an opponent may be a
             // roster-only Digimon with no graph node, and asking the graph about one would answer
             // `.unauthored` where the node itself still carries what is known.
-            opponentType: types.type(forId: round.opponent.node.id, line: round.opponent.node.line),
+            opponentType: types.type(forId: opponent.node.id, line: opponent.node.line),
             training: result
         )
 
@@ -2276,7 +2341,7 @@ final class MainScreenModel: ObservableObject {
         let config = ConsumptionConfig.bundled
         let playerMaxHP = config.stats(for: state.stage)
             .map { state.effectiveStat(.hp, base: $0.baseHP) } ?? BattleEngine.startingHitPoints
-        let opponentMaxHP = config.stats(for: round.opponent.node.stage)?.baseHP
+        let opponentMaxHP = config.stats(for: opponent.node.stage)?.baseHP
             ?? BattleEngine.startingHitPoints
 
         // Each side's Agility decides how many of the other's swings it slips (US-189). Both come
@@ -2287,7 +2352,7 @@ final class MainScreenModel: ObservableObject {
         // it adds HP dashes above.
         let agility: BattleAgility?
         if let playerAgility = config.stats(for: state.stage)?.baseAgility,
-           let opponentAgility = config.stats(for: round.opponent.node.stage)?.baseAgility {
+           let opponentAgility = config.stats(for: opponent.node.stage)?.baseAgility {
             agility = BattleAgility(player: state.effectiveStat(.agility, base: playerAgility),
                                     opponent: opponentAgility,
                                     coefficients: config.hitRate)
@@ -2302,7 +2367,6 @@ final class MainScreenModel: ObservableObject {
                                       opponent: matchup.opponentType.element,
                                       multipliers: config.elementDamage)
 
-        var generator = round.generator
         let report = BattleEngine.resolve(playerPower: matchup.playerPower,
                                           opponentPower: matchup.opponentPower,
                                           playerMaxHitPoints: playerMaxHP,
@@ -2329,26 +2393,19 @@ final class MainScreenModel: ObservableObject {
         // which misses `lineDefaults` and lands on the stage tier, exactly as intended.
         let catalog = MoveCatalog.bundled
         let playerNode = graph.node(id: state.currentDigimonId)
-        let bout = BattleBout(
-            player: round.player,
-            opponent: DigimonPresentation(displayName: round.opponent.node.displayName,
-                                          stage: round.opponent.node.stage,
-                                          spriteFile: round.opponent.node.spriteFile),
+        return BattleBout(
+            player: player,
+            opponent: DigimonPresentation(displayName: opponent.node.displayName,
+                                          stage: opponent.node.stage,
+                                          spriteFile: opponent.node.spriteFile),
             report: report,
             playerMove: catalog.move(forId: state.currentDigimonId,
                                      line: playerNode?.line, stage: playerNode?.stage),
-            opponentMove: catalog.move(forId: round.opponent.node.id,
-                                       line: round.opponent.node.line, stage: round.opponent.node.stage),
+            opponentMove: catalog.move(forId: opponent.node.id,
+                                       line: opponent.node.line, stage: opponent.node.stage),
             matchup: matchup,
             meatGained: meatGained
         )
-
-        pendingBattle = bout
-        Self.log.info("""
-            Battle vs \(round.opponent.node.id) after a \(result.displayName) round: \
-            \(report.playerWon ? "won" : "lost")
-            """)
-        return bout
     }
 
     /// Ends a pre-battle round the user walked out of — graded a `.miss`, and the battle fought anyway.
@@ -2398,6 +2455,116 @@ final class MainScreenModel: ObservableObject {
         // `care.battleWinRatio` may have newly come due — US-128's after-a-battle drop check. After
         // the save above so the recorded result is on disk whether or not an egg then drops.
         checkForDigitamaDrop()
+    }
+
+    // MARK: - Wild encounters (US-201)
+
+    /// How far into a map the player walks between wild encounters — 500 steps. Measured against the
+    /// map's recorded total at the LAST encounter (`PlayerProfile.encounterMarker`), so it is 500
+    /// NEW steps each time rather than a multiple of 500 of lifetime walking.
+    static let wildEncounterStepInterval: Double = 500
+
+    /// Raises a wild encounter if the player has walked `wildEncounterStepInterval` into their map
+    /// since the last one resolved (US-201).
+    ///
+    /// Called at the tail of every `refresh()` — the app coming to the front — so an encounter that
+    /// came due while the app was closed greets the player the moment they open it, exactly as a hatch
+    /// or evolution does. Internal rather than private so a test can drive the trigger against a
+    /// seeded map counter without a whole health read; the step source it reads (the map's recorded
+    /// total) and the clock are both injected, which is US-201's "the trigger is testable".
+    ///
+    /// Silent when anything is already on screen — a pending encounter, battle, round, ceremony or
+    /// memorial — because the dialog must not appear over one of those, and because the same steps
+    /// should not raise a second foe while the first is unanswered. Silent with no map selected, with
+    /// a dead Digimon, and when the map's pool offers nobody the roster knows.
+    func checkForWildEncounter() {
+        guard pendingWildEncounter == nil, pendingBattle == nil, pendingBattleRound == nil,
+              pendingTraining == nil, pendingEvolution == nil, memorial == nil,
+              let state, state.healthStatus != .dead,
+              let profile, let map = selectedMap else { return }
+        let recorded = profile.recorded(forMap: map.id)
+        guard recorded - profile.encounterMarker(forMap: map.id) >= Self.wildEncounterStepInterval else {
+            return
+        }
+        // Drawn here and CARRIED on the encounter, exactly as `battle()` carries its generator onto
+        // the pre-battle round: the opponent is picked now and the fight, if accepted, is rolled from
+        // the same sequence, so one seed still produces one whole bout.
+        var generator = nextBattleGenerator()
+        guard let opponent = BattleMatchmaker.choose(in: graph, roster: roster,
+                                                     playerId: state.currentDigimonId,
+                                                     map: map, recorded: recorded,
+                                                     using: &generator) else { return }
+        pendingWildEncounter = WildEncounter(
+            opponent: opponent,
+            presentation: DigimonPresentation(displayName: opponent.node.displayName,
+                                              stage: opponent.node.stage,
+                                              spriteFile: opponent.node.spriteFile),
+            mapId: map.id,
+            generator: generator)
+    }
+
+    /// FLEE: the Digimon turns away and the map loses 500 steps (US-201).
+    ///
+    /// The penalty is what keeps fleeing from being free — a wild encounter is walked into, and walking
+    /// out of it sends the player back the 500 steps that raised it. The marker is then moved to the
+    /// map's new total, so the next encounter is 500 fresh steps from here rather than being owed
+    /// immediately. A no-op with no encounter pending.
+    func fleeWildEncounter() {
+        guard let encounter = pendingWildEncounter, let profile else { return }
+        pendingWildEncounter = nil
+        profile.reduceRecorded(steps: Self.wildEncounterStepInterval, forMap: encounter.mapId)
+        profile.setEncounterMarker(profile.recorded(forMap: encounter.mapId), forMap: encounter.mapId)
+        // The refuse pose, recoiling backward: the Digimon turns tail, which is the sad/refuse
+        // animation US-201 asks a flee to play.
+        show(.pose(.refuse), motion: .recoil, message: "Fled!")
+
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save after fleeing: \(String(describing: error))")
+        }
+    }
+
+    /// BATTLE: fights the wild Digimon and settles the map on the outcome (US-201).
+    ///
+    /// The fight is resolved through the same `resolveBattle` core the pre-battle round uses — graded
+    /// `.good`, since a wild encounter has no minigame to earn a grade from — and handed to the screen
+    /// on `pendingBattle`, so it replays a decided outcome exactly as a chosen battle does. The
+    /// consequence is read off that decided report:
+    /// - WIN: no step penalty, and the wild Digimon counts as MET on this map (US-202/US-203).
+    /// - LOSS: the map loses 500 steps, the same penalty a flee costs.
+    ///
+    /// The marker is moved to the map's total AFTER any penalty, so the next 500 is measured from where
+    /// this one left off. `finishBattle` still files the win/loss record when the replay ends, exactly
+    /// as it does for a chosen battle. A no-op with no encounter pending, or before a game is loaded.
+    @discardableResult
+    func acceptWildEncounter() -> BattleBout? {
+        guard let encounter = pendingWildEncounter, let state, let profile,
+              let player = presentation(forId: state.currentDigimonId) else { return nil }
+        pendingWildEncounter = nil
+
+        var generator = encounter.generator
+        guard let bout = resolveBattle(player: player, opponent: encounter.opponent,
+                                       result: .good, using: &generator) else { return nil }
+
+        if bout.report.playerWon {
+            profile.recordMet(encounter.opponent.node.id, forMap: encounter.mapId)
+        } else {
+            profile.reduceRecorded(steps: Self.wildEncounterStepInterval, forMap: encounter.mapId)
+        }
+        profile.setEncounterMarker(profile.recorded(forMap: encounter.mapId), forMap: encounter.mapId)
+
+        pendingBattle = bout
+        Self.log.info("""
+            Wild battle vs \(encounter.opponent.node.id): \(bout.report.playerWon ? "won" : "lost")
+            """)
+
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save after a wild battle: \(String(describing: error))")
+        }
+        return bout
     }
 
     /// Wakes a sleeping Digimon so the action the user just asked for can actually happen, and
