@@ -95,6 +95,18 @@ final class PlayerProfile {
     /// store — an old save has met nobody, which is the honest starting point.
     private var metStorage: [String: [String]] = [:]
 
+    /// Backing store for the per-map wild-battle NOTIFICATION markers (US-205): id -> the
+    /// `encounterMarker` value a background nudge was last raised against. Distinct from
+    /// `encounterMarkerStorage` on purpose — that one moves when an encounter RESOLVES, this one only
+    /// records that a crossing was already notified, so one threshold crossing raises at most one
+    /// background notification even across process death (a background wake that finds the same
+    /// marker already stamped stays silent). Absent means "never notified", so the first crossing
+    /// nudges.
+    ///
+    /// Inline `[:]` default so an existing save migrates without a hand-written migration, the same
+    /// lightweight move `encounterMarkerStorage` relies on.
+    private var wildBattleNotifiedMarkerStorage: [String: Double] = [:]
+
     init(
         lifetimeEnergy: EnergyTotals = .zero,
         meat: Int = 0,
@@ -105,7 +117,8 @@ final class PlayerProfile {
         finishedAt: [String: Date] = [:],
         ownedDigitamaIds: Set<String> = [],
         encounterMarkers: [String: Double] = [:],
-        met: [String: [String]] = [:]
+        met: [String: [String]] = [:],
+        wildBattleNotifiedMarkers: [String: Double] = [:]
     ) {
         self.lifetimeEnergy = lifetimeEnergy
         self.meat = meat
@@ -117,6 +130,7 @@ final class PlayerProfile {
         self.ownedDigitamaStorage = ownedDigitamaIds.sorted()
         self.encounterMarkerStorage = encounterMarkers
         self.metStorage = met
+        self.wildBattleNotifiedMarkerStorage = wildBattleNotifiedMarkers
     }
 }
 
@@ -194,6 +208,7 @@ extension PlayerProfile {
         finishedAtStorage = [:]
         encounterMarkerStorage = [:]
         metStorage = [:]
+        wildBattleNotifiedMarkerStorage = [:]
     }
     #endif
 }
@@ -231,6 +246,20 @@ extension PlayerProfile {
         guard !met.contains(digimonId) else { return }
         met.append(digimonId)
         metStorage[id] = met
+    }
+
+    /// The `encounterMarker` value this map's last BACKGROUND wild-battle notification was raised
+    /// against (US-205), or nil if none ever was. Compared to the current marker to decide whether a
+    /// crossing has already been notified — see `MainScreenModel.notifyWildEncounterIfDue`.
+    func wildBattleNotifiedMarker(forMap id: String) -> Double? {
+        wildBattleNotifiedMarkerStorage[id]
+    }
+
+    /// Stamps that a background wild-battle notification has been raised for the crossing measured
+    /// from `marker` on this map, so a later background wake before the player acts does not raise a
+    /// second one for the same crossing.
+    func setWildBattleNotifiedMarker(_ marker: Double, forMap id: String) {
+        wildBattleNotifiedMarkerStorage[id] = marker
     }
 }
 

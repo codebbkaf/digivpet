@@ -1276,7 +1276,13 @@ final class MainScreenModel: ObservableObject {
     /// Safe to call as often as the app is opened, which is the point: US-014's ledger makes
     /// crediting a DELTA, so a second read with no new activity credits nothing rather than paying
     /// for the same steps twice.
-    func refresh() async {
+    /// - Parameter background: true when this refresh is a background wake (a `BGAppRefreshTask` or a
+    ///   HealthKit observer update) rather than the app coming to the front. It changes exactly one
+    ///   thing at the tail: a due wild encounter raises a NOTIFICATION (US-205) instead of the on-screen
+    ///   BATTLE/FLEE dialog, because there is no screen to put a dialog on. Everything else — crediting,
+    ///   sickness, death, hatching, evolving — is identical, so a background wake and a foregrounding
+    ///   never run two different versions of the rules.
+    func refresh(background: Bool = false) async {
         guard let state, let ledger, let profile, !isRefreshing else { return }
         // A read is several awaits long, and scenePhase can go active again inside one (the app
         // being raised twice in quick succession). Two overlapping reads would both see the same
@@ -1417,7 +1423,16 @@ final class MainScreenModel: ObservableObject {
         // sets no saved state (the encounter is not persisted), so it needs no flush of its own — it
         // runs after the save, over the settled game the snapshot above describes. Silent while a boss
         // is pending (its own guard), so the two dialogs never stack.
-        checkForWildEncounter()
+        //
+        // US-205 splits foreground from background here: a foregrounding raises the on-screen dialog,
+        // a background wake — where there is no screen — raises a local notification inviting the
+        // player to open the app instead. The two are mutually exclusive by design; the notification
+        // path stamps a saved marker for itself, so it flushes rather than leaning on the save above.
+        if background {
+            notifyWildEncounterIfDue()
+        } else {
+            checkForWildEncounter()
+        }
     }
 
     /// Reads today's health metrics for `refresh`, seeded from the read the energy path already made.
@@ -2585,6 +2600,65 @@ final class MainScreenModel: ObservableObject {
         // whichever way the player resolves it. `recordMet` is idempotent, so meeting the same foe
         // again is one meeting.
         profile.recordMet(opponent.node.id, forMap: map.id)
+        // The dialog is now on screen, so a background nudge that got the player here has done its
+        // job — withdraw it rather than leave a "go and battle" notice on the wrist over the battle
+        // they are already looking at, exactly as cleaning withdraws the mess notice (US-054).
+        notifications.cancel(.wildBattle)
+    }
+
+    /// Raises a wild-battle NOTIFICATION when one is due but the app is not in front (US-205).
+    ///
+    /// The background twin of `checkForWildEncounter`: run only from a background wake (`refresh(background:)`),
+    /// where there is no screen to put the BATTLE/FLEE dialog on. It reads the same trigger — 500 steps
+    /// into the map past the last encounter's marker — and, if crossed, hands the system a local
+    /// notification inviting the player to open the app. It deliberately does NOT set
+    /// `pendingWildEncounter`, pick an opponent or record a meeting: all of that is the foreground
+    /// refresh's job the moment the player taps in, which re-derives the encounter from the same
+    /// counter (US-201). Tapping the notification launches the app, so the dialog is waiting with no
+    /// deep-link plumbing of its own.
+    ///
+    /// **Best-effort, no timing guarantee.** watchOS grants background refreshes when it chooses, at
+    /// most roughly every `BackgroundRefreshSchedule.interval` (~30 minutes) and often less; a crossing
+    /// may sit unannounced until the next wake or until the app is opened. This is opportunistic by
+    /// construction — see `BackgroundRefreshSchedule` and `docs/background-wild-battle.md`.
+    ///
+    /// Silent under the same guards `checkForWildEncounter` uses (a pending encounter, battle, round,
+    /// training, evolution or memorial; no map; a dead Digimon), so a boss due at the same time takes
+    /// precedence and the same steps never raise two things. Silent too while asleep (the notice does
+    /// not fire at 3am) and while the toggle is off — `NotificationDispatcher.send` enforces both.
+    ///
+    /// It fires at most ONCE per threshold crossing, even across process death: the crossing is keyed
+    /// by the `encounterMarker` it is measured from — which only moves when an encounter resolves — so
+    /// once a nudge is delivered its marker is stamped on the profile and saved, and a later wake that
+    /// finds the same marker already stamped stays silent. The stamp is taken only on actual delivery,
+    /// so a crossing suppressed by sleep is nudged on the next wake past the window rather than lost.
+    func notifyWildEncounterIfDue() {
+        guard pendingWildEncounter == nil, pendingBossEncounter == nil, pendingBattle == nil,
+              pendingBattleRound == nil, pendingTraining == nil, pendingEvolution == nil,
+              memorial == nil,
+              let state, state.healthStatus != .dead,
+              let profile, let map = selectedMap else { return }
+        let recorded = profile.recorded(forMap: map.id)
+        let marker = profile.encounterMarker(forMap: map.id)
+        guard recorded - marker >= Self.wildEncounterStepInterval else { return }
+        // Already nudged for this crossing? The marker only moves when an encounter resolves, so a
+        // stamp equal to the current marker means the notice for this crossing has gone out — say
+        // nothing until the player acts and the marker moves on.
+        guard profile.wildBattleNotifiedMarker(forMap: map.id) != marker else { return }
+        let name = presentation?.displayName ?? "Your Digimon"
+        let delivered = notifications.send(
+            .wildBattle,
+            body: "\(name) has walked into a wild Digimon. Open the app to battle.",
+            isAsleep: isAsleep)
+        // Stamp only on real delivery, so a crossing the sleep gate or a switched-off toggle held
+        // back is still owed and gets its nudge from a later wake rather than being silently spent.
+        guard delivered else { return }
+        profile.setWildBattleNotifiedMarker(marker, forMap: map.id)
+        do {
+            try store?.save()
+        } catch {
+            Self.log.error("Could not save the wild-battle notification marker: \(String(describing: error))")
+        }
     }
 
     /// FLEE: the Digimon turns away and the map loses 500 steps (US-201).

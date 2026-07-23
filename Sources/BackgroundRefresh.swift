@@ -143,7 +143,10 @@ final class BackgroundRefreshCoordinator {
     /// re-arms itself on success would stop dead at the first read that failed, and nothing would
     /// ever wake the app again until the user opened it.
     func performRefresh() async {
-        await model.refresh()
+        // `background: true` so a wild encounter that came due while the app was closed raises a
+        // notification (US-205) rather than an on-screen dialog nobody is here to see. Everything
+        // else the refresh does is identical to a foregrounding.
+        await model.refresh(background: true)
         scheduleNext()
     }
 
@@ -154,7 +157,11 @@ final class BackgroundRefreshCoordinator {
     /// starve the schedule of exactly the wake it was there to guarantee.
     private func healthDataChanged() {
         Self.log.info("Health data changed; refreshing")
-        pendingHealthRefresh = Task { await model.refresh() }
+        // A HealthKit observer wake is a background wake like any other — the app may not be in front
+        // — so `background: true`, and new steps that just crossed 500 raise a wild-battle
+        // notification (US-205) instead of a dialog. This is in fact the timeliest path to that nudge:
+        // it fires when the steps actually land rather than waiting for the next ~30-minute refresh.
+        pendingHealthRefresh = Task { await model.refresh(background: true) }
     }
 
     private func scheduleNext() {

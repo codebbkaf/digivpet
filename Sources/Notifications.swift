@@ -25,6 +25,12 @@ enum NotificationKind: String, CaseIterable, Identifiable {
     /// scheduled AHEAD rather than decided by a rule that has just run — see
     /// `PetNotificationDelivering.deliver(_:at:)`.
     case lights
+    /// The player has walked 500+ steps into their map and a wild Digimon is waiting (US-205). The
+    /// only kind raised from a BACKGROUND refresh rather than a foregrounding: with the app closed
+    /// the wild-battle dialog cannot be shown, so this nudge invites the player to open it. Tapping
+    /// it launches the app, whose foreground refresh re-derives the same encounter (US-201) and puts
+    /// the BATTLE/FLEE dialog up.
+    case wildBattle
 
     var id: String { rawValue }
 
@@ -36,6 +42,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .deathWarning: return "Death Warning"
         case .poop: return "Mess"
         case .lights: return "Lights Out"
+        case .wildBattle: return "Wild Battles"
         }
     }
 
@@ -49,6 +56,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .deathWarning: return "24 hours before it dies."
         case .poop: return "When the screen needs cleaning."
         case .lights: return "The light left on at bedtime."
+        case .wildBattle: return "A wild foe after 500 steps."
         }
     }
 
@@ -67,7 +75,11 @@ enum NotificationKind: String, CaseIterable, Identifiable {
     var firesWhileAsleep: Bool {
         switch self {
         case .deathWarning, .lights: return true
-        case .evolution, .sickness, .poop: return false
+        // The wild-battle nudge is FALSE deliberately: a "go and battle" at 3am is a notice at the
+        // one hour the player cannot act on it, and unlike the death warning nothing is lost by
+        // holding it — the encounter is still there in the morning, so the next background wake past
+        // the sleep window raises it then.
+        case .evolution, .sickness, .poop, .wildBattle: return false
         }
     }
 
@@ -78,6 +90,7 @@ enum NotificationKind: String, CaseIterable, Identifiable {
         case .deathWarning: return "Your Digimon is dying"
         case .poop: return "Time to clean up"
         case .lights: return "Lights out"
+        case .wildBattle: return "A wild Digimon appeared!"
         }
     }
 }

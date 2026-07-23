@@ -1720,8 +1720,8 @@
         "Build green; manual note in progress.txt on simulator limitations for background verification"
       ],
       "priority": 90,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "refresh(background:) split: background wakes (BGAppRefreshTask via BackgroundRefreshCoordinator.performRefresh, and HealthKit observer via healthDataChanged) call notifyWildEncounterIfDue, which raises a .wildBattle local notification when steps are >=500 past PlayerProfile.encounterMarker; foreground refresh still raises the US-201 dialog. Dedup via persisted PlayerProfile.wildBattleNotifiedMarker (one nudge per crossing, survives process death), stamped only on delivery; guarded on no pending encounter/boss/battle/etc and silent while asleep or toggle off. Surfacing the dialog cancels the nudge; tapping the notice launches the app whose foreground refresh re-derives the encounter (no deep-link needed). Docs: docs/background-wild-battle.md (+README, +sim limitations). 9 new tests in WildBattleNotificationTests; full suite 2642 pass, build green."
     },
     {
       "id": "US-206",

@@ -6167,3 +6167,52 @@ The thirty, `Perfect -> Ultimate`:
     rather than claiming a second baseline. Adding any new consumer of a metric must spend a returned
     delta, never call claim itself.
 ---
+
+## 2026-07-24 - US-205 (Best-effort background step check raising a wild-battle notification)
+- Split foreground vs background in the one shared refresh path: `MainScreenModel.refresh(background:)`
+  now takes a flag (default false). At the tail, a foregrounding still runs `checkForWildEncounter()`
+  (the on-screen BATTLE/FLEE dialog, US-201); a background wake runs the new
+  `notifyWildEncounterIfDue()`, which raises a `.wildBattle` local notification when steps are >=500
+  past `PlayerProfile.encounterMarker` for the selected map. Mutually exclusive by design.
+- Background wakes pass `background: true` from `BackgroundRefreshCoordinator.performRefresh()`
+  (BGAppRefreshTask) and `healthDataChanged()` (HealthKit observer — the timelier path, fires when
+  steps actually land).
+- Dedup: new persisted `PlayerProfile.wildBattleNotifiedMarker` (per map), stamped with the
+  current encounterMarker ONLY on actual delivery and saved, so one crossing = one nudge even across
+  process death. A crossing held back by sleep or a switched-off toggle is left unstamped, so a later
+  wake still delivers it. Guarded on nothing else pending (encounter/boss/battle/round/training/
+  evolution/memorial), a live map, and a non-dead Digimon — a boss due at the same time wins, same as
+  the dialog. New `NotificationKind.wildBattle` (default on; `firesWhileAsleep` false).
+- Tap-to-open: surfacing the dialog on the next foregrounding calls `notifications.cancel(.wildBattle)`
+  to withdraw the now-stale nudge (like cleaning withdraws the mess notice). No deep-link plumbing —
+  tapping a local notification launches the app, whose foreground refresh re-derives the encounter.
+- Files: Sources/Notifications.swift (new kind + gates/strings), Sources/PlayerProfile.swift (marker
+  storage/accessors/init/clearForDemo), Sources/MainScreenModel.swift (refresh flag,
+  notifyWildEncounterIfDue, cancel on surface), Sources/BackgroundRefresh.swift (background:true on
+  both wake paths), docs/background-wild-battle.md (new), README.md (Layout pointer),
+  Tests/WildBattleNotificationTests.swift (new, 9 tests + SpyNotificationDeliverer fixture).
+- Verified: xcodegen + build green (Series 11 46mm). WildBattleNotificationTests 9/9 pass; FULL suite
+  2642 tests, 0 failures. The `NotificationSettingsView` toggle row appears for free off
+  `allCases`, so the user gets a Wild Battles toggle with no view change.
+- SIMULATOR LIMITATION (manual note, AC5): the end-to-end "watch notices 500 real steps on its own
+  and buzzes" path is device-only. HealthKit is empty in the Simulator so the observer path has
+  nothing to observe, and `scheduleBackgroundRefresh` is not honoured on a real schedule there (you
+  can force one BGAppRefreshTask via Xcode Debug > Simulate Background Fetch, but not the cadence or
+  budgeting, which are hardware behaviour). All logic decidable without the OS scheduler is covered by
+  the tests, which seed the map counter and call refresh(background:) directly.
+- **Learnings for future iterations:**
+  - `refresh()` is the SINGLE path a foregrounding and a background wake share (see
+    BackgroundRefreshCoordinator). To make background behave differently from foreground, thread a flag
+    THROUGH refresh() rather than adding a second code path — the whole point of the shared path is
+    that the rules never fork. `refresh(background:)` is the pattern.
+  - Notification dedup that must survive process death needs a PERSISTED marker on a @Model
+    (PlayerProfile/GameState) + a save(); an in-memory flag only dedups within one launch. Stamp the
+    marker on DELIVERY (use NotificationDispatcher.send's Bool return), not on decision, so a
+    sleep/toggle-suppressed notice is retried rather than silently spent — the mirror of
+    claimPoopNotification but gated on real delivery.
+  - Adding a NotificationKind is nearly free: NotificationSettingsView and SettingsView drive off
+    `NotificationKind.allCases`, so the toggle appears automatically. But `firesWhileAsleep` and the
+    switch statements in Notifications.swift are exhaustive — the compiler forces you to handle the
+    new case in each, which is the safety net. Default `firesWhileAsleep` to false unless the notice
+    ONLY makes sense at night.
+---

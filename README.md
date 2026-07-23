@@ -33,6 +33,7 @@ xcodebuild test -project DigiVPet.xcodeproj -scheme DigiVPet \
 | `16x16 Digimon Sprites/` | Sprite tree, bundled as a folder reference (not an asset catalog). |
 | `docs/evolutions-schema.md` | The graph file format, field by field. |
 | `docs/metric-accounting.md` | How steps/calories/exercise/sleep are credited once, never doubled. |
+| `docs/background-wild-battle.md` | The opportunistic background step check that nudges you to battle (US-205). |
 | `scripts/` | Dev tools. Not shipped, not part of the build. |
 
 ## Sprites
