@@ -3592,6 +3592,74 @@
     "nezhamon": {
       "element": "fire",
       "attribute": "vaccine"
+    },
+    "sakuyamon": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "sakuyamon_x": {
+      "element": "light",
+      "attribute": "data"
+    },
+    "shagaramon": {
+      "element": "earth",
+      "attribute": "data"
+    },
+    "takutoumon": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "xiangpengmon": {
+      "element": "wind",
+      "attribute": "data"
+    },
+    "siriusmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "slashangemon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "susanoomon": {
+      "element": "light",
+      "attribute": "free"
+    },
+    "tlalocmon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "valdurmon": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "ulforcev-dramon_x": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ultimatebrachimon": {
+      "element": "water",
+      "attribute": "data"
+    },
+    "voltobautamon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "skullmammon_x": {
+      "element": "ice",
+      "attribute": "virus"
+    },
+    "wargreymon_x": {
+      "element": "fire",
+      "attribute": "vaccine"
+    },
+    "sleipmon_x": {
+      "element": "ice",
+      "attribute": "vaccine"
+    },
+    "yukinamon": {
+      "element": "ice",
+      "attribute": "data"
     }
   },
   "lineDefaults": {

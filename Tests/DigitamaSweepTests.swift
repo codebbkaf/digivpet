@@ -197,7 +197,7 @@ final class DigitamaSweepTests: XCTestCase {
         // US-151 opened the Perfect rung on both, three nodes each: the Champion it swept, the
         // Perfect above it and the junk floor under that.
         XCTAssertEqual(sizes["tamers"], 123, "plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["wanyamon"], 31, "plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
+        XCTAssertEqual(sizes["wanyamon"], 33, "plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
     }
 
     /// Twelve of the twenty-two eggs added no rung at all, because their species is already wired.

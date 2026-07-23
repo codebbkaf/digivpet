@@ -106,7 +106,7 @@ final class UltimateSweepEToHTests: XCTestCase {
             .filter { $0.stage == .ultimate && !$0.dexOnly && !connected.contains($0.id) }
             .map(\.id)
 
-        XCTAssertEqual(orphans.count, 19,
+        XCTAssertEqual(orphans.count, 2,
                        "80 Ultimate were edge-orphaned before this story and 66 after")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
@@ -149,13 +149,13 @@ final class UltimateSweepEToHTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["tamers"], 123)
-        XCTAssertEqual(sizes["penc-nso"], 84)
-        XCTAssertEqual(sizes["penc-me"], 74)
-        XCTAssertEqual(sizes["penc-wg"], 50)
-        XCTAssertEqual(sizes["penc-nsp"], 46)
-        XCTAssertEqual(sizes["dmc-v4"], 35)
+        XCTAssertEqual(sizes["penc-nso"], 86)
+        XCTAssertEqual(sizes["penc-me"], 75)
+        XCTAssertEqual(sizes["penc-wg"], 53)
+        XCTAssertEqual(sizes["penc-nsp"], 47)
+        XCTAssertEqual(sizes["dmc-v4"], 36)
         XCTAssertEqual(sizes["dmc-v5"], 28)
-        XCTAssertEqual(sizes["penc-sw"], 23)
+        XCTAssertEqual(sizes["penc-sw"], 26)
     }
 
     // MARK: - AC4: the shape of every edge this story authored
@@ -225,11 +225,12 @@ final class UltimateSweepEToHTests: XCTestCase {
             XCTAssertEqual(Set(node.evolutions.compactMap(\.requiredEnergy)), Set(EnergyType.allCases), parent)
         }
 
-        // Vamdemon carries three after this story with GrandDracumon. (Digitamamon carried three
-        // here — Gankoomon, Gankoomon X and HolyDigitamamon — but US-166 took it to four with
-        // Minervamon X.)
+        // Vamdemon carried three after this story with GrandDracumon; US-168 took it to four with
+        // VoltoBautamon (a Jogress of Vamdemon and Piemon, hung off the Perfect parent). (Digitamamon
+        // carried three here — Gankoomon, Gankoomon X and HolyDigitamamon — but US-166 took it to
+        // four with Minervamon X.)
         for parent in ["vamdemon"] {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).evolutions.count, 3, parent)
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).evolutions.count, 4, parent)
         }
     }
 
@@ -485,7 +486,7 @@ final class UltimateSweepEToHTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 898, "837 before this story, 851 after it")
+        XCTAssertEqual(graph.nodes.count, 915, "837 before this story, 851 after it")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
@@ -497,7 +498,7 @@ final class UltimateSweepEToHTests: XCTestCase {
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 19,
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 2,
                        "the Ultimate edge-orphan bucket moved without this claim moving with it")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")

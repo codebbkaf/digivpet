@@ -328,7 +328,7 @@ final class ChildSweepAToFTests: XCTestCase {
         XCTAssertEqual(sizes["tamers"], 123,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["dmc-v3"], 56, "plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["dmc-v3"], 58, "plus US-163's one Ultimate")
         XCTAssertEqual(sizes["palmon"], 32, "US-159's Lilamon and Lilimon X, plus US-163's one Ultimate")
     }
 
@@ -706,7 +706,7 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 898,
+        XCTAssertEqual(graph.nodes.count, 915,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "

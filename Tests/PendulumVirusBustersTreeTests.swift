@@ -302,7 +302,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 61,
+        XCTAssertEqual(inLine.count, 62,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
                            + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon, "
                            + "US-152 GulusGammamon, US-153 KausGammamon, US-154 Mikemon and "
@@ -413,8 +413,8 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
 
-        XCTAssertEqual(mine.count, 30)
-        XCTAssertEqual(plain.count, 15, "the orphan count in the notes is off")
+        XCTAssertEqual(mine.count, 31)
+        XCTAssertEqual(plain.count, 16, "the orphan count in the notes is off")
         XCTAssertEqual(scoped.count, 15)
 
         // And none of the fifteen was already carried by another line under the same id.

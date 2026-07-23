@@ -6216,3 +6216,59 @@ The thirty, `Perfect -> Ultimate`:
     new case in each, which is the safety net. Default `firesWhileAsleep` to false unless the notice
     ONLY makes sense at night.
 ---
+
+## 2026-07-24 - US-168 (Orphan sweep: Ultimate-Super Ultimate S-Z)
+- Wired all 17 remaining S-Z Ultimate orphans as terminal nodes in Resources/evolutions.json, each
+  an EARNED Perfect in-edge on its parent's line (scripts/us168_author.py, refuses to run twice):
+  Sakuyamon (machgaogamon) + Sakuyamon X (machgaogamon, strong-variant) on wanyamon beside Kuzuhamon;
+  Shagaramon (pandamon), Takutoumon (xingtianmon), Xiangpengmon (sagomon) on penc-sw (Saiyu Warriors,
+  stranded-from-egg); Siriusmon (canoweissmon, penc-vb); SlashAngemon (asuramon, penc-nsp -
+  holyangemon and knightmon were both full); Susanoomon (superstarmon, penc-me - Frontier Jogress,
+  Cernumon shape); Tlalocmon (tonosamagekomon, penc-wg - Jogress of 3 Ultimates, the Perfect climbs
+  into cited El Doradimon); Valdurmon (yatagaramon, penc-wg); UlforceV-dramon X (aerov-dramon,
+  penc-wg, X-from-X); UltimateBrachimon (triceramon, dmc-v4); VoltoBautamon (vamdemon, penc-nso -
+  Jogress whose parent Vamdemon IS a Perfect, Mastemon shape); SkullMammon X (mammon, penc-nso);
+  WarGreymon X (metalgreymon_x, dmc-v3 - off the walked dmc-v1 line, X-from-X); Sleipmon X
+  (skullbaluchimon, commandramon - NO base form on disk, follows a cited Perfect); Yukinamon
+  (sekkamon, dmc-v3).
+- Each edge: distinct requiredEnergy, minEnergy 150, maxCareMistakes 2, two conditions (one health +
+  one care, hints digit-free), inserted before the parent's isDefault climb (fallback stays last).
+  Explicit elements.json + moves.json rows for all 17 (symbol+tint unique per line, signature name
+  globally unique - "Celestial Blade" collided so Susanoomon became "Heavenly Ten Blade").
+- Orphan count stage 'Ultimate-Super Ultimate' (Appendix B): BEFORE 19, AFTER 2. The two left are
+  Chaosdramon and Chaosmon: they begin with C (out of S-Z range) AND their device trees pin them to
+  NO node (Jogress results), so they stay orphaned by design and the top rung is otherwise spent.
+  Overall playable orphans 35 -> 18 (16 Armor-Hybrid remain for US-169). Validator: zero findings.
+- Added Tests/UltimateSweepSToZTests.swift (xcodegen generate AFTER writing it; grep confirmed it
+  bundled). Build green; all 2665 tests pass.
+
+**Learnings for future iterations (US-169 is the LAST sweep - Armor-Hybrid):**
+- THE S-Z (or any letter) RANGE INCLUDES ALREADY-WIRED ULTIMATES. `roster.entries.filter { .ultimate
+  && S..Z }` returned 35, not 17 - eighteen were wired by device trees / earlier sweeps. The range
+  test must partition into `Set(swept) union alreadyWired`, exactly like NToR's. My first draft
+  asserted the range == my seventeen and failed at 35 != 17. Copy NToR's partition, not a bare equality.
+- `roster.entries` (Roster.bundled = roster.json, one per SHEET) differs from roster.generated.json
+  (Appendix B, mirrors evolutions.json aliases and all): the S-Z band is 35 sheets vs 42 generated
+  ids. Count the RANGE test off roster.entries; count ORPHANS off roster.generated.json.
+- THE KNOCK-ON FOR A 17-NODE ULTIMATE SWEEP WAS 78 FAILING TESTS ACROSS ~25 FILES, all mechanical:
+  (1) `graph.nodes.count, 898` -> 915 (22 files); (2) `nodes(at: .ultimate).count, 219` -> 236 (7);
+  (3) per-line `sizes["<line>"], N` in every `testTheSweepOpenedNoNewLines` for the 10 touched lines
+  (wanyamon 31->33, penc-sw 23->26, penc-vb 61->62, penc-nsp 46->47, penc-me 74->75, penc-wg 50->53,
+  dmc-v4 35->36, penc-nso 84->86, dmc-v3 56->58, commandramon 15->16); (4) EvolutionGraphTests' whole
+  byLine dict (colon form, edit by hand); (5) each UltimateSweep*Tests' "bucketFell"/"handsTo" reads
+  the CURRENT orphan bucket, now 2 (CToD's jogress-adjusted remainder now 0); (6) five Pendulum tree
+  `testEveryNodeInTheLineIsReachableFromItsDigitama` inLine.count bumps + their orphan-removal counts;
+  (7) the single-climb dicts (PerfectSweepSToZ branchedByUS163, PerfectSweepM branchedBySweeps,
+  UltimateSweepAToB forkedLater, UltimateSweepEToH's hardcoded vamdemon==3->4); (8) climb-list
+  assertions (AdultSweepSToT metalgreymon_x, AdultSweepUToZ canoweissmon x2, PerfectSweepAToC/NToR
+  pandamon, PerfectSweepNToR wanyamon Mega set); (9) SeedRosterTests patamon set (dmc-v3: WarGreymon
+  X, Yukinamon) + piyomon set (dmc-v4: UltimateBrachimon) - APPEND, never widen; (10) three penc-sw
+  nodes into EvolutionCriteriaTests.strandedUltimate, comments MUST say "Saiyu Warriors".
+- SCRIPTING GOTCHA that cost one build cycle: a python batch that edits several files and asserts
+  per line will, on a mis-guessed line number, throw AFTER editing earlier files in that run but
+  BEFORE writing the current file - so every file listed AFTER the failing one is silently skipped.
+  Re-run leaves three inLine.count bumps unapplied. Apply per-file with its own write, or verify each
+  file changed on disk before moving on.
+- vamdemon already had a duplicate-energy-free set of 3; etemon (dmc-v3) ships with TWO vitality
+  edges (bancholeomon + kingetemon), so DO NOT fork etemon - `testNoPerfectThisStoryForkedOffers...`
+  would inherit its pre-existing collision. Check the parent's own energies before choosing it.

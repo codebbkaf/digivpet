@@ -140,9 +140,9 @@ final class UltimateSweepCToDTests: XCTestCase {
             .filter { $0.stage == .ultimate && !$0.dexOnly && !connected.contains($0.id) }
             .map(\.id)
 
-        XCTAssertEqual(orphans.count, 19,
+        XCTAssertEqual(orphans.count, 2,
                        "100 before this story, 80 after; US-165 then took the E-H band down to 66")
-        XCTAssertEqual(orphans.filter { !jogressReachable.contains($0) }.count, 17,
+        XCTAssertEqual(orphans.filter { !jogressReachable.contains($0) }.count, 0,
                        "the true remainder once the Jogress results are set aside, after US-167")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
@@ -185,15 +185,15 @@ final class UltimateSweepCToDTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["tamers"], 123)
-        XCTAssertEqual(sizes["penc-nso"], 84)
-        XCTAssertEqual(sizes["penc-me"], 74)
-        XCTAssertEqual(sizes["penc-vb"], 61)
-        XCTAssertEqual(sizes["dmc-v3"], 56)
+        XCTAssertEqual(sizes["penc-nso"], 86)
+        XCTAssertEqual(sizes["penc-me"], 75)
+        XCTAssertEqual(sizes["penc-vb"], 62)
+        XCTAssertEqual(sizes["dmc-v3"], 58)
         XCTAssertEqual(sizes["penc-ds"], 48)
-        XCTAssertEqual(sizes["penc-wg"], 50)
-        XCTAssertEqual(sizes["penc-nsp"], 46)
+        XCTAssertEqual(sizes["penc-wg"], 53)
+        XCTAssertEqual(sizes["penc-nsp"], 47)
         XCTAssertEqual(sizes["dmc-v1"], 42)
-        XCTAssertEqual(sizes["dmc-v4"], 35)
+        XCTAssertEqual(sizes["dmc-v4"], 36)
         XCTAssertEqual(sizes["diablomon"], 24)
     }
 
@@ -563,7 +563,7 @@ final class UltimateSweepCToDTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 898, "817 before this story, 837 after it")
+        XCTAssertEqual(graph.nodes.count, 915, "817 before this story, 837 after it")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
@@ -575,10 +575,10 @@ final class UltimateSweepCToDTests: XCTestCase {
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 19,
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 2,
                        "the Ultimate edge-orphan bucket moved without this claim moving with it")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate && !jogressReachable.contains($0.id) }.count,
-                       17, "Ultimate truly owed once the Jogress results are set aside, after US-167")
+                       0, "Ultimate truly owed once the Jogress results are set aside, after US-167")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")
         XCTAssertEqual(stillOrphaned.filter { $0.stage != .ultimate && $0.stage != .armorHybrid },

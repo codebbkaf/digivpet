@@ -2,59 +2,61 @@ import XCTest
 
 @testable import DigiVPet
 
-/// US-167 — the twenty-fifth of Phase E's orphan sweeps and **the fifth at the TOP rung**: the
-/// twenty playable Ultimate whose display name begins N-R that no device tree and no earlier sweep
-/// reached. The Ultimate edge-orphan bucket 39 -> 19; what remains is the S-Z band (US-168) and the
-/// sixteen Armor-Hybrid US-169 owns.
+/// US-168 — the twenty-sixth of Phase E's orphan sweeps and **the sixth and LAST at the top rung**:
+/// the seventeen playable Ultimate whose display name begins S-Z that no device tree and no earlier
+/// sweep reached. The Ultimate edge-orphan bucket 19 -> 2; what remains at the top rung is Chaosdramon
+/// and Chaosmon, both pinned to NO node by their device trees (Jogress results), and the sixteen
+/// Armor-Hybrid US-169 owns.
 ///
-/// **AN ULTIMATE SWEEP IS AN IN-EDGE SWEEP AND NOTHING ELSE**, exactly as US-163/US-164/US-165/US-166
-/// recorded: the rung is terminal, so there is no rung above to open, no junk floor to invent, and no
-/// new line. Twenty orphans cost exactly twenty nodes, each hung as an EARNED branch beside the climb
-/// its Perfect already has, with two criteria and a `requiredEnergy` distinct from every other edge on
-/// that node. No leaf parents this story: all twenty Perfects already led somewhere.
+/// **AN ULTIMATE SWEEP IS AN IN-EDGE SWEEP AND NOTHING ELSE**, exactly as US-163..US-167 recorded: the
+/// rung is terminal, so there is no rung above to open, no junk floor to invent, and no new line.
+/// Seventeen orphans cost exactly seventeen nodes, each an EARNED branch beside the climb its Perfect
+/// already has, with two criteria and a `requiredEnergy` distinct from every other edge on that node.
+/// No leaf parents this story: all sixteen Perfects already led somewhere.
 ///
-/// Omegamon, Omegamon X/Zwart/Alter-S, Ogudomon and Ordinemon are Jogress results whose parents sit at
-/// the Ultimate rung, off the one-rung ladder; each still takes a Perfect in-edge here, exactly as
-/// Mastemon and Millenniumon did before them.
-final class UltimateSweepNToRTests: XCTestCase {
+/// Tlalocmon (a Jogress of three Ultimates, the Cernumon shape) and Voltobautamon (a Jogress one of
+/// whose parents IS the Perfect Vamdemon, the Mastemon shape) still take a Perfect in-edge here.
+/// Sleipmon X has no base form on disk, so it follows a cited Perfect directly rather than by the
+/// strong-variant rule.
+final class UltimateSweepSToZTests: XCTestCase {
     private let graph = EvolutionGraph.bundled
     private let roster = Roster.bundled
 
-    /// The twenty orphaned Ultimates this story wired, with the Perfect that now reaches each and the
-    /// `requiredEnergy` of the new edge. Every one is a plain roster id, so every one removes an orphan.
+    /// The seventeen orphaned Ultimates this story wired, with the Perfect that now reaches each and
+    /// the `requiredEnergy` of the new edge. Every one is a plain roster id, so every one removes an
+    /// orphan.
     private let swept: [(ultimate: String, parent: String, energy: EnergyType)] = [
-        ("omegamon", "chimairamon", .vitality),
-        ("omegamon_x", "metalgreymon_x", .vitality),
-        ("omegamon_zwart", "weregarurumon_black", .spirit),
-        ("omegamon_alter-s", "metalgreymon_virus", .strength),
-        ("ogudomon", "mephismon", .stamina),
-        ("ogudomon_x", "mephismon_x", .stamina),
-        ("ophanimon_core", "angewomon", .stamina),
-        ("ophanimon_falldown_x", "angewomon_x", .vitality),
-        ("rosemon_burst", "lilamon", .stamina),
-        ("rosemon_x", "lilimon_x", .stamina),
-        ("rapidmon_x", "rapidmon", .stamina),
-        ("ragnalordmon", "grademon", .spirit),
-        ("ragnamon", "nanomon", .strength),
-        ("quantumon", "andromon", .strength),
-        ("plesiomon_x", "megaseadramon_x", .vitality),
-        ("princemamemon_x", "mamemon_x", .stamina),
-        ("rusttyrannomon", "metaltyranomon", .stamina),
-        ("rasenmon_fury", "hisyaryumon", .stamina),
-        ("ordinemon", "lucemon_falldown", .vitality),
-        ("nezhamon", "sanzomon", .spirit),
+        ("sakuyamon", "machgaogamon", .stamina),
+        ("sakuyamon_x", "machgaogamon", .vitality),
+        ("shagaramon", "pandamon", .strength),
+        ("takutoumon", "xingtianmon", .strength),
+        ("xiangpengmon", "sagomon", .strength),
+        ("siriusmon", "canoweissmon", .strength),
+        ("slashangemon", "asuramon", .strength),
+        ("susanoomon", "superstarmon", .strength),
+        ("tlalocmon", "tonosamagekomon", .stamina),
+        ("valdurmon", "yatagaramon", .strength),
+        ("ulforcev-dramon_x", "aerov-dramon", .vitality),
+        ("ultimatebrachimon", "triceramon", .stamina),
+        ("voltobautamon", "vamdemon", .stamina),
+        ("skullmammon_x", "mammon", .stamina),
+        ("wargreymon_x", "metalgreymon_x", .stamina),
+        ("sleipmon_x", "skullbaluchimon", .strength),
+        ("yukinamon", "sekkamon", .strength),
     ]
 
     // MARK: - AC1/AC2: the range, counted off the roster rather than off the list above
 
     /// The headline claim. The range is derived from the ROSTER, so an Ultimate sheet added to the
-    /// folder later lands in scope and fails here instead of being quietly missed.
-    func testEveryPlayableUltimateNToRIsANodeWithAnInEdge() throws {
+    /// folder later lands in scope and fails here instead of being quietly missed. Chaosdramon and
+    /// Chaosmon are the two in-range-by-stage exceptions: they begin with C, not S-Z, and are pinned
+    /// off the graph by their device trees, so they are neither in this range nor this story's job.
+    func testEveryPlayableUltimateSToZIsANodeWithAnInEdge() throws {
         let inRange = roster.entries.filter {
             $0.stage == .ultimate && !$0.dexOnly
-                && ("N"..."R").contains(String($0.displayName.prefix(1)).uppercased())
+                && ("S"..."Z").contains(String($0.displayName.prefix(1)).uppercased())
         }
-        XCTAssertEqual(inRange.count, 39, "the N-R Ultimate range changed size")
+        XCTAssertEqual(inRange.count, 35, "the S-Z Ultimate range changed size")
 
         for entry in inRange {
             let node = try XCTUnwrap(graph.node(id: entry.id), "\(entry.id) is not a node at all")
@@ -62,26 +64,27 @@ final class UltimateSweepNToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: entry.id).isEmpty, "\(entry.id) is evolved into by nothing")
         }
 
-        // Nineteen of the thirty-nine were already wired before this story.
-        let alreadyWired = ["noblepumpmon", "ophanimon", "ophanimon_x", "ouryumon", "piemon",
-                            "pinochimon", "platinumnumemon", "plesiomon", "princemamemon", "pukumon",
-                            "rafflesimon", "raguelmon", "raidenmon", "rasenmon", "rasielmon", "ravmon",
-                            "regalecusmon", "rosemon", "ryugumon"]
+        // Eighteen of the thirty-five were already wired before this story.
+        let alreadyWired = ["saberleomon", "saintgalgomon", "seitengokuwmon", "seraphimon", "shakamon",
+                            "shinmonzaemon", "skullmammon", "tengumon", "tigervespamon", "titamon",
+                            "ulforcev-dramon", "venomvamdemon", "vikemon", "volcanicdramon",
+                            "wargreymon", "zanbamon", "zekegreymon", "zephagamon"]
         XCTAssertEqual(Set(inRange.map(\.id)),
                        Set(swept.map(\.ultimate)).union(alreadyWired),
-                       "the range no longer partitions into this story's twenty and the nineteen before")
+                       "the range no longer partitions into this story's seventeen and the eighteen before")
     }
 
-    /// The whole-file form, so an Ultimate outside N-R that a later sweep is meant to take shows up as
-    /// a falling number rather than as nothing at all.
-    func testTheUltimateBucketFellByExactlyThisStorys20() {
+    /// The whole-file form. Chaosdramon and Chaosmon remain, out of the S-Z range and pinned to no
+    /// node by their device trees, so the Ultimate edge-orphan bucket lands at two rather than zero.
+    func testTheUltimateBucketFellToTheTwoPinnedChaosNodes() {
         let connected = Set(graph.nodes.flatMap { $0.evolutions.map(\.to) })
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let orphans = roster.entries
             .filter { $0.stage == .ultimate && !$0.dexOnly && !connected.contains($0.id) }
             .map(\.id)
 
-        XCTAssertEqual(orphans.count, 2, "39 Ultimate were edge-orphaned before this story and 19 after")
+        XCTAssertEqual(Set(orphans), ["chaosdramon", "chaosmon"],
+                       "the only Ultimate orphans left must be the two pinned Chaos nodes")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
         }
@@ -117,7 +120,7 @@ final class UltimateSweepNToRTests: XCTestCase {
         }
     }
 
-    /// No new lines for twenty new nodes: every one joined a line that already had a Perfect rung.
+    /// No new lines for seventeen new nodes: every one joined a line that already had a Perfect rung.
     func testTheSweepOpenedNoNewLines() throws {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
         for (ultimate, _, _) in swept {
@@ -207,15 +210,21 @@ final class UltimateSweepNToRTests: XCTestCase {
         }
     }
 
-    /// Proven through the ENGINE: a Digimon that earned the branch takes it, and one that did not falls
-    /// to the Perfect's own climb instead.
+    /// Proven through the ENGINE: a Digimon that earned the branch takes it, and one that did not
+    /// falls to the Perfect's own climb instead.
     func testEveryNewBranchIsTakenByTheEngineWhenItIsEarnedAndNotOtherwise() throws {
         let met = ConditionContext(
             stageTotals: MetricTotals(values: ["health.steps": 500_000,
                                                "health.activeEnergy": 50_000,
                                                "health.exerciseMinutes": 5_000,
+                                               "health.flightsClimbed": 5_000,
+                                               "health.distanceWalkingRunning": 500_000,
+                                               "health.distanceSwimming": 100_000,
+                                               "health.mindfulMinutes": 5_000,
                                                "health.sleep": 100_000]),
             trainingSessionsThisStage: 50,
+            overfeedsThisStage: 20,
+            sleepDisturbancesThisStage: 0,
             battlesLifetime: 60,
             battleWinRatioLifetime: 1.0)
 
@@ -289,19 +298,36 @@ final class UltimateSweepNToRTests: XCTestCase {
 
     // MARK: - AC3: the lines are coherent, and the variants sit with their base forms
 
-    /// The X-Antibody variants each hang off their base form's line or rise from the X form of the
-    /// Perfect their base form uses — never across a line boundary.
     func testTheVariantsHangWithTheirLineage() throws {
-        // Variant and base share ONE line (both are nodes this story added, on the same Perfect line).
-        for (variant, base) in [("ogudomon_x", "ogudomon"), ("rosemon_x", "rosemon_burst")] {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: variant)).line,
-                           try XCTUnwrap(graph.node(id: base)).line,
-                           "\(variant) no longer shares \(base)'s line")
-        }
+        // Sakuyamon and Sakuyamon X share ONE line, both off Mach Gaogamon on `wanyamon`.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "sakuyamon_x")).line,
+                       try XCTUnwrap(graph.node(id: "sakuyamon")).line,
+                       "sakuyamon_x no longer shares sakuyamon's line")
         // Every X node this story added is an X-Antibody form on its parent's line.
-        for variant in ["omegamon_x", "ogudomon_x", "ophanimon_falldown_x", "rosemon_x", "rapidmon_x",
-                        "plesiomon_x", "princemamemon_x"] {
+        for variant in ["sakuyamon_x", "ulforcev-dramon_x", "skullmammon_x", "wargreymon_x",
+                        "sleipmon_x"] {
             XCTAssertEqual(try XCTUnwrap(graph.node(id: variant)).variant, "X", variant)
+        }
+    }
+
+    /// Sleipmon X has NO base form on disk, so it cannot use the strong-variant rule and follows a
+    /// cited Perfect directly. WarGreymon X is off the walked `dmc-v1` line entirely, on the X form
+    /// of its Champion instead.
+    func testTheTwoVariantsWithoutADrawableBaseFollowACitedParent() throws {
+        XCTAssertNil(roster.entry(id: "sleipmon"), "a base sleipmon appeared; the placement rests on none")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "sleipmon_x")).line, "commandramon")
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "wargreymon_x")).line, "dmc-v3",
+                       "wargreymon_x must not sit on the walked dmc-v1 line")
+    }
+
+    // MARK: - the two Jogress results still take a Perfect in-edge
+
+    /// Tlalocmon and Voltobautamon are Jogress results kept in `jogress.json`, yet each is also a
+    /// wired node with a Perfect in-edge — the Mastemon/Mitamamon precedent.
+    func testTheJogressResultsAreAlsoWiredNodes() throws {
+        for id in ["tlalocmon", "voltobautamon"] {
+            let node = try XCTUnwrap(graph.node(id: id), "\(id) is not a node")
+            XCTAssertFalse(graph.parents(of: id).isEmpty, "\(id) has no Perfect in-edge")
         }
     }
 
@@ -316,28 +342,38 @@ final class UltimateSweepNToRTests: XCTestCase {
         }
     }
 
-    // MARK: - AC8: the orphan count, and what this sweep hands on
+    /// Every `penc-sw` node names the Saiyu Warriors device, the standing claim about that line.
+    func testTheSaiyuWarriorsNodesNameTheirDevice() throws {
+        for id in ["shagaramon", "takutoumon", "xiangpengmon"] {
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).line, "penc-sw")
+            XCTAssertTrue(try authoredComment(on: id).contains("Saiyu Warriors"),
+                          "\(id) is on the Saiyu Warriors line without saying so")
+        }
+    }
 
-    func testThe20OrphansThisStoryRemovedAreAllPlainRosterIds() throws {
-        XCTAssertEqual(swept.count, 20)
+    // MARK: - AC8: the orphan count, and the top rung is now spent
+
+    func testThe17OrphansThisStoryRemovedAreAllPlainRosterIds() throws {
+        XCTAssertEqual(swept.count, 17)
         for (ultimate, _, _) in swept {
             XCTAssertNotNil(roster.entry(id: ultimate),
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 915, "878 before this story, 898 after it")
+        XCTAssertEqual(graph.nodes.count, 915, "898 before this story, 915 after it")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 236, "219 before this story, 236 after it")
     }
 
-    /// **The handover to US-168 and US-169: a claim, not a note.** What the last sweeps inherit is the
-    /// S-Z Ultimate band and the sixteen Armor-Hybrid.
-    func testWhatThisSweepHandsToTheRestOfTheUltimateRung() throws {
+    /// **The handover to US-169: a claim, not a note.** What the last sweep inherits is the sixteen
+    /// Armor-Hybrid — the Ultimate rung is now spent but for the two pinned Chaos nodes.
+    func testWhatThisSweepHandsToTheLastSweep() throws {
         let connected = Set(graph.nodes.flatMap { $0.evolutions.map(\.to) })
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 2,
-                       "the Ultimate edge-orphan bucket moved without this claim moving with it")
+                       "the Ultimate edge-orphan bucket is now the two pinned Chaos nodes only")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")
         XCTAssertEqual(stillOrphaned.filter { $0.stage != .ultimate && $0.stage != .armorHybrid },

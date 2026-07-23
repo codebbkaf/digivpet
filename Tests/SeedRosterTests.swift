@@ -349,6 +349,11 @@ final class SeedRosterTests: XCTestCase {
         // and Quantumon over Andromon, both already on this line. Eyeballed as
         // `Ultimate-Super Ultimate/Omegamon_X.png` and `.../Quantumon.png`.
         "Omegamon X", "Quantumon",
+        // US-168's two, the S-Z Ultimate sweep: WarGreymon X over MetalGreymon X (an X from an X,
+        // off the walked dmc-v1 line) and Yukinamon over Sekkamon (its BOLDED `Evolves From`), both
+        // already on this line. Eyeballed as `Ultimate-Super Ultimate/WarGreymon_X.png` and
+        // `.../Yukinamon.png`.
+        "WarGreymon X", "Yukinamon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -503,6 +508,9 @@ final class SeedRosterTests: XCTestCase {
         // US-166's one: Minervamon X over Digitamamon, its base form idle-only so it follows the
         // cited parent (the Dynasmon X shape). Eyeballed as `Ultimate-Super Ultimate/Minervamon_X.png`.
         "Minervamon X",
+        // US-168's one, the S-Z Ultimate sweep: UltimateBrachimon over Triceramon, a cited `Evolves
+        // From` and already on this line. Eyeballed as `Ultimate-Super Ultimate/UltimateBrachimon.png`.
+        "UltimateBrachimon",
     ]
 
     func testThePiyomonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

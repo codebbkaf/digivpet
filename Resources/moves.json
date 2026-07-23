@@ -5388,6 +5388,108 @@
       "tint": "yellow",
       "signatureName": "Universal Fist",
       "signatureSymbol": "flame.fill"
+    },
+    "sakuyamon": {
+      "projectileSymbol": "sparkles",
+      "tint": "purple",
+      "signatureName": "Amethyst Mandala",
+      "signatureSymbol": "sparkles"
+    },
+    "sakuyamon_x": {
+      "projectileSymbol": "sparkles",
+      "tint": "pink",
+      "signatureName": "Amethyst Wind Cross",
+      "signatureSymbol": "sparkles"
+    },
+    "shagaramon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "green",
+      "signatureName": "Boulder Crush",
+      "signatureSymbol": "flame.fill"
+    },
+    "takutoumon": {
+      "projectileSymbol": "scissors",
+      "tint": "white",
+      "signatureName": "Heavenly Twin Blades",
+      "signatureSymbol": "scissors"
+    },
+    "xiangpengmon": {
+      "projectileSymbol": "wind",
+      "tint": "yellow",
+      "signatureName": "Roc Gale",
+      "signatureSymbol": "wind"
+    },
+    "siriusmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "red",
+      "signatureName": "Dog Star Saber",
+      "signatureSymbol": "star.fill"
+    },
+    "slashangemon": {
+      "projectileSymbol": "scissors",
+      "tint": "white",
+      "signatureName": "Heaven's Ripper",
+      "signatureSymbol": "scissors"
+    },
+    "susanoomon": {
+      "projectileSymbol": "wind",
+      "tint": "red",
+      "signatureName": "Heavenly Ten Blade",
+      "signatureSymbol": "wind"
+    },
+    "tlalocmon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "blue",
+      "signatureName": "Divine Deluge",
+      "signatureSymbol": "drop.fill"
+    },
+    "valdurmon": {
+      "projectileSymbol": "wind",
+      "tint": "cyan",
+      "signatureName": "Aurora Undulation",
+      "signatureSymbol": "wind"
+    },
+    "ulforcev-dramon_x": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "cyan",
+      "signatureName": "Tensegrity Cross",
+      "signatureSymbol": "bolt.fill"
+    },
+    "ultimatebrachimon": {
+      "projectileSymbol": "drop.fill",
+      "tint": "purple",
+      "signatureName": "Deep Arbiter",
+      "signatureSymbol": "drop.fill"
+    },
+    "voltobautamon": {
+      "projectileSymbol": "scissors",
+      "tint": "white",
+      "signatureName": "Marionette Storm",
+      "signatureSymbol": "scissors"
+    },
+    "skullmammon_x": {
+      "projectileSymbol": "snowflake",
+      "tint": "purple",
+      "signatureName": "Tusk Crusher Cross",
+      "signatureSymbol": "snowflake"
+    },
+    "wargreymon_x": {
+      "projectileSymbol": "flame.fill",
+      "tint": "green",
+      "signatureName": "Gaia Force Cross",
+      "signatureSymbol": "flame.fill"
+    },
+    "sleipmon_x": {
+      "projectileSymbol": "snowflake",
+      "tint": "blue",
+      "signatureName": "Bifrost Cross",
+      "signatureSymbol": "snowflake"
+    },
+    "yukinamon": {
+      "projectileSymbol": "snowflake",
+      "tint": "red",
+      "signatureName": "Blizzard Fang",
+      "signatureSymbol": "snowflake"
     }
   },
   "lineDefaults": {

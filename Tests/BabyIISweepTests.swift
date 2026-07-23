@@ -343,7 +343,7 @@ final class BabyIISweepTests: XCTestCase {
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
         XCTAssertEqual(sizes["vital"], 42, "plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["wanyamon"], 31, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`, plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
+        XCTAssertEqual(sizes["wanyamon"], 33, "US-151 opened the Perfect rung on `tamers` and on `wanyamon`, plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
     }
 
     /// The line-scoped alias, called out because it is the one node here that is not its own

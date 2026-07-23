@@ -318,7 +318,7 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 74,
+        XCTAssertEqual(inLine.count, 75,
                        "US-147 hung Kozenimon and Zenimon here, US-149 Kokuwamon X and Kuwagamon X, "
                            + "US-150 Phascomon, ToyAgumon Black and three Champions, "
                            + "US-151 Deckerdramon, US-157 five Perfects and Kazuchimon, "
@@ -431,8 +431,8 @@ final class PendulumMetalEmpireTreeTests: XCTestCase {
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }
 
-        XCTAssertEqual(mine.count, 34)
-        XCTAssertEqual(plain.count, 26, "the orphan count in the notes is off")
+        XCTAssertEqual(mine.count, 35)
+        XCTAssertEqual(plain.count, 27, "the orphan count in the notes is off")
         XCTAssertEqual(scoped.count, 8)
 
         // And none of the twenty-four was already carried by another line under the same id.

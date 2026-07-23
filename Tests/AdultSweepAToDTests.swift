@@ -226,17 +226,17 @@ final class AdultSweepAToDTests: XCTestCase {
         XCTAssertEqual(sizes["tamers"], 123, "US-151 added DarkLizamon, MegaloGrowmon, CatchMamemon; "
                            + "US-152 added FlareLizamon and Growmon Orange; "
                            + "US-156 added Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["wanyamon"], 31,
+        XCTAssertEqual(sizes["wanyamon"], 33,
                        "US-151 added BlackGaogamon, BlackMachGaogamon, Karakurumon, "
                            + "plus US-158's four, plus US-159's two" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["dmc-v4"], 35, "US-151 added the two Burgermon, US-156 Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["penc-wg"], 50,
+        XCTAssertEqual(sizes["dmc-v4"], 36, "US-151 added the two Burgermon, US-156 Xiquemon and Huankunmon")
+        XCTAssertEqual(sizes["penc-wg"], 53,
                        "US-151 added Akatorimon, US-153 Kougamon, US-154 RedV-dramon, "
                            + "US-156 the two Black V-dramon, plus US-158's two, plus US-161's Paildramon")
-        XCTAssertEqual(sizes["penc-vb"], 61,
+        XCTAssertEqual(sizes["penc-vb"], 62,
                        "US-151 added BlackTailmon, US-152 GulusGammamon, US-153 KausGammamon, "
                            + "US-156 WezenGammamon and Canoweissmon, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
-        XCTAssertEqual(sizes["penc-me"], 74, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-me"], 75, "US-151 added Deckerdramon, US-157 five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
     }
 
     /// **The variant rule.** Four of the seven are variants — Black, and nothing else at this rung —
@@ -401,7 +401,7 @@ final class AdultSweepAToDTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 898,
+        XCTAssertEqual(graph.nodes.count, 915,
                        "599 before this story, 615 after US-152, 618 after US-153, 629 after US-154, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "
                            + "693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")

@@ -212,10 +212,12 @@ final class AdultSweepUToZTests: XCTestCase {
             // the same edit. Huankunmon is still a leaf and still owed an Ultimate.
             // US-164 then wired the third, Huankunmon, which climbs to Dijiangmon (cited on
             // Wikimon) — so the last of the three leaves this test pinned now leads somewhere too.
-            let wiredBySweeps = ["blackrapidmon": "blacksaintgalgomon", "canoweissmon": "arcturusmon",
-                                 "huankunmon": "dijiangmon"]
-            if let ultimate = wiredBySweeps[perfect] {
-                XCTAssertEqual(node.evolutions.map(\.to), [ultimate],
+            // US-168 hung Siriusmon on Canoweissmon as an earned branch, so it now leads two places.
+            let wiredBySweeps = ["blackrapidmon": ["blacksaintgalgomon"],
+                                 "canoweissmon": ["siriusmon", "arcturusmon"],
+                                 "huankunmon": ["dijiangmon"]]
+            if let ultimates = wiredBySweeps[perfect] {
+                XCTAssertEqual(node.evolutions.map(\.to), ultimates,
                                "\(perfect)'s single climb is not the one a sweep gave it")
             } else {
                 XCTAssertTrue(node.evolutions.isEmpty,
@@ -489,9 +491,9 @@ final class AdultSweepUToZTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-wg"], 50, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
-        XCTAssertEqual(sizes["penc-vb"], 61, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
-        XCTAssertEqual(sizes["dmc-v4"], 35, "Xiquemon and Huankunmon")
+        XCTAssertEqual(sizes["penc-wg"], 53, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
+        XCTAssertEqual(sizes["penc-vb"], 62, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["dmc-v4"], 36, "Xiquemon and Huankunmon")
         XCTAssertEqual(sizes["tamers"], 123, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
@@ -639,14 +641,15 @@ final class AdultSweepUToZTests: XCTestCase {
         // US-163 and US-164 ARE the sweeps that said so: BlackRapidmon, Canoweissmon and now
         // Huankunmon lead somewhere, and the claim flips rather than dying — the same shape US-152
         // gave FlareLizamon.
-        let wiredBySweeps = ["blackrapidmon": "blacksaintgalgomon", "canoweissmon": "arcturusmon",
-                             "huankunmon": "dijiangmon"]
+        let wiredBySweeps = ["blackrapidmon": ["blacksaintgalgomon"],
+                             "canoweissmon": ["siriusmon", "arcturusmon"],
+                             "huankunmon": ["dijiangmon"]]
         for id in authoredPerfects.map(\.perfect) where wiredBySweeps[id] == nil {
             XCTAssertTrue(try XCTUnwrap(graph.node(id: id)).evolutions.isEmpty,
                           "\(id) leads somewhere — then US-157 onward should say so here")
         }
-        for (id, ultimate) in wiredBySweeps {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).evolutions.map(\.to), [ultimate])
+        for (id, ultimates) in wiredBySweeps {
+            XCTAssertEqual(try XCTUnwrap(graph.node(id: id)).evolutions.map(\.to), ultimates)
         }
 
         // US-157 took `penc-sw` off this list — Cho-Hakkaimon opened it — so six lines are left
@@ -677,7 +680,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 898, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
+        XCTAssertEqual(graph.nodes.count, 915, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
     func testTheGraphValidatesWithNoFindings() {

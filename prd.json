@@ -1497,8 +1497,8 @@
         "Typecheck passes"
       ],
       "priority": 91,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Wired all 17 remaining S-Z Ultimate orphans as terminal nodes in Resources/evolutions.json, each with one Perfect in-edge on its parent's line (scripts/us168_author.py). Sakuyamon/Sakuyamon X (machgaogamon, wanyamon, joining Kuzuhamon), Shagaramon/Takutoumon/Xiangpengmon (penc-sw Saiyu Warriors, stranded-from-egg), Siriusmon (canoweissmon), SlashAngemon (asuramon, holyangemon full), Susanoomon (superstarmon, Frontier Jogress/Cernumon shape), Tlalocmon (tonosamagekomon, Cernumon shape), Valdurmon (yatagaramon), UlforceV-dramon X (aerov-dramon, X-from-X), UltimateBrachimon (triceramon), VoltoBautamon (vamdemon, Mastemon shape), SkullMammon X (mammon), WarGreymon X (metalgreymon_x, off the walked dmc-v1 line), Sleipmon X (skullbaluchimon, no base form on disk), Yukinamon (sekkamon). Each edge: distinct requiredEnergy, minEnergy 150, maxCareMistakes 2, two conditions (one health + one care, hints digit-free), inserted before the parent's isDefault climb. Element+move rows added. Orphan count stage 'Ultimate-Super Ultimate' (Appendix B): BEFORE 19, AFTER 2 (the two Chaosdramon/Chaosmon pinned to no-node by their device trees, out of S-Z range). Overall playable orphans 35 -> 18 (16 Armor-Hybrid left for US-169). EvolutionGraphValidator: zero findings. Added Tests/UltimateSweepSToZTests.swift; build green, all 2665 tests pass."
     },
     {
       "id": "US-169",

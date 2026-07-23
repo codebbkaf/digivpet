@@ -219,7 +219,7 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
         // US-150 hung YukiAgumon and its Champion Hyougamon on this line's Koromon, which is why
         // the line is two larger than the tree the document draws.
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 46,
+        XCTAssertEqual(inLine.count, 47,
                        "US-157 hung AtlurKabuterimon Red on this line, US-158 DarkKnightmon over "
                            + "Tailmon and DarkKnightmon X over that, US-160 MegaSeadramon X over "
                            + "the leaf Hyougamon")
@@ -550,7 +550,7 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
                                           // Plesiomon X over MegaSeadramon X.
                                           "ophanimon_core", "plesiomon_x"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !notThisStorys.contains($0.id) }.count,
-                       31)
+                       32)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,
                        12, "the twelve aliases, which remove no orphan")
     }

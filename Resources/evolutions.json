@@ -5197,6 +5197,28 @@
       "spriteFile": "Asuramon",
       "evolutions": [
         {
+          "to": "slashangemon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 620,
+              "hint": "Raise the blade angel higher than any tower"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 40,
+              "hint": "And let its swords answer every challenger"
+            }
+          ]
+        },
+        {
           "to": "saberleomon",
           "requiredEnergy": "stamina",
           "minEnergy": 150,
@@ -7432,6 +7454,28 @@
           ]
         },
         {
+          "to": "skullmammon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 240000,
+              "hint": "Range the frozen waste the bone mammoth reworks"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 38,
+              "hint": "And let its tusks meet every foe"
+            }
+          ]
+        },
+        {
           "to": "pencnso_skullmammon",
           "requiredEnergy": "strength",
           "minEnergy": 150,
@@ -7622,6 +7666,28 @@
               "window": "lifetime",
               "comparison": "atLeast",
               "value": 36,
+              "hint": "And build its dread one duel at a time"
+            }
+          ]
+        },
+        {
+          "to": "voltobautamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 36000,
+              "hint": "Burn the puppet lord's whole dark engine"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 42,
               "hint": "And build its dread one duel at a time"
             }
           ]
@@ -8619,6 +8685,28 @@
           ]
         },
         {
+          "to": "ulforcev-dramon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 110000,
+              "hint": "Walk the whole circuit the blue knight reworks"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.9,
+              "hint": "And let the Ulforce saber spare no rival"
+            }
+          ]
+        },
+        {
           "to": "ulforcev-dramon",
           "requiredEnergy": "strength",
           "minEnergy": 150,
@@ -8764,6 +8852,28 @@
       "spriteFile": "TonosamaGekomon",
       "comment": "This tree's junk Perfect, invented for the same reason as zassoumon. Wikimon lists it as something Zassoumon really evolves into and ElDoradimon as something it really evolves into, so the invented chain is at least a chain the source material would recognise.",
       "evolutions": [
+        {
+          "to": "tlalocmon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 33000,
+              "hint": "Loose the rain god's whole gathered storm"
+            },
+            {
+              "metric": "care.overfeeds",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 7,
+              "hint": "And swell the flood far past every meal"
+            }
+          ]
+        },
         {
           "to": "eldoradimon",
           "requiredEnergy": "strength",
@@ -21768,6 +21878,28 @@
           ]
         },
         {
+          "to": "wargreymon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 600,
+              "hint": "Lift the reforged dragon above every peak"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.88,
+              "hint": "And let the Brave Shield turn each blow"
+            }
+          ]
+        },
+        {
           "to": "chaosdramon_v2",
           "requiredEnergy": "strength",
           "minEnergy": 150,
@@ -22023,6 +22155,28 @@
       "spriteFile": "Canoweissmon",
       "comment": "Wezen Gammamon's own bolded Evolves To on Wikimon, cited to Pendulum COLOR ZERO Virus Busters - the device this line is - as well as Vital Bracelet Digital Monster, BT10-011, RB1-009 and Ghost Game 26 'Cannibal Mansion', and drawn WITH OR WITHOUT any Vaccine Adult, so the solo arrow is the source's own. Opened for exactly one Champion. Wikimon also draws it straight out of Gammamon, which US-156 has just filled, so that second arrow can never be drawn and this node has one parent for good rather than for now. A leaf until the Ultimate sweeps, and on the dead-end ledger in `ChildSweepAToFTests` until one of them claims it.",
       "evolutions": [
+        {
+          "to": "siriusmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 34000,
+              "hint": "Pour a hero's spirit into the star knight"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.9,
+              "hint": "And let the dog star go unbeaten"
+            }
+          ]
+        },
         {
           "to": "arcturusmon",
           "requiredEnergy": "vitality",
@@ -22685,6 +22839,28 @@
       "spriteFile": "Pandamon",
       "comment": "FLAVOUR. The Saiyu Warriors line had no junk PERFECT and every branching Champion needs one (`EvolutionCriteriaTests`), so opening this line's Perfect rung for Cho-Hakkaimon meant authoring a floor under it in the same story - the same bill US-151 paid when it gave `wanyamon` Karakurumon and `tamers` CatchMamemon. Pandamon is a stuffed-panda puppet off an unused sheet: a Chinese toy beside a Journey to the West line, following Tsuchidarumon the mud daruma, which US-148 chose as this line's junk CHAMPION for the same reason. `grep -rn Pandamon` finds it in no tree markdown - the check US-140 insists on. A leaf until the Ultimate sweeps, and stranded with the rest of `penc-sw`.",
       "evolutions": [
+        {
+          "to": "shagaramon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 580,
+              "hint": "Haul the stone dragon up every ridge"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 28,
+              "hint": "And drill the earth pilgrim in the training pit"
+            }
+          ]
+        },
         {
           "to": "erlangmon",
           "requiredEnergy": "spirit",
@@ -23761,6 +23937,50 @@
       "spriteFile": "MachGaogamon",
       "comment": "Gaogamon is MachGaogamon's bolded `Evolves From` on Wikimon — the other bolded name is Gaomon, a CHILD, which the validator's one-rung rule refuses exactly as it refused Lucemon under Lucemon Falldown in US-159 — and it has been on `wanyamon` since US-151, so the bolded arrow needs no new node below. The climb is Ancient Volcamon, on the page's `Evolves To` and already this line's Mega over Gogmamon: **Mirage Gaogamon and Z'd Garurumon, the two BOLDED climbs, are both idle-only in this pack** (`Idle Frame Only/`, dexOnly, and `edgeToDexOnlyNode` forbids the edge), so the canonical top of this thread cannot be drawn at all and the cited one is taken instead. Strength is what a martial artist earns; Gaogamon spends stamina on Gogmamon and spirit on its junk fall.",
       "evolutions": [
+        {
+          "to": "sakuyamon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.mindfulMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 950,
+              "hint": "Sit the shrine priestess in a long meditation"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "And temper her spirit power in daily rites"
+            }
+          ]
+        },
+        {
+          "to": "sakuyamon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 105000,
+              "hint": "Walk the whole spirit road the fox reworks"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.88,
+              "hint": "And let her golden staff end every duel"
+            }
+          ]
+        },
         {
           "to": "ancientvolcamon",
           "requiredEnergy": "strength",
@@ -24920,6 +25140,28 @@
       "comment": "Lianpumon is a cited `Evolves From` on Wikimon — the page bolds only the Xros Wars fusion Xros Up Arresterdramon (Sagomon) and its two components, which are DigiXros arrows and not evolutions — and it had been a LEAF on `penc-sw` since US-157, so the arrow clears a dead end. Shakamon is on the same page's `Evolves To` and has been this line's Mega over Cho·Hakkaimon since US-157, so both ends are cited on the Saiyu Warriors line, which is where the whole Journey to the West cast belongs: Wikimon's own Virtual Pets section lists Sagomon in Pendulum COLOR 6 Saiyu Warriors, beside Gokuwmon and Cho·Hakkaimon. Gawappamon (`penc-ds`), Tortamon (`dmc-v3`) and Xiquemon (`dmc-v4`) are the drawable alternatives and each would have split the quartet. Vitality is what a river monk earns; Lianpumon's junk fall to Pandamon takes stamina.",
       "evolutions": [
         {
+          "to": "xiangpengmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 230000,
+              "hint": "March the roc-warrior across the whole grid"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "And harden its wings in the training pit"
+            }
+          ]
+        },
+        {
           "to": "shakamon",
           "requiredEnergy": "vitality",
           "minEnergy": 150,
@@ -25077,6 +25319,28 @@
       "comment": "Shellmon is a cited `Evolves From` on Wikimon and Ryugumon is a cited `Evolves To` that has been `dmc-v3`'s Mega over MarinBullmon since US-160, so both ends are cited on one line at no cost. **TENKOMON, THE BOLDED PARENT, WAS DELIBERATELY NOT TAKEN.** It is a `tamers` leaf, so the arrow would have cleared a dead end — but the page's bolded climb, Yukinamon, has no node and `tamers` holds no cited climb at all, so honouring the bold would have cost an Ultimate for one Perfect. Manekimon (`wanyamon`) is the third cited parent and its line holds no cited climb either. Spirit; Shellmon spends stamina on Andromon and on its junk fall to Etemon, and vitality on MarinBullmon.",
       "evolutions": [
         {
+          "to": "yukinamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.mindfulMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 880,
+              "hint": "Sit the ice fox in a still winter calm"
+            },
+            {
+              "metric": "care.sleepDisturbances",
+              "window": "stage",
+              "comparison": "atMost",
+              "value": 1,
+              "hint": "And never break its snowbound rest"
+            }
+          ]
+        },
+        {
           "to": "ryugumon",
           "requiredEnergy": "spirit",
           "minEnergy": 150,
@@ -25206,6 +25470,28 @@
       "comment": "Damemon is a cited `Evolves From` on Wikimon and had been a LEAF on `commandramon` since US-151, so the arrow clears a dead end AND opens the last-but-one line with no Perfect rung. Baluchimon, the sole BOLDED parent, has no sheet in this pack at all. Chaosdramon (X-Antibody) is a cited `Evolves To` here and on Triceramon (X-Antibody)'s page as well, which is why one Mega serves both and `commandramon` pays for one rather than two: a chaos-red machine dragon over the line of mechanised soldiers is the flavour this line was always going to want. Titamon, the page's bolded climb, is on `tamers`, and every other cited climb — Dinorexmon, Dinotigermon, Griffomon, Ouryumon, Platinum Numemon, Skull Mammon, Zanbamon — is on a line that is not this one. Stamina; the fall to Karakurumon takes strength.",
       "evolutions": [
         {
+          "to": "sleipmon_x",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceWalkingRunning",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 250000,
+              "hint": "Gallop the reworked knight across the frozen north"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.85,
+              "hint": "And let its bolt bow end every chase"
+            }
+          ]
+        },
+        {
           "to": "chaosdramon_x",
           "requiredEnergy": "stamina",
           "minEnergy": 150,
@@ -25222,6 +25508,28 @@
       "spriteFile": "Superstarmon",
       "comment": "Omekamon is a cited `Evolves From` on Wikimon and Prince Mamemon is a cited `Evolves To` that has been `penc-me`'s since US-142, so both ends are cited on one line. **STARMON, THE BOLDED PARENT, WAS NOT TAKEN AND THE REASON IS A WHOLE RUNG.** It is a `tamers` Adult and `tamers` holds no cited climb for Superstarmon at all — Mametyramon is a Perfect — so the bolded arrow would have cost an Ultimate; and the two other `penc-me` parents Wikimon cites, Revolmon and Thunderballmon, are both FULL at three earned branches apiece, which is what left Omekamon carrying it. Vademon and Nanimon are cited and are junk, Numemon and Scumon likewise; Superstarmon really is the Digimon a gag Digimon becomes when it makes it. Spirit; Omekamon spends strength on Hisyaryumon, vitality on RizeGreymon X and strength again on its junk fall to Locomon.",
       "evolutions": [
+        {
+          "to": "susanoomon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1700,
+              "hint": "Train the storm god without a wasted hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 32,
+              "hint": "And forge the ten warriors into one daily"
+            }
+          ]
+        },
         {
           "to": "princemamemon",
           "requiredEnergy": "spirit",
@@ -25256,6 +25564,28 @@
       "spriteFile": "Triceramon",
       "comment": "Monochromon is a BOLDED `Evolves From` on Wikimon and Darkdramon is a cited `Evolves To` that has been `dmc-v4`'s Mega since US-136, so the bolded arrow and a cited climb close on one line for nothing. The page's other bolded parents are Agumon — a CHILD, which `GraphValidationError.invalidStageTransition` refuses exactly as it refused Lucemon under Lucemon Falldown in US-159 — and Mori Shellmon on `penc-ds`, whose line holds cited climbs but not the pairing this one has. **Astamon and Triceramon (X-Antibody) are the page's two bolded `Evolves To`: the first is a PERFECT and so can never be a climb, and the second is the variant, which cannot be reached from its own base form.** Strength; Monochromon spends vitality on Megadramon and on its junk fall to GreatKingScumon.",
       "evolutions": [
+        {
+          "to": "ultimatebrachimon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.distanceSwimming",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 44000,
+              "hint": "Cross the deep the titan reptile rules"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 40,
+              "hint": "And drag every challenger under the tide"
+            }
+          ]
+        },
         {
           "to": "darkdramon",
           "requiredEnergy": "strength",
@@ -25443,6 +25773,28 @@
       "comment": "Ginkakumon is a cited `Evolves From` on Wikimon and Seiten Gokuwmon is a cited `Evolves To` that has been `penc-sw`'s Mega over Gokuwmon since US-158 — both ends cited on the Saiyu Warriors line, which is where a Chinese myth headless giant belongs. The page cites only three parents in total and TWO of them are on this line (Lianpumon is the other, and it carries Sagomon here); Gawappamon on `penc-ds` is the third. Dijiangmon and Takutoumon are the cited climbs with no node and are left for the Ultimate sweeps. Vitality; Ginkakumon spends strength on Gokuwmon and stamina on its junk fall to Pandamon.",
       "evolutions": [
         {
+          "to": "takutoumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1650,
+              "hint": "Keep the sword saint in constant motion"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 38,
+              "hint": "And prove the twin blades over countless bouts"
+            }
+          ]
+        },
+        {
           "to": "seitengokuwmon",
           "requiredEnergy": "vitality",
           "minEnergy": 150,
@@ -25459,6 +25811,28 @@
       "spriteFile": "Yatagaramon",
       "comment": "XV-mon (Black) is a cited `Evolves From` on Wikimon and Hououmon is a cited `Evolves To` that has been `penc-wg`'s Mega since US-141, so both ends are cited on the Wind Guardians line — a three-legged crow under the phoenix, which is the pairing this line exists for. **FALCOMON, THE SOLE BOLDED PARENT, IS IDLE-ONLY IN THIS PACK** (`Idle Frame Only/`, dexOnly, and `edgeToDexOnlyNode` forbids the edge), which is the MachGaogamon shape US-160 recorded and the fourth time this series has met it. The plain XV-mon on `adventure02` is cited too and was not taken because Vermillimon needed that line's junk Champion instead — see that node's comment — and Birdramon, the remaining cited parent, carries this Digimon's 2006 variant on this same line. Spirit; XV-mon Black spends stamina on Aero V-dramon and on its junk fall to TonosamaGekomon, and strength on Paildramon.",
       "evolutions": [
+        {
+          "to": "valdurmon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "conditions": [
+            {
+              "metric": "health.flightsClimbed",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 640,
+              "hint": "Lift the sky eagle above every peak"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.85,
+              "hint": "And let its aurora talons turn each blow"
+            }
+          ]
+        },
         {
           "to": "hououmon",
           "requiredEnergy": "spirit",
@@ -26421,6 +26795,147 @@
       "line": "penc-sw",
       "spriteFile": "Nezhamon",
       "comment": "US-167 orphan sweep (N-R Ultimate). Nezhamon on Wikimon is the lotus-prince war god of the Journey-to-the-West cast; this Saiyu Warriors line already crowns Sanzomon the pilgrim monk, so the sweep seats the martial prince one rung above him, a saint of the same myth, its ascent earned through long rest and steady training."
+    },
+    {
+      "id": "sakuyamon",
+      "displayName": "Sakuyamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "wanyamon",
+      "spriteFile": "Sakuyamon",
+      "comment": "The Renamon-line fox priestess. Wikimon's `Evolves From` bolds Taomon and Renamon (a Perfect with no node and a Child), so the drawable citation is Mach Gaogamon (Dα-247) — and Mach Gaogamon is `wanyamon`'s, the line US-166 already gathered the sister priestess Kuzuhamon onto (off Karatenmon). Placing Sakuyamon there keeps the two shrine-maiden forms on ONE line. Stamina; Sakuyamon X takes vitality off the same Perfect in this same edit."
+    },
+    {
+      "id": "sakuyamon_x",
+      "displayName": "Sakuyamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "wanyamon",
+      "spriteFile": "Sakuyamon_X",
+      "variant": "X",
+      "comment": "SITS ON ITS BASE FORM'S OWN PERFECT, the strong variant rule. Wikimon's `Evolves From` for Sakuyamon (X-Antibody) bolds only the plain Sakuyamon, an Ultimate `invalidStageTransition` refuses, so the antibody hangs where the plain Sakuyamon hangs — Mach Gaogamon on `wanyamon`. Vitality; the second of Mach Gaogamon's two priestess branches, distinct from Sakuyamon's stamina."
+    },
+    {
+      "id": "shagaramon",
+      "displayName": "Shagaramon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-sw",
+      "spriteFile": "Shagaramon",
+      "comment": "A Saiyu Warriors (Journey to the West) beast. Wikimon bolds Calamaramon (no node), and every other cited `Evolves From` — Cho·Hakkaimon, Huankunmon, Pandamon, Sagomon — is a Saiyu Warriors Perfect. Pandamon is `penc-sw`'s and takes the earth dragon here. `penc-sw` (Saiyu Warriors) has no Digitama in this pack, so Shagaramon is stranded-from-egg like every node on the line. Strength."
+    },
+    {
+      "id": "takutoumon",
+      "displayName": "Takutoumon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-sw",
+      "spriteFile": "Takutoumon",
+      "comment": "A Saiyu Warriors sword saint. Wikimon's `Evolves From` cites Xingtianmon, Sagomon and Sanzomon — all Saiyu Warriors Perfects — beside the off-line Beowolfmon/Bryweludramon. Xingtianmon is `penc-sw`'s and carries the twin-bladed warrior here. `penc-sw` (Saiyu Warriors) has no Digitama, so Takutoumon is stranded-from-egg like every node on the line. Strength."
+    },
+    {
+      "id": "xiangpengmon",
+      "displayName": "Xiangpengmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-sw",
+      "spriteFile": "Xiangpengmon",
+      "comment": "A Saiyu Warriors roc-warrior. Wikimon bolds Huankunmon (a Saiyu Warriors Perfect the roster wired to `dmc-v4`) and also cites Sagomon, which is `penc-sw`'s — so Sagomon keeps the roc on the Saiyu Warriors line proper. `penc-sw` (Saiyu Warriors) has no Digitama, so Xiangpengmon is stranded-from-egg like every node on the line. Strength."
+    },
+    {
+      "id": "siriusmon",
+      "displayName": "Siriusmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Siriusmon",
+      "comment": "Wikimon BOLDS Canoweissmon (Digimon Masters, Pendulum COLOR ZERO Virus Busters, Digimon RPG) as the star knight's `Evolves From`, and Canoweissmon is `penc-vb`'s — the Virus Busters line the whole Bemon -> Canoweissmon -> Regulusmon -> Siriusmon thread belongs to — so Siriusmon lands on its own line for nothing. Its other citations (Regulusmon, Metal Greymon, Gammamon) are off this thread or already spoken for. Strength."
+    },
+    {
+      "id": "slashangemon",
+      "displayName": "SlashAngemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "SlashAngemon",
+      "comment": "Wikimon bolds Shakkoumon (no node) for the blade angel and cites Holy Angemon, Asuramon, Giromon, Piccolomon and Knightmon among its Perfects. Holy Angemon and Knightmon are FULL — all four energies spent — and Seraphimon is an Ultimate, so Asuramon is the drawable holy-line Perfect: it is `penc-nsp`'s, the angel line Angewomon and Seraphimon already sit on, keeping SlashAngemon among the seraphim. Strength."
+    },
+    {
+      "id": "susanoomon",
+      "displayName": "Susanoomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "Susanoomon",
+      "comment": "**ITS `Evolves From` IS A JOGRESS OF TWO FRONTIER ULTIMATES**, the Cernumon shape: Wikimon bolds Kaiser Greymon and Magna Garurumon (with the Warrior Ten), both Ultimates `invalidStageTransition` refuses. Among its drawable Perfect citations only Superstarmon is a node, and it is `penc-me`'s, so the storm god is drawn one rung below on the Perfect that cites it (Superstarmon, Magnamon). Strength."
+    },
+    {
+      "id": "tlalocmon",
+      "displayName": "Tlalocmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Tlalocmon",
+      "comment": "**ITS `Evolves From` IS A JOGRESS OF THREE ULTIMATES**, the Cernumon/Mitamamon shape: Wikimon draws Tlalocmon from El Doradimon, Metal Etemon and Saber Leomon (Pendulum COLOR 1 Nature Spirits), all Ultimates `invalidStageTransition` refuses. Tonosamagekomon climbs into El Doradimon on `penc-wg`, so the Aztec rain god lands one rung below on that Perfect. `jogress.json` reserves the recipe, which is wired all the same. Stamina."
+    },
+    {
+      "id": "valdurmon",
+      "displayName": "Valdurmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "Valdurmon",
+      "comment": "A holy sky-eagle of the Norse pantheon. Wikimon bolds Falcomon (a Child) and cites Garudamon, Yatagaramon and Hououmon among its Perfects — all `penc-wg`'s, the Wind Guardians bird line. Yatagaramon (the three-legged crow) carries Valdurmon here, keeping the winged holy Digimon with the phoenix and the roc. Strength; Yatagaramon spends spirit on its Hououmon climb."
+    },
+    {
+      "id": "ulforcev-dramon_x",
+      "displayName": "UlforceV-dramon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-wg",
+      "spriteFile": "UlforceV-dramon_X",
+      "variant": "X",
+      "comment": "SITS ON ITS BASE FORM'S OWN PERFECT, the strong variant rule — an antibody rising from an antibody. Wikimon bolds only the plain Ulforce V-dramon (an Ultimate) for Ulforce V-dramon (X-Antibody), so it hangs where the base form hangs: Aero V-dramon on `penc-wg`, the V-mon Wind Guardians line that climbs into the blue Royal Knight. Vitality; Aero V-dramon spends stamina on Magnamon X and strength on its own Ulforce climb."
+    },
+    {
+      "id": "ultimatebrachimon",
+      "displayName": "UltimateBrachimon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v4",
+      "spriteFile": "UltimateBrachimon",
+      "comment": "A titan marine reptile. Wikimon bolds Brachimon (no node) and cites Triceramon, Metal Tyranomon, Mametyramon and others among its Perfects. Triceramon is `dmc-v4`'s, the dinosaur line, and carries the giant here — keeping UltimateBrachimon with the reptiles it evolves beside. Stamina; Triceramon spends strength on its DarkTyranomon-thread DarkDramon climb."
+    },
+    {
+      "id": "voltobautamon",
+      "displayName": "VoltoBautamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nso",
+      "spriteFile": "VoltoBautamon",
+      "comment": "**A JOGRESS whose parents on Wikimon are Vamdemon (a Perfect) and Piemon (an Ultimate)**, the Mastemon shape: because ONE parent is a Perfect, the puppet lord hangs directly off it as a legal Perfect -> Ultimate edge. Vamdemon is `penc-nso`'s, the Nightmare Soldiers demon line. `jogress.json` reserves the Vamdemon+Piemon recipe, which is wired all the same. Stamina; the fourth and last energy on Vamdemon, beside BelialVamdemon, GranDracumon and VenomVamdemon."
+    },
+    {
+      "id": "skullmammon_x",
+      "displayName": "SkullMammon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nso",
+      "spriteFile": "SkullMammon_X",
+      "variant": "X",
+      "comment": "SITS ON ITS BASE FORM'S OWN PERFECT, the strong variant rule. Wikimon bolds only the plain Skull Mammon (an Ultimate) for Skull Mammon (X-Antibody); the sole Perfect it cites is Mammon, which is `penc-nso`'s and already climbs into the base SkullMammon. So the antibody bone-mammoth hangs where its base form hangs. Stamina; Mammon spends vitality on AncientMegatheriumon and strength on its plain SkullMammon climb."
+    },
+    {
+      "id": "wargreymon_x",
+      "displayName": "WarGreymon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v3",
+      "spriteFile": "WarGreymon_X",
+      "variant": "X",
+      "comment": "AN ANTIBODY RISING FROM AN ANTIBODY. WarGreymon's base line runs through Metal Greymon on `dmc-v1`, which US-002 walks and no sweep may fork; but Wikimon BOLDS Metal Greymon (X-Antibody) for WarGreymon (X-Antibody), and MetalGreymon X is `dmc-v3`'s. So the X dragon rises from the X Champion, off the walked line entirely. Stamina; MetalGreymon X spends vitality on Omegamon X and strength on its ChaosDramon climb."
+    },
+    {
+      "id": "sleipmon_x",
+      "displayName": "Sleipmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "commandramon",
+      "spriteFile": "Sleipmon_X",
+      "variant": "X",
+      "comment": "**HAS NO BASE FORM ON DISK** — there is no `sleipmon` roster entry at all — so the strong variant rule cannot apply and it follows a cited Perfect directly. Wikimon cites Skull Baluchimon (Digital Monster X) as an `Evolves From` for Sleipmon (X-Antibody), the same Digital Monster X evolution partner; Skull Baluchimon is `commandramon`'s. Strength; Skull Baluchimon spends stamina on its ChaosDramon X climb."
+    },
+    {
+      "id": "yukinamon",
+      "displayName": "Yukinamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v3",
+      "spriteFile": "Yukinamon",
+      "comment": "Wikimon BOLDS Sekkamon (Digimon Alysion, Pendulum COLOR 7 Toho Braves) as the ice fox's `Evolves From`, and Sekkamon is `dmc-v3`'s, so Yukinamon lands on an existing line for nothing. Its other citations, Karakurumon and Marin Bullmon, are off this thread. Strength; Sekkamon spends spirit on its Ryugumon climb."
     }
   ]
 }
