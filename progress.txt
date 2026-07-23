@@ -5552,3 +5552,49 @@ The thirty, `Perfect -> Ultimate`:
   - BattleView.hitPoints(_:afterTurn:of:maxHitPoints:) is the pure "solid dash count" — assert the on-screen bar against it, no view graph needed (DashBarLayout.dashes renders the solid/outline split).
   - This story's AC has NO Simulator screenshot requirement (US-189's does). The HP bar is a pure DashBar pinned by tests.
 ---
+
+## 2026-07-23 - US-189: Agility decides dodges, and the dodger turns away
+- Each incoming swing now rolls a hit chance from both Agility stats before it can deal damage
+  (US-189). A lost roll is a DODGE: no HP lost, the defender turns aside.
+- Files changed:
+  - Sources/Battle.swift — BattleTurn gained `dodged: Bool = false` (defaulted, so every existing
+    BattleTurn(...) keeps its meaning); new `BattleAgility` bundle (player/opponent Agility +
+    HitRateCoefficients); `BattleEngine.hitChance(attackerAgility:defenderAgility:coefficients:)` —
+    base + weight*(atk-def), clamped floor...ceiling; `resolve` gained `agility: BattleAgility? = nil`
+    and, when non-nil, rolls `Double.random(in:0..<1)` against hitChance FIRST each turn — a miss
+    records a dodge turn (damage 0, HP unchanged) and passes the turn, a hit rolls damage as before.
+  - Sources/BattleView.swift — `animation(for:during:landed:)` returns .idle (walk) on a dodge, never
+    hurt; new static `faces(_:during:landed:)` flips the DEFENDER to `!faces(side)` at the impact
+    instant of a dodge only; instance `faces(for:)` reads beat/hasLanded; arena uses it for both
+    sprites' `flipped:`.
+  - Sources/MainScreenModel.swift — finishBattleRound builds BattleAgility from each side's base
+    Agility (ConsumptionConfig.stats(for: stage)?.baseAgility) and passes it to resolve; nil (no
+    dodges) only if a stage has no stats.
+  - Tests/BattleTests.swift — BattleAgilityDodgeTests (9 tests): AC3 formula (equal->base, monotonic
+    decreasing in defender / increasing in attacker, clamped in [floor,ceiling]), forced-miss dodge
+    with no HP lost, forced-hit no-dodge, back-compat no-agility never dodges, and the face-turn +
+    keep-walking. Uses a private ConstantGenerator.
+- VERIFIED: build green; full suite 2565 tests, 0 failures (Series 11 46mm, +9 over US-188's 2556).
+  AC4 screenshot via a TEMP `-battleDodgeProbe` (resolve + all-miss generator, then removed): arena
+  showed Greymon (opponent) facing the SAME way as the attacking Agumon — i.e. flipped from its
+  normal leftward face-off heading, so turned away.
+- **Learnings for future iterations:**
+  - **A ConstantGenerator(value: 0) HANGS Int.random(in:using:).** `Int.random`'s rejection sampling
+    keeps drawing the same rejected 0 forever (99% CPU, no timeout). This cost a 24-minute hung test
+    run. Use word `1` instead: it reads as ~0 for `Double.random(in:0..<1)` (so still forces a hit)
+    AND terminates `Int.random` on the first draw. `.max` is safe (the float random takes one draw,
+    no loop) and forces a MISS (~0.9999 >= any hit chance since ceiling<1).
+  - **The dodge roll is the FIRST draw of a turn, damage the second — and ONLY when `agility` is
+    non-nil.** Passing nil draws neither, so every seeded battle test predating US-189 rolls the exact
+    same numbers. This is the same defaulted-optional back-compat seam US-188 used for HP. Any future
+    battle change that adds a per-turn draw MUST keep the nil-agility / default path drawless or it
+    shifts every pinned seed.
+  - **HitRateCoefficients + the whole stageStats table were ALREADY shipped (US-170/US-186) and
+    tested by ConsumptionConfigTests.** US-189 read them; it authored no config. US-190 (element
+    damage: ElementDamageMultipliers is likewise already in the struct + consumption.json), US-191/192
+    (training bonuses + trainingCap on StageStats) should also READ, not re-author.
+  - **A leftover system alert (notification permission) from a PREVIOUS killed demo app persists on a
+    sim device and covers the next launch's screenshot.** `-noNotificationPrompt` suppresses the app's
+    OWN ask (DEBUG only) but not a stale alert already on screen. Fix: screenshot on a CLEAN device
+    that never showed it, not the one a prior iteration left dirty.
+---

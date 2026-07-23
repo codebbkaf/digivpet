@@ -1116,3 +1116,177 @@ final class BattleDashHPBarTests: XCTestCase {
         XCTAssertEqual(report.maxHitPoints(.opponent), BattleEngine.startingHitPoints)
     }
 }
+
+// MARK: - US-189: Agility decides dodges, and the dodger turns away
+
+/// A generator that always returns the same word, for rigging a battle's rolls (US-189 AC4).
+///
+/// `.max` makes every `Double.random(in: 0..<1)` land just under 1 — above any hit chance, since the
+/// ceiling is below 1 — so every swing MISSES and the whole fight is dodges. `1` makes every draw ~0,
+/// below any hit chance (the floor is above 0), so every swing LANDS. Either way the dice are removed
+/// from the picture and only the Agility path is under test.
+///
+/// `1` and not `0`: a WORD of 0 makes `Int.random`'s rejection sampling spin forever (it keeps drawing
+/// the same rejected 0), whereas a word of 1 both reads as ~0 for the `Double` hit roll and terminates
+/// the damage roll's `Int.random` on its first draw.
+private struct ConstantGenerator: RandomNumberGenerator {
+    let value: UInt64
+    func next() -> UInt64 { value }
+}
+
+/// The Agility hit-chance formula and the dodge it drives (US-189).
+///
+/// The formula's monotonicity and clamping are pinned directly (AC3), the dodge's "no HP lost" and
+/// the face-turn against rigged rolls (AC2), since a Simulator screenshot can only ever catch one
+/// instant of a fight the dice decided.
+final class BattleAgilityDodgeTests: XCTestCase {
+    /// The shipped coefficients, so the test asserts against the numbers the game actually fights with.
+    private let coefficients = HitRateCoefficients(base: 0.85, agilityWeight: 0.03,
+                                                   floor: 0.30, ceiling: 0.98)
+
+    private func chance(attacker: Int, defender: Int) -> Double {
+        BattleEngine.hitChance(attackerAgility: attacker, defenderAgility: defender,
+                               coefficients: coefficients)
+    }
+
+    // MARK: AC3 — the formula
+
+    /// Equal Agility gives exactly the base chance (the config's base sits inside the band, so nothing
+    /// is clamped there).
+    func testEqualAgilityGivesTheBaseChance() {
+        for agility in 0...20 {
+            XCTAssertEqual(chance(attacker: agility, defender: agility), coefficients.base,
+                           accuracy: 1e-9, "equal Agility is the base chance, whatever the level")
+        }
+    }
+
+    /// A more agile DEFENDER is harder to hit: the chance never rises as the defender's Agility rises,
+    /// and inside the band it strictly falls.
+    func testHitChanceDecreasesAsTheDefenderGrowsMoreAgile() {
+        var strictlyFellSomewhere = false
+        var previous = chance(attacker: 10, defender: 0)
+        for defender in 1...40 {
+            let current = chance(attacker: 10, defender: defender)
+            XCTAssertLessThanOrEqual(current, previous,
+                                     "a more agile defender is never easier to hit")
+            if current < previous { strictlyFellSomewhere = true }
+            previous = current
+        }
+        XCTAssertTrue(strictlyFellSomewhere, "and inside the band it genuinely falls, not just flat")
+    }
+
+    /// A more agile ATTACKER lands more often: the chance never falls as the attacker's Agility rises,
+    /// and inside the band it strictly climbs.
+    func testHitChanceIncreasesAsTheAttackerGrowsMoreAgile() {
+        var strictlyRoseSomewhere = false
+        var previous = chance(attacker: 0, defender: 10)
+        for attacker in 1...40 {
+            let current = chance(attacker: attacker, defender: 10)
+            XCTAssertGreaterThanOrEqual(current, previous,
+                                        "a more agile attacker never lands less often")
+            if current > previous { strictlyRoseSomewhere = true }
+            previous = current
+        }
+        XCTAssertTrue(strictlyRoseSomewhere, "and inside the band it genuinely climbs")
+    }
+
+    /// Nothing is ever a guaranteed hit or a guaranteed dodge: even the most lopsided Agility gap stays
+    /// strictly inside `floor...ceiling`, both of which are off 0 and 1.
+    func testHitChanceIsClampedInsideFloorAndCeiling() {
+        XCTAssertGreaterThan(coefficients.floor, 0, "a floor of 0 would make a foe untouchable")
+        XCTAssertLessThan(coefficients.ceiling, 1, "a ceiling of 1 would make a hit a certainty")
+
+        // A wildly more agile attacker is clamped to the ceiling, not sent past it.
+        XCTAssertEqual(chance(attacker: 1000, defender: 0), coefficients.ceiling, accuracy: 1e-9)
+        // A wildly more agile defender is clamped to the floor, not sent below it.
+        XCTAssertEqual(chance(attacker: 0, defender: 1000), coefficients.floor, accuracy: 1e-9)
+
+        for attacker in 0...60 {
+            for defender in 0...60 {
+                let c = chance(attacker: attacker, defender: defender)
+                XCTAssertGreaterThanOrEqual(c, coefficients.floor)
+                XCTAssertLessThanOrEqual(c, coefficients.ceiling)
+            }
+        }
+    }
+
+    // MARK: AC1/AC2 — dodges in a resolved battle
+
+    /// A missed swing is a DODGE: the defender loses no HP, the turn is flagged `dodged`, and — since
+    /// nobody ever lands — the fight runs to the turn cap with every combatant still on full health.
+    func testAForcedMissIsADodgeThatCostsNoHitPoints() {
+        var generator = ConstantGenerator(value: .max)
+        let agility = BattleAgility(player: 5, opponent: 5, coefficients: coefficients)
+        let report = BattleEngine.resolve(playerPower: 30, opponentPower: 20,
+                                          playerMaxHitPoints: 5, opponentMaxHitPoints: 5,
+                                          agility: agility, using: &generator)
+
+        XCTAssertEqual(report.turns.count, BattleEngine.maximumTurns,
+                       "with every swing dodged nobody falls, so the fight hits the turn cap")
+        for turn in report.turns {
+            XCTAssertTrue(turn.dodged, "a missed swing is a dodge")
+            XCTAssertEqual(turn.damage, 0, "a dodge deals no damage")
+            XCTAssertFalse(turn.isKnockout, "a dodge never ends a battle")
+            // The defender still stands on its full pool — no HP was ever lost.
+            XCTAssertEqual(turn.defenderRemainingHitPoints, 5)
+        }
+    }
+
+    /// The mirror: with every roll below the hit chance nobody dodges, the fight lands blow after blow
+    /// exactly as it did before dodges existed, and ends on a real knockout.
+    func testAForcedHitNeverDodges() {
+        var generator = ConstantGenerator(value: 1)
+        let agility = BattleAgility(player: 5, opponent: 5, coefficients: coefficients)
+        let report = BattleEngine.resolve(playerPower: 30, opponentPower: 20,
+                                          agility: agility, using: &generator)
+
+        XCTAssertFalse(report.turns.contains { $0.dodged }, "no roll below the chance is a dodge")
+        XCTAssertEqual(report.turns.last?.isKnockout, true, "landed blows still end in a knockout")
+    }
+
+    /// Back-compat: a battle resolved with NO agility never dodges — the pre-US-189 always-lands model,
+    /// so the seeded outcomes every earlier test pins are untouched.
+    func testWithoutAgilityABattleNeverDodges() {
+        for seed in UInt64(0)..<40 {
+            var generator = SeededGenerator(seed: seed)
+            let report = BattleEngine.resolve(playerPower: 34, opponentPower: 30, using: &generator)
+            XCTAssertFalse(report.turns.contains { $0.dodged },
+                           "a fight resolved without agility has no dodges")
+        }
+    }
+
+    // MARK: AC2 — the defender turns away
+
+    /// On a dodge the defender flips to face the OTHER way at the impact instant, and only then: a
+    /// flipped walk frame is the flinch-aside. The attacker never turns, and a turn that isn't a dodge
+    /// leaves both facings exactly as the plain face-off.
+    func testTheDodgingDefenderTurnsAwayAtTheDodgeInstant() {
+        let dodge = BattleTurn(attacker: .player, damage: 0, defenderRemainingHitPoints: 5, dodged: true)
+
+        // Before the shot arrives the defender still faces the attacker, as in the stare-down.
+        XCTAssertEqual(BattleView.faces(.opponent, during: dodge, landed: false),
+                       BattleView.faces(.opponent), "no turn-away before the dodge instant")
+        // At the impact instant it spins to face the other direction.
+        XCTAssertEqual(BattleView.faces(.opponent, during: dodge, landed: true),
+                       !BattleView.faces(.opponent), "the dodging defender turns away")
+        // The attacker is unaffected — it swung, it did not dodge.
+        XCTAssertEqual(BattleView.faces(.player, during: dodge, landed: true),
+                       BattleView.faces(.player), "the attacker keeps facing the fight")
+
+        // A landed (non-dodge) blow leaves the face-off untouched, dodges being the only thing that
+        // turns a combatant around.
+        let hit = BattleTurn(attacker: .player, damage: 3, defenderRemainingHitPoints: 2)
+        XCTAssertEqual(BattleView.faces(.opponent, during: hit, landed: true),
+                       BattleView.faces(.opponent), "a landed blow never turns the defender away")
+    }
+
+    /// And a dodging defender keeps WALKING rather than flinching: no hit landed, so the hurt loop is
+    /// never played, even at the impact instant.
+    func testTheDodgingDefenderKeepsWalkingRatherThanFlinching() {
+        let dodge = BattleTurn(attacker: .player, damage: 0, defenderRemainingHitPoints: 5, dodged: true)
+        XCTAssertEqual(BattleView.animation(for: .opponent, during: dodge, landed: true), .idle,
+                       "a dodge shows the walk loop, not the hurt frames")
+        XCTAssertEqual(BattleView.animation(for: .player, during: dodge, landed: true), .pose(.attack),
+                       "the attacker still swings")
+    }
+}

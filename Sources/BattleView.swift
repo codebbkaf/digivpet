@@ -172,12 +172,12 @@ struct BattleView: View {
                         DigimonSpriteView(stage: bout.player.spriteStage, name: bout.player.spriteFile,
                                           animation: animation(for: .player),
                                           scale: BattleArenaLayout.spriteScale,
-                                          flipped: Self.faces(.player))
+                                          flipped: faces(for: .player))
                         Spacer(minLength: 0)
                         DigimonSpriteView(stage: bout.opponent.spriteStage, name: bout.opponent.spriteFile,
                                           animation: animation(for: .opponent),
                                           scale: BattleArenaLayout.spriteScale,
-                                          flipped: Self.faces(.opponent))
+                                          flipped: faces(for: .opponent))
                     }
                     .padding(.horizontal, BattleArenaLayout.bezelInset)
 
@@ -448,6 +448,17 @@ struct BattleView: View {
         return Self.animation(for: side, during: bout.report.turns[index], landed: hasLanded)
     }
 
+    /// Which way `side` faces on screen right now: the face-off heading in the intro and result, and
+    /// during an exchange whatever `faces(_:during:landed:)` says — which turns a dodging defender
+    /// aside at the impact instant (US-189). Reads `hasLanded` for the same reason `animation(for:)`
+    /// does, so the flip happens when the slipped shot arrives rather than when the turn opens.
+    private func faces(for side: BattleSide) -> Bool {
+        guard case .turn(let index) = beat, index < bout.report.turns.count else {
+            return Self.faces(side)
+        }
+        return Self.faces(side, during: bout.report.turns[index], landed: hasLanded)
+    }
+
     /// `side`'s MAX hit points — the length of its HP dash bar (US-188), read off the resolved report
     /// so a 5-HP Child and a 12-HP Ultimate draw bars of their own length.
     private func maxHitPoints(_ side: BattleSide) -> Int {
@@ -485,6 +496,22 @@ struct BattleView: View {
         side == .player
     }
 
+    /// Which way `side` is drawn DURING the exchange at hand — the standing face-off, except that a
+    /// dodging defender turns away at the impact instant (US-189).
+    ///
+    /// On a dodged swing the defender flips to face the OTHER direction the moment the shot arrives
+    /// (`landed`), so `!faces(side)` — the player, who normally faces right into the opponent, spins
+    /// to face left off the arena, and the leftward-facing opponent spins to face right. That flipped
+    /// walk frame IS the flinch-aside the story asks for, reusing the pack's art with no new pose.
+    /// Everyone else — the attacker, and either side before the shot lands — keeps its face-off
+    /// heading, so this reduces to `faces(_:)` for every turn that isn't a dodge.
+    static func faces(_ side: BattleSide, during turn: BattleTurn, landed: Bool) -> Bool {
+        if turn.dodged && landed && side == turn.attacker.other {
+            return !faces(side)
+        }
+        return faces(side)
+    }
+
     /// The PRD's frame assignment, as a pure function: the attacker SWINGS — the attack frame (11)
     /// looped against walk1 (US-102) for the whole exchange, before and after impact alike — and the
     /// defender stands in its idle loop until the shot lands, then plays the hurt loop (9 <-> 10).
@@ -500,6 +527,10 @@ struct BattleView: View {
     static func animation(for side: BattleSide, during turn: BattleTurn,
                           landed: Bool) -> SpriteAnimation {
         guard turn.attacker != side else { return .pose(.attack) }
+        // A DODGED swing never touches the defender (US-189), so it keeps its walk loop rather than
+        // flinching into the hurt frames — the dodge reads through the face-turn in `faces`, not a
+        // recoil. Only a landed blow plays hurt, and only from the impact instant on.
+        guard !turn.dodged else { return .idle }
         return landed ? .hurt : .idle
     }
 

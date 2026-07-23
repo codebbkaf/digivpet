@@ -2214,11 +2214,25 @@ final class MainScreenModel: ObservableObject {
         let opponentMaxHP = config.stats(for: round.opponent.node.stage)?.baseHP
             ?? BattleEngine.startingHitPoints
 
+        // Each side's Agility decides how many of the other's swings it slips (US-189). Both come
+        // straight off the stage stat table, so a faster stage dodges more; nil when either stage has
+        // no stats — an edge no playable Digimon hits — in which case the fight falls back to the
+        // pre-dodge always-lands model rather than crediting one side an untouchable Agility of zero.
+        let agility: BattleAgility?
+        if let playerAgility = config.stats(for: state.stage)?.baseAgility,
+           let opponentAgility = config.stats(for: round.opponent.node.stage)?.baseAgility {
+            agility = BattleAgility(player: playerAgility, opponent: opponentAgility,
+                                    coefficients: config.hitRate)
+        } else {
+            agility = nil
+        }
+
         var generator = round.generator
         let report = BattleEngine.resolve(playerPower: matchup.playerPower,
                                           opponentPower: matchup.opponentPower,
                                           playerMaxHitPoints: playerMaxHP,
                                           opponentMaxHitPoints: opponentMaxHP,
+                                          agility: agility,
                                           using: &generator)
         // The win's meat drop (US-175), rolled off the SAME generator the fight was resolved from so
         // the seed pins it too, and credited to the global larder here rather than in `finishBattle`

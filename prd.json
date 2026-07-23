@@ -951,8 +951,8 @@
         "Typecheck passes"
       ],
       "priority": 50,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "hitChance formula (BattleEngine.hitChance) reads both Agilities and the HitRateCoefficients that already ship in consumption.json (base .85, weight .03, floor .30, ceiling .98): equal Agility -> base, a more-agile defender lowers it, clamped floor<..<ceiling so nothing is guaranteed. resolve() gained an optional BattleAgility (nil = pre-dodge always-lands, no extra draws, seeds unchanged); a lost roll is a dodge turn (damage 0, no HP lost, dodged=true). BattleView flips the dodging defender to face away at the impact instant (faces(_:during:landed:)) and keeps it walking rather than flinching. finishBattleRound feeds each side its base Agility. Tests: BattleAgilityDodgeTests (9) pin monotonicity/clamp/base-at-equal, forced miss=dodge/no-HP, forced hit=no-dodge, back-compat no-dodge, and the face-turn. Full suite 2565, 0 failures. AC4: -battleDodgeProbe (temp, removed) resolved a dodge via an all-miss generator; screenshot showed Greymon turned to face away (same direction as the attacker, i.e. flipped from the face-off)."
     },
     {
       "id": "US-190",

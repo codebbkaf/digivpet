@@ -51,7 +51,14 @@ struct BattleTurn: Equatable {
     let damage: Int
     /// The defender's hit points after taking `damage`. Zero means this turn ended the battle.
     let defenderRemainingHitPoints: Int
+    /// Whether the defender DODGED this swing (US-189): the attacker's Agility lost the hit-chance
+    /// roll to the defender's, so `damage` is 0, no HP was lost, and the defender turns aside at the
+    /// impact instant instead of flinching. Defaulted false so a swing that simply landed — every
+    /// turn built before dodges existed — needs no mention of it, and the memberwise init gives every
+    /// existing `BattleTurn(...)` the old meaning unchanged.
+    var dodged: Bool = false
 
+    /// A dodge is never a knockout — nothing landed, so the defender keeps the HP it had.
     var isKnockout: Bool { defenderRemainingHitPoints == 0 }
 }
 
@@ -76,6 +83,24 @@ struct BattleReport: Equatable {
     /// The MAX hit points on `side`, the total the HP dash bar is drawn to.
     func maxHitPoints(_ side: BattleSide) -> Int {
         side == .player ? playerMaxHitPoints : opponentMaxHitPoints
+    }
+}
+
+/// The two combatants' Agility and the dodge formula's coefficients, handed to `BattleEngine.resolve`
+/// so every swing can roll whether it lands (US-189).
+///
+/// Bundled into one optional argument rather than threaded as three loose parameters so a caller that
+/// does not care about dodges — every test and preview that predates them — passes `nil` and gets the
+/// old always-hits battle back, drawing no extra randomness and shifting no seed. When it IS supplied,
+/// each incoming attack rolls `hitChance` and a lost roll is a dodge.
+struct BattleAgility: Equatable {
+    let player: Int
+    let opponent: Int
+    let coefficients: HitRateCoefficients
+
+    /// This side's Agility, indexed the same way the engine's power and hit-point arrays are.
+    fileprivate func agility(_ side: BattleSide) -> Int {
+        side == .player ? player : opponent
     }
 }
 
@@ -126,6 +151,23 @@ enum BattleEngine {
         return max(minimumDamage, (damageScale * attack) / (attack + defence))
     }
 
+    /// The chance an attack from `attackerAgility` LANDS on `defenderAgility`, in 0...1 (US-189).
+    ///
+    /// `base` at equal Agility, moved by `agilityWeight` for every point the attacker is more (or the
+    /// defender less) agile, then clamped to `coefficients.floor...ceiling`. Because the config floors
+    /// above 0 and ceils below 1, nothing is ever a guaranteed hit or a guaranteed dodge — a fast
+    /// Digimon slips more blows but never becomes untouchable, and a clumsy one still lands sometimes.
+    ///
+    /// PURE and the whole formula the loop below rolls against, so its monotonicity and clamping are
+    /// asserted directly (US-189 AC3) without resolving a battle: strictly decreasing in the defender's
+    /// Agility and increasing in the attacker's while inside the band, and flat once clamped.
+    static func hitChance(attackerAgility: Int, defenderAgility: Int,
+                          coefficients: HitRateCoefficients) -> Double {
+        let raw = coefficients.base
+            + coefficients.agilityWeight * Double(attackerAgility - defenderAgility)
+        return min(coefficients.ceiling, max(coefficients.floor, raw))
+    }
+
     /// Fights the battle out and reports it.
     ///
     /// The PLAYER swings first, always. A battle is something the user chose to start, and losing
@@ -135,6 +177,7 @@ enum BattleEngine {
         opponentPower: Int,
         playerMaxHitPoints: Int = startingHitPoints,
         opponentMaxHitPoints: Int = startingHitPoints,
+        agility: BattleAgility? = nil,
         using generator: inout G
     ) -> BattleReport {
         let power = [max(1, playerPower), max(1, opponentPower)]
@@ -146,6 +189,25 @@ enum BattleEngine {
 
         while turns.count < maximumTurns {
             let defender = attacker.other
+
+            // The Agility dodge roll (US-189), FIRST — a dodge spends no damage draw, so the whole
+            // hit/damage sequence per turn is one draw when the shot is slipped and two when it lands.
+            // With `agility` nil (no dodges) neither draw for the hit is taken, so a battle resolved
+            // the pre-US-189 way rolls exactly the same numbers off the same seed as before.
+            if let agility {
+                let chance = hitChance(attackerAgility: agility.agility(attacker),
+                                       defenderAgility: agility.agility(defender),
+                                       coefficients: agility.coefficients)
+                if Double.random(in: 0..<1, using: &generator) >= chance {
+                    // Dodged: no HP lost, the defender still standing on the hit points it had.
+                    turns.append(BattleTurn(attacker: attacker, damage: 0,
+                                            defenderRemainingHitPoints: hitPoints[defender.index],
+                                            dodged: true))
+                    attacker = defender
+                    continue
+                }
+            }
+
             let ceiling = maximumDamage(attacker: power[attacker.index],
                                         defender: power[defender.index])
             let damage = Int.random(in: minimumDamage...ceiling, using: &generator)
