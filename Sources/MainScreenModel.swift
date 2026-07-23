@@ -2207,9 +2207,18 @@ final class MainScreenModel: ObservableObject {
             training: result
         )
 
+        // Each side's HP dash bar is drawn to its per-stage base HP (US-188), so a Child fights on
+        // five dashes and an Ultimate on twelve; a stage the table omits falls back to the flat pool.
+        let config = ConsumptionConfig.bundled
+        let playerMaxHP = config.stats(for: state.stage)?.baseHP ?? BattleEngine.startingHitPoints
+        let opponentMaxHP = config.stats(for: round.opponent.node.stage)?.baseHP
+            ?? BattleEngine.startingHitPoints
+
         var generator = round.generator
         let report = BattleEngine.resolve(playerPower: matchup.playerPower,
                                           opponentPower: matchup.opponentPower,
+                                          playerMaxHitPoints: playerMaxHP,
+                                          opponentMaxHitPoints: opponentMaxHP,
                                           using: &generator)
         // The win's meat drop (US-175), rolled off the SAME generator the fight was resolved from so
         // the seed pins it too, and credited to the global larder here rather than in `finishBattle`
@@ -2219,7 +2228,6 @@ final class MainScreenModel: ObservableObject {
         // saves alongside the win/loss record, exactly as the energy cost is.
         var meatGained = 0
         if report.playerWon, let profile {
-            let config = ConsumptionConfig.bundled
             meatGained = MeatReward.rolled(from: config.meatPerBattleWin,
                                            current: profile.meat, cap: config.meatCap,
                                            using: &generator)

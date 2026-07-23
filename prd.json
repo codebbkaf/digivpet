@@ -935,8 +935,8 @@
         "Typecheck passes"
       ],
       "priority": 49,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "BattleEngine now starts each side on its OWN pool: resolve() gained playerMaxHitPoints/opponentMaxHitPoints (defaulted to startingHitPoints, so every pre-US-188 caller/test/preview is untouched), floored at 1, and BattleReport carries both totals plus a maxHitPoints(side) accessor. MainScreenModel.finishBattleRound feeds each side its per-stage baseHP from ConsumptionConfig (Child 5, Ultimate 12; falls back to the flat 10 for a stage the table omits). BattleView replaced the '10 - 10' text readout with two red HP DashBars (US-171), player-left/opponent-right, total = max HP, solid = current HP, no number; BattleView.hitPoints(afterTurn:) gained a maxHitPoints param (defaulted) so the solid count derives from each side's own max. New BattleDashHPBarTests: the literal AC (5 HP taking 2 then 3 -> 3 -> 0 dashes, loses; DashBarLayout renders 3-of-5 then 0-of-5), resolve carries each side's own max and the felled bar ends the fight, and the no-arg resolve still defaults both to the flat pool. Build green, full suite 2556 tests 0 failures (2553 + 3). No Simulator screenshot in this story's AC; the bar length/solid-count is a pure DashBar the tests pin directly."
     },
     {
       "id": "US-189",

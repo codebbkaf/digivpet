@@ -63,7 +63,20 @@ struct BattleReport: Equatable {
     let turns: [BattleTurn]
     let winner: BattleSide
 
+    /// Each side's MAX hit points — the length of its HP dash bar (US-188). Per-Digimon since
+    /// US-188: a 5-HP Child shows five dashes and a 12-HP Ultimate twelve, so the bar's total reads
+    /// the combatant's health at a glance. Defaulted to `BattleEngine.startingHitPoints` so a bout
+    /// hand-built by a test or a preview that only cares about the frames still has a full bar to
+    /// draw without naming a stat.
+    var playerMaxHitPoints: Int = BattleEngine.startingHitPoints
+    var opponentMaxHitPoints: Int = BattleEngine.startingHitPoints
+
     var playerWon: Bool { winner == .player }
+
+    /// The MAX hit points on `side`, the total the HP dash bar is drawn to.
+    func maxHitPoints(_ side: BattleSide) -> Int {
+        side == .player ? playerMaxHitPoints : opponentMaxHitPoints
+    }
 }
 
 /// Turn-based battle resolution (PRD FR-32).
@@ -72,11 +85,12 @@ struct BattleReport: Equatable {
 /// powers always produce the same `BattleReport`, which is what US-031's "deterministic winner"
 /// test asserts and what makes the whole thing testable without a watch.
 ///
-/// THE MODEL: both sides start on the same hit points, and `BattlePower` decides how hard each one
-/// HITS rather than how much it can take. That is deliberate — a shared health pool keeps every
-/// battle roughly the same LENGTH (a handful of exchanges, which is all the screen has patience to
-/// animate) while power still decides who is likely to get there first. Scaling hit points instead
-/// would make a strong Digimon's battles drag on precisely because it is strong.
+/// THE MODEL: each side starts on its OWN max hit points (US-188) — the per-stage `baseHP` from
+/// `ConsumptionConfig`, so a 5-HP Child and a 12-HP Ultimate carry visibly different HP bars — while
+/// `BattlePower` still decides how hard each one HITS. Before US-188 both sides shared a flat pool,
+/// which kept every battle the same length; the per-Digimon pool is the price of the dash HP bar
+/// reading a combatant's real health. `resolve` still defaults both sides to `startingHitPoints`, so
+/// a caller that only wants the power model — every test predating US-188 — keeps the old behaviour.
 ///
 /// The damage roll is `1...maximumDamage`, and `maximumDamage` is the attacker's SHARE of the two
 /// powers rather than its absolute power. So it is the RATIO that matters: an evenly matched pair
@@ -119,10 +133,14 @@ enum BattleEngine {
     static func resolve<G: RandomNumberGenerator>(
         playerPower: Int,
         opponentPower: Int,
+        playerMaxHitPoints: Int = startingHitPoints,
+        opponentMaxHitPoints: Int = startingHitPoints,
         using generator: inout G
     ) -> BattleReport {
         let power = [max(1, playerPower), max(1, opponentPower)]
-        var hitPoints = [startingHitPoints, startingHitPoints]
+        // Floored at 1 so a hand-built 0 (or a stage with no stats) still terminates on the first
+        // landed hit rather than starting the loser already dead — a 0-HP bar is a battle with no bar.
+        var hitPoints = [max(1, playerMaxHitPoints), max(1, opponentMaxHitPoints)]
         var turns: [BattleTurn] = []
         var attacker = BattleSide.player
 
@@ -138,7 +156,9 @@ enum BattleEngine {
 
             if hitPoints[defender.index] == 0 {
                 return BattleReport(playerPower: playerPower, opponentPower: opponentPower,
-                                    turns: turns, winner: attacker)
+                                    turns: turns, winner: attacker,
+                                    playerMaxHitPoints: max(1, playerMaxHitPoints),
+                                    opponentMaxHitPoints: max(1, opponentMaxHitPoints))
             }
             attacker = defender
         }
@@ -153,7 +173,9 @@ enum BattleEngine {
             winner = power[0] > power[1] ? .player : .opponent
         }
         return BattleReport(playerPower: playerPower, opponentPower: opponentPower,
-                            turns: turns, winner: winner)
+                            turns: turns, winner: winner,
+                            playerMaxHitPoints: max(1, playerMaxHitPoints),
+                            opponentMaxHitPoints: max(1, opponentMaxHitPoints))
     }
 }
 

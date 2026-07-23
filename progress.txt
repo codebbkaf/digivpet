@@ -5537,3 +5537,18 @@ The thirty, `Perfect -> Ultimate`:
   - `BattleStat` is a plain (no-associated-value) enum, so it's Hashable for free — `ForEach(...,
     id: \.self)` needs no manual conformance.
 ---
+
+## 2026-07-23 - US-188: Dash-style HP bar in battle
+- Per-Digimon max HP in the engine + a red HP DashBar per combatant in BattleView.
+- Files changed:
+  - Sources/Battle.swift — BattleReport gained playerMaxHitPoints/opponentMaxHitPoints (defaulted to startingHitPoints) and a maxHitPoints(side) accessor; BattleEngine.resolve gained playerMaxHitPoints/opponentMaxHitPoints params (defaulted, floored at 1); model doc updated to per-Digimon pool.
+  - Sources/BattleView.swift — replaced the "N — N" text HP readout with two red HP DashBars (player left / opponent right, total = max HP, solid = current HP, no number); added maxHitPoints(side) + hpBar(for:); BattleView.hitPoints(afterTurn:) gained a defaulted maxHitPoints param.
+  - Sources/MainScreenModel.swift — finishBattleRound feeds each side its per-stage baseHP from ConsumptionConfig; removed the now-redundant inner `let config`.
+  - Tests/BattleTests.swift — new BattleDashHPBarTests (3 tests).
+- Verified: build green; full suite 2556 tests, 0 failures (2553 + 3).
+- **Learnings for future iterations:**
+  - BattleReport and BattleEngine.resolve are back-compat via DEFAULTED stored props / params — a Swift synthesized memberwise init gives a default to any stored property with an initial value, so adding fields did NOT churn the ~15 existing BattleReport(...) / resolve(...) call sites. Reuse this pattern for US-189/190/191 rather than threading new required args everywhere.
+  - Per-stage baseHP lives in ConsumptionConfig.stats(for: Stage)?.baseHP (Baby I 3 ... Ultimate 12). Effective HP = base only for now; US-191 training bonuses will add to it, and battle (US-188/189/190) reads the effective value.
+  - BattleView.hitPoints(_:afterTurn:of:maxHitPoints:) is the pure "solid dash count" — assert the on-screen bar against it, no view graph needed (DashBarLayout.dashes renders the solid/outline split).
+  - This story's AC has NO Simulator screenshot requirement (US-189's does). The HP bar is a pure DashBar pinned by tests.
+---

@@ -1042,3 +1042,77 @@ final class BattlePacingTests: XCTestCase {
         XCTAssertEqual(paced.flightDuration, 0.03, accuracy: 0.0001)
     }
 }
+
+// MARK: - US-188: the dash-style HP bar in battle
+
+/// The HP dash bar and the per-Digimon health pool it draws (US-188).
+///
+/// The bar's total is a combatant's MAX HP and its solid count the HP it has left, so a landed hit
+/// knocks dashes off and reaching zero dashes is the loss. Both the engine's per-side pool and the
+/// view's derived solid count are pinned here, since neither is something a Simulator screenshot can
+/// prove on its own.
+final class BattleDashHPBarTests: XCTestCase {
+
+    /// AC1/AC2, the literal AC scenario: a 5-HP combatant taking 2 then 3 damage reaches 0 and loses,
+    /// and the bar's SOLID count (`BattleView.hitPoints`) tracks the HP left after each exchange —
+    /// 5 → 3 → 0. Hand-built rather than seeded so the "2 then 3" the AC names is exact.
+    func testAFiveHPCombatantTakingTwoThenThreeReachesZeroAndLoses() {
+        let turns = [
+            BattleTurn(attacker: .opponent, damage: 2, defenderRemainingHitPoints: 3),
+            BattleTurn(attacker: .opponent, damage: 3, defenderRemainingHitPoints: 0),
+        ]
+        let report = BattleReport(playerPower: 10, opponentPower: 20, turns: turns, winner: .opponent,
+                                  playerMaxHitPoints: 5, opponentMaxHitPoints: 5)
+
+        // The bar's total is the max HP, and its solid count follows the HP left each exchange.
+        XCTAssertEqual(report.maxHitPoints(.player), 5, "the bar is drawn to five dashes")
+        XCTAssertEqual(BattleView.hitPoints(.player, afterTurn: 0, of: turns, maxHitPoints: 5), 3,
+                       "after a 2-damage hit, three dashes solid")
+        XCTAssertEqual(BattleView.hitPoints(.player, afterTurn: 1, of: turns, maxHitPoints: 5), 0,
+                       "after a 3-damage hit, none")
+
+        // Zero dashes is the loss.
+        XCTAssertEqual(report.turns.last?.isKnockout, true)
+        XCTAssertFalse(report.playerWon, "the side that ran out of dashes lost")
+
+        // And that solid count really is what the DashBar renders: 3 of 5 solid, then 0 of 5.
+        XCTAssertEqual(DashBarLayout.dashes(filled: 3, total: 5).filter { $0 == .solid }.count, 3)
+        XCTAssertEqual(DashBarLayout.dashes(filled: 0, total: 5), Array(repeating: .outline, count: 5))
+    }
+
+    /// The engine really does start each side on ITS OWN pool: a report resolved with a 5-HP player
+    /// against a 12-HP opponent carries both totals, and the player's remaining HP tracked down from 5
+    /// matches every turn's `defenderRemainingHitPoints`.
+    func testResolveCarriesEachSidesOwnMaxHitPoints() {
+        var generator = SeededGenerator(seed: 7)
+        let report = BattleEngine.resolve(playerPower: 30, opponentPower: 26,
+                                          playerMaxHitPoints: 5, opponentMaxHitPoints: 12,
+                                          using: &generator)
+
+        XCTAssertEqual(report.maxHitPoints(.player), 5)
+        XCTAssertEqual(report.maxHitPoints(.opponent), 12)
+
+        for side in BattleSide.allCases {
+            var expected = report.maxHitPoints(side)
+            for (index, turn) in report.turns.enumerated() where turn.attacker == side.other {
+                expected = max(0, expected - turn.damage)
+                XCTAssertEqual(turn.defenderRemainingHitPoints, expected,
+                               "\(side) HP falls from its own max, not a shared pool")
+                XCTAssertEqual(BattleView.hitPoints(side, afterTurn: index, of: report.turns,
+                                                    maxHitPoints: report.maxHitPoints(side)),
+                               expected, "the bar's solid count matches the report")
+            }
+        }
+        XCTAssertEqual(report.turns.last?.isKnockout, true, "the battle ends when a bar empties")
+    }
+
+    /// Back-compat: a caller that names no max HP — every test and preview predating US-188 — still
+    /// gets the flat starting pool on both sides, so the old power model is untouched.
+    func testResolveDefaultsBothSidesToTheFlatPool() {
+        var generator = SeededGenerator(seed: 11)
+        let report = BattleEngine.resolve(playerPower: 40, opponentPower: 33, using: &generator)
+
+        XCTAssertEqual(report.maxHitPoints(.player), BattleEngine.startingHitPoints)
+        XCTAssertEqual(report.maxHitPoints(.opponent), BattleEngine.startingHitPoints)
+    }
+}

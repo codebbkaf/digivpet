@@ -192,11 +192,15 @@ struct BattleView: View {
                     .minimumScaleFactor(0.7)
                     .lineLimit(1)
 
-                // The hit points left on each side, so the exchanges read as progress rather than as two
-                // sprites twitching at each other.
-                Text("\(hitPoints(.player)) — \(hitPoints(.opponent))")
-                    .font(.system(size: 13, weight: .semibold))
-                    .monospacedDigit()
+                // The hit points left on each side as a dash bar (US-188): its total is the combatant's
+                // MAX HP and its solid count the HP left, so a landed blow visibly knocks dashes off and
+                // the exchanges read as progress rather than as two sprites twitching at each other. No
+                // number anywhere — the bar IS the readout, the same language every value bar speaks.
+                HStack(spacing: 8) {
+                    hpBar(for: .player)
+                    hpBar(for: .opponent)
+                }
+                .padding(.horizontal, BattleArenaLayout.bezelInset)
             }
             .frame(width: geometry.size.width, height: geometry.size.height)
         }
@@ -444,10 +448,29 @@ struct BattleView: View {
         return Self.animation(for: side, during: bout.report.turns[index], landed: hasLanded)
     }
 
-    /// `side`'s hit points as of the exchange on screen.
+    /// `side`'s MAX hit points — the length of its HP dash bar (US-188), read off the resolved report
+    /// so a 5-HP Child and a 12-HP Ultimate draw bars of their own length.
+    private func maxHitPoints(_ side: BattleSide) -> Int {
+        bout.report.maxHitPoints(side)
+    }
+
+    /// `side`'s HP dash bar (US-171): `maxHitPoints` dashes total, the current `hitPoints` solid and
+    /// the rest outline, in the health red the detail page's HP bar and the heart glyph share. Each
+    /// takes half the row so the player's bar sits under the player and the opponent's under the
+    /// opponent, and `.red` keeps HP one colour across the app.
+    private func hpBar(for side: BattleSide) -> some View {
+        DashBar(filled: hitPoints(side), total: maxHitPoints(side),
+                tint: .red, dashHeight: 5)
+            .frame(maxWidth: .infinity)
+    }
+
+    /// `side`'s CURRENT hit points as of the exchange on screen — the solid count of its HP dash bar.
+    /// Full before the first exchange (the intro's stare-down); the result screen replaces the arena,
+    /// so the felled side's empty bar is never asked for here.
     private func hitPoints(_ side: BattleSide) -> Int {
-        guard case .turn(let index) = beat else { return BattleEngine.startingHitPoints }
-        return Self.hitPoints(side, afterTurn: index, of: bout.report.turns)
+        guard case .turn(let index) = beat else { return maxHitPoints(side) }
+        return Self.hitPoints(side, afterTurn: index, of: bout.report.turns,
+                              maxHitPoints: maxHitPoints(side))
     }
 
     /// Which way `side` should be drawn, as a pure function so the face-off can be asserted without a
@@ -480,15 +503,18 @@ struct BattleView: View {
         return landed ? .hurt : .idle
     }
 
-    /// `side`'s hit points once the exchange at `index` has been played out.
+    /// `side`'s hit points once the exchange at `index` has been played out — `maxHitPoints` less the
+    /// damage every incoming blow up to and including this one landed for (US-188). `maxHitPoints`
+    /// defaults to the flat pool so a test predating per-Digimon HP still reads the old numbers.
     ///
-    /// Derived from the report rather than tracked in `@State`, so the number on screen can never
-    /// drift out of step with the frames animating beside it.
-    static func hitPoints(_ side: BattleSide, afterTurn index: Int, of turns: [BattleTurn]) -> Int {
+    /// Derived from the report rather than tracked in `@State`, so the solid dash count on screen can
+    /// never drift out of step with the frames animating beside it.
+    static func hitPoints(_ side: BattleSide, afterTurn index: Int, of turns: [BattleTurn],
+                          maxHitPoints: Int = BattleEngine.startingHitPoints) -> Int {
         let taken = turns.prefix(index + 1)
             .filter { $0.attacker == side.other }
             .reduce(0) { $0 + $1.damage }
-        return max(0, BattleEngine.startingHitPoints - taken)
+        return max(0, maxHitPoints - taken)
     }
 
     /// The frame the result screen holds: the happy frame (7) on a win, a hurt frame on a loss.
