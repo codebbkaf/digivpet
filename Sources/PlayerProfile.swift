@@ -107,6 +107,29 @@ final class PlayerProfile {
     /// lightweight move `encounterMarkerStorage` relies on.
     private var wildBattleNotifiedMarkerStorage: [String: Double] = [:]
 
+    /// Backing store for the per-map condition counters (US-206): map id -> `MetricTotals.values`,
+    /// i.e. metric raw value -> how much of that metric was earned WHILE THIS MAP WAS SELECTED.
+    ///
+    /// This is what makes a map's Digitama conditions a question about the map rather than about the
+    /// player's whole history. Every accumulating `health.*` metric lands here, and so do the three
+    /// stage care counters and `care.battleCount` — each credited by the same call that credits the
+    /// global one, off the same already-claimed delta, so a step counts once for the day's energy and
+    /// once for this map and never twice for either (see `docs/metric-accounting.md`).
+    ///
+    /// Absent means NEVER CREDITED, and that distinction is load-bearing exactly as it is on
+    /// `MetricTotals.known(_:)`: an un-walked map answers `health.steps` with `.unknown`, not with a
+    /// zero that would satisfy an `atMost` gate for free.
+    ///
+    /// Inline `[:]` default so an existing save migrates without a hand-written migration, the same
+    /// lightweight move `encounterMarkerStorage` relies on — a save written before this story simply
+    /// has no map-scoped progress, which is the honest reading: nothing was ever measured per map.
+    private var mapMetricStorage: [String: [String: Double]] = [:]
+
+    /// Backing store for battles WON per map (US-206). Its own dictionary rather than a key in
+    /// `mapMetricStorage` because "wins" is not a `ConditionMetric` — it is the numerator of
+    /// `care.battleWinRatio`, whose denominator is the `care.battleCount` kept above.
+    private var mapBattleWinStorage: [String: Int] = [:]
+
     init(
         lifetimeEnergy: EnergyTotals = .zero,
         meat: Int = 0,
@@ -118,7 +141,9 @@ final class PlayerProfile {
         ownedDigitamaIds: Set<String> = [],
         encounterMarkers: [String: Double] = [:],
         met: [String: [String]] = [:],
-        wildBattleNotifiedMarkers: [String: Double] = [:]
+        wildBattleNotifiedMarkers: [String: Double] = [:],
+        mapMetrics: [String: MetricTotals] = [:],
+        mapBattleWins: [String: Int] = [:]
     ) {
         self.lifetimeEnergy = lifetimeEnergy
         self.meat = meat
@@ -131,6 +156,8 @@ final class PlayerProfile {
         self.encounterMarkerStorage = encounterMarkers
         self.metStorage = met
         self.wildBattleNotifiedMarkerStorage = wildBattleNotifiedMarkers
+        self.mapMetricStorage = mapMetrics.mapValues(\.values)
+        self.mapBattleWinStorage = mapBattleWins
     }
 }
 
@@ -209,6 +236,8 @@ extension PlayerProfile {
         encounterMarkerStorage = [:]
         metStorage = [:]
         wildBattleNotifiedMarkerStorage = [:]
+        mapMetricStorage = [:]
+        mapBattleWinStorage = [:]
     }
     #endif
 }
@@ -260,6 +289,76 @@ extension PlayerProfile {
     /// second one for the same crossing.
     func setWildBattleNotifiedMarker(_ marker: Double, forMap id: String) {
         wildBattleNotifiedMarkerStorage[id] = marker
+    }
+}
+
+// MARK: - Map-scoped progress (US-206)
+
+extension PlayerProfile {
+    /// Everything earned WHILE THIS MAP WAS SELECTED, as the same `MetricTotals` a `ConditionContext`
+    /// reads its `health.*` windows out of.
+    ///
+    /// A copy, like `recordedByMap`: progress is written by `credit`, never by mutating a read.
+    func mapMetrics(forMap id: String) -> MetricTotals {
+        MetricTotals(values: mapMetricStorage[id] ?? [:])
+    }
+
+    /// Steps walked in this map — AC1's named counter, and simply `health.steps` out of the totals
+    /// above.
+    ///
+    /// NOT `recorded(forMap:)`, and the two are deliberately different numbers: `recorded` is the map's
+    /// PROGRESS toward its boss, which a flee or a lost fight takes 500 or 1,000 off (US-201/US-203).
+    /// This one only ever goes up, because a lost fight does not un-walk the steps that were walked —
+    /// an egg's condition must not be revoked by a battle that had nothing to do with it.
+    func stepsWalked(forMap id: String) -> Double {
+        mapMetrics(forMap: id)[.healthSteps]
+    }
+
+    /// Battles resolved in this map — the denominator of its `care.battleWinRatio`.
+    func battlesFought(forMap id: String) -> Int {
+        Int(mapMetrics(forMap: id)[.careBattleCount])
+    }
+
+    /// Battles WON in this map — AC1's other named counter, and the ratio's numerator.
+    func battlesWon(forMap id: String) -> Int {
+        mapBattleWinStorage[id] ?? 0
+    }
+
+    /// Adds a whole read's worth of deltas to a map's counters.
+    ///
+    /// `totals` are DELTAS — what `MetricCreditor.credit` just banked off the shared `MetricLedger`,
+    /// the very same numbers the stage and lifetime totals were moved by — so this is a second
+    /// SPENDER of one claim rather than a second claim. Two spenders of one delta is not double
+    /// counting; two claims of one reading is, which is why nothing here reads a day total.
+    func credit(_ totals: MetricTotals, forMap id: String) {
+        for (metric, amount) in totals.values where amount > 0 {
+            credit(rawMetric: metric, amount: amount, forMap: id)
+        }
+    }
+
+    /// Adds one counter's delta to a map. The `care.*` path: a training session, a refusal, a
+    /// disturbance or a resolved battle is worth 1 to the map the player is standing in.
+    func credit(_ metric: ConditionMetric, amount: Double = 1, forMap id: String) {
+        credit(rawMetric: metric.rawValue, amount: amount, forMap: id)
+    }
+
+    /// Records a resolved battle against this map: one fought, and one won if it was won.
+    ///
+    /// Fought is counted here, at the RESULT, rather than where `GameState.recordBattleStarted` counts
+    /// the global one — so that the map's `care.battleCount` and its win count are the same population
+    /// and the ratio between them can never exceed 1.
+    func recordBattle(won: Bool, forMap id: String) {
+        credit(.careBattleCount, forMap: id)
+        if won { mapBattleWinStorage[id] = battlesWon(forMap: id) + 1 }
+    }
+
+    /// The one writer. Never writes a non-positive amount, which is what keeps "absent means never
+    /// credited" true — see `mapMetricStorage`.
+    private func credit(rawMetric: String, amount: Double, forMap id: String) {
+        guard amount > 0 else { return }
+        var totals = mapMetricStorage[id] ?? [:]
+        totals[rawMetric] = (totals[rawMetric] ?? 0) + amount
+        mapMetricStorage[id] = totals
     }
 }
 

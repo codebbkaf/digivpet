@@ -21,6 +21,23 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **THREE SETS OF TOTALS EXIST AND THEY ARE NOT INTERCHANGEABLE (US-206).** `GameState.stage/lifetime
+  MetricTotals` = the Digimon's life, what an EVOLUTION is gated on. `PlayerProfile.recorded(forMap:)`
+  = progress toward a map's BOSS, which a flee/loss takes 500/1,000 off. `PlayerProfile.mapMetrics(
+  forMap:)` = what was earned WHILE THAT MAP WAS SELECTED, what a map's EGG is gated on, and which
+  only ever goes up. A new gate must pick one on purpose. The map-scoped set is read through
+  `ConditionContext.mapScoped` (`Sources/MapScopedContext.swift`) and credited only via
+  `MainScreenModel.creditMapMetrics` / `creditMapCare` / `profile.recordBattle(won:forMap:)` — all of
+  which drop the tick when no map (or an unknown map) is selected.
+- **SCOPING A CONDITION IS A NEW `ConditionContext` CONSTRUCTOR, NEVER A NEW `ConditionWindow`.**
+  Adding a `.map` window would touch the validator, `answerableWindows`, every hint string and all
+  authored JSON. Building the same context type off different counters changes nothing about the
+  vocabulary — same `ConditionReveal`, same `ConditionEvaluator`, same authored conditions — which is
+  why US-206 broke only 3 pre-existing tests.
+- **A NEW PER-METRIC CONSUMER TAKES `MetricCreditor.credit`'s RETURN VALUE, IT NEVER CALLS
+  `MetricLedger.claim`.** Second SPENDER of one claim = fine; second CLAIM of one reading = the
+  double-count bug. Four consumers are wired this way (map steps, map-scoped counters, train charges,
+  clean charges). See `docs/metric-accounting.md`.
 - **CONSUMPTION WAVE: A "SPENDABLE CHARGE" HAS FIVE SEAMS, COPY THE BATTLE CHARGE (US-176) FOR EACH.**
   (1) GameState optional storage `xChargesStorage`/`xProgressStorage` + computed getters (nil reads 0)
   + `creditXCharges(amount:per:maxCharges:)` — the while-loop-with-remainder-dropped-at-cap shape;
@@ -6312,4 +6329,68 @@ The thirty, `Perfect -> Ultimate`:
   safest parents to extend — but their Children are still counted in the ChildSweep `branchedByALater
   Sweep` dicts and `EvolutionCriteria`'s Digitama-reachability (avoid stranded parents like ryudamon).
 - Signature names in moves.json must be GLOBALLY unique; projectileSymbol+tint pairs unique PER LINE.
+---
+
+## 2026-07-24 - US-206 (A map's Digitama conditions measure progress on that map, not globally)
+- A map's egg now asks "what have you done HERE", not "what have you ever done". Before this, the
+  map detail and the drop engine were both judged on a `ConditionContext(state:)` built from the
+  Digimon's stage/lifetime totals, so a veteran arriving in a fresh map found its slots already
+  satisfied and marked "Ready to find" before walking a step there.
+- THE COUNTERS (`Sources/PlayerProfile.swift`): two new stored dictionaries — `mapMetricStorage`
+  (map id -> MetricTotals.values) and `mapBattleWinStorage` (map id -> wins). API: `mapMetrics(forMap:)`,
+  `stepsWalked(forMap:)`, `battlesFought(forMap:)`, `battlesWon(forMap:)`, `credit(_:forMap:)` (a
+  whole MetricTotals delta set, or one ConditionMetric), `recordBattle(won:forMap:)`. Nothing writes
+  a non-positive amount, so "absent means never credited" stays true and an unwalked map answers
+  `health.steps` `.unknown` rather than a 0 that would satisfy an `atMost` gate.
+  On PlayerProfile and NOT GameState (the AC says "via GameState" loosely): every other per-map fact
+  already lives here, and GameState is deleted whole on death — map progress must outlive a Digimon.
+- THE CREDITING (`Sources/MainScreenModel.swift`), always to the map SELECTED AT THE MOMENT, which
+  is what makes leakage impossible rather than merely unlikely:
+  - `creditMapMetrics(creditedMetrics)` in `refresh()`, off the SAME deltas `MetricCreditor` claimed
+    (a second SPENDER of one claim, never a second claim — the US-204 rule).
+  - `creditMapCare(.careTrainingSessions)` at `train()`'s `.started`, `.careOverfeeds` at `feed()`'s
+    `.refused`, `.careSleepDisturbances` in `wakeIfAsleep()`.
+  - `profile.recordBattle(won:forMap:)` in `finishBattle()` — the one site every battle (ordinary,
+    wild, boss) resolves through. Fought and won move together, so the ratio can never exceed 1.
+- THE READING (`Sources/MapScopedContext.swift`, new): `ConditionContext.mapScoped(_:profile:
+  lightState:readings:)`. ALL THREE WINDOWS read the map's running total — a map is a place, not a
+  span of anybody's life, so `health.steps day atLeast 2000` means "walk 2,000 steps in this map".
+  `lightState` and `readings` stay global (a NOW reading and the standing measurements a running
+  total cannot hold have no per-map version). Care counters flatten to a real 0; health metrics stay
+  `.unknown` until credited.
+- WIRED AT TWO SEAMS, deliberately the same value: `mapDetailContext(for:)` (was a computed global
+  property, now a function of the map id) and `checkForDigitamaDrop`. So what the detail promises is
+  exactly what can drop.
+- Files: Sources/PlayerProfile.swift, Sources/MapScopedContext.swift (new), Sources/MainScreenModel.swift,
+  Tests/MapScopedProgressTests.swift (new, 17 tests in 3 classes), Tests/DigitamaDropTests.swift
+  (3 tests reseeded), docs/metric-accounting.md.
+- Verified: xcodegen + build green; FULL suite 2695 tests, 0 failures. The AC6 regression
+  (`testProgressIsEarnedPerMapAndSurvivesSwitchingAway`) walks alpha -> meet -> beta not met ->
+  back to alpha still met, on the SAME condition in both maps so the result cannot be about which
+  criterion was picked. Clock injected (`now: { Fixture.morning }`) throughout; nothing waits.
+- NOT screenshotted: no AC asked for one, and the demo flag (`-mapDetailDemo`) short-circuits to a
+  literal context so it would photograph the stand-in rather than the new path. The screen's own
+  seam is asserted instead — `model.mapDetail(for:)` -> `detail.digitama[0].isReady`.
+
+**Learnings for future iterations:**
+- **THREE SETS OF TOTALS NOW EXIST AND THEY ARE NOT INTERCHANGEABLE.** `GameState.stage/lifetime
+  MetricTotals` (the Digimon's life, what an EVOLUTION is judged on), `PlayerProfile.recorded(forMap:)`
+  (progress toward a map's BOSS, which a flee/loss takes 500/1,000 off), and
+  `PlayerProfile.mapMetrics(forMap:)` (what was earned while that map was selected, what a map's EGG
+  is judged on, and which only ever goes up). Adding a new gate means choosing one on purpose.
+- **THE "SECOND SPENDER, NEVER A SECOND CLAIM" RULE EXTENDS CLEANLY.** `MetricCreditor.credit`
+  RETURNS its claimed deltas; any new per-metric consumer takes that return value as a parameter and
+  never touches `MetricLedger.claim` itself. `creditMapMetrics` is the fourth consumer wired this way
+  (after map steps, train charges, clean charges) and cost no new de-dup reasoning at all.
+- **A "SCOPED" CONTEXT IS A CONSTRUCTOR, NOT A NEW WINDOW.** The temptation was to add a `.map` case
+  to `ConditionWindow`; that would have touched the validator, `answerableWindows`, every hint string
+  and all authored JSON. Building a different `ConditionContext` from different counters changed
+  nothing about the vocabulary — same `ConditionReveal`, same `ConditionEvaluator`, same authored
+  conditions — and is why the blast radius was 3 pre-existing tests.
+- **TESTS THAT SEED A GLOBAL COUNTER TO DRIVE A MAP FEATURE ARE THE ONES THAT BREAK.** Exactly three
+  did (`DigitamaDropModelTests`, all setting `model.state?.stageTrainingSessions = 1`); the fix is
+  `model.profile?.credit(.careTrainingSessions, forMap: "<id>")`. Grep `stageTrainingSessions =` /
+  `battleWins =` before assuming a fixture drives a map path.
+- `HealthSampleFetching`'s method is `samples(of: QuantityMetric, in: DateInterval)` — the stub
+  fetchers copied between test files are easy to mistype as `HealthMetric` and fail only at compile.
 ---

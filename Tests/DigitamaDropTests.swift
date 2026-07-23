@@ -435,8 +435,9 @@ final class DigitamaDropModelTests: XCTestCase {
         XCTAssertEqual(try store.allStates().count, 1, "no egg while the condition is unmet")
         XCTAssertNil(model.pendingDigitamaDrop)
 
-        // Meet the condition and refresh again: the egg drops.
-        model.state?.stageTrainingSessions = 1
+        // Meet the condition and refresh again: the egg drops. US-206: the counter that matters is
+        // the MAP's, not the Digimon's stage-long one — a slot asks what has been done here.
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
         await model.refresh()
 
         XCTAssertEqual(try store.allStates().count, 2, "the found egg joined the box")
@@ -454,7 +455,7 @@ final class DigitamaDropModelTests: XCTestCase {
             maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]))
         await model.start()
         model.selectMap("grass")
-        model.state?.stageTrainingSessions = 1
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
 
         await model.refresh()
         model.acknowledgeDigitamaDrop()
@@ -471,7 +472,7 @@ final class DigitamaDropModelTests: XCTestCase {
             maps: catalog(slotId: "gabu_digitama", [Fixture.trainedAtLeastOnce()]))
         await model.start()
         model.selectMap("grass")
-        model.state?.stageTrainingSessions = 1
+        model.profile?.credit(.careTrainingSessions, forMap: "grass")
         await model.refresh()
 
         let egg = try XCTUnwrap(try store.allStates().first { $0.currentDigimonId == "gabu_digitama" })

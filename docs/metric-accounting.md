@@ -41,7 +41,8 @@ Both ledgers do the same three things — roll the day if midnight has passed, t
   is taken against `creditedToday[type]`.
 - `MetricLedger.claim(_:dayTotal:now:)` — **the single place the metric de-duplication rule lives.**
   Every consumer of a metric (the stage/lifetime totals `MetricCreditor` keeps, the per-map step
-  accrual, the train and clean charges) spends the delta `claim` hands back rather than computing
+  accrual, the per-map condition counters, the train and clean charges) spends the delta `claim`
+  hands back rather than computing
   its own from a private baseline. Two baselines over one reading is exactly how "walking 1,000
   steps credited the map 2,000" would happen.
 
@@ -59,6 +60,7 @@ into `HealthDayReadings`, then:
 3. The map, train and clean charges **spend those returned deltas** — they never `claim` a second
    time. So a step is de-duplicated once and shared:
    - `creditMapSteps(creditedMetrics[.healthSteps])` — US-118 map progress.
+   - `creditMapMetrics(creditedMetrics)` — US-206 per-map condition counters, the whole delta set.
    - `creditTrainCharges(creditedMetrics[.healthActiveEnergy])` — US-177 training charges.
    - `creditCleanCharges(creditedMetrics[.healthHandwashing])` — US-178 cleaning charges.
    - `state.creditSleep(minutes: creditedMetrics[.healthSleep])` — US-181 accumulated sleep.
@@ -74,8 +76,8 @@ the app publishes (see `Sources/ComplicationSnapshot.swift:101`).
 
 | Activity | Metric | Energy (via `EnergyLedger`) | Metric total (via `MetricLedger`) |
 |---|---|---|---|
-| Steps | `.healthSteps` | Strength, capped | Map steps (US-118), stage/lifetime step totals |
-| Active calories | `.healthActiveEnergy` | Vitality, capped | Train charges (US-177), stage/lifetime totals |
+| Steps | `.healthSteps` | Strength, capped | Map steps (US-118), map-scoped counters (US-206), stage/lifetime step totals |
+| Active calories | `.healthActiveEnergy` | Vitality, capped | Train charges (US-177), map-scoped counters (US-206), stage/lifetime totals |
 | Exercise minutes | `.healthExerciseMinutes` | Stamina, capped | Stage/lifetime totals |
 | Sleep | `.healthSleep` | Spirit, capped (last-night window) | Accumulated per-Digimon sleep (US-181) |
 
@@ -115,3 +117,16 @@ it (`Tests/`):
 
 - `testRefreshingTwiceInADayCreditsTheMetricOnce` — a full `refresh()` twice in one day credits the
   metric once.
+
+## Map-scoped counters (US-206)
+
+`PlayerProfile.mapMetrics(forMap:)` is a *third* set of totals, keyed by map id, holding what was
+earned **while that map was selected**. It is written by `creditMapMetrics` off the same claimed
+deltas as everything above (a second *spender*, never a second *claim*) plus one tick per training
+session, refusal, sleep disturbance and resolved battle from `MainScreenModel`.
+
+It exists because a map's Digitama conditions ask what has been done *there* — see
+`ConditionContext.mapScoped` (`Sources/MapScopedContext.swift`), which is what `MapDetailView`'s
+hints and `DigitamaDropEngine` are both judged against. It is **not** the same number as
+`recorded(forMap:)`: that one is progress toward the map's boss and a lost fight takes 500 or 1,000
+off it, while these counters only ever go up.

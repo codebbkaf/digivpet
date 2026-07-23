@@ -1737,8 +1737,8 @@
         "Build green; existing tests pass"
       ],
       "priority": 93,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "PlayerProfile gained per-map counters (mapMetrics + battle wins), credited only while that map is selected: health deltas off the same MetricLedger claim, plus a tick per training session / refusal / sleep disturbance / resolved battle. ConditionContext.mapScoped (new Sources/MapScopedContext.swift) reads them for every window; MapDetailView's hints + Ready mark and DigitamaDropEngine both use it. Counters live on PlayerProfile, not GameState, because map progress must outlive a Digimon's death. 2695 tests pass, build green."
     },
     {
       "id": "US-207",

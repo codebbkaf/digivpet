@@ -1336,6 +1336,10 @@ final class MainScreenModel: ObservableObject {
         // that bought that energy — see `creditMapSteps`. Before the evolution and hatch checks below
         // only because everything is; nothing here depends on it.
         creditMapSteps(creditedMetrics[.healthSteps])
+        // US-206, off the SAME claimed deltas again: everything this read brought in also accrues to
+        // the map the player is standing in, which is what a map's Digitama conditions are measured
+        // against. A second SPENDER of one claim, never a second claim — see `PlayerProfile.credit`.
+        creditMapMetrics(creditedMetrics)
         // The exercise-to-training loop (US-177): the active calories this same read brought in buy
         // training charges on the Digimon that burned them, spent off the same claimed delta so a
         // calorie counts once as energy and once as a charge, never read twice.
@@ -1485,6 +1489,34 @@ final class MainScreenModel: ObservableObject {
         let config = ConsumptionConfig.bundled
         state?.creditBattleCharges(steps: steps, stepsPerCharge: config.stepsPerBattleCharge,
                                    maxCharges: config.maxBattleCharges)
+    }
+
+    /// Accrues this read's per-metric deltas to the map the player is adventuring in (US-206).
+    ///
+    /// `credited` is what `MetricCreditor` just banked off the shared `MetricLedger` — the same
+    /// deltas the stage, lifetime, map-step and charge paths spend — so a metric is de-duplicated
+    /// once and shared, exactly as `creditMapSteps` documents. Only the map SELECTED AT THE MOMENT OF
+    /// THE READ is credited, which is what stops progress leaking between maps: what was walked while
+    /// another map was chosen stays on that map's counter, because the ledger has already spent it
+    /// and only the counter it landed on remembers.
+    private func creditMapMetrics(_ credited: MetricTotals) {
+        guard let profile, let mapId = profile.selectedMapId, maps.map(id: mapId) != nil else {
+            return
+        }
+        profile.credit(credited, forMap: mapId)
+    }
+
+    /// Adds one care counter's tick to the selected map (US-206) — a training session, a refusal or a
+    /// sleep disturbance, credited beside the global counter the same act moves on `GameState`.
+    ///
+    /// Silent with nowhere selected, or with a selection the catalog no longer knows: a tick with no
+    /// map to land on is dropped rather than parked somewhere it could later be mistaken for real
+    /// progress, which is `MapStepCreditor`'s rule applied to the care counters.
+    private func creditMapCare(_ metric: ConditionMetric) {
+        guard let profile, let mapId = profile.selectedMapId, maps.map(id: mapId) != nil else {
+            return
+        }
+        profile.credit(metric, forMap: mapId)
     }
 
     /// Converts the active calories this read brought in into training charges (US-177).
@@ -1817,7 +1849,7 @@ final class MainScreenModel: ObservableObject {
     func mapDetail(for row: MapListRow) -> MapDetail? {
         MapDetail.make(for: row, in: maps, roster: roster,
                        discovered: mapDetailDiscoveries, met: mapDetailMet(for: row),
-                       context: mapDetailContext)
+                       context: mapDetailContext(for: row.id))
     }
 
     /// The residents of `row`'s map the player has met (US-202), plus whatever `-mapDetailFoesDemo`
@@ -1841,19 +1873,24 @@ final class MainScreenModel: ObservableObject {
         #endif
     }
 
-    /// The counters a map detail's hints are warmed against: the same `ConditionContext` an
-    /// evolution is judged on, off the same saved state, so a hint on this screen and the branch it
-    /// describes can never disagree about how far along the player is.
+    /// The counters ONE map's hints are warmed against (US-206): that map's own progress, read the
+    /// same way `checkForDigitamaDrop` reads it, so a slot the detail screen promises is "Ready to
+    /// find" is exactly the slot that can drop.
     ///
-    /// `.unknown` before `start()` has a save — every condition then reads as unearned, which is
+    /// Map-scoped rather than the whole-life `ConditionContext(state:)` an evolution is judged on:
+    /// a map's egg is a question about what has been done in that map, and the global counters
+    /// answered it "yes" for a veteran the instant a new map was selected. See
+    /// `ConditionContext.mapScoped`.
+    ///
+    /// `.unknown` before `start()` has a profile — every condition then reads as unearned, which is
     /// the honest answer for a game that has not begun.
-    private var mapDetailContext: ConditionContext {
+    private func mapDetailContext(for mapId: String) -> ConditionContext {
         #if DEBUG
         if let demo = Self.mapDetailDemoContext { return demo }
         #endif
-        guard let state else { return .unknown }
-        return ConditionContext(state: state, now: now(), calendar: calendar,
-                                readings: conditionReadings)
+        guard let profile else { return .unknown }
+        return .mapScoped(mapId, profile: profile,
+                          lightState: state?.lightState, readings: conditionReadings)
     }
 
     #if DEBUG
@@ -1879,7 +1916,10 @@ final class MainScreenModel: ObservableObject {
     /// starting egg's own Dex entry. One screenshot, all three states.
     ///
     /// A context literal rather than seeded state, so it cannot write a fake game to the store —
-    /// the same discipline, and the same reason, as `DexModel.revealDemoContext`.
+    /// the same discipline, and the same reason, as `DexModel.revealDemoContext`. Since US-206 the
+    /// real screen reads `ConditionContext.mapScoped` instead, so what this stands in for is 2,100
+    /// steps walked IN THAT MAP; the numbers and the picture are unchanged, because a `.day` window
+    /// is answered off `bestDayThisStage` either way.
     private static var mapDetailDemoContext: ConditionContext? {
         guard isMapDetailDemo else { return nil }
         return ConditionContext(bestDayThisStage: MetricTotals(values: [
@@ -2028,6 +2068,9 @@ final class MainScreenModel: ObservableObject {
             // them, so a meal is something the Digimon does rather than something its art does.
             show(.eat, motion: .chew, message: nil)
         case .refused:
+            // A refusal is an overfeed, counted on the map it happened in as well as on the Digimon
+            // (US-206) — `05_wasteland`'s and `15_dungeon`'s eggs are gated on exactly this.
+            creditMapCare(.careOverfeeds)
             // The refuse pose alternates with the walk frame, so the Digimon is drawn turning its
             // head away rather than holding one picture; the head-shake dips that whole sprite side
             // to side, which is what makes a refusal legible without reading the caption.
@@ -2082,6 +2125,11 @@ final class MainScreenModel: ObservableObject {
 
         switch start {
         case .started:
+            // The session `TrainAction.begin` just counted, counted again against the map it was
+            // trained in (US-206). Here rather than in `finishTraining` for the reason the global
+            // count is taken at `begin`: the session is one per STARTED round, and a round walked
+            // out of still happened.
+            creditMapCare(.careTrainingSessions)
             // No pose and no haptic yet: the Digimon is about to be covered by the game, and the
             // attack frame belongs to the round LANDING rather than to it starting.
             pendingTraining = PendingTraining(
@@ -2535,6 +2583,12 @@ final class MainScreenModel: ObservableObject {
         guard let bout = pendingBattle else { return }
         pendingBattle = nil
         state?.recordBattle(bout.report)
+        // US-206: the same result filed against the map it was fought in, so a map's
+        // `care.battleCount` and `care.battleWinRatio` slots ask what happened HERE. Both counters
+        // move together off one call, which is what keeps the ratio between them from exceeding 1.
+        if let profile, let mapId = profile.selectedMapId, maps.map(id: mapId) != nil {
+            profile.recordBattle(won: bout.report.playerWon, forMap: mapId)
+        }
 
         do {
             try store?.save()
@@ -2855,6 +2909,9 @@ final class MainScreenModel: ObservableObject {
     private func wakeIfAsleep() {
         guard isAsleep, let state, state.healthStatus != .dead else { return }
         state.recordWakingEarly(now: now(), calendar: calendar)
+        // The disturbance counted against the map it happened in as well (US-206) — `05_wasteland`'s
+        // and `15_dungeon`'s eggs want them, `03_ocean`'s and `11_city_night`'s want none.
+        creditMapCare(.careSleepDisturbances)
         state.awakeUntil = now() + SleepSchedule.wakeGracePeriod
         isAsleep = false
         // The sleep loop is on screen right now and the Digimon is no longer in it. Left to the next
@@ -3195,13 +3252,17 @@ final class MainScreenModel: ObservableObject {
     /// on one, and this is belt to their braces.
     private func checkForDigitamaDrop() {
         guard let state, let store, let profile, state.healthStatus != .dead else { return }
-        let context = ConditionContext(state: state, now: now(), calendar: calendar,
-                                       readings: conditionReadings)
+        guard let mapId = profile.selectedMapId, let map = maps.map(id: mapId) else { return }
+        // US-206: the SELECTED MAP's own counters, not the player's lifetime totals — the same
+        // `mapScoped` reading `mapDetailContext(for:)` draws its hints and its "Ready to find" mark
+        // from, so what the map promised is what the map gives.
+        let context = ConditionContext.mapScoped(mapId, profile: profile,
+                                                 lightState: state.lightState,
+                                                 readings: conditionReadings)
         let held = (try? store.heldDigitamaIds()) ?? []
         var generator = makeDropGenerator()
         guard let dropId = DigitamaDropEngine.award(
-            in: maps.map(id: profile.selectedMapId ?? ""),
-            context: context, held: held, using: &generator
+            in: map, context: context, held: held, using: &generator
         ) else { return }
 
         do {
