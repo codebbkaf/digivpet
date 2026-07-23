@@ -982,8 +982,8 @@
         "Typecheck passes"
       ],
       "priority": 52,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Trained HP/Attack/Agility bonuses stored per-Digimon on GameState (trainedHPBonus/trainedAttackBonus/trainedAgilityBonus, optional-backed like the charge stores). trainStat(_:cap:by:) raises a chosen stat toward cap=StageStats.trainingCap (never past it, never reduces, gain>=0); effectiveStat(_:base:)=base+bonus. Battle (finishBattleRound) now reads the player's EFFECTIVE HP (US-188) and Agility (US-189) via effectiveStat; opponent (wild, no GameState) stays on base. Attack bonus stored but no battle rung reads baseAttack yet. Caps already in consumption.json (Child cap 4 < Perfect cap 8). Tests: TrainedStatsTests (8). Build green; full suite 2576 tests, 0 failures (Series 11 46mm, +8 over US-190; BattleTests seeds unshifted)."
     },
     {
       "id": "US-192",

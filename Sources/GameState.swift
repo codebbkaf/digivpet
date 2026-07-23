@@ -247,6 +247,16 @@ final class GameState {
     /// "nothing banked yet".
     private var trainChargesStorage: Int?
     private var trainChargeKcalStorage: Double?
+    /// Backing stores for the three trained stat bonuses (US-191): how far training has pushed this
+    /// Digimon's HP, Attack and Agility ABOVE its stage base, each capped at the stage's
+    /// `StageStats.trainingCap`. Per-Digimon in the same sense as `trainChargesStorage` — the pet you
+    /// trained keeps its own muscle, and switching which Digimon is out shows its own bonuses, never
+    /// another's. All optional for the same migration reason as every other storage property here: an
+    /// optional attribute is the one shape SwiftData migrates into an already-shipped store without a
+    /// default. `nil` reads as 0 — an untrained stat.
+    private var trainedHPBonusStorage: Int?
+    private var trainedAttackBonusStorage: Int?
+    private var trainedAgilityBonusStorage: Int?
     /// Backing store for `accumulatedSleepMinutes` (US-181): the lifetime HealthKit sleep this
     /// Digimon has banked, in minutes, credited from the same US-179 `MetricLedger` delta the
     /// nightly sleep *energy* is read from but kept SEPARATE from it — this is the running total the
@@ -423,6 +433,9 @@ final class GameState {
         self.battleChargeStepsStorage = 0
         self.trainChargesStorage = 0
         self.trainChargeKcalStorage = 0
+        self.trainedHPBonusStorage = 0
+        self.trainedAttackBonusStorage = 0
+        self.trainedAgilityBonusStorage = 0
         self.accumulatedSleepMinutesStorage = 0
         // Stamped with `now` rather than left nil, or a brand new game would be charged for every
         // day between the epoch and today the first time the audit ran.
@@ -595,6 +608,72 @@ extension GameState {
             trainCharges += 1
         }
         trainChargeKcal = trainCharges < maxCharges ? progress : 0
+    }
+
+    /// The bonus training has added to HP on top of the stage base (US-191), 0 on an untrained
+    /// Digimon. `effectiveStat(_:base:)` adds it to the base the battle actually fights on.
+    ///
+    /// Computed for the same reason `trainCharges` is: the optionality persistence needs stops at the
+    /// model boundary, so a save written before bonuses existed reads as 0 rather than as a `nil`
+    /// every caller has to unwrap.
+    var trainedHPBonus: Int {
+        get { trainedHPBonusStorage ?? 0 }
+        set { trainedHPBonusStorage = newValue }
+    }
+
+    /// The bonus training has added to Attack (US-191). Stored like `trainedHPBonus`; unlike HP and
+    /// Agility no battle rung reads Attack yet, so it is banked toward that use rather than fought on.
+    var trainedAttackBonus: Int {
+        get { trainedAttackBonusStorage ?? 0 }
+        set { trainedAttackBonusStorage = newValue }
+    }
+
+    /// The bonus training has added to Agility (US-191). Fed into the dodge model through
+    /// `effectiveStat(.agility:base:)` exactly as the HP bonus feeds the HP bar.
+    var trainedAgilityBonus: Int {
+        get { trainedAgilityBonusStorage ?? 0 }
+        set { trainedAgilityBonusStorage = newValue }
+    }
+
+    /// This Digimon's trained bonus for `stat` (US-191) — the single reader `trainStat` and
+    /// `effectiveStat` share so a stat is never added twice or read off the wrong field.
+    func trainedBonus(for stat: BattleStat) -> Int {
+        switch stat {
+        case .hp: return trainedHPBonus
+        case .attack: return trainedAttackBonus
+        case .agility: return trainedAgilityBonus
+        }
+    }
+
+    /// Raises one trained stat bonus toward `cap`, returning the gain actually applied — 0 once the
+    /// bonus already sits at the cap (US-191).
+    ///
+    /// `cap` is the current stage's `StageStats.trainingCap`, so a higher stage's larger cap is what
+    /// unlocks the room to grow; the bonus itself never passes `cap`, which is what guarantees the
+    /// effective stat never passes `base + cap` no matter how many times this is called. `amount` and
+    /// `cap` are floored at 0 so a stray negative can neither push a stat down nor below its base.
+    @discardableResult
+    func trainStat(_ stat: BattleStat, cap: Int, by amount: Int = 1) -> Int {
+        let ceiling = max(0, cap)
+        let current = trainedBonus(for: stat)
+        // Never reduces: training only ever adds, so a stat already at (or, from a lowered cap, above)
+        // the ceiling gains nothing rather than being trimmed. This is what keeps `gain` non-negative
+        // and a stat's earned bonus safe across the one edge — a shrinking cap — the game never hits.
+        guard current < ceiling else { return 0 }
+        let next = min(ceiling, current + max(0, amount))
+        switch stat {
+        case .hp: trainedHPBonus = next
+        case .attack: trainedAttackBonus = next
+        case .agility: trainedAgilityBonus = next
+        }
+        return next - current
+    }
+
+    /// This Digimon's EFFECTIVE value for `stat`: the stage `base` plus what training has added
+    /// (US-191). This — not the bare base — is what the battle engine fights on (US-188/189/190), so
+    /// a trained Digimon carries more HP dashes and slips more swings than a fresh one of its stage.
+    func effectiveStat(_ stat: BattleStat, base: Int) -> Int {
+        base + trainedBonus(for: stat)
     }
 
     /// Lifetime HealthKit sleep banked for THIS Digimon, in minutes (US-181). Distinct from the

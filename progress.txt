@@ -5642,3 +5642,41 @@ The thirty, `Perfect -> Ultimate`:
     round(r*0.5) can tie at r=1). US-191 (train caps -> effective stats) and US-192 will read the same
     stage stat table; the battle plumbing (HP/agility/elements) is now all in resolve's defaulted args.
 ---
+
+## 2026-07-23 - US-191: Stats train up to a per-Digimon cap
+- Training now raises HP/Attack/Agility toward a per-stage cap; the bonuses are stored per-Digimon
+  and the player's EFFECTIVE (base+bonus) HP and Agility are what battle fights on.
+- Files changed:
+  - Sources/GameState.swift — three optional-backed storage fields (trainedHPBonusStorage /
+    trainedAttackBonusStorage / trainedAgilityBonusStorage), init'd to 0, same migration seam as the
+    charge stores. Computed trainedHPBonus/trainedAttackBonus/trainedAgilityBonus (?? 0);
+    trainedBonus(for: BattleStat) reader; trainStat(_:cap:by:=1) raises one stat toward cap=
+    StageStats.trainingCap — floors amount/cap at 0, never reduces (guard current<ceiling -> return 0
+    at/over cap), returns the non-negative gain; effectiveStat(_:base:) = base + bonus.
+  - Sources/MainScreenModel.swift — finishBattleRound builds playerMaxHP and player Agility through
+    state.effectiveStat(.hp/.agility, base:), so a trained Digimon fights on more HP dashes and slips
+    more swings. Opponent side unchanged (a wild node is no GameState). No new draw -> every pinned
+    battle seed is byte-stable.
+  - Tests/TrainedStatsTests.swift — 8 pure tests: fresh=0, per-Digimon independence, repeated training
+    never passes base+cap, at-cap gains 0, one-per-call below cap, Perfect cap>Child cap (off bundled
+    config) and a Perfect out-trains a Child, effective=base+bonus, negatives/negative-cap never reduce.
+- VERIFIED: build green; full suite 2576 tests, 0 failures (Series 11 46mm, +8 over US-190's 2568).
+  Ran TrainedStatsTests + BattleTests + TrainActionTests together first to confirm no seed shifted.
+- **Learnings for future iterations:**
+  - **BattleStat (the HP/Attack/Agility enum) lives in StatBarsView.swift but is a plain domain enum
+    — GameState (Foundation/SwiftData only) references it fine, same module, no SwiftUI import needed.**
+    Reuse it for anything stat-keyed rather than authoring a parallel enum.
+  - **US-190's learning holds: the battle plumbing (HP/agility/elements) is all in resolve's defaulted
+    args, and the player-side stat now flows through state.effectiveStat(...). Adding a bonus to the
+    base BEFORE resolve adds no randomness, so seeds stay stable — same discipline as US-188/189/190.**
+  - **baseAttack is STILL not read by any battle rung** (only battlePower drives the power compare, HP
+    drives US-188 dashes, Agility drives US-189 dodges). US-191 stores a trained Attack bonus but it
+    is inert in combat until a story wires baseAttack in. Don't assume Attack scales damage yet.
+  - **trainStat is model-level and reached live only through battle's effectiveStat read** — there is
+    no Train-button stat-picker UI. The current Train button still buys the separate strengthStat
+    (US-025/075/177), which steers evolution branches and is untouched. If a UI story wants the player
+    to pick which of HP/Attack/Agility to raise, it calls trainStat with the stage's trainingCap.
+  - **trainingCap is ONE value per stage in StageStats (applies to all three stats), already shipped
+    in consumption.json (US-170).** US-191 authored no config — it only read the table, exactly as
+    US-189/190 read hitRate/elementDamage. The cap grows with stage (Child 4 -> Perfect 8 -> Ult 10).
+---

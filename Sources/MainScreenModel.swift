@@ -2209,8 +2209,11 @@ final class MainScreenModel: ObservableObject {
 
         // Each side's HP dash bar is drawn to its per-stage base HP (US-188), so a Child fights on
         // five dashes and an Ultimate on twelve; a stage the table omits falls back to the flat pool.
+        // The PLAYER's is its EFFECTIVE HP — base plus what training banked (US-191) — so a trained
+        // Digimon fights on more dashes; the wild opponent is no `GameState`, so it fights on base.
         let config = ConsumptionConfig.bundled
-        let playerMaxHP = config.stats(for: state.stage)?.baseHP ?? BattleEngine.startingHitPoints
+        let playerMaxHP = config.stats(for: state.stage)
+            .map { state.effectiveStat(.hp, base: $0.baseHP) } ?? BattleEngine.startingHitPoints
         let opponentMaxHP = config.stats(for: round.opponent.node.stage)?.baseHP
             ?? BattleEngine.startingHitPoints
 
@@ -2218,10 +2221,13 @@ final class MainScreenModel: ObservableObject {
         // straight off the stage stat table, so a faster stage dodges more; nil when either stage has
         // no stats — an edge no playable Digimon hits — in which case the fight falls back to the
         // pre-dodge always-lands model rather than crediting one side an untouchable Agility of zero.
+        // The player's Agility is its EFFECTIVE value (US-191): training slips more swings, exactly as
+        // it adds HP dashes above.
         let agility: BattleAgility?
         if let playerAgility = config.stats(for: state.stage)?.baseAgility,
            let opponentAgility = config.stats(for: round.opponent.node.stage)?.baseAgility {
-            agility = BattleAgility(player: playerAgility, opponent: opponentAgility,
+            agility = BattleAgility(player: state.effectiveStat(.agility, base: playerAgility),
+                                    opponent: opponentAgility,
                                     coefficients: config.hitRate)
         } else {
             agility = nil
