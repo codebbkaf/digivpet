@@ -700,6 +700,19 @@ struct ContentView: View {
                     .allowsHitTesting(false)
                 }
             }
+            // Pin the action row to the screen bottom and hand the reclaimed band to the play area
+            // (US-172). watchOS reserves a bottom safe-area inset — 26pt on 41mm, 36pt on 46mm — for
+            // the display's corner curvature, and until now the action row sat ABOVE it, leaving that
+            // whole band empty under the buttons. `.ignoresSafeArea(.container, edges: .bottom)` lets
+            // this stack draw into it, and because the sprite's `GeometryReader` is the one row that
+            // claims `maxHeight: .infinity`, every reclaimed point lands on the play area — and, off
+            // `SpriteSlotBoundsKey`, on the map behind it. The 4pt bottom padding is what stops the
+            // row landing flush on the display edge; applied INSIDE the ignore, so the stack fills the
+            // full height less those 4 points and the row ends exactly 4pt from the physical bottom.
+            // Applied here, after the map and scrim preference layers, so those keep tracking the
+            // sprite slot's bounds unchanged — only the height the slot is offered grows.
+            .padding(.bottom, MainScreenLayout.actionRowBottomInset)
+            .ignoresSafeArea(.container, edges: .bottom)
         } else {
             // The graph has no node for the saved id — a roster edit that dropped a Digimon out
             // from under a live save. Nothing to draw, so say so rather than showing an empty box.
@@ -739,6 +752,18 @@ enum MainScreenTypography {
     /// Not a style rule — a measured ceiling. The 41mm slot has 0.5pt of slack and a point of font
     /// costs it about 1.2pt of height, so there is no room above 9 for either of them.
     static let maximumSafeFontSize: CGFloat = 9
+}
+
+/// The fixed insets the main screen's outer frame carries (US-172).
+///
+/// Named rather than a literal in `body` for `MainScreenTypography`'s reason: this one is load-
+/// bearing too. `MainScreenLayoutTests` pins it so an edit that pads the action row further off the
+/// bottom — quietly taking height back from the play area US-172 just handed it — fails a test.
+enum MainScreenLayout {
+    /// The gap between the action row and the physical bottom of the display. US-172 pins the row to
+    /// the screen bottom and hands the safe-area band it used to sit above to the sprite slot; 4pt is
+    /// the margin that keeps the circles off the very edge without giving that band back.
+    static let actionRowBottomInset: CGFloat = 4
 }
 
 enum SpriteScale {

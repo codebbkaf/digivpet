@@ -93,6 +93,16 @@ final class MainScreenLayoutTests: XCTestCase {
         XCTAssertEqual(SpriteScale.fitting(63.5), 3)
     }
 
+    /// US-172: the action row pins to the screen bottom with exactly 4pt below it.
+    ///
+    /// The play area growing to fill the reclaimed bottom safe-area band is a Simulator screenshot,
+    /// recorded in progress.txt — this cannot assert the safe-area reclaim, only the margin the row
+    /// keeps below itself. Pinned at 4 so an edit that pushes the row further off the bottom, which
+    /// would take that height straight back out of the sprite slot, fails here.
+    func testTheActionRowKeepsExactlyFourPointsBelowIt() {
+        XCTAssertEqual(MainScreenLayout.actionRowBottomInset, 4)
+    }
+
     /// More room never draws a smaller Digimon.
     func testTheScaleNeverDecreasesAsHeightGrows() {
         var previous = SpriteScale.fitting(0)

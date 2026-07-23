@@ -683,8 +683,8 @@
         "Typecheck passes"
       ],
       "priority": 33,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "ContentView's `digimon` VStack gains `.padding(.bottom, MainScreenLayout.actionRowBottomInset)` then `.ignoresSafeArea(.container, edges: .bottom)`, applied AFTER the map/scrim preference layers so those keep tracking the sprite slot unchanged. New MainScreenLayout enum (actionRowBottomInset=4), pinned by MainScreenLayoutTests.testTheActionRowKeepsExactlyFourPointsBelowIt. Build green, 2473 tests (2472+1), 0 failures. MEASURED before/after on the Simulator, pre- vs post-story builds (baseline built from HEAD 09c7ea8 in a git worktree, same launch command `-healthAnswered -noNotificationPrompt -battleAffordableDemo -mapDemo=01_grassland`, both watch sizes). NOTE: these sims carried a STALE SpringBoard notification alert that survived uninstall/reinstall and hid the screen; rebooting the sim cleared it (`-noNotificationPrompt` works, the alert was just left over). AC1: the action row's disc band now ends exactly 4.0pt from the physical bottom on BOTH 41mm (y421/430) and 46mm (y487/496), vs a floating 26pt/36pt gap before — the reclaimed bottom safe-area band. AC2: the map slot (full-width contiguous scan from its fixed top edge; the method reproduced US-120's 49.0/64.0pt baseline to the point, which is what makes it trustworthy) grew 49.0->71.0pt on 41mm (+22, sprite scale 3->4) and 63.5->95.5pt on 46mm (+32, scale 4->5), so the Digimon is a whole step BIGGER after; MapBackgroundView grows with it by construction (same SpriteSlotBoundsKey). AC3: no overlap - the sprite stays inside its slot (SpriteScale.fitting floors, so scale 5 fits) and the action row is a separate row below the energy bars; the toolbar (lamp/clock/Dex) and the energy bars (STEP/KCAL/Zz/EXER) are byte-identical before and after. Both sims left with the app uninstalled and the baseline worktree removed."
     },
     {
       "id": "US-173",

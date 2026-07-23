@@ -773,6 +773,21 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   The rule that keeps it honest either way: no single Champion may reach the same Digimon twice
   under two spellings, so hang the second sheet off a DIFFERENT parent of the same line and pin
   that the two parent sets are disjoint.
+- **SCREENSHOT STORIES: A STALE `simctl` SYSTEM ALERT CAN SURVIVE UNINSTALL/REINSTALL AND HIDE THE
+  SCREEN — REBOOT THE SIM TO CLEAR IT.** US-172's first four screenshots (both sizes, both builds)
+  all landed on the notification-permission alert DESPITE `-noNotificationPrompt`, which does work.
+  The alert was a SpringBoard-level modal left over from an earlier session; `simctl terminate` +
+  `uninstall` + reinstall + relaunch did NOT dismiss it, and `simctl` cannot tap it. `xcrun simctl
+  shutdown <id> && boot <id>` (then reinstall) clears it. If a main-screen screenshot comes back as
+  a full-screen system sheet, suspect a stale alert before you suspect your launch flags.
+- **SCREENSHOT STORIES: MEASURE THE MAP SLOT BY A CONTIGUOUS FULL-WIDTH SCAN DOWN FROM ITS FIXED TOP
+  EDGE, NOT BY COLOUR.** The map fills the slot full width; the name/strip/bars below it are centred
+  with black side margins. Scan rows down from just under the stats strip while >80% of the width is
+  non-black (lum>18), stop after ~4 black rows. This reproduced US-120's independently-measured
+  49.0pt (41mm) / 64.0pt (46mm) baseline to the point, which is what makes a growth number
+  trustworthy. Colour/green detection and edge-column probes both leak into the sprite or the energy
+  bars and gave wrong answers. Screenshots are @2x: divide px by 2 for pt. 41mm frame 352x430,
+  46mm 416x496.
 
 ## 2026-07-22 — US-114: The light button moves to the top-left toolbar
 - `LightButton` is now `ToolbarItem(placement: .topBarLeading)` in ContentView, the mirror of the
@@ -5083,4 +5098,39 @@ The thirty, `Perfect -> Ultimate`:
     after both DashBar.swift + DashBarTests.swift existed; `grep -c DashBarTests pbxproj == 4` and
     the count climbed. Re-generated a THIRD time after deleting the probe to drop it from the target.
 - REMAINS: US-172..US-192 (24 stories). US-172 (bottom-align action row) is next by priority.
+---
+
+## 2026-07-23 — US-172: Bottom-align the action row and grow the play area
+- ContentView's `digimon` VStack now carries, after the map/scrim preference layers:
+  `.padding(.bottom, MainScreenLayout.actionRowBottomInset)` then
+  `.ignoresSafeArea(.container, edges: .bottom)`. The ignore lets the stack draw into the bottom
+  safe-area band watchOS reserves for the corner curvature (26pt on 41mm, 36pt on 46mm); the 4pt
+  padding, applied INSIDE the ignore, keeps the row off the very edge. Every reclaimed point lands
+  on the sprite's `GeometryReader` because it is the one row at `maxHeight: .infinity`.
+- New `MainScreenLayout` enum (actionRowBottomInset = 4) beside `SpriteScale`, pinned by
+  `MainScreenLayoutTests.testTheActionRowKeepsExactlyFourPointsBelowIt`.
+- Files: Sources/ContentView.swift, Tests/MainScreenLayoutTests.swift.
+- Build green (Series 11 46mm). 2473 tests (2472 + 1 new), 0 failures.
+- MEASURED before/after, both watch sizes, pre- vs post-story builds. Baseline = HEAD 09c7ea8
+  built in a git worktree; identical launch `-healthAnswered -noNotificationPrompt
+  -battleAffordableDemo -mapDemo=01_grassland`.
+  - AC1 action-row bottom inset: 41mm gap 26pt -> 4.0pt; 46mm gap 36pt -> 4.0pt. Measured as the
+    dim colored disc band's lowest row (y421/430 on 41mm, y487/496 on 46mm).
+  - AC2 play area grew: map slot 49.0 -> 71.0pt on 41mm (+22, sprite scale 3->4); 63.5 -> 95.5pt on
+    46mm (+32, scale 4->5). So the Digimon is a WHOLE step bigger after. MapBackgroundView grows
+    with the slot by construction (same SpriteSlotBoundsKey). The before numbers reproduce US-120's
+    49.0/64.0pt baseline, which validates the method.
+  - AC3 no overlap / chrome unchanged: sprite stays inside its slot (SpriteScale.fitting floors, so
+    scale 5 fits); action row is a separate row below the energy bars. Toolbar (lamp/clock/Dex) and
+    energy bars (STEP/KCAL/Zz/EXER) byte-identical before and after.
+- **Learnings for future iterations:**
+  - The two SCREENSHOT patterns added to Codebase Patterns this iteration: a stale SpringBoard
+    system alert can survive uninstall/reinstall and only a sim reboot clears it (cost me four dead
+    screenshots), and the map slot is measured by a contiguous full-width scan down from its fixed
+    top edge — colour/edge-column probes leak into the sprite or the bars.
+  - The slot now sits at 71pt (41mm) / 95.5pt (46mm), i.e. scale 4 / 5. US-120's razor-thin 0.5pt
+    slack over a 16pt quantum is GONE — the play area has whole points to spare now, so a later
+    polish row is no longer one point of font away from shrinking the Digimon. But the 4pt inset is
+    load-bearing and pinned; do not pad the action row further without re-measuring the slot.
+- REMAINS: US-173..US-192 (20 stories). US-173 (bigger widget sprite) is next by priority.
 ---
