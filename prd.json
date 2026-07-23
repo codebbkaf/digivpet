@@ -811,8 +811,8 @@
         "Typecheck passes"
       ],
       "priority": 41,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MetricTotals.known(_:) returns values[metric.rawValue] (nil when never credited); ConditionContext.healthValue now reads through it (`guard let totals, let value = totals.known(metric)`) instead of the subscript, so an accumulating metric that was never credited is .unknown even when the totals struct is present. The subscript still flattens absent->0 for arithmetic; nothing ever writes an explicit 0, so present-in-values == really-credited. Build green, 2510 tests (2507 + 3 new), 0 failures; the 3 new observed passing on their own. AC1: MetricTotals.known distinguishes never-credited (nil) from credited-0 (.known(0)) - a test pins both, and that the subscript still reads 0 for the arithmetic path. AC2: healthValue returns .unknown for an uncredited metric with stage/lifetime/day totals all PRESENT (not the .unknown context) across all three windows; a credited 0 stays .known(0). AC3: with no credit atLeast(1) AND atMost(500) both fail (unknown); with a credited 0, atMost(500) passes and atLeast(1) fails. The existing 'a genuinely zero readable total still satisfies atMost' test still passes because Fixture.context writes healthSteps=0 through the subscript, so the key is present. Only Sources/MetricLedger.swift and Sources/ConditionEvaluator.swift changed; no existing test edited."
     },
     {
       "id": "US-181",

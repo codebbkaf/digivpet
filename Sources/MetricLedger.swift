@@ -23,6 +23,18 @@ struct MetricTotals: Codable, Equatable {
         get { values[metric.rawValue] ?? 0 }
         set { values[metric.rawValue] = newValue }
     }
+
+    /// The credited total for `metric`, or nil if it was never credited.
+    ///
+    /// The `subscript` flattens an absent metric to 0 so arithmetic starts from zero (`+= delta` on
+    /// a fresh metric needs a base), and nothing ever writes an explicit 0 — so a metric present in
+    /// `values` was really credited and one that is absent was never touched. That distinction is
+    /// invisible through the subscript and is exactly what the condition path must keep: an
+    /// un-credited health total is UNKNOWN, not zero, and must NOT satisfy an `atMost` gate (US-180).
+    /// A credited value of 0 stays a real, known 0.
+    func known(_ metric: ConditionMetric) -> Double? {
+        values[metric.rawValue]
+    }
 }
 
 extension ConditionMetric {

@@ -108,8 +108,11 @@ struct ConditionContext: Equatable {
         case .lifetime: totals = lifetimeTotals
         case .day: totals = bestDayThisStage
         }
-        guard let totals else { return .unknown }
-        return .known(totals[metric])
+        // `known(_:)`, not the subscript: an absent metric was never credited and is `.unknown`, not
+        // a real zero. Reading it as zero would satisfy an `atMost` gate for free (US-180). A metric
+        // credited to exactly 0 is present in the totals and stays `.known(0)`.
+        guard let totals, let value = totals.known(metric) else { return .unknown }
+        return .known(value)
     }
 
     /// The `care.*` counters, each answerable over the window it is actually kept in and `.unknown`

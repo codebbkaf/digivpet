@@ -354,6 +354,60 @@ final class ConditionEvaluationTests: XCTestCase {
                        "the ratio is lifetime only — US-084 note 4")
     }
 
+    // MARK: - US-180: no data is unknown, not zero
+
+    /// `MetricTotals.known(_:)` — the accessor the condition path reads through — tells "never
+    /// credited" (nil -> `.unknown`) apart from "credited to zero" (`.known(0)`). The subscript
+    /// cannot: it flattens both to 0.
+    func testMetricTotalsKnownDistinguishesUncreditedFromZero() {
+        var totals = MetricTotals.zero
+        XCTAssertNil(totals.known(.healthSteps), "never credited: nil")
+        XCTAssertEqual(totals[.healthSteps], 0, "the subscript still reads it as 0 for arithmetic")
+
+        totals[.healthSteps] = 0
+        XCTAssertEqual(totals.known(.healthSteps), 0, "a credited 0 is a real, known 0")
+    }
+
+    /// `healthValue(for:window:)` returns `.unknown` for a metric that was never credited, even when
+    /// the totals themselves are present — so an `atMost` health gate is NOT satisfied on no data.
+    /// A metric credited to 0 stays `.known(0)` and does satisfy it.
+    func testAnUncreditedAccumulatingMetricIsUnknownEvenWithTotalsPresent() {
+        // Totals present (not the `.unknown` context), but this metric was never written into them.
+        let uncredited = ConditionContext(stageTotals: .zero, lifetimeTotals: .zero,
+                                          bestDayThisStage: .zero)
+        XCTAssertEqual(uncredited.value(for: .healthSteps, window: .stage), .unknown)
+        XCTAssertEqual(uncredited.value(for: .healthSteps, window: .lifetime), .unknown)
+        XCTAssertEqual(uncredited.value(for: .healthSteps, window: .day), .unknown)
+
+        var zero = MetricTotals.zero
+        zero[.healthSteps] = 0
+        let credited = ConditionContext(stageTotals: zero)
+        XCTAssertEqual(credited.value(for: .healthSteps, window: .stage), .known(0),
+                       "a credited 0 is known, distinct from never credited")
+    }
+
+    /// The story's test, stated on the gate: with no credit both an `atLeast` and an `atMost` health
+    /// condition fail (unknown); with a credited 0, `atMost` passes and `atLeast(> 0)` fails.
+    func testUncreditedFailsBothGatesWhileACreditedZeroSatisfiesAtMost() {
+        let uncredited = ConditionContext(stageTotals: .zero)
+        XCTAssertFalse(
+            ConditionEvaluator.isSatisfied(Fixture.condition(.healthSteps, .atLeast, 1), in: uncredited),
+            "no data: atLeast fails")
+        XCTAssertFalse(
+            ConditionEvaluator.isSatisfied(Fixture.condition(.healthSteps, .atMost, 500), in: uncredited),
+            "no data: atMost must NOT pass for free")
+
+        var zero = MetricTotals.zero
+        zero[.healthSteps] = 0
+        let creditedZero = ConditionContext(stageTotals: zero)
+        XCTAssertTrue(
+            ConditionEvaluator.isSatisfied(Fixture.condition(.healthSteps, .atMost, 500), in: creditedZero),
+            "a real, credited 0 satisfies atMost")
+        XCTAssertFalse(
+            ConditionEvaluator.isSatisfied(Fixture.condition(.healthSteps, .atLeast, 1), in: creditedZero),
+            "a credited 0 does not reach an atLeast(> 0) gate")
+    }
+
     /// The default context answers nothing, so an omitted context can never hand out a branch —
     /// including through an `atMost` condition, which is the direction an omission would otherwise
     /// pass by accident.
