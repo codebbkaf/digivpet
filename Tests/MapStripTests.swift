@@ -160,7 +160,8 @@ final class MapStripRemovalTests: XCTestCase {
                                       feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                                       mapDestination: { EmptyView() },
                                       partyDestination: { EmptyView() },
-                                      dexDestination: { EmptyView() })
+                                      dexDestination: { EmptyView() },
+                                      sleepDestination: { EmptyView() })
 
         XCTAssertFalse(controls.mapValue.isEmpty, "a reading with nothing spoken says nothing")
 
@@ -306,7 +307,8 @@ final class MapStripSelectionTests: XCTestCase {
                                                     activate: { model.activate($0) },
                                                     fuse: { model.performJogress($0) })
                                       },
-                                      dexDestination: { EmptyView() })
+                                      dexDestination: { EmptyView() },
+                                      sleepDestination: { EmptyView() })
 
         // AC3: choosing on the list the Map button opens still moves the save.
         let list = controls.mapDestination()

@@ -79,6 +79,12 @@ struct ContentView: View {
         || CommandLine.arguments.contains("-sequenceRecallInputDemo")
         || CommandLine.arguments.contains("-sequenceRecallResultDemo")
         || CommandLine.arguments.contains("-sequenceRecallMissDemo")
+    /// US-213's Sleep Time view. Same reason as the map list and the party screen: `simctl` cannot
+    /// tap a circle in the grid, so the only way to photograph the screen behind the Sleep button is
+    /// to push it from the launch command. The same flag seeds the hours — see
+    /// `MainScreenModel.seedSleepBarDemoIfRequested` — so one launch gives both the ringed button and
+    /// the screen it opens.
+    @State private var showsSleepTimeDemo = CommandLine.arguments.contains("-sleepTimeDemo")
     #endif
 
     /// The battle replay's pacing. Constant in a release build; in DEBUG, `-battleResultDemo` paces
@@ -374,6 +380,12 @@ struct ContentView: View {
                     MapDetailView(detail: detail) { model.selectMap(row.id) }
                 }
             }
+            // US-213's Sleep Time view, pushed onto the same stack for the same reason as the map
+            // list: it is the real destination the grid's Sleep button leads to, built from the same
+            // two model values the button's ring is drawn from.
+            .navigationDestination(isPresented: $showsSleepTimeDemo) {
+                SleepTimeView(sleptHours: model.sleepHours, goalHours: model.sleepHoursCap)
+            }
             #endif
         }
         // The evolution ceremony sits above everything, so it covers the bars and stage text too.
@@ -622,16 +634,13 @@ struct ContentView: View {
                 // the grid's now, so the row is deleted and the line of height it cost — plus the
                 // map name that floated under the sprite — goes back to the Digimon.
                 //
-                // The one reading left above the action area: how much the active Digimon has slept,
-                // as a DashBar (US-171). US-196 retired the STEP/KCAL/EXER bars — steps, calories and
-                // exercise are already spent into train points and battle time — leaving map progress
-                // and sleep; US-212 then moved map steps onto a green ring around the grid's Map
-                // button, where every other currency already reads, so only the Zz line is drawn here.
-                // Gated on `state` like the grid below, so no lone bar draws before a Digimon is out.
-                if model.state != nil {
-                    MainReadingBars(sleepHours: model.sleepHours, sleepTotal: model.sleepHoursCap)
-                }
-
+                // Nothing reads between the name and the grid any more (US-213). US-196 retired the
+                // STEP/KCAL/EXER bars — steps, calories and exercise are already spent into train
+                // points and battle time — leaving map progress and sleep as two DashBars here;
+                // US-212 took map steps onto a green ring around the Map button and US-213 took the
+                // Zz line onto an indigo ring around a new Sleep button. Every reading on this screen
+                // now sits on the button it is about, and `MainReadingBars` is deleted with the last
+                // of them.
                 if model.state != nil {
                     // The map's step counts, read once and handed to the grid's Map ring (US-212).
                     // `mapStrip` outlived the row it was named for and is now read only for these
@@ -670,6 +679,8 @@ struct ContentView: View {
                                    meatCap: model.meatCap,
                                    mapRecorded: strip?.recordedSteps ?? 0,
                                    mapTotal: strip?.totalSteps ?? 0,
+                                   sleepHours: model.sleepHours,
+                                   sleepHoursCap: model.sleepHoursCap,
                                    feed: { model.feed() },
                                    train: { model.train() },
                                    clean: { model.clean() },
@@ -687,6 +698,13 @@ struct ContentView: View {
                                    dexDestination: {
                                        // Reuses the game's one store (US-193), never a second one.
                                        DexView(model: DexModel(makeStore: model.sharedStore))
+                                   },
+                                   sleepDestination: {
+                                       // The same two numbers the ring is drawn from (US-213), so
+                                       // the screen a tap opens spells out exactly what the ring
+                                       // showed.
+                                       SleepTimeView(sleptHours: model.sleepHours,
+                                                     goalHours: model.sleepHoursCap)
                                    })
                 }
             }
@@ -791,7 +809,7 @@ struct ContentView: View {
 /// nothing useful here and a test should not have to build a view graph to check the arithmetic.
 /// The two text sizes on the main screen that the sprite's scale depends on (US-120).
 ///
-/// Named rather than left as literals in a `body` for `MainReadingBarLayout`'s reason: these are
+/// Named rather than left as literals in a `body` for `EnergyBarLayout`'s reason: these are
 /// not taste, they are load-bearing. `SpriteScale.fitting` FLOORS `slotHeight / 16`. Before US-194
 /// the slot sat right on a scale boundary — 49.5pt on 41mm, 64.0pt on 46mm, 0.5pt and 0.0pt of slack
 /// — so a point of font silently cost the Digimon a whole scale step. US-194's shorter room (the

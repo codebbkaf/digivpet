@@ -37,7 +37,8 @@ final class ActionControlsTests: XCTestCase {
                                       cycleLight: { called.append("light") },
                                       mapDestination: { EmptyView() },
                                       partyDestination: { EmptyView() },
-                                      dexDestination: { EmptyView() })
+                                      dexDestination: { EmptyView() },
+                                      sleepDestination: { EmptyView() })
 
         controls.feed()
         controls.train()
@@ -59,7 +60,8 @@ final class ActionControlsTests: XCTestCase {
                                           feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                                           mapDestination: { EmptyView() },
                                           partyDestination: { EmptyView() },
-                                          dexDestination: { EmptyView() })
+                                          dexDestination: { EmptyView() },
+                                          sleepDestination: { EmptyView() })
             XCTAssertEqual(controls.isCleanDisabled, count == 0, "wrong at \(count) poops")
         }
     }
@@ -98,7 +100,7 @@ final class ActionControlsTests: XCTestCase {
     /// A row whose Battle button reads the affordability of the energies it is given, asked the same
     /// way `MainScreenModel.canAffordBattle` asks it.
     private func controls(strength: Int, stamina: Int)
-        -> ActionControls<EmptyView, EmptyView, EmptyView> {
+        -> ActionControls<EmptyView, EmptyView, EmptyView, EmptyView> {
         let state = GameState(currentDigimonId: "hero", now: Date(timeIntervalSince1970: 0))
         state.stageEnergy.strength = strength
         state.stageEnergy.stamina = stamina
@@ -110,7 +112,8 @@ final class ActionControlsTests: XCTestCase {
                               feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                               mapDestination: { EmptyView() },
                               partyDestination: { EmptyView() },
-                              dexDestination: { EmptyView() })
+                              dexDestination: { EmptyView() },
+                              sleepDestination: { EmptyView() })
     }
 
     /// US-197 AC6, restated for US-211's AC6: a FULL row of circles and their gaps fits the narrowest
@@ -124,8 +127,8 @@ final class ActionControlsTests: XCTestCase {
     }
 
     /// US-211 AC6, the other half: the staggered row is offset INTO the full row's width rather than
-    /// past it, so nothing hangs off the right edge. Checked at the row-2 count US-213 leaves behind
-    /// (four buttons) as well as today's three.
+    /// past it, so nothing hangs off the right edge. Checked at every row-2 count up to four, which
+    /// is what US-213's Sleep button made it.
     func testTheStaggeredRowStaysInsideAFullRowsWidth() {
         for buttons in 1...ActionGridLayout.columns - 1 {
             let width = CGFloat(buttons) * ActionButtonFace.diameter
@@ -137,16 +140,15 @@ final class ActionControlsTests: XCTestCase {
 
     // MARK: - US-211: the staggered, scrollable, list-style grid
 
-    /// AC1 and AC4: the buttons chunk five to a row, in the order they are declared. Eight buttons
-    /// today put Feed, Train, Clean, Battle, Map on row 1 and Party, Light, Dex on row 2; the nine
-    /// US-213 leaves — the same eight with Sleep appended — are the 5-and-4 the story describes, and
-    /// AC3's future third row of five needs nothing but more buttons.
+    /// AC1 and AC4: the buttons chunk five to a row, in the order they are declared. The nine drawn
+    /// since US-213 appended Sleep put Feed, Train, Clean, Battle, Map on row 1 and Party, Light,
+    /// Dex, Sleep on row 2 — the 5-and-4 US-211 describes — and AC3's future third row of five needs
+    /// nothing but more buttons.
     func testTheButtonsChunkFiveToARow() {
         XCTAssertEqual(ActionGridLayout.columns, 5)
         XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: ActionControls<EmptyView, EmptyView,
-                                                                             EmptyView>.buttonCount),
-                       [5, 3], "Feed Train Clean Battle Map / Party Light Dex")
-        XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 9), [5, 4], "with US-213's Sleep")
+                                                                             EmptyView, EmptyView>.buttonCount),
+                       [5, 4], "Feed Train Clean Battle Map / Party Light Dex Sleep")
         XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 14), [5, 5, 4], "and a third row")
         XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 0), [])
     }
@@ -276,7 +278,8 @@ final class ActionControlsTests: XCTestCase {
                                       feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                                       mapDestination: { EmptyView() },
                                       partyDestination: { EmptyView() },
-                                      dexDestination: { EmptyView() })
+                                      dexDestination: { EmptyView() },
+                                      sleepDestination: { EmptyView() })
 
         let rings = [
             DashRing(filled: controls.meat, total: controls.meatCap, tint: .orange),
@@ -294,13 +297,14 @@ final class ActionControlsTests: XCTestCase {
     }
 
     /// A row carrying a map, for the ring and announcement assertions above.
-    private func walking(recorded: Int, total: Int) -> ActionControls<EmptyView, EmptyView, EmptyView> {
+    private func walking(recorded: Int, total: Int) -> ActionControls<EmptyView, EmptyView, EmptyView, EmptyView> {
         ActionControls(canAffordBattle: true, poopCount: 0, lightState: .on,
                        mapRecorded: recorded, mapTotal: total,
                        feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                        mapDestination: { EmptyView() },
                        partyDestination: { EmptyView() },
-                       dexDestination: { EmptyView() })
+                       dexDestination: { EmptyView() },
+                       sleepDestination: { EmptyView() })
     }
 
     /// A call site that says nothing about meat draws no ring, so every pre-US-208 construction of
@@ -313,12 +317,91 @@ final class ActionControlsTests: XCTestCase {
     }
 
     /// A row carrying a larder, for the ring assertions above.
-    private func ringed(meat: Int, meatCap: Int) -> ActionControls<EmptyView, EmptyView, EmptyView> {
+    private func ringed(meat: Int, meatCap: Int) -> ActionControls<EmptyView, EmptyView, EmptyView, EmptyView> {
         ActionControls(canAffordBattle: true, poopCount: 0, lightState: .on,
                        meat: meat, meatCap: meatCap,
                        feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                        mapDestination: { EmptyView() },
                        partyDestination: { EmptyView() },
-                       dexDestination: { EmptyView() })
+                       dexDestination: { EmptyView() },
+                       sleepDestination: { EmptyView() })
+    }
+
+    // MARK: - US-213: the Sleep button and its Zz ring
+
+    /// AC1: the grid grew a ninth circle, and it landed on the END of the sequence — so US-211's
+    /// chunking puts it last on row 2 and every other button stayed exactly where it was. Asserted on
+    /// the count the scroll view's height cap is derived from, which is the one number that decides
+    /// both.
+    func testTheGridGrewANinthCircleForSleep() {
+        XCTAssertEqual(ActionControls<EmptyView, EmptyView, EmptyView, EmptyView>.buttonCount, 9)
+
+        let rows = ActionGridLayout.rowCounts(
+            forButtons: ActionControls<EmptyView, EmptyView, EmptyView, EmptyView>.buttonCount)
+        XCTAssertEqual(rows, [5, 4], "Sleep is the fourth circle of the staggered row")
+        XCTAssertEqual(ActionGridLayout.height(forRows: rows.count), 64,
+                       "a ninth button costs the sprite nothing — row 2 was already there")
+    }
+
+    /// AC2: the ring Sleep carries is the model's two sleep numbers, drawn through the same `DashRing`
+    /// the other five use — same diameter, same weight, same ten segments — so the Zz reading reads as
+    /// one more of the grid's rings rather than as a new kind of dial.
+    func testTheSleepRingIsDrivenByTheModelsSleepHours() {
+        let controls = rested(hours: 8, cap: MainScreenModel.sleepHoursDisplayCap)
+        let sleepRing = DashRing(filled: controls.sleepHours, total: controls.sleepHoursCap,
+                                 tint: .indigo)
+
+        XCTAssertEqual(controls.sleepHours, 8)
+        XCTAssertEqual(controls.sleepHoursCap, 16)
+        XCTAssertEqual(sleepRing.solid, DashRingLayout.segments / 2, "half a night, half a ring")
+        XCTAssertEqual(sleepRing.diameter, DashRing(filled: 3, total: 10, tint: .red).diameter)
+        XCTAssertEqual(sleepRing.lineWidth, DashRing(filled: 3, total: 10, tint: .red).lineWidth)
+    }
+
+    /// The ring floors like every other one (US-212's rounding rule), so a Digimon lights a segment
+    /// only once it has fully slept it — and an overshoot past the display ceiling cannot light an
+    /// eleventh arc.
+    func testTheSleepRingFloorsAndClampsLikeTheOthers() {
+        func solid(_ hours: Int) -> Int {
+            DashRing(filled: rested(hours: hours, cap: 16).sleepHours, total: 16).solid
+        }
+
+        XCTAssertEqual(solid(0), 0)
+        XCTAssertEqual(solid(1), 0, "1 of 16 is under a tenth, so nothing lights yet")
+        XCTAssertEqual(solid(16), DashRingLayout.segments)
+        XCTAssertEqual(solid(19), DashRingLayout.segments, "a long lie-in cannot light an 11th arc")
+    }
+
+    /// AC5: Sleep announces slept against goal, in the WORDS the Zz `DashBar` used before US-213 moved
+    /// the reading onto this button — the numbers moved, the sentence a VoiceOver user hears did not.
+    /// Clamped like `mapValue`, and silent when there is no ceiling to read against.
+    func testSleepAnnouncesSleptAgainstGoal() {
+        XCTAssertEqual(rested(hours: 6, cap: 16).sleepValue, "6 of 16 hours slept")
+        XCTAssertEqual(rested(hours: 0, cap: 16).sleepValue, "0 of 16 hours slept")
+        XCTAssertEqual(rested(hours: 19, cap: 16).sleepValue, "16 of 16 hours slept",
+                       "a Digimon past the ceiling cannot say 19 of 16")
+        XCTAssertEqual(rested(hours: 6, cap: 0).sleepValue, "", "no ceiling, so nothing to announce")
+    }
+
+    /// A row built without sleep — every fixture that predates this story — draws no ring and says
+    /// nothing, the same silence an absent charge economy and an unselected map get.
+    func testARowBuiltWithoutSleepCarriesNoRing() {
+        let controls = self.controls(strength: 5, stamina: 5)
+
+        XCTAssertEqual(controls.sleepHours, 0)
+        XCTAssertEqual(controls.sleepHoursCap, 0)
+        XCTAssertEqual(DashRing(filled: controls.sleepHours, total: controls.sleepHoursCap).solid, 0)
+        XCTAssertEqual(controls.sleepValue, "")
+    }
+
+    /// A row carrying a night's sleep, for the ring and announcement assertions above.
+    private func rested(hours: Int, cap: Int) -> ActionControls<EmptyView, EmptyView, EmptyView, EmptyView> {
+        ActionControls(canAffordBattle: true, poopCount: 0, lightState: .on,
+                       sleepHours: hours, sleepHoursCap: cap,
+                       feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                       mapDestination: { EmptyView() },
+                       partyDestination: { EmptyView() },
+                       dexDestination: { EmptyView() },
+                       sleepDestination: { EmptyView() })
     }
 }

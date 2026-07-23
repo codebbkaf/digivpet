@@ -138,7 +138,7 @@ extension PartyRow {
 
 /// The party screen's sizes and tints.
 ///
-/// Named rather than left as literals in the `body`, for `MainReadingBarLayout`'s reason: what a row is
+/// Named rather than left as literals in the `body`, for `EnergyBarLayout`'s reason: what a row is
 /// allowed to cost is a decision, and a decision a test can argue with is one that stays made.
 enum PartyRowLayout {
     /// Screen points per sprite pixel, so a row's Digimon is 32pt square. Twice the Dex grid's

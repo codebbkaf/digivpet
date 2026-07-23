@@ -642,10 +642,14 @@ final class MainScreenModel: ObservableObject {
     /// - `-sleepBarDemo` — 6 accumulated hours, so the Zz bar reads 6 of `sleepHoursCap` dashes.
     /// - `-sleepBarFullDemo` — 14 hours, a nearly-full bar, for the "two Digimon, different fill"
     ///   comparison AC3 asks for.
+    /// - `-sleepTimeDemo` — the same 6 hours, seeded for US-213: the bar became an indigo ring around
+    ///   the new Sleep button, and the flag that pushes the screen behind it (`ContentView`) needs the
+    ///   same hours banked, or the ring photographs empty and the screen reads "0 h".
     private func seedSleepBarDemoIfRequested() {
         let arguments = CommandLine.arguments
         let full = arguments.contains("-sleepBarFullDemo")
-        guard arguments.contains("-sleepBarDemo") || full, let state else { return }
+        guard arguments.contains("-sleepBarDemo") || full
+                || arguments.contains("-sleepTimeDemo"), let state else { return }
 
         // Off the starting egg so the bar sits under a real Digimon rather than the placeholder.
         if let agumon = graph.node(id: "agumon") {
@@ -1704,8 +1708,8 @@ final class MainScreenModel: ObservableObject {
     /// Where the Digimon is adventuring and how far across it it has walked (US-120): the selected
     /// map, or the first map as a prompt when the player has chosen nowhere.
     ///
-    /// Named for the strip it once fed, which US-210 deleted; what reads it now is the map-step
-    /// `DashBar` in `MainReadingBars`, off `recordedSteps`/`totalSteps`.
+    /// Named for the strip it once fed, which US-210 deleted; what reads it now is the green
+    /// `DashRing` around the grid's Map button (US-212), off `recordedSteps`/`totalSteps`.
     ///
     /// Computed off the same injected catalog and the same `PlayerProfile` as `mapRows`, and for the
     /// same reason: both are already observable, so a step credited to the selected map moves the

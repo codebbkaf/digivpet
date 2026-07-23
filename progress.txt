@@ -242,6 +242,16 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `graph.reachesUltimate`, so US-157's first four `tamers` Ultimates turned five Digitama from
   unraisable into legal starting eggs and moved BOTH lists in `EggHatchingTests`. `wanyamon` is the
   last line with Perfects and no Mega — expect the same there.
+- **A DEMO FLAG THAT PUSHES A SCREEN MUST ALSO SEED IT — ONE FLAG, NOT TWO (US-213).** `simctl`
+  cannot tap, so every screen behind a grid button is photographed by a `-xxxDemo` flag that pushes it
+  onto `ContentView`'s stack. If the screen's CONTENT comes from a separate seed
+  (`MainScreenModel.seed...IfRequested`), add the new flag to that seed's guard rather than expecting
+  the two to be passed together: a push flag alone photographs an empty screen and reads like the
+  feature is broken. `-sleepTimeDemo` pushes AND banks the 6 hours `-sleepBarDemo` banks.
+- **Deleting a view means grepping its NAME through comments, not just its call sites (US-213).**
+  Nothing warns about a doc comment pointing at a deleted type. `MainReadingBars`/`MainReadingBarLayout`
+  were cited by five comments in four other files. Repoint them at whatever the deleted type itself
+  cited — a chain of reasons is worth keeping unbroken.
 - **Author a multi-node edit with a script, after proving the JSON round-trips.**
   `json.dumps(d, indent=2, ensure_ascii=False)` reproduces `evolutions.json`, `elements.json` and
   `moves.json` byte-for-byte (no trailing newline). US-157 added 29 nodes across three files that
@@ -6762,4 +6772,73 @@ The thirty, `Perfect -> Ultimate`:
   as TOP then LEFT — getting that backwards crops the inside of a button and looks like a bug in the
   view. Row 1 of the grid sits at y≈345-405 in a 416x496 46mm shot; the five ring centres are near
   x = 73, 141, 209, 277, 345.
+---
+
+## 2026-07-24 - US-213 (A Sleep button, ringed with the Zz reading, opens the Sleep Time view)
+- `placesRow` gained a ninth circle: `bed.double.fill`, `.indigo`, a `NavigationLink` (not a
+  `Button`) because sleep is a place you go and look at rather than an action you spend.
+  `ActionControls.buttonCount` 8 -> 9, so `rowCounts` chunks [5, 4] and the scroll cap stays 64pt —
+  the sprite's slot did not move and no `SpriteScale` band shifted. Exactly the two edits US-211's
+  learnings predicted, plus the ring and the destination.
+- The ring is `DashRing(filled: sleepHours, total: sleepHoursCap, tint: .indigo)` off new
+  `sleepHours`/`sleepHoursCap` properties (defaulted 0/0, so every pre-existing call site draws no
+  ring). `sleepValue` speaks "6 of 16 hours slept" — WORD FOR WORD what the Zz `DashBar` spoke, so a
+  VoiceOver user who learnt the old phrasing does not have to learn a new one. Clamped and silent at
+  cap 0, exactly like `mapValue`.
+- `Sources/MainReadingBars.swift` is DELETED, with `MainReadingBarLayout` and `ReadingRow`. It held
+  one line; US-212 took the map line, this took the Zz line, and a view with no readings is not a
+  view. Nothing between the name row and the grid draws any more — every reading on the main screen
+  now sits on the button it is about.
+- New `Sources/SleepTimeView.swift`: the total, as the headline hours, "of 16 h", the same `DashBar`
+  re-housed (indigo, so the number, the bar and the ring on the button that opened it are one
+  colour), and a "Fully rested." / "Slept so far." caption. `ScrollView` + `navigationTitle("Sleep")`.
+  **This is US-213's half of the screen — US-214 adds the per-Digimon bedtime / wake / nap beneath
+  it**, which is why the body is a `VStack` of rows in a `ScrollView` rather than a centred hero.
+- `ActionControls` is now generic over FOUR destinations. Five test fixtures and three explicit
+  `ActionControls<EmptyView, EmptyView, EmptyView>` annotations across three files needed the fourth
+  arg; nothing else did.
+- New `-sleepTimeDemo` flag: `ContentView` pushes `SleepTimeView` onto the same stack the map list
+  uses, and `seedSleepBarDemoIfRequested` banks the same 6 hours `-sleepBarDemo` does, so ONE launch
+  gives both a ringed button and the screen behind it.
+- Files: Sources/ActionControls.swift, Sources/SleepTimeView.swift (new), Sources/ContentView.swift,
+  Sources/MainScreenModel.swift, Sources/MapStrip.swift (comments), Sources/PartyView.swift
+  (comment), Sources/MainReadingBars.swift (deleted), Tests/ActionControlsTests.swift,
+  Tests/SleepTimeViewTests.swift (new), Tests/MainReadingBarsTests.swift (deleted),
+  Tests/MapStripTests.swift, Tests/FeedingTests.swift.
+- Verified: build green; FULL suite **2723 tests, 0 failures** (+6: 5 new in `ActionControlsTests`,
+  3 new in `SleepTimeViewTests`, 2 deleted with `MainReadingBarsTests`). Screenshots:
+  /tmp/us213/ring46.png and /tmp/us213/ring42.png — nine circles, Sleep last on the staggered row,
+  nothing clipped at either edge on either watch, and no Zz bar left above the grid;
+  /tmp/us213/sleepbtn.png — the button zoomed, three of ten arcs lit, which is `floor(6/16*10)`;
+  /tmp/us213/view46.png — the pushed Sleep screen reading "6 h / of 16 h / Slept so far."
+- Tests: `testTheGridGrewANinthCircleForSleep`, `testTheSleepRingIsDrivenByTheModelsSleepHours`,
+  `testTheSleepRingFloorsAndClampsLikeTheOthers`, `testSleepAnnouncesSleptAgainstGoal`,
+  `testARowBuiltWithoutSleepCarriesNoRing`; `SleepTimeViewTests` drives the screen through the very
+  `model.sleepHours`/`model.sleepHoursCap` expressions `ContentView` hands it and asserts the screen
+  and the ring are the same fraction.
+
+**Learnings for future iterations:**
+- **Two flags for one story is one flag too many.** A pushed-screen demo needs BOTH the push and the
+  seed, and requiring `-sleepTimeDemo -sleepBarDemo` together is a trap the next iteration will fall
+  into (it reads as one flag doing nothing). Adding the new flag to the EXISTING seed's guard costs
+  one `||` and makes the screenshot command a single argument. Do this for any future pushed screen
+  whose content is seeded elsewhere.
+- **Deleting a view means grepping for its NAME in comments, not just its call sites.** The compiler
+  is silent about a doc comment that says "for `MainReadingBarLayout`'s reason"; four such references
+  (PartyView, ContentView, MapStrip ×2, MainScreenModel) survived the delete and would have pointed
+  at nothing. `MainReadingBarLayout`'s own doc said it was free-standing "for `EnergyBarLayout`'s
+  reason", so the repointing was mechanical — a chain of reasons is worth keeping unbroken.
+- **A new generic parameter on `ActionControls` costs five test fixtures.** Three files build it, and
+  three places spell `ActionControls<EmptyView, EmptyView, EmptyView>` explicitly (two private helper
+  return types and one `buttonCount` reference wrapped over two lines). If a tenth button ever needs
+  a tenth destination, budget for that, or collapse the destinations into one `AnyView`-free protocol
+  first.
+- **The 42mm is the shot that matters for a row that grew.** Row 2 at four buttons is
+  `staggerOffset + 4*30 + 3*4 = 17 + 132 = 149pt` inside a 166pt row, so it was never going to clip —
+  but that is exactly the arithmetic `testTheStaggeredRowStaysInsideAFullRowsWidth` already loops
+  over up to `columns - 1`, which is why no new layout test was needed for the ninth circle.
+- **`.indigo` is free in this palette.** The grid now runs orange, red, brown, purple, green / teal,
+  yellow, blue, indigo. Indigo next to blue (Dex) is the closest pair on the screen and is still
+  legible at 30pt because the glyphs differ completely; a tenth button should take a hue from the
+  warm end rather than adding a third blue.
 ---

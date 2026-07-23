@@ -6,8 +6,8 @@ import Foundation
 /// It was a VIEW's backing value until US-210 — the thin row above the energy bars that named the
 /// map and held the way through to the box (US-120). That row is gone: US-197 gave the action grid
 /// its own Map and Party circles, so the strip was a second door to a screen the grid already
-/// opened, plus a name floating under the sprite. The value outlived it because the map-step
-/// `DashBar` (`MainReadingBars`, US-196) is built from `recordedSteps`/`totalSteps`, and because
+/// opened, plus a name floating under the sprite. The value outlived it because the Map button's
+/// green `DashRing` (US-212) is built from `recordedSteps`/`totalSteps`, and because
 /// what it SAYS — which map it names when nothing is selected, how the counter is spelled — is
 /// arithmetic, and arithmetic belongs somewhere a test can reach without a Simulator.
 struct MapStrip: Equatable {
@@ -24,14 +24,14 @@ struct MapStrip: Equatable {
     /// screens is the point — a figure that reads `1222 / 25000` in the list and `1.2k` here would
     /// be two answers to one question.
     ///
-    /// No longer drawn since US-196 moved the step reading into the map-step `DashBar`
-    /// (`MainReadingBars`); kept because it is still this feature's single spelled counter and what
+    /// No longer drawn since US-196 moved the step reading into a bar, and US-212 that bar onto the
+    /// Map button's ring; kept because it is still this feature's single spelled counter and what
     /// `MapStripTests` pins the counter's exact wording against.
     let progressText: String
 
-    /// The floored step counter and the map's length, the raw numbers the map-step `DashBar` fills
-    /// (US-196). The same values `progressText` spells, exposed as integers so `MainReadingBars` can
-    /// draw them as a proportional bar rather than re-parse the string.
+    /// The floored step counter and the map's length, the raw numbers the Map button's `DashRing`
+    /// fills (US-196, ringed in US-212). The same values `progressText` spells, exposed as integers
+    /// so the ring can draw the fraction rather than re-parse the string.
     let recordedSteps: Int
     let totalSteps: Int
 

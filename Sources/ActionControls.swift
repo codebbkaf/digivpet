@@ -3,8 +3,8 @@ import SwiftUI
 /// The circular face shared by every button in the action grid (US-038).
 ///
 /// Shared rather than duplicated because the grid mixes `Button`s (Feed, Train, Clean, Battle,
-/// Light) with `NavigationLink`s (Map, Party, Dex) — different containers that must nevertheless
-/// look like one grid of eight identical circles.
+/// Light) with `NavigationLink`s (Map, Party, Dex, Sleep) — different containers that must
+/// nevertheless look like one grid of nine identical circles.
 ///
 /// It reads `isEnabled` from the environment rather than taking a flag: the disabled Battle button
 /// is disabled by the `.disabled` modifier on the `Button` that wraps this, and a second source of
@@ -37,7 +37,7 @@ struct ActionButtonFace: View {
 
     @Environment(\.isEnabled) private var isEnabled
 
-    /// The SF Symbol the circle holds. All eight buttons name one again as of US-209: the drawn
+    /// The SF Symbol the circle holds. All nine buttons name one again as of US-209: the drawn
     /// `ActionGlyph.waste` coil US-197 put on Clean lost its only caller when Clean went back to its
     /// sparkle, so the enum and its `WasteGlyph` went with it.
     let systemImage: String
@@ -50,7 +50,7 @@ struct ActionButtonFace: View {
             .font(.system(size: 14, weight: .semibold))
             .foregroundStyle(colour)
             // The frame is the whole button: an exact size, not padding around a glyph whose
-            // metrics differ per symbol, so all eight circles match and none exceeds the 32pt cap.
+            // metrics differ per symbol, so all nine circles match and none exceeds the 32pt cap.
             .frame(width: Self.diameter, height: Self.diameter)
             .background(Circle().fill(colour.opacity(0.2)))
             .contentShape(Circle())
@@ -61,7 +61,7 @@ struct ActionButtonFace: View {
 /// test can hold them still.
 ///
 /// A separate, non-generic enum for the same reason `ActionButtonFace.diameter` lives where it does:
-/// `ActionControls` is generic over three destination types, so `ActionControls.cleanSymbol` would
+/// `ActionControls` is generic over four destination types, so `ActionControls.cleanSymbol` would
 /// not infer at a test's call site.
 enum ActionSymbol {
     /// Clean. Was `"sparkles"` before US-197, `ActionGlyph.waste` (a drawn coil of droppings) from
@@ -78,7 +78,7 @@ enum ActionSymbol {
 ///
 /// Free-standing and non-generic, in the same spirit as `DashBarLayout`: the arrangement is
 /// arithmetic, and a test should be able to check the row split, the offset and the width against
-/// the narrowest screen without standing up a view graph. (`ActionControls` is generic over three
+/// the narrowest screen without standing up a view graph. (`ActionControls` is generic over four
 /// destination types, so a static on it would not infer at a test's call site.)
 enum ActionGridLayout {
     /// Buttons per row. Five, because that is what fits: see `ActionButtonFace.diameter` for the
@@ -99,8 +99,8 @@ enum ActionGridLayout {
     }
 
     /// How the buttons chunk into rows, in order: five to a row until the last, which takes the
-    /// remainder. Nine buttons — the eight drawn today plus US-213's Sleep — give `[5, 4]`; a
-    /// fourteenth would give `[5, 5, 4]` with no change to anything that draws.
+    /// remainder. The nine drawn since US-213 give `[5, 4]`; a fourteenth would give `[5, 5, 4]`
+    /// with no change to anything that draws.
     static func rowCounts(forButtons count: Int) -> [Int] {
         guard count > 0 else { return [] }
         return stride(from: 0, to: count, by: columns).map { min(columns, count - $0) }
@@ -120,9 +120,9 @@ enum ActionGridLayout {
     }
 }
 
-/// The action grid: Feed, Train, Clean, Battle, Map on the top row and Party, Light, Dex on the
-/// staggered bottom row, as circular icon-only buttons (US-038; two rows since US-197; five-column
-/// and staggered since US-211).
+/// The action grid: Feed, Train, Clean, Battle, Map on the top row and Party, Light, Dex, Sleep on
+/// the staggered bottom row, as circular icon-only buttons (US-038; two rows since US-197;
+/// five-column and staggered since US-211; nine circles since US-213).
 ///
 /// Icon-only, in rows, because the labelled buttons this replaces were stacked blocks that pushed
 /// the Digimon off the top of the screen — the thing the user actually came to look at. The action
@@ -131,7 +131,8 @@ enum ActionGridLayout {
 /// US-197 pulled Light out of the toolbar and Dex too, and brought Map and Party in beside them, so
 /// every way out of the room is one consistent circle in this grid rather than scattered between the
 /// toolbar, a strip and a row.
-struct ActionControls<MapDestination: View, PartyDestination: View, DexDestination: View>: View {
+struct ActionControls<MapDestination: View, PartyDestination: View, DexDestination: View,
+                      SleepDestination: View>: View {
     /// Whether the Digimon can pay `BattleCost.energy` (US-108, replacing US-032's daily count).
     /// False disables the Battle button and shows why.
     let canAffordBattle: Bool
@@ -163,11 +164,19 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
 
     /// How far the active Digimon has walked the selected map and how long that map is, ringed around
     /// Map in green (US-212) — the last reading that still lived as a bar under the sprite. It is the
-    /// same `MapStrip.recordedSteps`/`totalSteps` pair `MainReadingBars` drew, and it rings for the
+    /// same `MapStrip.recordedSteps`/`totalSteps` pair the bar above the grid drew, and it rings for the
     /// reason the other four do: a reading belongs on the button it is about. Defaulted to 0/0, which
     /// is also what no map selected gives, so no ring draws.
     var mapRecorded: Int = 0
     var mapTotal: Int = 0
+
+    /// How many whole hours the active Digimon has slept and the nominal ceiling that counts as a
+    /// full night's rest, ringed around Sleep in indigo (US-213). It is `model.sleepHours` /
+    /// `model.sleepHoursCap` — the Zz `DashBar` that was the last reading drawn above this grid —
+    /// and it rings for the same reason map steps did a story earlier: a reading belongs on the
+    /// button it is about, and sleep now has one. Defaulted to 0/0, which draws no ring.
+    var sleepHours: Int = 0
+    var sleepHoursCap: Int = 0
 
     let feed: () -> Void
     let train: () -> Void
@@ -175,12 +184,14 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     let battle: () -> Void
     /// One tap of the Light button; cycles on -> semi -> off -> on like the old toolbar switch did.
     let cycleLight: () -> Void
-    /// The three destinations the navigation buttons push. Builders rather than concrete types so
-    /// this view need not know about `MapListView`, `PartyView` or `DexView`, and so a test can hand
-    /// each an `EmptyView`; lazy so the store a `DexView` opens is not built on every body pass.
+    /// The four destinations the navigation buttons push. Builders rather than concrete types so
+    /// this view need not know about `MapListView`, `PartyView`, `DexView` or `SleepTimeView`, and so
+    /// a test can hand each an `EmptyView`; lazy so the store a `DexView` opens is not built on every
+    /// body pass.
     @ViewBuilder let mapDestination: () -> MapDestination
     @ViewBuilder let partyDestination: () -> PartyDestination
     @ViewBuilder let dexDestination: () -> DexDestination
+    @ViewBuilder let sleepDestination: () -> SleepDestination
 
     /// Whether the Battle button is disabled. Not `private`, like `limitCaption`, so a test can
     /// assert the rule — a `.disabled` modifier inside `body` is unreachable outside a view graph.
@@ -191,7 +202,7 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     var isCleanDisabled: Bool { poopCount == 0 }
 
     /// The caption under the grid. Nil while a battle is affordable — a permanent cost label on one of
-    /// eight buttons would be noise on a 41mm screen. When it is not, it is the model's OWN refusal
+    /// nine buttons would be noise on a 41mm screen. When it is not, it is the model's OWN refusal
     /// string, so what a user reads cannot disagree with what was enforced.
     var limitCaption: String? {
         canAffordBattle ? nil : BattleCost.insufficientEnergyReason
@@ -216,11 +227,21 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
         return "\(min(max(mapRecorded, 0), mapTotal)) of \(mapTotal) steps"
     }
 
-    /// How many circles the grid draws. Eight today; US-213 appends Sleep and this becomes 9, which
+    /// What the Sleep button speaks (US-213). Word for word the value the Zz `DashBar` spoke before
+    /// this story moved the reading onto a button — "6 of 16 hours slept" — because it is the same
+    /// two numbers and a VoiceOver user who learnt the old phrasing should not have to learn a new
+    /// one. Named like `mapValue` for `chargeValue`'s reason: hours are not a charge count, and the
+    /// unit has to be said aloud. Clamped and silent at no cap, exactly as the other two are.
+    var sleepValue: String {
+        guard sleepHoursCap > 0 else { return "" }
+        return "\(min(max(sleepHours, 0), sleepHoursCap)) of \(sleepHoursCap) hours slept"
+    }
+
+    /// How many circles the grid draws. Nine since US-213 appended Sleep, which
     /// `ActionGridLayout.rowCounts` chunks into the 5-and-4 US-211 describes with nothing else to
     /// change. Named rather than counted by hand so the scroll view's height cap cannot drift out of
     /// step with the rows below it.
-    static var buttonCount: Int { 8 }
+    static var buttonCount: Int { 9 }
 
     private var rowCounts: [Int] { ActionGridLayout.rowCounts(forButtons: Self.buttonCount) }
 
@@ -335,8 +356,9 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     }
 
     /// Row 1 — the ways out of the room and the switch on its wall, staggered half a cell right so
-    /// they sit between the circles above. Three today; US-213's Sleep is the fourth, and lands here
-    /// with no change to this row's shape.
+    /// they sit between the circles above. Four since US-213 appended Sleep, which landed here with
+    /// no change to this row's shape: `ActionGridLayout` chunks the same sequence, and a row of four
+    /// is still inside a full row's width.
     private var placesRow: some View {
         HStack(spacing: ActionGridLayout.spacing) {
             NavigationLink {
@@ -366,6 +388,24 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Dex")
+
+            // Sleep (US-213), the ninth circle and the last reading to come off the screen above.
+            // A `NavigationLink` rather than a `Button` because sleep, like the map and the party,
+            // is a place you go and look at rather than an action you spend — the tap opens the
+            // Sleep Time view instead of doing something to the Digimon.
+            NavigationLink {
+                sleepDestination()
+            } label: {
+                ActionButtonFace(systemImage: "bed.double.fill", tint: .indigo)
+            }
+            .buttonStyle(.plain)
+            // The Zz reading, indigo, ringed around the button the sleep screen opens from. It is
+            // the one ring in the grid whose value the player cannot spend or walk off — it counts
+            // what the watch recorded overnight — but it reads exactly like the other five, which is
+            // the point: the grid is one control repeated, not six unrelated dials.
+            .overlay { DashRing(filled: sleepHours, total: sleepHoursCap, tint: .indigo) }
+            .accessibilityLabel("Sleep")
+            .accessibilityValue(sleepValue)
         }
     }
 }

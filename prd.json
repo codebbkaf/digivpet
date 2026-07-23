@@ -1851,8 +1851,8 @@
         "Build green. Verify in the simulator: the Sleep button shows the Zz ring and pushes the Sleep view"
       ],
       "priority": 100,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Ninth grid circle: bed.double.fill, indigo, appended to the staggered row (buttonCount 8->9, rowCounts [5,4]); it carries DashRing(model.sleepHours/sleepHoursCap) and a NavigationLink to the new SleepTimeView. MainReadingBars deleted with its last reading. Build green, full suite 2723 tests 0 failures; screenshotted on 46mm and 42mm (ring lights 3 of 10 at 6 of 16 h, nothing clipped) plus the pushed Sleep view via the new -sleepTimeDemo flag."
     },
     {
       "id": "US-214",

@@ -426,7 +426,8 @@ final class FeedApplyTests: XCTestCase {
                                       feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                                       mapDestination: { EmptyView() },
                                       partyDestination: { EmptyView() },
-                                      dexDestination: { EmptyView() })
+                                      dexDestination: { EmptyView() },
+                                      sleepDestination: { EmptyView() })
         return DashRing(filled: controls.meat, total: controls.meatCap, tint: .orange)
     }
 }
