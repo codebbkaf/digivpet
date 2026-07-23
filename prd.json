@@ -1,7 +1,7 @@
 {
   "project": "Digimon Health V-Pet",
   "branchName": "ralph/adventure-maps-party-and-jogress",
-  "description": "Adventure Maps, Multi-Digimon Party, Jogress and Full Roster Wiring - sixteen map backgrounds become places that accrue your steps, supply your battle opponents and hold the Digitama you can find; the save grows from one Digimon to a box of many with exactly one active and the rest frozen; two owned Digimon fuse by Jogress and hand one of their eggs back; the light button leaves the Digimon's play area; and the 780 playable Digimon that today have no evolution edge at all get wired into the graph. Source PRD: tasks/prd-adventure-maps-party-and-jogress.md",
+  "description": "Adventure Maps, Multi-Digimon Party, Jogress and Full Roster Wiring - sixteen map backgrounds become places that accrue your steps, supply your battle opponents and hold the Digitama you can find; the save grows from one Digimon to a box of many with exactly one active and the rest frozen; two owned Digimon fuse by Jogress and hand one of their eggs back; the light button leaves the Digimon's play area; and the 780 playable Digimon that today have no evolution edge at all get wired into the graph. Source PRD: tasks/prd-adventure-maps-party-and-jogress.md || Prepended ahead of the Orphan sweep: sleep in evolution, the meat/steps/calories/handwash consumption loop as a config file, per-Digimon HP/Attack/Agility with dash-bar battle HP, agility dodges and element damage, light-off conditions, screen-layout polish, and wiring the dead MetricCreditor health pipeline. Source PRD: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
   "userStories": [
     {
       "id": "US-114",
@@ -637,6 +637,370 @@
       "notes": "Authored penc-vb from nothing: 30 nodes, 270 -> 300, and the LAST of the eleven device trees - every ### Version section of the tree document now has a line. Orphans 643 -> 628, 15 removed (heriss_digitama, yukimibotamon, nyaromon, plotmon, herissmon, filmon, turuiemon, holyangemon, stiffilmon, andiramon_virus, seraphimon, ophanimon, cherubimon_virtue, rasenmon, cherubimon_vice), counted with Appendix B. NO name in the section is absent: all 26 Digimon the document draws have a playable 48x64 sheet, five under a spelling it does not use (SnowBotamon/YukimiBotamon, Salamon/Plotmon, Gatomon/Tailmon, Wizardmon/Wizarmon, Stefilmon/Stiffilmon) - the first tree needing no Wikimon stand-in and no rehomed rung. MagnaAngemon IS HolyAngemon, so the document's two drawings of it (over Angemon toward Seraphimon, over Wizardmon toward Cherubimon Virtue) are ONE node with two parents and two children. Omegamon stays a jogress.json recipe, as in every other tree's Ultra row. Fifteen of the thirty nodes are pencvb_ aliases, the worst ratio in the file, and both existing triples become quadruples. Junk chain invented as in every Pendulum tree: Turuiemon -> Andiramon (Virus) -> Cherubimon (Vice), every arrow drawn by Wikimon and the dark mirror of this tree's own Cherubimon (Virtue). Egg is heriss_digitama, dropped by 14_farmland. Validator: zero findings. Build green, 1921 tests, 0 failures."
     },
     {
+      "id": "US-170",
+      "title": "Metric-to-game conversion config file",
+      "description": "As a developer, I want every HealthKit-to-game conversion constant in one shipped config so tuning the economy needs no code change - today they are scattered across FeedAction.swift:22, TrainAction.swift:36 and Battle.swift (BattleLimits). Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "New Resources/consumption.json carried by the existing Resources folder reference, plus Sources/ConsumptionConfig.swift loaded the way MapCatalog.bundled loads - fatalError on undecodable data",
+        "Config holds at least: kcalPerTrain=50, stepsPerBattleCharge=300, maxBattleCharges=10, handwashPerCleanCharge, maxCleanCharges=2, meatPerBattleWin (min/max), meatCap, the hit-rate coefficients, the element-damage multipliers, and per-stage base-stat and training-cap tables",
+        "No conversion constant added or reworked by US-171..US-192 remains hard-coded in an action/battle file - each reads ConsumptionConfig",
+        "New Sources/ConsumptionConfigValidator.swift (shape of MapCatalogValidator, returns findings) rejects a non-positive rate, a max below zero, and an empty stat table; test: zero findings over the shipped config",
+        "Test: ConsumptionConfig.bundled decodes and every rate is > 0 and every cap >= 0",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-171",
+      "title": "Reusable dash-bar component",
+      "description": "As a player, I want progress shown as dashes not numbers so I can read my Digimon's state in under two seconds - this is the single visual language for every value bar in the app. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "New Sources/DashBar.swift renders `total` equal-width dashes: the first `filled` solid and the remaining `total - filled` as outline only (stroked border, no fill), with NO digits drawn anywhere",
+        "filled is clamped to 0...total; total==0 renders nothing; the bar fits the watch content width and wraps or scales for large totals up to at least 16 dashes without clipping on 41mm",
+        "An accessibilityLabel carries \"<filled> of <total>\" so VoiceOver still speaks the value the sightless bar hides",
+        "Test: filled dashes count == min(filled,total) and outline dashes count == total - min(filled,total) across filled in {0, half, total, total+1}",
+        "Verify on the watchOS Simulator: screenshot a 6-of-16 bar on 41mm and confirm 6 solid + 10 outline dashes, no number, no horizontal overflow",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-172",
+      "title": "Bottom-align the action row and grow the play area",
+      "description": "As a player, I want the button row at the very bottom so the blank gap under it becomes room for my Digimon to walk - today there is empty space between the action row and the screen bottom. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "The action button row pins to the screen bottom with exactly 4pt bottom padding",
+        "The sprite play area and MapBackgroundView grow to take the reclaimed vertical space; the walk bound widens/heightens accordingly",
+        "No button overlaps the sprite at any walk offset; the toolbar and energy bars are unchanged",
+        "Verify on the watchOS Simulator: screenshot main screen before and after on 41mm and 46mm - the play area is measurably taller after and the row's bottom inset is 4pt",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-173",
+      "title": "Enlarge the Digimon image in the circular complication",
+      "description": "As a player, I want the widget's Digimon big enough to recognise at a glance - it currently renders small inside its frame. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "The circular complication's Digimon sprite is enlarged within its frame (ComplicationViews.swift / ComplicationSnapshot.swift) so it reads at watch-face size",
+        "The sprite never clips the round bezel and stays .interpolation(.none)",
+        "Verify on the watchOS Simulator: screenshot the circular complication before and after - the sprite occupies visibly more of the circle with no clipping",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-174",
+      "title": "Meat is the global feed currency",
+      "description": "As a player, I want to feed my Digimon with meat I earned, shared across my whole box - replacing today's Vitality-energy feed cost at FeedAction.swift:22. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "PlayerProfile gains a global `meat` count (survives the active Digimon, migrates existing saves to 0)",
+        "Feeding consumes 1 meat and is blocked at 0 meat with a clear 'no meat - go battle' affordance; the Vitality-energy feed cost is removed",
+        "Meat is shown as a DashBar (US-171), capped at config meatCap, no number",
+        "Test: feeding at 0 meat is a no-op that does not change hunger; feeding at >=1 meat decrements meat by 1 and feeds",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 35,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-175",
+      "title": "Battle wins drop meat",
+      "description": "As a player, I want battles to be how I get meat, so the walk -> battle -> feed cycle closes. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Winning (or completing) a battle credits a random amount of meat from ConsumptionConfig.meatPerBattleWin to the global pool, respecting meatCap",
+        "The battle result screen surfaces the meat gained",
+        "Test: with an injected RNG the meat granted is within [min,max] and the global meat rises by exactly that, never above meatCap",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 36,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-176",
+      "title": "Battle charges accrue from steps, per Digimon",
+      "description": "As a player, I want walking to earn battles: 300 steps = 1 battle charge, up to 10, stored on the Digimon I walked with. Removes the per-day battle cap (BattleLimits.perDay). Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Steps convert to battle charges at stepsPerBattleCharge (300) -> 1, stored on GameState (per Digimon), capped at maxBattleCharges (10)",
+        "Starting a battle spends exactly one charge; a battle is unavailable at 0 charges and says so; BattleLimits.perDay gating is removed",
+        "Switching the active Digimon shows that Digimon's own charge count, never another's",
+        "Battle charges shown as a DashBar (US-171), max 10, no number",
+        "Test: 900 injected steps yields 3 charges; 3300 steps caps at 10; a battle decrements by 1; a second Digimon's charges are independent",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 37,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-177",
+      "title": "Train charges accrue from active calories, per Digimon",
+      "description": "As a player, I want exercise to power training: 50 active kcal = 1 train charge, stored per Digimon. Replaces the Strength/Stamina energy cost in TrainAction.swift. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Active calories convert to train charges at kcalPerTrain (50) -> 1, stored on GameState (per Digimon)",
+        "Training spends exactly one charge and no longer spends Strength/Stamina energy; training is unavailable at 0 charges and says so",
+        "Switching the active Digimon shows that Digimon's own train charges",
+        "Train charges shown as a DashBar (US-171), no number",
+        "Test: 150 injected kcal yields 3 charges; training decrements by 1; a second Digimon's charges are independent",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 38,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-178",
+      "title": "Cleaning poop costs a global handwash charge",
+      "description": "As a player, I want cleaning to draw on real handwashing, capped at 2, shared globally - closing the last arm of the care loop. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "PlayerProfile gains global handwash charges from HealthKit handwashing, capped at maxCleanCharges (2)",
+        "Cleaning poop (MainScreenModel.clean()) spends 1 handwash charge; at 0 charges cleaning is unavailable and says so",
+        "Handwash charges shown as a DashBar (US-171), max 2, no number",
+        "Test: cleaning at 0 charges is a no-op leaving poopCount unchanged; at >=1 it decrements charges by 1 and zeroes poop",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 39,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-179",
+      "title": "Wire the metric ledger into the health-read flow",
+      "description": "As a developer, I need MetricCreditor.credit actually called so every health.* evolution condition has data - today it is called only in tests (0 calls in Sources), leaving the whole health condition pipeline dead (Problem 1/2/4). Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "MetricCreditor.credit(...) is called in the health-read flow beside EnergyCreditor.credit (MainScreenModel.swift:1157), writing stageMetricTotals / lifetimeMetricTotals / stageBestDayMetrics",
+        "ConditionContext.readings is supplied from HealthMetricReader at every build point (MainScreenModel.swift:1385/1501/2233/2445, DexModel.swift:252) instead of the empty dictionary",
+        "No energy double-credit or metric double-credit across relaunches - reuse the existing recency/ledger guard the energy path uses",
+        "Test: after crediting a health.sleep total above a threshold, an atLeast sleep condition evaluates satisfied and an atMost one below it evaluates unsatisfied - proving the data reaches ConditionEvaluator",
+        "Test: a standing/instantaneous metric supplied via readings is answerable (not forced to .unknown)",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 40,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-180",
+      "title": "No data is unknown, not zero",
+      "description": "As a developer, I need 'never credited / unauthorized' to read as .unknown, distinct from a real credited 0, so atMost health gates stop passing for free (Problem 2) even after wiring. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "GameState's metric-total accessor returns nil (-> .unknown) for a metric that was never credited, matching the ConditionContext comment's stated intent; a credited value of 0 stays .known(0)",
+        "healthValue(for:window:) returns .unknown for an un-credited metric, so an atMost health condition is NOT satisfied when there is no data",
+        "Test: with no credit, atLeast returns false AND atMost returns false (unknown); with a credited 0, atMost returns true and atLeast(>0) returns false",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 41,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-181",
+      "title": "Accumulated sleep hours stored per Digimon",
+      "description": "As a player, I want each Digimon to remember how much I've slept for it, so switching Digimon shows the right sleep progress toward evolution. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "GameState gains an accumulated-sleep-hours value (distinct from the nightly sleep energy), credited from HealthKit sleep via the US-179 ledger",
+        "The value persists across active-Digimon switches; a frozen Digimon does not accrue sleep (consistent with US-125)",
+        "Test: crediting sleep to Digimon A does not change Digimon B's accumulated sleep; the active one's value is what the UI reads",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 42,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-182",
+      "title": "Zz bar shows the active Digimon's accumulated sleep",
+      "description": "As a player, I want the main screen Zz bar to show how much I've slept for the Digimon I have out. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "The main-screen Zz bar (EnergyBarsView) renders the active Digimon's accumulated sleep from US-181 as a DashBar (US-171), no number",
+        "Switching the active Digimon updates the Zz bar to the new Digimon's stored sleep",
+        "Verify on the watchOS Simulator: screenshot the Zz bar for two Digimon with different stored sleep and confirm different fill",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 43,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-183",
+      "title": "Sleep as an evolution gate with a detail dash bar",
+      "description": "As a player, I want a Digimon to need real sleep to evolve - e.g. Agumon needs 16 hours - and a dash bar in the detail view showing exactly how much sleep remains. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Evolution edges can require accumulated sleep hours (health.sleep), and that gate is now honoured because of US-179/180/181 - below the requirement the edge is blocked and the junk fallback shows",
+        "The Digimon detail view shows a sleep DashBar (US-171): `required` dashes total, `earned` solid, the remainder outline, no numbers - e.g. 6 of 16 for a 16h requirement with 6h slept",
+        "At least a few authored edges use a sleep requirement (verified present in evolutions.json), validated by EvolutionGraphValidator",
+        "Test: an edge requiring 16h is unmet at 6h accumulated and met at 16h; the detail bar reports filled==earned, total==required",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 44,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-184",
+      "title": "Validator rejects unanswerable metric-by-window conditions",
+      "description": "As a developer, I need bad condition data (a metric x window the evaluator refuses to answer, e.g. care.battleCount with a stage window) to fail loudly in a test, so the maps.json Digitama-slot bug class cannot recur. NOTE: this story adds the RULE only; it does not re-author the existing mis-windowed slots (separate pass). Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "A validator rule (in MapCatalogValidator and EvolutionGraphValidator, or a shared ConditionMetric check) rejects any condition whose (metric, window) pair ConditionEvaluator answers only with .unknown",
+        "Test: each unanswerable pair (care.battleCount window=stage, care.battleWinRatio window!=lifetime, care.trainingSessions window!=stage) fires the rule on a hand-built fixture",
+        "The rule is documented as expected-to-report against today's shipped maps.json until the separate data-fix pass lands, so this story does NOT require zero findings there",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 45,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-185",
+      "title": "Light-off evolution condition",
+      "description": "As a player, I want dark-side Digimon that only evolve in the dark - a new evolution condition requiring the room light off. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "A new evolution condition type 'light must be off' evaluated against LightState (Light.swift) is added to EvolutionCondition and ConditionEvaluator",
+        "The condition is satisfied only while the light is off at evaluation time; unmet otherwise",
+        "At least a few dark-line edges in evolutions.json use it, validated by EvolutionGraphValidator (zero findings)",
+        "Test: the edge evolves with light off and is blocked with light on, all else equal",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 46,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-186",
+      "title": "Light-off map condition",
+      "description": "As a player, I want some maps to reveal dark Digimon only when the light is off. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "A DigitamaSlot / opponent condition can require the light off; MapOpponents / DigitamaDrop honour it",
+        "MapCatalogValidator accepts the new condition and still reports zero findings over the shipped maps.json",
+        "At least one authored map uses it",
+        "Test: the gated slot/opponent is available with light off and withheld with light on",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 47,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-187",
+      "title": "Every Digimon has HP, Attack and Agility",
+      "description": "As a player, I want each Digimon to have real combat stats, shown in its detail page. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Every playable Digimon has base HP, Attack and Agility (in Resources/roster.json or a companion stats file), with per-stage base tables in ConsumptionConfig so a Perfect out-stats a Child",
+        "The Digimon detail page shows HP, Attack and Agility as DashBars (US-171), no numbers",
+        "A validator/test asserts every playable (non-dexOnly) Digimon has all three stats and each is > 0",
+        "Verify on the watchOS Simulator: screenshot a detail page and confirm three labelled stat dash bars",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 48,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-188",
+      "title": "Dash-style HP bar in battle",
+      "description": "As a player, I want to watch HP drain in battle - a 5-HP Agumon shows 5 dashes, and losing all dashes loses the fight. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "BattleView shows each combatant's current HP as a DashBar (US-171): total = max HP, solid = current HP, no number",
+        "A landed hit removes dashes equal to the damage; reaching 0 dashes ends the battle as a loss for that Digimon",
+        "Test: a combatant with 5 HP taking 2 then 3 damage reaches 0 and loses; the bar's filled tracks current HP each exchange",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 49,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-189",
+      "title": "Agility decides dodges, and the dodger turns away",
+      "description": "As a player, I want agile Digimon to dodge and visibly flinch aside at the dodge moment - the hit chance comes from both Agility stats. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Each incoming attack rolls a hit chance from attacker and defender Agility using a monotonic, bounded formula whose coefficients live in ConsumptionConfig: equal Agility gives a fixed base chance, a more-agile defender lowers it, clamped to a floor > 0 and a ceiling < 1 (nothing is guaranteed or impossible)",
+        "On a dodge the projectile misses (no HP lost) and the defender flips to face the other direction at the dodge instant (a flipped walk frame; no new art)",
+        "Test: hitChance is monotonic decreasing in defender Agility and increasing in attacker Agility, stays within [floor,ceiling], and equals base when Agility is equal",
+        "Verify on the watchOS Simulator: force a dodge with an injected RNG and screenshot the defender facing the opposite way",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 50,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-190",
+      "title": "Element matchup scales real damage",
+      "description": "As a player, I want type advantage to matter: an advantaged attacker hits harder, a disadvantaged one softer, but a hit always dents at least one dash. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Landed damage = Attack scaled by the attacker-vs-defender element multiplier from the existing elements.json/ElementCatalog (advantage/neutral/disadvantage), with the multipliers in ConsumptionConfig and a floor of 1 HP",
+        "Damage feeds the US-188 HP bar",
+        "Test: with equal Attack, an advantaged attacker removes more dashes than neutral, which removes more than disadvantaged, and every landed hit removes >= 1",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 51,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-191",
+      "title": "Stats train up to a per-Digimon cap",
+      "description": "As a player, I want training to raise HP, Attack and Agility - but only so far, with higher-stage Digimon able to grow more. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "Training raises a chosen stat (HP/Attack/Agility) toward base + a capped bonus; the trained bonuses are stored per-Digimon on GameState",
+        "Caps come from per-stage tables in ConsumptionConfig; a higher-stage Digimon has a larger cap",
+        "A stat at its cap cannot be raised further; effective stat = base + bonus is what battle (US-188/189/190) reads",
+        "Test: repeated training never pushes a stat past base+cap, and a Perfect's cap exceeds a Child's for the same stat",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 52,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-192",
+      "title": "Losing a battle heals or costs a care mistake, and can kill",
+      "description": "As a player, I want losses to matter: after a loss the Digimon is healed, or else it takes a care mistake - and enough care mistakes lead to death. Reverses the old 'losing never causes a care mistake' rule deliberately. Full reasoning: tasks/prd-sleep-consumption-battle-stats-and-polish.md.",
+      "acceptanceCriteria": [
+        "After a battle loss the Digimon is either healed or charged a care mistake via the existing CareMistakes.swift path; the old rule that losing never causes a care mistake is removed with a note saying why",
+        "Accumulated care mistakes progress toward death (Death.swift) on the existing schedule - a repeatedly-neglected, repeatedly-losing Digimon can die; a healed one does not",
+        "Test: a loss without healing increments care mistakes; enough accrued care mistakes cross the existing death threshold; a healed loss does not increment",
+        "Tests pass",
+        "Typecheck passes"
+      ],
+      "priority": 53,
+      "passes": false,
+      "notes": ""
+    },
+    {
       "id": "US-144",
       "title": "Orphan sweep: Digitama A-K",
       "description": "As a player, I want every Digimon on disk to be obtainable rather than a Dex entry I can never reach. This sweep covers roughly 27 of the 51 orphaned Digitama, over whatever the Phase E device trees left behind. Full reasoning: tasks/prd-adventure-maps-party-and-jogress.md, Phase E.",
@@ -652,7 +1016,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 31,
+      "priority": 54,
       "passes": true,
       "notes": "Digitama orphans 45 -> 23 (all 23 left are L-Z, US-145's); whole-file orphans 628 -> 598, the extra 8 being the Baby I this sweep opened. 30 nodes added, 300 -> 330: 22 Digitama plus 8 Baby I. Twelve eggs join a device line their species is already wired into and add no rung (agu2006/gabublack/elec/kune/hyoko/angora/cand/beta/kame/kuda/kuda2006/espi); ten open a thread and bring their own Baby I, in five new lines - tamers, wanyamon, diablomon, commandramon, algomon. Every Wikimon arrow is cited in the node's comment. Build green, 1936 tests 0 failures, validator zero findings. TWO DEVIATIONS, both deliberate and both pinned by a test. (1) The AC 'every edge has at least one condition with a non-empty hint' is NOT met for the 22 hatch edges, and cannot be at this stage: EggHatcher.hatchTarget reads minEnergy and ignores conditions entirely, so a condition would be data that lies - and since every egg has exactly one way out, a condition an engine DID honour could leave a player's only egg unable to hatch. All 12 previously-shipped hatch edges are unconditional for the same reason; DigitamaSweepTests.testHatchEdgesAreUnconditionalAndUngatedByType states it as a claim. (2) The AC 'every Digimon in the range gets at least one in-edge' is impossible at Digitama - nothing evolves into an egg. Every one of the 22 got an out-edge, which is what the Appendix B count measures. Two invariants had to be generalised, and six earlier stories' tests with them: a line may now have SEVERAL eggs (the 'one egg per line' assertion in all six Pendulum/DMC tree tests now pins the exact egg list instead), and a node below Ultimate may be a dead end (the 8 new Baby I; ledgered by testTheOnlyDeadEndsBelowUltimateAreTheOnesThisSweepOpened for US-146/US-147 to shrink). MainScreenModel.startingDigitamaId now filters a new game's egg through EvolutionGraph.reachesUltimate so nobody starts on an unfinished thread."
     },
@@ -672,7 +1036,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 32,
+      "priority": 55,
       "passes": true,
       "notes": "Digitama orphans 23 -> 0, and the stage is now CLOSED: all 57 playable eggs carry their one hatch edge. Whole-file orphans 598 -> 563, the extra 12 being the Baby I this sweep opened. 35 nodes added, 330 -> 365: 23 Digitama plus 12 Baby I. Build green, 1951 tests 0 failures (1936 + 15 new, all 15 also observed passing on their own), validator zero findings over the whole file. THE RULE US-144 SET WAS TIGHTENED, and the reason is arithmetic rather than taste: `EggHatcher.hatchTarget` reads `evolutions.first`, so an egg has exactly one hatch edge and a Baby I's only possible in-edge is an egg of its own - and after this story there are no eggs left. So every egg spent on an already-reachable Baby I is a Baby I nobody can ever hatch. US-144's rule (an egg whose species is already wired joins that species' line) becomes: an egg opens the Baby I Wikimon puts two rungs below its species, and doubles up ONLY when it has no choice. Twelve opened one; eleven doubled up, each for one of five checked reasons (species already wired 4, species idle-only 3, species has no sheet at all 1 (Liollmon), the species' OWN Baby I idle-only 1 (Meicoomon), every candidate Baby I already in the graph 2 (Phascomon, Vorvomon)). TWELVE IS THE CEILING, PROVED NOT ASSUMED: only 13 of the 25 orphaned Baby I sit on a Wikimon thread reaching any of these 23 species at all, and two of those 13 (Leafmon, Pururumon) are reachable only through `worm_digitama`, which can hatch into one. So 13 Baby I are beyond Phase E's reach through Digitama; the number is asserted by `testTheBabyIStillOrphanedCannotBeReachedByAnyRemainingEgg` together with 'no unspent egg exists', so US-146 is told rather than having to discover it. ONLY TWO NEW LINES, not twelve: `adventure02` (V-mon, Wormmon) and `vital` (Ludomon, Zubamon, Morphomon, Pulsemon, Sunarizamon - every one of them drawn on a Vital Bracelet device, checked on the Wikimon Virtual Pets section rather than asserted). The other ten threads went onto lines that already exist: four Tamers partners (Lopmon, Monodramon, Renamon, Terriermon) onto `tamers`, which is now 15 nodes, and `pipimon`/`tsubumon` onto `palmon`/`dmc-v3` BY THEIR BABY II - Tanemon and Tokomon are already those lines', so US-147 closes those two dead ends with an edge and no new node. That pairing is pinned by `testTwoOfTheOpenedBabyIAlreadyHaveTheirBabyIIOnTheSameLine`. Every thread cites Wikimon AND names the middle rung the pairing rests on, and a test greps for both - a citation that skips the Baby II is unfalsifiable. THE DEAD-END LEDGER MOVED, deliberately: it is now the whole-file list of 20 in `DigitamaSweepLToZTests.testTheOnlyDeadEndsBelowUltimateAreTheOnesTheTwoDigitamaSweepsOpened`, because the next sweep will look at the newest sweep's file. US-144's version was narrowed to 'my eight are still dead ends' and points at the new home. US-144's marker test for this story fired as designed and was rewritten into the claim it guarded (zero orphaned Digitama, 57 wired). KNOCK-ON: nine test files, all count/egg-list pins - EvolutionGraphTests' per-line dict, graph.nodes.count in ElementCatalogTests and EvolutionGraphValidatorTests, EggHatchingTests' starting-egg split (8 new candidates, 15 new unraisable, computed not guessed), MinigameAssignmentTests' sharer map, EvolutionTreeTests' dmc-v1 layout, and the four Pendulum tree tests whose lines took an egg. PendulumWindGuardiansTreeTests' reachability was still seeded from one egg and now seeds from every egg of the line, which is the generalisation US-144 made everywhere else and missed there. TWO ACs NOT MET LITERALLY, both for the reasons US-144 recorded and both stated as tests rather than prose: nothing evolves INTO a Digitama, so 'every Digimon in the range gets an in-edge' is impossible at this stage; and a hatch edge carries no conditions, because `EggHatcher` ignores them and a condition an engine DID honour could leave a player's only egg unable to hatch. FOR US-147: `ketomon`'s only Wikimon Baby II is Hopmon, which is idle-only, so it needs a stand-in - the same problem `bommon` has. Noted in the node's own comment."
     },
@@ -692,7 +1056,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 33,
+      "priority": 56,
       "passes": true,
       "notes": "Wired the WHOLE Baby I rung, not only the 13 names still orphaned: the PRD's Appendix A lists 38 orphaned Baby I and US-144/US-145 gave 25 of them an in-edge only, so the out-edge half was left for this story on all of them. 38 new nodes (13 Baby I + the 25 Baby II they and the 20 dead ends now evolve into), 33 new edges, 365 -> 403 nodes. Orphans at stage 'Baby I': 13 BEFORE, 0 AFTER (whole file 563 -> 525; Baby II fell 37 -> 12 as a side effect). The AC 'every Digimon in the range gets at least one in-edge' CANNOT be met and is not claimed: a Baby I's only possible parent is a Digitama, EggHatcher.hatchTarget reads evolutions.first so an egg carries exactly one hatch edge, and US-144/US-145 spent all 57 - US-145 proved 12 was the most the last 23 could open. So 13 Baby I have no parent and never can; they are authored for their out-edges and pinned by name in EvolutionCriteriaTests.testEveryNonEggNodeIsReachableFromSomeDigitama (21 stranded: the 13 plus the 8 Baby II only they feed), which was a zero before and is now a checked list that still fails on a 22nd. Two new lines only - `xros` (6) and `penc-sw` (2), each justified on a DEVICE every member shares per Wikimon's Virtual Pets section (Digimon Xros Loader; Pendulum COLOR 6 Saiyu Warriors); the other 30 nodes joined existing lines. Four pairings are stand-ins rather than Wikimon arrows (Curimon/Gurimon absent, Pafumon/Kyaromon idle-only, Pyonmon/Bosamon absent, Puyomon/Puyoyomon absent) and each names the missing rung and the shared next rung it was rehomed on; Bombmon has NO evolution on Wikimon at all and its comment says FLAVOUR rather than dressing itself as a citation. Every sprite ls'd, no dexOnly on any edge, validator ZERO findings. Build green, 1967 tests, 0 failures."
     },
@@ -712,7 +1076,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 34,
+      "priority": 57,
       "passes": true,
       "notes": "Wired the WHOLE Baby II rung: 51 new nodes (12 Baby II nobody had wired + 39 Children), 12 new branch edges at Baby I and 38 Baby II out-edges. evolutions.json 403 -> 454, no new lines. ORPHAN COUNT FOR THE STAGE: Baby II 12 BEFORE, 0 AFTER (whole file 525 -> 475; Child fell 88 -> 50 as a side effect). Build green, 1986 tests, 0 failures, validator zero findings. ONE AC IS MET ON THE PHASE-E READING, NOT LITERALLY: 'no edge is unconditional' cannot hold for an isDefault edge, because US-020's fallback ignores an edge's gates - so every EARNED branch is conditioned and hinted (20 of them) and every fallback is not, the same reading US-144/145/146 recorded. Nine Baby I gained a second edge, which is the only mechanism that can give a Baby II an in-edge; the eight Baby II whose parent is a stranded Baby I still cannot be reached, and the 9 Children above them inherit that - pinned by name in EvolutionCriteriaTests, 21 -> 30."
     },
@@ -732,7 +1096,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 35,
+      "priority": 58,
       "passes": true,
       "notes": "Wired the A-F third of the Child rung: 43 new nodes (the 14 orphaned Children A-F, 23 earned Champions above them, 6 junk Champions for the lines that had no Champion rung at all), 14 new branch edges at Baby II across 9 Baby II, and the 9 Children US-147 opened as A-F leaves wired onward. evolutions.json 454 -> 497, plus the matching elements.json/moves.json rows, a new Tests/ChildSweepAToFTests.swift (22 tests) and 9 existing test files. NO new lines; no aliases, so new nodes and orphans removed are the same number. ORPHAN COUNT for the stage (Appendix B, regenerated roster.generated.json): Child 50 BEFORE, 36 AFTER — Child A-F 14 BEFORE, 0 AFTER. Whole file 475 -> 432; Adult fell 129 -> 100 as a side effect of authoring the rung above. Build green, 2008 tests, 0 failures, validator zero findings."
     },
@@ -752,7 +1116,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 36,
+      "priority": 59,
       "passes": true,
       "notes": "Wired the G-L third of the Child rung: 51 new nodes (the 18 orphaned Children G-L, 31 earned Champions above them, 2 junk Champions for `xros` and `vital`, the last two lines with no Adult rung at all), 18 new branch edges across 15 Baby II, and out-edges on the 14 Children US-147 opened as G-L leaves. evolutions.json 497 -> 548, plus the matching elements.json/moves.json rows, a new Tests/ChildSweepGToLTests.swift (23 tests) and 12 existing test files. NO new lines; no aliases, so new nodes and orphans removed are the same number. ORPHAN COUNT for the stage (Appendix B, regenerated roster.generated.json): Child 36 BEFORE, 18 AFTER — Child G-L 18 BEFORE, 0 AFTER. Whole file 432 -> 381; Adult fell 100 -> 67 as a side effect of authoring the rung above. Build green, 2031 tests, 0 failures, validator zero findings, and the 23 new tests also observed passing on their own. SCOPE READING, same as US-148: the range is the RUNG-AND-RANGE, so the 14 Children US-147 left with an in-edge and no out-edge are in it as well as the 18 orphans. AC9 read as US-144..US-148 read it, and asserted as three claims: every EARNED edge is conditioned and hinted, every junk fallback is unconditioned, no hint is blank. FOUND BY THE TEST, NOT BY THE PLAN: roster.generated.json carries the line-scoped ALIASES and Roster.bundled.entries does not, so the range is 43 and not the 45 the generated file reads — and `xros_hagurumon`, one of the 14 swept onward, is one of those aliases, which is why sweptChildren is deliberately not a subset of the range and has its own test. VARIANTS: six of the eight X-Antibody Children sit on their base form's own In-Training; Gabumon X and Gomamon X could not (Tokomon X is full since US-148, and Pukamon is the ONLY In-Training the whole penc-ds line has) so both joined the X-Antibody thread US-148 opened on dmc-v3. Kokuwamon X is the case worth knowing: Caprimon is full too, but penc-me has a second In-Training, so the variant kept its base form's LINE without keeping its parent. STRANDED, checked before parents were chosen rather than after: Gammamon moved off the stranded Pusurimon onto Hiyarimon (same line, equally free) and stayed reachable for free; Gaossmon could not be saved the same way, because all three xros Baby II are stranded — that line has no Digitama and US-144/145 spent all 57 eggs — so EvolutionCriteriaTests' list grows by one Child and six Champions, every one hanging off something already on it. HANDOVER: adventure02 is now the ONLY line without a Champion rung and it is US-150's, since V-mon, Wormmon and Tinkermon are all M-Z; the new test states that as a one-element list US-150 either empties or fails. One US-148 assertion was REPLACED rather than bumped and it is the one thing to review: its \"this line had no Champion before\" check read \"every Adult here is one US-148 authored\", which 16 new tamers Champions falsify — it now asserts the junk floor itself is US-148's, with the historical half moved into the comment."
     },
@@ -772,7 +1136,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 37,
+      "priority": 60,
       "passes": true,
       "notes": "Wired the M-Z third of the Child rung and FINISHED the rung: 51 new nodes (the 18 orphaned Children M-Z, 33 new Champions above them), 18 new branch edges across 14 Baby II, and out-edges on the 16 Children US-147 opened as M-Z leaves. evolutions.json 548 -> 599, plus the matching elements.json/moves.json rows, a new Tests/ChildSweepMToZTests.swift (26 tests) and 17 existing test files. NO new lines; no aliases, so new nodes and orphans removed are the same number. ORPHAN COUNT for the stage (Appendix B, regenerated roster.generated.json): Child 18 BEFORE, 0 AFTER. Whole file 381 -> 330; Adult fell 67 -> 34 as a side effect of authoring the rung above. Build green, 2057 tests, 0 failures, validator zero findings, and the 26 new tests also observed passing on their own. SCOPE READING, same as US-148/US-149: the range is the RUNG-AND-RANGE, so the 16 Children US-147 left with an in-edge and no out-edge are in it as well as the 18 orphans. THE WHOLE CHILD RUNG IS NOW COMPLETE - all 126 Child nodes, aliases included, have both edges, and that is asserted directly rather than left as three per-range claims. FOUND BY A TEST, NOT BY THE PLAN, and it is the one real bug here: `care.battleCount` is answerable ONLY over the LIFETIME window - ConditionContext.careValue returns .unknown for (careBattleCount, .stage) - so four edges first authored with \"window\": \"stage\" on a battle criterion were UNREACHABLE, not merely hard. Caught by BabyIISweepTests' engine test; every other care.* counter is the opposite way round and is .stage only. A new test pins the rule over the whole file so no later sweep repeats it. PLACEMENT DECIDED BY AN EGG'S PROMISE, per the Codebase Patterns rule: Phascomon first went to Sunmon (penc-nso) on flavour, and moving it to Kozenimon (penc-me, its cited Caprimon's line) made phasco_digitama's BFS arrive at its own species - so all three eggs that doubled up in US-145 because their species had no node (meicoo, phasco, vorvo) now reach it. Solarmon took the cited Gigimon parent on tamers to free that slot; DigitamaSweepLToZTests' \"the species is still unwired\" guards are replaced by the arrival check they were deferring. VARIANTS: eight of the nine hang off their base form's line and three off its own In-Training; Shakomon X could not - penc-ds has exactly ONE In-Training and Pukamon is full, the trap US-149's Gomamon X hit - so it followed its OTHER cited parent, Chocomon, onto tamers rather than being rehomed by flavour. adventure02 was the last line in the file with no Adult rung and gained NiseDrimogemon as its junk floor, which empties the one-element list US-149 left for this story. STRANDED, checked before parents were chosen: Starmon 2010 is the one Child added to EvolutionCriteriaTests' list and it is inherited - Wikimon gives it exactly one parent, Pickmon, and all three xros Baby II are unreachable because that line has no Digitama. Five Champions follow their already-stranded Child (Dorulumon, Shoutmon King, Ginryumon, Hakubamon, Parasaurmon); the other 28 sit over a reachable Child. TWO CHAMPIONS ARE NOT NEW NODES and that is a deliberate trade, the same one US-149 made for Lalamon: PetitMamon -> pencnso_devimon and Terriermon X -> Galgomon are the arrows the source draws, and both targets were already reachable, so each costs one orphan struck off in exchange for the canonical evolution. THREE HISTORICAL CLAIMS WERE REPLACED RATHER THAN BUMPED, each with the reason in the comment: US-149's \"every Adult on vital/xros is one US-149 authored\" (false once this story put ten more there - the junk FLOOR half survives); the Nature Spirits tree's \"Koromon's only conditioned edge is the unlockable slot\" (scoped to the three Rookies the SECTION draws, since YukiAgumon now hangs there too); and DexScreenTests' \"the roster dwarfs the graph\" (599 nodes against 1025 entries is past half, so the floor is now the 157 idle-only Digimon, which can never gain a node)."
     },
@@ -792,7 +1156,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 38,
+      "priority": 61,
       "passes": true,
       "notes": "Orphan count 330 -> 319 (Appendix B, regenerated roster.generated.json); the Adult bucket 34 -> 27 and the Perfect bucket 114 -> 110. All seven playable Adults A-D that were orphaned - Akatorimon, BlackGaogamon, BlackTailmon, Burgermon Mama, Burgermon Papa, DarkLizamon, Deckerdramon - now have one earned in-edge and one earned out-edge plus their line's unconditioned junk fallback. `wanyamon` and `tamers` had no Perfect rung at all, so the story opened it on both: BlackMachGaogamon and MegaloGrowmon as earned branches, Karakurumon and CatchMamemon as the junk floors (both added to EvolutionCriteriaTests.junkIds). 599 -> 610 nodes, no new lines, no dexOnly on any edge, validator reports zero findings. New Tests/AdultSweepAToDTests.swift (18 tests). Full suite 2075 tests green, build green."
     },
@@ -812,7 +1176,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 39,
+      "priority": 62,
       "passes": true,
       "notes": "Orphan count 319 -> 314 (Appendix B, regenerated roster.generated.json); the Adult bucket 27 -> 22 and no other bucket moved, because this story spent no Perfect. All five playable Adults E-G that were orphaned - Ebidramon, FlareLizamon, Gawappamon, Growmon Orange, GulusGammamon - now have one earned in-edge and one earned out-edge plus their line's junk fallback. Every one landed on a line that already had a Perfect rung (`penc-ds`, `tamers`, `penc-vb`), so 610 -> 615 nodes with no new Perfect, no new line and no change to the dead-end ledger. FlareLizamon closes the MegaloGrowmon arrow US-151 could only draw one end of. Gawappamon's bolded Wikimon parent Kamemon is idle-only, so it took the next CITED parent (Gomamon) rather than a rehome. New Tests/AdultSweepEToGTests.swift (20 tests). Full suite 2095 tests green, build green."
     },
@@ -832,7 +1196,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 40,
+      "priority": 63,
       "passes": true,
       "notes": "Orphan count 314 -> 311 (Appendix B, regenerated roster.generated.json); the Adult bucket 22 -> 19 and no other bucket moved, because this story spent no Perfect. Only THREE playable Adults H-L were still orphaned - KausGammamon, Kinkakumon, Kougamon - not the ~25 the PRD estimated, because the eleven device trees and three Child sweeps had already taken the rung from 168 orphans to 22. Each got one earned in-edge from a Child of its own line and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk fallback: gammamon -> kausgammamon -> pencvb_weregarurumon on penc-vb (both arrows cited to Pendulum COLOR ZERO Virus Busters, which is also its Wikimon family), jellymon -> kinkakumon -> zudomon on penc-ds (both cited to Vital Bracelet BE), mushmon -> kougamon -> jyureimon on penc-wg (both cited to D-alpha-508 / Digimon Story: Sunburst & Moonlight). Every line already had a Perfect rung, so 615 -> 618 nodes with no new Perfect, no new line and the dead-end ledger left at 99. Kinkakumon's Saiyu Warriors reading (Fujamon/Takinmon on penc-sw) was rejected on price - penc-sw still has NO Perfect rung - and both halves of that are pinned as a test. Gammamon is now FULL at three earned branches plus junk, the four-energy ceiling. The 17 Adults H-L that US-149/US-150 left as LEAVES were out of scope (they have in-edges, so they are not orphans) and stay on the dead-end ledger for the Perfect sweeps. New Tests/AdultSweepHToLTests.swift (20 tests). Full suite 2115 tests green, build green."
     },
@@ -852,7 +1216,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 41,
+      "priority": 64,
       "passes": true,
       "notes": "Wired the NINE playable Champions whose display name begins M-R that had no edge at all: Meramon X, Mikemon, Monochromon X, MoriShellmon, Musyamon, Nefertimon X, Pegasmon X, Pteranomon X, RedV-dramon. Each gained one earned in-edge from a Child of its own line and one earned out-edge to a Perfect of that line, plus the line's unconditioned junk fallback. TWO new Perfects were opened on `tamers` because every Perfect the four X-Antibody Champions cite is a sheet with no node: Grademon (cited by Meramon X and Pegasmon X off Digital Monster X Ver.3) and Mametyramon (the two sides of Bx-43, which fuses Monochromon X and Pteranomon X). Neither needed a junk floor - US-151 already put CatchMamemon under the line. Orphans 311 -> 300 (Appendix B over a regenerated roster.generated.json): Adult 19 -> 10 and Perfect 110 -> 108; no other bucket moved. 618 -> 629 nodes. Full suite 2137 tests green (2115 before), build green."
     },
@@ -872,7 +1236,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 42,
+      "priority": 65,
       "passes": true,
       "notes": "Wired the FIVE playable Champions whose display name begins S-T that had no edge at all: Saberdramon, ShimaUnimon, Siesamon X, Tyrannomon and Tyrannomon X. Orphans 300 -> 294 (Appendix B over a regenerated roster.generated.json): Adult 10 -> 5 AND Perfect 108 -> 107. 618 -> 629 -> 635 nodes. Four of the five cost NOTHING one rung up - the Rookie below and the Perfect above were already on one line in each case (muchomon/megadramon on dmc-v4, bakumon/mammon on penc-nso both cited to Digimon World 2, dorumon/grademon on tamers off Digital Monster X Ver.3, agumon/mamemon on dmc-v1 off Digital Monster Ver. 1). Only Tyrannomon X needed a Perfect opened, MetalGreymon X on dmc-v3, and that cost one node because Etemon has been that line's junk floor since US-133. Found and corrected a false claim: DMCVersion1TreeTests said the V1 document's Tyranomon had 'no colour sheet at all' - it was a SPELLING miss (the pack writes Tyrannomon with two n's), so the arrow was drawable all along and is now drawn. Full suite 2159 tests green (2137 before), build green."
     },
@@ -892,7 +1256,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 43,
+      "priority": 66,
       "passes": true,
       "notes": "Wired the last FIVE orphaned Champions (V-dramon Black, WezenGammamon, XV-mon Black, Xiquemon, Youkomon); the Adult rung now holds ZERO orphans. Orphans 294 -> 286 by Appendix B over a regenerated roster.generated.json: Adult 5 -> 0 AND Perfect 107 -> 104. 635 -> 643 nodes (5 Champions + 3 new Perfects: Canoweissmon, Huankunmon, BlackRapidmon). Both Black V-dramon cost nothing above - AeroV-dramon already had parents. Corrected US-153's inherited 'Gammamon is full' claim: vitality was free, so WezenGammamon took its bolded Wikimon parent rather than the Gabumon stand-in. Validator zero findings; full suite 2185 tests green, build green."
     },
@@ -912,7 +1276,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 44,
+      "priority": 67,
       "passes": true,
       "notes": "Wired the NINETEEN playable Perfect with no edge at all whose display name begins A-C. Each gained one earned in-edge from a Champion of its own line and one isDefault climb into an Ultimate of that line. TEN cost nothing above; the other NINE opened an Ultimate that had no node - four of them on `tamers`, which had five Perfects and no Ultimate rung at all. NINE of the nineteen in-edges came off Champions that were LEAVES, so the dead-end ledger FELL for the first time in Phase E, 105 -> 97, and each of those nine also gained its line's junk floor. `penc-sw`'s Perfect rung was opened at last (Cho-Hakkaimon + Shakamon + the junk floor Pandamon, the three-node bill US-153 and US-156 both quoted), and the new `tamers` Ultimate rung promoted FIVE Digitama to legal starting eggs. Orphans 286 -> 257 (Appendix B over a regenerated `roster.generated.json`): Perfect 104 -> 84, Ultimate 166 -> 157. 643 -> 672 nodes. Full suite 2210 tests green (2185 before), build green, validator zero findings."
     },
@@ -932,7 +1296,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 45,
+      "priority": 68,
       "passes": true,
       "notes": "Fifteen orphaned Perfect D-G cleared for FOURTEEN new nodes plus seven new Ultimates: the fifteenth, Ex-Tyranomon, was already drawn on `dmc-v5` under the hyphen-less id `extyranomon` (spelling drift `DMCVersion5TreeTests` has recorded since US-137), so it cost a RENAME, not a node — which also took it off `RosterTests`' alias list. Orphan count with Appendix B over a regenerated roster.generated.json: 257 -> 235; Perfect bucket 84 -> 69 (D-G band 15 -> 0), Ultimate bucket 157 -> 150. US-152's intersection closed on 7 of the 14 free. Seven in-edges came off LEAF Champions and every junk floor they needed already existed, so the dead-end ledger falls 97 -> 90 with nothing added back. `wanyamon` — the last line with Perfects and no Mega — got Ancient Volcamon and Dinotigermon over Gogmamon and Grappleomon, promoting all four of its Digitama to legal starting eggs; Monodra Digitama was promoted too by the DORUmon thread. Two edges rest on a stated LINE argument: Gokuwmon's in-edge (all three cited parents are off `penc-sw`) and Entmon's climb (all three cited climbs are undrawable). Validator reports zero findings; 2237 tests pass; build green."
     },
@@ -952,7 +1316,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 46,
+      "priority": 69,
       "passes": true,
       "notes": "Wired the ELEVEN playable Perfect whose display name begins H-L, for 11 new Perfect nodes plus 5 new Ultimates (16 nodes; graph 693 -> 709). Orphans, Appendix B over a regenerated roster.generated.json: 235 BEFORE -> 219 AFTER — Perfect bucket 69 -> 58 (the H-L band 11 -> 0), Ultimate bucket 150 -> 145. NINE of the eleven hang off a leaf Champion, the biggest fall the dead-end ledger has taken (90 -> 81), and every junk floor those nine needed already existed so junkIds did not move. New Tests/PerfectSweepHToLTests.swift (27 tests); full suite 2264 green, build green, validator zero findings."
     },
@@ -972,7 +1336,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 47,
+      "priority": 70,
       "passes": true,
       "notes": "Wired all 21 orphaned Perfect whose displayName begins with M: 21 Perfect nodes, 5 new Ultimates (Dukemon/tamers, Ryugumon/dmc-v3, Rasielmon and Raguelmon/diablomon, Dinorexmon/penc-nso) and 1 junk Perfect floor (diablomon_gerbemon, the first junk floor authored as a line-scoped alias). ORPHAN COUNT, Appendix B over a regenerated roster.generated.json: 219 BEFORE -> 193 AFTER; Perfect bucket 58 -> 37 (the M band 21 -> 0), Ultimate bucket 145 -> 140. Graph 709 -> 736 nodes across the same 21 lines - no new line. `diablomon` gained its Perfect AND Ultimate rungs in one edit, promoting Kera and Meicoo Digitama to legal starting eggs. Dead-end ledger 81 -> 77 (five leaf Champions cleared, one node added back). EvolutionGraphValidator reports ZERO findings. Build green; 2292 tests green (2264 before, 28 new in Tests/PerfectSweepMTests.swift)."
     },
@@ -992,7 +1356,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 48,
+      "priority": 71,
       "passes": true,
       "notes": "Perfect orphans 37 BEFORE -> 22 AFTER (Appendix B, over a regenerated roster.generated.json); total playable orphans 193 -> 171, Ultimate 140 -> 133 because the sweep opened 7 new Ultimate nodes. Authored 24 nodes (736 -> 760): the 15 orphaned Perfect N-R, the 7 Ultimates they climb into, and 2 junk Perfect floors (vital_darumamon, xros_etemon) — line-scoped aliases, since no remaining orphaned Perfect sheet is junk-flavoured, so those two removed no orphan. Opens the Perfect rung on `vital` and `xros`, leaving adventure02/algomon/commandramon as the only lines without one. Every new sprite ls-verified in an animated stage folder; no dexOnly node on any edge. 2322 tests pass, build green, EvolutionGraphValidator reports zero findings on the shipped evolutions.json."
     },
@@ -1012,7 +1376,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 49,
+      "priority": 72,
       "passes": true,
       "notes": "Wired all 22 orphaned Perfect S-Z — every Perfect still orphaned anywhere, so the rung is CLOSED — plus the 3 Ultimates they climb into and 2 line-scoped junk floors: 27 nodes, 760 -> 787. Orphans BEFORE 171 (Perfect 22, Ultimate 133, Armor-Hybrid 16) -> AFTER 146 (Perfect 0, Ultimate 130, Armor-Hybrid 16), counted with Appendix B over a regenerated roster.generated.json. `commandramon` and `adventure02` gained a Perfect rung and a Mega; `adventure02` opened under its JUNK Champion Nise Drimogemon, which all three of its Children fall into, so both its eggs were promoted at once — the problem US-161 could not solve. `algomon` STAYS CLOSED and cannot be opened by any later story: its only cited Champion, Siesamon, descends from Paomon, a Baby I no Digitama can reach, so opening it would strand Ghost Digitama. Dead-end ledger 73 -> 67. Build green, 2353 tests pass, validator reports zero findings."
     },
@@ -1032,7 +1396,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 50,
+      "priority": 73,
       "passes": true,
       "notes": "Wired all 30 orphaned Ultimate A-B — the first sweep at the TOP rung — for exactly 30 nodes, the first Phase E story whose orphan count and node count match. Orphans BEFORE 146 (Ultimate 130, Armor-Hybrid 16) -> AFTER 116 (Ultimate 100, Armor-Hybrid 16), counted with Appendix B over a regenerated roster.generated.json; 787 -> 817 nodes. Build green, 2382 tests (2353 + 29 new), 0 failures, validator reports zero findings over the whole file. AN ULTIMATE SWEEP IS AN IN-EDGE SWEEP AND NOTHING ELSE: the rung is terminal, so AC2's out-edge clause does not bind, and no junk floor was owed — EvolutionCriteriaTests.branchingNodes filters to Child and Adult, so a forked Perfect needs no fallback beyond the climb it already has. No new line; all 30 joined a line that already had a Perfect rung. TWO SHAPES OF IN-EDGE. Five LEAF Perfects gained their single isDefault climb (Grademon->Alphamon, Mametyramon->Bagramon, Canoweissmon->Arcturusmon, BlackRapidmon->BlackSaintGalgomon, MegaloGrowmon->Breakdramon), which is five off ChildSweepAToFTests' dead-end ledger, 67 -> 62. The other 25 hang off a Perfect that already climbs, so THIS IS THE FIRST STORY TO FORK A PERFECT: an EARNED branch beside the climb, minEnergy 150, maxCareMistakes 2, two criteria apiece (one health metric, one care counter) and a requiredEnergy distinct from the climb's — EvolutionEngine matches on the DOMINANT type, so a shared energy would have made one edge unreachable for good. Four Perfects now carry three edges (Mummymon, Mephismon, Astamon, Baalmon) and every energy on each is distinct, asserted. Both directions proven through the ENGINE for all 25: earned takes the branch, nothing earned falls to the climb. AC4 READ AS EVERY RUNG BELOW READ IT, STATED PLAINLY: 'no edge is unconditional' binds the EARNED edges. The five leaf climbs carry no conditions and must not — SeedRosterTests requires exactly one isDefault edge per non-terminal node and US-020 takes it whatever the gates say, so a condition there would be data that lies. Same reading US-157..US-162 recorded for the Perfect rung. CITATIONS: every one of the 30 comments names Wikimon, fetched as wikitext (two page titles had to be found by opensearch — 'Agumon -Yuki no Kizuna-' is the YnK sheet, and BlackWarGreymon X is 'Black War Greymon (X-Antibody)' with spaces). Four nodes have no drawable BOLDED parent and each says why in as many words, pinned by a test: Agumon YnK's is Agumon (a CHILD) and Armagemon's is Kuramon (a BABY I), both refused by invalidStageTransition; Anubimon's Cerberumon and Algomon's Algomon (Perfect) have NO SHEET in this pack. THREE FINDINGS WORTH KEEPING. (1) Armagemon cannot go on `diablomon`, the line it belongs to, because BOTH Perfect rungs the Kuramon swarm climbs through (Chrysalimon, Infermon) are idle-only and edgeToDexOnlyNode forbids the edge — the first time art, not shape, closed a whole line to a node; it took the cited Chimairamon on dmc-v1, an amalgam Digimon under an amalgam Digimon. (2) BanchoLilimon's BOLDED parent Lilimon was refused by a TEST rather than by the data: SeedRosterTests.testTheThreeNamedLinesAreTheOnesShipped walks US-002's Palmon line by preferring the EARNED edge at every rung, so a branch on Lilimon would have silently redirected that named line away from Rosemon. Lilamon, Lilimon's own sister form and cited on the same page, took it. Same trap kept Agumon YnK off MetalGreymon, which that test also walks. (3) `algomon` is still the one line with no Perfect and so no Mega, and US-162 proved it never can be — so Algomon (Ultimate) sits on penc-nso under Mummymon, its only drawable cited parent anywhere. ONE NODE STRANDED, INHERITED NOT CHOSEN: Armamon, whose only cited Perfect parent anywhere is OmegaShoutmon on the egg-less `xros` line (its other two citations are an Adult and an Ultimate). Added to EvolutionCriteriaTests' strandedUltimate list, which proves through its parent loop that it is inheritance. The other 29 all sit on lines an egg reaches. KNOCK-ON was 204 failures across 29 files, all fixed by NAMING rather than loosening: six 'is not a single climb' checks gained a branchedByUS163 table, three leaf ledgers and the dead-end ledger were edited down, five device-tree files gained sweepEggs entries and line counts, and the node census moved 787->817 in 17 files. Only Resources/{evolutions,elements,moves}.json changed as data; scripts/us163_author.py is the record of what was authored and is asserted to agree with the shipped files. HANDOVER: 100 Ultimate still orphaned for US-164..US-168, 16 Armor-Hybrid for US-169, 62 Perfect leaves still owed a climb, and Ogudomon (US-159's pin) belongs to US-167."
     },
@@ -1052,7 +1416,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 51,
+      "priority": 74,
       "passes": true,
       "notes": "Wired 20 of the 22 orphaned Ultimate C-D; the other two, Chaosdramon and Chaosmon, are Jogress results the DMC Ver.5/Ver.4 and Metal Empire trees reserve as non-nodes (asserted by DMCVersion5/4TreeTests and PendulumMetalEmpireTreeTests), so they are obtainable and left unwired. Orphans BEFORE 116 (Ultimate 100, Armor-Hybrid 16) -> AFTER 96 (Ultimate 80, Armor-Hybrid 16), counted with Appendix B over a regenerated roster.generated.json; the 80 is the evolution-edge count and 78 the true remainder once the two Jogress results are set aside. 817 -> 837 nodes. Two shapes of in-edge: TWO leaf Perfects (metalgreymon_x, huankunmon) took their single isDefault climb - both parked for this rung by 'A leaf until the Ultimate sweeps' in US-160/US-159 and both cited parents - clearing the dead-end ledger 62 -> 60; the other eighteen are earned branches beside an existing climb, two criteria and a distinct requiredEnergy apiece. HolyAngemon became the FIRST four-edge Perfect in the file (Dominimon spent its last free energy, node CLOSED); five Perfects now carry three edges. The eponymous diablomon line got its Diablomon and Diablomon X over Meicrackmon, the only drawable route (every cited parent idle-only or wrong-stage - the Armagemon wall US-163 hit). Chaosdramon V2 follows a cited parent (MetalGreymon X) because its base form is a Jogress result. Cernumon IS wired - a Jogress result no tree reserves, like aegisdramon/millenniumon. Every one of the 20 comments cites Wikimon or says why it cannot. Build green, 2408 tests pass (0 failures), validator reports zero findings. Knock-on was ~19 files of node-census/per-line/ledger counts plus semantic updates to the Andromon and HolyAngemon multi-parent tests; scripts/us164_author.py is the record of what was authored. HANDOVER: 78 Ultimate still truly owed to US-165..US-168 (80 by edge-count, minus the two Jogress), 16 Armor-Hybrid for US-169, 60 Perfect leaves still owed a climb; Ogudomon (O) belongs to US-167."
     },
@@ -1072,7 +1436,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 52,
+      "priority": 75,
       "passes": true,
       "notes": "Sources: Resources/{evolutions,elements,moves}.json (data), scripts/us165_author.py (authoring record), Tests/UltimateSweepEToHTests.swift (new, 25 tests). Build green, 2433 tests, 0 failures (25 new in UltimateSweepEToHTests, all observed passing). ORPHAN COUNT (Appendix B script, Ultimate-Super Ultimate stage): BEFORE 80, AFTER 66 - the 14 E-H orphans wired (ebemon_x, enmamon, erlangmon, examon_x, gankoomon_x, gigaseadramon, goddramon_x, gracenovamon, granddracumon, hi-andromon, holydigitamamon, holydramon_x, hououmon_x, hydramon). Total orphans 96 -> 82 (Ultimate 80->66, Armor-Hybrid 16 untouched). Nodes 837 -> 851. Every sprite ls'd before naming; no dexOnly on any edge; validator reports ZERO findings over evolutions.json. PLACEMENTS: 13 earned branches (2 criteria each, one health metric + one care counter, distinct requiredEnergy) + 1 leaf isDefault climb (Pandamon->Erlangmon, a bolded Saiyu-Warriors parent, clearing the dead-end ledger 60->59). Strong variant rule (base form's own Perfect): ebemon_x/vademon, gankoomon_x/digitamamon, holydramon_x/angewomon, hououmon_x/garudamon_x. Idle-only base -> cited parent (Dynasmon X shape): examon_x/doruguremon, goddramon_x/megadramon. Second design -> cited parent (Chaosdramon V2 shape): hi-andromon/pencme_andromon (Wikimon has only HiAndromon, the dmc-v3 node; hi-andromon is the pack's 2nd Andromon sprite). All-Ultimate Evolves From, drawn one rung below (Cernumon shape): enmamon/gokuwmon (below cited SeitenGokuwmon), gracenovamon/flaremon (below cited Apollomon). Undrawable bolded parents (Dracumon a Child, Matadormon no sheet) -> cited Vamdemon: granddracumon. Bolded Perfect on line: gigaseadramon/megaseadramon, hydramon/blossomon. EMPTY Evolves From -> eponym: holydigitamamon/digitamamon. TWO NEW FOUR-EDGE PERFECTS: doruguremon (examon_x) and pencme_andromon (hi-andromon) join HolyAngemon (US-164), each spending all four energies. digitamamon->3 (gankoomon_x + holydigitamamon), vamdemon->3. enmamon/erlangmon land on the stranded penc-sw (Saiyu Warriors) line, which has no Digitama in this pack - added to EvolutionCriteriaTests.strandedUltimate, the honest placement (every citation is an Ultimate; the line is the only home). KNOCK-ON: ~20 test files updated for the moved live-state (node count 837->851, ultimate node count 158->172, ultimate orphan bucket 80->66, dead-end ledger 60->59, 8 line sizes, tree reachability/orphan sweepEggs, SeedRoster verified sets, and DexTypeBadge/ElementCatalog roster-only fallback repointed from the now-wired Seadramon to permanently-dexOnly ankylomon)."
     },
@@ -1092,7 +1456,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 53,
+      "priority": 76,
       "passes": true,
       "notes": "Sources: Resources/{evolutions,elements,moves}.json (data), scripts/us166_author.py (authoring record), Tests/UltimateSweepIToMTests.swift (new, 25 tests). Build green, 2458 tests, 0 failures (25 new, all observed passing; the whole suite re-run after `xcodegen generate` picked up the new file). ORPHAN COUNT (Appendix B script, Ultimate-Super Ultimate stage): BEFORE 66, AFTER 39 - the 27 I-M orphans wired (imperialdramon_fighter, imperialdramon_fighter_black, imperialdramon_paladin, jesmon, jesmon_x, jesmon_gx, jougamon, jumbogamemon, justimon_x, kaguyamon, kuzuhamon, leviamon_x, lilithmon, lilithmon_x, lordknightmon_x, lotusmon, lucemon_satan, lucemon_x, magnamon_x, marinangemon, mastemon, megidramon, megidramon_x, metalgarurumon_black, metalgarurumon_x, minervamon_x, mitamamon). Total orphans 82 -> 55 (Ultimate 66->39, Armor-Hybrid 16 untouched). Nodes 851 -> 878. Every sprite ls'd before naming; no dexOnly on any edge; validator reports ZERO findings over evolutions.json. PLACEMENTS: 26 earned branches (2 criteria each, one health metric + one care counter, distinct requiredEnergy) + 1 leaf isDefault climb (Karakurumon->Kaguyamon, clearing the dead-end ledger 59->58). FIVE NEW FOUR-EDGE PERFECTS (all energies spent): paildramon (the three Imperialdramon Modes), saviorhackmon (the three Jesmon), ladydevimon (Lilithmon + Lilithmon X), knightmon (LordKnightmon X), digitamamon (Minervamon X) - joining HolyAngemon, DORUguremon, pencme_andromon. JOGRESS RESULTS WIRED (the Cernumon precedent, US-164): mastemon and mitamamon are jogress.json results but no device tree reserves them to no-node, so each takes an evolution in-edge - mastemon directly off Angewomon (both jogress parents are Perfects), mitamamon one rung below on Garudamon (its jogress parents Hououmon+MarinAngemon are both Ultimates, the Cernumon shape). VARIANT SHAPES: strong variant same-parent (jesmon_x, lilithmon_x, megidramon_x, imperialdramon_fighter_black off their base form's own Perfect); Dynasmon-X idle-only-base -> cited parent (justimon_x/cyberdramon_x, lordknightmon_x/knightmon, magnamon_x/aerov-dramon, minervamon_x/digitamamon - all four base forms roster-dexOnly); leviamon_x off marindevimon (one of base Leviamon's parents); metalgarurumon_x off weregarurumon_x (antibody from antibody). Every id resolved from Wikimon Evolves From (curl opensearch/parse), bolded citation preferred; a throwaway fetch script recorded each. jougamon/jumbogamemon land on penc-sw (Saiyu Warriors, no Digitama) so they join EvolutionCriteriaTests.strandedUltimate, the honest placement. KNOCK-ON: ~30 test files updated for the moved live-state (node count 851->878, ultimate node count 172->199, ultimate orphan bucket 66->39, dead-end ledger 59->58 plus the ChildSweepAToFTests master ledger list, 11 line sizes across every sweep+tree file, EvolutionGraphTests line dict, five branchedBySweeps dicts for the forked Perfects, UltimateSweep A-B megalogrowmon-forked-leaf, C-D knightmon-to-four + jogress true-remainder 64->37, E-H digitamamon-to-four, SeedRoster piyomon verified set += Minervamon X, PerfectSweepNToR wanyamon-Megas list)."
     },
@@ -1112,7 +1476,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 54,
+      "priority": 77,
       "passes": false,
       "notes": ""
     },
@@ -1132,7 +1496,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 55,
+      "priority": 78,
       "passes": false,
       "notes": ""
     },
@@ -1152,7 +1516,7 @@
         "Tests pass",
         "Typecheck passes"
       ],
-      "priority": 56,
+      "priority": 79,
       "passes": false,
       "notes": ""
     }
