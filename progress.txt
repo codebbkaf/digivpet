@@ -6622,3 +6622,69 @@ The thirty, `Perfect -> Ultimate`:
   in THAT shell invocation.** Each Bash call starts a fresh shell, so a screenshot loop in a second
   command needs its own `export` — the failure is a zero-file directory, not an error message.
 ---
+
+## 2026-07-24 - US-211 (The action grid becomes a staggered, scrollable, list-style grid)
+- New `ActionGridLayout` (in `Sources/ActionControls.swift`, free-standing and non-generic like
+  `DashBarLayout`): `columns = 5`, `spacing = 4`, `cellPitch = 34`, `width = 166`,
+  `rowCounts(forButtons:)`, `staggerOffset(forRow:)` and `height(forRows:)`. All six are USED by the
+  body — no ornamental constants — and all six are asserted directly.
+- `ActionControls.body` is now a `ScrollView(.vertical)` over a `VStack(alignment: .leading)` of two
+  extracted row properties (`careRow`, `placesRow`), `.frame(width: ActionGridLayout.width,
+  alignment: .leading)` so a short row is placed inside the FULL row's box rather than re-centred on
+  its own buttons, with `placesRow.offset(x: staggerOffset(forRow: 1))`. The caption stays outside
+  the scroll view so a refusal never scrolls away.
+- The button SEQUENCE is untouched; it is only chunked five to a row instead of four, so Map is the
+  fifth circle of row 1 rather than the first of row 2 (AC4). Every ring, `.disabled`, action closure
+  and accessibility label moved with its button verbatim (AC5).
+- Diameter stays **30** and AC2's "document the diameter constant chosen" is answered on
+  `ActionButtonFace.diameter` with the arithmetic that actually binds: five faces and four gaps come
+  to `5*30 + 4*4 = 166pt`, 10pt inside the 176pt of the narrowest screen; the 4pt gap is exactly the
+  `DashRing` overhang (`diameter + 4`, 2pt each side) so two neighbouring rings MEET instead of
+  overlapping; 32 — US-038's cap — would come to exactly 176pt with no margin AND overlapping rings.
+  34pt of ring every 34pt of row is list-row scale; the list-row FEEL comes from the stagger and the
+  scrolling, not from a taller button.
+- Scroll cap: `.frame(maxHeight: height(forRows: rowCounts.count))` = 64pt for two rows, which is
+  exactly `30 + 4 + 30` — the pre-US-211 height. So the sprite's slot is unchanged and
+  `MainScreenLayoutTests`' pinned `SpriteScale` bands still hold (they do; suite green).
+- Files: Sources/ActionControls.swift, Sources/ContentView.swift (comment only),
+  Tests/ActionControlsTests.swift.
+- Verified: build green; FULL suite **2712 tests, 0 failures** (+5). Screenshots on BOTH sizes
+  (/tmp/us211/46mm.png, /tmp/us211/42mm.png): row 1 is Feed, Train, Clean, Battle, Map; row 2 is
+  Party, Light, Dex sitting in the notches between them; nothing clipped at either edge on either
+  watch. Measured off the 46mm shot at @2x: row-1 centres 73/141/209/277/345px (68px = 34pt pitch),
+  row-2 centres 107/175/243px — 34px = 17pt = exactly half a cell.
+- Tests: renamed `testARowOfFourFitsTheNarrowestScreen` -> `testAFullRowFitsTheNarrowestScreen`
+  (it now guards a row of FIVE), plus `testTheStaggeredRowStaysInsideAFullRowsWidth`,
+  `testTheButtonsChunkFiveToARow`, `testTheSecondRowsCirclesSitBetweenTheFirstRows`,
+  `testTheGridsHeightIsItsRowsAndNothingMore`, `testTheGapIsWideEnoughForTwoNeighbouringRingsToMeet`.
+
+**Learnings for future iterations:**
+- **AC1's "Row 2 holds 4" needs US-213's Sleep button, and the PRD says so itself.** US-211's own
+  Context paragraph reads "appending the new Sleep button (US-213)" — the 5-and-4 split is the END
+  state of US-211 + US-213, not of US-211 alone. A Sleep button here would have had no destination
+  (US-214 builds the view) and so could only have been a stub, which the rules forbid. What US-211
+  can own honestly is the ARRANGEMENT, so it is proven by test rather than by screenshot:
+  `rowCounts(forButtons: 9) == [5, 4]`. **US-213 appends one `NavigationLink` to `placesRow` and
+  bumps `ActionControls.buttonCount` from 8 to 9 — nothing else.** The height cap, the stagger and
+  the scroll all follow from those two edits.
+- **A ScrollView in a fixed VStack must be capped with `.frame(maxHeight:)` or it eats the sprite.**
+  A bare `ScrollView` is greedy vertically and would have fought the sprite's `GeometryReader` for the
+  leftover height. Capped at its content's natural height it takes exactly that when there is room —
+  behaving like the plain VStack it replaced, which is why no `SpriteScale` test moved — and scrolls
+  only when the screen offers less. This is the pattern for any future scrollable row on this screen.
+- **A short row needs `.frame(width:, alignment: .leading)` on the CONTAINER, not centring.** Inside a
+  `VStack`, an `HStack` of three sizes to its own 98pt and gets centred, which puts the stagger
+  nowhere in particular. Sizing the VStack to a FULL row's `ActionGridLayout.width` and leading-
+  aligning is what makes "offset half a cell" mean the same thing at 3, 4 or 5 buttons.
+- **The constraint on this grid's button size is the RING, not the face.** `DashRing.diameter` is
+  `ActionButtonFace.diameter + 4`, so the row's gap must be >= 4pt or adjacent rings overlap. Any
+  future story that wants bigger buttons has to move `DashRing`'s overhang or drop a column first —
+  `testTheGapIsWideEnoughForTwoNeighbouringRingsToMeet` fails loudly if it does neither.
+- **Stagger is assertable on CENTRES.** "Row 2 sits between row 1's" = centre(1, c) is the mean of
+  centre(0, c) and centre(0, c+1). That catches a whole-cell offset and a zero offset, which a
+  screenshot only catches if someone looks carefully.
+- Screenshot recipe unchanged, and the two-device loop works in ONE Bash call as long as
+  `DEVELOPER_DIR` is exported in that call: `shutdown` -> `erase` -> `boot` -> sleep 25 ->
+  `install` -> `launch ... -healthAnswered -noNotificationPrompt -chargesDemo` -> sleep 20 ->
+  `io <id> screenshot`. The 42mm is `F4A12A1C-1C5E-4B83-8278-341634CDE4F5`.
+---

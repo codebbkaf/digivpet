@@ -10,12 +10,26 @@ import SwiftUI
 /// is disabled by the `.disabled` modifier on the `Button` that wraps this, and a second source of
 /// truth for the same fact could disagree with it.
 struct ActionButtonFace: View {
-    /// The button diameter. US-038 caps it at 32pt; it sits at 30 since US-052 added a fifth
-    /// circle, because five 32pt buttons plus their gaps come to 184pt and the narrowest supported
-    /// screen is 176pt wide — the row would have been clipped at both ends. Thirty is still
-    /// comfortably above the ~28pt where a fingertip starts missing. US-197 split the row into two
-    /// rows of four, so the width is no longer the binding constraint, but the size stays put so the
-    /// eight circles match the diameter every earlier story built against.
+    /// The button diameter, and the number US-211's AC2 asks to be documented rather than guessed.
+    ///
+    /// US-038 caps it at 32pt; it sits at 30 since US-052 added a fifth circle, because five 32pt
+    /// buttons plus their gaps come to 184pt and the narrowest supported screen is 176pt wide — the
+    /// row would have been clipped at both ends. US-197 split the row into two rows of four, which
+    /// briefly made width a non-issue; US-211 puts five back on row 1, so the old constraint binds
+    /// again and 30 is re-derived rather than merely inherited:
+    ///
+    ///   * five circles and their four gaps come to `5 * 30 + 4 * 4 = 166pt`, 10pt inside the 176pt
+    ///     of the narrowest supported screen;
+    ///   * what a neighbouring button actually has to clear is the RING, not the face —
+    ///     `DashRing.diameter` is `diameter + 4`, so two adjacent rings exactly meet at a 4pt gap
+    ///     and any larger face would make them overlap;
+    ///   * 32 would fit the faces (`5 * 32 + 4 * 4 = 176`) with zero margin and overlapping rings,
+    ///     so 30 is the largest diameter this grid can actually carry.
+    ///
+    /// The ring pitch that gives — 34pt of circle every 34pt of row — is the scale of the leading
+    /// control on a watchOS list row, which is what "sized like a list row" buys at five columns; the
+    /// list-row FEEL comes from `ActionGridLayout`'s stagger and scrolling rather than from a taller
+    /// button. Thirty is also comfortably above the ~28pt where a fingertip starts missing.
     ///
     /// It lives here rather than on `ActionControls` because the face is what applies the frame,
     /// and because `ActionControls` is generic: `ActionControls.buttonDiameter` would not infer.
@@ -58,8 +72,57 @@ enum ActionSymbol {
     static let battle = "bolt.fill"
 }
 
-/// The action grid: Feed, Train, Clean, Battle on the top row and Map, Party, Light, Dex on the
-/// bottom, as circular icon-only buttons (US-038, split into two rows in US-197).
+/// Where the action grid's circles sit (US-211): a five-column grid whose every other row is
+/// staggered half a cell, so the lower row's buttons fall into the notches between the upper row's
+/// rather than lining up under them — the honeycomb reading a watchOS app list has.
+///
+/// Free-standing and non-generic, in the same spirit as `DashBarLayout`: the arrangement is
+/// arithmetic, and a test should be able to check the row split, the offset and the width against
+/// the narrowest screen without standing up a view graph. (`ActionControls` is generic over three
+/// destination types, so a static on it would not infer at a test's call site.)
+enum ActionGridLayout {
+    /// Buttons per row. Five, because that is what fits: see `ActionButtonFace.diameter` for the
+    /// arithmetic that ties the column count, the face and the ring together.
+    static let columns = 5
+
+    /// The gap between two circles in a row, and between two rows. Four points, which is exactly the
+    /// 2pt each neighbouring `DashRing` overhangs its face — so adjacent rings meet and never overlap.
+    static let spacing: CGFloat = 4
+
+    /// Centre-to-centre distance between two circles in a row.
+    static var cellPitch: CGFloat { ActionButtonFace.diameter + spacing }
+
+    /// The width of a FULL row — what the grid is sized to, so a short row is positioned inside the
+    /// same box a five-button row occupies rather than being centred on its own.
+    static var width: CGFloat {
+        CGFloat(columns) * ActionButtonFace.diameter + CGFloat(columns - 1) * spacing
+    }
+
+    /// How the buttons chunk into rows, in order: five to a row until the last, which takes the
+    /// remainder. Nine buttons — the eight drawn today plus US-213's Sleep — give `[5, 4]`; a
+    /// fourteenth would give `[5, 5, 4]` with no change to anything that draws.
+    static func rowCounts(forButtons count: Int) -> [Int] {
+        guard count > 0 else { return [] }
+        return stride(from: 0, to: count, by: columns).map { min(columns, count - $0) }
+    }
+
+    /// How far right row `row` starts. Even rows are flush; odd rows are offset half a cell, which
+    /// puts each of their buttons exactly midway between two of the row above's.
+    static func staggerOffset(forRow row: Int) -> CGFloat {
+        row.isMultiple(of: 2) ? 0 : cellPitch / 2
+    }
+
+    /// The natural height of `rows` rows of circles — the cap the scroll view is given, so it takes
+    /// no more room than the grid needs and scrolls only once the screen offers it less.
+    static func height(forRows rows: Int) -> CGFloat {
+        guard rows > 0 else { return 0 }
+        return CGFloat(rows) * ActionButtonFace.diameter + CGFloat(rows - 1) * spacing
+    }
+}
+
+/// The action grid: Feed, Train, Clean, Battle, Map on the top row and Party, Light, Dex on the
+/// staggered bottom row, as circular icon-only buttons (US-038; two rows since US-197; five-column
+/// and staggered since US-211).
 ///
 /// Icon-only, in rows, because the labelled buttons this replaces were stacked blocks that pushed
 /// the Digimon off the top of the screen — the thing the user actually came to look at. The action
@@ -135,100 +198,36 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
         return "\(min(max(filled, 0), total)) of \(total)"
     }
 
+    /// How many circles the grid draws. Eight today; US-213 appends Sleep and this becomes 9, which
+    /// `ActionGridLayout.rowCounts` chunks into the 5-and-4 US-211 describes with nothing else to
+    /// change. Named rather than counted by hand so the scroll view's height cap cannot drift out of
+    /// step with the rows below it.
+    static var buttonCount: Int { 8 }
+
+    private var rowCounts: [Int] { ActionGridLayout.rowCounts(forButtons: Self.buttonCount) }
+
     var body: some View {
         VStack(spacing: 4) {
-            // Row 1 — the things you do FOR the Digimon. Four points between four circles:
-            // 4 * 30 + 3 * 4 = 132pt, well inside the 176pt of the narrowest supported screen.
-            HStack(spacing: 4) {
-                Button(action: feed) {
-                    ActionButtonFace(systemImage: "fork.knife", tint: .orange)
+            // Scrollable since US-211, and capped at the grid's own natural height: with room to
+            // spare the ScrollView takes exactly `height(forRows:)` and behaves like the plain VStack
+            // it replaces — the sprite above loses nothing — and when a screen (or a third row of
+            // buttons) leaves it less, it scrolls instead of clipping. `.basedOnSize` so a grid that
+            // fits does not rubber-band under a finger.
+            ScrollView(.vertical) {
+                // Leading-aligned inside a FULL row's width, so the staggered row below is measured
+                // against the five-column box rather than being re-centred on its own three buttons.
+                VStack(alignment: .leading, spacing: ActionGridLayout.spacing) {
+                    careRow
+                    // Half a cell right, so Party, Light and Dex sit in the notches between the row
+                    // above's circles. Row 0 takes `staggerOffset(forRow: 0)` = 0 and is left flush.
+                    placesRow
+                        .offset(x: ActionGridLayout.staggerOffset(forRow: 1))
                 }
-                .buttonStyle(.plain)
-                // The larder, orange, ringed around the button that spends it (US-208) — the same
-                // overlay the other three carry, so meat reads where it is used like they do.
-                .overlay { DashRing(filled: meat, total: meatCap, tint: .orange) }
-                .accessibilityLabel("Feed")
-                .accessibilityValue(chargeValue(meat, meatCap))
-
-                Button(action: train) {
-                    ActionButtonFace(systemImage: "dumbbell", tint: .red)
-                }
-                .buttonStyle(.plain)
-                // Training progress, red, ringed around the button that spends it (US-199).
-                .overlay { DashRing(filled: trainCharges, total: trainChargeCap, tint: .red) }
-                .accessibilityLabel("Train")
-                .accessibilityValue(chargeValue(trainCharges, trainChargeCap))
-
-                // Back to the sparkle (US-209). US-197 had drawn `ActionGlyph.waste` — a coil of
-                // droppings — on the argument that the button should show the mess rather than what
-                // follows it; the sparkle is preferred, so the glyph reverts. Only the GLYPH does:
-                // the tint stays the `.brown` US-197 gave it, and the ring, the disabled rule and the
-                // label are untouched.
-                Button(action: clean) {
-                    ActionButtonFace(systemImage: ActionSymbol.clean, tint: .brown)
-                }
-                .buttonStyle(.plain)
-                .disabled(isCleanDisabled)
-                // Handwash/clean progress, blue, ringed around the Clean button (US-199). Drawn even
-                // when the button is disabled at zero poop — the ring reads banked washes, not whether
-                // there is a mess to spend them on.
-                .overlay { DashRing(filled: cleanCharges, total: cleanChargeCap, tint: .blue) }
-                .accessibilityLabel("Clean")
-                .accessibilityValue(chargeValue(cleanCharges, cleanChargeCap))
-
-                // Back to the bolt (US-209), for the same reason Clean went back to its sparkle.
-                // US-197 had made this `figure.martial.arts` on the argument that a bolt reads as the
-                // energy Battle spends rather than the fight it buys; the bolt is preferred. The
-                // `.purple` tint never changed, so this is a glyph-only revert too.
-                Button(action: battle) {
-                    ActionButtonFace(systemImage: ActionSymbol.battle, tint: .purple)
-                }
-                .buttonStyle(.plain)
-                .disabled(isBattleDisabled)
-                // Battle-time progress, purple, ringed around the Battle button (US-199).
-                .overlay { DashRing(filled: battleCharges, total: battleChargeCap, tint: .purple) }
-                .accessibilityLabel("Battle")
-                .accessibilityValue(chargeValue(battleCharges, battleChargeCap))
+                .frame(width: ActionGridLayout.width, alignment: .leading)
             }
-
-            // Row 2 — the ways out of the room and the switch on its wall.
-            HStack(spacing: 4) {
-                NavigationLink {
-                    mapDestination()
-                } label: {
-                    ActionButtonFace(systemImage: "map.fill", tint: .green)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Map")
-
-                NavigationLink {
-                    partyDestination()
-                } label: {
-                    ActionButtonFace(systemImage: "person.2.fill", tint: .teal)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Party")
-
-                // The room light (US-114), now a circle in the grid rather than a toolbar switch
-                // (US-197). The glyph names the state the light is IN, not the one a tap moves to —
-                // see `LightState.symbolName` — so it reads as an indicator that happens to be
-                // tappable, exactly as the toolbar version did.
-                Button(action: cycleLight) {
-                    ActionButtonFace(systemImage: lightState.symbolName, tint: .yellow)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Light")
-                .accessibilityValue(lightState.displayName)
-                .accessibilityHint("Cycles the room light")
-
-                NavigationLink {
-                    dexDestination()
-                } label: {
-                    ActionButtonFace(systemImage: "book.fill", tint: .blue)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Dex")
-            }
+            .scrollIndicators(.hidden)
+            .scrollBounceBehavior(.basedOnSize)
+            .frame(maxHeight: ActionGridLayout.height(forRows: rowCounts.count))
 
             if let limitCaption {
                 Text(limitCaption)
@@ -241,6 +240,108 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                     .lineLimit(1)
                     .minimumScaleFactor(0.7)
             }
+        }
+    }
+
+    /// Row 0 — the things you do FOR the Digimon, plus the map they are done on. Five circles and
+    /// their four gaps: 5 * 30 + 4 * 4 = 166pt, inside the 176pt of the narrowest supported screen.
+    private var careRow: some View {
+        HStack(spacing: ActionGridLayout.spacing) {
+            Button(action: feed) {
+                ActionButtonFace(systemImage: "fork.knife", tint: .orange)
+            }
+            .buttonStyle(.plain)
+            // The larder, orange, ringed around the button that spends it (US-208) — the same
+            // overlay the other three carry, so meat reads where it is used like they do.
+            .overlay { DashRing(filled: meat, total: meatCap, tint: .orange) }
+            .accessibilityLabel("Feed")
+            .accessibilityValue(chargeValue(meat, meatCap))
+
+            Button(action: train) {
+                ActionButtonFace(systemImage: "dumbbell", tint: .red)
+            }
+            .buttonStyle(.plain)
+            // Training progress, red, ringed around the button that spends it (US-199).
+            .overlay { DashRing(filled: trainCharges, total: trainChargeCap, tint: .red) }
+            .accessibilityLabel("Train")
+            .accessibilityValue(chargeValue(trainCharges, trainChargeCap))
+
+            // Back to the sparkle (US-209). US-197 had drawn `ActionGlyph.waste` — a coil of
+            // droppings — on the argument that the button should show the mess rather than what
+            // follows it; the sparkle is preferred, so the glyph reverts. Only the GLYPH does:
+            // the tint stays the `.brown` US-197 gave it, and the ring, the disabled rule and the
+            // label are untouched.
+            Button(action: clean) {
+                ActionButtonFace(systemImage: ActionSymbol.clean, tint: .brown)
+            }
+            .buttonStyle(.plain)
+            .disabled(isCleanDisabled)
+            // Handwash/clean progress, blue, ringed around the Clean button (US-199). Drawn even
+            // when the button is disabled at zero poop — the ring reads banked washes, not whether
+            // there is a mess to spend them on.
+            .overlay { DashRing(filled: cleanCharges, total: cleanChargeCap, tint: .blue) }
+            .accessibilityLabel("Clean")
+            .accessibilityValue(chargeValue(cleanCharges, cleanChargeCap))
+
+            // Back to the bolt (US-209), for the same reason Clean went back to its sparkle.
+            // US-197 had made this `figure.martial.arts` on the argument that a bolt reads as the
+            // energy Battle spends rather than the fight it buys; the bolt is preferred. The
+            // `.purple` tint never changed, so this is a glyph-only revert too.
+            Button(action: battle) {
+                ActionButtonFace(systemImage: ActionSymbol.battle, tint: .purple)
+            }
+            .buttonStyle(.plain)
+            .disabled(isBattleDisabled)
+            // Battle-time progress, purple, ringed around the Battle button (US-199).
+            .overlay { DashRing(filled: battleCharges, total: battleChargeCap, tint: .purple) }
+            .accessibilityLabel("Battle")
+            .accessibilityValue(chargeValue(battleCharges, battleChargeCap))
+
+            // Map moved up from row 2 in US-211: the sequence of buttons is unchanged, it is only
+            // chunked five to a row instead of four, so Map is the fifth circle rather than the first
+            // of the second row.
+            NavigationLink {
+                mapDestination()
+            } label: {
+                ActionButtonFace(systemImage: "map.fill", tint: .green)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Map")
+        }
+    }
+
+    /// Row 1 — the ways out of the room and the switch on its wall, staggered half a cell right so
+    /// they sit between the circles above. Three today; US-213's Sleep is the fourth, and lands here
+    /// with no change to this row's shape.
+    private var placesRow: some View {
+        HStack(spacing: ActionGridLayout.spacing) {
+            NavigationLink {
+                partyDestination()
+            } label: {
+                ActionButtonFace(systemImage: "person.2.fill", tint: .teal)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Party")
+
+            // The room light (US-114), now a circle in the grid rather than a toolbar switch
+            // (US-197). The glyph names the state the light is IN, not the one a tap moves to —
+            // see `LightState.symbolName` — so it reads as an indicator that happens to be
+            // tappable, exactly as the toolbar version did.
+            Button(action: cycleLight) {
+                ActionButtonFace(systemImage: lightState.symbolName, tint: .yellow)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Light")
+            .accessibilityValue(lightState.displayName)
+            .accessibilityHint("Cycles the room light")
+
+            NavigationLink {
+                dexDestination()
+            } label: {
+                ActionButtonFace(systemImage: "book.fill", tint: .blue)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Dex")
         }
     }
 }

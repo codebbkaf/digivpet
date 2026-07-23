@@ -1819,8 +1819,8 @@
         "Build green. Verify in the simulator with screenshots on both watch sizes"
       ],
       "priority": 98,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Five-column staggered grid in ActionGridLayout (columns 5, spacing 4, cellPitch 34, stagger 17 = half a cell), rows re-chunked to Feed/Train/Clean/Battle/Map + Party/Light/Dex, wrapped in a ScrollView capped at height(forRows:) so it takes the same 64pt the two flush rows took and scrolls only when squeezed. Diameter stays 30 and the reason is documented on ActionButtonFace.diameter: 5*30+4*4=166pt inside the 176pt screen, and 4pt is exactly the DashRing overhang so neighbouring rings meet rather than overlap; 32 would come to exactly 176 with overlapping rings. AC1's fourth row-2 button is US-213's Sleep - the PRD's own US-211 Context assigns that button to US-213 - so the layout RESERVES the slot and is unit-tested for it: rowCounts(forButtons: 9) == [5, 4] and 14 == [5, 5, 4] (AC3's future third row). Build green, 2712 tests 0 failures (+5). Screenshots /tmp/us211/46mm.png and 42mm.png: five circles on top, three staggered into the notches below, no clipping."
     },
     {
       "id": "US-212",

@@ -642,10 +642,16 @@ struct ContentView: View {
                     // around Feed too. Every currency now reads on its own button, so there is no
                     // row left to draw — and the vertical space it took goes back to the sprite.
                     //
-                    // The eight actions in a two-row grid (US-197): Feed, Train, Clean, Battle on
-                    // top; Map, Party, Light, Dex below. Light and Dex moved in off the toolbar and
+                    // The eight actions in a two-row grid (US-197): Feed, Train, Clean, Battle, Map
+                    // on top; Party, Light, Dex below. Light and Dex moved in off the toolbar and
                     // Map and Party in off the strip, so every way out of the room is one consistent
                     // circle here rather than scattered around the screen's edges.
+                    //
+                    // US-211 re-chunks the same sequence five to a row, staggers the second row half
+                    // a cell so its circles fall in the notches of the first, and wraps the whole
+                    // thing in a scroll view — see `ActionGridLayout`. It costs this stack nothing:
+                    // the grid is still two rows of 30pt circles, and the scroll view is capped at
+                    // exactly that height, so the sprite's slot is the size it was.
                     //
                     // The 2pt top padding this used to carry went to the sprite in US-120. The
                     // circles are 30pt discs with their own visual margin, so the gap above them

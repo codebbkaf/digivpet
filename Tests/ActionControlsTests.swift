@@ -113,15 +113,88 @@ final class ActionControlsTests: XCTestCase {
                               dexDestination: { EmptyView() })
     }
 
-    /// US-197 AC6: a row of four circles and their gaps fits the narrowest supported screen (176pt
-    /// at 41mm). US-197 split the old row of five into two rows of four, so each row is now narrower
-    /// than before — but the guard stays, so a later fifth button or a bumped diameter that would
-    /// clip a row at both ends fails here rather than only on a screenshot of the SMALL watch.
-    func testARowOfFourFitsTheNarrowestScreen() {
-        let buttons = 4
-        let spacing: CGFloat = 4
-        let width = CGFloat(buttons) * ActionButtonFace.diameter + CGFloat(buttons - 1) * spacing
-        XCTAssertLessThanOrEqual(width, 176)
+    /// US-197 AC6, restated for US-211's AC6: a FULL row of circles and their gaps fits the narrowest
+    /// supported screen (176pt at 41mm; the 42mm is 187pt and the 46mm wider still). US-197 split the
+    /// old row of five into two rows of four; US-211 puts five back on row 1, so this is the guard
+    /// that a bumped diameter or a sixth column clips the row at both ends fails here rather than
+    /// only on a screenshot of the SMALL watch.
+    func testAFullRowFitsTheNarrowestScreen() {
+        XCTAssertLessThanOrEqual(ActionGridLayout.width, 176)
+        XCTAssertEqual(ActionGridLayout.width, 166, "5 * 30 + 4 * 4")
+    }
+
+    /// US-211 AC6, the other half: the staggered row is offset INTO the full row's width rather than
+    /// past it, so nothing hangs off the right edge. Checked at the row-2 count US-213 leaves behind
+    /// (four buttons) as well as today's three.
+    func testTheStaggeredRowStaysInsideAFullRowsWidth() {
+        for buttons in 1...ActionGridLayout.columns - 1 {
+            let width = CGFloat(buttons) * ActionButtonFace.diameter
+                + CGFloat(buttons - 1) * ActionGridLayout.spacing
+            let right = ActionGridLayout.staggerOffset(forRow: 1) + width
+            XCTAssertLessThanOrEqual(right, ActionGridLayout.width, "row of \(buttons)")
+        }
+    }
+
+    // MARK: - US-211: the staggered, scrollable, list-style grid
+
+    /// AC1 and AC4: the buttons chunk five to a row, in the order they are declared. Eight buttons
+    /// today put Feed, Train, Clean, Battle, Map on row 1 and Party, Light, Dex on row 2; the nine
+    /// US-213 leaves — the same eight with Sleep appended — are the 5-and-4 the story describes, and
+    /// AC3's future third row of five needs nothing but more buttons.
+    func testTheButtonsChunkFiveToARow() {
+        XCTAssertEqual(ActionGridLayout.columns, 5)
+        XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: ActionControls<EmptyView, EmptyView,
+                                                                             EmptyView>.buttonCount),
+                       [5, 3], "Feed Train Clean Battle Map / Party Light Dex")
+        XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 9), [5, 4], "with US-213's Sleep")
+        XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 14), [5, 5, 4], "and a third row")
+        XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 0), [])
+    }
+
+    /// AC1: row 2 is staggered — each of its circles sits exactly midway between two of row 1's,
+    /// rather than under one of them. Asserted on CENTRES, which is what "sits between" means on
+    /// screen; a stagger of a whole cell (or of none) fails here.
+    func testTheSecondRowsCirclesSitBetweenTheFirstRows() {
+        XCTAssertEqual(ActionGridLayout.staggerOffset(forRow: 0), 0, "row 1 is flush")
+        XCTAssertEqual(ActionGridLayout.staggerOffset(forRow: 1), ActionGridLayout.cellPitch / 2)
+        XCTAssertEqual(ActionGridLayout.staggerOffset(forRow: 2), 0, "a third row is flush again")
+
+        func centre(row: Int, column: Int) -> CGFloat {
+            ActionGridLayout.staggerOffset(forRow: row)
+                + CGFloat(column) * ActionGridLayout.cellPitch + ActionButtonFace.diameter / 2
+        }
+
+        for column in 0..<ActionGridLayout.columns - 1 {
+            XCTAssertEqual(centre(row: 1, column: column),
+                           (centre(row: 0, column: column) + centre(row: 0, column: column + 1)) / 2,
+                           accuracy: 0.001, "column \(column)")
+        }
+    }
+
+    /// AC3: the scroll view is capped at the grid's own natural height, so with room to spare it
+    /// takes exactly what the two flush rows took before US-211 — the sprite above loses nothing —
+    /// and a third row simply asks for more rather than changing the layout.
+    func testTheGridsHeightIsItsRowsAndNothingMore() {
+        XCTAssertEqual(ActionGridLayout.height(forRows: 0), 0)
+        XCTAssertEqual(ActionGridLayout.height(forRows: 1), 30)
+        XCTAssertEqual(ActionGridLayout.height(forRows: 2), 64, "30 + 4 + 30, the pre-US-211 height")
+        XCTAssertEqual(ActionGridLayout.height(forRows: 3), 98)
+    }
+
+    /// AC2: the diameter is the largest the grid can carry, and the reason is the RING rather than
+    /// the face — `DashRing` is 4pt wider, so a row's gap must be at least 4pt for two neighbouring
+    /// rings to meet instead of overlap, and 5 * 32 + 4 * 4 already exceeds the 176pt screen.
+    func testTheGapIsWideEnoughForTwoNeighbouringRingsToMeet() {
+        let overhang = DashRing(filled: 0, total: 10).diameter - ActionButtonFace.diameter
+        XCTAssertEqual(ActionGridLayout.spacing, overhang,
+                       "two rings meet exactly at the row's gap")
+
+        // 32 is US-038's cap and the next size up. It comes to exactly 176pt across — the whole of
+        // the narrowest screen, with no margin for the safe area a watch inset leaves — so 30 is the
+        // largest diameter this grid can actually carry.
+        let oneSizeUp = CGFloat(ActionGridLayout.columns) * (ActionButtonFace.diameter + 2)
+            + CGFloat(ActionGridLayout.columns - 1) * ActionGridLayout.spacing
+        XCTAssertGreaterThanOrEqual(oneSizeUp, 176, "a 32pt face leaves five columns no margin")
     }
 
     // MARK: - US-208: the meat ring on Feed
