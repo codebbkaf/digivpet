@@ -161,6 +161,14 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     var meat: Int = 0
     var meatCap: Int = 0
 
+    /// How far the active Digimon has walked the selected map and how long that map is, ringed around
+    /// Map in green (US-212) — the last reading that still lived as a bar under the sprite. It is the
+    /// same `MapStrip.recordedSteps`/`totalSteps` pair `MainReadingBars` drew, and it rings for the
+    /// reason the other four do: a reading belongs on the button it is about. Defaulted to 0/0, which
+    /// is also what no map selected gives, so no ring draws.
+    var mapRecorded: Int = 0
+    var mapTotal: Int = 0
+
     let feed: () -> Void
     let train: () -> Void
     let clean: () -> Void
@@ -196,6 +204,16 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     func chargeValue(_ filled: Int, _ total: Int) -> String {
         guard total > 0 else { return "" }
         return "\(min(max(filled, 0), total)) of \(total)"
+    }
+
+    /// What the Map button speaks (US-212). `chargeValue`'s "N of M" with the unit said aloud, because
+    /// these two numbers are not a charge count: "1500 of 25000" alone would leave a VoiceOver user to
+    /// guess what was being counted, and the bar this replaces named its unit for the same reason.
+    /// Clamped and silenced on an absent map exactly as `chargeValue` is — a finished map is not
+    /// capped at its finish line, and it must not say "26000 of 25000 steps".
+    var mapValue: String {
+        guard mapTotal > 0 else { return "" }
+        return "\(min(max(mapRecorded, 0), mapTotal)) of \(mapTotal) steps"
     }
 
     /// How many circles the grid draws. Eight today; US-213 appends Sleep and this becomes 9, which
@@ -306,7 +324,13 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 ActionButtonFace(systemImage: "map.fill", tint: .green)
             }
             .buttonStyle(.plain)
+            // Map progress, green to match the glyph, ringed around the button that chooses the map
+            // (US-212) — the reading that used to be a `DashBar` under the sprite. The other four
+            // rings count something a tap SPENDS; this one counts what walking has earned towards
+            // the far end of the map, which is the same relationship the other way round.
+            .overlay { DashRing(filled: mapRecorded, total: mapTotal, tint: .green) }
             .accessibilityLabel("Map")
+            .accessibilityValue(mapValue)
         }
     }
 

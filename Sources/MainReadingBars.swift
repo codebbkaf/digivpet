@@ -1,19 +1,15 @@
 import SwiftUI
 
-/// The two readings the main screen still shows after US-196 retired the STEP/KCAL/EXER energy bars:
-/// how far the active Digimon has walked across the current map, and how much it has slept. Each is a
-/// `DashBar` (US-171) — the app's one value language — and the two stack as exactly two lines
-/// directly above the action area.
+/// The reading the main screen still shows above the action area: how much the active Digimon has
+/// slept, as a `DashBar` (US-171) — the app's one value language.
 ///
-/// The three spirit-energy bars left the screen because their readings are already spent elsewhere:
-/// steps, calories and exercise are converted into train points and battle time. Map progress and
-/// sleep are the two things a glance at the raising screen still needs, so they are the two that stay.
+/// It was two readings between US-196 and US-212. The STEP/KCAL/EXER energy bars left in US-196
+/// because their readings are already spent elsewhere — steps, calories and exercise convert into
+/// train points and battle time — leaving map progress and sleep. US-212 then moved map steps onto a
+/// green `DashRing` around the grid's Map button, where every other currency already reads, so the
+/// map line is gone from here and the Zz line stands alone. (US-213 rings the Zz reading around a
+/// Sleep button the same way, which retires this view entirely.)
 struct MainReadingBars: View {
-    /// The current map's floored step counter and its length, straight off `MapStrip` — the same
-    /// numbers the strip used to spell as "1500 / 25000" before US-196 moved the reading into a bar.
-    let mapRecorded: Int
-    let mapTotal: Int
-
     /// The active Digimon's accumulated sleep hours and the nominal full-bar ceiling (US-182), the
     /// same values the Zz `DashBar` filled while it lived among the energy bars.
     let sleepHours: Int
@@ -21,25 +17,9 @@ struct MainReadingBars: View {
 
     var body: some View {
         VStack(spacing: MainReadingBarLayout.rowSpacing) {
-            // Line 1 — map steps. A proportional bar over a FIXED number of dashes, not one dash per
-            // step: a map is tens of thousands of steps across, so the reading is the fraction walked
-            // drawn as `MainReadingBarLayout.dashes` ticks, the same way the Zz bar draws lifetime
-            // sleep against a nominal ceiling rather than a dash per hour lived.
-            ReadingRow(filled: MainStepBar.filled(recorded: mapRecorded, total: mapTotal,
-                                                  dashes: MainReadingBarLayout.dashes),
-                       total: MainReadingBarLayout.dashes,
-                       tint: .green,
-                       accessibilityLabel: MainReadingBarLayout.mapLabel,
-                       accessibilityValue: "\(mapRecorded) of \(mapTotal) steps") {
-                // The walking figure the strip used to carry (US-120) makes its home here in US-196,
-                // labelling the reading it actually measures rather than sitting redundantly beside
-                // the map's name.
-                Image(systemName: MainReadingBarLayout.mapSymbol)
-                    .font(.system(size: MainReadingBarLayout.labelFontSize))
-            }
-
-            // Line 2 — Zz sleep. The same "Zz" label and bar the sleep row wore among the energy
-            // bars, unchanged but now standing beside the map bar rather than inside a 2×2 grid.
+            // Zz sleep. The same "Zz" label and bar the sleep row wore among the energy bars,
+            // unchanged through two moves — out of the 2×2 grid in US-196, and left standing alone
+            // when US-212 took the map line onto the Map button's ring.
             ReadingRow(filled: sleepHours,
                        total: sleepTotal,
                        tint: .secondary,
@@ -53,37 +33,15 @@ struct MainReadingBars: View {
     }
 }
 
-/// The proportional fill of the map-step `DashBar`: how many of `dashes` ticks are solid for a map
-/// that is `recorded` of `total` steps walked.
+/// The sizes the reading bar is built from.
 ///
-/// Free-standing arithmetic rather than a literal buried in `body`, in the spirit of `DashBarLayout`
-/// and `EnergyBarLayout`: a test should be able to check that a half-walked map lights half its
-/// dashes without standing up a view graph.
-enum MainStepBar {
-    /// The solid-dash count, floored so the bar never reads as one step further than the player has
-    /// actually walked (`MapListRow.recordedSteps`' rule, applied to the dashes): a map at
-    /// `total - 1` steps shows every dash but the last, and only `recorded >= total` fills them all.
-    /// Clamped to `0...dashes` so a counter that overshoots `total` — a finished map is not capped at
-    /// its finish line — cannot ask for a phantom dash.
-    static func filled(recorded: Int, total: Int, dashes: Int) -> Int {
-        guard total > 0, dashes > 0 else { return 0 }
-        let solid = Int((Double(recorded) / Double(total) * Double(dashes)).rounded(.down))
-        return min(dashes, max(0, solid))
-    }
-}
-
-/// The sizes the two reading bars are built from, and the fixed dash count the map-step bar fills.
-///
-/// Free-standing for `EnergyBarLayout`'s reason: the one fact that is an acceptance criterion — that
-/// there are exactly two bars, drawn as dashes — is checkable here without a Simulator.
+/// Free-standing for `EnergyBarLayout`'s reason: what the row is made of is checkable here without a
+/// Simulator. `MainStepBar` — the map bar's proportional fill — lived here until US-212 moved the
+/// reading onto the Map button; the arithmetic went with it and now lives, generalised to every ring
+/// in the grid, as `DashRingLayout.solidSegments`.
 enum MainReadingBarLayout {
-    /// How many dashes the map-step bar is drawn as. Matched to the Zz bar's `sleepHoursDisplayCap`
-    /// of 16 so the two lines are the same length and read as a pair rather than as two unrelated
-    /// widths.
-    static let dashes = 16
-
-    /// The leading label column, matched to `EnergyBarLayout.nameWidth` so the two bars line up their
-    /// dashes exactly where the energy grid used to.
+    /// The leading label column, matched to `EnergyBarLayout.nameWidth` so the bar lines its dashes
+    /// up exactly where the energy grid used to.
     static let labelWidth: CGFloat = 21
 
     /// Size 8, matching the energy grid's name column the Zz "Zz" once sat in.
@@ -92,28 +50,17 @@ enum MainReadingBarLayout {
     /// Between the label and the bar, matched to `EnergyBarLayout.columnSpacing`.
     static let columnSpacing: CGFloat = 3
 
-    /// Between the two rows. One point, the same gap the energy grid closed to in US-120.
+    /// Between rows. One point, the same gap the energy grid closed to in US-120. One row is left to
+    /// space since US-212; it stays because it is the row spacing of this stack, not of a pair.
     static let rowSpacing: CGFloat = 1
 
     /// The dash height, matched to the four currency bars beneath so every bar on the screen is the
     /// same weight.
     static let barHeight: CGFloat = 5
-
-    /// The map-step bar's leading glyph — the walking figure that used to mark the travelling strip.
-    static let mapSymbol = "figure.walk"
-
-    /// What the map-step bar is called to VoiceOver: a bare "12 of 16" dash reading says nothing
-    /// spoken. It names the READING rather than the map since US-210 took the map's name off this
-    /// area of the screen entirely — the strip that carried it is gone, and a spoken "Adventuring in
-    /// Grassland" would have been the only place under the sprite that still said which map it is,
-    /// which is exactly what the story removes. Which map you are on is read off the grid's Map
-    /// button and the map list.
-    static let mapLabel = "Map progress"
 }
 
-/// One reading line: a leading label and a `DashBar`, sharing `MainReadingBarLayout`'s label width so
-/// the map and Zz bars align. The label is injected so one row can carry an SF Symbol (the walking
-/// figure) and the other text ("Zz").
+/// One reading line: a leading label and a `DashBar`, sharing `MainReadingBarLayout`'s label width.
+/// The label is injected so a row can carry either an SF Symbol or text ("Zz").
 private struct ReadingRow<Label: View>: View {
     let filled: Int
     let total: Int
@@ -140,6 +87,6 @@ private struct ReadingRow<Label: View>: View {
 }
 
 #Preview {
-    MainReadingBars(mapRecorded: 1_500, mapTotal: 25_000, sleepHours: 6, sleepTotal: 16)
+    MainReadingBars(sleepHours: 6, sleepTotal: 16)
         .padding()
 }

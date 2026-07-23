@@ -1010,7 +1010,8 @@ final class MainScreenModel: ObservableObject {
     /// enabled, and drops a little poop so Clean is enabled too.
     ///
     /// - `-chargesDemo` — Feed 13/20 (orange), Train 4/10 (red), Battle 7/10 (purple), Clean 5/8
-    ///   (blue): four partly filled rings on the action grid at once (meat joined in US-208).
+    ///   (blue) and Map 1050/3000 (green): five partly filled rings on the action grid at once (meat
+    ///   joined in US-208, map steps in US-212).
     private func seedChargesDemoIfRequested() {
         guard CommandLine.arguments.contains("-chargesDemo"), let state else { return }
 
@@ -1033,6 +1034,36 @@ final class MainScreenModel: ObservableObject {
         state.stageEnergy.strength = max(state.stageEnergy.strength, BattleCost.energy)
         state.poopUpdatedAt = now().addingTimeInterval(-12 * 60 * 60)
         state.advancePoop(isAsleep: isAsleep, now: now())
+
+        seedMapRingForChargesDemo()
+    }
+
+    /// The fifth ring (US-212): a map selected and part-walked, so Map's green ring can be
+    /// screenshotted with a real fill beside the other four rather than as an empty circle. The
+    /// Simulator earns no steps, so — exactly as with the charges above — the counter is what has to
+    /// move; the ring is the shipped `DashRing` drawing whatever this banks.
+    ///
+    /// Two details that are the whole reason this is a method rather than two lines:
+    ///
+    /// * It walks the FIRST map to 35% (1050 of 3000), which the existing `-mapListDemo` family
+    ///   cannot stand in for: every one of those finishes maps and pushes the map list, and the shot
+    ///   this flag exists for is the grid on the main screen.
+    /// * It then moves the map's wild-encounter marker up to the same total. Banking 1050 steps in
+    ///   one go otherwise owes an encounter the moment the screen appears (US-201 raises one every
+    ///   500 steps), and its dialog covers the grid — so without this, the flag hides the very thing
+    ///   it seeds. Moving the marker is what a resolved encounter does, so this leaves the save in a
+    ///   state the game itself can produce rather than an impossible one.
+    ///
+    /// IDEMPOTENT: `record(steps:)` accumulates, so the counter is set to the target rather than
+    /// credited towards it — a second launch on the same container would otherwise read 2100/3000.
+    private func seedMapRingForChargesDemo() {
+        guard let profile, let map = maps.maps.first else { return }
+        let walked = Double(map.totalSteps) * 0.35
+
+        selectMap(map.id)
+        profile.setRecorded(walked, forMap: map.id)
+        profile.setEncounterMarker(walked, forMap: map.id)
+        try? store?.save()
     }
 
     /// Debug-only: puts the room light into a state worth screenshotting. `simctl` cannot tap the

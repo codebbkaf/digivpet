@@ -223,9 +223,84 @@ final class ActionControlsTests: XCTestCase {
 
         XCTAssertEqual(meatRing.diameter, trainRing.diameter)
         XCTAssertEqual(meatRing.lineWidth, trainRing.lineWidth)
-        XCTAssertEqual(meatRing.gapDegrees, trainRing.gapDegrees)
         XCTAssertEqual(meatRing.diameter, ActionButtonFace.diameter + 4,
                        "it encircles the face rather than resizing the button")
+    }
+
+    // MARK: - US-212: the map ring, and one segment count for all five
+
+    /// AC1: the Map button carries the strip's two step counts as a ring, built exactly like the four
+    /// beside it — same `DashRing`, same defaults, only the numbers and the hue differ. The ring is
+    /// reached through the view's OWN properties, so a call site that stopped passing the steps would
+    /// fail here rather than only in a screenshot.
+    func testTheMapRingIsDrivenByTheStripsSteps() {
+        let controls = walking(recorded: 12_500, total: 25_000)
+        let mapRing = DashRing(filled: controls.mapRecorded, total: controls.mapTotal, tint: .green)
+
+        XCTAssertEqual(controls.mapRecorded, 12_500)
+        XCTAssertEqual(controls.mapTotal, 25_000)
+        XCTAssertEqual(mapRing.solid, DashRingLayout.segments / 2, "a half-walked map, half a ring")
+        XCTAssertEqual(mapRing.diameter, DashRing(filled: 3, total: 10, tint: .red).diameter)
+    }
+
+    /// A save with no map selected hands 0 of 0 — `ContentView`'s nil case — which draws no ring and
+    /// says nothing, the same silence an absent charge economy gets.
+    func testNoMapSelectedDrawsNoRingAndSaysNothing() {
+        let controls = walking(recorded: 0, total: 0)
+
+        XCTAssertEqual(DashRing(filled: controls.mapRecorded, total: controls.mapTotal).solid, 0)
+        XCTAssertEqual(controls.mapValue, "")
+    }
+
+    /// AC5: Map announces its step progress, with the unit spoken — "1500 of 25000" alone would not
+    /// say what was being counted — and clamped, because a finished map is not capped at its finish
+    /// line and must not read as more steps than the map is long.
+    func testMapAnnouncesItsStepProgress() {
+        XCTAssertEqual(walking(recorded: 1_500, total: 25_000).mapValue, "1500 of 25000 steps")
+        XCTAssertEqual(walking(recorded: 0, total: 25_000).mapValue, "0 of 25000 steps")
+        XCTAssertEqual(walking(recorded: 30_000, total: 25_000).mapValue, "25000 of 25000 steps",
+                       "a map walked past its end cannot say 30000 of 25000")
+    }
+
+    /// AC3, end to end through the numbers the five buttons are actually handed: meat 20, train 10,
+    /// battle 10, clean 8 and a 25000-step map all draw the SAME ten segments, so the row reads as one
+    /// control repeated. Before US-212 those caps gave three different tick densities side by side.
+    func testAllFiveRingsInTheRowShareTheirSegments() {
+        let config = ConsumptionConfig.bundled
+        let controls = ActionControls(canAffordBattle: true, poopCount: 1, lightState: .on,
+                                      trainCharges: 5, trainChargeCap: config.maxTrainCharges,
+                                      battleCharges: 5, battleChargeCap: config.maxBattleCharges,
+                                      cleanCharges: 4, cleanChargeCap: config.maxCleanCharges,
+                                      meat: 10, meatCap: config.meatCap,
+                                      mapRecorded: 12_500, mapTotal: 25_000,
+                                      feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                                      mapDestination: { EmptyView() },
+                                      partyDestination: { EmptyView() },
+                                      dexDestination: { EmptyView() })
+
+        let rings = [
+            DashRing(filled: controls.meat, total: controls.meatCap, tint: .orange),
+            DashRing(filled: controls.trainCharges, total: controls.trainChargeCap, tint: .red),
+            DashRing(filled: controls.cleanCharges, total: controls.cleanChargeCap, tint: .blue),
+            DashRing(filled: controls.battleCharges, total: controls.battleChargeCap, tint: .purple),
+            DashRing(filled: controls.mapRecorded, total: controls.mapTotal, tint: .green),
+        ]
+
+        for ring in rings {
+            // Each is handed a value at half its own cap, so the same five segments light on all
+            // five — which is only possible because the segment count no longer follows the cap.
+            XCTAssertEqual(ring.solid, DashRingLayout.segments / 2)
+        }
+    }
+
+    /// A row carrying a map, for the ring and announcement assertions above.
+    private func walking(recorded: Int, total: Int) -> ActionControls<EmptyView, EmptyView, EmptyView> {
+        ActionControls(canAffordBattle: true, poopCount: 0, lightState: .on,
+                       mapRecorded: recorded, mapTotal: total,
+                       feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                       mapDestination: { EmptyView() },
+                       partyDestination: { EmptyView() },
+                       dexDestination: { EmptyView() })
     }
 
     /// A call site that says nothing about meat draws no ring, so every pre-US-208 construction of

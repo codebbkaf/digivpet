@@ -146,17 +146,26 @@ final class MapStripTests: XCTestCase {
 
 /// The row itself — `MapStripView`, `MapStripLayout` and `MapStripMarks` — is deleted, along with
 /// the name it drew under the sprite and its party button. Absence is not directly assertable, so
-/// what stands in for those tests is the one reading that survived the row: the map-step `DashBar`,
-/// which must no longer speak a map's name (AC1). That both ways out of the room still work is
+/// what stands in for those tests is the one reading that survived the row: the map-step reading,
+/// which must no longer speak a map's name (AC1). It followed the strip's steps onto the grid's Map
+/// button in US-212, so the assertion follows it there. That both ways out of the room still work is
 /// `MapStripSelectionTests`' last test, driven through the grid.
+@MainActor
 final class MapStripRemovalTests: XCTestCase {
-    /// AC1: the map name is off this area of the screen entirely, spoken as well as drawn. The bar's
-    /// VoiceOver label names the READING, so no shipped map's name can appear in it.
-    func testTheMapStepBarNoLongerNamesTheMap() {
-        XCTAssertFalse(MainReadingBarLayout.mapLabel.isEmpty, "a bar with no label says nothing spoken")
+    /// AC1: the map name is off this area of the screen entirely, spoken as well as drawn. What the
+    /// Map button speaks is its steps, so no shipped map's name can appear in what it says.
+    func testTheMapStepReadingNoLongerNamesTheMap() {
+        let controls = ActionControls(canAffordBattle: true, poopCount: 0, lightState: .on,
+                                      mapRecorded: 1_500, mapTotal: 25_000,
+                                      feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                                      mapDestination: { EmptyView() },
+                                      partyDestination: { EmptyView() },
+                                      dexDestination: { EmptyView() })
+
+        XCTAssertFalse(controls.mapValue.isEmpty, "a reading with nothing spoken says nothing")
 
         for map in MapCatalog.bundled.maps {
-            XCTAssertFalse(MainReadingBarLayout.mapLabel.contains(map.displayName),
+            XCTAssertFalse(controls.mapValue.contains(map.displayName),
                            "the reading must not name \(map.displayName)")
         }
     }

@@ -1835,8 +1835,8 @@
         "Build green. Verify in the simulator that all five rings share the same 10-segment look"
       ],
       "priority": 99,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "DashRingLayout (segments=10, gapDegrees=8, solidSegments) is the one shared constant; every ring now draws 10 arcs whatever its cap, floored fill. Map steps ring the Map button in green and left MainReadingBars (MainStepBar deleted with it). Build green, 2717 tests 0 failures, five-ring look screenshotted on 46mm."
     },
     {
       "id": "US-213",

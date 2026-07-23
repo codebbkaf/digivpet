@@ -229,6 +229,16 @@ extension PlayerProfile {
     /// the one operation the game itself must never perform — map progress is what outlives a
     /// Digimon's death and a rebirth, so a shipped "clear it all" would be a way to lose it. See
     /// `MainScreenModel.seedMapListDemoIfRequested`.
+    /// Debug-only: sets a map's counter outright, where `record(steps:)` only ever adds to it.
+    ///
+    /// It exists because the screenshot flags have to be IDEMPOTENT — they write to the save, and a
+    /// flag that credits its steps towards the counter reads 35% on the first launch and 70% on the
+    /// second, which still looks plausible. `seedMapRingForChargesDemo` is the caller; nothing the
+    /// game does may set a step total, which is why this is not `record`'s sibling in the shipped API.
+    func setRecorded(_ steps: Double, forMap id: String) {
+        recordedStorage[id] = max(0, steps)
+    }
+
     func clearForDemo() {
         selectedMapId = nil
         recordedStorage = [:]

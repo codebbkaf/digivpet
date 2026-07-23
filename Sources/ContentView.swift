@@ -622,20 +622,21 @@ struct ContentView: View {
                 // the grid's now, so the row is deleted and the line of height it cost — plus the
                 // map name that floated under the sprite — goes back to the Digimon.
                 //
-                // The two readings that still matter after US-196 retired the STEP/KCAL/EXER energy
-                // bars: how far the active Digimon has walked the current map, and how much it has
-                // slept — each a DashBar (US-171), stacked as exactly two lines above the action
-                // area. Steps, calories and exercise left the screen because they are already spent
-                // into train points and battle time; map progress and sleep are what a glance at the
-                // raising screen still needs. Gated on `state` like the currency row below, so no lone
-                // bar draws before a Digimon is out; the map numbers still come off `MapStrip`, which
-                // outlived the row it was named for and is now read only for its two step counts.
-                if let strip = model.mapStrip, model.state != nil {
-                    MainReadingBars(mapRecorded: strip.recordedSteps, mapTotal: strip.totalSteps,
-                                    sleepHours: model.sleepHours, sleepTotal: model.sleepHoursCap)
+                // The one reading left above the action area: how much the active Digimon has slept,
+                // as a DashBar (US-171). US-196 retired the STEP/KCAL/EXER bars — steps, calories and
+                // exercise are already spent into train points and battle time — leaving map progress
+                // and sleep; US-212 then moved map steps onto a green ring around the grid's Map
+                // button, where every other currency already reads, so only the Zz line is drawn here.
+                // Gated on `state` like the grid below, so no lone bar draws before a Digimon is out.
+                if model.state != nil {
+                    MainReadingBars(sleepHours: model.sleepHours, sleepTotal: model.sleepHoursCap)
                 }
 
                 if model.state != nil {
+                    // The map's step counts, read once and handed to the grid's Map ring (US-212).
+                    // `mapStrip` outlived the row it was named for and is now read only for these
+                    // two numbers; nil — no map selected — rings 0 of 0, which draws nothing.
+                    let strip = model.mapStrip
                     // The currency row is GONE (US-208). It held four bars (US-174, US-176, US-177,
                     // US-178); US-199 moved train, battle and clean onto rings around the buttons
                     // that spend them and left meat alone on a row of one, and this story rings meat
@@ -667,6 +668,8 @@ struct ContentView: View {
                                    cleanChargeCap: model.cleanChargeCap,
                                    meat: model.meat,
                                    meatCap: model.meatCap,
+                                   mapRecorded: strip?.recordedSteps ?? 0,
+                                   mapTotal: strip?.totalSteps ?? 0,
                                    feed: { model.feed() },
                                    train: { model.train() },
                                    clean: { model.clean() },

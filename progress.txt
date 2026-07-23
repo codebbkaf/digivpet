@@ -841,6 +841,13 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `uninstall` + reinstall + relaunch did NOT dismiss it, and `simctl` cannot tap it. `xcrun simctl
   shutdown <id> && boot <id>` (then reinstall) clears it. If a main-screen screenshot comes back as
   a full-screen system sheet, suspect a stale alert before you suspect your launch flags.
+- **A DEMO FLAG THAT BANKS MAP STEPS MUST MOVE THAT MAP'S `encounterMarker` TOO (US-212).** US-201
+  raises a wild encounter every 500 recorded steps and `checkForWildEncounter` runs on appear, so any
+  flag that credits a realistic walk screenshots as "A wild <foe>!" over the whole action area — the
+  flag hides the thing it seeds, and `simctl` cannot tap Flee. `profile.setEncounterMarker(<the same
+  total>, forMap:)` is what a RESOLVED encounter does, so the save is left in a state the game itself
+  can reach. `-mapListDemo` / `-mapListPartialDemo` still have this (they also push the map list, so
+  neither can stand in for a main-screen shot); `-chargesDemo` is the corrected pattern.
 - **SCREENSHOT STORIES: MEASURE THE MAP SLOT BY A CONTIGUOUS FULL-WIDTH SCAN DOWN FROM ITS FIXED TOP
   EDGE, NOT BY COLOUR.** The map fills the slot full width; the name/strip/bars below it are centred
   with black side margins. Scan rows down from just under the stats strip while >80% of the width is
@@ -6687,4 +6694,72 @@ The thirty, `Perfect -> Ultimate`:
   `DEVELOPER_DIR` is exported in that call: `shutdown` -> `erase` -> `boot` -> sleep 25 ->
   `install` -> `launch ... -healthAnswered -noNotificationPrompt -chargesDemo` -> sleep 20 ->
   `io <id> screenshot`. The 42mm is `F4A12A1C-1C5E-4B83-8278-341634CDE4F5`.
+---
+
+## 2026-07-24 - US-212 (Map steps become a ring around the Map button; every ring is 10 segments)
+- New `DashRingLayout` in `Sources/DashBar.swift` (free-standing, non-generic, `DashBarLayout`'s
+  spirit): `segments = 10`, `gapDegrees = 8` and `solidSegments(filled:total:segments:)`. `DashRing`
+  no longer draws one arc per unit — it draws `DashRingLayout.segments` arcs and lights
+  `solidSegments` of them, and its per-instance `gapDegrees` property is GONE so two rings cannot be
+  given different divider spacing. `filled`/`total` stay the raw economy; the ring draws the fraction.
+- **Rounding rule (AC4): floored.** A segment lights only once fully earned — `DashBarLayout`'s rule
+  (a dash is a whole unit) and `MapListRow.recordedSteps`' (a step count is never rounded up). Two
+  documented consequences now that one segment can stand for more than one unit: a value under a tenth
+  of its cap shows an empty ring (1 meat of 20 is half a segment), and a ring is full only at
+  `filled >= total`, never a meal or a step early.
+- The Map button carries `DashRing(filled: mapRecorded, total: mapTotal, tint: .green)` and speaks
+  `ActionControls.mapValue` — "1050 of 3000 steps", clamped like `chargeValue` and silent at 0 total.
+  It says "steps" where `chargeValue` says nothing: these two numbers are not a charge count, and
+  "1500 of 25000" alone would not say what is being counted.
+- `MainReadingBars` lost its map line and its `mapRecorded`/`mapTotal` parameters; `MainStepBar` and
+  `MainReadingBarLayout.dashes`/`.mapSymbol`/`.mapLabel` were deleted with it (last caller gone).
+  Only the Zz line is left — US-213 rings that too and retires the view.
+- `ContentView` binds `let strip = model.mapStrip` once inside the `state != nil` branch and passes
+  `strip?.recordedSteps ?? 0` / `?? 0`; no map selected is 0 of 0, which draws no ring.
+- `-chargesDemo` grew a fifth ring: `seedMapRingForChargesDemo` selects map 1 and sets it to 35%
+  (1050/3000). It also moves that map's wild-encounter marker to the same total — see learnings.
+  New DEBUG-only `PlayerProfile.setRecorded(_:forMap:)` because `record(steps:)` only ADDS, and a
+  screenshot flag that writes to the save must be idempotent.
+- Files: Sources/DashBar.swift, Sources/ActionControls.swift, Sources/MainReadingBars.swift,
+  Sources/ContentView.swift, Sources/MainScreenModel.swift, Sources/PlayerProfile.swift,
+  Tests/DashBarTests.swift, Tests/ActionControlsTests.swift, Tests/MainReadingBarsTests.swift,
+  Tests/MapStripTests.swift.
+- Verified: build green; FULL suite **2717 tests, 0 failures** (+5). AC6 screenshotted on 46mm
+  (/tmp/us212/b2.png, brow.png, bmap.png): the five rings show the same ten arcs and the same gaps,
+  filled 6 (meat 13/20), 4 (train 4/10), 6 (clean 5/8), 7 (battle 7/10) and 3 (map 1050/3000) — every
+  one of them the floored value, counted off the zoomed crop.
+- Tests: new `DashRingLayoutTests` class in `Tests/DashBarTests.swift` (6 tests: the shared constants,
+  ten segments across all five real caps, the floored partial, both ends of the rounding rule, the
+  overshoot/negative clamp, the absent economy). `ActionControlsTests` gained a US-212 section (the
+  map ring off the strip's steps, the no-map-selected silence, the spoken step value, and all five
+  rings at half their own caps lighting the same five segments). `MainReadingBarsTests` was rewritten
+  down to what is left of that view; `MapStripTests`' US-210 "the reading no longer names the map"
+  test followed the reading onto `ActionControls.mapValue`.
+
+**Learnings for future iterations:**
+- **A demo flag that credits map steps owes a wild encounter, and its dialog covers the grid.**
+  US-201 raises an encounter every 500 recorded steps and `checkForWildEncounter` runs on appear, so
+  `-mapListPartialDemo` + `-chargesDemo` screenshots as "A wild Swimmon!" over the action row — the
+  flag hides the exact thing it seeds. The fix is to move the map's `encounterMarker` to the same
+  total the demo banks: that is what a RESOLVED encounter does, so the save is left in a state the
+  game itself can reach rather than an impossible one. Any future flag that banks steps needs the
+  same line. (`-mapListDemo`/`-mapListPartialDemo` have this bug today, and additionally push the map
+  list, so neither can stand in for a main-screen shot.)
+- **When a ring's segment count stops following its cap, the caps become free to retune.** Meat 20,
+  train 10, battle 10, clean 8 gave three different tick densities in one row of five. Fixing the
+  count at 10 decouples the LOOK from `consumption.json`, so a later balance change cannot silently
+  restyle the grid — and `testAllFiveRingsInTheRowShareTheirSegments` reads the real bundled caps, so
+  it keeps proving that after they change.
+- **Delete the per-instance knob, not just the divergence.** `DashRing.gapDegrees` was a `var` with a
+  default nobody overrode. Leaving it while adding `DashRingLayout.gapDegrees` would have left two
+  sources for one AC ("the SAME divider spacing"); removing it makes the criterion unbreakable rather
+  than merely currently-true. One test (`testTheMeatRingIsTheSameRingTheChargesUse`) referenced it and
+  was simply shortened.
+- **A `let` binding is legal inside a `ViewBuilder` block** — `ContentView` now reads `model.mapStrip`
+  (which rebuilds a `MapStrip` on every access) once per body pass instead of twice, without
+  restructuring the branch.
+- Screenshot recipe unchanged; `sips -c H W --cropOffset Y X` takes HEIGHT then WIDTH and the offset
+  as TOP then LEFT — getting that backwards crops the inside of a button and looks like a bug in the
+  view. Row 1 of the grid sits at y≈345-405 in a 416x496 46mm shot; the five ring centres are near
+  x = 73, 141, 209, 277, 345.
 ---
