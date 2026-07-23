@@ -325,11 +325,11 @@ final class ChildSweepAToFTests: XCTestCase {
         // These are the FILE's sizes, not this story's, so every later sweep is in them too:
         // US-150 added ten to `tamers`, three to `dmc-v3`, eleven to `vital`, three to `xros`
         // and two to `palmon`.
-        XCTAssertEqual(sizes["tamers"], 121,
+        XCTAssertEqual(sizes["tamers"], 123,
                        "US-152 put FlareLizamon and Growmon Orange under this line's Perfect rung, "
                            + "US-156 Youkomon and BlackRapidmon, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["dmc-v3"], 54, "plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["palmon"], 30, "US-159's Lilamon and Lilimon X, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["dmc-v3"], 56, "plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["palmon"], 32, "US-159's Lilamon and Lilimon X, plus US-163's one Ultimate")
     }
 
     /// **The variant rule, and the honest version of it.** The criteria say a variant hangs off its
@@ -706,7 +706,7 @@ final class ChildSweepAToFTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 878,
+        XCTAssertEqual(graph.nodes.count, 898,
                        "454 before this story, 497 after it, 548 after US-149, 599 after US-150, "
                            + "610 after US-151, 615 after US-152, 618 after US-153, "
                            + "635 after US-155, 643 after US-156, 672 after US-157, "

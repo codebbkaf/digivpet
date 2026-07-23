@@ -5717,3 +5717,57 @@ The thirty, `Perfect -> Ultimate`:
     they were unaffected because no refresh runs between bouts, so the Digimon stays healthy and
     the accrued mistakes never tip it into sickness within the test.
 ---
+
+## 2026-07-23 - US-167 (Orphan sweep: Ultimate-Super Ultimate N-R)
+- Wired all 20 remaining N-R Ultimate orphans as evolution nodes in Resources/evolutions.json, each
+  with one Perfect in-edge on its parent's line: Nezhamon (Sanzomon), Omegamon (Chimairamon),
+  Omegamon X (MetalGreymon X), Omegamon Zwart (WereGarurumon Black), Omegamon Alter-S (MetalGreymon
+  Virus), Ogudomon (Mephismon), Ogudomon X (Mephismon X), Ophanimon Core (Angewomon), Ophanimon
+  Falldown X (Angewomon X), Ordinemon (Lucemon Falldown), Plesiomon X (MegaSeadramon X),
+  PrinceMamemon X (Mamemon X), Quantumon (Andromon), RagnaLordmon (Grademon), Ragnamon (Nanomon),
+  Rapidmon X (Rapidmon), Rasenmon Fury (Hisyaryumon), Rosemon Burst (Lilamon), Rosemon X (Lilimon X),
+  RustTyrannomon (MetalTyranomon).
+- Each new node: line = parent's line, a >200-char Wikimon-citing comment, an explicit elements.json
+  type row and a moves.json row (symbol+tint unique within the line, signature name globally unique).
+- Each in-edge: inserted BEFORE the parent's isDefault climb (fallback stays last), requiredEnergy
+  distinct from the parent's other edges, minEnergy 150, maxCareMistakes 2, exactly two conditions
+  (one health metric + one care counter), every hint free of digits.
+- Orphan count for stage 'Ultimate-Super Ultimate': BEFORE 39, AFTER 19 (Appendix B script). Overall
+  playable orphans 55 -> 35. EvolutionGraphValidator: zero findings over the whole file.
+- Added Tests/UltimateSweepNToRTests.swift. Build green; all 2597 tests pass.
+
+**Learnings for future iterations (US-168 / US-169 will hit all of this):**
+- An Ultimate sweep is an IN-EDGE-ONLY sweep: every new node is terminal (Ultimate is rung 6, the
+  top; the validator's stage-transition check forbids any out-edge). Twenty orphans = twenty nodes.
+- The graph is built ONLY from Resources/evolutions.json nodes. The N-R orphans were NOT in that file
+  — they existed only as sprite-derived entries in roster.generated.json. So wiring = ADD the node to
+  evolutions.json (with `line`, or EvolutionGraph.bundled traps) AND add a Perfect in-edge.
+- HARD CONVENTIONS enforced by the per-story test suites (violate any and ~470 tests go red):
+  * every edge is INTRA-LINE (orphan.line == parent.line); no edge crosses a line.
+  * the isDefault climb must be LAST in each node's evolutions — insert new edges before it.
+  * no node offers two edges with the same requiredEnergy (EvolutionEngine matches on dominant type).
+  * every evolutions.json node needs an explicit elements.json `types[id]` AND moves.json `moves[id]`
+    row — the line/stage fallbacks are unreachable and ElementCatalog/MoveCatalog tests demand the id.
+  * moves: (projectileSymbol, tint) unique per line, signatureName globally unique, symbols must be
+    real SF Symbols (MoveCatalogTests renders them), signatureName must not contain the displayName.
+  * hints must contain NO digit characters (spell numbers as words) — a sweep test checks this.
+- SNAPSHOT tests across ~20 files hardcode the CURRENT global totals and must all be bumped: every
+  `graph.nodes.count` (was 878, now 898), `graph.nodes(at: .ultimate).count` (199 -> 219), each
+  `sizes["<line>"]` you touch, EvolutionGraphTests' whole byLine dict, the ultimate orphan buckets
+  (39 -> 19; CToD's jogress-adjusted 37 -> 17), and EvolutionTreeTests' dmc-v1 rowCount/connectors.
+- Forking a Perfect that a Perfect/Adult sweep already gave a climb means updating that story's
+  `branchedBySweeps`/`wiredBy...` count dict or expected-climb list (they map parent -> edge count).
+- DO NOT fork a Perfect that sits on one of US-002's three walked named lines (Agumon/dmc-v1 via
+  MetalGreymon, Palmon via Lilimon, Gabumon via WereGarurumon): SeedRosterTests.earnedPath walks the
+  single earned edge at each rung, so an added branch redirects the named line. Hang the node on a
+  sibling Perfect instead (Omegamon -> Chimairamon, Rosemon Burst -> Lilamon here; the AToB story did
+  the same with BanchoLilimon -> Lilamon).
+- Jogress-result Ultimates (Omegamon family, Ogudomon, Ordinemon) are counted as orphans by Appendix
+  B and DO take an evolution in-edge in the sweep (as IToM did for Mastemon/Mitamamon). Device-tree
+  tests that asserted `graph.node(id: "omegamon") == nil` had to change — the line still leaves it a
+  Jogress recipe (its own WarGreymon draws no edge), but the node now exists on dmc-v1.
+- penc-sw (Saiyu Warriors) has no Digitama, so a node placed there is stranded-from-egg and must be
+  added to EvolutionCriteriaTests.strandedUltimate; its comment MUST contain "Saiyu Warriors"
+  (BabyII/ChildAToF/DigitamaBabyI membership tests check that).
+- Fast dev loop: a Python replica of EvolutionGraphValidator + the Appendix B count catches most data
+  errors in <1s before the ~1-minute watchOS build/test.

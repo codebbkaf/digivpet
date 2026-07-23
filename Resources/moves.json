@@ -5268,6 +5268,126 @@
       "tint": "mint",
       "signatureName": "Purifying Barrier",
       "signatureSymbol": "sparkles"
+    },
+    "omegamon": {
+      "projectileSymbol": "star.fill",
+      "tint": "white",
+      "signatureName": "Grey Sword Cross",
+      "signatureSymbol": "star.fill"
+    },
+    "omegamon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "cyan",
+      "signatureName": "Omega inForce",
+      "signatureSymbol": "star.fill"
+    },
+    "omegamon_zwart": {
+      "projectileSymbol": "star.fill",
+      "tint": "red",
+      "signatureName": "Zwart Requiem",
+      "signatureSymbol": "star.fill"
+    },
+    "omegamon_alter-s": {
+      "projectileSymbol": "bolt.fill",
+      "tint": "brown",
+      "signatureName": "Alter Break",
+      "signatureSymbol": "bolt.fill"
+    },
+    "ogudomon": {
+      "projectileSymbol": "star.fill",
+      "tint": "red",
+      "signatureName": "Catedral Fall",
+      "signatureSymbol": "star.fill"
+    },
+    "ogudomon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "brown",
+      "signatureName": "Seven Deadly Sins",
+      "signatureSymbol": "star.fill"
+    },
+    "ophanimon_core": {
+      "projectileSymbol": "sparkles",
+      "tint": "red",
+      "signatureName": "Sefirot Crystal Ray",
+      "signatureSymbol": "sparkles"
+    },
+    "ophanimon_falldown_x": {
+      "projectileSymbol": "moon.fill",
+      "tint": "red",
+      "signatureName": "Fallen Judgement",
+      "signatureSymbol": "moon.fill"
+    },
+    "rosemon_burst": {
+      "projectileSymbol": "star.fill",
+      "tint": "purple",
+      "signatureName": "Rose Burst Spear",
+      "signatureSymbol": "star.fill"
+    },
+    "rosemon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "brown",
+      "signatureName": "Thorn Carnival",
+      "signatureSymbol": "star.fill"
+    },
+    "rapidmon_x": {
+      "projectileSymbol": "triangle.fill",
+      "tint": "mint",
+      "signatureName": "Golden Triangle Burst",
+      "signatureSymbol": "triangle.fill"
+    },
+    "ragnalordmon": {
+      "projectileSymbol": "star.fill",
+      "tint": "yellow",
+      "signatureName": "Ragnarok Edge",
+      "signatureSymbol": "star.fill"
+    },
+    "ragnamon": {
+      "projectileSymbol": "gearshape.fill",
+      "tint": "teal",
+      "signatureName": "Leviathan Surge",
+      "signatureSymbol": "gearshape.fill"
+    },
+    "quantumon": {
+      "projectileSymbol": "sparkles",
+      "tint": "red",
+      "signatureName": "Quantum Leap",
+      "signatureSymbol": "sparkles"
+    },
+    "plesiomon_x": {
+      "projectileSymbol": "drop.fill",
+      "tint": "red",
+      "signatureName": "Deep Sorrow",
+      "signatureSymbol": "drop.fill"
+    },
+    "princemamemon_x": {
+      "projectileSymbol": "star.fill",
+      "tint": "brown",
+      "signatureName": "Royal Bean Punch",
+      "signatureSymbol": "star.fill"
+    },
+    "rusttyrannomon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "yellow",
+      "signatureName": "Corroded Breath",
+      "signatureSymbol": "flame.fill"
+    },
+    "rasenmon_fury": {
+      "projectileSymbol": "wind",
+      "tint": "mint",
+      "signatureName": "Spiral Fury",
+      "signatureSymbol": "wind"
+    },
+    "ordinemon": {
+      "projectileSymbol": "moon.fill",
+      "tint": "mint",
+      "signatureName": "Nyx Ruin",
+      "signatureSymbol": "moon.fill"
+    },
+    "nezhamon": {
+      "projectileSymbol": "flame.fill",
+      "tint": "yellow",
+      "signatureName": "Universal Fist",
+      "signatureSymbol": "flame.fill"
     }
   },
   "lineDefaults": {

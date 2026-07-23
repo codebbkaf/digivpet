@@ -152,7 +152,12 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
     /// and the one whose own document actually draws the fusion.
     func testTheOmegamonRowIsAJogressRecipeRatherThanAnEdge() throws {
         XCTAssertTrue(try virusBustersSection().contains("Ultra: Omegamon (Jogress)"))
-        XCTAssertNil(graph.node(id: "omegamon"), "Omegamon is a Jogress result, not a node here")
+        // US-167 wired Omegamon as an evolution node on dmc-v1 (from MetalGreymon), as the sweep
+        // gives every orphan an in-edge; this line still leaves it a Jogress recipe and draws no
+        // Omegamon edge of its own.
+        XCTAssertEqual(graph.node(id: "omegamon")?.line, "dmc-v1", "Omegamon is not US-167's dmc-v1 node")
+        XCTAssertFalse(graph.nodes.contains { $0.line == line && $0.evolutions.contains { $0.to == "omegamon" } },
+                       "this line drew Omegamon as an edge rather than leaving it a Jogress recipe")
 
         XCTAssertNotNil(JogressCatalog.bundled.recipe(for: "wargreymon", and: "metalgarurumon"),
                         "the Virus Busters Ultra row has no recipe in jogress.json")
@@ -297,7 +302,7 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
         }
 
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 60,
+        XCTAssertEqual(inLine.count, 61,
                        "US-147 hung Hiyarimon and Penmon here, US-149 Gammamon and BetelGammamon, "
                            + "US-150 Plotmon X, Tailmon X and Cockatrimon, US-151 BlackTailmon, "
                            + "US-152 GulusGammamon, US-153 KausGammamon, US-154 Mikemon and "
@@ -401,7 +406,9 @@ final class PendulumVirusBustersTreeTests: XCTestCase {
                                       // US-164's three Megas: both Cherubimon X over the Andiramon
                                       // and Entmon that carry the plain Cherubimon, and Dominimon
                                       // over this line's own HolyAngemon.
-                                      "cherubimon_vice_x", "cherubimon_virtue_x", "dominimon"]
+                                      "cherubimon_vice_x", "cherubimon_virtue_x", "dominimon",
+                                      // US-167's one: Ophanimon Falldown Mode X over Angewomon X.
+                                      "ophanimon_falldown_x"]
         let mine = graph.nodes.filter { $0.line == line && !sweepEggs.contains($0.id) }
         let plain = mine.filter { Roster.bundled.entry(id: $0.id) != nil }
         let scoped = mine.filter { Roster.bundled.entry(id: $0.id) == nil }

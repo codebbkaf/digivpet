@@ -209,9 +209,10 @@ final class PerfectSweepAToCTests: XCTestCase {
         // US-166, the I-M Ultimate sweep, forked two more: chohakkaimon (Jougamon) and cyberdramon_x
         // (Justimon X), each gaining their first branch (1 -> 2).
         let branchedBySweeps: [String: Int] = ["astamon": 3, "atlurkabuterimon_red": 2, "baalmon": 3,
-                                             "cargodramon": 2, "cerberumon_x": 2, "chimairamon": 2,
+                                             "cargodramon": 2, "cerberumon_x": 2, "chimairamon": 3,
                                              "andiramon_virus": 2, "blackmegalogrowmon": 2,
-                                             "chohakkaimon": 2, "cyberdramon_x": 2]
+                                             "chohakkaimon": 2, "cyberdramon_x": 2,
+                                             "angewomon_x": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.evolutions.count, branchedBySweeps[perfect] ?? 1,
@@ -389,15 +390,15 @@ final class PerfectSweepAToCTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 121, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["penc-me"], 73, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
-        XCTAssertEqual(sizes["penc-vb"], 60, "three Perfects and Ophanimon X, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 81, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
-        XCTAssertEqual(sizes["dmc-v1"], 39, "Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon, plus US-163's three Ultimates")
-        XCTAssertEqual(sizes["palmon"], 30, "Cannonbeemon and TigerVespamon, plus US-159's two, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-sw"], 22, "Cho-Hakkaimon, Pandamon and Shakamon, plus US-158's two")
+        XCTAssertEqual(sizes["tamers"], 123, "four Perfects and four Ultimates, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-me"], 74, "five Perfects and Kazuchimon, plus US-158's Duramon, plus US-159's two" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 61, "three Perfects and Ophanimon X, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 84, "Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["dmc-v1"], 42, "Chimairamon and Millenniumon" + ", plus US-160's three, plus US-161's NeoDevimon, plus US-163's three Ultimates")
+        XCTAssertEqual(sizes["palmon"], 32, "Cannonbeemon and TigerVespamon, plus US-159's two, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-sw"], 23, "Cho-Hakkaimon, Pandamon and Shakamon, plus US-158's two")
         XCTAssertEqual(sizes["penc-ds"], 48, "Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-nsp"], 44, "AtlurKabuterimon Red, plus US-158's two" + ", plus US-160's one, plus US-161's both Panjyamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-nsp"], 46, "AtlurKabuterimon Red, plus US-158's two" + ", plus US-160's one, plus US-161's both Panjyamon, plus US-163's one Ultimate")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 9)
     }
@@ -708,13 +709,13 @@ final class PerfectSweepAToCTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 878,
+        XCTAssertEqual(graph.nodes.count, 898,
                        "643 before this story, 672 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189,
                        "81 before this story, 101 after it, 115 after US-158, 126 after US-159, 148 after US-160, 165 after US-161, 189 after US-162")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 199,
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 219,
                        "72 before this story, 81 after it, 88 after US-158, 93 after US-159, 98 after US-160, 105 after US-161, 108 after US-162, 138 after US-163")
     }
 

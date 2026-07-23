@@ -144,17 +144,17 @@ final class EvolutionTreeLayoutTests: XCTestCase {
         // (Virus), BlackWarGreymon X over MetalGreymon (Virus) X and Armagemon over Chimairamon,
         // so only the Ultimate column grew. The row count does NOT move — the Perfect column is
         // ten deep and the Ultimate one is nine, so the widest column is still the Perfect one.
-        XCTAssertEqual(nodes.count, 39)
+        XCTAssertEqual(nodes.count, 42)
         XCTAssertEqual(layout.columns.map(\.stage),
                        [.digitama, .babyI, .babyII, .child, .adult, .perfect, .ultimate])
         XCTAssertEqual(layout.columns.first { $0.stage == .adult }?.nodes.map(\.id),
                        ["greymon", "meramon", "numemon", "devimon", "airdramon", "seadramon",
                         "greymon_blue", "coredramon_green", "tyrannomon"])
-        XCTAssertEqual(layout.rowCount, 10)
+        XCTAssertEqual(layout.rowCount, 12)
         // Every one of the line's edges is drawn, because none of them leaves the line — which is
         // the whole reason US-133 renamed this line rather than adding a second one beside it.
         let edges = nodes.flatMap(\.evolutions).count
         XCTAssertEqual(layout.connectors.count, edges)
-        XCTAssertEqual(layout.connectors.count, 58)
+        XCTAssertEqual(layout.connectors.count, 61)
     }
 }

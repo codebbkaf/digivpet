@@ -745,6 +745,29 @@
           ]
         },
         {
+          "to": "omegamon_alter-s",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50000,
+              "hint": "Walk beside it mile after mile"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
+            }
+          ]
+        },
+        {
           "to": "blitzgreymon",
           "requiredEnergy": "spirit",
           "minEnergy": 150,
@@ -2610,6 +2633,29 @@
       "spriteFile": "Andromon",
       "evolutions": [
         {
+          "to": "quantumon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50000,
+              "hint": "Walk beside it mile after mile"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
+        {
           "to": "hiandromon",
           "requiredEnergy": "spirit",
           "minEnergy": 150,
@@ -4269,6 +4315,29 @@
       "comment": "The V5 tree's Ultra, Chaosdramon, hangs off Mugendramon but is a Jogress with Darkdramon — a two-parent edge the schema cannot express (docs/sprite-availability.md), the same reason V4's Chaosmon is absent. This line ends at its three Ultimates.",
       "evolutions": [
         {
+          "to": "rusttyrannomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
+            }
+          ]
+        },
+        {
           "to": "mugendramon",
           "requiredEnergy": "strength",
           "minEnergy": 150,
@@ -4300,6 +4369,29 @@
       "line": "dmc-v5",
       "spriteFile": "Nanomon",
       "evolutions": [
+        {
+          "to": "ragnamon",
+          "requiredEnergy": "strength",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.steps",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 50000,
+              "hint": "Walk beside it mile after mile"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
+            }
+          ]
+        },
         {
           "to": "raidenmon",
           "requiredEnergy": "vitality",
@@ -5200,6 +5292,29 @@
               "comparison": "atLeast",
               "value": 30,
               "hint": "And temper both halves in the training ring"
+            }
+          ]
+        },
+        {
+          "to": "ophanimon_core",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
             }
           ]
         },
@@ -21356,6 +21471,29 @@
       "comment": "The second earned Perfect this line has ever had, and it exists because TWO of this story's Champions cite it off the same device: Wikimon lists Grademon in the Evolves To of both Meramon (X-Antibody) and Pegasmon (X-Antibody), each to Digital Monster X Ver.3. Opening it cost one node rather than two, because US-151 already put CatchMamemon under this line as its junk floor. A leaf until the Ultimate sweeps.",
       "evolutions": [
         {
+          "to": "ragnalordmon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it rest long and deep"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "and winning far more fights than it loses"
+            }
+          ]
+        },
+        {
           "to": "alphamon",
           "requiredEnergy": "strength",
           "minEnergy": 150,
@@ -21606,6 +21744,29 @@
       "spriteFile": "MetalGreymon_X",
       "comment": "The one Perfect this story had to open, and it exists because every OTHER Perfect Wikimon names in Tyranomon (X-Antibody)'s Evolves To is either on a line `dmc-v3` cannot reach or has no sheet at all. Metal Greymon (X-Antibody) is cited to Digital Monster X, the same device that draws Agumon X into Tyranomon X, so the whole thread is one drawing. It cost one node rather than two: US-133 put Etemon under this line as its junk floor long before this story. Wikimon also draws it from Greymon (X-Antibody), which is already a Champion here and a dead end - that arrow is left to the Perfect sweeps rather than drawn now, so this node has exactly one parent. A leaf until the Ultimate sweeps.",
       "evolutions": [
+        {
+          "to": "omegamon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Pour fierce energy into it"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "and winning far more fights than it loses"
+            }
+          ]
+        },
         {
           "to": "chaosdramon_v2",
           "requiredEnergy": "strength",
@@ -21930,6 +22091,29 @@
       "spriteFile": "Angewomon_X",
       "comment": "Wikimon's bolded `Evolves From` for Angewomon (X-Antibody) is Tailmon (X-Antibody), and Tailmon X has sat on `penc-vb` as a LEAF since US-150 - so this arrow costs nothing below and clears a dead end at the same time. The climb is Ofanimon (X-Antibody), also on the page, which had no node: the X counterpart of the Ophanimon this line already puts over the plain Angewomon, so the pair reads as one family rather than two. Jazardmon and Pegasmon X are the page's other parents; both are `tamers`, which has no Angel rung, and the criteria's own rule puts a variant on its BASE FORM's line in any case. Spirit is what a holy cat earns and Tailmon X had every energy free.",
       "evolutions": [
+        {
+          "to": "ophanimon_falldown_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Pour fierce energy into it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
+            }
+          ]
+        },
         {
           "to": "ophanimon_x",
           "requiredEnergy": "spirit",
@@ -22346,6 +22530,29 @@
               "comparison": "atLeast",
               "value": 8,
               "hint": "And feed it far past full, because it never stops eating"
+            }
+          ]
+        },
+        {
+          "to": "omegamon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Pour fierce energy into it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
             }
           ]
         },
@@ -23055,6 +23262,29 @@
       "comment": "NOT THE BOLDED PARENT, AND THIS SAYS SO. Wikimon bolds Ginryumon (with or without Blast Evolution, or Growmon (X-Antibody) or Omekamon) and Ryudamon (Warp Evolution), and BOTH are on `commandramon` — a line with no Perfect rung at all, so taking that reading would have cost a junk Perfect floor and a new `junkIds` entry on top of this node, and left all three stranded, because Ryudamon and Ginryumon are already on `EvolutionCriteriaTests`' stranded list. **HISYARYUMON IS THEREFORE `commandramon`'s REHOME CANDIDATE the day that line's Perfect rung opens** — the same pin US-153 and US-157 left on Kinkakumon for `penc-sw`. What is taken instead is Omekamon, which is the OTHER Digimon the Ginryumon clause names — the page carries a standalone `Omekamon (with or without Ginryumon)` bullet — and which has been a LEAF on `penc-me` since US-152, so the arrow clears a dead end. The climb is Ouryumon, bolded on the page (with or without Blast Evolution, or Triceramon (X-Antibody)), which had no node. Strength is what a drawn blade earns and Omekamon had every energy free.",
       "evolutions": [
         {
+          "to": "rasenmon_fury",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "and winning far more fights than it loses"
+            }
+          ]
+        },
+        {
           "to": "ouryumon",
           "requiredEnergy": "strength",
           "minEnergy": 150,
@@ -23328,6 +23558,29 @@
           ]
         },
         {
+          "to": "rosemon_burst",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
+        {
           "to": "rosemon",
           "requiredEnergy": "vitality",
           "minEnergy": 150,
@@ -23344,6 +23597,29 @@
       "spriteFile": "Lilimon_X",
       "comment": "Togemon (X-Antibody) is a bolded `Evolves From` for Lilimon (X-Antibody) on Wikimon — the other bolded one is Lilimon itself, a Perfect, which can never be an in-edge — and `togemon_x` has been a LEAF on `palmon` since US-155. So this is the X-to-X pairing drawn exactly as the page draws it, on the line the plain Lilimon already sits on, which is the criteria's variant rule; and it clears a dead end. The climb is Rosemon, cited on the page and already Lilimon's own Mega, so the two Lilimon converge the way the two Togemon diverge. Rosemon (X-Antibody) is the bolded climb and has no sheet in this pack. Spirit is the energy Togemon X had free — it had all four — and it is deliberately NOT the vitality Sunflowmon spends on Lilamon in this same story, so no `palmon` Champion offers two flowers on one energy.",
       "evolutions": [
+        {
+          "to": "rosemon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
         {
           "to": "rosemon",
           "requiredEnergy": "spirit",
@@ -23402,6 +23678,29 @@
               "comparison": "atLeast",
               "value": 0.9,
               "hint": "And let dead-or-alive spare no challenger"
+            }
+          ]
+        },
+        {
+          "to": "ordinemon",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Pour fierce energy into it"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
             }
           ]
         },
@@ -23479,6 +23778,29 @@
       "spriteFile": "Mamemon_X",
       "comment": "Greymon (Blue) is a cited `Evolves From` for Mamemon (X-Antibody) on Wikimon — the bolded one is Mamemon itself, a Perfect, which can never be an in-edge — and it has been a LEAF on `dmc-v1` since US-137, so the arrow clears a dead end. It is also the placement the variant rule wants: the plain Mamemon is on `dmc-v1`, and Bancho Mamemon, this node's climb, is cited on the page AND is the plain Mamemon's own Mega, so the two Mamemon converge the way US-159's two Lilimon do. **THIS EDGE OPENS GREYMON (BLUE)**, which had every energy free and now carries one earned branch and the `dmc-v1` junk floor.",
       "evolutions": [
+        {
+          "to": "princemamemon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
+            }
+          ]
+        },
         {
           "to": "banchomamemon",
           "requiredEnergy": "strength",
@@ -23586,6 +23908,29 @@
       "spriteFile": "MegaSeadramon_X",
       "comment": "PLACED BY THE VARIANT RULE, WITH A CITED CLIMB. MegaSeadramon (X-Antibody) has eleven drawable `Evolves From` on Wikimon and not one of them is on `penc-nsp`, where the plain MegaSeadramon lives — so following a citation would have split the pair. Hyougamon is `penc-nsp`'s remaining LEAF (US-152) and takes the arrow instead, which also clears a dead end. The climb needs no such argument: Metal Seadramon is on the page's `Evolves To` and is the plain MegaSeadramon's own Mega on this line, so the two MegaSeadramon converge. **THIS EDGE OPENS HYOUGAMON**, which had every energy free and now carries one earned branch and `penc-nsp`'s junk floor.",
       "evolutions": [
+        {
+          "to": "plesiomon_x",
+          "requiredEnergy": "vitality",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.activeEnergy",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 3000,
+              "hint": "Pour fierce energy into it"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
         {
           "to": "metalseadramon",
           "requiredEnergy": "strength",
@@ -23782,6 +24127,29 @@
           ]
         },
         {
+          "to": "ogudomon",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
+        {
           "to": "piemon",
           "requiredEnergy": "vitality",
           "minEnergy": 150,
@@ -23798,6 +24166,29 @@
       "spriteFile": "Mephismon_X",
       "comment": "**NO DRAWABLE CITED PARENT EXISTS ANYWHERE FOR THIS DIGIMON, AND THIS SAYS SO.** Wikimon gives Mephismon (X-Antibody) exactly two `Evolves From`: Mephismon itself, which is a Perfect and can never be an in-edge, and Velgrmon, which is Armor-Hybrid and off the ladder entirely — the same dead end LadyDevimon X had in US-159, except that one at least had Numemon X. So the node is placed by the variant rule, on the line this story puts the plain Mephismon on, and the parent is chosen on flavour among that line's Champions: Devimon, which is a cited parent of the BASE form and is the demon the goat-demon belongs beside. The climb is Dinorexmon, the page's SOLE `Evolves To`, which had no node. Vitality is the energy Devimon had left after Vamdemon took spirit and Lucemon Falldown stamina in US-159.",
       "evolutions": [
+        {
+          "to": "ogudomon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
         {
           "to": "dinorexmon",
           "requiredEnergy": "vitality",
@@ -24364,6 +24755,29 @@
       "comment": "Galgomon is Rapidmon's bolded `Evolves From` on Wikimon — the other bolded name is Terriermon, a CHILD, which the one-rung rule refuses — and it has been a LEAF on `tamers` since US-149, so the arrow clears a dead end on the line the whole Terriermon thread already lives on. The climb is Saint Galgomon, bolded on the same page and with no node anywhere: Cherubimon (Vice), Cherubimon (Virtue), Hi Andromon, Metal Etemon and Mugendramon are the cited alternatives and every one is on another line, and Black Rapidmon, the page's other bolded climb, is a PERFECT already on `tamers`. Spirit is what a Digimon made of its partner's faith earns.",
       "evolutions": [
         {
+          "to": "rapidmon_x",
+          "requiredEnergy": "stamina",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.exerciseMinutes",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 400,
+              "hint": "Keep it exercising hour upon hour"
+            },
+            {
+              "metric": "care.battleWinRatio",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 0.6,
+              "hint": "and winning far more fights than it loses"
+            }
+          ]
+        },
+        {
           "to": "saintgalgomon",
           "requiredEnergy": "spirit",
           "minEnergy": 150,
@@ -24522,6 +24936,29 @@
       "spriteFile": "Sanzomon",
       "comment": "Hakubamon is a cited `Evolves From` on Wikimon and Shakamon is a BOLDED `Evolves To`, and both are on `penc-sw`, the Saiyu Warriors line — the cheapest shape there is. Hakubamon is the white horse Tang Sanzang rides, so the arrow is the story itself, and it already carried Cho·Hakkaimon (US-157) on stamina, leaving vitality free. Lianpumon and Xiquemon are the other cited parents; Tailmon and Turuiemon are cited too and are on `penc-nsp`, `penc-vb` and nowhere near the quartet. Erlangmon and Nezhamon are the flavour-perfect climbs and neither has a node — they are left for the Ultimate sweeps, which will find Sanzomon waiting.",
       "evolutions": [
+        {
+          "to": "nezhamon",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it rest long and deep"
+            },
+            {
+              "metric": "care.trainingSessions",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 25,
+              "hint": "and drilled through steady training"
+            }
+          ]
+        },
         {
           "to": "shakamon",
           "requiredEnergy": "vitality",
@@ -24923,6 +25360,29 @@
               "comparison": "atLeast",
               "value": 38,
               "hint": "And let the metal fangs meet every foe"
+            }
+          ]
+        },
+        {
+          "to": "omegamon_zwart",
+          "requiredEnergy": "spirit",
+          "minEnergy": 150,
+          "maxCareMistakes": 2,
+          "isDefault": false,
+          "conditions": [
+            {
+              "metric": "health.sleep",
+              "window": "stage",
+              "comparison": "atLeast",
+              "value": 1500,
+              "hint": "Let it rest long and deep"
+            },
+            {
+              "metric": "care.battleCount",
+              "window": "lifetime",
+              "comparison": "atLeast",
+              "value": 30,
+              "hint": "and hardened over many battles"
             }
           ]
         },
@@ -25794,6 +26254,173 @@
       "line": "penc-wg",
       "spriteFile": "Mitamamon",
       "comment": "**ITS `Evolves From` IS A JOGRESS OF TWO ULTIMATES**, the Cernumon shape: Wikimon draws Mitamamon from Hououmon and MarinAngemon (Pendulum COLOR 4 Wind Guardians), both Ultimates `invalidStageTransition` refuses, so the shrine guardian is drawn one rung below on the Perfect that climbs into a cited Ultimate. Garudamon climbs into Hououmon on `penc-wg`, the Wind Guardians line, so the sacred-treasure spirit lands there. Its bolded parents Tyilinmon (dexOnly) and Kudamon 2006 (a Child) cannot be drawn. `jogress.json` reserves the recipe, which is wired all the same. Strength."
+    },
+    {
+      "id": "omegamon",
+      "displayName": "Omegamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v1",
+      "spriteFile": "Omegamon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Omegamon's Wikimon page draws it as a Jogress of WarGreymon and MetalGarurumon, both Ultimate and so off the one-rung ladder; the sweep gives every orphan a Perfect in-edge, and it hangs on Chimairamon - the dmc-v1 line's own forbidden fusion beast - rather than on MetalGreymon or WereGarurumon, whose earned edges US-002 walks as the named Agumon and Gabumon lines and must not be redirected. Omegamon stays a Jogress recipe there."
+    },
+    {
+      "id": "omegamon_x",
+      "displayName": "Omegamon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v3",
+      "spriteFile": "Omegamon_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Omegamon (X-Antibody) on Wikimon carries the same Jogress parents as the base form, both Ultimate; following the sweep rule it rises from MetalGreymon X, the X-Antibody Perfect this line already carries, an antibody drawn from an antibody rather than across a line boundary."
+    },
+    {
+      "id": "omegamon_zwart",
+      "displayName": "Omegamon Zwart",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v2",
+      "spriteFile": "Omegamon_Zwart",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Omegamon Zwart is Wikimon's blackened Omegamon; its fusion parents are Ultimate, so per the sweep rule the darkened half - WereGarurumon (Black), already on this line - carries the in-edge, keeping the black variant beside the black Adult it grows from."
+    },
+    {
+      "id": "omegamon_alter-s",
+      "displayName": "Omegamon Alter-S",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v1",
+      "spriteFile": "Omegamon_Alter-S",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Omegamon Alter-S on Wikimon is the D-Reaper-warped Omegamon, a corruption of the fusion whose parents are Ultimate; the sweep rule draws it from the virus MetalGreymon on this line, and its edge asks for a hard-won battle record because the corruption is a thing earned in the field."
+    },
+    {
+      "id": "ogudomon",
+      "displayName": "Ogudomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nso",
+      "spriteFile": "Ogudomon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Ogudomon is Wikimon's union of the Seven Great Demon Lords, a Jogress with no single Perfect below it; the sweep rule seats it on the Nightmare Soldiers line under Mephismon, the darkest Perfect this line offers, so the demon-lord amalgam climbs from a demon rather than out of nowhere."
+    },
+    {
+      "id": "ogudomon_x",
+      "displayName": "Ogudomon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nso",
+      "spriteFile": "Ogudomon_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Ogudomon (X-Antibody) on Wikimon shares its base form's demon-lord Jogress; per the variant rule it hangs off its base form's Nightmare Soldiers line, rising from Mephismon X - the X-Antibody counterpart of the Perfect that raises the plain Ogudomon - so the pair reads as one family."
+    },
+    {
+      "id": "ophanimon_core",
+      "displayName": "Ophanimon Core",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "Ophanimon_Core",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Ophanimon is Wikimon's highest of the Three Great Angels; this line already climbs Angewomon, the holy Perfect cited among its predecessors, so the sweep seats the angel one rung up from her and gates it on long undisturbed devotion rather than raw force."
+    },
+    {
+      "id": "ophanimon_falldown_x",
+      "displayName": "Ophanimon Falldown X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-vb",
+      "spriteFile": "Ophanimon_Falldown_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Ophanimon Falldown Mode (X-Antibody) is Wikimon's fallen angel; its bolded predecessor Angewomon (X-Antibody) already sits on this line as a leaf, so the sweep draws the fallen X-angel straight from the holy X-angel, the fall reading as one darkened step rather than a jump across lines."
+    },
+    {
+      "id": "rosemon_burst",
+      "displayName": "Rosemon Burst",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "palmon",
+      "spriteFile": "Rosemon_Burst",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Rosemon Burst Mode on Wikimon is Rosemon's overdrive; it hangs on Lilamon - Lilimon's own sister form on the Palmon line, the same placement US-163 gave BanchoLilimon - rather than on Lilimon itself, whose single earned climb US-002 walks as the named Palmon line and must be left ending at Rosemon. Lilamon is a plant fairy of the same line, so the Burst Mode reads as kin."
+    },
+    {
+      "id": "rosemon_x",
+      "displayName": "Rosemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "palmon",
+      "spriteFile": "Rosemon_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Rosemon (X-Antibody) on Wikimon shares Rosemon's Palmon lineage; the variant rule seats it on its base form's line, rising from Lilimon X - the X-Antibody Perfect this line already carries - so the X-Rose reads as kin to the plain Rose rather than a stranger."
+    },
+    {
+      "id": "rapidmon_x",
+      "displayName": "Rapidmon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "tamers",
+      "spriteFile": "Rapidmon_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Rapidmon (X-Antibody) is Wikimon's golden Ultimate; the plain Rapidmon already stands on this Tamers line as a Perfect, so the sweep draws the X-Antibody straight up from it, keeping the fast machine hound on the one line the roster gives it and gating the leap on a winning record."
+    },
+    {
+      "id": "ragnalordmon",
+      "displayName": "RagnaLordmon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "tamers",
+      "spriteFile": "RagnaLordmon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). RagnaLordmon on Wikimon is a sovereign holy warrior whose cited climb runs off this roster's sheets; the sweep seats it above Grademon, the sword-bearing knight Perfect this Tamers line already carries, so a blade-saint grows from a blade-saint and the leap is earned by winning most of its duels."
+    },
+    {
+      "id": "ragnamon",
+      "displayName": "Ragnamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v5",
+      "spriteFile": "Ragnamon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Ragnamon on Wikimon is an AI overlord grown fat on data; none of its cited kin exist as sheets here, so the sweep rule draws it from Nanomon, the machine Perfect on this line, feeding the overlord on the steps of data and the battles the plain machine could never earn alone."
+    },
+    {
+      "id": "quantumon",
+      "displayName": "Quantumon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v3",
+      "spriteFile": "Quantumon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Quantumon on Wikimon is a being of pure quantum data with no single cited predecessor on this roster; the sweep seats it above Andromon, the cyborg Perfect on this line, so a machine of computation grows from a machine of iron, its leap paid for in energy and training."
+    },
+    {
+      "id": "plesiomon_x",
+      "displayName": "Plesiomon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nsp",
+      "spriteFile": "Plesiomon_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Plesiomon (X-Antibody) on Wikimon is a deep-sea Ultimate whose base predecessor is off this roster's sheets; the sweep draws the X-Antibody from MegaSeadramon X, the X sea-serpent Perfect this line already carries, keeping the antibody on one water line and gating it on hard effort in the depths."
+    },
+    {
+      "id": "princemamemon_x",
+      "displayName": "PrinceMamemon X",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v1",
+      "spriteFile": "PrinceMamemon_X",
+      "variant": "X",
+      "comment": "US-167 orphan sweep (N-R Ultimate). PrinceMamemon (X-Antibody) on Wikimon is the crowned Mamemon; Mamemon X already sits on this line as its Perfect, so the variant rule draws the X-prince straight up from the X-Mamemon, a bean-royal from a bean, its coronation earned across many battles."
+    },
+    {
+      "id": "rusttyrannomon",
+      "displayName": "RustTyrannomon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "dmc-v5",
+      "spriteFile": "RustTyrannomon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). RustTyrannomon on Wikimon is a rusted colossus of a machine dinosaur; the sweep seats it above MetalTyranomon, the metal dino Perfect this line already carries, so the corroded giant grows from the polished one, its bulk paid for in exercise and the scars of battle."
+    },
+    {
+      "id": "rasenmon_fury",
+      "displayName": "Rasenmon Fury",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-me",
+      "spriteFile": "Rasenmon_Fury",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Rasenmon: Fury Mode on Wikimon is a whirlwind dragon-knight whose cited Hackmon-line Perfect is already spent on this graph; the sweep seats it above Hisyaryumon, the flying-dragon Perfect this Metal Empire line carries, so a spiralling dragon rises from a soaring one, earned by winning most of its fights."
+    },
+    {
+      "id": "ordinemon",
+      "displayName": "Ordinemon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-nso",
+      "spriteFile": "Ordinemon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Ordinemon on Wikimon is a dark colossus fused from fallen angels; its Jogress parents are Ultimate and off the ladder, so the sweep draws it from Lucemon Falldown Mode, the fallen-angel Perfect this Nightmare Soldiers line already carries, the beast growing from the fall and fed on many battles."
+    },
+    {
+      "id": "nezhamon",
+      "displayName": "Nezhamon",
+      "stage": "Ultimate-Super Ultimate",
+      "line": "penc-sw",
+      "spriteFile": "Nezhamon",
+      "comment": "US-167 orphan sweep (N-R Ultimate). Nezhamon on Wikimon is the lotus-prince war god of the Journey-to-the-West cast; this Saiyu Warriors line already crowns Sanzomon the pilgrim monk, so the sweep seats the martial prince one rung above him, a saint of the same myth, its ascent earned through long rest and steady training."
     }
   ]
 }

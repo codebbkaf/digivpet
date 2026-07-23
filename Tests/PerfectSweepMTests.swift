@@ -185,9 +185,10 @@ final class PerfectSweepMTests: XCTestCase {
         // is NAMED with its new edge count rather than the count being loosened to a `>=`.
         // US-164, the C-D Ultimate sweep, forked two more: meicrackmon gained both Diablomon and
         // Diablomon X (1 -> 3), and megalogrowmon_orange gained Dukemon X (1 -> 2).
-        let branchedBySweeps: [String: Int] = ["marinbullmon": 2, "mephismon": 3, "mermaimon": 2,
+        let branchedBySweeps: [String: Int] = ["marinbullmon": 2, "mephismon": 4, "mermaimon": 2,
                                              "metalgreymon_virus_x": 2, "mummymon": 3,
-                                             "meicrackmon": 3, "megalogrowmon_orange": 2]
+                                             "meicrackmon": 3, "megalogrowmon_orange": 2,
+                                             "mephismon_x": 2, "mamemon_x": 2, "megaseadramon_x": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.evolutions.count, branchedBySweeps[perfect] ?? 1,
@@ -442,18 +443,18 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 121, "Manticoremon, both MegaloGrowmon and Dukemon, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 81,
+        XCTAssertEqual(sizes["tamers"], 123, "Manticoremon, both MegaloGrowmon and Dukemon, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 84,
                        "Mammon X, both Mephismon, Mummymon and Dinorexmon, plus US-161's Orochimon, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["diablomon"], 24,
                        "both Meicrackmon, the Gerbemon floor, Rasielmon and Raguelmon")
-        XCTAssertEqual(sizes["dmc-v1"], 39, "Mamemon X, MetalGreymon Virus X and Monzaemon X, plus US-161's NeoDevimon, plus US-163's three Ultimates")
-        XCTAssertEqual(sizes["dmc-v3"], 54, "MarinBullmon, Ryugumon and MetalPhantomon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["dmc-v1"], 42, "Mamemon X, MetalGreymon Virus X and Monzaemon X, plus US-161's NeoDevimon, plus US-163's three Ultimates")
+        XCTAssertEqual(sizes["dmc-v3"], 56, "MarinBullmon, Ryugumon and MetalPhantomon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["penc-ds"], 48, "MarinChimairamon and Mermaimon, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["dmc-v5"], 26, "MetalTyranomon V2 and MetalTyranomon X")
+        XCTAssertEqual(sizes["dmc-v5"], 28, "MetalTyranomon V2 and MetalTyranomon X")
         XCTAssertEqual(sizes["wanyamon"], 31, "MachGaogamon, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["penc-nsp"], 44, "MegaSeadramon X, plus US-161's both Panjyamon, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-me"], 73, "MetalMamemon X, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-nsp"], 46, "MegaSeadramon X, plus US-161's both Panjyamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["penc-me"], 74, "MetalMamemon X, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 10)
     }
@@ -745,11 +746,11 @@ final class PerfectSweepMTests: XCTestCase {
         XCTAssertNil(roster.entry(id: "diablomon_gerbemon"),
                      "the junk floor gained a roster entry, so it removes an orphan after all")
 
-        XCTAssertEqual(graph.nodes.count, 878, "709 before this story")
+        XCTAssertEqual(graph.nodes.count, 898, "709 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "126 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 199, "93 before this story, 138 after US-163")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 219, "93 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

@@ -345,6 +345,10 @@ final class SeedRosterTests: XCTestCase {
         // the C-D Ultimate sweep landed it here. Eyeballed as
         // `Ultimate-Super Ultimate/Chaosdramon_V2.png`.
         "Chaosdramon V2",
+        // US-167's two, the N-R Ultimate sweep: Omegamon X over MetalGreymon X (an X from an X)
+        // and Quantumon over Andromon, both already on this line. Eyeballed as
+        // `Ultimate-Super Ultimate/Omegamon_X.png` and `.../Quantumon.png`.
+        "Omegamon X", "Quantumon",
     ]
 
     func testThePatamonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {
@@ -705,6 +709,10 @@ final class SeedRosterTests: XCTestCase {
         // US-165's one: Ebemon X hangs off Vademon, its base form's own Perfect (the strong variant
         // rule), which is already on this line. Eyeballed as `Ultimate-Super Ultimate/Ebemon_X.png`.
         "Ebemon X",
+        // US-167's two, the N-R Ultimate sweep: Ragnamon over Nanomon and RustTyrannomon over
+        // MetalTyranomon, both already on this line. Eyeballed as
+        // `Ultimate-Super Ultimate/Ragnamon.png` and `.../RustTyrannomon.png`.
+        "Ragnamon", "RustTyrannomon",
     ]
 
     func testTheGazimonLineDrawsItsAdultsAndUpFromTheVerifiedSet() {

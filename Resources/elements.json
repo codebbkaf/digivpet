@@ -3512,6 +3512,86 @@
     "mitamamon": {
       "element": "light",
       "attribute": "data"
+    },
+    "omegamon": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "omegamon_x": {
+      "element": "steel",
+      "attribute": "vaccine"
+    },
+    "omegamon_zwart": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "omegamon_alter-s": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "ogudomon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "ogudomon_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "ophanimon_core": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ophanimon_falldown_x": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "rosemon_burst": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "rosemon_x": {
+      "element": "plant",
+      "attribute": "data"
+    },
+    "rapidmon_x": {
+      "element": "machine",
+      "attribute": "vaccine"
+    },
+    "ragnalordmon": {
+      "element": "light",
+      "attribute": "vaccine"
+    },
+    "ragnamon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "quantumon": {
+      "element": "electric",
+      "attribute": "free"
+    },
+    "plesiomon_x": {
+      "element": "water",
+      "attribute": "vaccine"
+    },
+    "princemamemon_x": {
+      "element": "steel",
+      "attribute": "data"
+    },
+    "rusttyrannomon": {
+      "element": "machine",
+      "attribute": "virus"
+    },
+    "rasenmon_fury": {
+      "element": "wind",
+      "attribute": "vaccine"
+    },
+    "ordinemon": {
+      "element": "dark",
+      "attribute": "virus"
+    },
+    "nezhamon": {
+      "element": "fire",
+      "attribute": "vaccine"
     }
   },
   "lineDefaults": {

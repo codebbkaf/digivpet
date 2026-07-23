@@ -118,7 +118,7 @@ final class UltimateSweepIToMTests: XCTestCase {
             .filter { $0.stage == .ultimate && !$0.dexOnly && !connected.contains($0.id) }
             .map(\.id)
 
-        XCTAssertEqual(orphans.count, 39,
+        XCTAssertEqual(orphans.count, 19,
                        "66 Ultimate were edge-orphaned before this story and 39 after")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
@@ -160,17 +160,17 @@ final class UltimateSweepIToMTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 121)
-        XCTAssertEqual(sizes["penc-nso"], 81)
-        XCTAssertEqual(sizes["penc-me"], 73)
+        XCTAssertEqual(sizes["tamers"], 123)
+        XCTAssertEqual(sizes["penc-nso"], 84)
+        XCTAssertEqual(sizes["penc-me"], 74)
         XCTAssertEqual(sizes["penc-wg"], 50)
         XCTAssertEqual(sizes["penc-ds"], 48)
-        XCTAssertEqual(sizes["penc-nsp"], 44)
+        XCTAssertEqual(sizes["penc-nsp"], 46)
         XCTAssertEqual(sizes["dmc-v4"], 35)
         XCTAssertEqual(sizes["wanyamon"], 31)
-        XCTAssertEqual(sizes["dmc-v2"], 31)
-        XCTAssertEqual(sizes["palmon"], 30)
-        XCTAssertEqual(sizes["penc-sw"], 22)
+        XCTAssertEqual(sizes["dmc-v2"], 32)
+        XCTAssertEqual(sizes["palmon"], 32)
+        XCTAssertEqual(sizes["penc-sw"], 23)
     }
 
     // MARK: - AC4: the shape of every edge this story authored
@@ -240,11 +240,11 @@ final class UltimateSweepIToMTests: XCTestCase {
             XCTAssertEqual(Set(node.evolutions.compactMap(\.requiredEnergy)), Set(EnergyType.allCases), parent)
         }
 
-        // Lucemon: Falldown Mode carries three after this story — Venom Vamdemon, Lucemon Satan and
-        // Lucemon X — and Megalo Growmon three with Megidramon and Megidramon X.
-        for parent in ["lucemon_falldown", "megalogrowmon"] {
-            XCTAssertEqual(try XCTUnwrap(graph.node(id: parent)).evolutions.count, 3, parent)
-        }
+        // Lucemon: Falldown Mode carried three after this story — Venom Vamdemon, Lucemon Satan and
+        // Lucemon X — until US-167 hung Ordinemon on it for a fourth; Megalo Growmon keeps three
+        // with Megidramon and Megidramon X.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "lucemon_falldown")).evolutions.count, 4)
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "megalogrowmon")).evolutions.count, 3)
     }
 
     /// Proven through the ENGINE rather than argued: a Digimon that earned the branch takes it, and a
@@ -482,7 +482,7 @@ final class UltimateSweepIToMTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 878, "851 before this story, 878 after it")
+        XCTAssertEqual(graph.nodes.count, 898, "851 before this story, 878 after it")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
@@ -493,7 +493,7 @@ final class UltimateSweepIToMTests: XCTestCase {
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 39,
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 19,
                        "the Ultimate edge-orphan bucket moved without this claim moving with it")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")
@@ -502,7 +502,8 @@ final class UltimateSweepIToMTests: XCTestCase {
 
         // Ogudomon is still US-159's pin; its display name begins O, so it belongs to US-167.
         XCTAssertNotNil(roster.entry(id: "ogudomon"))
-        XCTAssertNil(graph.node(id: "ogudomon"))
+        // US-167 wired Ogudomon from Mephismon, a Nightmare Soldiers Demon Lord.
+        XCTAssertEqual(graph.parents(of: "ogudomon").map(\.id), ["mephismon"])
     }
 
     // MARK: - Helpers

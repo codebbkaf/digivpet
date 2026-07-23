@@ -181,7 +181,8 @@ final class PerfectSweepSToZTests: XCTestCase {
         // edges (the three Jesmon), and Shawujinmon, WereGarurumon Black and WereGarurumon X each to
         // two (JumboGamemon, MetalGarurumon Black, MetalGarurumon X).
         let branchedByUS163: [String: Int] = ["shishimamon": 2, "saviorhackmon": 4, "shawujinmon": 2,
-                                              "weregarurumon_black": 2, "weregarurumon_x": 2]
+                                              "weregarurumon_black": 3, "weregarurumon_x": 2,
+                                              "sanzomon": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.evolutions.count, branchedByUS163[perfect] ?? 1,
@@ -412,9 +413,9 @@ final class PerfectSweepSToZTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-sw"], 22, "Sagomon, Sanzomon, Shawujinmon and Xingtianmon")
-        XCTAssertEqual(sizes["penc-me"], 73, "Scorpiomon, Shootmon, Superstarmon and Tekkamon, plus US-163's four Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 81,
+        XCTAssertEqual(sizes["penc-sw"], 23, "Sagomon, Sanzomon, Shawujinmon and Xingtianmon")
+        XCTAssertEqual(sizes["penc-me"], 74, "Scorpiomon, Shootmon, Superstarmon and Tekkamon, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 84,
                        "SaviorHackmon, Vamdemon X and WereGarurumon X, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["penc-wg"], 50, "both Yatagaramon")
         XCTAssertEqual(sizes["commandramon"], 15,
@@ -422,8 +423,8 @@ final class PerfectSweepSToZTests: XCTestCase {
         XCTAssertEqual(sizes["adventure02"], 18,
                        "Vermillimon, BlackWarGreymon and the Jyagamon floor")
         XCTAssertEqual(sizes["vital"], 42, "Shishimamon, Sirenmon and Regalecusmon, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["dmc-v2"], 31, "WereGarurumon Black")
-        XCTAssertEqual(sizes["dmc-v3"], 54, "Sekkamon, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["dmc-v2"], 32, "WereGarurumon Black")
+        XCTAssertEqual(sizes["dmc-v3"], 56, "Sekkamon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["dmc-v4"], 35, "Triceramon")
         XCTAssertEqual(sizes["penc-ds"], 48, "WaruSeadramon, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["algomon"], 12, "unchanged — see the Siesamon test above")
@@ -778,7 +779,8 @@ final class PerfectSweepSToZTests: XCTestCase {
         // Ogudomon is still the one US-159 pinned in Lucemon Falldown's comment, and it is an
         // Ultimate, so it belongs to the sweeps after this one rather than to this one.
         XCTAssertNotNil(roster.entry(id: "ogudomon"))
-        XCTAssertNil(graph.node(id: "ogudomon"), "Ogudomon is wired now — say which arrow it is")
+        // US-167 wired Ogudomon from Mephismon, a Nightmare Soldiers Demon Lord.
+        XCTAssertEqual(graph.parents(of: "ogudomon").map(\.id), ["mephismon"])
     }
 
     // MARK: - AC8/AC7: the orphan count, and the whole file still validates
@@ -804,9 +806,9 @@ final class PerfectSweepSToZTests: XCTestCase {
             XCTAssertNil(roster.entry(id: id), "\(id) removed an orphan after all")
         }
 
-        XCTAssertEqual(graph.nodes.count, 878, "760 before this story")
+        XCTAssertEqual(graph.nodes.count, 898, "760 before this story")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "165 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 199, "105 before this story, 138 after US-163")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 219, "105 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly the Perfects named here, so a parent hung on

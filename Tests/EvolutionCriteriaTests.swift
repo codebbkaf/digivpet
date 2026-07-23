@@ -416,8 +416,10 @@ final class EvolutionCriteriaTests: XCTestCase {
         // US-166's Jougamon and JumboGamemon join the stranded `penc-sw` list: Jougamon climbs from
         // Cho-Hakkaimon and JumboGamemon from Shawujinmon, both already stranded because `penc-sw`
         // (Saiyu Warriors) has no Digitama in this pack.
+        // US-167's Nezhamon joins the stranded `penc-sw` list: it climbs from Sanzomon, already
+        // stranded because `penc-sw` (Saiyu Warriors) has no Digitama in this pack.
         let strandedUltimate = ["armamon", "enmamon", "erlangmon", "jougamon", "jumbogamemon",
-                                "seitengokuwmon", "shakamon", "zekegreymon"]
+                                "nezhamon", "seitengokuwmon", "shakamon", "zekegreymon"]
 
         let stranded = graph.nodes.map(\.id).filter { !reached.contains($0) }.sorted()
         XCTAssertEqual(stranded,

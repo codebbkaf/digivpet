@@ -172,8 +172,9 @@ final class PerfectSweepHToLTests: XCTestCase {
         // US-166, the I-M Ultimate sweep, took LadyDevimon to four (Lilithmon and Lilithmon X) and
         // Lucemon: Falldown Mode to three (Lucemon Satan and Lucemon X), forked Lilamon a second time
         // (Lotusmon, 2 -> 3), and gave Karatenmon its first branch (Kuzuhamon, 1 -> 2).
-        let branchedByUS163: [String: Int] = ["insekimon": 2, "ladydevimon": 4, "lilamon": 3,
-                                              "lucemon_falldown": 3, "karatenmon": 2]
+        let branchedByUS163: [String: Int] = ["insekimon": 2, "ladydevimon": 4, "lilamon": 4,
+                                              "lucemon_falldown": 4, "karatenmon": 2,
+                                              "hisyaryumon": 2, "lilimon_x": 2]
         for (perfect, _, ultimate) in swept {
             let node = try XCTUnwrap(graph.node(id: perfect))
             XCTAssertEqual(node.evolutions.count, branchedByUS163[perfect] ?? 1,
@@ -393,13 +394,13 @@ final class PerfectSweepHToLTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 121,
+        XCTAssertEqual(sizes["tamers"], 123,
                        "Jazarichmon, LadyDevimon, LadyDevimon X and their two Megas" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["penc-nso"], 81,
+        XCTAssertEqual(sizes["penc-nso"], 84,
                        "Insekimon, Lavogaritamon, Volcanicdramon and Lucemon Falldown" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
-        XCTAssertEqual(sizes["penc-me"], 73, "Hisyaryumon and Ouryumon" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
+        XCTAssertEqual(sizes["penc-me"], 74, "Hisyaryumon and Ouryumon" + ", plus US-160's one, plus US-161's both Okuwamon, RizeGreymon X and two Kuwagamon Megas, plus US-163's four Ultimates")
         XCTAssertEqual(sizes["wanyamon"], 31, "Karatenmon and Tengumon" + ", plus US-160's one, plus US-161's RizeGreymon and Ravmon")
-        XCTAssertEqual(sizes["palmon"], 30, "Lilamon and Lilimon X, plus US-163's one Ultimate")
+        XCTAssertEqual(sizes["palmon"], 32, "Lilamon and Lilimon X, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["penc-ds"], 48, "Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.perfect)?.line }).count, 6)
@@ -523,10 +524,11 @@ final class PerfectSweepHToLTests: XCTestCase {
         XCTAssertTrue(comment.contains("CHILD"), "the reason the bolded arrow is undrawable is not said")
         XCTAssertTrue(comment.contains("Ogudomon"), "the bolded climb left for a later sweep is not named")
 
-        // And Ogudomon is still owed, which is what makes that half of the comment a live claim.
+        // US-167, the N-R Ultimate sweep, paid that debt: Ogudomon is wired now, hung on Mephismon
+        // — a Demon Lord of the Nightmare Soldiers line, not off Lucemon Falldown Mode itself.
         XCTAssertNotNil(roster.entry(id: "ogudomon"))
-        XCTAssertNil(graph.node(id: "ogudomon"),
-                     "Ogudomon is wired now — then say which Demon Lord line took it")
+        XCTAssertEqual(graph.parents(of: "ogudomon").map(\.id), ["mephismon"],
+                       "Ogudomon's Demon Lord parent changed without this claim moving with it")
     }
 
     // MARK: - The eggs this story promoted
@@ -684,11 +686,11 @@ final class PerfectSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 878, "693 before this story")
+        XCTAssertEqual(graph.nodes.count, 898, "693 before this story")
 
         // The buckets, re-derived off the graph rather than trusted from the notes.
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "115 before this story")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 199, "88 before this story, 138 after US-163")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 219, "88 before this story, 138 after US-163")
     }
 
     /// Every Ultimate this story opened serves exactly one Perfect, so a second parent hung on one

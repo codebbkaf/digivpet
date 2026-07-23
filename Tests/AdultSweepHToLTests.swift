@@ -320,7 +320,7 @@ final class AdultSweepHToLTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["penc-vb"], 60, "US-153 added KausGammamon, US-154 two more, US-156 two more, US-157 four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 61, "US-153 added KausGammamon, US-154 two more, US-156 two more, US-157 four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
         XCTAssertEqual(sizes["penc-ds"], 48, "US-153 added Kinkakumon, US-154 MoriShellmon, US-157 Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
         XCTAssertEqual(sizes["penc-wg"], 50, "US-153 added Kougamon, US-154 RedV-dramon, US-156 two more, plus US-158's two, plus US-161's Paildramon")
 
@@ -459,7 +459,7 @@ final class AdultSweepHToLTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 878,
+        XCTAssertEqual(graph.nodes.count, 898,
                        "615 before this story, 618 after it, 629 after US-154, 635 after US-155, "
                            + "643 after US-156, 672 after US-157, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }

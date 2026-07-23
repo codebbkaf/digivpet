@@ -160,7 +160,12 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
     /// US-143's Virus Busters / ZERO is the second and the recipe's real home: the V0 document
     /// draws "Ultra: Omegamon (Jogress)" on its Agumon thread AND on its Gabumon one.
     func testTheOmegamonHalfOfTheRowIsAJogressRecipeRatherThanAnEdge() throws {
-        XCTAssertNil(graph.node(id: "omegamon"), "Omegamon is a Jogress result, not a node here")
+        // US-167 wired Omegamon as an evolution node on dmc-v1 (from MetalGreymon), as the sweep
+        // gives every orphan an in-edge; this Nature Spirits line still leaves it a Jogress recipe,
+        // and its own WarGreymon reaches nothing.
+        XCTAssertEqual(graph.node(id: "omegamon")?.line, "dmc-v1", "Omegamon is not US-167's dmc-v1 node")
+        XCTAssertFalse(graph.nodes.contains { $0.line == line && $0.evolutions.contains { $0.to == "omegamon" } },
+                       "this line drew Omegamon as an edge rather than leaving it a Jogress recipe")
         XCTAssertTrue(try node("pencnsp_wargreymon").evolutions.isEmpty)
 
         XCTAssertNotNil(JogressCatalog.bundled.recipe(for: "wargreymon", and: "metalgarurumon"),
@@ -214,7 +219,7 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
         // US-150 hung YukiAgumon and its Champion Hyougamon on this line's Koromon, which is why
         // the line is two larger than the tree the document draws.
         let inLine = graph.nodes.filter { $0.line == line }.map(\.id)
-        XCTAssertEqual(inLine.count, 44,
+        XCTAssertEqual(inLine.count, 46,
                        "US-157 hung AtlurKabuterimon Red on this line, US-158 DarkKnightmon over "
                            + "Tailmon and DarkKnightmon X over that, US-160 MegaSeadramon X over "
                            + "the leaf Hyougamon")
@@ -540,7 +545,10 @@ final class PendulumNatureSpiritsTreeTests: XCTestCase {
                                           "darknessbagramon",
                                           // US-165's two: GigaSeadramon over this line's MegaSeadramon
                                           // and Holydramon X over its Angewomon.
-                                          "gigaseadramon", "holydramon_x"]
+                                          "gigaseadramon", "holydramon_x",
+                                          // US-167's two: Ophanimon Core over Angewomon and
+                                          // Plesiomon X over MegaSeadramon X.
+                                          "ophanimon_core", "plesiomon_x"]
         XCTAssertEqual(graph.nodes.filter { $0.line == line && !notThisStorys.contains($0.id) }.count,
                        31)
         XCTAssertEqual(graph.nodes.filter { $0.line == line && Roster.bundled.entry(id: $0.id) == nil }.count,

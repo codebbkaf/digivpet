@@ -222,9 +222,11 @@ final class AdultSweepMToRTests: XCTestCase {
             // US-163 gave BOTH of them their Ultimate and moved the ledger with them, which is
             // exactly what this message asked for: Grademon climbs to Alphamon — its bolded
             // `Evolves From` on that page — and Mametyramon to Bagramon.
-            let wiredByUS163 = ["grademon": "alphamon", "mametyramon": "bagramon"]
-            XCTAssertEqual(node.evolutions.map(\.to), [wiredByUS163[perfect]].compactMap { $0 },
-                           "\(perfect)'s single climb is not the one US-163 gave it")
+            // US-167, the N-R Ultimate sweep, hung RagnaLordmon on Grademon beside its Alphamon
+            // climb, so Grademon now carries two — the earned branch first, the fallback still last.
+            let wiredBySweeps = ["grademon": ["ragnalordmon", "alphamon"], "mametyramon": ["bagramon"]]
+            XCTAssertEqual(node.evolutions.map(\.to), wiredBySweeps[perfect] ?? [],
+                           "\(perfect)'s climbs are not the ones the sweeps gave it")
             XCTAssertEqual(Set(graph.parents(of: perfect).map(\.id)), parents,
                            "\(perfect)'s parents changed without this claim changing with them")
         }
@@ -395,10 +397,10 @@ final class AdultSweepMToRTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 121, "four Champions and both new Perfects, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
-        XCTAssertEqual(sizes["penc-vb"], 60, "Mikemon and Nefertimon X, plus US-156's two and US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["tamers"], 123, "four Champions and both new Perfects, plus US-156's two and US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 61, "Mikemon and Nefertimon X, plus US-156's two and US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
         XCTAssertEqual(sizes["penc-ds"], 48, "MoriShellmon, plus US-157's Anomalocarimon X, plus US-158's Gusokumon, plus US-159's Hangyomon" + ", plus US-160's two, plus US-163's one Ultimate")
-        XCTAssertEqual(sizes["penc-nso"], 81, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
+        XCTAssertEqual(sizes["penc-nso"], 84, "Musyamon, plus US-157's Archnemon and BlueMeramon, plus US-158's three, plus US-159's four" + ", plus US-160's five, plus US-161's Orochimon, plus US-163's seven Ultimates")
         XCTAssertEqual(sizes["penc-wg"], 50, "RedV-dramon, plus US-156's two Black V-dramon, plus US-158's two, plus US-161's Paildramon")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 5)
@@ -586,7 +588,7 @@ final class AdultSweepMToRTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 878, "618 before this story, 635 after US-155, 643 after US-156, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
+        XCTAssertEqual(graph.nodes.count, 898, "618 before this story, 635 after US-155, 643 after US-156, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
     func testTheGraphValidatesWithNoFindings() {

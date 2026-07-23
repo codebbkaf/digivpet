@@ -490,9 +490,9 @@ final class AdultSweepUToZTests: XCTestCase {
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
         XCTAssertEqual(sizes["penc-wg"], 50, "V-dramon Black and XV-mon Black, plus US-158's two, plus US-161's Paildramon")
-        XCTAssertEqual(sizes["penc-vb"], 60, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
+        XCTAssertEqual(sizes["penc-vb"], 61, "WezenGammamon and Canoweissmon, plus US-157's four, plus US-158's Entmon, plus US-161's Regulusmon, plus US-163's two Ultimates")
         XCTAssertEqual(sizes["dmc-v4"], 35, "Xiquemon and Huankunmon")
-        XCTAssertEqual(sizes["tamers"], 121, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
+        XCTAssertEqual(sizes["tamers"], 123, "Youkomon and BlackRapidmon, plus US-157's eight, plus US-158's four, plus US-159's five" + ", plus US-160's four, plus US-161's Rapidmon and SaintGalgomon, plus US-163's eight Ultimates")
 
         XCTAssertEqual(Set(swept.map { graph.node(id: $0.adult)?.line }).count, 4)
     }
@@ -677,7 +677,7 @@ final class AdultSweepUToZTests: XCTestCase {
             XCTAssertFalse(graph.parents(of: id).isEmpty && node.evolutions.isEmpty,
                            "\(id) is still an orphan")
         }
-        XCTAssertEqual(graph.nodes.count, 878, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
+        XCTAssertEqual(graph.nodes.count, 898, "635 before this story, 643 after it, 693 after US-158, 709 after US-159, 736 after US-160, 760 after US-161, 787 after US-162, 817 after US-163")
     }
 
     func testTheGraphValidatesWithNoFindings() {

@@ -135,7 +135,7 @@ final class UltimateSweepAToBTests: XCTestCase {
         // 100 after this story; US-164 then took the C-D band down to 80 (two of the band,
         // Chaosdramon and Chaosmon, are Jogress results it left unwired, so 80 is the
         // evolution-edge count and 78 the true owed remainder).
-        XCTAssertEqual(orphans.count, 39,
+        XCTAssertEqual(orphans.count, 19,
                        "130 before US-163, 100 after; US-164 reached 80, US-165 reached 66")
         for (ultimate, _, _) in swept {
             XCTAssertFalse(orphans.contains(ultimate), "\(ultimate) is still an orphan")
@@ -182,16 +182,16 @@ final class UltimateSweepAToBTests: XCTestCase {
         XCTAssertEqual(Set(graph.nodes.map(\.line)).count, 21)
 
         let sizes = Dictionary(grouping: graph.nodes, by: \.line).mapValues(\.count)
-        XCTAssertEqual(sizes["tamers"], 121)
-        XCTAssertEqual(sizes["penc-nso"], 81)
-        XCTAssertEqual(sizes["penc-me"], 73)
-        XCTAssertEqual(sizes["dmc-v1"], 39)
-        XCTAssertEqual(sizes["penc-vb"], 60)
+        XCTAssertEqual(sizes["tamers"], 123)
+        XCTAssertEqual(sizes["penc-nso"], 84)
+        XCTAssertEqual(sizes["penc-me"], 74)
+        XCTAssertEqual(sizes["dmc-v1"], 42)
+        XCTAssertEqual(sizes["penc-vb"], 61)
         XCTAssertEqual(sizes["penc-ds"], 48)
-        XCTAssertEqual(sizes["penc-nsp"], 44)
-        XCTAssertEqual(sizes["dmc-v3"], 54)
+        XCTAssertEqual(sizes["penc-nsp"], 46)
+        XCTAssertEqual(sizes["dmc-v3"], 56)
         XCTAssertEqual(sizes["vital"], 42)
-        XCTAssertEqual(sizes["palmon"], 30)
+        XCTAssertEqual(sizes["palmon"], 32)
         XCTAssertEqual(sizes["xros"], 22)
     }
 
@@ -215,8 +215,10 @@ final class UltimateSweepAToBTests: XCTestCase {
             if leafParents.contains(parent) {
                 XCTAssertTrue(edge.isDefault, "\(parent)'s only edge is not its fallback")
                 // US-166 forked Megalo Growmon (Megidramon and Megidramon X) beside the isDefault
-                // climb to Breakdramon this story gave it, so it is no longer a single edge.
-                XCTAssertEqual(node.evolutions.count, parent == "megalogrowmon" ? 3 : 1,
+                // climb to Breakdramon this story gave it, and US-167 forked Grademon (RagnaLordmon)
+                // beside its Alphamon climb, so neither is a single edge any longer.
+                let forkedLater = ["megalogrowmon": 3, "grademon": 2]
+                XCTAssertEqual(node.evolutions.count, forkedLater[parent] ?? 1,
                                "\(parent) is not a single climb")
                 XCTAssertEqual(edge.conditions, [], "\(parent)'s fallback carries criteria")
             } else {
@@ -264,7 +266,8 @@ final class UltimateSweepAToBTests: XCTestCase {
         }
 
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "mummymon")).evolutions.count, 3)
-        XCTAssertEqual(try XCTUnwrap(graph.node(id: "mephismon")).evolutions.count, 3)
+        // US-167 hung Ogudomon on Mephismon, taking it from three edges to four.
+        XCTAssertEqual(try XCTUnwrap(graph.node(id: "mephismon")).evolutions.count, 4)
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "astamon")).evolutions.count, 3)
         XCTAssertEqual(try XCTUnwrap(graph.node(id: "baalmon")).evolutions.count, 3)
     }
@@ -608,8 +611,8 @@ final class UltimateSweepAToBTests: XCTestCase {
                             "\(ultimate) is an alias, so it removed no orphan")
         }
 
-        XCTAssertEqual(graph.nodes.count, 878, "787 before this story, 817 after it")
-        XCTAssertEqual(graph.nodes(at: .ultimate).count, 199, "108 before this story, 172 after US-165")
+        XCTAssertEqual(graph.nodes.count, 898, "787 before this story, 817 after it")
+        XCTAssertEqual(graph.nodes(at: .ultimate).count, 219, "108 before this story, 172 after US-165")
         XCTAssertEqual(graph.nodes(at: .perfect).count, 189, "the Perfect rung must not have moved")
     }
 
@@ -621,7 +624,7 @@ final class UltimateSweepAToBTests: XCTestCase {
             .union(graph.nodes.filter { !$0.evolutions.isEmpty }.map(\.id))
         let stillOrphaned = roster.entries.filter { !$0.dexOnly && !connected.contains($0.id) }
 
-        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 39,
+        XCTAssertEqual(stillOrphaned.filter { $0.stage == .ultimate }.count, 19,
                        "the Ultimate bucket moved without this claim moving with it")
         XCTAssertEqual(stillOrphaned.filter { $0.stage == .armorHybrid }.count, 16,
                        "the Armor-Hybrid bucket is US-169's and must not have moved")
@@ -631,7 +634,8 @@ final class UltimateSweepAToBTests: XCTestCase {
         // Ogudomon is still the one US-159 pinned in Lucemon Falldown's comment; its display name
         // begins O, so it belongs to US-167 rather than to this story.
         XCTAssertNotNil(roster.entry(id: "ogudomon"))
-        XCTAssertNil(graph.node(id: "ogudomon"))
+        // US-167 wired Ogudomon from Mephismon, a Nightmare Soldiers Demon Lord.
+        XCTAssertEqual(graph.parents(of: "ogudomon").map(\.id), ["mephismon"])
     }
 
     // MARK: - Helpers
