@@ -1952,8 +1952,8 @@
         "Build green, tests pass. Verify in the simulator at BOTH 42mm and 46mm with a map selected: a visibly shorter map band with clear margin above and below, the Digimon inside it, every action circle still on screen"
       ],
       "priority": 106,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "MainScreenLayout.playAreaHeightFraction = 0.8 + playAreaHeight(in:) (floored); the sprite GeometryReader still claims the whole flexible row but draws an 80% band centred in it, and SpriteSlotBoundsKey's anchorPreference moved onto that shortened band so the map, scrim and poop pile follow it with no second arithmetic. Bands RE-MEASURED on the Simulator by diffing -mapDemo=01_grassland against -mapDemo=none: rows 63.5/66.5/76.0pt (41/42/46mm) -> bands 50.0/53.0/60.0pt, matching floor(row*0.8) exactly. The old pinned 41.5/56.0 were stale by ~50%. Sprite drops 4->3 on 42mm and 46mm, unchanged at 3 on 41mm; SpriteScale.minimum never binds. Build green, 2768 tests 0 failures."
     },
     {
       "id": "US-220",

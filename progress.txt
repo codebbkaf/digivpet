@@ -21,6 +21,14 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **THE SPRITE SLOT IS MEASURED BY THE MAP BAND, AND MUST BE RE-MEASURED WHENEVER A ROW IS ADDED **OR
+  REMOVED** FROM `ContentView`'s VStack (US-219).** The map is painted off `SpriteSlotBoundsKey`, so the
+  longest run of rows differing between a `-mapDemo=01_grassland` and a `-mapDemo=none` shot IS the play
+  area, in screenshot px (halve for points @2x). **Threshold that run at 0.5 of the width, not 0.75** —
+  dark rows of the asset differ in only ~73% and a higher cut truncates the band. `MainScreenLayoutTests`'
+  pinned slot numbers are EVIDENCE; US-194's were arithmetic rather than measurement and six later
+  row-deleting stories left them ~50% low with nothing failing. Measured 2026-07-24: flexible row
+  63.5 / 66.5 / 76.0pt and 80% band 50 / 53 / 60pt on 41 / 42 / 46mm.
 - **THE SIMULATOR BUNDLE ID IS `com.digivpet.DigiVPet` (US-214).** `simctl launch` with anything else
   fails as `FBSOpenApplicationServiceErrorDomain code=4`, which reads like a launch crash. The whole
   screenshot recipe, in ONE Bash call with `DEVELOPER_DIR` exported in it:
@@ -7154,3 +7162,75 @@ The thirty, `Perfect -> Ultimate`:
   guarded on a `-xDemo` launch argument, ending in `actionDuration = 60` (the 2s hold does not
   survive boot + install + launch + `sleep 20`) and then the real action call. Never stage the
   outcome by hand — call the shipped method, or the screenshot proves nothing.
+
+## 2026-07-24 - US-219: The play area and the map behind it are 80 percent of their old height
+- `MainScreenLayout` gained `playAreaHeightFraction = 0.8` and `playAreaHeight(in:) -> floor(available
+  * 0.8)`, free-standing exactly like `SpriteScale.fitting` so a test reads the arithmetic without a
+  view graph.
+- The sprite's `GeometryReader` STILL claims the whole flexible row — that is what keeps the stats
+  strip, the name row and the action grid byte-for-byte where they were — but the content inside it
+  is now `.frame(width: geometry.size.width, height: band, alignment: sick ? .bottom : .center)`,
+  wrapped in a plain `.frame(maxWidth: .infinity, maxHeight: .infinity)` that CENTRES that band in
+  the row. The reclaimed fifth is left empty and splits evenly above and below.
+- `SpriteSlotBoundsKey`'s `anchorPreference` MOVED off the row and onto the shortened band (it now
+  sits between the sick-badge overlay and the centring frame). That one move is the entire
+  implementation of "the map, the scrim and the poop pile shrink with it" — all three are placed off
+  that anchor, so there is no second rect anywhere. `SpriteScale.fitting` is likewise handed `band`
+  rather than `geometry.size.height`.
+- Files: Sources/ContentView.swift (constant + fn, the band frame, the anchor move, two comments),
+  Tests/MainScreenLayoutTests.swift (+4 tests, re-measured evidence), prd.json, progress.txt.
+- Verified: build green; FULL suite **2768 tests, 0 failures** (+4).
+
+- **RE-MEASURED SLOTS — AND THE OLD PINNED NUMBERS WERE STALE BY HALF.** Method: the map is painted
+  off `SpriteSlotBoundsKey`, so the band that changes between `-mapDemo=01_grassland` and
+  `-mapDemo=none` IS the play area, measured directly instead of inferred from a sprite. Baseline
+  built in a `git worktree` at HEAD; all three sims `simctl erase`d first; both builds launched
+  `-healthAnswered -noNotificationPrompt -wanderDemo -mapDemo=...`.
+      screen        row (before)   band (after)   floor(row*0.8)   sprite scale
+      41mm  S9       63.5pt         50.0pt         50.0  exact      3 -> 3
+      42mm  S11      66.5pt         53.0pt         53.0  exact      4 -> 3
+      46mm  S11      76.0pt         60.0pt         60.0  exact      4 -> 3
+  All three match the shipped arithmetic to the point. `MainScreenLayoutTests` pinned 41.5 (41mm) and
+  56.0 (46mm) from US-194 — those were **arithmetic, not measurement** (49.5-8, 64.0-8), and US-196,
+  US-199, US-208, US-210, US-211 and US-213 have since deleted the currency row, the map strip and
+  both reading bars, every point of which went silently back into the one flexible row. The tests now
+  pin the three measured bands with the rows beside them for comparison.
+- Scale confirmed independently by Agumon's ink WIDTH on the `-mapDemo=none` shots (13 sprite pixels,
+  so 78px at @2x is scale 3 and 104px is scale 4): before 78/104/104, after 78/78/78 on 41/42/46mm.
+  Ink heights 72px = 12 rows x 6, inside a 96px (48pt) sprite box inside a 100/106/120px band — the
+  sprite never overflows. `SpriteScale.minimum` (2) never binds: the smallest band is 50pt.
+- Margins measured off the band rows: 46mm before 146-297, after 162-281 — 16px reclaimed at the top
+  and 16px at the bottom, an even split. 41mm 130-256 -> 144-243 (14/13px), 42mm 134-266 -> 148-253
+  (14/13px). Odd totals split as evenly as whole pixels allow.
+- SCREENSHOTS /tmp/us219 (not committed): after42_map.png, after46_map.png against before42_map.png,
+  before46_map.png. Visibly shorter map band with black margin above and below, the map still filling
+  it edge to edge with no letterboxing, the Digimon inside it, and all nine action circles, the name
+  row and the stats strip untouched and on screen.
+- NOTE for whoever ships US-221: the sick badge's `clearanceFloor` (50pt) now sits right ON the 41mm
+  band and above the 42mm one, so an ILL Digimon's badge overlaps the sprite on those screens. That
+  is the documented behaviour of a short slot (`SickBadgeLayout.clearanceFloor`'s own comment says the
+  badge cannot fix it), not a regression this story introduced — 41mm was already below it — but
+  US-221 shrinks the sprite again and will make the overlap disappear on its own.
+
+**Learnings for future iterations:**
+- **THE MAP BAND DIFF IS THE ONLY HONEST WAY TO MEASURE THE SPRITE SLOT, AND IT TAKES ONE MINUTE.**
+  `-mapDemo=<asset>` vs `-mapDemo=none`, then find the longest run of rows where the two shots differ.
+  **Use a 0.5 width threshold, not 0.75:** the grassland asset has dark rows that differ from black in
+  only ~73% of the width, and a 0.75 cut silently truncates the band by 16px (it reported 62pt on a
+  76pt slot). Print the per-row profile before trusting any single number.
+- **A PINNED "MEASURED" NUMBER THAT WAS ACTUALLY ARITHMETIC ROTS SILENTLY, AND EVERY LATER STORY
+  INHERITS IT.** US-194 published 41.5/56.0 as `49.5 - 8` / `64.0 - 8`; six row-deleting stories later
+  the real rows were 63.5/76.0 and nothing failed, because the tests only asserted what those numbers
+  map to. **Any story that adds OR REMOVES a row in `ContentView`'s VStack must re-measure the slot** —
+  removal is the dangerous direction, because a bigger Digimon looks like a nice surprise rather than
+  a bug. US-221's PRD arithmetic is built on the stale numbers; re-measure before trusting it.
+- **TO SHORTEN A BAND WITHOUT MOVING ANYTHING ELSE, KEEP THE FLEXIBLE ROW AND SHRINK ITS CONTENT.**
+  `GeometryReader { let band = f(geometry.size.height); content.frame(height: band).anchorPreference(...)
+  .frame(maxHeight: .infinity) }`. The row still claims the leftover height so no sibling moves; the
+  inner fixed frame is the band; the trailing infinite frame centres it; and putting the anchor
+  BETWEEN them is what makes every layer placed off that anchor track the band rather than the row.
+  Anchors resolve after placement, so the centring frame does not have to be accounted for by hand.
+- **`git worktree add /tmp/<name> HEAD` + `-derivedDataPath` is the clean baseline** (the stash recipe
+  races on DerivedData). Build it in the BACKGROUND while capturing the "after" shots — the two
+  halves of a before/after are independent and this iteration cost ~90s instead of ~4 minutes.
+---

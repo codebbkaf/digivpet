@@ -580,12 +580,20 @@ struct ContentView: View {
                 // itself at the largest whole-pixel scale that fits it, so a 42mm screen shows a
                 // smaller Digimon rather than a clipped action row.
                 GeometryReader { geometry in
+                    // The band is 80% of the row since US-219 — the row still claims all the
+                    // leftover height, so nothing else on the screen moved, but the play area drawn
+                    // inside it is shorter and the missing fifth is simply left empty.
+                    let band = MainScreenLayout.playAreaHeight(in: geometry.size.height)
+
                     WanderingSpriteView(
                         stage: presentation.spriteStage,
                         name: presentation.spriteFile,
                         animation: model.animation,
+                        // Sized against the BAND, not the row: the sprite is drawn with `.offset`
+                        // and so overflows rather than clips, and a Digimon sized to the full row
+                        // would stand out of the top and bottom of the room it is meant to be in.
                         scale: SpriteScale.fitting(
-                            SickBadgeLayout.spriteHeight(in: geometry.size.height,
+                            SickBadgeLayout.spriteHeight(in: band,
                                                          isSick: model.isSick)
                         ),
                         isMoving: model.isWandering,
@@ -599,8 +607,8 @@ struct ContentView: View {
                     // slot one badge-band shorter than this frame, so pushing it to the floor is
                     // what turns that missing band into clear space at the TOP rather than half of
                     // it at each end — see `SickBadgeLayout`. Nothing changes when healthy.
-                    .frame(maxWidth: .infinity,
-                           maxHeight: .infinity,
+                    .frame(width: geometry.size.width,
+                           height: band,
                            alignment: model.isSick ? .bottom : .center)
                     // In the band the sprite was just sized out of, so it sits above the Digimon
                     // rather than on it, and well clear of the action row at the bottom of the
@@ -611,13 +619,23 @@ struct ContentView: View {
                             SickBadgeView()
                         }
                     }
+                    // Where the light button goes (US-099). Reported rather than drawn here: the
+                    // button has to be painted ABOVE the scrim that covers the whole screen, so it
+                    // lives in the layer below and this is the only way it can still land in this
+                    // row's corner. It costs the sprite nothing — a preference is measurement, not
+                    // layout.
+                    //
+                    // Attached to the SHORTENED band since US-219, and that placement is the whole
+                    // implementation of "the map shrinks too": the map background, the scrim and the
+                    // poop pile are all placed off this anchor, so they follow the band's rect
+                    // wherever it is without anyone recomputing it.
+                    .anchorPreference(key: SpriteSlotBoundsKey.self, value: .bounds) { $0 }
+                    // Centres the band in the row, so the fifth this story gave back splits evenly
+                    // above and below rather than pushing the Digimon to one end. The anchor above
+                    // is resolved after this places the band, so it reports the centred rect.
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .frame(maxHeight: .infinity)
-                // Where the light button goes (US-099). Reported rather than drawn here: the button
-                // has to be painted ABOVE the scrim that covers the whole screen, so it lives in the
-                // layer below and this is the only way it can still land in this row's corner. It
-                // costs the sprite nothing — a preference is measurement, not layout.
-                .anchorPreference(key: SpriteSlotBoundsKey.self, value: .bounds) { $0 }
 
                 // Name, stage and action message share ONE row since US-039, where the name had a
                 // headline row to itself above the sprite. That row cost 16 of the 136 points a
@@ -827,10 +845,11 @@ struct ContentView: View {
 /// Named rather than left as literals in a `body` for `EnergyBarLayout`'s reason: these are
 /// not taste, they are load-bearing. `SpriteScale.fitting` FLOORS `slotHeight / 16`. Before US-194
 /// the slot sat right on a scale boundary — 49.5pt on 41mm, 64.0pt on 46mm, 0.5pt and 0.0pt of slack
-/// — so a point of font silently cost the Digimon a whole scale step. US-194's shorter room (the
-/// action row's inset grew 4 -> 12, all of it out of this one flexible slot) re-measured to 41.5pt
-/// on 41mm and 56.0pt on 46mm, dropping the sprite one deliberate step and, as a side effect, moving
-/// both slots to mid-band with real slack. The ceiling stays as a conservative guard even so.
+/// — so a point of font silently cost the Digimon a whole scale step. US-194's shorter room, and
+/// then six stories that deleted whole rows and handed the height back, moved it well clear:
+/// US-219 re-measured the flexible row at 63.5 / 66.5 / 76.0pt on 41 / 42 / 46mm, and the 80% band
+/// drawn inside it at 50 / 53 / 60pt — all three mid-band with real slack. The ceiling stays as a
+/// conservative guard even so.
 ///
 /// `MainScreenLayoutTests` holds these here so a change that would shrink the sprite fails a test.
 enum MainScreenTypography {
@@ -865,6 +884,28 @@ enum MainScreenLayout {
     /// exactly the 8pt this gained (before: slot 49.5pt/64.0pt on 41mm/46mm with a 4pt inset; after:
     /// 8pt shorter, re-measured on the Simulator — see `MainScreenLayoutTests` and progress.txt).
     static let actionRowBottomInset: CGFloat = 12
+
+    /// How much of the flexible row the play area actually uses (US-219).
+    ///
+    /// The sprite's `GeometryReader` still CLAIMS the whole leftover height — that is what keeps the
+    /// stats strip, the name row and the action grid exactly where they are — but the band drawn
+    /// inside it is only this fraction of that height, and the remaining 20% is left empty. The
+    /// margin splits above and below, because the band is centred in the row it sits in.
+    ///
+    /// It is one number rather than two because the band is also the `SpriteSlotBoundsKey` anchor:
+    /// the map background, the light scrim and the poop pile are all placed off that anchor, so they
+    /// shrink with the band by construction rather than by a second piece of arithmetic agreeing
+    /// with this one.
+    static let playAreaHeightFraction: CGFloat = 0.8
+
+    /// The band's height in a flexible row of `available` points — floored, so the band is a whole
+    /// number of points and the sprite is never sized against a fractional slot.
+    ///
+    /// Free-standing and non-generic on purpose, the same as `SpriteScale.fitting`: a test reads the
+    /// arithmetic without building a view graph to do it.
+    static func playAreaHeight(in available: CGFloat) -> CGFloat {
+        max((available * playAreaHeightFraction).rounded(.down), 0)
+    }
 }
 
 enum SpriteScale {

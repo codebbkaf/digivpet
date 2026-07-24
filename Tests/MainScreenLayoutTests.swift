@@ -71,11 +71,12 @@ final class MainScreenLayoutTests: XCTestCase {
     /// Until US-194 the slot sat right on a scale boundary — 49.5pt on 41mm, 64.0pt on 46mm, 0.5pt
     /// and 0.0pt of slack — so growing either font by a point silently cost the Digimon a scale step.
     /// US-194 grows the action row's bottom inset from 4 to 12, and because that inset comes straight
-    /// out of the one flexible row, the slot lost 8pt on each screen. RE-MEASURED on the Simulator
-    /// with `-wanderDemo` (progress.txt has the method): 41.5pt on 41mm and 56.0pt on 46mm, which
-    /// drop the sprite one deliberate step to scale 2 (41mm) and scale 3 (46mm). Those now sit mid-
-    /// band rather than on an edge, so the font ceiling is looser than it was — but it stays pinned
-    /// as a conservative guard, and if a later story changes the layout it must re-measure these two.
+    /// out of the one flexible row, the slot lost 8pt on each screen. Six stories then DELETED rows
+    /// (the currency row, the map strip, both reading bars) and handed all of it back, so by US-219
+    /// the rows were 63.5 / 66.5 / 76.0pt on 41 / 42 / 46mm — half again what was pinned here.
+    /// US-219 trims the play area to 80% of the row and the bands were RE-MEASURED directly off the
+    /// map (see below); they sit mid-band rather than on an edge, so the font ceiling is looser than
+    /// it was, but it stays pinned as a conservative guard.
     ///
     /// This cannot assert the layout — that is a screenshot. What it CAN hold is the two font sizes,
     /// so growing one fails here rather than silently costing the Digimon a scale step.
@@ -85,14 +86,87 @@ final class MainScreenLayoutTests: XCTestCase {
         XCTAssertLessThanOrEqual(MainScreenTypography.statValueFontSize,
                                  MainScreenTypography.maximumSafeFontSize)
 
-        // The measured slots after US-194 shortened the room: scale 2 on 41mm, scale 3 on 46mm. These
-        // are evidence, not arithmetic — a later layout change must re-measure and update them.
-        XCTAssertEqual(SpriteScale.fitting(41.5), 2, "41mm slot measured after US-194")
-        XCTAssertEqual(SpriteScale.fitting(56.0), 3, "46mm slot measured after US-194")
+        // RE-MEASURED on the Simulator for US-219, by diffing a `-mapDemo=01_grassland` screenshot
+        // against a `-mapDemo=none` one: the map is painted off `SpriteSlotBoundsKey`, so the band
+        // that changes IS the play area, measured directly rather than inferred from a sprite.
+        //
+        // **The old 41.5 / 56.0 pinned here were stale, and by a lot.** They were US-194 arithmetic
+        // (49.5 - 8, 64.0 - 8), and US-196, US-199, US-208, US-210, US-211 and US-213 have since
+        // deleted the currency row, the map strip and both reading bars — every point of which went
+        // straight back to the one flexible row without anyone re-measuring. The real FLEXIBLE ROWS
+        // before this story were 63.5pt (41mm), 66.5pt (42mm) and 76.0pt (46mm).
+        //
+        // The bands this story draws inside them, floor(row * 0.8), measured to the point:
+        //   41mm  63.5 -> 50.0   42mm  66.5 -> 53.0   46mm  76.0 -> 60.0
+        XCTAssertEqual(SpriteScale.fitting(50.0), 3, "41mm band measured for US-219")
+        XCTAssertEqual(SpriteScale.fitting(53.0), 3, "42mm band measured for US-219")
+        XCTAssertEqual(SpriteScale.fitting(60.0), 3, "46mm band measured for US-219")
 
-        // Both now sit mid-band with room to spare: 41mm keeps scale 2 down to 32, 46mm keeps 3 to 48.
+        // What the trim cost, confirmed by the sprite's ink width in the same screenshots (13 sprite
+        // pixels of Agumon, so 78px at @2x is scale 3 and 104px is scale 4): 42mm and 46mm drop one
+        // step from 4 to 3, and 41mm keeps the 3 it already had. The floor never binds — the smallest
+        // band is 50pt against a 48pt sprite — so `SpriteScale.minimum` is untouched.
+        XCTAssertEqual(SpriteScale.fitting(63.5), 3, "41mm row, for comparison")
+        XCTAssertEqual(SpriteScale.fitting(66.5), 4, "42mm row, for comparison")
+        XCTAssertEqual(SpriteScale.fitting(76.0), 4, "46mm row, for comparison")
+
+        // None of the three bands is on a scale edge: scale 3 holds from 48 up to just under 64.
         XCTAssertEqual(SpriteScale.fitting(48.0), 3)
         XCTAssertEqual(SpriteScale.fitting(47.9), 2)
+        XCTAssertEqual(SpriteScale.fitting(64.0), 4)
+    }
+
+    /// US-219: the play area is 80% of the flexible row, and the missing fifth is left empty.
+    ///
+    /// The fraction is pinned rather than the layout — that the band is visibly shorter with clear
+    /// margin above and below is a Simulator screenshot, recorded in progress.txt. What this holds is
+    /// that the number itself cannot drift back without failing here.
+    func testThePlayAreaTakesEightyPercentOfTheFlexibleRow() {
+        XCTAssertEqual(MainScreenLayout.playAreaHeightFraction, 0.8)
+
+        // The three measured rows through the shipped arithmetic, each matching the band that was
+        // then measured on the Simulator to the point (progress.txt has the diff).
+        XCTAssertEqual(MainScreenLayout.playAreaHeight(in: 63.5), 50.0, "41mm")
+        XCTAssertEqual(MainScreenLayout.playAreaHeight(in: 66.5), 53.0, "42mm")
+        XCTAssertEqual(MainScreenLayout.playAreaHeight(in: 76.0), 60.0, "46mm")
+    }
+
+    /// Floored, never rounded: the band is a whole number of points, so the sprite is never sized
+    /// against a fractional slot and the band can never be a hair TALLER than its share of the row.
+    func testTheBandIsFlooredToAWholeNumberOfPointsAndNeverExceedsItsShare() {
+        for row in stride(from: 0.0, through: 300.0, by: 0.5) {
+            let band = MainScreenLayout.playAreaHeight(in: CGFloat(row))
+            XCTAssertEqual(band, band.rounded(), "row \(row) gave a fractional band")
+            XCTAssertLessThanOrEqual(band,
+                                     CGFloat(row) * MainScreenLayout.playAreaHeightFraction,
+                                     "row \(row) gave a band over its share")
+            XCTAssertGreaterThanOrEqual(band, 0, "row \(row) gave a negative band")
+        }
+    }
+
+    /// The reclaimed fifth is real: every row leaves strictly more empty than it did, and the empty
+    /// space is the row less the band — which is what the centring frame splits above and below.
+    func testTheRemainingFifthIsLeftEmpty() {
+        for row in stride(from: 20.0, through: 300.0, by: 1.0) {
+            let empty = CGFloat(row) - MainScreenLayout.playAreaHeight(in: CGFloat(row))
+            XCTAssertGreaterThanOrEqual(empty,
+                                        CGFloat(row) * (1 - MainScreenLayout.playAreaHeightFraction),
+                                        "row \(row) left too little empty")
+        }
+    }
+
+    /// The sprite still fits the BAND it is drawn in, sick or healthy — the band is what
+    /// `SpriteScale.fitting` is now asked about, and an overflow does not clip, it lands on the rows
+    /// above and below.
+    func testTheSpriteFitsTheShortenedBandAtBothMeasuredRows() {
+        for row in [63.5, 66.5, 76.0] as [CGFloat] {
+            let band = MainScreenLayout.playAreaHeight(in: row)
+            for isSick in [false, true] {
+                let offered = SickBadgeLayout.spriteHeight(in: band, isSick: isSick)
+                let side = SpriteScale.fitting(offered) * CGFloat(SpriteSheet.frameSize)
+                XCTAssertLessThanOrEqual(side, band, "row \(row), sick \(isSick) overflowed the band")
+            }
+        }
     }
 
     /// US-172 pinned the action row 4pt off the bottom; US-194 moves it to 12.
