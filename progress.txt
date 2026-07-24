@@ -41,6 +41,17 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   `sleep 2` BEFORE each shot in the loop and the real pace appears. This bites hardest on anything
   with a catch-up cap (`MovementModel.maximumCatchUpSteps`), which by design cannot make up for the
   frames the screenshot load ate.
+- **MEASURE "DID THE SPRITE MOVE" BY LIT-PIXEL CENTROID, NEVER BY BOUNDING BOX (US-217).** Every
+  sprite here animates in place — the egg wobbles, the two walk frames differ in width — so
+  `xmin`/`xmax` shift between frames with zero travel and a bbox comparison reports motion that is
+  not there. Take the centroid of `luma > 40` over the sprite band only (rows 140-265 on the 42mm
+  screenshot, which excludes the stats strip and the name line): it is stable to three decimals
+  across a pose change and moves by exactly the travel. **numpy is NOT installed; PIL 12.3.0 is** —
+  a plain `im.convert('L').load()` double loop over ~125 rows is well under a second per shot.
+- **THE CHEAPEST BEFORE/AFTER IS `git stash push -- Sources Tests`, REBUILD, CAPTURE, `stash pop`
+  (US-217).** ~90 s per side, and it produces the only evidence that settles a "does it still X"
+  criterion. Use `uninstall` + `install` when the story is about a FRESH save, or the previous run's
+  hatched Digimon is still in the store.
 - **A DERIVED-PER-DIGIMON VALUE USES A PINNED SEED FUNCTION, NEVER `hashValue` (US-214).** Swift seeds
   `Hasher` per process, so anything derived from it changes on every relaunch while still passing
   `XCTAssertEqual(f(id), f(id))`. `SleepRoutine.seed(for:)` is FNV-1a over the id's UTF-8 bytes, fed to
@@ -7013,4 +7024,58 @@ The thirty, `Perfect -> Ultimate`:
   has no such problem, so a whole `SeededGenerator` for one bit is ceremony. It also let the model
   drop its RNG field entirely, which is what makes "there is no randomness in the walk" literally
   true rather than a comment.
+---
+
+## 2026-07-24 - US-217: A Digitama does not walk
+- `MainScreenModel.isWandering` gained ONE leading clause, `state?.stage != .digitama`. It is an
+  added condition, not a replacement: an egg's resting animation is the ordinary `.idle` loop, so
+  every other clause was happily true while it paced, and asleep/eating/sick/dead/overlay still turn
+  the walk off through exactly the reasons they always did.
+- The suspension rides the existing `isMoving: false` -> `MovementModel.hold(at:)` path, so the
+  walk's clock keeps up and hatching costs one step of travel rather than the whole incubation.
+- AC2 (the egg sits at CENTRE, not where the last Digimon fell) needed one new thing:
+  `MovementModel.recentre()`, plus `SpriteWanderer.position(at:bound:isMoving:holdsAtCentre:)` which
+  calls it alongside the hold. `WanderingSpriteView` reads `holdsAtCentre` off its own `stage`
+  (`stage == Stage.digitama.rawValue` — `stage` IS the sprite subfolder name), so nothing new is
+  threaded through `ContentView`. Asserted on EVERY call rather than on the transition into egg-ness,
+  so no frame can draw the egg at the dead Digimon's spot.
+- Files: Sources/{MainScreenModel,Movement,WanderingSpriteView}.swift,
+  Tests/{MovementTests,WanderingTests}.swift, prd.json, progress.txt.
+- Verified: build green; FULL suite **2752 tests, 0 failures** (+6). New tests —
+  `WanderingTests.testAnUnhatchedDigitamaDoesNotWander` (driven off a real `loadOrCreate` egg save,
+  and it asserts `animation == .idle` first so the reason the stage must be named is on the record),
+  `testHatchingOutOfTheDigitamaResumesTheWalk`, `testTheEggRuleDoesNotReplaceTheOtherSuspensions`;
+  `MovementTests.testAModelOnlyEverHeldNeverLeavesTheCentre` (600 held seconds, offset 0),
+  `testRecentringPutsTheSpriteBackInTheMiddle`, and
+  `testAnEggHeldAtCentreDoesNotInheritThePreviousDigimonsPosition` (the rebirth, through
+  `SpriteWanderer`: walk off centre -> egg at 0 -> still 0 after 10 min -> one step of time is
+  exactly one `stepDistance` of travel).
+- SIMULATOR, 42mm (46mm had a stale notification alert up, so it was skipped — see US-215): fresh
+  save via uninstall+install, 6 screenshots paced 2s apart, on the PRE-story build and the POST-story
+  build. Lit-pixel centroid of the sprite band (rows 140-265, luma > 40) on a 374px-wide screen:
+      before  196.5  76.5  191.5  301.5  166.5  101.5   <- 225px of travel
+      after   186.5 186.5  186.5  186.5  186.5  186.5   <- dead centre, every frame
+  The bounding box still breathes between frames (139-234 vs 147-226) because the egg's idle/wobble
+  loop animates in place. That is the pose, not travel.
+
+**Learnings for future iterations:**
+- **MEASURE "DID THE SPRITE MOVE" BY LIT-PIXEL CENTROID, NEVER BY BOUNDING BOX.** Every sprite in
+  this game animates in place — the egg wobbles, the Digimon's two walk frames differ in width — so
+  `xmin`/`xmax` change from frame to frame with zero travel and a bbox comparison reports motion that
+  is not there. The centroid of `luma > 40` over the sprite band is stable to three decimals across
+  a pose change and moves by exactly the travel. **numpy is NOT installed; PIL 12.3.0 is** — a plain
+  `im.convert('L').load()` double loop over ~125 rows costs well under a second per shot.
+- **THE CHEAPEST BEFORE/AFTER IS `git stash push -- Sources Tests`, REBUILD, CAPTURE, `stash pop`.**
+  ~90s per side on this project and it produces the only evidence that actually settles a "does it
+  still X" acceptance criterion. The install must be `uninstall` + `install` when the story is about
+  a FRESH save, or the previous run's hatched Digimon is still in the store.
+- **`SpriteWanderer` IS `@State` AND SURVIVES A REBIRTH.** The view's identity does not change when
+  the Digimon dies and an egg replaces it, so the new sprite inherits the dead one's offset. Anything
+  that must reset a `@State` model on a game event has to say so declaratively on every call (as
+  `holdsAtCentre` does) rather than via `.onChange`, which would leave one frame drawn at the old
+  value.
+- **US-218 SEAM:** the egg is `state?.stage == .digitama` on the model and
+  `stage == Stage.digitama.rawValue` in the sprite view. US-218 wants the same fact on
+  `ActionControls`; put it on `MainScreenModel` as a named `isEgg` property and let both this clause
+  and the action guards read it, rather than adding a third spelling.
 ---

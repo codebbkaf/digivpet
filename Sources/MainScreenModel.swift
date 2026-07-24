@@ -2070,8 +2070,15 @@ final class MainScreenModel: ObservableObject {
     /// the screen, and a sprite pacing on unseen underneath it is work spent drawing nothing. Each
     /// clears on its own, at which point this returns true again and the walk resumes from where it
     /// stood.
+    ///
+    /// A Digitama is the one suspension the pose does NOT already say (US-217). An egg's resting
+    /// animation is the plain `.idle` loop — the wobble — so every clause below is happily true
+    /// while it sits there, and the egg used to pace the floor on legs it does not have. Naming the
+    /// stage is therefore an ADDED condition rather than a replacement: asleep, eating, sick, dead
+    /// and every overlay still turn the walk off through exactly the reasons they always did.
     var isWandering: Bool {
-        animation == .idle && pendingEvolution == nil && pendingBattle == nil
+        state?.stage != .digitama
+            && animation == .idle && pendingEvolution == nil && pendingBattle == nil
             && pendingTraining == nil && pendingBattleRound == nil && memorial == nil
             && pendingWildEncounter == nil && pendingBossEncounter == nil
     }

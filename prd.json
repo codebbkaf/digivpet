@@ -1917,8 +1917,8 @@
         "Build green, tests pass. Verify in the simulator: two screenshots of a fresh save at least 2s apart show the egg in the same place (pace screenshots 2s apart \u2014 a burst starves the TimelineView and makes any sprite look frozen)"
       ],
       "priority": 104,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "isWandering gained one leading clause, `state?.stage != .digitama`, so an egg is passed isMoving:false and holds; the hold goes through the existing MovementModel.hold(at:) path, with a new MovementModel.recentre() called alongside it (SpriteWanderer.position gains holdsAtCentre:, read off `stage == Stage.digitama.rawValue` in WanderingSpriteView) so a rebirth's egg sits at centre rather than where the dead Digimon fell. recentre() is asserted on EVERY call rather than on the transition, so no frame draws the egg at the old spot. Build green, 2752 tests (2746 + 6 new), 0 failures. MEASURED on the 42mm watch, fresh save (uninstall+install), pre- vs post-story builds, 6 screenshots paced 2 s apart per US-216: BEFORE the egg's lit-pixel centroid in the sprite band roamed 196.5 -> 76.5 -> 191.5 -> 301.5 -> 166.5 -> 101.5, i.e. 225 px of travel on a 374 px screen; AFTER it is 186.5 in all six frames, dead centre. The bounding box still breathes (xmin/xmax 139-234 vs 147-226) because the egg's idle/wobble loop still animates in place - that is the pose, not travel, and the centroid is identical to three decimals across it. AC4 (no jump on hatching) is covered by the SpriteWanderer test: 10 minutes held at centre then one step of time = exactly one stepDistance of travel, not the incubation paid back at once."
     },
     {
       "id": "US-218",

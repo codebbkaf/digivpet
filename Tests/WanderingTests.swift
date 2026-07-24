@@ -169,4 +169,69 @@ final class WanderingTests: XCTestCase {
         XCTAssertNil(model.pendingBattle)
         XCTAssertTrue(model.isWandering, "and the walk resumes when the battle comes down")
     }
+
+    // MARK: - AC: an unhatched Digitama holds still (US-217)
+
+    /// A save that is still an egg, reached the way the app reaches it — `loadOrCreate` on the
+    /// Digitama, nothing overwritten afterwards.
+    private func startedEggModel(named name: String) async throws -> MainScreenModel {
+        let url = storeDirectory.appendingPathComponent("\(name).store")
+        let seeding = try GameStore(url: url)
+        _ = try seeding.loadOrCreate(digitamaId: "egg", now: Clock.start)
+        try seeding.save()
+
+        let model = MainScreenModel(
+            makeStore: { try GameStore(url: url) },
+            graph: fixtureGraph(),
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: EmptySampleFetcher(),
+                                               calendar: Clock.calendar),
+                sleepReader: LastNightSleepReader(fetcher: EmptySleepFetcher(),
+                                                  calendar: Clock.calendar)
+            ),
+            calendar: Clock.calendar,
+            now: { Clock.start },
+            chooseStartingDigitama: { $0.first },
+            actionDuration: 0.05
+        )
+        await model.start()
+        XCTAssertEqual(model.phase, .playing)
+        XCTAssertEqual(model.state?.stage, .digitama, "this fixture is only interesting unhatched")
+        return model
+    }
+
+    /// The headline. Note the pose assertion: an egg's resting animation is the ordinary `.idle`
+    /// loop, so every other clause of `isWandering` is true while it sits there — naming the stage
+    /// is the only thing that stops it pacing.
+    func testAnUnhatchedDigitamaDoesNotWander() async throws {
+        let model = try await startedEggModel(named: "digitama")
+
+        XCTAssertEqual(model.animation, .idle)
+        XCTAssertFalse(model.isWandering, "an egg has no legs to pace the floor on")
+    }
+
+    /// The other half, and the control: the very same model walks the moment it is a Baby I, so
+    /// this is a rule about the stage and not a rule that suspends everything.
+    func testHatchingOutOfTheDigitamaResumesTheWalk() async throws {
+        let model = try await startedEggModel(named: "hatching")
+        XCTAssertFalse(model.isWandering)
+
+        model.state?.currentDigimonId = "hero"
+        model.state?.stage = .babyI
+
+        XCTAssertTrue(model.isWandering, "hatching gives the legs back")
+    }
+
+    /// The egg clause is ADDED, not a replacement: a Digimon past the egg can still be stopped by
+    /// every reason that stopped it before. Death stands in for the whole list, which the tests
+    /// above already cover one at a time.
+    func testTheEggRuleDoesNotReplaceTheOtherSuspensions() async throws {
+        let model = try await startedModel(named: "still-suspended")
+        XCTAssertEqual(model.state?.stage, .babyI, "so nothing here is passing because of the egg")
+
+        model.state?.healthStatus = .dead
+        await model.refresh()
+
+        XCTAssertFalse(model.isWandering, "a dead Baby I must still not go for a walk")
+    }
 }

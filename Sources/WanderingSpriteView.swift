@@ -28,14 +28,25 @@ final class SpriteWanderer {
     /// `bound` is re-applied on every call because it comes from the screen, and the screen is only
     /// known once the view has been laid out — the first call can genuinely carry a different bound
     /// from the one this was constructed with.
-    func position(at date: Date, bound: CGFloat, isMoving: Bool) -> (offset: CGFloat, flipped: Bool) {
+    ///
+    /// - Parameter holdsAtCentre: for the suspension that is a different sprite rather than a pause
+    ///   in this one's day — an unhatched Digitama (US-217). Asserted on every call rather than on
+    ///   the transition into it, so there is no frame in which the egg is drawn at the position the
+    ///   Digimon before it died on.
+    func position(at date: Date,
+                  bound: CGFloat,
+                  isMoving: Bool,
+                  holdsAtCentre: Bool = false) -> (offset: CGFloat, flipped: Bool) {
         model.bound = bound
         if isMoving {
             model.advance(to: date)
         } else {
             // Not simply skipping the advance: see `MovementModel.hold(at:)`. A skipped advance
             // leaves the clock behind, and the walk would then be caught up in one jump the moment
-            // the Digimon woke, finished eating, or the battle came down.
+            // the Digimon woke, finished eating, or the battle came down. That is exactly why an
+            // egg holds rather than opting out: the walk it resumes with when it hatches is one
+            // step long, not the whole incubation paid back at once.
+            if holdsAtCentre { model.recentre() }
             model.hold(at: date)
         }
         // The pack's art faces left, so a rightward heading is the one that needs mirroring.
@@ -53,8 +64,10 @@ struct WanderingSpriteView: View {
     let name: String
     var animation: SpriteAnimation = .idle
     var scale: CGFloat = 5
-    /// False while the Digimon is asleep, eating, sick, dead, or behind an overlay. The sprite
-    /// stays exactly where it stood and resumes from there — see `MainScreenModel.isWandering`.
+    /// False while the Digimon is asleep, eating, sick, dead, still an egg, or behind an overlay.
+    /// The sprite stays exactly where it stood and resumes from there — see
+    /// `MainScreenModel.isWandering`. The egg is the one case that also goes back to centre first,
+    /// because it is a new sprite rather than a pause in this one's day.
     var isMoving: Bool = true
     /// A scripted nudge running on top of wherever the walk left the sprite, or nil for none.
     ///
@@ -76,6 +89,14 @@ struct WanderingSpriteView: View {
     @State private var wanderer: SpriteWanderer
 
     private var side: CGFloat { CGFloat(SpriteSheet.frameSize) * scale }
+
+    /// Whether what is being drawn is an unhatched Digitama, which sits at centre rather than
+    /// wherever the walk last left the sprite (US-217).
+    ///
+    /// Read off `stage` rather than passed in as a second flag: `stage` IS `Stage.rawValue` — the
+    /// name of the sprite subfolder the art comes from — so the egg is already named here, and a
+    /// separate parameter would be the same fact travelling twice.
+    private var isEgg: Bool { stage == Stage.digitama.rawValue }
 
     /// How far from centre the sprite may walk.
     ///
@@ -119,7 +140,10 @@ struct WanderingSpriteView: View {
         // shortest track is shorter than two walk steps, so at the walk's cadence it would be
         // drawn once or not at all.
         TimelineView(.periodic(from: .now, by: motion == nil ? MovementModel.step : ActionMotion.tick)) { context in
-            let position = wanderer.position(at: context.date, bound: bound, isMoving: isMoving)
+            let position = wanderer.position(at: context.date,
+                                             bound: bound,
+                                             isMoving: isMoving,
+                                             holdsAtCentre: isEgg)
             let nudge = motionOffset(at: context.date)
 
             DigimonSpriteView(

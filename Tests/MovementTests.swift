@@ -327,4 +327,59 @@ final class MovementTests: XCTestCase {
                        "sixteen steps of walking is sixteen steps of walking, paused or not")
         XCTAssertEqual(interrupted.facing, uninterrupted.facing)
     }
+
+    // MARK: - US-217: an egg holds at centre
+
+    /// A Digitama's whole life, as the model sees it: held and never advanced. Ten minutes of it,
+    /// because "does not walk" has to mean over a span long enough for a walk to be obvious — a
+    /// single held call would pass even if `hold(at:)` moved the sprite a step.
+    func testAModelOnlyEverHeldNeverLeavesTheCentre() {
+        var egg = MovementModel(bound: wideBound, seed: 42, start: Clock.start)
+
+        for second in stride(from: 1.0, through: 600.0, by: 1.0) {
+            egg.hold(at: Clock.after(second))
+        }
+
+        XCTAssertEqual(egg.offset, 0, "ten minutes of holding is ten minutes of standing still")
+    }
+
+    /// Recentring is about POSITION and holding about TIME, so the two are checked apart: this one
+    /// says the sprite goes back to the middle, and says nothing about the clock.
+    func testRecentringPutsTheSpriteBackInTheMiddle() {
+        var model = MovementModel(bound: wideBound, seed: 42, start: Clock.start)
+        model.advance(to: Clock.after(2))
+        XCTAssertGreaterThan(abs(model.offset), 0, "the walk must actually have left centre first")
+
+        model.recentre()
+
+        XCTAssertEqual(model.offset, 0)
+    }
+
+    /// AC2 and AC4 together, through `SpriteWanderer` because that is the piece the view calls and
+    /// the only place "held AND recentred" is put together.
+    ///
+    /// The scenario is the rebirth: a Digimon dies out at the wall, the egg that replaces it must
+    /// not inherit that spot, and the Baby I that hatches must set off from the centre one ordinary
+    /// step at a time rather than lurching back across the floor.
+    @MainActor
+    func testAnEggHeldAtCentreDoesNotInheritThePreviousDigimonsPosition() {
+        let wanderer = SpriteWanderer(bound: wideBound, seed: 42, start: Clock.start)
+
+        let walked = wanderer.position(at: Clock.after(2), bound: wideBound, isMoving: true)
+        XCTAssertGreaterThan(abs(walked.offset), 0, "the Digimon before the egg must have moved")
+
+        let egg = wanderer.position(at: Clock.after(3), bound: wideBound,
+                                    isMoving: false, holdsAtCentre: true)
+        XCTAssertEqual(egg.offset, 0, "the egg sits where it was created, not where the last one fell")
+
+        let stillEgg = wanderer.position(at: Clock.after(600), bound: wideBound,
+                                         isMoving: false, holdsAtCentre: true)
+        XCTAssertEqual(stillEgg.offset, 0, "and stays there however long it is left unhatched")
+
+        // Hatching. One step of time is one step of travel: the incubation was held, not banked.
+        let hatched = wanderer.position(at: Clock.after(600 + MovementModel.step),
+                                        bound: wideBound, isMoving: true)
+        XCTAssertEqual(abs(hatched.offset), MovementModel.stepDistance, accuracy: 0.0001,
+                       "the newly hatched Digimon walks away from where the egg sat, with no jump")
+    }
 }

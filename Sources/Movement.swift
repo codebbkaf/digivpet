@@ -128,6 +128,20 @@ struct MovementModel {
         updatedAt = now
     }
 
+    /// Puts the Digimon back at centre without touching its clock.
+    ///
+    /// For when the sprite being drawn is no longer the one that walked here: a rebirth hands the
+    /// screen a Digitama where a Digimon has just died, and US-217's egg would otherwise sit
+    /// perfectly still at whatever spot its predecessor happened to fall on — off to one side, for
+    /// a reason nothing on screen can explain.
+    ///
+    /// Deliberately separate from `hold(at:)`: holding is about TIME and this is about POSITION.
+    /// A caller that wants both — the egg does — says both, and every other suspension keeps
+    /// resuming from where it stood.
+    mutating func recentre() {
+        offset = 0
+    }
+
     /// One stride, always in the direction the Digimon faces.
     ///
     /// RESTING: there isn't any. The Digimon walks every single step, wall to wall, forever. A
