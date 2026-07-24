@@ -2011,8 +2011,8 @@
         "Build green, tests pass. Verify in the simulator: a fresh save's egg hatches within ~5 minutes with no health data present, showing the ceremony"
       ],
       "priority": 109,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "hatchTarget is now an OR of three paths (energy >= the edge's minEnergy, now - stageEnteredAt >= maximumEggDuration = 5*60, stageMetrics[.healthSteps] >= stepsToHatch = 500), still pure with now injected. Verified on the 42mm Simulator: a fresh save with no health data was an egg at 2 min and hatched into Mokumon with the ceremony on the reopen at 5.5 min. Suite 2788 tests, 0 failures — 7 pre-existing fixtures that earned energy by walking 1,000-4,900 steps on an egg had to start above the egg or burn calories instead, since those step counts now hatch it."
     }
   ]
 }

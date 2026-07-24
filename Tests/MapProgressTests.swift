@@ -394,6 +394,15 @@ final class MapAccrualTests: XCTestCase {
     /// credits energy as usual and no counter is opened.
     func testWithNoMapSelectedNothingIsRecordedAndTheGameStillCreditsEnergy() async throws {
         walked(1_000)
+        // Started one rung above the egg: since US-222, 1,000 steps hatch a Digitama (500 is the
+        // step path), and a hatch resets `stageEnergy` — so an egg fixture would read 0 Strength
+        // here for a reason that has nothing to do with maps.
+        let store = try GameStore(url: storeURL)
+        let saved = try store.loadOrCreate(digitamaId: "agu_digitama", now: Fixture.morning)
+        saved.currentDigimonId = "botamon"
+        saved.stage = .babyI
+        try store.save()
+
         let model = makeModel()
         await model.start()
 

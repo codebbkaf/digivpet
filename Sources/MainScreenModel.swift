@@ -3119,7 +3119,8 @@ final class MainScreenModel: ObservableObject {
         #endif
     }
 
-    /// Hatches the egg into its linked Baby I form once total energy crosses the threshold.
+    /// Hatches the egg into its linked Baby I form once any of `EggHatcher`'s three paths opens —
+    /// total energy over the edge's threshold, five minutes on the clock, or 500 steps (US-222).
     ///
     /// A no-op unless the current Digimon is a Digitama that is ready to hatch. Moves the saved game
     /// onto the Baby I node and keeps `GameState.stage` in step with the graph — the two are a saved
@@ -3136,7 +3137,14 @@ final class MainScreenModel: ObservableObject {
         // something else calls this.
         guard state.isActive else { return }
         guard let node = graph.node(id: state.currentDigimonId),
-              let target = EggHatcher.hatchTarget(for: node, stageEnergy: state.stageEnergy),
+              let target = EggHatcher.hatchTarget(for: node,
+                                                  stageEnergy: state.stageEnergy,
+                                                  // US-222's two extra paths, both already on the
+                                                  // state this refresh has just settled: the stage
+                                                  // clock and the stage-scoped step total.
+                                                  stageEnteredAt: state.stageEnteredDate,
+                                                  stageMetrics: state.stageMetricTotals,
+                                                  now: now()),
               let baby = graph.node(id: target) else { return }
         advance(state, to: baby)
         // Stamps the moment age is counted from (US-200). Set here, in the one hatch-specific path,

@@ -52,19 +52,34 @@ private final class FixtureSleepFetcher: SleepSampleFetching, @unchecked Sendabl
 // MARK: - The hatch rule (pure)
 
 final class EggHatcherTests: XCTestCase {
+    /// The rule with an egg's age and step count spelled out, defaulting to a freshly laid, unwalked
+    /// egg — so an assertion that names only the energy is testing the energy path alone.
+    ///
+    /// `age` and `steps` are what US-222 added; both are handed in, and nothing here reads a real
+    /// clock, so five minutes of egg costs a test nothing.
+    private func target(_ node: EvolutionNode, energy: EnergyTotals,
+                        age: TimeInterval = 0, steps: Double? = nil) -> String? {
+        var metrics = MetricTotals.zero
+        // Left ABSENT rather than written as 0 by default: the un-credited case is the real one on
+        // a fresh save, and the rule has to read it as zero steps through the subscript.
+        if let steps { metrics[.healthSteps] = steps }
+        return EggHatcher.hatchTarget(for: node, stageEnergy: energy,
+                                      stageEnteredAt: Fixture.morning,
+                                      stageMetrics: metrics,
+                                      now: Fixture.morning.addingTimeInterval(age))
+    }
+
     /// THE AC: 49 total energy does not hatch and 50 does.
     func testFortyNineDoesNotHatchAndFiftyDoes() {
         let egg = Fixture.egg(threshold: 50, hatchesInto: "botamon")
 
         // 49 spread across the four types — hatching is gated on the TOTAL, not any one type.
-        XCTAssertNil(EggHatcher.hatchTarget(
-            for: egg, stageEnergy: EnergyTotals(strength: 13, vitality: 12, spirit: 12, stamina: 12)))
+        XCTAssertNil(target(egg, energy: EnergyTotals(strength: 13, vitality: 12, spirit: 12, stamina: 12)))
         XCTAssertEqual(EnergyTotals(strength: 13, vitality: 12, spirit: 12, stamina: 12).total, 49)
 
         // 50 exactly — the boundary hatches.
-        XCTAssertEqual(EggHatcher.hatchTarget(
-            for: egg, stageEnergy: EnergyTotals(strength: 13, vitality: 12, spirit: 12, stamina: 13)),
-            "botamon")
+        XCTAssertEqual(target(egg, energy: EnergyTotals(strength: 13, vitality: 12, spirit: 12, stamina: 13)),
+                       "botamon")
         XCTAssertEqual(EnergyTotals(strength: 13, vitality: 12, spirit: 12, stamina: 13).total, 50)
     }
 
@@ -72,8 +87,8 @@ final class EggHatcherTests: XCTestCase {
     /// different edge hatches on its own number.
     func testTheThresholdComesFromTheHatchEdge() {
         let egg = Fixture.egg(threshold: 30)
-        XCTAssertNil(EggHatcher.hatchTarget(for: egg, stageEnergy: EnergyTotals(strength: 29)))
-        XCTAssertEqual(EggHatcher.hatchTarget(for: egg, stageEnergy: EnergyTotals(strength: 30)), "baby")
+        XCTAssertNil(target(egg, energy: EnergyTotals(strength: 29)))
+        XCTAssertEqual(target(egg, energy: EnergyTotals(strength: 30)), "baby")
     }
 
     /// Only a Digitama hatches. A Baby I with 50 energy is not an egg, and evolving it is US-019's
@@ -83,14 +98,19 @@ final class EggHatcherTests: XCTestCase {
             id: "botamon", displayName: "Botamon", stage: .babyI, spriteFile: "Botamon",
             evolutions: [EvolutionEdge(to: "koromon", minEnergy: 50, maxCareMistakes: 4, isDefault: true)]
         )
-        XCTAssertNil(EggHatcher.hatchTarget(for: baby, stageEnergy: EnergyTotals(strength: 99)))
+        XCTAssertNil(target(baby, energy: EnergyTotals(strength: 99)))
+        // US-222: and not on either of the new paths either. A Baby I sitting a week in its stage
+        // with 100,000 steps behind it must NOT take its `isDefault` edge on the clock — that would
+        // turn the hatch shortcut into a free evolution for the whole roster.
+        XCTAssertNil(target(baby, energy: .zero, age: 7 * 24 * 60 * 60, steps: 100_000))
     }
 
     /// A terminal Digitama with no hatch edge cannot hatch, rather than crashing on an empty edge
-    /// list.
+    /// list — on any of the three paths.
     func testADigitamaWithNoEdgeDoesNotHatch() {
         let egg = EvolutionNode(id: "egg", displayName: "Egg", stage: .digitama, spriteFile: "Agu_Digitama")
-        XCTAssertNil(EggHatcher.hatchTarget(for: egg, stageEnergy: EnergyTotals(strength: 999)))
+        XCTAssertNil(target(egg, energy: EnergyTotals(strength: 999)))
+        XCTAssertNil(target(egg, energy: .zero, age: EggHatcher.maximumEggDuration, steps: 5_000))
     }
 
     /// AC3, against the SHIPPED graph: each seed egg hatches into the Baby I its edge names.
@@ -100,10 +120,70 @@ final class EggHatcherTests: XCTestCase {
                                 ("gabu_digitama", "punimon"),
                                 ("pal_digitama", "yuramon")] {
             let egg = try XCTUnwrap(graph.node(id: eggId))
-            let target = EggHatcher.hatchTarget(for: egg, stageEnergy: EnergyTotals(strength: 50))
-            XCTAssertEqual(target, babyId)
+            XCTAssertEqual(target(egg, energy: EnergyTotals(strength: 50)), babyId)
             XCTAssertEqual(graph.node(id: babyId)?.stage, .babyI, "\(babyId) is the Baby I form")
         }
+    }
+
+    // MARK: US-222's two extra paths
+
+    /// THE AC: an egg with no energy and no steps hatches at five minutes on the nose, and does not
+    /// one second earlier. The comparison is `>=`, like the energy one.
+    func testAnEggHatchesOnTheClockAtFiveMinutesAndNotBefore() {
+        let egg = Fixture.egg(threshold: 50, hatchesInto: "botamon")
+        XCTAssertEqual(EggHatcher.maximumEggDuration, 5 * 60, "five minutes")
+
+        XCTAssertNil(target(egg, energy: .zero, age: EggHatcher.maximumEggDuration - 1),
+                     "4m59s is still an egg")
+        XCTAssertEqual(target(egg, energy: .zero, age: EggHatcher.maximumEggDuration), "botamon",
+                       "the boundary hatches")
+        // And an app closed on an egg and reopened much later finds it hatched: the rule is
+        // wall-clock against `stageEnteredDate`, not a counter that had to be running.
+        XCTAssertEqual(target(egg, energy: .zero, age: 6 * 60), "botamon")
+    }
+
+    /// THE AC: an egg with no energy hatches on its 500th step at the very instant it was laid —
+    /// the step path does not need the clock, and the clock path does not need the steps.
+    func testAnEggHatchesOnFiveHundredStepsWithNoTimePassed() {
+        let egg = Fixture.egg(threshold: 50, hatchesInto: "botamon")
+        XCTAssertEqual(EggHatcher.stepsToHatch, 500)
+
+        XCTAssertNil(target(egg, energy: .zero, age: 0, steps: 499), "499 steps is still an egg")
+        XCTAssertEqual(target(egg, energy: .zero, age: 0, steps: 500), "botamon",
+                       "the 500th step hatches it, with now == stageEnteredDate")
+    }
+
+    /// A fresh save has never credited a step metric at all, and that absent total must read as 0
+    /// rather than trip the gate — the subscript's flattening is exactly what is wanted here, unlike
+    /// US-180's `atMost` conditions where unknown must not satisfy.
+    func testAnUncreditedStepTotalIsNotAHatch() {
+        let egg = Fixture.egg(threshold: 50, hatchesInto: "botamon")
+        XCTAssertEqual(MetricTotals.zero.known(.healthSteps), nil, "nothing was ever credited")
+        XCTAssertNil(target(egg, energy: .zero, age: 0, steps: nil))
+    }
+
+    /// The three paths are an OR, not an AND: none of them needs either of the others, and an egg
+    /// that meets all three still hatches once.
+    func testTheThreePathsAreIndependent() {
+        let egg = Fixture.egg(threshold: 50, hatchesInto: "botamon")
+        XCTAssertEqual(target(egg, energy: EnergyTotals(strength: 50), age: 0, steps: 0), "botamon",
+                       "energy alone")
+        XCTAssertEqual(target(egg, energy: .zero, age: 5 * 60, steps: 0), "botamon", "time alone")
+        XCTAssertEqual(target(egg, energy: .zero, age: 0, steps: 500), "botamon", "steps alone")
+        XCTAssertEqual(target(egg, energy: EnergyTotals(strength: 50), age: 5 * 60, steps: 500),
+                       "botamon", "all three at once is still one hatch into the same Baby I")
+        XCTAssertNil(target(egg, energy: EnergyTotals(strength: 49), age: 5 * 60 - 1, steps: 499),
+                     "just short on every path is no hatch at all")
+    }
+
+    /// The hatch shortcut must NOT have leaked into the evolution gate: a Digitama still has no
+    /// minimum stage duration, so `EvolutionEngine` cannot take the egg's `isDefault` edge on the
+    /// clock behind `EggHatcher`'s back. US-222 adds a hatch path, not an evolution one.
+    func testTheDigitamaEvolutionGateStillNeverOpens() {
+        XCTAssertNil(EvolutionTiming.minimumStageDuration(for: .digitama))
+        XCTAssertFalse(EvolutionTiming.hasClearedTimeGate(
+            stage: .digitama, enteredAt: Fixture.morning,
+            now: Fixture.morning.addingTimeInterval(EggHatcher.maximumEggDuration * 100)))
     }
 }
 
@@ -342,13 +422,104 @@ final class EggHatchingTests: XCTestCase {
     }
 
     /// AC2's other half at the seam: 49 energy is NOT enough, so the egg stays an egg.
-    func testFortyNineEnergyDoesNotHatch() async throws {
-        walk(4_900) // 49
+    ///
+    /// Walked as 499 steps rather than the 4,900 this test used before US-222 — 4,900 steps now
+    /// hatches the egg on the STEP path long before it has 49 energy (see
+    /// `testTheStepPathHatchesAWalkedEggBeforeItHasFiftyEnergy`), so the only way to hold an egg
+    /// short of every path through the real refresh is to walk under 500. The 49-vs-50 energy seam
+    /// itself is pinned in `EggHatcherTests`, where the other two paths can be shut individually.
+    func testShortOfEveryHatchPathTheEggStaysAnEgg() async throws {
+        walk(499) // 4 energy, and 499 steps — one short of US-222's step path
         let model = makeModel()
         await model.start()
 
         XCTAssertEqual(model.state?.currentDigimonId, "agu_digitama", "still an egg")
         XCTAssertEqual(model.state?.stage, .digitama)
+        XCTAssertEqual(model.state?.stageMetricTotals[.healthSteps], 499,
+                       "the steps were credited to the egg's stage — they just did not reach 500")
+    }
+
+    /// US-222's step path through the real refresh: 4,900 steps is only 49 energy, one short of the
+    /// hatch threshold this test's ancestor pinned, and the egg hatches anyway because 4,900 steps
+    /// is nine times the 500 the step path asks for.
+    func testTheStepPathHatchesAWalkedEggBeforeItHasFiftyEnergy() async throws {
+        walk(4_900) // 49 energy — NOT enough on the energy path
+        let model = makeModel()
+        await model.start()
+
+        let state = try XCTUnwrap(model.state)
+        XCTAssertEqual(state.stage, .babyI, "hatched on steps, not on energy")
+        XCTAssertEqual(state.currentDigimonId, "botamon")
+        XCTAssertEqual(state.hatchedDate, Fixture.morning, "US-200's age counter is stamped either way")
+        XCTAssertEqual(model.lifetimeEnergy.strength, 49, "and it really was one short on energy")
+    }
+
+    /// US-222's whole point, through the real refresh: a save with NO health data at all — the
+    /// Simulator, a watch worn for the first time — hatches on the clock alone, five minutes after
+    /// the egg appeared. The clock is injected, so this test waits for nothing.
+    func testAnEggWithNoHealthDataAtAllHatchesAfterFiveMinutes() async throws {
+        // No `walk(_:)` at all: zero steps, zero energy, nothing to earn 50 with.
+        var currentNow = Fixture.morning
+        let model = MainScreenModel(
+            makeStore: { [storeURL] in try GameStore(url: storeURL) },
+            graph: .bundled,
+            energySource: HealthEnergySource(
+                todayReader: TodayHealthReader(fetcher: steps, calendar: Fixture.losAngeles),
+                sleepReader: LastNightSleepReader(fetcher: FixtureSleepFetcher(),
+                                                  calendar: Fixture.losAngeles)
+            ),
+            calendar: Fixture.losAngeles,
+            now: { currentNow },
+            chooseStartingDigitama: { $0.first }
+        )
+        await model.start()
+        XCTAssertEqual(model.state?.stage, .digitama, "a new game opens on the egg")
+
+        // 4m59s: still an egg.
+        currentNow = Fixture.morning.addingTimeInterval(EggHatcher.maximumEggDuration - 1)
+        await model.refresh()
+        XCTAssertEqual(model.state?.currentDigimonId, "agu_digitama", "not yet")
+
+        // Five minutes: hatched, and stamped with the instant it hatched at rather than the one it
+        // was laid at.
+        currentNow = Fixture.morning.addingTimeInterval(EggHatcher.maximumEggDuration)
+        await model.refresh()
+        let state = try XCTUnwrap(model.state)
+        XCTAssertEqual(state.currentDigimonId, "botamon", "hatched on the clock with no health data")
+        XCTAssertEqual(state.stage, .babyI)
+        XCTAssertEqual(state.hatchedDate, currentNow)
+        XCTAssertEqual(state.stageEnteredDate, currentNow, "the Baby I's own stage starts now")
+    }
+
+    /// A frozen egg does not age toward the five-minute hatch. `Freeze.shiftTimeline` moves
+    /// `stageEnteredDate` forward by exactly the span spent in the box, which US-222 makes
+    /// load-bearing in a way it was not before: without it, an egg put away for an hour would hatch
+    /// the instant it was taken out.
+    func testAFrozenEggDoesNotAgeTowardTheHatch() throws {
+        let egg = try XCTUnwrap(EvolutionGraph.bundled.node(id: "agu_digitama"))
+        let state = GameState(currentDigimonId: "agu_digitama", now: Fixture.morning)
+
+        // Away for an hour, twelve times the whole egg stage.
+        state.freeze(at: Fixture.morning.addingTimeInterval(60))
+        let outAgain = Fixture.morning.addingTimeInterval(60 + 60 * 60)
+        state.thaw(at: outAgain)
+
+        // One minute of egg was served before the freeze, so four minutes are left — and the
+        // hour in the box bought none of them.
+        XCTAssertEqual(state.stageEnteredDate, Fixture.morning.addingTimeInterval(60 * 60))
+        XCTAssertNil(EggHatcher.hatchTarget(for: egg, stageEnergy: state.stageEnergy,
+                                            stageEnteredAt: state.stageEnteredDate,
+                                            stageMetrics: state.stageMetricTotals,
+                                            now: outAgain),
+                     "an hour in the box is not five minutes of egg")
+
+        // Four more minutes of being OUT, and it hatches — the freeze delayed the hatch, it did not
+        // cancel it.
+        XCTAssertEqual(EggHatcher.hatchTarget(for: egg, stageEnergy: state.stageEnergy,
+                                              stageEnteredAt: state.stageEnteredDate,
+                                              stageMetrics: state.stageMetricTotals,
+                                              now: outAgain.addingTimeInterval(4 * 60)),
+                       "botamon")
     }
 
     /// Hatching starts the new stage fresh (stageEnergy zero, a new stageEnteredDate) while the
@@ -394,7 +565,7 @@ final class EggHatchingTests: XCTestCase {
     /// An egg that has not hatched records only itself in the Dex, not the Baby I it has yet to
     /// become — the control for the test above.
     func testAnUnhatchedEggDoesNotRecordItsBabyForm() async throws {
-        walk(4_900)
+        walk(499) // under US-222's step path as well as under the energy one
         let model = makeModel()
         await model.start()
 
@@ -500,7 +671,7 @@ final class EggHatchingTests: XCTestCase {
     /// An egg that has NOT hatched has no age yet: `hatchedDate` stays nil and `ageYears` reads 0,
     /// so the strip never shows an egg a stale year.
     func testAnUnhatchedEggHasNoHatchDateAndReadsZeroYears() async throws {
-        walk(4_900) // 49 — not enough to hatch
+        walk(499) // under every hatch path — see `testShortOfEveryHatchPathTheEggStaysAnEgg`
         let model = makeModel()
         await model.start()
 

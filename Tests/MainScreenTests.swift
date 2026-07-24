@@ -94,6 +94,21 @@ final class MainScreenModelTests: XCTestCase {
         ]
     }
 
+    /// Seeds the save with an already-hatched Baby I, so that a test about ENERGY is not also a
+    /// test about hatching.
+    ///
+    /// Since US-222 an egg hatches at 500 steps — well under the 1,000 the refresh tests walk — and
+    /// a hatch resets `stageEnergy` to zero, so an egg fixture would read 0 however much was
+    /// credited to it. Starting one rung above the egg keeps each assertion about the thing it
+    /// names. Botamon's own evolution is 24 hours away, so nothing else moves either.
+    private func seedHatchedBabyI() throws {
+        let store = try GameStore(url: storeURL)
+        let saved = try store.loadOrCreate(digitamaId: "agu_digitama", now: Fixture.morning)
+        saved.currentDigimonId = "botamon"
+        saved.stage = .babyI
+        try store.save()
+    }
+
     // MARK: - What the screen shows
 
     /// THE AC: the stage name and the Digimon's display name are both available to draw, and they
@@ -241,6 +256,7 @@ final class MainScreenModelTests: XCTestCase {
     /// the energy it finds. The view calls exactly this when scenePhase becomes .active.
     func testRefreshingCreditsTheEnergyInTodaysHealthData() async throws {
         walk(1_000)
+        try seedHatchedBabyI()
         let model = makeModel()
         await model.start()
 
@@ -254,6 +270,7 @@ final class MainScreenModelTests: XCTestCase {
     /// safe to wire to every activation.
     func testRefreshingAgainWithNoNewActivityCreditsNothingMore() async throws {
         walk(1_000)
+        try seedHatchedBabyI()
         let model = makeModel()
         await model.start()
 
@@ -267,6 +284,7 @@ final class MainScreenModelTests: XCTestCase {
     /// doing, not a model that stopped reading after the first time.
     func testRefreshingAfterMoreActivityCreditsOnlyTheDifference() async throws {
         walk(1_000)
+        try seedHatchedBabyI()
         let model = makeModel()
         await model.start()
         XCTAssertEqual(model.state?.stageEnergy.strength, 10)
@@ -282,12 +300,13 @@ final class MainScreenModelTests: XCTestCase {
     /// out of the first context's memory.
     func testCreditedEnergyIsSaved() async throws {
         walk(1_000)
+        try seedHatchedBabyI()
         let model = makeModel()
         await model.start()
 
         let reopened = try GameStore(url: storeURL)
         let saved = try reopened.loadOrCreate(digitamaId: "unused", now: Fixture.morning)
-        XCTAssertEqual(saved.currentDigimonId, "agu_digitama", "the existing save, not a new one")
+        XCTAssertEqual(saved.currentDigimonId, "botamon", "the existing save, not a new one")
         XCTAssertEqual(saved.stageEnergy.strength, 10)
     }
 
@@ -321,6 +340,7 @@ final class MainScreenModelTests: XCTestCase {
     /// day the ledger keys on would be whenever the suite happened to run.
     func testTheRefreshReadsAgainstTheInjectedClock() async throws {
         walk(1_000)
+        try seedHatchedBabyI()
         var now = Fixture.morning
         let model = makeModel(now: { now })
         await model.start()

@@ -21,6 +21,11 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **A FRESH SAVE IS AN EGG, AND SINCE US-222 AN EGG DIES OF OLD AGE IN 5 MINUTES OR 500 STEPS.**
+  Any test that walks a new save more than 499 steps hatches it, and a hatch zeroes `stageEnergy` —
+  so an energy assertion silently reads 0. Seed `currentDigimonId = "botamon"` / `stage = .babyI`
+  into the store before `start()` when the test is about accrual, or earn the points off calories /
+  sleep / exercise when the test really is about the egg.
 - **THE SPRITE SCALE IS A FLOORED LADDER, SO A FRACTION ONLY DOES ANYTHING IF IT CROSSES A RUNG
   (US-221).** `SpriteScale.fitting` floors `height / 16`, so `f * band` draws the same pixels as
   `band` whenever both land in the same 16pt bracket — and a band that is an exact MULTIPLE of 16 is
@@ -7395,4 +7400,68 @@ The thirty, `Perfect -> Ultimate`:
   `launch` put the system modal back and ate the shot, `-noNotificationPrompt` notwithstanding. On
   46mm: erase, then install ONCE, then take the shot that matters first and the optional variants
   after.
+---
+
+## 2026-07-24 - US-222: The egg hatches after 5 minutes or 500 steps
+- `EggHatcher.hatchTarget` is now an **OR of three paths**, still a pure function and still reading
+  the energy threshold out of the graph rather than duplicating the 50:
+      earned  stageEnergy.total >= edge.minEnergy          (unchanged, US-018)
+      waited  now - stageEnteredAt >= maximumEggDuration    (new, 5 * 60 s)
+      walked  stageMetrics[.healthSteps] >= stepsToHatch    (new, 500)
+  Both new constants sit together at the top of the enum with the `EvolutionTiming` reasoning
+  ("retuning the pacing is editing these numbers"). Every comparison is `>=`, so five minutes on the
+  nose and the 500th step both hatch. Steps go through the `MetricTotals` SUBSCRIPT, not `known(_:)`
+  — an un-credited total is 0 here, which is the right answer for a `>=` gate (the opposite of
+  US-180's `atMost` conditions, and the doc comment says so).
+- The signature gained `stageEnteredAt:`, `stageMetrics:` and `now:` with **no defaults**, on
+  purpose: a default that quietly shut off a time path is exactly the bug this rule cannot afford.
+  The one production caller (`MainScreenModel.hatchIfReady`) already held all three.
+- Nothing else about the hatch moved: dead and boxed records are still refused before it, the
+  illness pause is still bypassed, `state.hatchedDate` is still stamped whichever path fired, and
+  the hatch still goes through the graph's `isDefault` edge with `EvolutionCeremonyView` playing.
+  `EvolutionTiming.minimumStageDuration(for: .digitama)` is still nil, pinned by a new test — this
+  is a hatch path, not a new evolution.
+- Files: Sources/EggHatcher.swift, Sources/MainScreenModel.swift, Tests/EggHatchingTests.swift
+  (+11 tests), Tests/ComplicationTests.swift, Tests/MainScreenTests.swift, Tests/MapProgressTests.swift,
+  Tests/DigitamaSweepTests.swift, Tests/DigitamaSweepLToZTests.swift, prd.json, progress.txt.
+- Verified: build green; FULL suite **2788 tests, 0 failures** (+8 net).
+- **SIMULATOR, 42mm, fresh install (uninstall first, so the save is new) with NO health data:**
+  10:28 launch -> `Vorvo Digitama - Digitama`, STR 0, PWR 1. Terminate + relaunch at ~2 min ->
+  STILL the egg (the clock path had not opened). Terminate + relaunch at ~5.5 min -> the ceremony
+  card `Mokumon` on black, then `Mokumon - Baby I` on the main screen. Screenshots in /tmp/us222
+  (not committed): a_fresh_egg, b_two_minutes, c_ceremony, e_hatched.
+- **The hatch needs a refresh to be noticed, and that is by design, not a gap.** `hatchIfReady` runs
+  inside `refresh()`, which fires from `start()` and from scenePhase `.active` — so an app left open
+  and untouched for five minutes does not pop the egg mid-stare; the next open (or a
+  `BackgroundRefresh`) does. That is exactly the criterion's wording: "an app closed on an egg and
+  reopened six minutes later finds a hatched Baby I".
+
+**Learnings for future iterations:**
+- **A RULE THAT MAKES A FRESH SAVE PROGRESS FASTER BREAKS EVERY FIXTURE THAT USED THAT PROGRESS AS
+  A UNIT.** Seven suites earned energy by walking 1,000-4,900 steps on a brand-new save, which is an
+  EGG, and 500 steps now hatches it — and a hatch zeroes `stageEnergy`, so each of those tests read
+  0 where it wanted 10/25/40 and looked like a crediting regression. The build was green and only
+  the run found them. Two repairs, both keeping each test about the thing it names: seed the store
+  with `currentDigimonId = "botamon"` / `stage = .babyI` before `start()` where the test is about
+  energy accrual (MainScreenTests' five, MapProgressTests' one), or earn the energy WITHOUT walking
+  where the test is about the egg's own gauge (ComplicationTests: 800 active kcal at 20/point is the
+  same 40 points as 4,000 steps, and calories do not hatch anything). Grep for `walk(`/`walked(` in
+  Tests before changing anything an egg is subject to.
+- **THE ONLY WAY TO GIVE AN EGG ENERGY IN A TEST IS NOW CALORIES, SLEEP OR EXERCISE.** Steps above
+  499 end the egg stage, so any future test needing an egg with energy on the board must use one of
+  the other three metrics — `EnergyRates`: 20 kcal/Vitality, 15 min asleep/Spirit, 2 exercise
+  min/Stamina. All four types share the egg's total gate (`EnergyGoal.target` is nil for a Digitama
+  and `fraction(of:)` falls back to `totalGate`), so the gauge arithmetic is identical whichever one
+  is used.
+- **A NEW PARAMETER ON A PURE RULE IS WORTH A PRIVATE TEST HELPER WITH DEFAULTS, NOT DEFAULTS ON THE
+  RULE.** `EggHatcher.hatchTarget` takes all five arguments outright, so nothing can call it and
+  silently miss a path; `EggHatcherTests.target(_:energy:age:steps:)` supplies "freshly laid,
+  unwalked" defaults so the older assertions still read as one line about energy. Same shape works
+  for any engine function that grows a clock.
+- **`simctl` CANNOT ADVANCE THE SIMULATOR'S CLOCK, SO A FIVE-MINUTE RULE COSTS FIVE REAL MINUTES
+  ONCE.** Do it in a single backgrounded shell script that installs, launches, sleeps and shoots in
+  order (foreground `sleep` is blocked in this harness), and take the terminate + relaunch AT the
+  boundary — `refresh()` is what evaluates the hatch, so a screenshot without a relaunch would show
+  a stale egg and read as a failure. Three seconds after launch caught the ceremony card; fifteen
+  caught the settled main screen.
 ---

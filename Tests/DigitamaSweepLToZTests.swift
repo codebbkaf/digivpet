@@ -164,10 +164,14 @@ final class DigitamaSweepLToZTests: XCTestCase {
 
     /// Every authored hatch, through the real engine rather than by reading the edge back.
     func testEachAuthoredEggHatchesIntoTheBabyIItNames() throws {
+        // Freshly laid and unwalked, so US-222's clock and step paths are both shut and the hatch
+        // asserted here is the ENERGY one.
+        let laid = Date(timeIntervalSince1970: 1_700_000_000)
         for (eggId, babyId) in authoredHatches {
             let egg = try XCTUnwrap(graph.node(id: eggId), "no node \(eggId)")
             XCTAssertEqual(egg.stage, .digitama)
-            XCTAssertEqual(EggHatcher.hatchTarget(for: egg, stageEnergy: EnergyTotals(strength: 50)),
+            XCTAssertEqual(EggHatcher.hatchTarget(for: egg, stageEnergy: EnergyTotals(strength: 50),
+                                                  stageEnteredAt: laid, stageMetrics: .zero, now: laid),
                            babyId, "\(eggId) hatches into the wrong Digimon")
             XCTAssertEqual(graph.node(id: babyId)?.stage, .babyI, "\(babyId) is not a Baby I")
         }

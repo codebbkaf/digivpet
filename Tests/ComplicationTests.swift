@@ -87,6 +87,16 @@ final class ComplicationTests: XCTestCase {
         ]
     }
 
+    /// Active kilocalories, for a test that wants energy on the board WITHOUT walking — since
+    /// US-222, 500 steps hatch an egg, so steps are no longer a way to fill an egg's bars.
+    private func burn(_ kilocalories: Double) {
+        steps.samples[.activeEnergy] = [
+            HealthSample(start: Fixture.date("2026-07-17 07:00"),
+                         end: Fixture.date("2026-07-17 07:30"),
+                         value: kilocalories)
+        ]
+    }
+
     // MARK: - What the complication is given to draw
 
     /// THE AC ("renders the current Digimon's 16x16 idle sprite"): the snapshot names the SAVED
@@ -132,22 +142,28 @@ final class ComplicationTests: XCTestCase {
     /// and its progress toward the current node's gate reach the snapshot.
     func testTheSnapshotCarriesDominantEnergyProgress() async throws {
         let model = makeModel()
-        // 4000 steps at 100 steps/point is 40 Strength, against the egg's 50-point hatch gate. The
-        // egg's bars aim at their SHARE of the total gate (US-017), so this is a real fraction and
-        // not a 0 or a 1 that any arithmetic would produce.
-        walk(4000)
+        // 800 active kcal at 20 kcal/point is 40 Vitality, against the egg's 50-point hatch gate.
+        // The egg's bars aim at their SHARE of the total gate (US-017), so this is a real fraction
+        // and not a 0 or a 1 that any arithmetic would produce.
+        //
+        // Earned by BURNING rather than by the 4,000 steps this test used before US-222: 4,000
+        // steps now hatches the egg on the step path (500) long before it reaches 40 of anything,
+        // and a hatched Digimon has zero stage energy and so no dominant type at all. Calories buy
+        // the same 40 points with the egg still in one piece.
+        burn(800)
         await model.start()
 
         let snapshot = try XCTUnwrap(model.complicationSnapshot)
+        XCTAssertEqual(model.presentation?.stage, .digitama, "still the egg whose gate this measures")
         // The short name and not the display name: the face labels the gauge with where the energy
         // came from, and spells the type out in the accessibility label beside it (US-085).
-        XCTAssertEqual(snapshot.dominantEnergySymbol, "STEP")
-        XCTAssertEqual(snapshot.dominantEnergySymbol, EnergyType.strength.shortName)
-        XCTAssertEqual(snapshot.dominantEnergyName, "Strength")
+        XCTAssertEqual(snapshot.dominantEnergySymbol, "KCAL")
+        XCTAssertEqual(snapshot.dominantEnergySymbol, EnergyType.vitality.shortName)
+        XCTAssertEqual(snapshot.dominantEnergyName, "Vitality")
         XCTAssertEqual(snapshot.dominantEnergyEarned, 40)
 
         let progress = try XCTUnwrap(model.energyProgress)
-        let goal = try XCTUnwrap(progress.goals.first { $0.type == .strength })
+        let goal = try XCTUnwrap(progress.goals.first { $0.type == .vitality })
         XCTAssertEqual(snapshot.dominantEnergyFraction, progress.fraction(of: goal), accuracy: 0.0001)
         XCTAssertGreaterThan(snapshot.dominantEnergyFraction, 0)
         XCTAssertLessThan(snapshot.dominantEnergyFraction, 1)
