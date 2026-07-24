@@ -31,11 +31,15 @@ final class MainScreenLayoutTests: XCTestCase {
         XCTAssertEqual(SpriteScale.fitting(SpriteScale.maximum * 16), SpriteScale.maximum)
     }
 
-    /// Below the floor the sprite stops being readable as a Digimon, so it stops shrinking and
-    /// overflows visibly instead — a smudge that fits would look fine and be wrong.
+    /// Below the floor the sprite stops shrinking and overflows visibly instead — a smudge that fits
+    /// would look fine and be wrong.
+    ///
+    /// The heights are under `minimum * 16` rather than the old 0 and 20: US-221 drops the floor to 1
+    /// and 20pt is now above it, so asserting on 20 would pass while testing nothing.
     func testTheScaleIsFlooredRatherThanShrinkingToNothing() {
         XCTAssertEqual(SpriteScale.fitting(0), SpriteScale.minimum)
-        XCTAssertEqual(SpriteScale.fitting(20), SpriteScale.minimum)
+        XCTAssertEqual(SpriteScale.fitting(SpriteScale.minimum * 16 - 0.1), SpriteScale.minimum)
+        XCTAssertEqual(SpriteScale.fitting(-40), SpriteScale.minimum)
     }
 
     /// US-099 AC2: the light button costs the screen nothing.
@@ -98,6 +102,11 @@ final class MainScreenLayoutTests: XCTestCase {
         //
         // The bands this story draws inside them, floor(row * 0.8), measured to the point:
         //   41mm  63.5 -> 50.0   42mm  66.5 -> 53.0   46mm  76.0 -> 60.0
+        //
+        // These are the scale the BAND alone allows. Since US-221 the call site hands `fitting` only
+        // `SpriteScale.sizeFraction` of that band, so what is actually drawn is one step smaller on
+        // all three — see `testTheSpriteIsDrawnAtAFractionOfTheBandItStandsIn`. Kept as the band's
+        // own capacity, because that is what a font point eats into.
         XCTAssertEqual(SpriteScale.fitting(50.0), 3, "41mm band measured for US-219")
         XCTAssertEqual(SpriteScale.fitting(53.0), 3, "42mm band measured for US-219")
         XCTAssertEqual(SpriteScale.fitting(60.0), 3, "46mm band measured for US-219")
@@ -158,14 +167,75 @@ final class MainScreenLayoutTests: XCTestCase {
     /// The sprite still fits the BAND it is drawn in, sick or healthy — the band is what
     /// `SpriteScale.fitting` is now asked about, and an overflow does not clip, it lands on the rows
     /// above and below.
+    ///
+    /// The arithmetic here is the shipped call site verbatim, `sizeFraction` included (US-221), so
+    /// this holds against what is drawn rather than against what would be drawn without the fraction.
     func testTheSpriteFitsTheShortenedBandAtBothMeasuredRows() {
         for row in [63.5, 66.5, 76.0] as [CGFloat] {
             let band = MainScreenLayout.playAreaHeight(in: row)
             for isSick in [false, true] {
                 let offered = SickBadgeLayout.spriteHeight(in: band, isSick: isSick)
+                    * SpriteScale.sizeFraction
                 let side = SpriteScale.fitting(offered) * CGFloat(SpriteSheet.frameSize)
                 XCTAssertLessThanOrEqual(side, band, "row \(row), sick \(isSick) overflowed the band")
             }
+        }
+    }
+
+    /// US-221: the Digimon itself is drawn at a fraction of the band it stands in.
+    ///
+    /// The fraction is pinned, and so is the ladder it lands on at each measured screen — a smaller
+    /// Digimon is a screenshot (progress.txt), but the arithmetic that decides the size is not, and
+    /// this is where it stops drifting.
+    func testTheSpriteIsDrawnAtAFractionOfTheBandItStandsIn() {
+        XCTAssertEqual(SpriteScale.sizeFraction, 0.75)
+
+        // Two fractions, not one, because they answer different complaints: US-219's shortens the
+        // BAND (the map and the poop pile shrink with it), this one only shrinks the Digimon. They
+        // are deliberately NOT equal, and neither is derived from the other.
+        XCTAssertNotEqual(SpriteScale.sizeFraction, MainScreenLayout.playAreaHeightFraction)
+
+        // The floor comes down with it (US-221). It does not bind at any measured band — every
+        // screen lands on 2 — so this is headroom for a band that gets shorter later, not a number
+        // anything on screen depends on today.
+        XCTAssertEqual(SpriteScale.minimum, 1)
+
+        // The bands measured for US-219 (progress.txt) through the shipped call site. Every screen
+        // drew scale 3 before this story; RE-MEASURED on the Simulator for US-221 by the sprite's
+        // pixel quantisation (screenshot px per sprite px at @2x = 2 x scale) — see progress.txt.
+        //   41mm  band 50 -> 37.50 -> 2      42mm  band 53 -> 39.75 -> 2      46mm  band 60 -> 45.0 -> 2
+        for band in [50.0, 53.0, 60.0] as [CGFloat] {
+            XCTAssertEqual(SpriteScale.fitting(band * SpriteScale.sizeFraction), 2, "band \(band)")
+            // Stated as a step rather than as a number, so a future band change shows up here as
+            // "the Digimon stopped shrinking" rather than as an opaque constant that moved.
+            XCTAssertEqual(SpriteScale.fitting(band)
+                               - SpriteScale.fitting(band * SpriteScale.sizeFraction),
+                           1, "band \(band) did not step down")
+        }
+
+        // **Why not the 0.8 US-221 proposed.** It was predicted against slot numbers that were stale
+        // by half; against the real 60pt band at 46mm, 0.8 is exactly 48.0 — exactly the bottom of
+        // scale 3 — so that screen alone would have kept its old size. Measured, not deduced: a 0.8
+        // build drew 46mm at 6 screenshot px per sprite px (scale 3, unchanged) while 42mm went to 4.
+        XCTAssertEqual(SpriteScale.fitting(60.0 * 0.8), 3, "the knife-edge 0.8 sits on")
+
+        // The whole window that steps all three down together, so the next person to tune this can
+        // see how much room there is either side rather than guessing.
+        for fraction in stride(from: 0.64, to: 0.80, by: 0.01) {
+            for band in [50.0, 53.0, 60.0] as [CGFloat] {
+                XCTAssertEqual(SpriteScale.fitting(band * CGFloat(fraction)), 2,
+                               "fraction \(fraction), band \(band)")
+            }
+        }
+        XCTAssertEqual(SpriteScale.fitting(50.0 * 0.63), 1, "just under the window, 41mm undershoots")
+    }
+
+    /// The fraction can only ever shrink the Digimon, never grow it, at any height at all.
+    func testTheSizeFractionNeverDrawsALargerSprite() {
+        for band in stride(from: 0.0, through: 300.0, by: 0.5) {
+            let plain = SpriteScale.fitting(CGFloat(band))
+            let scaled = SpriteScale.fitting(CGFloat(band) * SpriteScale.sizeFraction)
+            XCTAssertLessThanOrEqual(scaled, plain, "band \(band) drew larger with the fraction")
         }
     }
 

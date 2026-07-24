@@ -592,9 +592,15 @@ struct ContentView: View {
                         // Sized against the BAND, not the row: the sprite is drawn with `.offset`
                         // and so overflows rather than clips, and a Digimon sized to the full row
                         // would stand out of the top and bottom of the room it is meant to be in.
+                        //
+                        // And against only `SpriteScale.sizeFraction` of that band since US-221 —
+                        // the fraction goes on the height HANDED to `fitting`, so the Digimon gets
+                        // smaller while the band it walks in, and everything anchored to that band,
+                        // stays exactly where US-219 put it.
                         scale: SpriteScale.fitting(
                             SickBadgeLayout.spriteHeight(in: band,
                                                          isSick: model.isSick)
+                                * SpriteScale.sizeFraction
                         ),
                         isMoving: model.isWandering,
                         // The nudge under the pose (US-095): the chew of a meal, the shake of a
@@ -912,13 +918,51 @@ enum SpriteScale {
     /// The scale the screen showed before there was anything to compete with it for room.
     static let maximum: CGFloat = 5
 
+    /// How much of the room it is offered the sprite actually fills (US-221).
+    ///
+    /// Separate from `MainScreenLayout.playAreaHeightFraction` on purpose, even though both are 0.8
+    /// today: that one shortens the BAND — the map, the light scrim and the poop pile all shrink with
+    /// it — while this one only shrinks the Digimon standing inside that band. They are tuned against
+    /// different complaints ("the play area is too tall" vs "the Digimon is too big") and must move
+    /// independently.
+    ///
+    /// Applied to the height handed to `fitting`, never to `maximum`: the ceiling does not bind on
+    /// either supported screen, so lowering it would change nothing on a real watch.
+    ///
+    /// The ladder is coarse, so no fraction means its own number on screen. Whole scales give
+    /// 80/64/48/32/16pt, so what this buys is exactly one step down — from 48pt to 32pt on all three
+    /// supported screens, i.e. ~67% of the sprite rather than 75% of it.
+    ///
+    /// **0.75 rather than US-221's proposed 0.8, and the difference is measurement, not taste.** The
+    /// story predicted the fraction against slot numbers that were stale (see `MainScreenTypography`);
+    /// the bands re-measured for US-219 are 50 / 53 / 60pt on 41 / 42 / 46mm, and 0.8 of the 46mm band
+    /// is exactly 48.0 — precisely the bottom of scale 3. That one screen would have kept its old
+    /// size while the other two shrank, measured on the Simulator and not deduced. Any fraction in
+    /// [0.64, 0.8) steps all three down together; 0.75 sits mid-range, 3pt clear of the rung above at
+    /// 46mm and 5.5pt clear of the one below at 41mm, so neither edge is a knife-edge.
+    ///
+    /// If it ever reads too small on-wrist, the cheapest revert is putting this back to 1.0 and
+    /// leaving `minimum` where it is.
+    static let sizeFraction: CGFloat = 0.75
+
     /// The floor, and it is a real floor: the sprite is drawn with `.offset` inside its slot and so
     /// OVERFLOWS rather than clips when it does not fit, which on a 42mm screen meant Agumon's head
-    /// landing on top of the energy bars. Two is where it stops shrinking because 32pt is still a
-    /// recognisable Digimon — the complication draws one no larger. The rows above and below were
-    /// trimmed until 42mm lands above this rather than on it; if a later row pushes it back down
-    /// here, the sprite gets small before anything starts overlapping.
-    static let minimum: CGFloat = 2
+    /// landing on top of the energy bars.
+    ///
+    /// It was 2 until US-221, on the reasoning that 32pt is the smallest a Digimon still reads as
+    /// one — the complication draws one no larger. **That reasoning has been overridden by an
+    /// explicit product decision, not forgotten.** US-221 asks for a smaller Digimon and calls the
+    /// drop to 1 a requirement of the story rather than a side effect, on the grounds that the floor
+    /// would otherwise stop the narrowest screen shrinking at all. Against the bands as re-measured
+    /// (50 / 53 / 60pt), the floor in fact does not bind — every screen lands on scale 2, one clear
+    /// step above it — so what 1 actually buys is headroom for a future row that shortens the band
+    /// below 32pt: there the Digimon now keeps shrinking instead of overflowing onto its neighbours.
+    /// Scale 1 is the raw 16x16 art at 1:1, smaller than the complication draws one — accepted
+    /// knowingly, and recorded here so a later reader does not file it as a regression.
+    ///
+    /// What the floor still does is unchanged: below it the sprite stops shrinking and overflows
+    /// visibly, because a smudge that fits would look fine and be wrong.
+    static let minimum: CGFloat = 1
 
     static func fitting(_ height: CGFloat) -> CGFloat {
         let whole = (height / CGFloat(SpriteSheet.frameSize)).rounded(.down)

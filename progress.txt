@@ -21,6 +21,19 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **THE SPRITE SCALE IS A FLOORED LADDER, SO A FRACTION ONLY DOES ANYTHING IF IT CROSSES A RUNG
+  (US-221).** `SpriteScale.fitting` floors `height / 16`, so `f * band` draws the same pixels as
+  `band` whenever both land in the same 16pt bracket — and a band that is an exact MULTIPLE of 16 is
+  where a fraction reads as a no-op. That is not hypothetical: 0.8 of the 46mm band (exactly 60.0pt)
+  is exactly 48.0, so the fraction the PRD specified shrank 41mm and 42mm and left 46mm untouched.
+  Before pinning any fraction, print `floor(band * f / 16)` for all three measured bands (50 / 53 /
+  60pt on 41 / 42 / 46mm). Shipped `sizeFraction = 0.75`; the window that steps all three down
+  together is [0.64, 0.8).
+- **READ THE SPRITE'S SCALE OFF THE GCD OF ITS LIT-PIXEL RUN LENGTHS (US-221).** `gcd(runs) / 2` is
+  the scale at @2x, because every run of sprite ink is a whole number of scaled pixels. Unlike ink
+  size or centroid it is invariant to which walk frame and which facing the screenshot caught, so it
+  needs none of US-220's "same frame, same facing" discipline — one shot answers "what scale is this
+  drawing at" outright.
 - **NOTHING INSIDE A `TimelineView`'s BODY CAN BE ANIMATED (US-220).** Its updates carry a transaction
   that disables animation, and it reaches the whole subtree the closure builds — `.animation(_:value:)`
   in there and `withAnimation` from an `onChange` in there were both measured doing nothing at all.
@@ -7318,3 +7331,68 @@ The thirty, `Perfect -> Ultimate`:
 - **THE FILE SIZE OF THE RECORDING IS A FREE FIRST ANSWER.** Same 8s of the same screen: 125KB while
   the sprite hopped, 614KB once it glided. h264 pays for change, so a tween that is not running is
   visible in `ls -la` before any frame is extracted.
+
+## 2026-07-24 - US-221: The Digimon is drawn at a fraction of its size, one step down the ladder
+- `SpriteScale` gained `sizeFraction` and its `minimum` dropped 2 -> 1. The fraction is applied to
+  the height HANDED TO `fitting` at the one call site in `ContentView.digimon` —
+  `SpriteScale.fitting(SickBadgeLayout.spriteHeight(in: band, isSick:) * SpriteScale.sizeFraction)` —
+  never to `maximum` (the ceiling binds on no supported screen, so lowering it would have drawn
+  exactly the same pixels). `MainScreenLayout.playAreaHeightFraction` is untouched: the band, and so
+  the map, the light scrim and the poop pile hung off `SpriteSlotBoundsKey`, are exactly where
+  US-219 left them. Only the Digimon inside the band moved.
+- Files: Sources/ContentView.swift, Tests/MainScreenLayoutTests.swift (+2 tests, 2 rewritten),
+  prd.json, progress.txt.
+- Verified: build green; FULL suite **2780 tests, 0 failures** (+2).
+
+- **SHIPPED `sizeFraction = 0.75`, NOT THE 0.8 US-221 ASKED FOR, AND THE REASON IS A MEASUREMENT.**
+  I built 0.8 first and put it on both watches. 42mm shrank; **46mm did not move at all.** Its band
+  is exactly 60.0pt (US-219's measurement, floor(76.0 * 0.8)), 0.8 of it is exactly 48.0, and 48.0 is
+  exactly the bottom of scale 3 — the one band of the three that lands ON a rung instead of inside
+  one. The story's own table predicted 46mm at a 44.8pt slot, which is the stale-by-half number
+  US-219 already retired; the PRD says in as many words "these are predictions — re-measure", and
+  re-measuring is what moved the number. Every fraction in **[0.64, 0.8)** steps all three screens
+  down together. 0.75 sits mid-window: 45.0pt at 46mm, 3pt clear of the rung above; 37.5pt at 41mm,
+  5.5pt clear of the rung below. Both edges are pinned in `MainScreenLayoutTests`, including a
+  `fitting(60 * 0.8) == 3` that documents the knife-edge itself so nobody re-derives 0.8 by hand.
+- **MEASURED SCALES, by the sprite's pixel quantisation rather than by its ink size.** The gcd of the
+  lit-pixel run lengths across the sprite IS screenshot-px-per-sprite-px, so scale = gcd / 2 at @2x —
+  independent of which walk frame or which facing the shot caught, which ink width and centroid are
+  not (US-220). Agumon, `-wanderDemo -mapDemo=none`:
+      screen     before   0.8 build   0.75 build (shipped)   sprite box
+      42mm  S11  q=6 (3)  q=4 (2)     q=4 (2)                48pt -> 32pt
+      46mm  S11  q=6 (3)  q=6 (3) !!  q=4 (2)                48pt -> 32pt
+  Ink rows on the shipped build: 42mm 177-228 inside a 148-253 band, 46mm 202-249 inside a 162-281
+  band. Nothing reaches the stats strip, the name row or the action grid at either size.
+- `SpriteScale.minimum = 1` is REQUIRED BY THE STORY BUT BINDS ON NOTHING. Against the real bands
+  every screen lands on scale 2, a clear step above the old floor of 2 — the story's reasoning
+  ("without lowering it the 41mm sprite cannot shrink at all") was itself built on the stale 33.2pt
+  slot. What 1 actually buys is headroom: a future row that shortens the band under 32pt now shrinks
+  the Digimon instead of overflowing it onto its neighbours. The doc comment says exactly this, and
+  says the readability floor was overridden deliberately rather than forgotten. `clearanceFloor` is
+  `reservedHeight + minimum * 16` and tracked it for free, from 50pt to 34pt — which incidentally
+  retires the US-219 note about the sick badge overlapping the sprite on 41mm/42mm.
+- SCREENSHOTS /tmp/us221 (not committed): final42_none/map.png, final46_none/map.png, with
+  probe42.png (before) and after46_none.png (the 0.8 build that did not move).
+
+**Learnings for future iterations:**
+- **A FRACTION APPLIED TO A HEIGHT ONLY MOVES A FLOORED SCALE IF IT CROSSES A RUNG, AND A BAND THAT
+  IS AN EXACT MULTIPLE OF 16 IS THE CASE WHERE IT WILL NOT.** `fitting` floors `height / 16`, so
+  `f * band` and `band` give the same scale whenever both sit in the same 16pt bracket. 60pt x 0.8 =
+  48.0 is the worst case: dead on the boundary, so the fraction reads as a no-op on that screen alone
+  while working everywhere else. Before pinning any such fraction, print `floor(band * f / 16)` for
+  every measured band — the answer is three lines of Python and it is what caught this.
+- **A PRD'S ARITHMETIC IS AN INPUT, NOT A SPEC, WHEN IT IS BUILT ON NUMBERS A LATER STORY RE-MEASURED.**
+  US-221's table came from the 41.5/56.0pt slots US-219 proved were stale by half. Implementing the
+  literal 0.8 would have satisfied the letter of eight criteria and failed the one that matters
+  ("a visibly smaller Digimon at BOTH sizes"). Build the literal version first, measure it, and let
+  the measurement pick the constant — then write down both numbers and why.
+- **SCALE IS READ OFF THE GCD OF THE LIT-PIXEL RUN LENGTHS, NOT OFF THE INK BOX.** `gcd(runs) / 2` is
+  the scale at @2x and it is frame- and facing-invariant, so it needs none of US-220's "same frame,
+  same facing" discipline. Ink height told me 78px on 46mm, which is 13 rows at scale 3 and nothing
+  at scale 2 — true but only decidable by knowing the frame; the gcd said 6 outright.
+- **THE 46mm NOTIFICATION ALERT CAME BACK ON A RE-INSTALL OF AN ALREADY-INSTALLED APP.** A clean
+  `erase` + `boot` + `install` + `launch` was fine, but `terminate` + `install` over the running app +
+  `launch` put the system modal back and ate the shot, `-noNotificationPrompt` notwithstanding. On
+  46mm: erase, then install ONCE, then take the shot that matters first and the optional variants
+  after.
+---

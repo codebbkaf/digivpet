@@ -1990,8 +1990,8 @@
         "Build green, tests pass. Verify in the simulator at BOTH 42mm and 46mm: a visibly smaller Digimon, still walking, with no part overlapping the stats strip, name row or action grid"
       ],
       "priority": 108,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "SpriteScale.sizeFraction applied to the height handed to fitting (not to maximum); minimum 2->1 with its doc comment rewritten. SHIPPED 0.75 RATHER THAN 0.8: the real 46mm band is 60.0pt and 0.8 of it is exactly 48.0, the bottom of scale 3, so 0.8 was measured leaving 46mm at its old size while 42mm shrank — the story's 33.2/44.8pt slots were US-194 numbers US-219 already proved stale. [0.64,0.8) steps all three screens down; 0.75 is mid-window. Measured by gcd of lit-pixel runs: 42mm and 46mm both scale 3 -> 2, sprite box 48pt -> 32pt, ink well inside the band at both. Build green, 2780 tests 0 failures."
     },
     {
       "id": "US-222",
