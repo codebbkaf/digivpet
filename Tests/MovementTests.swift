@@ -32,17 +32,13 @@ final class MovementTests: XCTestCase {
     // MARK: - AC: advancing time moves position
 
     /// The headline: hand the model a later date and the Digimon is somewhere else.
-    ///
-    /// Sampled over several seconds rather than one step because a rest is a legal first heading —
-    /// asserting after a single step would fail whenever the seed opened with a pause, which would
-    /// be a flaky test rather than a real defect.
     func testAdvancingTimeMovesThePosition() {
         var model = MovementModel(bound: wideBound, seed: 42, start: Clock.start)
         XCTAssertEqual(model.offset, 0, "starts centred")
 
-        model.advance(to: Clock.after(5))
+        model.advance(to: Clock.after(MovementModel.step))
 
-        XCTAssertNotEqual(model.offset, 0, "five seconds of walking must leave the centre")
+        XCTAssertNotEqual(model.offset, 0, "a step of walking must leave the centre")
     }
 
     /// Advancing by less than one step does nothing yet — the model is not sub-step continuous.
@@ -68,17 +64,18 @@ final class MovementTests: XCTestCase {
         XCTAssertEqual(carried.offset, direct.offset, "0.2 + 0.2 must equal 0.4")
     }
 
-    /// The invariant that lets the view redraw at whatever cadence it likes: the path depends on
-    /// total elapsed time and the seed, never on how the caller chopped that time up.
-    func testManySmallAdvancesMatchOneLargeAdvance() {
-        var stepwise = MovementModel(bound: wideBound, seed: 99, start: Clock.start)
-        for tick in 1...40 { stepwise.advance(to: Clock.after(Double(tick) * 0.25)) }
+    /// What survives US-216's catch-up cap of the old "any chopping agrees" invariant: a view may
+    /// redraw at any cadence up to the cap without changing the path. 0.5s is exactly the cap, so
+    /// twenty of those must land where forty 0.25s ticks do.
+    func testAdvancesChoppedWithinTheCapAgree() {
+        var fine = MovementModel(bound: wideBound, seed: 99, start: Clock.start)
+        for tick in 1...40 { fine.advance(to: Clock.after(Double(tick) * 0.25)) }
 
-        var oneShot = MovementModel(bound: wideBound, seed: 99, start: Clock.start)
-        oneShot.advance(to: Clock.after(10))
+        var coarse = MovementModel(bound: wideBound, seed: 99, start: Clock.start)
+        for tick in 1...20 { coarse.advance(to: Clock.after(Double(tick) * 0.5)) }
 
-        XCTAssertEqual(stepwise.offset, oneShot.offset)
-        XCTAssertEqual(stepwise.facing, oneShot.facing)
+        XCTAssertEqual(fine.offset, coarse.offset)
+        XCTAssertEqual(fine.facing, coarse.facing)
     }
 
     // MARK: - AC: hitting a bound reverses
@@ -124,7 +121,7 @@ final class MovementTests: XCTestCase {
     /// strand the Digimon off screen.
     func testShrinkingTheBoundPullsTheSpriteBackInside() {
         var model = MovementModel(bound: 200, seed: 11, start: Clock.start)
-        model.advance(to: Clock.after(20))
+        _ = path(of: &model, steps: 3)
         XCTAssertGreaterThan(abs(model.offset), 10, "needs to be well out from centre to matter")
 
         model.bound = 10
@@ -134,17 +131,18 @@ final class MovementTests: XCTestCase {
 
     // MARK: - AC: facing matches direction of travel
 
-    /// Facing is not decoration. Three rules, and the wall is the interesting one:
+    /// Facing is not decoration. Two rules, and the wall is the interesting one:
     ///
     /// - standing ON a bound, facing points INWARD, because that step was a turn. This is the one
     ///   case where facing deliberately disagrees with the direction just travelled — the sprite
     ///   walked right into the wall and is now looking back left, which is what a turn looks like.
-    /// - otherwise a step that moved looks the way it moved,
-    /// - and a step that rested holds the previous look rather than picking a new one.
+    /// - otherwise a step looks the way it moved.
+    ///
+    /// Since US-216 there is no third rule for a rest, because there are no rests: every step off a
+    /// wall moves, which is what the `XCTFail` below pins.
     func testFacingAlwaysMatchesTheDirectionOfTravel() {
         var model = MovementModel(bound: wideBound, seed: 5, start: Clock.start)
         var previousOffset = model.offset
-        var previousFacing = model.facing
         var sawLeft = false
         var sawRight = false
         var sawTurn = false
@@ -164,18 +162,17 @@ final class MovementTests: XCTestCase {
                 sawLeft = true
                 XCTAssertEqual(model.facing, .left, "moved left at step \(step)")
             } else {
-                XCTAssertEqual(model.facing, previousFacing, "a rest must hold facing")
+                XCTFail("the walk never stands still off a wall, but step \(step) did")
             }
 
             previousOffset = model.offset
-            previousFacing = model.facing
         }
 
         XCTAssertTrue(sawLeft && sawRight, "the walk must go both ways over 100 seconds")
         XCTAssertTrue(sawTurn, "100 seconds of walking must reach a bound at least once")
     }
 
-    // MARK: - AC: deterministic given a seed
+    // MARK: - US-216: a deterministic edge-to-edge ping-pong
 
     /// Two models on the same seed walk the same path, step for step. This is what makes the exact
     /// path below assertable at all.
@@ -186,31 +183,59 @@ final class MovementTests: XCTestCase {
         XCTAssertEqual(path(of: &first, steps: 200), path(of: &second, steps: 200))
     }
 
-    /// A different seed is a different Digimon: two pets on screen must not pace in lockstep.
-    func testADifferentSeedProducesADifferentPath() {
-        var first = MovementModel(bound: wideBound, seed: 1, start: Clock.start)
-        var second = MovementModel(bound: wideBound, seed: 2, start: Clock.start)
+    /// The seed's whole remaining job: which way the Digimon sets off. Two pets on one screen must
+    /// not pace in lockstep, and an even/odd seed is now the only thing that tells them apart.
+    func testTheSeedChoosesTheOpeningDirection() {
+        var even = MovementModel(bound: wideBound, seed: 2, start: Clock.start)
+        var odd = MovementModel(bound: wideBound, seed: 1, start: Clock.start)
 
-        XCTAssertNotEqual(path(of: &first, steps: 200), path(of: &second, steps: 200))
+        XCTAssertEqual(even.facing, .right)
+        XCTAssertEqual(odd.facing, .left)
+
+        let rightward = path(of: &even, steps: 200)
+        let leftward = path(of: &odd, steps: 200)
+        XCTAssertNotEqual(rightward, leftward)
+        // Mirrored, in fact: the same pace, opened the other way.
+        XCTAssertEqual(rightward, leftward.map { -$0 })
     }
 
     /// The exact path for seed 1, pinned as a literal.
     ///
-    /// A regression guard rather than a specification: the numbers are whatever the algorithm
-    /// produces, and the point is that a change to the stepping, the speed or the RNG draw ORDER
-    /// cannot slip through silently — every other test here would still pass after such a change.
+    /// A regression guard rather than a specification, and after US-216 it reads as the story does:
+    /// an odd seed sets off LEFT, eight steady 7.5pt strides to the wall at -60, a turn, and twelve
+    /// more the other way. No pause, no mid-floor reversal, and every gap identical.
     func testTheExactPathForAFixedSeed() {
         var model = MovementModel(bound: wideBound, seed: 1, start: Clock.start)
 
-        // Readable as a walk: out to the right wall, a turn, two steps back, a seven-step rest at
-        // 45, then off to the right again.
         let expected: [CGFloat] = [
-            7.5, 15, 22.5, 30, 37.5, 45, 52.5, 60,
-            52.5, 45,
-            45, 45, 45, 45, 45, 45, 45,
-            52.5, 60, 52.5
+            -7.5, -15, -22.5, -30, -37.5, -45, -52.5, -60,
+            -52.5, -45, -37.5, -30, -22.5, -15, -7.5, 0, 7.5, 15, 22.5, 30
         ]
         XCTAssertEqual(path(of: &model, steps: expected.count), expected)
+    }
+
+    /// The heart of the story: every step covers exactly the same ground, and the direction only
+    /// ever changes ON a wall. A single mid-screen reversal or one oversized stride fails this.
+    ///
+    /// `wideBound` is a whole number of strides from centre, so no step is ever cut short by the
+    /// clamp at the wall and "every stride identical" is exactly true.
+    func testThePaceIsConstantAndTurnsOnlyAtAWall() {
+        var model = MovementModel(bound: wideBound, seed: 4, start: Clock.start)
+        let offsets = [0] + path(of: &model, steps: 400)
+
+        var previousDirection: CGFloat = 0
+        for index in 1..<offsets.count {
+            let moved = offsets[index] - offsets[index - 1]
+            XCTAssertEqual(abs(moved), MovementModel.stepDistance, accuracy: 0.0001,
+                           "every stride is the same length, at step \(index)")
+
+            let direction: CGFloat = moved > 0 ? 1 : -1
+            if previousDirection != 0, direction != previousDirection {
+                XCTAssertEqual(abs(offsets[index - 1]), wideBound,
+                               "a reversal may only happen standing on a wall, at step \(index)")
+            }
+            previousDirection = direction
+        }
     }
 
     // MARK: - Clock robustness
@@ -230,19 +255,33 @@ final class MovementTests: XCTestCase {
         XCTAssertNotEqual(model.offset, settled, "the walk resumes rather than freezing")
     }
 
-    /// A long absence is abandoned, not simulated: a backgrounded night must not cost hundreds of
-    /// thousands of steps to decide where a 16px sprite stands.
-    func testALongAbsenceIsNotSimulated() {
+    /// US-216's headline: no gap, however long, can move the sprite more than the cap.
+    ///
+    /// A backgrounded night used to be simulated in full up to a minute's worth of steps and then
+    /// abandoned; either way the sprite arrived somewhere it had visibly not walked to. Now the same
+    /// two strides apply whether the gap was a second, an hour or a night.
+    func testALongGapMovesNoFurtherThanTheCap() {
+        let cap = CGFloat(MovementModel.maximumCatchUpSteps) * MovementModel.stepDistance
+
+        for gap in [MovementModel.maximumCatchUp + 0.25, 10, 3_600, 86_400] as [TimeInterval] {
+            var model = MovementModel(bound: wideBound, seed: 8, start: Clock.start)
+            model.advance(to: Clock.after(gap))
+
+            XCTAssertLessThanOrEqual(abs(model.offset), cap,
+                                     "a \(gap)s gap must not sprint the sprite")
+        }
+    }
+
+    /// And the surplus is forgiven, not banked: the advance after a long gap is one ordinary step,
+    /// not the rest of the debt paid off two strides at a time.
+    func testALongGapIsNotRepaidOnLaterAdvances() {
         var model = MovementModel(bound: wideBound, seed: 8, start: Clock.start)
-        model.advance(to: Clock.after(10))
-        let settled = model.offset
+        model.advance(to: Clock.after(86_400))
+        let afterTheGap = model.offset
 
-        model.advance(to: Clock.after(10 + MovementModel.maximumCatchUp + 1))
-        XCTAssertEqual(model.offset, settled, "the missed walk is dropped, the position kept")
-
-        // And the clock was restamped, so the walk picks up from the new now.
-        model.advance(to: Clock.after(10 + MovementModel.maximumCatchUp + 6))
-        XCTAssertNotEqual(model.offset, settled, "walking resumes after the gap")
+        model.advance(to: Clock.after(86_400 + MovementModel.step))
+        XCTAssertEqual(abs(model.offset - afterTheGap), MovementModel.stepDistance, accuracy: 0.0001,
+                       "one step's worth of time is one step of travel, gap or no gap")
     }
 
     // MARK: - US-037: suspending the walk
@@ -270,18 +309,22 @@ final class MovementTests: XCTestCase {
 
     /// A held pause costs the walk nothing but time: what resumes is the same path the same seed
     /// would have walked, just later. This is what lets the sprite pick up where it stood.
+    ///
+    /// Both walks are driven one step at a time, because a pause is only interesting against a walk
+    /// that actually happened — handing either model a multi-second jump would just measure the
+    /// catch-up cap on both sides.
     func testAHeldPauseDoesNotChangeThePathThatFollows() {
         var uninterrupted = MovementModel(bound: wideBound, seed: 11, start: Clock.start)
+        for tick in 1...16 { uninterrupted.advance(to: Clock.after(Double(tick) * MovementModel.step)) }
+
         var interrupted = MovementModel(bound: wideBound, seed: 11, start: Clock.start)
-
-        uninterrupted.advance(to: Clock.after(4))
-
-        interrupted.advance(to: Clock.after(2))
+        for tick in 1...8 { interrupted.advance(to: Clock.after(Double(tick) * MovementModel.step)) }
+        // Thirty seconds asleep, then eight more steps measured from the far side of the pause.
         interrupted.hold(at: Clock.after(30))
-        interrupted.advance(to: Clock.after(32))
+        for tick in 1...8 { interrupted.advance(to: Clock.after(30 + Double(tick) * MovementModel.step)) }
 
         XCTAssertEqual(interrupted.offset, uninterrupted.offset,
-                       "four seconds of walking is four seconds of walking, paused or not")
+                       "sixteen steps of walking is sixteen steps of walking, paused or not")
         XCTAssertEqual(interrupted.facing, uninterrupted.facing)
     }
 }

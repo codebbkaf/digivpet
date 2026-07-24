@@ -35,6 +35,12 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   the alert is already up. A bare `xcrun simctl io <id> screenshot /tmp/probe.png` costs a second and
   says which of the two watches is clean. Clearing one needs the full `shutdown` + `erase` + `boot`
   (~90 s, app reinstalled afterwards), so switching watches is usually the cheaper move.
+- **NEVER JUDGE ON-SCREEN MOTION FROM A BURST OF SCREENSHOTS (US-216).** Back-to-back
+  `xcrun simctl io <id> screenshot` calls starve the app's `TimelineView`, so an animation that runs
+  perfectly delivers only a couple of frames per capture and reads as frozen or crawling. Put a
+  `sleep 2` BEFORE each shot in the loop and the real pace appears. This bites hardest on anything
+  with a catch-up cap (`MovementModel.maximumCatchUpSteps`), which by design cannot make up for the
+  frames the screenshot load ate.
 - **A DERIVED-PER-DIGIMON VALUE USES A PINNED SEED FUNCTION, NEVER `hashValue` (US-214).** Swift seeds
   `Hasher` per process, so anything derived from it changes on every relaunch while still passing
   `XCTAssertEqual(f(id), f(id))`. `SleepRoutine.seed(for:)` is FNV-1a over the id's UTF-8 bytes, fed to
@@ -6966,4 +6972,45 @@ The thirty, `Perfect -> Ultimate`:
   three statuses are exactly that. The honest fix is a DEBUG bypass on the flag that already opens
   the screen, pinned by a test that it needs its argument — not weakening the gate, and not
   photographing a preview and calling it the screen.
+---
+
+## 2026-07-24 - US-216: The Digimon paces at one steady speed, wall to wall, no sprinting
+- Rewrote `MovementModel` as a deterministic ping-pong. The step function has NO randomness left:
+  `Heading`/`SeededGenerator`/`decide()` are gone, `facing` IS the direction of travel, and one
+  stride is always `stepDistance` (7.5pt). The seed's only remaining job is the opening direction —
+  `seed.isMultiple(of: 2) ? .right : .left` — which is all that is needed to stop two Digimon on one
+  screen pacing in lockstep. RESTING was removed outright and the choice documented on
+  `advanceOneStep()`: a pause mid-floor reads as hesitation, and nothing on this screen needs it.
+- Catch-up: `maximumCatchUp: TimeInterval = 60` became `maximumCatchUpSteps = 2` (with
+  `maximumCatchUp` kept as a derived `TimeInterval`). `advance(to:)` applies `min(due, cap)` steps;
+  when it truncates it restamps `updatedAt` to `now` so the surplus is FORGIVEN, not banked.
+  `hold(at:)` and the `>=` wall behaviour are untouched.
+- Added a `guard bound > 0` to `advanceOneStep()`: with no floor to walk on the two wall checks
+  used to flip `facing` on every single step and the sprite shimmered on the spot.
+- Files: Sources/Movement.swift, Tests/MovementTests.swift, prd.json, progress.txt.
+- Verified: build green; FULL suite **2746 tests, 0 failures** (+2 net; MovementTests 15 -> 17).
+  New/rewritten tests: `testThePaceIsConstantAndTurnsOnlyAtAWall` (every stride identical, a reversal
+  only ever standing on a wall), `testALongGapMovesNoFurtherThanTheCap` (0.75s / 10s / 1h / 24h all
+  move <= 15pt), `testALongGapIsNotRepaidOnLaterAdvances`, `testAdvancesChoppedWithinTheCapAgree`,
+  `testTheSeedChoosesTheOpeningDirection`. Simulator: 42mm with `-wanderDemo`, screenshots 2s apart
+  (/tmp/paced_1..6.png) show right wall -> centre -> left wall and back, facing matching travel.
+
+**Learnings for future iterations:**
+- **A CAPPED CATCH-UP TRADES AWAY "ANY CHOPPING OF TIME AGREES".** The old model's headline invariant
+  — forty 0.25s advances land where one 10s advance does — is not just weakened by US-216, it is the
+  thing US-216 deletes, because paying back a gap in full IS the sprint. What survives is agreement
+  up to the cap (`testAdvancesChoppedWithinTheCapAgree`: twenty 0.5s ticks == forty 0.25s ticks),
+  and four existing tests had to stop driving the model with multi-second jumps. If you add another
+  capped simulation, expect its "any cadence agrees" test to need this same narrowing.
+- **THE COST OF THE CAP IS THAT A STARVED RENDER LOOP CRAWLS RATHER THAN CATCHING UP.** Taking eight
+  `simctl io screenshot`s back to back starves the app's `TimelineView`, and the sprite then moves
+  ~2 steps per delivered frame instead of 4/second — it looked frozen and I nearly filed it as a bug.
+  It is not: idle the simulator between captures (`sleep 2` per shot) and the full edge-to-edge pace
+  is there. **Pace wander/animation screenshots at least 2s apart, and never judge motion from a
+  burst.**
+- **`isMultiple(of: 2)` ON THE SEED IS ENOUGH WHEN THE ONLY CHOICE IS BINARY.** The pinned-seed-
+  function rule (US-214) exists because `hashValue` is per-process; a seed the caller already owns
+  has no such problem, so a whole `SeededGenerator` for one bit is ceremony. It also let the model
+  drop its RNG field entirely, which is what makes "there is no randomness in the walk" literally
+  true rather than a comment.
 ---
