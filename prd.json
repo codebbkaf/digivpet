@@ -1,7 +1,7 @@
 {
   "project": "Digimon Health V-Pet",
   "branchName": "ralph/adventure-maps-party-and-jogress",
-  "description": "Adventure Maps, Multi-Digimon Party, Jogress and Full Roster Wiring - sixteen map backgrounds become places that accrue your steps, supply your battle opponents and hold the Digitama you can find; the save grows from one Digimon to a box of many with exactly one active and the rest frozen; two owned Digimon fuse by Jogress and hand one of their eggs back; the light button leaves the Digimon's play area; and the 780 playable Digimon that today have no evolution edge at all get wired into the graph. Source PRD: tasks/prd-adventure-maps-party-and-jogress.md || Prepended ahead of the Orphan sweep: sleep in evolution, the meat/steps/calories/handwash consumption loop as a config file, per-Digimon HP/Attack/Agility with dash-bar battle HP, agility dodges and element damage, light-off conditions, screen-layout polish, and wiring the dead MetricCreditor health pipeline. Source PRD: tasks/prd-sleep-consumption-battle-stats-and-polish.md. || Prepended ahead of all remaining work: the urgent Dex crash (single shared GameStore), main-screen polish (shorter room, touching dash bars, two-row action grid, settings gear, consumption rings, energy bars removed for map-step and Zz dash bars), Digimon age, wild-battle and per-map-boss encounters gated on walked steps, met-or-'?' map residents, and metric double-count safeguards with a README. Source PRD: tasks/prd-screen-polish-wild-battle-and-boss.md.",
+  "description": "Adventure Maps, Multi-Digimon Party, Jogress and Full Roster Wiring - sixteen map backgrounds become places that accrue your steps, supply your battle opponents and hold the Digitama you can find; the save grows from one Digimon to a box of many with exactly one active and the rest frozen; two owned Digimon fuse by Jogress and hand one of their eggs back; the light button leaves the Digimon's play area; and the 780 playable Digimon that today have no evolution edge at all get wired into the graph. Source PRD: tasks/prd-adventure-maps-party-and-jogress.md || Prepended ahead of the Orphan sweep: sleep in evolution, the meat/steps/calories/handwash consumption loop as a config file, per-Digimon HP/Attack/Agility with dash-bar battle HP, agility dodges and element damage, light-off conditions, screen-layout polish, and wiring the dead MetricCreditor health pipeline. Source PRD: tasks/prd-sleep-consumption-battle-stats-and-polish.md. || Prepended ahead of all remaining work: the urgent Dex crash (single shared GameStore), main-screen polish (shorter room, touching dash bars, two-row action grid, settings gear, consumption rings, energy bars removed for map-step and Zz dash bars), Digimon age, wild-battle and per-map-boss encounters gated on walked steps, met-or-'?' map residents, and metric double-count safeguards with a README. Source PRD: tasks/prd-screen-polish-wild-battle-and-boss.md. || Appended after the paced-walk work: the Digitama stands still and refuses Feed/Train/Battle, hatches on 5 minutes or 500 steps as well as on energy, the play area and its map background shrink to 80 percent height, the Digimon is drawn one scale step smaller, and the walk is tweened between simulation steps. Source PRD: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md.",
   "userStories": [
     {
       "id": "US-114",
@@ -1902,6 +1902,117 @@
       "priority": 103,
       "passes": true,
       "notes": "MovementModel is now a deterministic ping-pong: no RNG in the step at all (the seed only picks the opening direction, even=right/odd=left), no resting, one constant 7.5pt stride, turn only at a wall (>= kept). Catch-up capped at maximumCatchUpSteps=2 (0.5s) with the surplus DROPPED and the clock restamped to now, so no gap of any length can sprint or slow-motion-repay. hold(at:) unchanged. 2746 tests green; MovementTests 17 tests. Verified on the 42mm sim with -wanderDemo: screenshots 2s apart show right wall -> centre -> left wall, facing matching travel."
+    },
+    {
+      "id": "US-217",
+      "title": "A Digitama does not walk",
+      "description": "As a player, I want my unhatched egg to sit still instead of pacing the floor, so that it reads as an egg rather than as a Digimon that lost its legs. Full reasoning: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md, US-217.",
+      "acceptanceCriteria": [
+        "While state.stage == .digitama, MainScreenModel.isWandering is false, so WanderingSpriteView is passed isMoving:false and the egg holds one position",
+        "The egg holds the position it was created at (centre), not wherever a previous Digimon stood",
+        "The suspension goes through MovementModel.hold(at:) \u2014 the existing isMoving:false path \u2014 so the walk's clock keeps up and the Digimon does NOT lurch across the floor on the first frame after it hatches",
+        "The instant the egg hatches into Baby I, walking resumes with no jump, starting from where the egg sat",
+        "Every other reason isWandering is already false (asleep, eating, sick, dead, overlay up) still turns it off \u2014 this is an added condition, not a replacement",
+        "Tests: a model at .digitama reports isWandering == false; the same model at .babyI reports true; a MovementModel given only hold(at:) calls over a long span has offset 0",
+        "Build green, tests pass. Verify in the simulator: two screenshots of a fresh save at least 2s apart show the egg in the same place (pace screenshots 2s apart \u2014 a burst starves the TimelineView and makes any sprite look frozen)"
+      ],
+      "priority": 104,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-218",
+      "title": "Feed, Train and Battle are refused while it is still an egg",
+      "description": "As a player, I want the Feed, Train and Battle buttons to be visibly unavailable while my Digimon is an egg, so that I am not spending meat, charges and energy on something that cannot eat, train or fight. Full reasoning: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md, US-218.",
+      "acceptanceCriteria": [
+        "ActionControls takes a new isEgg flag and applies .disabled(true) to the Feed, Train and Battle buttons when set; the circles grey out through the existing ActionButtonFace @Environment(\\.isEnabled) path \u2014 no second source of truth for the enabled state",
+        "Clean, Light, Map, Party, Dex and Sleep stay enabled and unchanged while the egg is unhatched",
+        "The grid still draws all nine circles \u2014 nothing removed or re-laid-out, so ActionGridLayout.rowCounts(forButtons: 9) == [5, 4] is unchanged",
+        "MainScreenModel.feed(), train() and battle() each guard on .digitama and show a short reason in the existing orange actionMessage line (e.g. 'It is still an egg.'), fitting the 9pt one-line name row",
+        "The egg guard runs FIRST \u2014 before wakeIfAsleep() and before each action's existing rule \u2014 so a blocked egg action charges NO care mistake, spends NO meat/energy/charge, opens NO minigame, and plays no pose and no motion",
+        "Tests: at .digitama, feed() returns .blocked, train() returns .blocked, battle() returns nil with a message set; meat, train/battle charges, energy totals and care-mistake counters are all unchanged across all three; pendingTraining and pendingBattleRound stay nil; the same three calls at .babyI behave exactly as they do today",
+        "Build green, tests pass. Verify in the simulator: a screenshot of a fresh unhatched save shows Feed/Train/Battle greyed and Clean/Light/Map/Party/Dex/Sleep in colour, plus a screenshot of the message after tapping Feed"
+      ],
+      "priority": 105,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-219",
+      "title": "The play area and the map behind it are 80 percent of their old height",
+      "description": "As a player, I want the Digimon's band and its map backdrop to take less of the screen, so that the display is less dominated by scenery. Full reasoning: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md, US-219.",
+      "acceptanceCriteria": [
+        "A named constant carries the fraction (e.g. MainScreenLayout.playAreaHeightFraction = 0.8), free-standing and non-generic so a test can read it without building a view graph",
+        "The sprite's flexible row is given a height of floor(available * 0.8); the remaining 20 percent is LEFT EMPTY \u2014 the action grid, stats strip and name row keep the heights and positions they have today",
+        "The shortened band stays vertically centred in the flexible row, so the reclaimed margin splits above and below",
+        "SpriteSlotBoundsKey's anchorPreference is attached to the SHORTENED band, so the map background, the light scrim and the poop pile shrink with it automatically \u2014 no second piece of arithmetic computing the same rect",
+        "The map background still .scaledToFill()s and is still .clipped() to the now-shorter slot, with no letterboxing bands inside it",
+        "The sprite is still sized by SpriteScale.fitting against the shortened slot and never overflows the band it is drawn in",
+        "MainScreenLayoutTests' pinned slot measurements (41.5pt on 41mm, 56.0pt on 46mm) are RE-MEASURED on the simulator, not predicted, updated in the test, and the numbers recorded in progress.txt",
+        "Build green, tests pass. Verify in the simulator at BOTH 42mm and 46mm with a map selected: a visibly shorter map band with clear margin above and below, the Digimon inside it, every action circle still on screen"
+      ],
+      "priority": 106,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-220",
+      "title": "The walk is drawn continuously between simulation steps",
+      "description": "As a player, I want the Digimon to glide across the floor instead of hopping, so that the pace US-216 made constant also LOOKS constant. Full reasoning: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md, US-220.",
+      "acceptanceCriteria": [
+        "MovementModel is NOT changed at all: step, pointsPerSecond, stepDistance, maximumCatchUpSteps and the ping-pong path stay exactly as US-216 left them. This is a rendering change in WanderingSpriteView only",
+        "The drawn horizontal offset is tweened between steps with a LINEAR animation whose duration equals MovementModel.step, so each hop finishes exactly as the next begins \u2014 no ease-in/ease-out, which would re-introduce a visible pulse every step",
+        "The tween duration is a named constant derived from MovementModel.step rather than a literal 0.25, and a test asserts the two are equal",
+        "The animation is scoped to the walk offset ONLY: flipped must not animate (a tweened mirror reads as the sprite squashing flat and inflating at every wall), and the sprite frame index must not animate",
+        "While a motion is playing (chew, shake) the walk tween is off \u2014 the motion already ticks at ActionMotion.tick and the walk is held at a fixed offset for its whole length",
+        "Turning at a wall still looks like a turn: tween into the bound and back out, no overshoot past bound, no visible pause at the edge",
+        "A held sprite (isMoving:false \u2014 asleep, eating, an egg, an overlay up) does not drift",
+        "Build green, all existing tests still pass. Verify in the simulator with -wanderDemo: screenshots at least 2s apart show the sprite at positions that are NOT whole multiples of stepDistance from where it started"
+      ],
+      "priority": 107,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-221",
+      "title": "The Digimon is drawn at 80 percent of its size, one step further down the ladder",
+      "description": "As a player, I want the Digimon sprite itself to be smaller, so that it does not dominate the watch face. Full reasoning: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md, US-221.",
+      "acceptanceCriteria": [
+        "A named constant carries the fraction (e.g. SpriteScale.sizeFraction = 0.8), SEPARATE from US-219's playAreaHeightFraction so the two can be tuned independently",
+        "The fraction is applied to the height HANDED TO SpriteScale.fitting, i.e. SpriteScale.fitting(SickBadgeLayout.spriteHeight(in:isSick:) * sizeFraction). It must NOT be applied by lowering SpriteScale.maximum \u2014 the ceiling does not bind on either supported screen, so that would change nothing",
+        "SpriteScale.minimum drops from 2 to 1. This is required, not incidental: the floor only binds below 32pt, so without lowering it the 41mm sprite cannot shrink at all",
+        "SpriteScale.fitting still returns whole numbers only, for every input \u2014 the existing testTheScaleIsAlwaysAWholeNumber must still pass untouched",
+        "The sprite still never exceeds the band it is drawn in at either screen size (it is drawn with .offset, so an overflow does not clip \u2014 it lands on the rows above and below)",
+        "SpriteScale.minimum's doc comment is rewritten: it currently states 2 as a hard readability floor, and that reasoning is being overridden by an explicit product decision, so the comment must say so rather than contradict the code",
+        "MainScreenLayoutTests is updated for the new floor, and the measured slot/scale pairs are RE-MEASURED on the simulator rather than predicted, with the numbers recorded in progress.txt",
+        "The complication is unaffected \u2014 ComplicationViews has its own sizing and must not inherit this fraction",
+        "Expected (verify, do not assume): 41mm slot ~33.2pt -> sprite height ~26.6pt -> scale 1 (32pt becomes 16pt); 46mm slot ~44.8pt -> ~35.8pt -> scale 2 (48pt becomes 32pt). Both fit their band with margin",
+        "Build green, tests pass. Verify in the simulator at BOTH 42mm and 46mm: a visibly smaller Digimon, still walking, with no part overlapping the stats strip, name row or action grid"
+      ],
+      "priority": 108,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-222",
+      "title": "The egg hatches after 5 minutes or 500 steps",
+      "description": "As a player, I want my Digitama to hatch reasonably soon after I start, so that I am not staring at an egg that may never crack \u2014 especially in the Simulator, where there is no health data to earn the 50 energy with. Full reasoning: tasks/prd-egg-stillness-shorter-play-area-and-smooth-walk.md, US-222.",
+      "acceptanceCriteria": [
+        "EggHatcher.hatchTarget gains an OR of three paths and hatches when ANY is met: total stage energy >= the hatch edge's minEnergy (the existing 50, still read from the graph data and not duplicated); now - stageEnteredDate >= EggHatcher.maximumEggDuration (new, 5*60 seconds); stageMetricTotals[.healthSteps] >= EggHatcher.stepsToHatch (new, 500)",
+        "Both new thresholds are named constants on EggHatcher, next to each other, in the spirit of EvolutionTiming",
+        "The comparisons are >=, matching the existing energy threshold: an egg at exactly 5 minutes or exactly 500 steps hatches",
+        "EggHatcher.hatchTarget stays a PURE function with the clock passed in as now: Date \u2014 never Date() inside. Tests must not wait real time",
+        "Steps are read from stageMetricTotals (which enterStage(at:) already clears), so the 500 is counted since THIS egg appeared and a second egg starts from zero; read through the subscript (absent reads as 0), not known(_:)",
+        "The five minutes is WALL-CLOCK against stageEnteredDate: an app closed on an egg and reopened six minutes later finds a hatched Baby I, and BackgroundRefresh can hatch it without a foreground",
+        "A frozen egg in the box does not age toward the hatch. Freeze.shiftTimeline already moves stageEnteredDate so this should hold for free \u2014 add a test proving it, since it is now load-bearing in a way it was not before",
+        "Every existing hatch guard is unchanged: a dead egg does not hatch, an inactive (boxed) record does not hatch, hatching still bypasses the illness pause, and EvolutionTiming.minimumStageDuration(for: .digitama) stays nil \u2014 this must NOT become an evolution",
+        "state.hatchedDate is still stamped at the hatch (US-200's age counter) whichever of the three paths fired, and the hatch still goes through the graph's isDefault hatch edge with EvolutionCeremonyView still playing",
+        "Tests: an egg at 0 energy and 0 steps hatches when handed a now 5 minutes past stageEnteredDate and does NOT at 4m59s; an egg at 0 energy and 500 steps hatches with now == stageEnteredDate; an egg at 50 energy still hatches immediately as today; a non-Digitama node still returns nil on all three paths",
+        "Build green, tests pass. Verify in the simulator: a fresh save's egg hatches within ~5 minutes with no health data present, showing the ceremony"
+      ],
+      "priority": 109,
+      "passes": false,
+      "notes": ""
     }
   ]
 }
