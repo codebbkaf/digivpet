@@ -21,6 +21,25 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
 ---
 
 ## Codebase Patterns
+- **NOTHING INSIDE A `TimelineView`'s BODY CAN BE ANIMATED (US-220).** Its updates carry a transaction
+  that disables animation, and it reaches the whole subtree the closure builds — `.animation(_:value:)`
+  in there and `withAnimation` from an `onChange` in there were both measured doing nothing at all.
+  Publish the value out with `.onChange(of:initial:) { drawnX = $1 }` into `@State` and put
+  `.offset(...)` + `.animation(...)` ON the `TimelineView`. And do NOT scope such an animation with
+  `.transaction { $0.animation = nil }` on the timeline: nested inside the animated modifier it
+  suppresses that modifier too. Scope by which update PASS a value changes in — a timeline tick is
+  pass one and carries no animation, the state change is pass two.
+- **TO SEE MOTION, RECORD VIDEO — `simctl io recordVideo --force /tmp/x.mov &` then `kill -INT`
+  (US-220).** Frames out via a short `xcrun swift` script using `AVAssetImageGenerator` with
+  `requestedTimeTolerance{Before,After} = .zero`; **there is no ffmpeg on this machine** (PIL yes,
+  numpy no). 30fps beats the ~10 samples/s a screenshot burst manages, and the .mov's SIZE alone
+  answers "is it animating" (125KB hopping vs 614KB gliding for the same 8s). One duplicated capture
+  frame reads as a d=0, so judge a stall by a run of frames.
+- **A CENTROID ONLY MEASURES POSITION BETWEEN SHOTS OF THE SAME FRAME AND THE SAME FACING (US-220).**
+  Sprite asymmetry rides on it: walk1 vs walk2 shifts it 0.815px and the mirror ~0.77px, turning a
+  true 15.000px step into 14.185. Read the frame off the lit-pixel COUNT (Agumon 2808 = walk1,
+  2880 = walk2) and the facing off the sign of `centroid - (xmin+xmax)/2`, then compare like with
+  like. The bbox midpoint is no escape — mirroring moves the ink ~6px inside a stationary box.
 - **THE SPRITE SLOT IS MEASURED BY THE MAP BAND, AND MUST BE RE-MEASURED WHENEVER A ROW IS ADDED **OR
   REMOVED** FROM `ContentView`'s VStack (US-219).** The map is painted off `SpriteSlotBoundsKey`, so the
   longest run of rows differing between a `-mapDemo=01_grassland` and a `-mapDemo=none` shot IS the play
@@ -7234,3 +7253,68 @@ The thirty, `Perfect -> Ultimate`:
   races on DerivedData). Build it in the BACKGROUND while capturing the "after" shots — the two
   halves of a before/after are independent and this iteration cost ~90s instead of ~4 minutes.
 ---
+
+## 2026-07-24 - US-220: The walk is drawn continuously between simulation steps
+- `WanderingSpriteView` gained `walkTweenDuration = MovementModel.step` (a derived constant, never a
+  literal 0.25), a `walkAnimation` of `.linear(duration:)` that is nil while a `motion` plays, and a
+  `@State drawnOffset`. The model's staircase is published out of the timeline by
+  `.onChange(of: position.offset, initial: true) { drawnOffset = $1 }`, and the tween is
+  `.offset(x: drawnOffset).animation(walkAnimation, value: drawnOffset)` applied TO the
+  `TimelineView`, not inside it. `MovementModel` is byte-for-byte untouched.
+- `SpriteWanderer` also gained `drawnFacing`: the direction of the segment being WALKED, read off
+  the distance the last `advance` actually covered rather than off `model.facing`. Without it the
+  sprite mirrors at the START of the quarter-second glide into the wall and moonwalks the last
+  points backwards — invisible while the walk hopped, obvious once it glides.
+- Files: Sources/WanderingSpriteView.swift, Tests/WalkTweenTests.swift (new, 10 tests), prd.json,
+  progress.txt.
+- Verified: build green; FULL suite **2778 tests, 0 failures** (+10).
+- SIMULATOR, 42mm (46mm still has US-215's stale notification alert up; a bare probe screenshot
+  found it again in a second). Evidence, all measured off 30fps frames of `simctl io recordVideo`
+  and off `simctl io screenshot`, sprite band rows 140-265:
+    * WALK: +/-2.000 px per 1/30s frame, held for dozens of frames at a time = 60px/s = **30pt/s
+      exactly `MovementModel.pointsPerSecond`**, where the pre-story build sat on one position for
+      ~8 frames and then jumped 15.000px.
+    * WALL: the flip now lands on the SAME frame as the reversal (f111 -1px facing R -> f112 turn
+      -> f113 +2px facing L). Travel span 267px = 133.5pt against a 131pt `2 * bound` plus the ~6px
+      the ink shifts when an asymmetric sprite mirrors: **no overshoot**, and no dwell at the edge.
+      The last stride into the wall is drawn at ~1px/frame because the model CLAMPS it short
+      (bound 65.5pt is not a multiple of the 7.5pt stride) — that is US-216's arithmetic rendered
+      honestly, not a pause.
+    * >=2s SCREENSHOTS (the literal AC): comparing shots of the SAME walk frame and SAME facing, so
+      the sprite's own asymmetry cancels — ac_1 vs ac_5 = 62.000px = **4.133 stepDistances**, ac_1 vs
+      ac_6 = 200.000px = **13.333**, ac_3 vs ac_8 = 196.000px = **13.067**. Not whole multiples.
+    * HELD: `-sleepDemo`, four shots over 12s, centroid 183.278 / 183.278 / 183.500 / 183.500 — the
+      two values are the two sleep frames (lit 2916 / 2700) at one position. No drift.
+  Videos/frames in /tmp/us220 (not committed).
+
+**Learnings for future iterations:**
+- **NOTHING INSIDE A `TimelineView`'s BODY CAN BE ANIMATED.** Its updates carry a transaction that
+  disables animation, and that reaches the whole subtree the closure builds. BOTH
+  `.animation(_:value:)` on a modifier inside the closure AND a `withAnimation` from an `onChange`
+  inside it were measured doing exactly nothing — every frame of a 30fps recording still on the
+  15px step grid. The fix is to publish the timeline's value to `@State` from `onChange` and put the
+  animated modifier ON the `TimelineView`, outside the closure.
+- **`.transaction { $0.animation = nil }` DOES NOT ONLY AFFECT WHAT IS BELOW IT.** Written as
+  `TimelineView{}.transaction{nil}.offset(x:).animation(...)` — i.e. the clear nested INSIDE the
+  offset — it killed the offset's tween too and put the hop straight back. Do not reach for it to
+  scope an animation to one modifier; scope by which UPDATE PASS the value changes in instead. Here
+  the mirror and the frame index only ever change on a timeline tick (pass one, unanimated) and
+  `drawnOffset` only in the state pass (pass two), which is structural and needs no transaction.
+- **A SCREENSHOT PAIR CANNOT MEASURE POSITION UNLESS BOTH SHOTS ARE THE SAME FRAME AND THE SAME
+  FACING.** The lit-pixel centroid carries the sprite's own asymmetry: walk1 and walk2 differ by
+  0.815px and a mirrored sprite by ~0.77px, so an honest 15.000px step reads as 14.185 or 15.815 and
+  a static sprite appears to move. Read the frame off the lit-pixel COUNT (Agumon: 2808 = walk1,
+  2880 = walk2) and the facing off `centroid - (xmin+xmax)/2` (its sign flips with the mirror), then
+  only ever compare like with like. Bounding-box midpoint is not a way out: mirroring an asymmetric
+  sprite moves the ink bbox ~6px inside a stationary sprite box.
+- **`simctl io recordVideo` + `AVAssetImageGenerator` IS THE TOOL FOR JUDGING MOTION, AND IT IS
+  CHEAP.** `xcrun simctl io <id> recordVideo --force /tmp/x.mov &` then `kill -INT` to finalise;
+  frames come out with a ~30-line `xcrun swift` script using `AVAssetImageGenerator` with
+  `requestedTimeTolerance{Before,After} = .zero` (there is **no ffmpeg on this machine**; PIL is
+  installed, numpy is not). This sees the real cadence at 30fps where a screenshot burst gives ~10
+  samples a second, and it settles "is it animating at all" in one recording. Watch for capture
+  jitter: an occasional duplicated frame shows up as one d=0 in the middle of a constant-speed run,
+  so judge a stall by a RUN of frames, never by one.
+- **THE FILE SIZE OF THE RECORDING IS A FREE FIRST ANSWER.** Same 8s of the same screen: 125KB while
+  the sprite hopped, 614KB once it glided. h264 pays for change, so a tween that is not running is
+  visible in `ls -la` before any frame is extracted.

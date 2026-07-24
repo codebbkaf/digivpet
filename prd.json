@@ -1970,8 +1970,8 @@
         "Build green, all existing tests still pass. Verify in the simulator with -wanderDemo: screenshots at least 2s apart show the sprite at positions that are NOT whole multiples of stepDistance from where it started"
       ],
       "priority": 107,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Drawn offset tweened linearly over WanderingSpriteView.walkTweenDuration (= MovementModel.step); MovementModel untouched. The .offset and .animation had to move OUTSIDE the TimelineView — nothing inside a timeline body animates (measured: 30fps recording stayed on the 15px grid), and a .transaction animation-nil clear on the timeline suppresses the sibling .offset too, so scoping is by the two-pass split instead. SpriteWanderer now draws the facing of the segment being walked, so the wall turn no longer moonwalks. Build green, 2778 tests 0 failures (+10). Verified on 42mm: video 2px/frame = 30pt/s constant, no overshoot, flip coincides with the reversal; screenshots >=2s apart 4.133 and 13.333 steps apart; a sleeping sprite does not drift."
     },
     {
       "id": "US-221",

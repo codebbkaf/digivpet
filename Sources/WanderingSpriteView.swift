@@ -19,8 +19,19 @@ import WatchKit
 final class SpriteWanderer {
     private var model: MovementModel
 
+    /// Which way the sprite is DRAWN facing, which is the direction of the segment currently being
+    /// walked rather than the direction of the next step.
+    ///
+    /// The two differ for exactly one step, and only at a wall. `MovementModel.facing` turns on the
+    /// step that ARRIVES at the bound — correct for the model, since that is where the Digimon goes
+    /// next — but US-220 draws that step as a quarter-second glide INTO the wall, and a sprite
+    /// mirrored at the start of it moonwalks the last few points backwards. Lagging the mirror by
+    /// one step puts the turn where the eye expects it: at the wall, as the sprite arrives.
+    private var drawnFacing: MovementModel.Facing
+
     init(bound: CGFloat, seed: UInt64 = .random(in: .min ... .max), start: Date = .now) {
         self.model = MovementModel(bound: bound, seed: seed, start: start)
+        self.drawnFacing = model.facing
     }
 
     /// Where to draw the sprite at `date`, walking it there first unless movement is suspended.
@@ -39,7 +50,14 @@ final class SpriteWanderer {
                   holdsAtCentre: Bool = false) -> (offset: CGFloat, flipped: Bool) {
         model.bound = bound
         if isMoving {
+            let before = model.offset
             model.advance(to: date)
+            // Read off the DISTANCE just covered rather than off `model.facing`, for two reasons.
+            // It is the direction actually being drawn, which is the point; and it updates only
+            // when a step was really applied, so the repeat calls a redraw makes within one step —
+            // and there is one every time the tween's own state change re-runs this closure —
+            // leave it alone instead of flipping the sprite mid-glide.
+            if model.offset != before { drawnFacing = model.offset > before ? .right : .left }
         } else {
             // Not simply skipping the advance: see `MovementModel.hold(at:)`. A skipped advance
             // leaves the clock behind, and the walk would then be caught up in one jump the moment
@@ -50,7 +68,7 @@ final class SpriteWanderer {
             model.hold(at: date)
         }
         // The pack's art faces left, so a rightward heading is the one that needs mirroring.
-        return (model.offset, model.facing == .right)
+        return (model.offset, drawnFacing == .right)
     }
 }
 
@@ -78,6 +96,30 @@ struct WanderingSpriteView: View {
     /// with a bob on it — rather than fighting over the position.
     var motion: ActionMotion?
 
+    /// How long the drawn offset takes to slide from one simulation step's position to the next.
+    ///
+    /// EQUAL to `MovementModel.step` by construction rather than by coincidence, which is why it is
+    /// written as that constant and not as 0.25: each tween has to finish exactly as the next step
+    /// begins. Shorter and the sprite arrives early and stands still for the remainder — the hop
+    /// US-220 is about, merely smaller. Longer and it is still in transit when it is told to go
+    /// somewhere else, so it never covers a full stride and the walk quietly slows down.
+    static let walkTweenDuration: TimeInterval = MovementModel.step
+
+    /// The tween applied to the walk offset, or nil for the stretches that must not be tweened.
+    ///
+    /// LINEAR, never eased. `.easeInOut` decelerates into every step boundary and accelerates out
+    /// of it, which puts a visible pulse on the walk four times a second — the exact opposite of the
+    /// constant pace US-216 established, and more obviously wrong than the hopping it replaces.
+    ///
+    /// Off while a motion is playing: the walk is held at a fixed offset for a motion's whole length
+    /// (see `motion`), so there is no step to tween, and a live animation would only smear the
+    /// mirroring that `ActionMotion` applies to a lunge as the sprite turns.
+    /// Not private so a test can read it: "the tween is off while a motion plays" is a rule about
+    /// this value and nothing else, and there is no way to see it from a rendered view.
+    var walkAnimation: Animation? {
+        motion == nil ? .linear(duration: Self.walkTweenDuration) : nil
+    }
+
     /// The motion's displacement at `date`, in POINTS: `ActionMotion` speaks in sprite pixels, and
     /// this is the one place that turns them into the screen distance this `scale` makes them.
     private func motionOffset(at date: Date) -> CGPoint {
@@ -87,6 +129,14 @@ struct WanderingSpriteView: View {
     }
 
     @State private var wanderer: SpriteWanderer
+
+    /// Where the sprite is DRAWN, as against where the model says it stands.
+    ///
+    /// The model's offset is a staircase — one whole `stepDistance` every `MovementModel.step` — and
+    /// this is the value that slides between two of its stairs. It is `@State` rather than simply
+    /// the model's offset because a tween needs a change to animate, and the animation has to be
+    /// attached to that change from OUTSIDE the timeline's own update (see `body`).
+    @State private var drawnOffset: CGFloat = 0
 
     private var side: CGFloat { CGFloat(SpriteSheet.frameSize) * scale }
 
@@ -154,11 +204,38 @@ struct WanderingSpriteView: View {
                 // The motion's x is written for the way the art faces, which is LEFT; a mirrored
                 // sprite lunges the other way, so the nudge is mirrored with it. Without this a
                 // Digimon walking right would lunge over its own shoulder.
-                offset: position.offset + (position.flipped ? -nudge.x : nudge.x),
+                //
+                // The WALK is no longer part of this offset — it is the `.offset` below, so that
+                // the tween can be scoped to it alone. The motion stays here, where it shares one
+                // `.offset` with its own vertical component (see `DigimonSpriteView.verticalOffset`).
+                offset: position.flipped ? -nudge.x : nudge.x,
                 verticalOffset: nudge.y,
                 flipped: position.flipped
             )
+            // The step the model has just taken is published to the view OUTSIDE this closure and
+            // tweened there. Nothing inside a `TimelineView`'s body can be animated: its updates
+            // carry a transaction that disables animation — otherwise every tick of every timeline
+            // would animate — and that suppression reaches the whole subtree the closure builds.
+            // MEASURED, not assumed: with the `.offset` in here, both `.animation(_:value:)` and a
+            // `withAnimation` from this same `onChange` left the sprite on an exact 15px (one-step)
+            // grid in every frame of a 30fps screen recording.
+            .onChange(of: position.offset, initial: true) { _, target in
+                drawnOffset = target
+            }
         }
+        // The walk, applied to the timeline rather than inside it: this is the tween, and it draws
+        // the ground between the model's stairs. The model itself is untouched and still steps.
+        //
+        // SCOPED TO THE OFFSET by the two-pass split above, and NOT by a `.transaction` clear on
+        // the timeline: a `.transaction { $0.animation = nil }` between these two modifiers and the
+        // `TimelineView` puts the hop straight back (measured — every frame of a 30fps recording
+        // back on the 15px grid), because it suppresses the `.offset` beside it as well as the
+        // sprite below it. The split is what makes the scoping structural instead: the mirror and
+        // the frame index only ever change on a timeline tick, which is pass one and carries no
+        // animation, and `drawnOffset` is the only thing that changes in pass two, which is the
+        // pass this animates.
+        .offset(x: drawnOffset)
+        .animation(walkAnimation, value: drawnOffset)
         // The sprite is drawn with `.offset`, which does not reserve the ground it covers. Claiming
         // the full width here is what stops a Digimon standing at the left bound from being clipped
         // by a parent that sized itself to one sprite.
