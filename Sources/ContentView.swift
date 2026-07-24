@@ -681,6 +681,8 @@ struct ContentView: View {
                     ActionControls(canAffordBattle: model.canAffordBattle,
                                    poopCount: model.poopCount,
                                    lightState: model.lightState,
+                                   // Greys Feed, Train and Battle while the egg sits there (US-218).
+                                   isEgg: model.isEgg,
                                    trainCharges: model.trainCharges,
                                    trainChargeCap: model.trainChargeCap,
                                    battleCharges: model.battleCharges,

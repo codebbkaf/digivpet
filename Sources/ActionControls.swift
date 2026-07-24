@@ -142,6 +142,13 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
     /// What the light is doing now (US-114), so the Light button's glyph names the state it is IN.
     let lightState: LightState
 
+    /// Whether the Digimon is still an unhatched egg (US-218). True greys Feed, Train and Battle —
+    /// an egg cannot eat, train or fight, and a tap that spent meat, a charge or energy on one was
+    /// paying for nothing. Clean, Light, Map, Party, Dex and Sleep are untouched: the room still gets
+    /// dirty, the light still works, and the places you can go are not about the Digimon's stage.
+    /// Defaulted to false so every call site that predates the flag compiles and greys nothing.
+    var isEgg: Bool = false
+
     /// The three spendable charges drawn as segmented rings AROUND their own buttons (US-199): Train
     /// red, Battle purple, Clean blue. Each pair is the same count/cap a straight `DashBar` used to
     /// read on the currency row before this story moved the reading onto the button that spends it.
@@ -195,7 +202,17 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
 
     /// Whether the Battle button is disabled. Not `private`, like `limitCaption`, so a test can
     /// assert the rule — a `.disabled` modifier inside `body` is unreachable outside a view graph.
-    var isBattleDisabled: Bool { !canAffordBattle }
+    /// An egg is refused whatever it can afford (US-218).
+    var isBattleDisabled: Bool { !canAffordBattle || isEgg }
+
+    /// Whether the Feed button is disabled (US-218). Only the egg rule: an empty larder still leaves
+    /// Feed tappable, because `MainScreenModel.feed()`'s own refusal is what says the larder is empty
+    /// and a greyed button would say nothing.
+    var isFeedDisabled: Bool { isEgg }
+
+    /// Whether the Train button is disabled (US-218). The egg rule alone, for `isFeedDisabled`'s
+    /// reason: running out of training charges is a message, not a greyed circle.
+    var isTrainDisabled: Bool { isEgg }
 
     /// Whether the Clean button is disabled. Derived from the count the pile is DRAWN from, not
     /// from a separate flag, so the button and the mess on screen cannot disagree.
@@ -290,6 +307,7 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 ActionButtonFace(systemImage: "fork.knife", tint: .orange)
             }
             .buttonStyle(.plain)
+            .disabled(isFeedDisabled)
             // The larder, orange, ringed around the button that spends it (US-208) — the same
             // overlay the other three carry, so meat reads where it is used like they do.
             .overlay { DashRing(filled: meat, total: meatCap, tint: .orange) }
@@ -300,6 +318,7 @@ struct ActionControls<MapDestination: View, PartyDestination: View, DexDestinati
                 ActionButtonFace(systemImage: "dumbbell", tint: .red)
             }
             .buttonStyle(.plain)
+            .disabled(isTrainDisabled)
             // Training progress, red, ringed around the button that spends it (US-199).
             .overlay { DashRing(filled: trainCharges, total: trainChargeCap, tint: .red) }
             .accessibilityLabel("Train")

@@ -99,7 +99,8 @@ final class ActionControlsTests: XCTestCase {
 
     /// A row whose Battle button reads the affordability of the energies it is given, asked the same
     /// way `MainScreenModel.canAffordBattle` asks it.
-    private func controls(strength: Int, stamina: Int)
+    /// `isEgg` defaults to false so every call that predates US-218 asks exactly what it asked.
+    private func controls(strength: Int, stamina: Int, isEgg: Bool = false)
         -> ActionControls<EmptyView, EmptyView, EmptyView, EmptyView> {
         let state = GameState(currentDigimonId: "hero", now: Date(timeIntervalSince1970: 0))
         state.stageEnergy.strength = strength
@@ -109,11 +110,60 @@ final class ActionControlsTests: XCTestCase {
 
         return ActionControls(canAffordBattle: canAfford, poopCount: 0,
                               lightState: .on,
+                              isEgg: isEgg,
                               feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
                               mapDestination: { EmptyView() },
                               partyDestination: { EmptyView() },
                               dexDestination: { EmptyView() },
                               sleepDestination: { EmptyView() })
+    }
+
+    // MARK: - US-218: the three doing-things buttons are greyed while it is an egg
+
+    /// AC1: Feed, Train and Battle are all disabled by the egg flag alone — on a row that can
+    /// otherwise afford everything, so what turns them off is the stage and nothing else.
+    func testAnEggDisablesFeedTrainAndBattle() {
+        let hatched = controls(strength: 40, stamina: 40, isEgg: false)
+        XCTAssertFalse(hatched.isFeedDisabled)
+        XCTAssertFalse(hatched.isTrainDisabled)
+        XCTAssertFalse(hatched.isBattleDisabled, "the control: this row can pay for a battle")
+
+        let egg = controls(strength: 40, stamina: 40, isEgg: true)
+        XCTAssertTrue(egg.isFeedDisabled)
+        XCTAssertTrue(egg.isTrainDisabled)
+        XCTAssertTrue(egg.isBattleDisabled, "an egg cannot fight whatever it can afford")
+    }
+
+    /// AC2: the other six circles are untouched. Clean is the only one of them with a disabled rule
+    /// at all, and it still turns on its own reason — the mess on screen — while the egg sits there.
+    func testAnEggLeavesTheOtherSixButtonsAlone() {
+        let egg = controls(strength: 40, stamina: 40, isEgg: true)
+        XCTAssertTrue(egg.isCleanDisabled, "no poop yet, which is Clean's own rule")
+
+        let dirtyEgg = ActionControls(canAffordBattle: true, poopCount: 2, lightState: .on,
+                                      isEgg: true,
+                                      feed: {}, train: {}, clean: {}, battle: {}, cycleLight: {},
+                                      mapDestination: { EmptyView() },
+                                      partyDestination: { EmptyView() },
+                                      dexDestination: { EmptyView() },
+                                      sleepDestination: { EmptyView() })
+        XCTAssertFalse(dirtyEgg.isCleanDisabled, "the room still gets dirty around an unhatched egg")
+    }
+
+    /// AC3: nothing is removed from the grid. The circles are all still drawn — greyed, not gone —
+    /// so the layout an egg sees is the layout everything else sees.
+    func testTheGridStillDrawsAllNineCirclesWhileItIsAnEgg() {
+        XCTAssertEqual(ActionControls<EmptyView, EmptyView, EmptyView, EmptyView>.buttonCount, 9)
+        XCTAssertEqual(ActionGridLayout.rowCounts(forButtons: 9), [5, 4])
+    }
+
+    /// The caption is about the ENERGY rule and stays that way: an egg with energy to spare is
+    /// refused for being an egg, and the model's own message says so in the orange line above — the
+    /// grid must not start claiming the player is broke.
+    func testTheEggFlagDoesNotChangeTheUnaffordableCaption() {
+        XCTAssertNil(controls(strength: 40, stamina: 40, isEgg: true).limitCaption)
+        XCTAssertEqual(controls(strength: 0, stamina: 0, isEgg: true).limitCaption,
+                       BattleCost.insufficientEnergyReason)
     }
 
     /// US-197 AC6, restated for US-211's AC6: a FULL row of circles and their gaps fits the narrowest

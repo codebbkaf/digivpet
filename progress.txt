@@ -48,6 +48,19 @@ Measured baseline at the start of this wave (regenerate with Appendix B of the P
   screenshot, which excludes the stats strip and the name line): it is stable to three decimals
   across a pose change and moves by exactly the travel. **numpy is NOT installed; PIL 12.3.0 is** —
   a plain `im.convert('L').load()` double loop over ~125 rows is well under a second per shot.
+- **A GUARD ADDED "FIRST" STEALS AN OLDER GUARD'S MESSAGE, AND SOME TEST PINS THAT STRING (US-218).**
+  A fixture can be in two refusing states at once — `DeathTests`' dead EGG is both dead and unhatched
+  — so `grep -rn '<the old reason>' Tests` BEFORE putting a new guard ahead of the existing ones, and
+  re-pin the assertion to the new reason with a comment rather than loosening it to "some block".
+  The matching evidence pattern: a "spends nothing" criterion is ONE `Equatable` snapshot struct
+  (`EggActionsTests.Ledger`, `@MainActor init(_ model:)` over meat, both charges, all four
+  `EnergyType.allCases`, `careMistakeCount` and the three stage counters), compared before/after —
+  not six assertions that each miss the currency the story forgot to name.
+- **A DEMO SEED IS HOW YOU SCREENSHOT AN ACTION'S MESSAGE, BECAUSE `simctl` CANNOT TAP (US-218).**
+  Fixed shape: a `#if DEBUG` `seedXDemoIfRequested()` called from the block at the end of
+  `MainScreenModel.start()`, guarded on a `-xDemo` launch argument, ending in `actionDuration = 60`
+  (the shipped 2s hold does not survive boot + install + launch + `sleep 20`) and then the REAL
+  action call. Staging the outcome by hand would make the screenshot prove nothing.
 - **THE CHEAPEST BEFORE/AFTER IS `git stash push -- Sources Tests`, REBUILD, CAPTURE, `stash pop`
   (US-217).** ~90 s per side, and it produces the only evidence that settles a "does it still X"
   criterion. Use `uninstall` + `install` when the story is about a FRESH save, or the previous run's
@@ -7079,3 +7092,65 @@ The thirty, `Perfect -> Ultimate`:
   `ActionControls`; put it on `MainScreenModel` as a named `isEgg` property and let both this clause
   and the action guards read it, rather than adding a third spelling.
 ---
+
+## 2026-07-24 - US-218 - Feed, Train and Battle are refused while it is still an egg
+- Took US-217's own advice and made the egg ONE named fact: `MainScreenModel.isEgg`
+  (`state?.stage == .digitama`) plus `MainScreenModel.eggActionReason = "It is still an egg."`.
+  `isWandering` now reads `!isEgg` instead of respelling the stage comparison, so there are two
+  readers of one property rather than two comparisons.
+- `ActionControls` gained `var isEgg: Bool = false`, declared right after `lightState` (memberwise
+  init order — ContentView passes it there). `.disabled(isFeedDisabled)` on Feed,
+  `.disabled(isTrainDisabled)` on Train, and `isBattleDisabled` became
+  `!canAffordBattle || isEgg`. All three grey through the existing `ActionButtonFace`
+  `@Environment(\.isEnabled)` path; no second source of truth, nothing removed from the grid.
+  Feed and Train are disabled by the EGG ONLY — an empty larder or no train charges is still a
+  message from the model, not a greyed circle.
+- `feed()`, `train()` and `battle()` each guard `!isEgg` FIRST: before `wakeIfAsleep()`, before
+  `FeedAction`/`TrainAction`, before battle's death/charge/energy guards and before matchmaking.
+  So a blocked egg action spends no meat, no charge and no energy, counts no care mistake, opens no
+  minigame and plays no pose and no motion — `show(nil, message:)`, exactly like every other block.
+- Files: Sources/{MainScreenModel,ActionControls,ContentView}.swift,
+  Tests/{EggActionsTests(new),ActionControlsTests,DeathTests}.swift, prd.json, progress.txt.
+- Verified: build green; FULL suite **2764 tests, 0 failures** (+12). New `EggActionsTests` (8) is
+  built on a `Ledger` struct that snapshots meat, both charges, all four energies,
+  `careMistakeCount`, `stageOverfeeds`, `stageTrainingSessions` and `stageSleepDisturbances` in one
+  value, so each blocked case asserts `Ledger(model) == before` rather than six separate reads — an
+  egg guard that showed the message but still spent the charge would fail. Its fixture stocks
+  EVERYTHING (meat, charges, 40 in each energy, hunger 3) so the only possible reason for a block is
+  the stage, and each `.digitama` case has a `.babyI` twin proving the action still works today.
+  4 new `ActionControlsTests` cover the three disabled buttons, the six untouched ones, the
+  unchanged `[5, 4]` grid, and that the egg does not hijack the unaffordable-energy caption.
+- Broke and fixed ONE pre-existing test: `DeathTests.testADeadDigimonNeitherHatchesNorEats` pinned
+  `.blocked(reason: "It cannot eat.")` on a fixture that is a dead EGG. Still blocked, still eats
+  nothing; the egg guard now runs ahead of `FeedAction`'s death arm, so the reason shown is the egg
+  one. Updated the expectation to `MainScreenModel.eggActionReason` with a comment saying why.
+- SIMULATOR, 42mm (46mm still had the stale notification alert up from an earlier session — see
+  US-215; the bare probe screenshot found it in a second):
+    /tmp/us218/before42.png — the pre-story build on a fresh egg: Feed orange, Train red, Battle
+      already grey (0 energy), Clean already grey (0 poop).
+    /tmp/us218/buttons42.png + buttons42-zoom.png — after: Feed, Train and Battle all grey, Map
+      green, Party teal, Light yellow, Dex blue, Sleep indigo, nine circles in a 5-and-4 grid.
+    /tmp/us218/feed-message42.png — Feed tapped on the egg: "It is still an egg." on one line in the
+      orange name row, egg sprite unchanged, no pose.
+- Added a debug-only `-eggFeedDemo` seed (`seedEggFeedDemoIfRequested`) beside the other seeds: it
+  is the ONLY one that does not move off the starting egg, stocks the larder so an empty one cannot
+  be the reason, sets `actionDuration = 60` and calls `feed()`.
+
+**Learnings for future iterations:**
+- **A NEW GUARD PLACED "FIRST" STEALS THE MESSAGE FROM AN OLDER GUARD, AND A TEST SOMEWHERE PINS
+  THAT STRING.** A fixture can be in two refusing states at once (`DeathTests`' dead EGG), and the
+  only symptom is one `XCTAssertEqual` on a reason. Before adding a guard ahead of the existing ones,
+  `grep -rn '<the old reason string>' Tests` — and when it fires, fix it by re-pinning to the NEW
+  reason with a comment, never by loosening the assertion to "some block".
+- **A "SPENDS NOTHING" ACCEPTANCE CRITERION IS ONE `Equatable` SNAPSHOT STRUCT, NOT SIX ASSERTIONS.**
+  `EggActionsTests.Ledger` reads the whole economy off the model in an `init(_ model:)` (marked
+  `@MainActor`, since `MainScreenModel`'s properties are), and every blocked case is then
+  `XCTAssertEqual(Ledger(model), before)`. It costs ten lines and it catches the currency the story
+  did not think to name. Copy it for any future "the tap must cost nothing" story.
+- **`EnergyType` IS THE ENUM'S NAME, NOT `Energy`** — `EnergyType.allCases` over
+  `state.stageEnergy[$1]` is how you snapshot all four at once.
+- **A DEMO SEED IS HOW YOU SCREENSHOT AN ACTION'S MESSAGE, BECAUSE `simctl` CANNOT TAP.** The shape
+  is fixed: a `#if DEBUG` `seedXDemoIfRequested()` called from the block at the end of `start()`,
+  guarded on a `-xDemo` launch argument, ending in `actionDuration = 60` (the 2s hold does not
+  survive boot + install + launch + `sleep 20`) and then the real action call. Never stage the
+  outcome by hand — call the shipped method, or the screenshot proves nothing.

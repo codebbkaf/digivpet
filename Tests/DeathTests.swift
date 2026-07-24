@@ -397,7 +397,11 @@ final class RebirthTests: XCTestCase {
 
         XCTAssertEqual(model.state?.healthStatus, .dead)
         XCTAssertEqual(model.state?.currentDigimonId, "egg", "a dead egg does not hatch")
-        XCTAssertEqual(model.feed(), .blocked(reason: "It cannot eat."))
+        // Blocked, and blocked for being an EGG rather than for being dead since US-218: this
+        // fixture is both, and the egg guard runs ahead of `FeedAction`'s own death arm. What the
+        // test is about — the feed does not happen and nothing is eaten — is unchanged; only which
+        // of two true reasons is shown moved.
+        XCTAssertEqual(model.feed(), .blocked(reason: MainScreenModel.eggActionReason))
         XCTAssertEqual(model.state?.hunger, 3, "and nothing was eaten")
     }
 }

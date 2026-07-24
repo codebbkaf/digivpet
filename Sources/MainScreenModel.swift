@@ -484,6 +484,7 @@ final class MainScreenModel: ObservableObject {
         seedCeremonyDemoIfRequested()
         seedFeedDemoIfRequested()
         seedTrainDemoIfRequested()
+        seedEggFeedDemoIfRequested()
         seedSleepDemoIfRequested()
         seedSleepBarDemoIfRequested()
         seedWanderDemoIfRequested()
@@ -612,6 +613,23 @@ final class MainScreenModel: ObservableObject {
         actionDuration = 60
         train()
         if grading { finishTraining(.great) }
+    }
+
+    /// Debug-only: taps Feed on an unhatched egg so US-218's refusal can be screenshotted.
+    ///
+    /// - `-eggFeedDemo` — the save is left exactly as it is (a fresh install IS an egg, since the
+    ///   Simulator has no HealthKit data to hatch one), the larder is stocked so an empty one cannot
+    ///   be the reason, and Feed is tapped.
+    ///
+    /// It is the only demo here that does NOT move off the starting egg — being an egg is the whole
+    /// subject. The pose is held for a minute for the reason `seedFeedDemoIfRequested` gives: nothing
+    /// can tap Feed from `simctl`, so the app has to arrive already showing the message, and two
+    /// seconds does not survive a boot, an install and a launch.
+    private func seedEggFeedDemoIfRequested() {
+        guard CommandLine.arguments.contains("-eggFeedDemo") else { return }
+        profile?.meat = 10
+        actionDuration = 60
+        feed()
     }
 
     /// Debug-only: forces the Digimon into its sleep window so the sleep loop can be screenshotted.
@@ -2054,6 +2072,19 @@ final class MainScreenModel: ObservableObject {
         .resting(for: state?.healthStatus ?? .healthy, isAsleep: isAsleep)
     }
 
+    /// Whether what is on screen is still an unhatched egg (US-217, named here by US-218).
+    ///
+    /// One fact, asked in three places that all mean the same thing: the walk is suspended
+    /// (`isWandering`), the three doing-things buttons are greyed (`ContentView` -> `ActionControls`),
+    /// and `feed()`/`train()`/`battle()` refuse. Naming it once is what keeps a future stage rule from
+    /// being taught to one of those and not the others.
+    var isEgg: Bool { state?.stage == .digitama }
+
+    /// Why Feed, Train and Battle refuse an egg (US-218). One string, shown in the same orange
+    /// `actionMessage` line every other refusal uses, and short enough for the 9pt one-line row it is
+    /// drawn in. Static so a test can assert the message without retyping it.
+    static let eggActionReason = "It is still an egg."
+
     /// Whether the Digimon should be walking about the screen right now (US-037).
     ///
     /// Expressed as "the pose is the plain idle walk, and nothing is covering the screen" rather
@@ -2077,7 +2108,7 @@ final class MainScreenModel: ObservableObject {
     /// stage is therefore an ADDED condition rather than a replacement: asleep, eating, sick, dead
     /// and every overlay still turn the walk off through exactly the reasons they always did.
     var isWandering: Bool {
-        state?.stage != .digitama
+        !isEgg
             && animation == .idle && pendingEvolution == nil && pendingBattle == nil
             && pendingTraining == nil && pendingBattleRound == nil && memorial == nil
             && pendingWildEncounter == nil && pendingBossEncounter == nil
@@ -2137,6 +2168,13 @@ final class MainScreenModel: ObservableObject {
     @discardableResult
     func feed() -> FeedOutcome? {
         guard let state, let profile else { return nil }
+        // BEFORE the wake and before `FeedAction`'s own rules (US-218): an egg has no mouth, so the
+        // tap must cost nothing at all — no meat, no overfeed counted, and no waking-early mistake
+        // for a Digimon that was never disturbed. A plain block, drawn exactly like every other one.
+        guard !isEgg else {
+            show(nil, message: Self.eggActionReason)
+            return .blocked(reason: Self.eggActionReason)
+        }
         // FIRST, so the meal is really eaten rather than the user paying a care mistake for a block
         // (US-110). `FeedAction` is handed the woken answer, so its own sleep arm never fires from
         // here — see `wakeIfAsleep`, which is also where the dead case is kept out.
@@ -2200,6 +2238,13 @@ final class MainScreenModel: ObservableObject {
         // a Train tap that got through one would charge energy for a round whose grade the battle is
         // waiting on. `battle()` carries the mirror of this guard.
         guard pendingTraining == nil, pendingBattleRound == nil else { return nil }
+        // BEFORE the wake and before `TrainAction`'s own rules (US-218): an egg cannot train, so the
+        // tap spends no charge, counts no session, opens NO minigame and charges no waking-early
+        // mistake. `pendingTraining` is left nil, which is what keeps the round from appearing.
+        guard !isEgg else {
+            show(nil, message: Self.eggActionReason)
+            return .blocked(reason: Self.eggActionReason)
+        }
         // Before the rule is asked, so the round really opens (US-110). A woken Digimon that turns
         // out to be sick or broke is still blocked by `TrainAction` — and still charged the
         // disturbance, because it really was disturbed: it is awake and walking about either way.
@@ -2428,6 +2473,14 @@ final class MainScreenModel: ObservableObject {
         // minigames at once, and a second Battle tap would spend a second cost on a fight the first
         // tap has already picked an opponent for.
         guard pendingBattleRound == nil, pendingTraining == nil else { return nil }
+        // BEFORE the death guard, the wake and the charge/energy guards (US-218): an egg cannot
+        // fight, so the tap spends no charge and no energy, picks no opponent, opens no round and
+        // charges no waking-early mistake. Ahead of the death arm because being an egg is the more
+        // specific thing to say about an egg that also died.
+        guard !isEgg else {
+            show(nil, message: Self.eggActionReason)
+            return nil
+        }
         guard state.healthStatus != .dead else {
             show(nil, message: "It cannot battle.")
             return nil
